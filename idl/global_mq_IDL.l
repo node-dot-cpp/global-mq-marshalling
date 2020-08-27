@@ -81,11 +81,6 @@ int createToken(int token)
 
     "DEFAULT" { return createToken( KW_DEFAULT ); }
 
-	"NUMERIC" { return createToken( KW_NUMERIC ); }
-    "INT" { return createToken( KW_INT ); }
-
-    "IDENTIFIER" { return createToken( KW_IDENTIFIER ); }
-
 	"INTEGER" { return createToken( KW_INTEGER ); }
 	"UINTEGER" { return createToken( KW_UINTEGER ); }
 	"CHARACTER-STRING" { return createToken( KW_CHARACTER_STRING ); }

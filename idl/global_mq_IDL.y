@@ -26,19 +26,15 @@
 * -------------------------------------------------------------------------------*/
 
 
-
+%token KW_FILE
 %token KW_MESSAGE
 %token KW_HASH_LINE
 %token KW_DEFAULT
 %token KW_ENUM
 %token KW_BYTE_ARRAY
-
-%token KW_NUMERIC KW_INT
-%token KW_FILE KW_CLASS_UPP
-
 %token IDENTIFIER
 %token KW_IDENTIFIER
-%token STRING_LITERAL INTEGER_LITERAL CHAR_LITERAL
+%token STRING_LITERAL INTEGER_LITERAL
 %token KW_INTEGER KW_UINTEGER
 %token KW_CHARACTER_STRING
 
@@ -73,10 +69,10 @@ message
 ;
 
 data_type
-    : integer_type
-    | unsigned_integer_type
-/*    | character_string_type*/
-    | byte_array_type
+	: integer_type
+	| unsigned_integer_type
+	| character_string_type
+	| byte_array_type
 	| inline_enum_type
 ;
 
@@ -106,13 +102,14 @@ unsigned_integer_type
 	| KW_UINTEGER '(' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefault($1, false, $3, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
 ;
 
-/*
+
 character_string_type
-	: KW_CHARACTER_STRING '{' STRING_LITERAL '}' { $$ = createCharacterStringType($1, $3, 0, 0); releaseYys2($2, $4); }
-	| KW_CHARACTER_STRING '{' STRING_LITERAL '}' '[' expr ',' expr ']' { $$ = createCharacterStringType($1, $3, $6, $8); releaseYys5($2, $4, $5, $7, $9); }
-	| KW_CHARACTER_STRING '{' character_set '}' { $$ = createCharacterStringType($1, $3, 0, 0); releaseYys2($2, $4); }
-	| KW_CHARACTER_STRING '{' character_set '}' '[' expr ',' expr ']' { $$ = createCharacterStringType($1, $3, $6, $8); releaseYys5($2, $4, $5, $7, $9); }
-;*/
+	: KW_CHARACTER_STRING { $$ = createCharacterStringType($1); }
+	| KW_CHARACTER_STRING '{' STRING_LITERAL '}' { $$ = createCharacterStringType4($1, $3, 0, 0); releaseYys2($2, $4); }
+	| KW_CHARACTER_STRING '{' STRING_LITERAL '}' '[' expr ',' expr ']' { $$ = createCharacterStringType4($1, $3, $6, $8); releaseYys5($2, $4, $5, $7, $9); }
+/*	| KW_CHARACTER_STRING '{' character_set '}' { $$ = createCharacterStringType4($1, $3, 0, 0); releaseYys2($2, $4); }
+	| KW_CHARACTER_STRING '{' character_set '}' '[' expr ',' expr ']' { $$ = createCharacterStringType4($1, $3, $6, $8); releaseYys5($2, $4, $5, $7, $9); }*/
+;
 
 byte_array_type
 	: KW_BYTE_ARRAY '[' expr ']' { $$ = createByteArrayType($1, $3); releaseYys2($2, $4); }

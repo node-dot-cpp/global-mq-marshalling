@@ -3,19 +3,19 @@
 MESSAGE message_one {
   enum EnumSecond {s_first=0,s_second=1, s_third=2} enum_second;
   
-//  CHARACTER-STRING string_str;
+  INTEGER ir_first;
+  UINTEGER uir_second;
   
-  INTEGER[-10,10] ir_forth;
+  INTEGER DEFAULT = -1986 ir_third;
+  UINTEGER DEFAULT = 1984 uir_forth;
+  
+  INTEGER[-10,10] ir_fifth;
   UINTEGER[30,100] uir_fifth;
   
-  INTEGER ir_sixh;
-  UINTEGER uir_seventh;
-  
-  INTEGER DEFAULT = -1986 ir_sixh;
-  UINTEGER DEFAULT = 1984 uir_seventh;
-  
-  INTEGER[-10,10] DEFAULT = 4 ir_forth;
-  UINTEGER[30,100] DEFAULT = 34 uir_fifth;
+  INTEGER[-10,10] DEFAULT = 4 ir_sixth;
+  UINTEGER[30,100] DEFAULT = 34 uir_seventh;
   
   BYTE_ARRAY[16] ba_nonce;
+  
+  CHARACTER-STRING string_str;
 };

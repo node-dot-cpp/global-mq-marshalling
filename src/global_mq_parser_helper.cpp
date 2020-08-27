@@ -611,7 +611,19 @@ YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, bool low_flag, YYSTY
 	return yy;
 }
 
-YYSTYPE createCharacterStringType(YYSTYPE token, YYSTYPE charset, YYSTYPE min_expr, YYSTYPE max_expr)
+YYSTYPE createCharacterStringType(YYSTYPE token)
+{
+	unique_ptr<YyBase> d0(token);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::CHARACTER_STRING;
+//	yy->dataType->characterSet = getCharacterSet(charset);
+
+	return yy;
+}
+
+YYSTYPE createCharacterStringType4(YYSTYPE token, YYSTYPE charset, YYSTYPE min_expr, YYSTYPE max_expr)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(charset);
