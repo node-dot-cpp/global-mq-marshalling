@@ -127,7 +127,9 @@ void printDataType( MessageParameterType& s )
 		case MessageParameterType::KIND::BYTE_ARRAY: kind = "BYTE_ARRAY"; break;
 	}
 
-	printf( "{kind: %d (%s), name: %s, ", (int)(s.kind), kind, s.name.c_str() );
+	printf( "{kind: %d (%s), ", (int)(s.kind), kind );
+	if ( s.name.size() )
+		printf( "name: %s, ", s.name.c_str() );
 	if ( s.kind == MessageParameterType::KIND::INTEGER || s.kind == MessageParameterType::KIND::UINTEGER )
 	{
 		if ( s.hasLowLimit )

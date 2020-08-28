@@ -490,7 +490,7 @@ YyDataType* createIntegerTypeImplBase(YYSTYPE token, bool isSigned)
 {
 	YyDataType* yy = new YyDataType();
 
-	yy->dataType->kind = isSigned ? MessageParameterType::UINTEGER : MessageParameterType::INTEGER;
+	yy->dataType->kind = isSigned ? MessageParameterType::INTEGER : MessageParameterType::UINTEGER;
 
 	return yy;
 }
@@ -521,7 +521,7 @@ void setLimitsForInteger(YYSTYPE token, YyDataType* yy, bool hasLowlimit, bool l
 		yy->dataType->lowLimit.value = l;
 	}
 
-	if ( hasLowlimit )
+	if ( hasHighlimit )
 	{
 		yy->dataType->hasHighLimit = true;
 
