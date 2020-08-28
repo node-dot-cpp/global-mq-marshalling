@@ -85,8 +85,8 @@ YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr
 YYSTYPE createUnsignedIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag);
 YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
 
-YYSTYPE createCharacterStringType(YYSTYPE token);
-YYSTYPE createCharacterStringType4(YYSTYPE token, YYSTYPE charset, YYSTYPE min_expr, YYSTYPE max_expr);
+YYSTYPE createCharacterStringType(YYSTYPE token, bool hasMaxLength, YYSTYPE maxlength_expr, bool hasDefault, YYSTYPE default_expr);
+
 YYSTYPE createByteArrayType(YYSTYPE token, YYSTYPE size_expr);
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);

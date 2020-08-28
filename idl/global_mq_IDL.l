@@ -71,15 +71,16 @@ int createToken(int token)
 	"/*" { jumpToState( COMMENT ) ; }
 	"//" { jumpToState( SLCOMMENT ) ; }
 
-    "#line" { return createToken( KW_HASH_LINE ); }
+	"#line" { return createToken( KW_HASH_LINE ); }
 
-    "MESSAGE" { return createToken( KW_MESSAGE ); }
+	"MESSAGE" { return createToken( KW_MESSAGE ); }
 	"enum" { return createToken( KW_ENUM ); }
 
 
-    "FILE" { return createToken( KW_FILE ); }
+	"FILE" { return createToken( KW_FILE ); }
 
-    "DEFAULT" { return createToken( KW_DEFAULT ); }
+	"DEFAULT" { return createToken( KW_DEFAULT ); }
+	"MAX_LENGTH" { return createToken( KW_MAX_LENGTH ); }
 
 	"INTEGER" { return createToken( KW_INTEGER ); }
 	"UINTEGER" { return createToken( KW_UINTEGER ); }

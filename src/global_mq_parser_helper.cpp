@@ -201,6 +201,38 @@ Variant variantFromExpression(YYSTYPE expr)
 }
 
 static
+string stringLiteralFromExpression1(YYSTYPE expr)
+{
+	if (YyStringLiteral* strLit = dynamic_cast<YyStringLiteral*>(expr))
+			return strLit->text;
+	else
+	{
+		reportError(expr->location, "Unsuported value");
+		return "";
+	}
+}
+
+static
+string stringLiteralFromExpression2(YYSTYPE expr, long long max_length)
+{
+	if (YyStringLiteral* strLit = dynamic_cast<YyStringLiteral*>(expr))
+	{
+		if ( strLit->text.size() <= max_length )
+			return strLit->text;
+		else
+		{
+			reportError(expr->location, "Unsuported value");
+			return "";
+		}
+	}
+	else
+	{
+		reportError(expr->location, "Unsuported value");
+		return "";
+	}
+}
+
+static
 double floatLiteralFromExpression(YYSTYPE expr)
 {
 	if (YyIntegerLiteral* intLit = dynamic_cast<YyIntegerLiteral*>(expr)) {
@@ -621,35 +653,32 @@ YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLow
 	return yy;
 }
 
-YYSTYPE createCharacterStringType(YYSTYPE token)
+YYSTYPE createCharacterStringType(YYSTYPE token, bool hasMaxLength, YYSTYPE maxlength_expr, bool hasDefault, YYSTYPE default_expr)
 {
 	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(default_expr);
+	unique_ptr<YyBase> d2(maxlength_expr);
 
 	YyDataType* yy = new YyDataType();
 
 	yy->dataType->kind = MessageParameterType::CHARACTER_STRING;
-//	yy->dataType->characterSet = getCharacterSet(charset);
 
-	return yy;
-}
-
-YYSTYPE createCharacterStringType4(YYSTYPE token, YYSTYPE charset, YYSTYPE min_expr, YYSTYPE max_expr)
-{
-	unique_ptr<YyBase> d0(token);
-	unique_ptr<YyBase> d1(charset);
-	unique_ptr<YyBase> d2(min_expr);
-	unique_ptr<YyBase> d3(max_expr);
-
-	YyDataType* yy = new YyDataType();
-
-	yy->dataType->kind = MessageParameterType::CHARACTER_STRING;
-//	yy->dataType->characterSet = getCharacterSet(charset);
-
-	if (min_expr)
+	if ( hasMaxLength )
 	{
-		yy->dataType->stringMinSize = static_cast<uint32_t>(integerLiteralFromExpression(min_expr, 0, UINT32_MAX));
-		yy->dataType->stringMaxSize = static_cast<uint32_t>(integerLiteralFromExpression(max_expr, yy->dataType->stringMinSize, UINT32_MAX));
+		yy->dataType->hasMaxLength = true;
+		yy->dataType->stringMaxLength = static_cast<uint32_t>(integerLiteralFromExpression(maxlength_expr, 0, UINT32_MAX));
 	}
+
+	if ( hasDefault )
+	{
+		yy->dataType->hasDefault = true;
+		if ( hasMaxLength )
+			yy->dataType->stringDefault = stringLiteralFromExpression2( default_expr, yy->dataType->stringMaxLength );
+		else
+			yy->dataType->stringDefault = stringLiteralFromExpression1( default_expr );
+	}
+
+//	yy->dataType->characterSet = getCharacterSet(charset);
 
 	return yy;
 }

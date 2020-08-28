@@ -61,25 +61,27 @@ public:
 	enum KIND { UNDEFINED, ENUM, INTEGER, UINTEGER, CHARACTER_STRING, BYTE_ARRAY };
 	KIND kind = UNDEFINED;
 	string name;
-	bool hasLowLimit = false;
-	bool hasHighLimit = false;
-	bool hasDefault = false;
-	Limit lowLimit;
-	Limit highLimit;
-	double numericalDefault;
+	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING
+	bool hasLowLimit = false; // INTEGER, UINTEGER
+	bool hasHighLimit = false; // INTEGER, UINTEGER
+	Limit lowLimit; // INTEGER, UINTEGER
+	Limit highLimit; // INTEGER, UINTEGER
+	double numericalDefault; // INTEGER, UINTEGER
+
 //    CharacterSet characterSet;
-	uint32_t stringMinSize = 0;          /* TODO check type */
-	uint32_t stringMaxSize = 0;          /* TODO check type */
+	bool hasMaxLength = false; // CHARACTER_STRING
+	uint32_t stringMaxLength = 0; // CHARACTER_STRING
+	string stringDefault; // CHARACTER_STRING
 
-	uint32_t arrayFixedaxSize = 0;          /* TODO check type */
+	uint32_t arrayFixedaxSize = 0; // BYTE_ARRAY
 
-	map<string, uint32_t> enumValues;
+	map<string, uint32_t> enumValues; // ENUM
 
 	MessageParameterType() = default;
 	MessageParameterType(const MessageParameterType& other)
 		: kind(other.kind), name(other.name),
 		lowLimit(other.lowLimit), highLimit(other.highLimit),
-		stringMinSize(other.stringMinSize), stringMaxSize(other.stringMaxSize),
+		stringMaxLength(other.stringMaxLength),
 		enumValues(other.enumValues)
 	{}
 

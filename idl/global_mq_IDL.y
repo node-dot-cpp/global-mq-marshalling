@@ -30,6 +30,7 @@
 %token KW_MESSAGE
 %token KW_HASH_LINE
 %token KW_DEFAULT
+%token KW_MAX_LENGTH
 %token KW_ENUM
 %token KW_BYTE_ARRAY
 %token IDENTIFIER
@@ -136,10 +137,14 @@ unsigned_integer_type
 
 
 character_string_type
-	: KW_CHARACTER_STRING { $$ = createCharacterStringType($1); }
-	| KW_CHARACTER_STRING '{' STRING_LITERAL '}' { $$ = createCharacterStringType4($1, $3, 0, 0); releaseYys2($2, $4); }
+	: KW_CHARACTER_STRING { $$ = createCharacterStringType($1, false, 0, false, 0); }
+	| KW_CHARACTER_STRING KW_MAX_LENGTH '=' expr { $$ = createCharacterStringType($1, true, $4, false, 0); releaseYys2($2, $3); }
+	| KW_CHARACTER_STRING KW_DEFAULT '=' STRING_LITERAL { $$ = createCharacterStringType($1, false, 0, true, $4); releaseYys2($2, $3); }
+	| KW_CHARACTER_STRING KW_MAX_LENGTH '=' expr KW_DEFAULT '=' STRING_LITERAL { $$ = createCharacterStringType($1, true, $4, true, $7); releaseYys4($2, $3, $5, $6); }
+	| KW_CHARACTER_STRING KW_DEFAULT '=' STRING_LITERAL KW_MAX_LENGTH '=' expr { $$ = createCharacterStringType($1, true, $7, true, $4); releaseYys4($2, $3, $5, $6); }
+/*	| KW_CHARACTER_STRING '{' STRING_LITERAL '}' { $$ = createCharacterStringType4($1, $3, 0, 0); releaseYys2($2, $4); }
 	| KW_CHARACTER_STRING '{' STRING_LITERAL '}' '[' expr ',' expr ']' { $$ = createCharacterStringType4($1, $3, $6, $8); releaseYys5($2, $4, $5, $7, $9); }
-/*	| KW_CHARACTER_STRING '{' character_set '}' { $$ = createCharacterStringType4($1, $3, 0, 0); releaseYys2($2, $4); }
+	| KW_CHARACTER_STRING '{' character_set '}' { $$ = createCharacterStringType4($1, $3, 0, 0); releaseYys2($2, $4); }
 	| KW_CHARACTER_STRING '{' character_set '}' '[' expr ',' expr ']' { $$ = createCharacterStringType4($1, $3, $6, $8); releaseYys5($2, $4, $5, $7, $9); }*/
 ;
 

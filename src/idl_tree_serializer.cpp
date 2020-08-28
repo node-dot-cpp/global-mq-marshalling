@@ -159,6 +159,13 @@ void printDataType( MessageParameterType& s )
 	{
 		printf( "size: %d ", s.arrayFixedaxSize );
 	}
+	else if ( s.kind == MessageParameterType::KIND::CHARACTER_STRING )
+	{
+		if ( s.hasMaxLength )
+			printf( "max_length: %d ", s.stringMaxLength );
+		if ( s.hasDefault )
+			printf( "default: \"%s\" ", s.stringDefault.c_str() );
+	}
 
 	if ( s.enumValues.size() )
 	{
