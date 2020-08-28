@@ -15,6 +15,12 @@ MESSAGE message_one {
   INTEGER[-10,10] DEFAULT = 4 ir_sixth;
   UINTEGER[30,100] DEFAULT = 34 uir_seventh;
   
+  INTEGER[,10] ir_fifth;
+  UINTEGER[,100] uir_fifth;
+  
+  INTEGER[-10,] DEFAULT = 4 ir_sixth;
+  UINTEGER[30,] DEFAULT = 34 uir_seventh;
+  
   BYTE_ARRAY[16] ba_nonce;
   
   CHARACTER-STRING string_str;
