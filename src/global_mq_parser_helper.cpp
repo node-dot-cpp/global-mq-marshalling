@@ -527,14 +527,14 @@ void setLimitsForInteger(YYSTYPE token, YyDataType* yy, bool low_flag, YYSTYPE l
 }
 
 
-YYSTYPE createIntegerTypeWithNoLimits(YYSTYPE token)
+YYSTYPE createIntegerType(YYSTYPE token)
 {
 	unique_ptr<YyBase> d0(token);
 
 	return createIntegerTypeImplBase(token, true);
 }
 
-YYSTYPE createIntegerTypeWithDefaultAndNoLimits(YYSTYPE token, YYSTYPE default_expr)
+YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d3(default_expr);
@@ -544,7 +544,7 @@ YYSTYPE createIntegerTypeWithDefaultAndNoLimits(YYSTYPE token, YYSTYPE default_e
 	return yy;
 }
 
-YYSTYPE createUnsignedIntegerTypeWithDefaultAndNoLimits(YYSTYPE token, YYSTYPE default_expr)
+YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d3(default_expr);
@@ -554,14 +554,14 @@ YYSTYPE createUnsignedIntegerTypeWithDefaultAndNoLimits(YYSTYPE token, YYSTYPE d
 	return yy;
 }
 
-YYSTYPE createUnsignedIntegerTypeWithNoLimits(YYSTYPE token)
+YYSTYPE createUnsignedIntegerType(YYSTYPE token)
 {
 	unique_ptr<YyBase> d0(token);
 
 	return createIntegerTypeImplBase(token, false);
 }
 
-YYSTYPE createIntegerType(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag)
+YYSTYPE createIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(low_expr);
@@ -572,7 +572,7 @@ YYSTYPE createIntegerType(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYP
 	return yy;
 }
 
-YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr )
+YYSTYPE createIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr )
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(low_expr);
@@ -586,7 +586,7 @@ YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, bool low_flag, YYSTYPE low_e
 	return yy;
 }
 
-YYSTYPE createUnsignedIntegerType(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag)
+YYSTYPE createUnsignedIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(low_expr);
@@ -597,7 +597,7 @@ YYSTYPE createUnsignedIntegerType(YYSTYPE token, bool low_flag, YYSTYPE low_expr
 	return yy;
 }
 
-YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr )
+YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr )
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(low_expr);

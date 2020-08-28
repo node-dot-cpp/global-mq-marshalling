@@ -75,14 +75,15 @@ YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
 
 YYSTYPE createMessage(YYSTYPE token, YYSTYPE id);
 
-YYSTYPE createIntegerTypeWithNoLimits(YYSTYPE token);
-YYSTYPE createUnsignedIntegerTypeWithNoLimits(YYSTYPE token);
-YYSTYPE createUnsignedIntegerTypeWithDefaultAndNoLimits(YYSTYPE token, YYSTYPE default_expr);
-YYSTYPE createIntegerTypeWithDefaultAndNoLimits(YYSTYPE token, YYSTYPE default_expr);
-YYSTYPE createIntegerType(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag);
-YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
-YYSTYPE createUnsignedIntegerType(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag);
-YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
+YYSTYPE createIntegerType(YYSTYPE token);
+YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
+YYSTYPE createIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag);
+YYSTYPE createIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
+
+YYSTYPE createUnsignedIntegerType(YYSTYPE token);
+YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
+YYSTYPE createUnsignedIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag);
+YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
 
 YYSTYPE createCharacterStringType(YYSTYPE token);
 YYSTYPE createCharacterStringType4(YYSTYPE token, YYSTYPE charset, YYSTYPE min_expr, YYSTYPE max_expr);

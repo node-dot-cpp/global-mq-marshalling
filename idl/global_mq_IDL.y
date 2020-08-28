@@ -77,29 +77,29 @@ data_type
 ;
 
 integer_type
-	: KW_INTEGER { $$ = createIntegerTypeWithNoLimits($1); }
-	| KW_INTEGER KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefaultAndNoLimits($1, $4); releaseYys2($2, $3); }
-	| KW_INTEGER '[' expr ',' expr ']' { $$ = createIntegerType($1, true, $3, $5, true); releaseYys3($2, $4, $6); }
-	| KW_INTEGER '(' expr ',' expr ']' { $$ = createIntegerType($1, false, $3, $5, true); releaseYys3($2, $4, $6); }
-	| KW_INTEGER '[' expr ',' expr ')' { $$ = createIntegerType($1, true, $3, $5, false); releaseYys3($2, $4, $6); }
-	| KW_INTEGER '(' expr ',' expr ')' { $$ = createIntegerType($1, false, $3, $5, false); releaseYys3($2, $4, $6); }
-	| KW_INTEGER '[' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefault($1, true, $3, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
-	| KW_INTEGER '(' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefault($1, false, $3, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
-	| KW_INTEGER '[' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefault($1, true, $3, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
-	| KW_INTEGER '(' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefault($1, false, $3, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
+	: KW_INTEGER { $$ = createIntegerType($1); }
+	| KW_INTEGER KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefault($1, $4); releaseYys2($2, $3); }
+	| KW_INTEGER '[' expr ',' expr ']' { $$ = createIntegerTypeWithLimits($1, true, true, $3, true, $5, true); releaseYys3($2, $4, $6); }
+	| KW_INTEGER '(' expr ',' expr ']' { $$ = createIntegerTypeWithLimits($1, true, false, $3, true, $5, true); releaseYys3($2, $4, $6); }
+	| KW_INTEGER '[' expr ',' expr ')' { $$ = createIntegerTypeWithLimits($1, true, true, $3, true, $5, false); releaseYys3($2, $4, $6); }
+	| KW_INTEGER '(' expr ',' expr ')' { $$ = createIntegerTypeWithLimits($1, true, false, $3, true, $5, false); releaseYys3($2, $4, $6); }
+	| KW_INTEGER '[' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefaultAndLimits($1, true, true, $3, true, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_INTEGER '(' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefaultAndLimits($1, true, false, $3, true, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_INTEGER '[' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefaultAndLimits($1, true, true, $3, true, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_INTEGER '(' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createIntegerTypeWithDefaultAndLimits($1, true, false, $3, true, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
 ;
 
 unsigned_integer_type
-	: KW_UINTEGER { $$ = createUnsignedIntegerTypeWithNoLimits($1); }
-	| KW_UINTEGER KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndNoLimits($1, $4); releaseYys2($2, $3); }
-	| KW_UINTEGER '[' expr ',' expr ']' { $$ = createUnsignedIntegerType($1, true, $3, $5, true); releaseYys3($2, $4, $6); }
-	| KW_UINTEGER '(' expr ',' expr ']' { $$ = createUnsignedIntegerType($1, false, $3, $5, true); releaseYys3($2, $4, $6); }
-	| KW_UINTEGER '[' expr ',' expr ')' { $$ = createUnsignedIntegerType($1, true, $3, $5, false); releaseYys3($2, $4, $6); }
-	| KW_UINTEGER '(' expr ',' expr ')' { $$ = createUnsignedIntegerType($1, false, $3, $5, false); releaseYys3($2, $4, $6); }
-	| KW_UINTEGER '[' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefault($1, true, $3, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
-	| KW_UINTEGER '(' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefault($1, false, $3, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
-	| KW_UINTEGER '[' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefault($1, true, $3, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
-	| KW_UINTEGER '(' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefault($1, false, $3, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
+	: KW_UINTEGER { $$ = createUnsignedIntegerType($1); }
+	| KW_UINTEGER KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefault($1, $4); releaseYys2($2, $3); }
+	| KW_UINTEGER '[' expr ',' expr ']' { $$ = createUnsignedIntegerTypeWithLimits($1, true, true, $3, true, $5, true); releaseYys3($2, $4, $6); }
+	| KW_UINTEGER '(' expr ',' expr ']' { $$ = createUnsignedIntegerTypeWithLimits($1, true, false, $3, true, $5, true); releaseYys3($2, $4, $6); }
+	| KW_UINTEGER '[' expr ',' expr ')' { $$ = createUnsignedIntegerTypeWithLimits($1, true, true, $3, true, $5, false); releaseYys3($2, $4, $6); }
+	| KW_UINTEGER '(' expr ',' expr ')' { $$ = createUnsignedIntegerTypeWithLimits($1, true, false, $3, true, $5, false); releaseYys3($2, $4, $6); }
+	| KW_UINTEGER '[' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, true, $3, true, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_UINTEGER '(' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, false, $3, true, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_UINTEGER '[' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, true, $3, true, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_UINTEGER '(' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, false, $3, true, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
 ;
 
 
