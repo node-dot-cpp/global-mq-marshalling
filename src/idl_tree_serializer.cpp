@@ -130,16 +130,23 @@ void printDataType( MessageParameterType& s )
 	printf( "{kind: %d (%s), name: %s, ", (int)(s.kind), kind, s.name.c_str() );
 	if ( s.kind == MessageParameterType::KIND::INTEGER || s.kind == MessageParameterType::KIND::UINTEGER )
 	{
-		if ( s.hasLimits )
+		if ( s.hasLowLimit )
 		{
 			printf( "lowLimit: " );
 			printLimit( s.lowLimit );
-			printf( ", highLimit: " );
+		}
+		else
+		{
+			printf( "<no low limit> " );
+		}
+		if ( s.hasHighLimit )
+		{
+			printf( " highLimit: " );
 			printLimit( s.highLimit );
 		}
 		else
 		{
-			printf( "<no limits> " );
+			printf( "<no high limit> " );
 		}
 		if ( s.hasDefault )
 		{

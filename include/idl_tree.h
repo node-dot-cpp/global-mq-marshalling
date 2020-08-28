@@ -61,7 +61,8 @@ public:
 	enum KIND { UNDEFINED, ENUM, INTEGER, UINTEGER, CHARACTER_STRING, BYTE_ARRAY };
 	KIND kind = UNDEFINED;
 	string name;
-	bool hasLimits = false;
+	bool hasLowLimit = false;
+	bool hasHighLimit = false;
 	bool hasDefault = false;
 	Limit lowLimit;
 	Limit highLimit;

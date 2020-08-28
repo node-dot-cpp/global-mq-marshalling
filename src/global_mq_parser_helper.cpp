@@ -501,29 +501,39 @@ void setDefaultValueForInteger(YYSTYPE token, YyDataType* yy, YYSTYPE default_ex
 	yy->dataType->numericalDefault = h;
 	yy->dataType->hasDefault = true;
 
-	bool withinLow = ( !yy->dataType->hasLimits ) || ( yy->dataType->lowLimit.inclusive ? yy->dataType->lowLimit.value <= yy->dataType->numericalDefault : yy->dataType->lowLimit.value < yy->dataType->numericalDefault );
+	bool withinLow = ( !yy->dataType->hasLowLimit ) || ( yy->dataType->lowLimit.inclusive ? yy->dataType->lowLimit.value <= yy->dataType->numericalDefault : yy->dataType->lowLimit.value < yy->dataType->numericalDefault );
 	if (!withinLow)
 		reportError(token->location, "Default value cannot be less than low limit");
 
-	bool withinHigh = ( !yy->dataType->hasLimits ) || ( yy->dataType->highLimit.inclusive ? yy->dataType->highLimit.value >= yy->dataType->numericalDefault : yy->dataType->highLimit.value > yy->dataType->numericalDefault );
+	bool withinHigh = ( !yy->dataType->hasHighLimit ) || ( yy->dataType->highLimit.inclusive ? yy->dataType->highLimit.value >= yy->dataType->numericalDefault : yy->dataType->highLimit.value > yy->dataType->numericalDefault );
 	if (!withinLow)
 		reportError(token->location, "Default value cannot be greater than high limit");
 }
 
-void setLimitsForInteger(YYSTYPE token, YyDataType* yy, bool low_flag, YYSTYPE low_expr, YYSTYPE high_expr, bool high_flag)
+void setLimitsForInteger(YYSTYPE token, YyDataType* yy, bool hasLowlimit, bool low_flag, YYSTYPE low_expr, bool hasHighlimit, YYSTYPE high_expr, bool high_flag)
 {
-	yy->dataType->hasLimits = true;
+	if ( hasLowlimit )
+	{
+		yy->dataType->hasLowLimit = true;
 
-	double l = floatLiteralFromExpression(low_expr);
-	yy->dataType->lowLimit.inclusive = low_flag;
-	yy->dataType->lowLimit.value = l;
+		double l = floatLiteralFromExpression(low_expr);
+		yy->dataType->lowLimit.inclusive = low_flag;
+		yy->dataType->lowLimit.value = l;
+	}
 
-	double h = floatLiteralFromExpression(high_expr);
-	yy->dataType->highLimit.inclusive = high_flag;
-	yy->dataType->highLimit.value = h;
+	if ( hasLowlimit )
+	{
+		yy->dataType->hasHighLimit = true;
 
-	if (!(yy->dataType->lowLimit.value < yy->dataType->highLimit.value))
+		double h = floatLiteralFromExpression(high_expr);
+		yy->dataType->highLimit.inclusive = high_flag;
+		yy->dataType->highLimit.value = h;
+	}
+
+	if ( ( yy->dataType->hasLowLimit && yy->dataType->hasHighLimit ) && !(yy->dataType->lowLimit.value < yy->dataType->highLimit.value) )
 		reportError(token->location, "Low limit must be less than high limit");
+
+	// TODO: non-negative low limit foe unsigned; INT64_MAX for high limit for unsigned
 }
 
 
@@ -568,7 +578,7 @@ YYSTYPE createIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_fl
 	unique_ptr<YyBase> d2(high_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, true);
-	setLimitsForInteger(token, yy, low_flag, low_expr, high_expr, high_flag);
+	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
 	return yy;
 }
 
@@ -580,7 +590,7 @@ YYSTYPE createIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, b
 	unique_ptr<YyBase> d3(default_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, true);
-	setLimitsForInteger(token, yy, low_flag, low_expr, high_expr, high_flag);
+	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
 	setDefaultValueForInteger(token, yy, default_expr);
 
 	return yy;
@@ -593,7 +603,7 @@ YYSTYPE createUnsignedIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, boo
 	unique_ptr<YyBase> d2(high_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, false);
-	setLimitsForInteger(token, yy, low_flag, low_expr, high_expr, high_flag);
+	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
 	return yy;
 }
 
@@ -605,7 +615,7 @@ YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLow
 	unique_ptr<YyBase> d3(default_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, false);
-	setLimitsForInteger(token, yy, low_flag, low_expr, high_expr, high_flag);
+	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
 	setDefaultValueForInteger(token, yy, default_expr);
 
 	return yy;
