@@ -698,6 +698,17 @@ YYSTYPE createByteArrayType(YYSTYPE token, YYSTYPE size_expr)
 	return yy;
 }
 
+YYSTYPE createBlobType(YYSTYPE token)
+{
+	unique_ptr<YyBase> d0(token);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::BLOB;
+
+	return yy;
+}
+
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)
 {
 	unique_ptr<YyBase> d0(token);

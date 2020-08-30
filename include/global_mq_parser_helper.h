@@ -89,6 +89,8 @@ YYSTYPE createCharacterStringType(YYSTYPE token, bool hasMaxLength, YYSTYPE maxl
 
 YYSTYPE createByteArrayType(YYSTYPE token, YYSTYPE size_expr);
 
+YYSTYPE createBlobType(YYSTYPE token);
+
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
 YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit);
 

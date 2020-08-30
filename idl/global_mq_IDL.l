@@ -86,6 +86,7 @@ int createToken(int token)
 	"UINTEGER" { return createToken( KW_UINTEGER ); }
 	"CHARACTER-STRING" { return createToken( KW_CHARACTER_STRING ); }
 	"BYTE_ARRAY" { return createToken( KW_BYTE_ARRAY ); }
+	"BLOB" { return createToken( KW_BLOB ); }
 
 
 	/* INT32, DOUBLE, etc will be parsed as IDENTIFIER (easier),

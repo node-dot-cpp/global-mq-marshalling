@@ -38,6 +38,7 @@
 %token STRING_LITERAL INTEGER_LITERAL
 %token KW_INTEGER KW_UINTEGER
 %token KW_CHARACTER_STRING
+%token KW_BLOB
 
 %error-verbose
 %start file
@@ -75,6 +76,7 @@ data_type
 	| character_string_type
 	| byte_array_type
 	| inline_enum_type
+	| blob_type
 ;
 
 integer_type
@@ -150,6 +152,10 @@ character_string_type
 
 byte_array_type
 	: KW_BYTE_ARRAY '[' expr ']' { $$ = createByteArrayType($1, $3); releaseYys2($2, $4); }
+;
+
+blob_type
+	: KW_BLOB { $$ = createBlobType($1); }
 ;
 
 inline_enum_type

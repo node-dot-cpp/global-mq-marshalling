@@ -58,7 +58,7 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, ENUM, INTEGER, UINTEGER, CHARACTER_STRING, BYTE_ARRAY };
+	enum KIND { UNDEFINED, ENUM, INTEGER, UINTEGER, CHARACTER_STRING, BYTE_ARRAY, BLOB };
 	KIND kind = UNDEFINED;
 	string name;
 	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING

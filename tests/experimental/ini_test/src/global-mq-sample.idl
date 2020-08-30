@@ -28,4 +28,6 @@ MESSAGE message_one {
   CHARACTER-STRING MAX_LENGTH = 17 string_str_2;
   CHARACTER-STRING MAX_LENGTH = 19 DEFAULT = "ABCD" string_str_4;
   CHARACTER-STRING DEFAULT = "ABCD" MAX_LENGTH = 20 string_str_5;
+  
+  BLOB blob;
 };

@@ -125,6 +125,7 @@ void printDataType( MessageParameterType& s )
 		case MessageParameterType::KIND::UINTEGER: kind = "UINTEGER"; break;
 		case MessageParameterType::KIND::CHARACTER_STRING: kind = "CHARACTER_STRING"; break;
 		case MessageParameterType::KIND::BYTE_ARRAY: kind = "BYTE_ARRAY"; break;
+		case MessageParameterType::KIND::BLOB: kind = "BLOB"; break;
 	}
 
 	printf( "{kind: %d (%s), ", (int)(s.kind), kind );
