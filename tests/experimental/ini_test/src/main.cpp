@@ -30,15 +30,19 @@
 
 int main()
 {
-	try
+//	try
 	{
 		Root* root = parseSourceFile("../src/global-mq-sample.idl", false);
 		printRoot( *root );
+
+		FILE* src = fopen( "marshaling.cpp", "wb" );
+		FILE* header = fopen( "marshaling.h", "wb" );
+		generateRoot( "marshaling", header, src, *root );
 	}
-	catch ( std::exception& x )
+	/*catch ( std::exception& x )
 	{
 		fmt::print( "Exception happened: {}\n", x.what() );
-	}
+	}*/
  
 
 	return 0;

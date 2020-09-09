@@ -46,4 +46,20 @@ void printDataType( MessageParameterType& s );
 void printLimit( Limit& s );
 void printVariant( Variant& s );
 
+// code generation
+void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s );
+void generateMessage( FILE* header, FILE* src, Message& s );
+void generateMessageParameter( FILE* header, FILE* src, MessageParameter& s );
+void generateMessageMembers( FILE* header, FILE* src, Message& s );
+void generateLimit( FILE* header, FILE* src, Limit& s );
+void generateLocation( FILE* header, FILE* src, Location& s );
+void generateDataType( FILE* header, FILE* src, MessageParameterType& s );
+void generate__unique_ptr_DataType( FILE* header, FILE* src, unique_ptr<MessageParameterType>& s );
+void generate__unique_ptr_Message( FILE* header, FILE* src, unique_ptr<Message>& s );
+void generate__unique_ptr_MessageParameter( FILE* header, FILE* src, unique_ptr<MessageParameter>& s );
+
+void generateDataType( FILE* header, FILE* src, MessageParameterType& s );
+void generateLimit( FILE* header, FILE* src, Limit& s );
+void generateVariant( FILE* header, FILE* src, Variant& s );
+
 #endif // IDL_TREE_SERIALIZER_H

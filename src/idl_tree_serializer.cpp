@@ -195,3 +195,105 @@ void printVariant( Variant& s ) {
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include <set>
+
+
+
+
+void impl_CollectParamNamesFromeMessageParameter( std::set<string>& params, MessageParameter& s )
+{
+	params.insert( s.name );
+}
+
+void impl_CollectParamNamesFrom__unique_ptr_MessageParameter( std::set<string>& params, unique_ptr<MessageParameter>& s )
+{
+	if ( s != nullptr ) 
+		impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(s)))) );
+}
+
+void impl_CollectParamNamesFromMessage( std::set<string>& params, Message& s )
+{
+	for ( auto& it : s.members )
+	{
+		auto& obj_1 = it;
+		impl_CollectParamNamesFrom__unique_ptr_MessageParameter( params, obj_1 );
+	}
+}
+
+void impl_CollectParamNamesFrom__unique_ptr_Message( std::set<string>& params, unique_ptr<Message>& s ) {
+
+	if ( s != nullptr && typeid( *(s) ) == typeid( Message ) )
+	{
+		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<Message*>(&(*(s)))) );
+	}
+}
+
+void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
+{
+	for ( auto& it : s.messages )
+	{
+		auto& obj_1 = it;
+		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
+	}
+}
+
+void generateParamNameBlock( FILE* header, const std::set<string>& params )
+{
+	// types
+	for ( auto name : params )
+	{
+		fprintf( header, "using %s_Type = NamedParameter<struct %sStruct>;\n", name.c_str(), name.c_str() );
+	}
+	fprintf( header, "\n" );
+
+	// objects
+	for ( auto name : params )
+	{
+		fprintf( header, "extern const %s_Type::TypeConverter %s;\n", name.c_str(), name.c_str() );
+	}
+	fprintf( header, "\n" );
+}
+
+void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
+{
+	std::set<string> params;
+	impl_CollectParamNamesFromRoot( params, s );
+
+	fprintf( header, "#ifndef %s_H\n"
+		"#define %s_H\n"
+		"\n"
+		"#include <named_params_core.h>\n"
+		"\n"
+		"namespace m {\n\n",
+		fileName, fileName );
+
+	generateParamNameBlock( header, params );
+
+//	fprintf( header, "Root (%zd messages) {\n", s.messages.size() );
+	for ( auto& it : s.messages )
+	{
+		auto& obj_1 = it;
+		generate__unique_ptr_Message( header, src, obj_1 );
+	}
+
+	fprintf( header, "\n"
+		"} // namespace m\n"
+		"\n"
+		"#endif // %s_H\n",
+		fileName );
+}
+
+void generate__unique_ptr_Message( FILE* header, FILE* src, unique_ptr<Message>& s ) {
+
+	if ( s == nullptr )
+	{
+		fprintf( header, "// Message = <null>\n" );
+	}
+	else if ( typeid( *(s) ) == typeid( Message ) )
+	{
+		generateMessage( header, src, *(dynamic_cast<Message*>(&(*(s)))) );
+	}
+}
+
