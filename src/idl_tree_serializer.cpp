@@ -239,27 +239,96 @@ void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
 	}
 }
 
+string paramNameToNameTagStruct( string name )
+{
+	return fmt::format( "{}_Struct", name );
+}
+
+string paramNameToNameTagType( string name )
+{
+	return fmt::format( "{}_Type", name );
+}
+
+string paramNameToNameObject( string name )
+{
+	return name;
+}
+
 void generateParamNameBlock( FILE* header, const std::set<string>& params )
 {
 	// types
 	for ( auto name : params )
 	{
-		fprintf( header, "using %s_Type = NamedParameter<struct %sStruct>;\n", name.c_str(), name.c_str() );
+		fprintf( header, "using %s = NamedParameter<struct %sStruct>;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameTagStruct( name ).c_str() );
 	}
 	fprintf( header, "\n" );
 
 	// objects
 	for ( auto name : params )
 	{
-		fprintf( header, "extern const %s_Type::TypeConverter %s;\n", name.c_str(), name.c_str() );
+		fprintf( header, "extern const %s::TypeConverter %s;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameObject( name ).c_str() );
 	}
 	fprintf( header, "\n" );
 }
 
+void impl_generateSrcFile( const char* hFileName, FILE* src, const std::set<string>& params )
+{
+	fprintf( src, 
+			"#include \"%s.h\"\n"
+			"\n"
+			"namespace m {\n"
+			"\n", hFileName );
+
+	// objects
+	for ( auto name : params )
+	{
+		fprintf( src, "static const %s_Type::TypeConverter %s;\n", name.c_str(), name.c_str() );
+	}
+	
+	fprintf( src, "\n} // namespace m\n" );
+}
+
+bool impl_checkMessageNameUniqueness(Root& s)
+{
+	bool ok = true;
+	std::map<string, Location> names;
+	for ( auto& it : s.messages )
+	{
+		auto ins = names.insert( std::make_pair( it->name, it->location ) );
+		if ( !ins.second )
+		{
+			fprintf( stderr, "Message name \"%s\" has already been used, see %s : %d\n", it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			ok = false;
+		}
+	}
+	return ok;
+}
+
+bool impl_checkMessageParamNameUniqueness(Message& s)
+{
+	bool ok = true;
+	std::map<string, Location> names;
+	for ( auto& it : s.members )
+	{
+		auto ins = names.insert( std::make_pair( it->name, it->location ) );
+		if ( !ins.second )
+		{
+			fprintf( stderr, "Message parameter \"%s\" has already been used within this message, see %s : %d\n", it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			ok = false;
+		}
+	}
+	return ok;
+}
+
 void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 {
+	if ( !impl_checkMessageNameUniqueness(s) )
+		throw std::exception();
+
 	std::set<string> params;
 	impl_CollectParamNamesFromRoot( params, s );
+
+	impl_generateSrcFile( fileName, src, params );
 
 	fprintf( header, "#ifndef %s_H\n"
 		"#define %s_H\n"
@@ -295,5 +364,190 @@ void generate__unique_ptr_Message( FILE* header, FILE* src, unique_ptr<Message>&
 	{
 		generateMessage( header, src, *(dynamic_cast<Message*>(&(*(s)))) );
 	}
+}
+
+void impl_GenerateMessageDefaults( FILE* header, Message& s )
+{
+	int count = 0; // let's see whether we need this block at all
+	for ( auto& it : s.members )
+	{
+		if ( it != nullptr )
+		{
+			MessageParameter& param = *it;
+			if ( param.type.hasDefault )
+				switch ( param.type.kind )
+				{
+					case MessageParameterType::KIND::CHARACTER_STRING:
+					{
+						++count;
+						break;
+					}
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+						break;
+					case MessageParameterType::KIND::BYTE_ARRAY:
+					case MessageParameterType::KIND::BLOB:
+					case MessageParameterType::KIND::ENUM:
+					{
+						break; // unsupported (yet)
+					}
+					default:
+					{
+						assert( false ); // unexpected
+						break;
+					}
+				}
+		}
+	}
+
+	if ( count == 0 )
+		return;
+
+	fprintf( header, "namespace Message_%s_defaults {\n", s.name.c_str() );
+
+	count = 0;
+	for ( auto& it : s.members )
+	{
+		if ( it != nullptr )
+		{
+			MessageParameter& param = *it;
+			if ( param.type.hasDefault )
+				switch ( param.type.kind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+						break; // will be added right to respective calls
+					case MessageParameterType::KIND::CHARACTER_STRING:
+					{
+						fprintf( header, "static constexpr impl::StringLiteralForComposing default_%d = { \"%s\", sizeof( \"%s\" ) - 1};\n", ++count, param.type.stringDefault.c_str(), param.type.stringDefault.c_str() );
+						break;
+					}
+					case MessageParameterType::KIND::ENUM:
+					{
+						assert( false ); // unsupported (yet)
+						break;
+					}
+					case MessageParameterType::KIND::BYTE_ARRAY:
+					case MessageParameterType::KIND::BLOB:
+					default:
+					{
+						assert( false ); // unexpected
+						break;
+					}
+				}
+		}
+	}
+
+	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
+}
+
+void impl_generateParamTypeLIst( FILE* header, Message& s )
+{
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+
+		MessageParameter& param = *it;
+		++count;
+
+		switch ( param.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::SignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::UnsignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::StringType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			case MessageParameterType::KIND::BYTE_ARRAY:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::ByteArrayType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			case MessageParameterType::KIND::BLOB:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::BlobType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			case MessageParameterType::KIND::ENUM:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::EnumType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			default:
+			{
+				assert( false ); // unexpected
+				break;
+			}
+		}
+	}
+}
+
+void impl_generateMatchCountBlock( FILE* header, Message& s )
+{
+	fprintf( header, "\tconstexpr size_t matchCount = " );
+
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+		MessageParameter& param = *it;
+			
+		if ( count )
+			fprintf( header, " + " );
+
+		++count;
+
+		fprintf( header, "isMatched(arg_%d_type::nameAndTypeID, Args::nameAndTypeID...)", count );
+	}
+
+	fprintf( header, ";/n" );
+}
+
+void impl_addParamStatsCheckBlock( FILE* header, Message& s )
+{
+	impl_generateMatchCountBlock( header, s );
+	fprintf( header, 
+		"\tconstexpr size_t argCount = sizeof ... (Args);\n"
+		"\tif constexpr ( argCount != 0 )\n"
+		"\t\tensureUniqueness(args.nameAndTypeID...);\n"
+		"\tstatic_assert( argCount == matchCount, \"unexpected arguments found\" );\n\n" );
+}
+
+void impl_generateComposeFunction( FILE* header, Message& s )
+{
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s_compose(Buffer& b, Args&& ... args)\n"
+	"{\n", s.name.c_str() );
+
+	impl_generateParamTypeLIst( header, s );
+	impl_addParamStatsCheckBlock( header, s );
+
+
+	fprintf( header, "}\n\n" );
+}
+
+void impl_generateParseFunction( FILE* header, Message& s )
+{
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s_parse(impl::Parser& p, Args&& ... args)\n"
+	"{\n", s.name.c_str() );
+
+	impl_generateParamTypeLIst( header, s );
+	impl_addParamStatsCheckBlock( header, s );
+
+	fprintf( header, "}\n\n" );
+}
+
+void generateMessage( FILE* header, FILE* src, Message& s )
+{
+	if ( !impl_checkMessageParamNameUniqueness(s) )
+		throw std::exception();
+
+	impl_GenerateMessageDefaults( header, s );
+	impl_generateComposeFunction( header, s );
+	impl_generateParseFunction( header, s );
+
+
+//	fprintf( header, "Message: name = \"%s\" (%zd parameters) {\n", s.name.c_str(), s.members.size() );
+	generateMessageMembers( header, src, s );
+	fprintf( header, "}\n" );
 }
 

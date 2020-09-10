@@ -15,11 +15,11 @@ MESSAGE message_one {
   INTEGER[-10,10] DEFAULT = 4 ir_sixth;
   UINTEGER[30,100] DEFAULT = 34 uir_seventh;
   
-  INTEGER[,10] ir_fifth;
-  UINTEGER[,100] uir_fifth;
+  INTEGER[,10] ir_fifth_2;
+  UINTEGER[,100] uir_fifth_2;
   
-  INTEGER[-10,] DEFAULT = 4 ir_sixth;
-  UINTEGER[30,] DEFAULT = 34 uir_seventh;
+  INTEGER[-10,] DEFAULT = 4 ir_sixth_2;
+  UINTEGER[30,] DEFAULT = 34 uir_seventh_2;
   
   BYTE_ARRAY[16] ba_nonce;
   
