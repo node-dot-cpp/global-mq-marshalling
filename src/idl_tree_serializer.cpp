@@ -366,6 +366,11 @@ void generate__unique_ptr_Message( FILE* header, FILE* src, unique_ptr<Message>&
 	}
 }
 
+string impl_MessageNameToDefaultsNamespaceName( string name )
+{
+	return fmt::format( "Message_{}_defaults", name );
+}
+
 void impl_GenerateMessageDefaults( FILE* header, Message& s )
 {
 	int count = 0; // let's see whether we need this block at all
@@ -403,39 +408,40 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 	if ( count == 0 )
 		return;
 
-	fprintf( header, "namespace Message_%s_defaults {\n", s.name.c_str() );
+	fprintf( header, "namespace %s {\n", impl_MessageNameToDefaultsNamespaceName(s.name).c_str() );
 
 	count = 0;
 	for ( auto& it : s.members )
 	{
-		if ( it != nullptr )
-		{
-			MessageParameter& param = *it;
-			if ( param.type.hasDefault )
-				switch ( param.type.kind )
+		assert( it != nullptr );
+
+		++count;
+
+		MessageParameter& param = *it;
+		if ( param.type.hasDefault )
+			switch ( param.type.kind )
+			{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+					break; // will be added right to respective calls
+				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
-					case MessageParameterType::KIND::INTEGER:
-					case MessageParameterType::KIND::UINTEGER:
-						break; // will be added right to respective calls
-					case MessageParameterType::KIND::CHARACTER_STRING:
-					{
-						fprintf( header, "static constexpr impl::StringLiteralForComposing default_%d = { \"%s\", sizeof( \"%s\" ) - 1};\n", ++count, param.type.stringDefault.c_str(), param.type.stringDefault.c_str() );
-						break;
-					}
-					case MessageParameterType::KIND::ENUM:
-					{
-						assert( false ); // unsupported (yet)
-						break;
-					}
-					case MessageParameterType::KIND::BYTE_ARRAY:
-					case MessageParameterType::KIND::BLOB:
-					default:
-					{
-						assert( false ); // unexpected
-						break;
-					}
+					fprintf( header, "static constexpr impl::StringLiteralForComposing default_%d = { \"%s\", sizeof( \"%s\" ) - 1};\n", count, param.type.stringDefault.c_str(), param.type.stringDefault.c_str() );
+					break;
 				}
-		}
+				case MessageParameterType::KIND::ENUM:
+				{
+					assert( false ); // unsupported (yet)
+					break;
+				}
+				case MessageParameterType::KIND::BYTE_ARRAY:
+				case MessageParameterType::KIND::BLOB:
+				default:
+				{
+					assert( false ); // unexpected
+					break;
+				}
+			}
 	}
 
 	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
@@ -478,6 +484,80 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 			}
 		}
 	}
+
+	fprintf( header, "\n" );
+}
+
+void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
+{
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+
+		MessageParameter& param = *it;
+		++count;
+
+		switch ( param.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, int64_t, int_64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, uint64_t, uint_64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+				break;
+			case MessageParameterType::KIND::BYTE_ARRAY:
+				break;
+			case MessageParameterType::KIND::BLOB:
+				break;
+			case MessageParameterType::KIND::ENUM:
+				break;
+			default:
+			{
+				assert( false ); // unexpected
+				break;
+			}
+		}
+	}
+}
+
+void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
+{
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+
+		MessageParameter& param = *it;
+		++count;
+
+		switch ( param.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				break;
+			case MessageParameterType::KIND::BYTE_ARRAY:
+				break;
+			case MessageParameterType::KIND::BLOB:
+				break;
+			case MessageParameterType::KIND::ENUM:
+				break;
+			default:
+			{
+				assert( false ); // unexpected
+				break;
+			}
+		}
+	}
 }
 
 void impl_generateMatchCountBlock( FILE* header, Message& s )
@@ -491,14 +571,14 @@ void impl_generateMatchCountBlock( FILE* header, Message& s )
 		MessageParameter& param = *it;
 			
 		if ( count )
-			fprintf( header, " + " );
+			fprintf( header, " + \n\t\t" );
 
 		++count;
 
 		fprintf( header, "isMatched(arg_%d_type::nameAndTypeID, Args::nameAndTypeID...)", count );
 	}
 
-	fprintf( header, ";/n" );
+	fprintf( header, ";\n" );
 }
 
 void impl_addParamStatsCheckBlock( FILE* header, Message& s )
@@ -519,6 +599,7 @@ void impl_generateComposeFunction( FILE* header, Message& s )
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
+	impl_generateParamCallBlockForComposing( header, s );
 
 
 	fprintf( header, "}\n\n" );
@@ -532,6 +613,7 @@ void impl_generateParseFunction( FILE* header, Message& s )
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
+	impl_generateParamCallBlockForParsing( header, s );
 
 	fprintf( header, "}\n\n" );
 }
@@ -547,7 +629,6 @@ void generateMessage( FILE* header, FILE* src, Message& s )
 
 
 //	fprintf( header, "Message: name = \"%s\" (%zd parameters) {\n", s.name.c_str(), s.members.size() );
-	generateMessageMembers( header, src, s );
-	fprintf( header, "}\n" );
 }
+
 

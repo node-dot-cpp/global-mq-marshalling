@@ -1,6 +1,6 @@
 
 
-MESSAGE message_one {
+/*MESSAGE message_one {
   enum EnumSecond {s_first=0,s_second=1, s_third=2} enum_second;
   
   INTEGER ir_first;
@@ -30,4 +30,29 @@ MESSAGE message_one {
   CHARACTER-STRING DEFAULT = "ABCD" MAX_LENGTH = 20 string_str_5;
   
   BLOB blob;
+};*/
+
+MESSAGE message_one {
+
+  INTEGER ir_first_in_msg_1;
+  UINTEGER uir_second;
+  
+  INTEGER DEFAULT = -1986 ir_third;
+  UINTEGER DEFAULT = 1984 uir_forth;
+  
+  CHARACTER-STRING string_str_1;
+  CHARACTER-STRING DEFAULT = "ABCD" string_str_3;
+};
+
+
+MESSAGE message_two {
+
+  INTEGER ir_first;
+  UINTEGER uir_second_in_msg_2;
+  
+  INTEGER DEFAULT = -1986 ir_third;
+  UINTEGER DEFAULT = 1984 uir_forth;
+  
+  CHARACTER-STRING string_str_1;
+  CHARACTER-STRING DEFAULT = "EFGH" string_str_3;
 };
