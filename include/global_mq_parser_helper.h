@@ -92,6 +92,7 @@ YYSTYPE createByteArrayType(YYSTYPE token, YYSTYPE size_expr);
 YYSTYPE createBlobType(YYSTYPE token);
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
+YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue);
 YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit);
 
 YYSTYPE addIdentifier(YYSTYPE list, YYSTYPE id);

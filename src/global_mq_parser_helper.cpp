@@ -727,6 +727,41 @@ YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)
 	return yy;
 }
 
+YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(opt_id);
+	unique_ptr<YyBase> d2(values);
+	unique_ptr<YyBase> d3(defaultValue);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::ENUM;
+	if (opt_id)
+		yy->dataType->name = nameFromYyIdentifier(opt_id);
+
+	YyEnumValues* v = yystype_cast<YyEnumValues*>(values);
+	yy->dataType->enumValues = v->enumValues;
+
+	YyIdentifier* dv = yystype_cast<YyIdentifier*>( defaultValue );
+
+	v->enumValues->find( dv->text );
+
+	bool among = false;
+	for ( auto& val : v->enumValues )
+		if ( dv->text == val.first )
+		{
+			among = true;
+			yy->dataType->hasDefault = true;
+			yy->dataType->stringDefault = dv->text;
+			break;
+		}
+	GLOBALMQASSERTM( among, "Default value for enum must be one of enum values" );
+
+
+	return yy;
+}
+
 YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit)
 {
 	unique_ptr<YyBase> d0(list);

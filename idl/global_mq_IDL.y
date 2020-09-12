@@ -160,6 +160,7 @@ blob_type
 
 inline_enum_type
 	: KW_ENUM qname '{' enum_values '}' { $$ = createInlineEnum($1, $2, $4); releaseYys2($3, $5); }
+	| KW_ENUM qname '{' enum_values '}' KW_DEFAULT '=' IDENTIFIER { $$ = createInlineEnumWithDefault($1, $2, $4, $8); releaseYys4($3, $5, $6, $7); }
 ;
 
 enum_values
