@@ -73,11 +73,12 @@ int createToken(int token)
 
 	"#line" { return createToken( KW_HASH_LINE ); }
 
+	"FILE" { return createToken( KW_FILE ); }
+
 	"MESSAGE" { return createToken( KW_MESSAGE ); }
 	"enum" { return createToken( KW_ENUM ); }
 
-
-	"FILE" { return createToken( KW_FILE ); }
+	"PROTO" { return createToken( KW_PROTO ); }
 
 	"DEFAULT" { return createToken( KW_DEFAULT ); }
 	"MAX_LENGTH" { return createToken( KW_MAX_LENGTH ); }

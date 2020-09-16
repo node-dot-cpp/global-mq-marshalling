@@ -73,7 +73,7 @@ YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr);
 
 YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
 
-YYSTYPE createMessage(YYSTYPE token, YYSTYPE id);
+YYSTYPE createMessage(YYSTYPE token, YYSTYPE protoList, YYSTYPE id);
 
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
@@ -94,6 +94,8 @@ YYSTYPE createBlobType(YYSTYPE token);
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
 YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue);
 YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit);
+
+YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id);
 
 YYSTYPE addIdentifier(YYSTYPE list, YYSTYPE id);
 YYSTYPE addExpression(YYSTYPE list, YYSTYPE id, YYSTYPE expr);

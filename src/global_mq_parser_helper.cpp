@@ -489,15 +489,17 @@ YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id)
 	return new YyPtr<MessageParameter>(att);
 }
 
-YYSTYPE createMessage(YYSTYPE token, YYSTYPE id)
+YYSTYPE createMessage(YYSTYPE token, YYSTYPE protoList, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);
-	unique_ptr<YyBase> d1(id);
+	unique_ptr<YyBase> d1(protoList);
+	unique_ptr<YyBase> d2(id);
 
 	Message* yy = new Message();
 
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
+	yy->protoList;
 
 	return new YyPtr<Message>(yy);
 }
@@ -745,7 +747,7 @@ YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE value
 
 	YyIdentifier* dv = yystype_cast<YyIdentifier*>( defaultValue );
 
-	v->enumValues->find( dv->text );
+	v->enumValues.find( dv->text );
 
 	bool among = false;
 	for ( auto& val : v->enumValues )
@@ -757,7 +759,6 @@ YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE value
 			break;
 		}
 	GLOBALMQASSERTM( among, "Default value for enum must be one of enum values" );
-
 
 	return yy;
 }
@@ -781,6 +782,27 @@ YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit)
 	uint32_t value = static_cast<uint32_t>(integerLiteralFromExpression(int_lit, 0, UINT32_MAX));
 
 	yy->enumValues.emplace(name, value);
+
+	return d0.release();
+}
+
+YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id)
+{
+	unique_ptr<YyBase> d0(list);
+	unique_ptr<YyBase> d1(id);
+
+	YyIdentifierList* yy = 0;
+	if (list)
+		yy = yystype_cast<YyIdentifierList*>(list);
+	else
+	{
+		yy = new YyIdentifierList();
+		d0.reset(yy);
+	}
+
+	string name = nameFromYyIdentifier(id);
+
+	yy->ids.push_back(name);
 
 	return d0.release();
 }

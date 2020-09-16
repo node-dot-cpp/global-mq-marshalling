@@ -41,6 +41,7 @@
 %token KW_CHARACTER_STRING
 %token KW_BLOB
 %token KW_VECTOR
+%token KW_PROTO
 
 %error-verbose
 %start file
@@ -64,7 +65,7 @@ line_directive
 ;
 
 message_begin
-	: KW_MESSAGE IDENTIFIER '{' { $$ = createMessage($1, $2); releaseYys($3); }
+	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, $4, $5); releaseYys3($2, $3, $6); }
 	| message_begin data_type IDENTIFIER ';' { $$ = addToMessage($1, createAttribute($2, $3)); releaseYys($4); }
 ;
 
@@ -79,7 +80,7 @@ data_type
 	| byte_array_type
 	| inline_enum_type
 	| blob_type
-	| vector_type
+//	| vector_type
 ;
 
 integer_type
@@ -157,7 +158,7 @@ byte_array_type
 	: KW_BYTE_ARRAY '[' expr ']' { $$ = createByteArrayType($1, $3); releaseYys2($2, $4); }
 ;
 
-vector_type
+/*vector_type
 	: KW_VECTOR '<' KW_INTEGER '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
 	| KW_VECTOR '<' KW_UINTEGER '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
 	| KW_VECTOR '<' KW_CHARACTER_STRING '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
@@ -168,7 +169,7 @@ vector_type
 	| KW_VECTOR '<' KW_CHARACTER_STRING '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_BLOB '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_BYTE_ARRAY '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
-;
+;*/
 
 blob_type
 	: KW_BLOB { $$ = createBlobType($1); }
@@ -184,6 +185,11 @@ enum_values
 	| enum_values ',' IDENTIFIER '=' INTEGER_LITERAL { $$ = addEnumValue($1, $3, $5); releaseYys2($2, $4); }
 	| KW_IDENTIFIER '(' STRING_LITERAL ')' '=' INTEGER_LITERAL { $$ = addEnumValue(0, $3, $6); releaseYys4($1, $2, $4, $5); }
 	| enum_values ',' KW_IDENTIFIER '(' STRING_LITERAL ')' '=' INTEGER_LITERAL { $$ = addEnumValue($1, $5, $8); releaseYys3($2, $3, $4); releaseYys2($6, $7); }
+;
+
+proto_values
+	: IDENTIFIER { $$ = addProtoValue(0, $1); }
+	| proto_values ',' IDENTIFIER { $$ = addProtoValue($1, $3); releaseYys($2); }
 ;
 
 expr

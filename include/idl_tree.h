@@ -121,6 +121,8 @@ class Message : public MessageOrMsgParameter
 public:
 	vector<unique_ptr<MessageParameter>> members;
 	string name;
+	enum Proto { json, gmq };
+	set<Proto> protoList;
 };
 
 class Root
