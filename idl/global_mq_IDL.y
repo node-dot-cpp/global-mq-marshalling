@@ -30,6 +30,7 @@
 %token KW_MESSAGE
 %token KW_HASH_LINE
 %token KW_DEFAULT
+%token KW_EMPTY
 %token KW_MAX_LENGTH
 %token KW_ENUM
 %token KW_BYTE_ARRAY
@@ -39,6 +40,7 @@
 %token KW_INTEGER KW_UINTEGER
 %token KW_CHARACTER_STRING
 %token KW_BLOB
+%token KW_VECTOR
 
 %error-verbose
 %start file
@@ -77,6 +79,7 @@ data_type
 	| byte_array_type
 	| inline_enum_type
 	| blob_type
+	| vector_type
 ;
 
 integer_type
@@ -152,6 +155,19 @@ character_string_type
 
 byte_array_type
 	: KW_BYTE_ARRAY '[' expr ']' { $$ = createByteArrayType($1, $3); releaseYys2($2, $4); }
+;
+
+vector_type
+	: KW_VECTOR '<' KW_INTEGER '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
+	| KW_VECTOR '<' KW_UINTEGER '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
+	| KW_VECTOR '<' KW_CHARACTER_STRING '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
+	| KW_VECTOR '<' KW_BLOB '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
+	| KW_VECTOR '<' KW_BYTE_ARRAY '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
+	| KW_VECTOR '<' KW_INTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_UINTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_CHARACTER_STRING '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_BLOB '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_BYTE_ARRAY '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
 ;
 
 blob_type

@@ -81,12 +81,14 @@ int createToken(int token)
 
 	"DEFAULT" { return createToken( KW_DEFAULT ); }
 	"MAX_LENGTH" { return createToken( KW_MAX_LENGTH ); }
+	"EMPTY" { return createToken( KW_EMPTY ); }
 
 	"INTEGER" { return createToken( KW_INTEGER ); }
 	"UINTEGER" { return createToken( KW_UINTEGER ); }
 	"CHARACTER-STRING" { return createToken( KW_CHARACTER_STRING ); }
 	"BYTE_ARRAY" { return createToken( KW_BYTE_ARRAY ); }
 	"BLOB" { return createToken( KW_BLOB ); }
+	"VECTOR" { return createToken( KW_VECTOR ); }
 
 
 	/* INT32, DOUBLE, etc will be parsed as IDENTIFIER (easier),
