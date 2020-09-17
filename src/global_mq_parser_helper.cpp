@@ -499,7 +499,16 @@ YYSTYPE createMessage(YYSTYPE token, YYSTYPE protoList, YYSTYPE id)
 
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
-	yy->protoList;
+	YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
+	for ( auto& proto : pl->ids )
+	{
+		if ( proto == "json" || proto == "JSON" )
+			yy->protoList.insert( Message::Proto::json );
+		else if ( proto == "gmq" || proto == "GMQ" )
+			yy->protoList.insert( Message::Proto::gmq );
+		else
+			reportError(token->location, "Unexpected value of PROTO");
+	}
 
 	return new YyPtr<Message>(yy);
 }

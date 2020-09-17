@@ -431,7 +431,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 				}
 				case MessageParameterType::KIND::ENUM:
 				{
-					assert( false ); // unsupported (yet)
+//					assert( false ); // unsupported (yet)
 					break;
 				}
 				case MessageParameterType::KIND::BYTE_ARRAY:
@@ -591,6 +591,51 @@ void impl_addParamStatsCheckBlock( FILE* header, Message& s )
 		"\tstatic_assert( argCount == matchCount, \"unexpected arguments found\" );\n\n" );
 }
 
+void impl_generateMessageCommentBlock( FILE* header, Message& s )
+{
+	fprintf( header, "//**********************************************************************\n" );
+	fprintf( header, "// Message \"%s\" (%zd parameters)\n", s.name.c_str(), s.members.size() );
+
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+		++count;
+		MessageParameter& param = *it;
+			
+		const char* kind = "";
+		switch ( param.type.kind )
+		{
+			case MessageParameterType::KIND::ENUM: kind = "ENUM"; break;
+			case MessageParameterType::KIND::UNDEFINED: kind = "UNDEFINED"; break;
+			case MessageParameterType::KIND::INTEGER: kind = "INTEGER"; break;
+			case MessageParameterType::KIND::UINTEGER: kind = "UINTEGER"; break;
+			case MessageParameterType::KIND::CHARACTER_STRING: kind = "CHARACTER_STRING"; break;
+			case MessageParameterType::KIND::BYTE_ARRAY: kind = "BYTE_ARRAY"; break;
+			case MessageParameterType::KIND::BLOB: kind = "BLOB"; break;
+			default: assert( false );
+		}
+
+		fprintf( header, "// %d. %s %s", count, kind, param.name.c_str() );
+		if ( param.type.hasDefault )
+		{
+			switch ( param.type.kind )
+			{
+				case MessageParameterType::KIND::ENUM: fprintf( header, " (DEFAULT: %s::%s)", param.type.name.c_str(), param.type.stringDefault.c_str() ); break;
+				case MessageParameterType::KIND::INTEGER: fprintf( header, " (DEFAULT: %lld)", (int64_t)(param.type.numericalDefault) ); break;
+				case MessageParameterType::KIND::UINTEGER: fprintf( header, " (DEFAULT: %lld)", (uint64_t)(param.type.numericalDefault) ); break;
+				case MessageParameterType::KIND::CHARACTER_STRING: fprintf( header, " (DEFAULT: \"%s\")", param.type.stringDefault.c_str() ); break;
+			}
+		}
+		else
+			fprintf( header, " (REQUIRED)" );
+		fprintf( header, "\n" );
+	}
+
+	fprintf( header, "\n" );
+	fprintf( header, "//**********************************************************************\n\n" );
+}
+
 void impl_generateComposeFunction( FILE* header, Message& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
@@ -618,17 +663,126 @@ void impl_generateParseFunction( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
+void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
+{
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+
+		MessageParameter& param = *it;
+		++count;
+
+		switch ( param.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, "\timpl::json::composeParam<%s, arg_%d_type, %s, int64_t, int_64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, b, args...);\n", param.name.c_str(), count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "\timpl::json::composeParam<%s, arg_%d_type, %s, uint64_t, uint_64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, b, args...);\n", param.name.c_str(), count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\timpl::json::composeParam<%s, arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, b, args...);\n", param.name.c_str(), count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+				break;
+			case MessageParameterType::KIND::BYTE_ARRAY:
+				break;
+			case MessageParameterType::KIND::BLOB:
+				break;
+			case MessageParameterType::KIND::ENUM:
+				break;
+			default:
+			{
+				assert( false ); // unexpected
+				break;
+			}
+		}
+	
+		if ( count != s.members.size() )
+			fprintf( header, "\tb.append( \",\\n  \", 4 );\n" );
+	}
+
+	fprintf( header, "\tb.appendUint8( \'\\n\' );\n" );
+	fprintf( header, "\tb.appendUint8( 0 );\n" );
+}
+
+void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
+{
+	fprintf( header, "\tfor ( ;; )\n\t{\n" );
+	fprintf( header, "\t\ttnodecpp::string key;\n" );
+	fprintf( header, "\t\tp.readKey( &key );\n" );
+
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+
+		MessageParameter& param = *it;
+		++count;
+
+		fprintf( header, "\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str() );
+		fprintf( header, "\t\t\timpl::json::parseJsonParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", count, count );
+	}
+
+	fprintf( header, 
+		"\t\tp.skipSpacesEtc();\n"
+		"\t\tif ( p.isComma() )\n"
+		"\t\t{\n"
+		"\t\t\tp.skipComma();\n"
+		"\t\t\tcontinue;\n"
+		"\t\t}\n"
+		"\t\tif ( !p.isData() )\n"
+		"\t\t\tbreak;\n"
+		"\t\tthrow std::exception(); // bad format\n" );
+
+	fprintf( header, "\t}\n" );
+}
+
+void impl_generateComposeFunctionJson( FILE* header, Message& s )
+{
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s_composeJson(Buffer& b, Args&& ... args)\n"
+	"{\n", s.name.c_str() );
+
+	impl_generateParamTypeLIst( header, s );
+	impl_addParamStatsCheckBlock( header, s );
+	impl_generateParamCallBlockForComposingJson( header, s );
+
+
+	fprintf( header, "}\n\n" );
+}
+
+void impl_generateParseFunctionJson( FILE* header, Message& s )
+{
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s_parseJson(impl::Parser& p, Args&& ... args)\n"
+	"{\n", s.name.c_str() );
+
+	impl_generateParamTypeLIst( header, s );
+	impl_addParamStatsCheckBlock( header, s );
+	impl_generateParamCallBlockForParsingJson( header, s );
+
+	fprintf( header, "}\n\n" );
+}
+
 void generateMessage( FILE* header, FILE* src, Message& s )
 {
 	if ( !impl_checkMessageParamNameUniqueness(s) )
 		throw std::exception();
 
+	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
-	impl_generateComposeFunction( header, s );
-	impl_generateParseFunction( header, s );
 
+	if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
+	{
+		impl_generateComposeFunction( header, s );
+		impl_generateParseFunction( header, s );
+	}
 
-//	fprintf( header, "Message: name = \"%s\" (%zd parameters) {\n", s.name.c_str(), s.members.size() );
+	if ( s.protoList.find( Message::Proto::json ) != s.protoList.end() )
+	{
+		impl_generateComposeFunctionJson( header, s );
+		impl_generateParseFunctionJson( header, s );
+	}
 }
 
 
