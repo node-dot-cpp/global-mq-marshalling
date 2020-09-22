@@ -259,14 +259,14 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	// types
 	for ( auto name : params )
 	{
-		fprintf( header, "using %s = NamedParameter<struct %sStruct>;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameTagStruct( name ).c_str() );
+		fprintf( header, "using %s = NamedParameter<struct %s>;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameTagStruct( name ).c_str() );
 	}
 	fprintf( header, "\n" );
 
 	// objects
 	for ( auto name : params )
 	{
-		fprintf( header, "extern const %s::TypeConverter %s;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameObject( name ).c_str() );
+		fprintf( header, "constexpr %s::TypeConverter %s;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameObject( name ).c_str() );
 	}
 	fprintf( header, "\n" );
 }
@@ -501,10 +501,10 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, int64_t, int_64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, uint64_t, uint_64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
@@ -537,13 +537,13 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -676,13 +676,13 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\timpl::json::composeParam<%s, arg_%d_type, %s, int64_t, int_64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, b, args...);\n", param.name.c_str(), count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\timpl::json::composeParam<%s, arg_%d_type, %s, uint64_t, uint_64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, b, args...);\n", param.name.c_str(), count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\timpl::json::composeParam<%s, arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, b, args...);\n", param.name.c_str(), count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -708,7 +708,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
 {
 	fprintf( header, "\tfor ( ;; )\n\t{\n" );
-	fprintf( header, "\t\ttnodecpp::string key;\n" );
+	fprintf( header, "\t\tnodecpp::string key;\n" );
 	fprintf( header, "\t\tp.readKey( &key );\n" );
 
 	int count = 0;

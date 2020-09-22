@@ -32,7 +32,7 @@
   BLOB blob;
 };*/
 
-MESSAGE PROTO=JSON,GMQ message_one {
+/*MESSAGE PROTO=JSON,GMQ message_one {
 //  enum EnumSecond {s_first=0,s_second=1, s_third=2} enum_first;
 //  enum EnumSecond {s_first=0,s_second=1, s_third=2} DEFAULT = s_second enum_second;
 
@@ -57,4 +57,17 @@ MESSAGE PROTO=JSON message_two {
   
   CHARACTER-STRING string_str_1;
   CHARACTER-STRING DEFAULT = "EFGH" string_str_3;
+};*/
+
+MESSAGE PROTO=JSON,GMQ message_one {
+  INTEGER DEFAULT = 10 firstParam;
+  CHARACTER-STRING DEFAULT = "default_v" secondParam;
+  UINTEGER DEFAULT = 30 thirdParam;
+//  VECTOR<BLOB> vec;
 };
+
+MESSAGE PROTO=JSON,GMQ point {
+  INTEGER x;
+  INTEGER y;
+};
+
