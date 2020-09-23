@@ -60,7 +60,15 @@ void printMessage( Message& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sMessage: name = \"%s\" (%zd parameters) {\n", offsetch, s.name.c_str(), s.members.size() );
+	printf( "%sMessage: name = \"%s\" %sTargets: ", offsetch, s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	for ( auto t:s.protoList )
+		switch ( t )
+		{
+			case Message::Proto::gmq: printf( "GMQ " ); break;
+			case Message::Proto::json: printf( "JSON " ); break;
+			default: assert( false );
+		}
+	printf( "(%zd parameters) {\n", s.members.size() );
 	printMessageMembers( s, offset + 4 );
 	printf( "%s}\n", offsetch );
 }
@@ -594,7 +602,15 @@ void impl_addParamStatsCheckBlock( FILE* header, Message& s )
 void impl_generateMessageCommentBlock( FILE* header, Message& s )
 {
 	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// Message \"%s\" (%zd parameters)\n", s.name.c_str(), s.members.size() );
+	fprintf( header, "// Message \"%s\" %sTargets: ", s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	for ( auto t:s.protoList )
+		switch ( t )
+		{
+			case Message::Proto::gmq: fprintf( header, "GMQ " ); break;
+			case Message::Proto::json: fprintf( header, "JSON " ); break;
+			default: assert( false );
+		}
+	fprintf( header, "(%zd parameters)\n", s.members.size() );
 
 	int count = 0;
 	for ( auto& it : s.members )

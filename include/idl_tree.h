@@ -123,6 +123,7 @@ public:
 	string name;
 	enum Proto { json, gmq };
 	set<Proto> protoList;
+	bool isNonExtendable = false;
 };
 
 class Root

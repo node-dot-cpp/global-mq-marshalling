@@ -28,6 +28,7 @@
 
 %token KW_FILE
 %token KW_MESSAGE
+%token KW_NONEXTENDABLE
 %token KW_HASH_LINE
 %token KW_DEFAULT
 %token KW_EMPTY
@@ -65,7 +66,9 @@ line_directive
 ;
 
 message_begin
-	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, $4, $5); releaseYys3($2, $3, $6); }
+	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, false, $4, $5); releaseYys3($2, $3, $6); }
+	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, true, $5, $6); releaseYys4($2, $3, $4, $7); }
+	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createMessage($1, true, $4, $6); releaseYys4($2, $3, $5, $7); }
 	| message_begin data_type IDENTIFIER ';' { $$ = addToMessage($1, createAttribute($2, $3)); releaseYys($4); }
 ;
 

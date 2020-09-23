@@ -489,7 +489,7 @@ YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id)
 	return new YyPtr<MessageParameter>(att);
 }
 
-YYSTYPE createMessage(YYSTYPE token, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
@@ -499,6 +499,7 @@ YYSTYPE createMessage(YYSTYPE token, YYSTYPE protoList, YYSTYPE id)
 
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
+	yy->isNonExtendable = isNonExtendable;
 	YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
 	for ( auto& proto : pl->ids )
 	{
