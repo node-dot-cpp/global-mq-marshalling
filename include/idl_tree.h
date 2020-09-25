@@ -58,7 +58,7 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, ENUM, INTEGER, UINTEGER, CHARACTER_STRING, BYTE_ARRAY, BLOB };
+	enum KIND { UNDEFINED, ENUM, INTEGER, UINTEGER, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE };
 	KIND kind = UNDEFINED;
 	string name;
 	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING
@@ -74,6 +74,10 @@ public:
 	string stringDefault; // CHARACTER_STRING
 
 	uint32_t arrayFixedaxSize = 0; // BYTE_ARRAY
+
+	KIND vectorElemKind = UNDEFINED; // VECTOR
+	bool isNonExtendable = false; // VECTOR
+	string messageName; // VECTOR of MESSAGEs
 
 	map<string, uint32_t> enumValues; // ENUM
 

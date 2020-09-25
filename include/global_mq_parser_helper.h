@@ -56,6 +56,7 @@ void releaseYys3(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2);
 void releaseYys4(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3);
 void releaseYys5(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4);
 void releaseYys6(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5);
+void releaseYys7(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6);
 
 YYSTYPE createYyToken(const char* text, int line, int token);
 
@@ -90,6 +91,13 @@ YYSTYPE createCharacterStringType(YYSTYPE token, bool hasMaxLength, YYSTYPE maxl
 YYSTYPE createByteArrayType(YYSTYPE token, YYSTYPE size_expr);
 
 YYSTYPE createBlobType(YYSTYPE token);
+
+YYSTYPE createVectorOfIntegerType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfUintegerType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
 YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue);

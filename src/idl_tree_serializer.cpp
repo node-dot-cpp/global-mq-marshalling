@@ -28,6 +28,23 @@
 #include "idl_tree_serializer.h"
 
 
+const char* impl_kindToString( MessageParameterType::KIND kind )
+{
+	switch ( kind )
+	{
+		case MessageParameterType::KIND::ENUM: return "ENUM";
+		case MessageParameterType::KIND::UNDEFINED: return "UNDEFINED";
+		case MessageParameterType::KIND::INTEGER: return "INTEGER";
+		case MessageParameterType::KIND::UINTEGER: return "UINTEGER";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "CHARACTER_STRING";
+		case MessageParameterType::KIND::BYTE_ARRAY: return "BYTE_ARRAY";
+		case MessageParameterType::KIND::BLOB: return "BLOB";
+		case MessageParameterType::KIND::VECTOR: return "VECTOR";
+		case MessageParameterType::KIND::MESSAGE: return "MESSAGE";
+		default: assert( false );
+	}
+}
+
 void printRoot( Root& s )
 {
 	printf( "Root (%zd messages) {\n", s.messages.size() );
@@ -124,19 +141,16 @@ void printMessageParameter( MessageParameter& s, size_t offset )
 
 void printDataType( MessageParameterType& s )
 {
-	const char* kind = "";
-	switch ( s.kind )
+	if ( s.kind == MessageParameterType::KIND::VECTOR )
 	{
-		case MessageParameterType::KIND::ENUM: kind = "ENUM"; break;
-		case MessageParameterType::KIND::UNDEFINED: kind = "UNDEFINED"; break;
-		case MessageParameterType::KIND::INTEGER: kind = "INTEGER"; break;
-		case MessageParameterType::KIND::UINTEGER: kind = "UINTEGER"; break;
-		case MessageParameterType::KIND::CHARACTER_STRING: kind = "CHARACTER_STRING"; break;
-		case MessageParameterType::KIND::BYTE_ARRAY: kind = "BYTE_ARRAY"; break;
-		case MessageParameterType::KIND::BLOB: kind = "BLOB"; break;
+		if ( s.vectorElemKind == MessageParameterType::KIND::MESSAGE )
+			printf( "%s<%s%s %s>", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( s.vectorElemKind ), s.messageName.c_str() );
+		else
+			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
+	else
+		printf( "%s", impl_kindToString( s.kind ) );
 
-	printf( "{kind: %d (%s), ", (int)(s.kind), kind );
 	if ( s.name.size() )
 		printf( "name: %s, ", s.name.c_str() );
 	if ( s.kind == MessageParameterType::KIND::INTEGER || s.kind == MessageParameterType::KIND::UINTEGER )
@@ -401,6 +415,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 					case MessageParameterType::KIND::BYTE_ARRAY:
 					case MessageParameterType::KIND::BLOB:
 					case MessageParameterType::KIND::ENUM:
+					case MessageParameterType::KIND::VECTOR:
 					{
 						break; // unsupported (yet)
 					}
@@ -432,6 +447,8 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 				case MessageParameterType::KIND::INTEGER:
 				case MessageParameterType::KIND::UINTEGER:
 					break; // will be added right to respective calls
+				case MessageParameterType::KIND::VECTOR:
+					break; // TODO: revise
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
 					fprintf( header, "static constexpr impl::StringLiteralForComposing default_%d = { \"%s\", sizeof( \"%s\" ) - 1};\n", count, param.type.stringDefault.c_str(), param.type.stringDefault.c_str() );
@@ -485,6 +502,32 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 			case MessageParameterType::KIND::ENUM:
 				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::EnumType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
+			case MessageParameterType::KIND::VECTOR:
+				switch ( param.type.vectorElemKind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::UINTEGER:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::StringType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::BYTE_ARRAY:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::ByteArrayType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::BLOB:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::BlobType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::ENUM:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::MESSAGE:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<VectorOfMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+				}
+				break;
 			default:
 			{
 				assert( false ); // unexpected
@@ -523,6 +566,8 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 				break;
 			case MessageParameterType::KIND::ENUM:
 				break;
+			case MessageParameterType::KIND::VECTOR:
+				break;
 			default:
 			{
 				assert( false ); // unexpected
@@ -558,6 +603,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 			case MessageParameterType::KIND::BLOB:
 				break;
 			case MessageParameterType::KIND::ENUM:
+			case MessageParameterType::KIND::VECTOR:
 				break;
 			default:
 			{
@@ -619,20 +665,17 @@ void impl_generateMessageCommentBlock( FILE* header, Message& s )
 		++count;
 		MessageParameter& param = *it;
 			
-		const char* kind = "";
-		switch ( param.type.kind )
+		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			case MessageParameterType::KIND::ENUM: kind = "ENUM"; break;
-			case MessageParameterType::KIND::UNDEFINED: kind = "UNDEFINED"; break;
-			case MessageParameterType::KIND::INTEGER: kind = "INTEGER"; break;
-			case MessageParameterType::KIND::UINTEGER: kind = "UINTEGER"; break;
-			case MessageParameterType::KIND::CHARACTER_STRING: kind = "CHARACTER_STRING"; break;
-			case MessageParameterType::KIND::BYTE_ARRAY: kind = "BYTE_ARRAY"; break;
-			case MessageParameterType::KIND::BLOB: kind = "BLOB"; break;
-			default: assert( false );
+			if ( param.type.vectorElemKind == MessageParameterType::KIND::MESSAGE )
+				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.messageName.c_str() );
+			else
+				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
+			fprintf( header, " %s", param.name.c_str() );
 		}
+		else
+			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
 
-		fprintf( header, "// %d. %s %s", count, kind, param.name.c_str() );
 		if ( param.type.hasDefault )
 		{
 			switch ( param.type.kind )
@@ -705,6 +748,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 			case MessageParameterType::KIND::BLOB:
 				break;
 			case MessageParameterType::KIND::ENUM:
+			case MessageParameterType::KIND::VECTOR:
 				break;
 			default:
 			{

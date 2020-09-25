@@ -365,6 +365,17 @@ void releaseYys6(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE
 	delete yys5;
 }
 
+void releaseYys7(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6)
+{
+	delete yys0;
+	delete yys1;
+	delete yys2;
+	delete yys3;
+	delete yys4;
+	delete yys5;
+	delete yys6;
+}
+
 YYSTYPE createYyToken(const char* text, int line, int token)
 {
 	YyToken* yy = new YyToken();
@@ -721,6 +732,42 @@ YYSTYPE createBlobType(YYSTYPE token)
 	return yy;
 }
 
+YYSTYPE createVectorOfSympleTypeBase(YYSTYPE token, MessageParameterType::KIND kind, bool hasDefault)
+{
+	unique_ptr<YyBase> d0(token);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::VECTOR;
+	yy->dataType->vectorElemKind = kind;
+	yy->dataType->hasDefault = hasDefault;
+	yy->dataType->isNonExtendable = true;
+
+	return yy;
+}
+
+YYSTYPE createVectorOfIntegerType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::INTEGER, hasDefault ); }
+YYSTYPE createVectorOfUintegerType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::UINTEGER, hasDefault ); }
+YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::CHARACTER_STRING, hasDefault ); }
+YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BLOB, hasDefault ); }
+YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BYTE_ARRAY, hasDefault ); }
+
+YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(messageName);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::VECTOR;
+	yy->dataType->vectorElemKind = MessageParameterType::MESSAGE;
+	yy->dataType->hasDefault = hasDefault;
+	yy->dataType->isNonExtendable = nonext;
+	yy->dataType->messageName = nameFromYyIdentifier(messageName);
+
+	return yy;
+}
+
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)
 {
 	unique_ptr<YyBase> d0(token);
@@ -756,8 +803,6 @@ YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE value
 	yy->dataType->enumValues = v->enumValues;
 
 	YyIdentifier* dv = yystype_cast<YyIdentifier*>( defaultValue );
-
-	v->enumValues.find( dv->text );
 
 	bool among = false;
 	for ( auto& val : v->enumValues )

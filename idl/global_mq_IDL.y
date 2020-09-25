@@ -83,7 +83,7 @@ data_type
 	| byte_array_type
 	| inline_enum_type
 	| blob_type
-//	| vector_type
+	| vector_type
 ;
 
 integer_type
@@ -161,18 +161,23 @@ byte_array_type
 	: KW_BYTE_ARRAY '[' expr ']' { $$ = createByteArrayType($1, $3); releaseYys2($2, $4); }
 ;
 
-/*vector_type
-	: KW_VECTOR '<' KW_INTEGER '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
-	| KW_VECTOR '<' KW_UINTEGER '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
-	| KW_VECTOR '<' KW_CHARACTER_STRING '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
-	| KW_VECTOR '<' KW_BLOB '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
-	| KW_VECTOR '<' KW_BYTE_ARRAY '>' { $$ = createVectorType($1, $3); releaseYys2($2, $4); }
-	| KW_VECTOR '<' KW_INTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
-	| KW_VECTOR '<' KW_UINTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
-	| KW_VECTOR '<' KW_CHARACTER_STRING '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
-	| KW_VECTOR '<' KW_BLOB '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
-	| KW_VECTOR '<' KW_BYTE_ARRAY '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorType($1, $3); releaseYys7($2, $4, $5, $6, $7); }
-;*/
+vector_type
+	: KW_VECTOR '<' KW_INTEGER '>' { $$ = createVectorOfIntegerType($1, false); releaseYys3($2, $3, $4); }
+	| KW_VECTOR '<' KW_UINTEGER '>' { $$ = createVectorOfUintegerType($1, false); releaseYys3($2, $3, $4); }
+	| KW_VECTOR '<' KW_CHARACTER_STRING '>' { $$ = createVectorOfCharStringType($1, false); releaseYys3($2, $3, $4); }
+	| KW_VECTOR '<' KW_BLOB '>' { $$ = createVectorOfBLOBType($1, false); releaseYys3($2, $3, $4); }
+	| KW_VECTOR '<' KW_BYTE_ARRAY '>' { $$ = createVectorOfByteArrayType($1, false); releaseYys3($2, $3, $4); }
+	| KW_VECTOR '<' KW_MESSAGE IDENTIFIER '>' { $$ = createVectorOfMassagesType($1, $4, false, false); releaseYys3($2, $3, $5); }
+	| KW_VECTOR '<' KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfMassagesType($1, $5, false, true); releaseYys4($2, $3, $4, $6); }
+	| KW_VECTOR '<' KW_INTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfIntegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_UINTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfUintegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_CHARACTER_STRING '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfCharStringType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_BLOB '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfBLOBType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_BYTE_ARRAY '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfByteArrayType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_MESSAGE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfMassagesType($1, $4, false, true); releaseYys6($2, $3, $5, $6, $7, $8); }
+	| KW_VECTOR '<' KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfMassagesType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_NONEXTENDABLE KW_MESSAGE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfMassagesType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+;
 
 blob_type
 	: KW_BLOB { $$ = createBlobType($1); }
