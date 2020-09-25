@@ -326,6 +326,34 @@ bool impl_checkMessageNameUniqueness(Root& s)
 	return ok;
 }
 
+bool impl_processMessageNamesInVectorTypes(Root& s)
+{
+	bool ok = true;
+	for ( auto& msg : s.messages )
+		for ( auto& param : msg->members )
+			if ( param->type.kind == MessageParameterType::VECTOR && param->type.vectorElemKind == MessageParameterType::MESSAGE )
+			{
+				param->type.messageIdx = (size_t)(-1);
+				for ( size_t i=0; i<s.messages.size(); ++i )
+					if ( param->type.messageName == s.messages[i]->name )
+					{
+						param->type.messageIdx = i;
+						if ( param->type.isNonExtendable && !s.messages[i]->isNonExtendable )
+						{
+							fprintf( stderr, "%s, line %d: message \"%s\" is not declared as NONEXTENDABLE (see message declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+							ok = false;
+							break;
+						}
+					}
+				if ( param->type.messageIdx == (size_t)(-1) )
+				{
+					fprintf( stderr, "%s, line %d: message name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str() );
+					ok = false;
+				}
+			}
+	return ok;
+}
+
 bool impl_checkMessageParamNameUniqueness(Message& s)
 {
 	bool ok = true;
@@ -345,6 +373,9 @@ bool impl_checkMessageParamNameUniqueness(Message& s)
 void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 {
 	if ( !impl_checkMessageNameUniqueness(s) )
+		throw std::exception();
+
+	if ( !impl_processMessageNamesInVectorTypes(s) )
 		throw std::exception();
 
 	std::set<string> params;
