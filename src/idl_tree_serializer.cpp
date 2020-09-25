@@ -144,7 +144,7 @@ void printDataType( MessageParameterType& s )
 	if ( s.kind == MessageParameterType::KIND::VECTOR )
 	{
 		if ( s.vectorElemKind == MessageParameterType::KIND::MESSAGE )
-			printf( "%s<%s%s %s>", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( s.vectorElemKind ), s.messageName.c_str() );
+			printf( "%s<%s%s %s>", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", impl_kindToString( s.vectorElemKind ), s.messageName.c_str() );
 		else
 			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
