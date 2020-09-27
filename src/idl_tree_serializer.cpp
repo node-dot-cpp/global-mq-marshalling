@@ -342,8 +342,16 @@ bool impl_processMessageNamesInVectorTypes(Root& s)
 						{
 							fprintf( stderr, "%s, line %d: message \"%s\" is not declared as NONEXTENDABLE (see message declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 							ok = false;
-							break;
 						}
+						for ( auto proto : msg->protoList )
+							if ( s.messages[i]->protoList.find( proto ) == s.messages[i]->protoList.end() )
+							{
+								fprintf( stderr, "%s, line %d: message \"%s\" does not support all protocols of current message\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str() );
+								fprintf( stderr, "             see declaration of current message at %s, line %d\n", msg->location.fileName.c_str(), msg->location.lineNumber );
+								fprintf( stderr, "             see declaration of message \"%s\" at %s, line %d\n", param->type.messageName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+								ok = false;
+							}
+						break;
 					}
 				if ( param->type.messageIdx == (size_t)(-1) )
 				{
