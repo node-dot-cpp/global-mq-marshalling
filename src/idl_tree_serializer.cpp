@@ -380,10 +380,9 @@ bool impl_checkMessageParamNameUniqueness(Message& s)
 
 void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 {
-	if ( !impl_checkMessageNameUniqueness(s) )
-		throw std::exception();
-
-	if ( !impl_processMessageNamesInVectorTypes(s) )
+	bool ok = impl_checkMessageNameUniqueness(s);
+	ok = impl_processMessageNamesInVectorTypes(s) && ok;
+	if ( !ok )
 		throw std::exception();
 
 	std::set<string> params;
@@ -563,7 +562,10 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::MESSAGE:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<VectorOfMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						if ( param.type.isNonExtendable )
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						else
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 				}
 				break;
