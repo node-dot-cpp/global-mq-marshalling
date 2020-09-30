@@ -63,8 +63,9 @@ MESSAGE PROTO=JSON,GMQ message_one {
   INTEGER DEFAULT = 10 firstParam;
   CHARACTER-STRING DEFAULT = "default_v" secondParam;
   UINTEGER DEFAULT = 30 thirdParam;
-  VECTOR<MESSAGE NONEXTENDABLE point> vec;
-  VECTOR<MESSAGE point3D> vec3D;
+  VECTOR<INTEGER> forthParam;
+  VECTOR<MESSAGE NONEXTENDABLE point> fifthParam;
+  VECTOR<MESSAGE point3D> sixthParam;
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {

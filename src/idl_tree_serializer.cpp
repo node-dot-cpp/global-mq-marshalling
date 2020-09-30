@@ -582,6 +582,7 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 {
+	fprintf( header, "\tb.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );" );
 	int count = 0;
 	for ( auto& it : s.members )
 	{
@@ -616,6 +617,8 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 			}
 		}
 	}
+//	fprintf( header, "\tb.append( \"\\n}\\n\", 3 );" );
+	fprintf( header, "\tb.append( \"\\n}\", 2 );" );
 }
 
 void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
@@ -808,6 +811,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
 {
+	fprintf( header, "\tp.skipDelimiter( \'{\' );\n" );
 	fprintf( header, "\tfor ( ;; )\n\t{\n" );
 	fprintf( header, "\t\tnodecpp::string key;\n" );
 	fprintf( header, "\t\tp.readKey( &key );\n" );
@@ -826,13 +830,16 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
 
 	fprintf( header, 
 		"\t\tp.skipSpacesEtc();\n"
-		"\t\tif ( p.isComma() )\n"
+		"\t\tif ( p.isDelimiter( \',\' ) )\n"
 		"\t\t{\n"
-		"\t\t\tp.skipComma();\n"
+		"\t\t\tp.skipDelimiter( \',\' );\n"
 		"\t\t\tcontinue;\n"
 		"\t\t}\n"
-		"\t\tif ( !p.isData() )\n"
+		"\t\tif ( p.isDelimiter( \'}\' ) )\n"
+		"\t\t{\n"
+		"\t\t\tp.skipDelimiter( \'}\' );\n"
 		"\t\t\tbreak;\n"
+		"\t\t}\n"
 		"\t\tthrow std::exception(); // bad format\n" );
 
 	fprintf( header, "\t}\n" );
