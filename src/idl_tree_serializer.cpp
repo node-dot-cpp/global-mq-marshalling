@@ -756,7 +756,7 @@ void impl_generateComposeFunction( FILE* header, Message& s )
 void impl_generateParseFunction( FILE* header, Message& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parse(impl::Parser& p, Args&& ... args)\n"
+	"void %s_parse(Parser& p, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
