@@ -582,7 +582,6 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 {
-	fprintf( header, "\tb.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );" );
 	int count = 0;
 	for ( auto& it : s.members )
 	{
@@ -609,6 +608,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			default:
 			{
@@ -617,8 +617,6 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 			}
 		}
 	}
-//	fprintf( header, "\tb.append( \"\\n}\\n\", 3 );" );
-	fprintf( header, "\tb.append( \"\\n}\", 2 );" );
 }
 
 void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
@@ -647,7 +645,9 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 			case MessageParameterType::KIND::BLOB:
 				break;
 			case MessageParameterType::KIND::ENUM:
+				break;
 			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			default:
 			{
@@ -768,6 +768,7 @@ void impl_generateParseFunction( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 {
+	fprintf( header, "\tb.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n" );
 	int count = 0;
 	for ( auto& it : s.members )
 	{
@@ -792,7 +793,9 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 			case MessageParameterType::KIND::BLOB:
 				break;
 			case MessageParameterType::KIND::ENUM:
+				break;
 			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, b, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			default:
 			{
@@ -805,8 +808,11 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 			fprintf( header, "\tb.append( \",\\n  \", 4 );\n" );
 	}
 
-	fprintf( header, "\tb.appendUint8( \'\\n\' );\n" );
-	fprintf( header, "\tb.appendUint8( 0 );\n" );
+//	fprintf( header, "\tb.append( \"\\n}\\n\", 3 );" );
+	fprintf( header, "\tb.append( \"\\n}\", 2 );" );
+
+//	fprintf( header, "\tb.appendUint8( \'\\n\' );\n" );
+//	fprintf( header, "\tb.appendUint8( 0 );\n" );
 }
 
 void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
@@ -862,7 +868,7 @@ void impl_generateComposeFunctionJson( FILE* header, Message& s )
 void impl_generateParseFunctionJson( FILE* header, Message& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parseJson(impl::Parser& p, Args&& ... args)\n"
+	"void %s_parseJson(Parser& p, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
