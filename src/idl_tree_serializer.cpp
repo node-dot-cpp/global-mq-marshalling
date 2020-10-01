@@ -580,7 +580,7 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 	fprintf( header, "\n" );
 }
 
-void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
+void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -619,7 +619,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 	}
 }
 
-void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
+void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -739,29 +739,29 @@ void impl_generateMessageCommentBlock( FILE* header, Message& s )
 	fprintf( header, "//**********************************************************************\n\n" );
 }
 
-void impl_generateComposeFunction( FILE* header, Message& s )
+void impl_generateComposeFunctionGmq( FILE* header, Message& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_compose(Composer& composer, Args&& ... args)\n"
+	"void %s_composeGmq(Composer& composer, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForComposing( header, s );
+	impl_generateParamCallBlockForComposingGmq( header, s );
 
 
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunction( FILE* header, Message& s )
+void impl_generateParseFunctionGmq( FILE* header, Message& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parse(Parser& p, Args&& ... args)\n"
+	"void %s_parseGmq(Parser& p, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForParsing( header, s );
+	impl_generateParamCallBlockForParsingGmq( header, s );
 
 	fprintf( header, "}\n\n" );
 }
@@ -878,6 +878,73 @@ void impl_generateParseFunctionJson( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
+void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
+{
+	fprintf( header, 
+		"\tswitch ( composer.proto )\n"
+		"\t{\n"
+		"\t\tcase Proto::GMQ:\n"
+		"\t\t{\n" );
+	impl_generateParamCallBlockForComposingGmq( header, s );
+	fprintf( header, 
+			"\t\t\tbreak;\n"
+		"\t\t}\n"
+		"\t\tcase Proto::JSON:\n"
+		"\t\t{\n" );
+	impl_generateParamCallBlockForComposingJson( header, s );
+	fprintf( header, 
+		"\t\t\tbreak;\n"
+		"\t\t}\n"
+		"\t}\n" );
+}
+
+void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
+{
+	fprintf( header, 
+		"\tswitch ( p.proto )\n"
+		"\t{\n"
+		"\t\tcase Proto::GMQ:\n"
+		"\t\t{\n" );
+	impl_generateParamCallBlockForParsingGmq( header, s );
+	fprintf( header, 
+			"\t\t\tbreak;\n"
+		"\t\t}\n"
+		"\t\tcase Proto::JSON:\n"
+		"\t\t{\n" );
+	impl_generateParamCallBlockForParsingJson( header, s );
+	fprintf( header, 
+		"\t\t\tbreak;\n"
+		"\t\t}\n"
+		"\t}\n" );
+}
+
+void impl_generateComposeFunction( FILE* header, Message& s )
+{
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s_compose(Composer& composer, Args&& ... args)\n"
+	"{\n", s.name.c_str() );
+
+	impl_generateParamTypeLIst( header, s );
+	impl_addParamStatsCheckBlock( header, s );
+	impl_generateParamCallBlockForComposing( header, s );
+
+
+	fprintf( header, "}\n\n" );
+}
+
+void impl_generateParseFunction( FILE* header, Message& s )
+{
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s_parse(Parser& p, Args&& ... args)\n"
+	"{\n", s.name.c_str() );
+
+	impl_generateParamTypeLIst( header, s );
+	impl_addParamStatsCheckBlock( header, s );
+	impl_generateParamCallBlockForParsing( header, s );
+
+	fprintf( header, "}\n\n" );
+}
+
 void generateMessage( FILE* header, FILE* src, Message& s )
 {
 	if ( !impl_checkMessageParamNameUniqueness(s) )
@@ -886,17 +953,20 @@ void generateMessage( FILE* header, FILE* src, Message& s )
 	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
 
-	if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
+	impl_generateComposeFunction( header, s );
+	impl_generateParseFunction( header, s );
+
+	/*if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
 	{
-		impl_generateComposeFunction( header, s );
-		impl_generateParseFunction( header, s );
+		impl_generateComposeFunctionGmq( header, s );
+		impl_generateParseFunctionGmq( header, s );
 	}
 
 	if ( s.protoList.find( Message::Proto::json ) != s.protoList.end() )
 	{
 		impl_generateComposeFunctionJson( header, s );
 		impl_generateParseFunctionJson( header, s );
-	}
+	}*/
 }
 
 
