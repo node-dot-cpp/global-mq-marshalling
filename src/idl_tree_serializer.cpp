@@ -619,7 +619,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s )
 	}
 }
 
-void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s )
+void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const char* offset )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -632,13 +632,13 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -647,7 +647,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s )
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "\timpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			default:
 			{
@@ -761,7 +761,7 @@ void impl_generateParseFunctionGmq( FILE* header, Message& s )
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForParsingGmq( header, s );
+	impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 
 	fprintf( header, "}\n\n" );
 }
@@ -815,12 +815,12 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 //	fprintf( header, "\tb.appendUint8( 0 );\n" );
 }
 
-void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
+void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const char* offset )
 {
-	fprintf( header, "\tp.skipDelimiter( \'{\' );\n" );
-	fprintf( header, "\tfor ( ;; )\n\t{\n" );
-	fprintf( header, "\t\tnodecpp::string key;\n" );
-	fprintf( header, "\t\tp.readKey( &key );\n" );
+	fprintf( header, "%sp.skipDelimiter( \'{\' );\n", offset );
+	fprintf( header, "%sfor ( ;; )\n\t{\n", offset );
+	fprintf( header, "%s\tnodecpp::string key;\n", offset );
+	fprintf( header, "%s\tp.readKey( &key );\n", offset );
 
 	int count = 0;
 	for ( auto& it : s.members )
@@ -830,25 +830,24 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s )
 		MessageParameter& param = *it;
 		++count;
 
-		fprintf( header, "\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str() );
-		fprintf( header, "\t\t\timpl::json::parseJsonParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", count, count );
+		fprintf( header, "%s\t%s( key == \"%s\" )\n", offset, count == 1 ? "if " : "else if ", param.name.c_str() );
+		fprintf( header, "%s\t\timpl::json::parseJsonParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 	}
 
-	fprintf( header, 
-		"\t\tp.skipSpacesEtc();\n"
-		"\t\tif ( p.isDelimiter( \',\' ) )\n"
-		"\t\t{\n"
-		"\t\t\tp.skipDelimiter( \',\' );\n"
-		"\t\t\tcontinue;\n"
-		"\t\t}\n"
-		"\t\tif ( p.isDelimiter( \'}\' ) )\n"
-		"\t\t{\n"
-		"\t\t\tp.skipDelimiter( \'}\' );\n"
-		"\t\t\tbreak;\n"
-		"\t\t}\n"
-		"\t\tthrow std::exception(); // bad format\n" );
+	fprintf( header, "%s\tp.skipSpacesEtc();\n", offset );
+	fprintf( header, "%s\tif ( p.isDelimiter( \',\' ) )\n", offset );
+	fprintf( header, "%s\t{\n", offset );
+	fprintf( header, "%s\t\tp.skipDelimiter( \',\' );\n", offset );
+	fprintf( header, "%s\t\tcontinue;\n", offset );
+	fprintf( header, "%s\t}\n", offset );
+	fprintf( header, "%s\tif ( p.isDelimiter( \'}\' ) )\n", offset );
+	fprintf( header, "%s\t{\n", offset );
+	fprintf( header, "%s\t\tp.skipDelimiter( \'}\' );\n", offset );
+	fprintf( header, "%s\t\tbreak;\n", offset );
+	fprintf( header, "%s\t}\n", offset );
+	fprintf( header, "%s\tthrow std::exception(); // bad format\n", offset );
 
-	fprintf( header, "\t}\n" );
+	fprintf( header, "%s}\n", offset );
 }
 
 void impl_generateComposeFunctionJson( FILE* header, Message& s )
@@ -873,7 +872,7 @@ void impl_generateParseFunctionJson( FILE* header, Message& s )
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForParsingJson( header, s );
+	impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 
 	fprintf( header, "}\n\n" );
 }
@@ -887,13 +886,13 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 		"\t\t{\n" );
 	impl_generateParamCallBlockForComposingGmq( header, s );
 	fprintf( header, 
-			"\t\t\tbreak;\n"
+			"\n\t\t\tbreak;\n"
 		"\t\t}\n"
 		"\t\tcase Proto::JSON:\n"
 		"\t\t{\n" );
 	impl_generateParamCallBlockForComposingJson( header, s );
 	fprintf( header, 
-		"\t\t\tbreak;\n"
+		"\n\t\t\tbreak;\n"
 		"\t\t}\n"
 		"\t}\n" );
 }
@@ -905,15 +904,15 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 		"\t{\n"
 		"\t\tcase Proto::GMQ:\n"
 		"\t\t{\n" );
-	impl_generateParamCallBlockForParsingGmq( header, s );
+	impl_generateParamCallBlockForParsingGmq( header, s, "\t\t\t" );
 	fprintf( header, 
-			"\t\t\tbreak;\n"
+			"\n\t\t\tbreak;\n"
 		"\t\t}\n"
 		"\t\tcase Proto::JSON:\n"
 		"\t\t{\n" );
-	impl_generateParamCallBlockForParsingJson( header, s );
+	impl_generateParamCallBlockForParsingJson( header, s, "\t\t\t" );
 	fprintf( header, 
-		"\t\t\tbreak;\n"
+		"\n\t\t\tbreak;\n"
 		"\t\t}\n"
 		"\t}\n" );
 }
