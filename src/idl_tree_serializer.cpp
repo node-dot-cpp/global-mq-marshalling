@@ -580,7 +580,7 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 	fprintf( header, "\n" );
 }
 
-void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s )
+void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const char* offset )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -593,13 +593,13 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+				fprintf( header, "%simpl::gmq::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -608,7 +608,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s )
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "\timpl::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			default:
 			{
@@ -632,13 +632,13 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -647,7 +647,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
 			default:
 			{
@@ -747,7 +747,7 @@ void impl_generateComposeFunctionGmq( FILE* header, Message& s )
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForComposingGmq( header, s );
+	impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 
 
 	fprintf( header, "}\n\n" );
@@ -766,9 +766,9 @@ void impl_generateParseFunctionGmq( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
+void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, const char* offset )
 {
-	fprintf( header, "\tcomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n" );
+	fprintf( header, "%scomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n", offset );
 	int count = 0;
 	for ( auto& it : s.members )
 	{
@@ -780,13 +780,13 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParam<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParam<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -795,7 +795,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "\timpl::json::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParam<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			default:
 			{
@@ -805,20 +805,17 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s )
 		}
 	
 		if ( count != s.members.size() )
-			fprintf( header, "\tcomposer.buff.append( \",\\n  \", 4 );\n" );
+			fprintf( header, "%scomposer.buff.append( \",\\n  \", 4 );\n", offset );
 	}
 
-//	fprintf( header, "\tcomposer.buff.append( \"\\n}\\n\", 3 );" );
-	fprintf( header, "\tcomposer.buff.append( \"\\n}\", 2 );" );
-
-//	fprintf( header, "\tb.appendUint8( \'\\n\' );\n" );
-//	fprintf( header, "\tb.appendUint8( 0 );\n" );
+	fprintf( header, "%scomposer.buff.append( \"\\n}\", 2 );", offset );
 }
 
 void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const char* offset )
 {
 	fprintf( header, "%sp.skipDelimiter( \'{\' );\n", offset );
-	fprintf( header, "%sfor ( ;; )\n\t{\n", offset );
+	fprintf( header, "%sfor ( ;; )\n", offset );
+	fprintf( header, "%s{\n", offset );
 	fprintf( header, "%s\tnodecpp::string key;\n", offset );
 	fprintf( header, "%s\tp.readKey( &key );\n", offset );
 
@@ -858,7 +855,7 @@ void impl_generateComposeFunctionJson( FILE* header, Message& s )
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForComposingJson( header, s );
+	impl_generateParamCallBlockForComposingJson( header, s, "\t" );
 
 
 	fprintf( header, "}\n\n" );
@@ -884,13 +881,13 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 		"\t{\n"
 		"\t\tcase Proto::GMQ:\n"
 		"\t\t{\n" );
-	impl_generateParamCallBlockForComposingGmq( header, s );
+	impl_generateParamCallBlockForComposingGmq( header, s, "\t\t\t" );
 	fprintf( header, 
 			"\n\t\t\tbreak;\n"
 		"\t\t}\n"
 		"\t\tcase Proto::JSON:\n"
 		"\t\t{\n" );
-	impl_generateParamCallBlockForComposingJson( header, s );
+	impl_generateParamCallBlockForComposingJson( header, s, "\t\t\t" );
 	fprintf( header, 
 		"\n\t\t\tbreak;\n"
 		"\t\t}\n"
