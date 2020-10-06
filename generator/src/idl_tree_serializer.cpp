@@ -42,7 +42,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
 		case MessageParameterType::KIND::MESSAGE: return "MESSAGE";
 		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
-		default: assert( false );
+		default: assert( false ); return "";
 	}
 }
 
@@ -870,7 +870,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const 
 	fprintf( header, "%sp.skipDelimiter( \'{\' );\n", offset );
 	fprintf( header, "%sfor ( ;; )\n", offset );
 	fprintf( header, "%s{\n", offset );
-	fprintf( header, "%s\std::string key;\n", offset );
+	fprintf( header, "%s\tstd::string key;\n", offset );
 	fprintf( header, "%s\tp.readKey( &key );\n", offset );
 
 	int count = 0;

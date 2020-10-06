@@ -40,7 +40,7 @@
 
 
 #include <exception>
-#include "../3rdparty/fmt/include/fmt/format.h"
+#include "../../3rdparty/fmt/include/fmt/format.h"
 
 namespace global_mq {
 class AssertException : public std::exception {
