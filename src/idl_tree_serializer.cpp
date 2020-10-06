@@ -924,42 +924,128 @@ void impl_generateParseFunctionJson( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 {
-	fprintf( header, 
-		"\tswitch ( composer.proto )\n"
-		"\t{\n"
-		"\t\tcase Proto::GMQ:\n"
-		"\t\t{\n" );
-	impl_generateParamCallBlockForComposingGmq( header, s, "\t\t\t" );
-	fprintf( header, 
-			"\n\t\t\tbreak;\n"
-		"\t\t}\n"
-		"\t\tcase Proto::JSON:\n"
-		"\t\t{\n" );
-	impl_generateParamCallBlockForComposingJson( header, s, "\t\t\t" );
-	fprintf( header, 
-		"\n\t\t\tbreak;\n"
-		"\t\t}\n"
-		"\t}\n" );
+	if ( s.protoList.size() == 1 )
+	{
+		switch ( *(s.protoList.begin()) )
+		{
+			case Message::Proto::gmq:
+			{
+				fprintf( header, "\tassert( composer.proto == Proto::GMQ );\n" );
+				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
+				break;
+			}
+			case Message::Proto::json:
+			{
+				fprintf( header, "\tassert( composer.proto == Proto::JSON );\n" );
+				impl_generateParamCallBlockForComposingJson( header, s, "\t" );
+				break;
+			}
+			default:
+				assert( false );
+		}
+	}
+	else
+	{
+		fprintf( header, 
+			"\tswitch ( composer.proto )\n"
+			"\t{\n" );
+		// if present, keep GMQ first!
+		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
+		{
+			fprintf( header, 
+				"\t\tcase Proto::GMQ:\n"
+				"\t\t{\n" );
+			impl_generateParamCallBlockForComposingGmq( header, s, "\t\t\t" );
+			fprintf( header, 
+					"\n\t\t\tbreak;\n"
+				"\t\t}\n" );
+		}
+		// then add the rest
+		for ( auto it:s.protoList )
+			switch ( it )
+			{
+				case Message::Proto::gmq:
+					break; // already done
+				case Message::Proto::json:
+				{
+					fprintf( header, 
+						"\t\tcase Proto::JSON:\n"
+						"\t\t{\n" );
+					impl_generateParamCallBlockForComposingJson( header, s, "\t" );
+					fprintf( header, 
+							"\n\t\t\tbreak;\n"
+						"\t\t}\n" );
+					break;
+				}
+				default:
+					assert( false );
+			}
+		fprintf( header, 
+			"\t}\n" );
+	}
 }
 
 void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 {
-	fprintf( header, 
-		"\tswitch ( p.proto )\n"
-		"\t{\n"
-		"\t\tcase Proto::GMQ:\n"
-		"\t\t{\n" );
-	impl_generateParamCallBlockForParsingGmq( header, s, "\t\t\t" );
-	fprintf( header, 
-			"\n\t\t\tbreak;\n"
-		"\t\t}\n"
-		"\t\tcase Proto::JSON:\n"
-		"\t\t{\n" );
-	impl_generateParamCallBlockForParsingJson( header, s, "\t\t\t" );
-	fprintf( header, 
-		"\n\t\t\tbreak;\n"
-		"\t\t}\n"
-		"\t}\n" );
+	if ( s.protoList.size() == 1 )
+	{
+		switch ( *(s.protoList.begin()) )
+		{
+			case Message::Proto::gmq:
+			{
+				fprintf( header, "\tassert( composer.proto == Proto::GMQ );\n" );
+				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
+				break;
+			}
+			case Message::Proto::json:
+			{
+				fprintf( header, "\tassert( composer.proto == Proto::JSON );\n" );
+				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
+				break;
+			}
+			default:
+				assert( false );
+		}
+	}
+	else
+	{
+		fprintf( header, 
+			"\tswitch ( composer.proto )\n"
+			"\t{\n" );
+		// if present, keep GMQ first!
+		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
+		{
+			fprintf( header, 
+				"\t\tcase Proto::GMQ:\n"
+				"\t\t{\n" );
+			impl_generateParamCallBlockForParsingGmq( header, s, "\t\t\t" );
+			fprintf( header, 
+					"\n\t\t\tbreak;\n"
+				"\t\t}\n" );
+		}
+		// then add the rest
+		for ( auto it:s.protoList )
+			switch ( it )
+			{
+				case Message::Proto::gmq:
+					break; // already done
+				case Message::Proto::json:
+				{
+					fprintf( header, 
+						"\t\tcase Proto::JSON:\n"
+						"\t\t{\n" );
+					impl_generateParamCallBlockForParsingJson( header, s, "\t" );
+					fprintf( header, 
+							"\n\t\t\tbreak;\n"
+						"\t\t}\n" );
+					break;
+				}
+				default:
+					assert( false );
+			}
+		fprintf( header, 
+			"\t}\n" );
+	}
 }
 
 void impl_generateComposeFunction( FILE* header, Message& s )
