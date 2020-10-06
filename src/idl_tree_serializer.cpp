@@ -889,7 +889,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const 
 	fprintf( header, "%sp.skipDelimiter( \'{\' );\n", offset );
 	fprintf( header, "%sfor ( ;; )\n", offset );
 	fprintf( header, "%s{\n", offset );
-	fprintf( header, "%s\tnodecpp::string key;\n", offset );
+	fprintf( header, "%s\std::string key;\n", offset );
 	fprintf( header, "%s\tp.readKey( &key );\n", offset );
 
 	int count = 0;
