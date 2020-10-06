@@ -500,6 +500,19 @@ YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id)
 	return new YyPtr<MessageParameter>(att);
 }
 
+YYSTYPE insertFence(YYSTYPE decl)
+{
+	unique_ptr<YyBase> d0(decl);
+
+	Message* yy = getPointedFromYyPtr<Message>(decl);
+	MessageParameter* fence = new MessageParameter();
+	fence->type.kind = MessageParameterType::KIND::FENCE;
+	yy->members.push_back(unique_ptr<MessageParameter>(fence));
+
+	return d0.release();
+}
+
+
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);

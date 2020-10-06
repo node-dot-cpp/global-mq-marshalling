@@ -41,6 +41,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
 		case MessageParameterType::KIND::MESSAGE: return "MESSAGE";
+		case MessageParameterType::KIND::FENCE: return "FENCE";
 		default: assert( false );
 	}
 }
@@ -119,6 +120,12 @@ void printMessageParameter( MessageParameter& s, size_t offset )
 	char offsetch[1024];
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
+
+	if ( s.type.kind == MessageParameterType::KIND::FENCE )
+	{
+		printf( "%sFENCE\n", offsetch );
+		return;
+	}
 
 	printf( "%sname: \"%s\" type: \"", offsetch, s.name.c_str() );
 	printDataType( s.type );
@@ -457,6 +464,9 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 					{
 						break; // unsupported (yet)
 					}
+					case MessageParameterType::KIND::FENCE:
+						assert( false ); // inapplicable
+						break;
 					default:
 					{
 						assert( false ); // unexpected
@@ -497,6 +507,9 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 //					assert( false ); // unsupported (yet)
 					break;
 				}
+				case MessageParameterType::KIND::FENCE:
+					assert( false ); // inapplicable
+					break;
 				case MessageParameterType::KIND::BYTE_ARRAY:
 				case MessageParameterType::KIND::BLOB:
 				default:
@@ -569,6 +582,8 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 						break;
 				}
 				break;
+			case MessageParameterType::KIND::FENCE:
+				break; // inapplicable
 			default:
 			{
 				assert( false ); // unexpected
@@ -610,6 +625,8 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
+			case MessageParameterType::KIND::FENCE:
+				break; // TODO: treatment
 			default:
 			{
 				assert( false ); // unexpected
@@ -649,6 +666,8 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
+			case MessageParameterType::KIND::FENCE:
+				break; // TODO: treatment
 			default:
 			{
 				assert( false ); // unexpected
@@ -797,6 +816,8 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
+			case MessageParameterType::KIND::FENCE:
+				break; // TODO: ...
 			default:
 			{
 				assert( false ); // unexpected
