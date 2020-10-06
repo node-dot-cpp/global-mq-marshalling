@@ -651,7 +651,10 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+				if ( param.type.hasDefault )
+					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+				else
+					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -851,7 +854,10 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+				if ( param.type.hasDefault )
+					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+				else
+					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;

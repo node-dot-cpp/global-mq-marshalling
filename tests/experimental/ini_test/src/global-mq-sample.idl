@@ -57,7 +57,7 @@ MESSAGE PROTO=JSON message_two {
   
   CHARACTER-STRING string_str_1;
   CHARACTER-STRING DEFAULT = "EFGH" string_str_3;
-};*/
+};
 
 MESSAGE PROTO=JSON,GMQ message_one {
   INTEGER firstParam;
@@ -79,5 +79,27 @@ MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point3D {
   INTEGER DEFAULT = 0 x;
   INTEGER DEFAULT = 0 y;
   INTEGER DEFAULT = 0 z;
+};*/
+
+
+MESSAGE PROTO=JSON,GMQ message_one {
+  INTEGER firstParam;
+  VECTOR<INTEGER> secondParam;
+  VECTOR<MESSAGE point3D> thirdParam;
+  UINTEGER forthParam;
+  CHARACTER-STRING fifthParam;
+  VECTOR<MESSAGE NONEXTENDABLE point> sixthParam;
 };
+
+MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
+  INTEGER x;
+  INTEGER y;
+};
+
+MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point3D {
+  INTEGER x;
+  INTEGER y;
+  INTEGER z;
+};
+
 
