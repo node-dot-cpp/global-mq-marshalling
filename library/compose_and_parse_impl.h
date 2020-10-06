@@ -29,8 +29,8 @@
 #define COMPOSE_AND_PARSE_IMPL_H
 
 #include <type_traits>
-#include "../../../../include/nodecpp/common_structs.h" // for Buffer
 #include <assert.h> // TODO: replace by nodecpp assertion system
+#include <fmt/format.h>
 
 namespace m {
 	static constexpr size_t MIN_BUFFER = 1024;
