@@ -500,14 +500,14 @@ YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id)
 	return new YyPtr<MessageParameter>(att);
 }
 
-YYSTYPE insertFence(YYSTYPE decl)
+YYSTYPE insertExtensionMarker(YYSTYPE decl)
 {
 	unique_ptr<YyBase> d0(decl);
 
 	Message* yy = getPointedFromYyPtr<Message>(decl);
-	MessageParameter* fence = new MessageParameter();
-	fence->type.kind = MessageParameterType::KIND::FENCE;
-	yy->members.push_back(unique_ptr<MessageParameter>(fence));
+	MessageParameter* extension = new MessageParameter();
+	extension->type.kind = MessageParameterType::KIND::EXTENSION;
+	yy->members.push_back(unique_ptr<MessageParameter>(extension));
 
 	return d0.release();
 }

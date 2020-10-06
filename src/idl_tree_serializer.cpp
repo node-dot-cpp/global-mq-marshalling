@@ -41,7 +41,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
 		case MessageParameterType::KIND::MESSAGE: return "MESSAGE";
-		case MessageParameterType::KIND::FENCE: return "FENCE";
+		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
 		default: assert( false );
 	}
 }
@@ -121,9 +121,9 @@ void printMessageParameter( MessageParameter& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	if ( s.type.kind == MessageParameterType::KIND::FENCE )
+	if ( s.type.kind == MessageParameterType::KIND::EXTENSION )
 	{
-		printf( "%sFENCE\n", offsetch );
+		printf( "%sEXTENSION:\n", offsetch );
 		return;
 	}
 
@@ -385,6 +385,33 @@ bool impl_checkMessageParamNameUniqueness(Message& s)
 	return ok;
 }
 
+bool impl_checkFollowingExtensionRules(Message& s)
+{
+	bool ok = true;
+	bool extMarkFound = false;
+	std::map<string, Location> names;
+	for ( size_t i=0; i<s.members.size(); ++i )
+	{
+		auto& msg = *(s.members[i]);
+		if ( msg.type.kind != MessageParameterType::KIND::EXTENSION )
+		{
+			if ( msg.type.hasDefault && !extMarkFound )
+			{
+				fprintf( stderr, "File %s, line %d: Message parameter \"%s\" with default value cannot appear before extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, msg.name.c_str() );
+				ok = false;
+			}
+			else if ( (!msg.type.hasDefault) && extMarkFound )
+			{
+				fprintf( stderr, "File %s, line %d: Message parameter \"%s\" with no default value cannot appear inside extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, msg.name.c_str() );
+				ok = false;
+			}
+		}
+		else
+			extMarkFound = true;
+	}
+	return ok;
+}
+
 void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 {
 	bool ok = impl_checkMessageNameUniqueness(s);
@@ -464,7 +491,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 					{
 						break; // unsupported (yet)
 					}
-					case MessageParameterType::KIND::FENCE:
+					case MessageParameterType::KIND::EXTENSION:
 						assert( false ); // inapplicable
 						break;
 					default:
@@ -507,7 +534,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 //					assert( false ); // unsupported (yet)
 					break;
 				}
-				case MessageParameterType::KIND::FENCE:
+				case MessageParameterType::KIND::EXTENSION:
 					assert( false ); // inapplicable
 					break;
 				case MessageParameterType::KIND::BYTE_ARRAY:
@@ -582,7 +609,7 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 						break;
 				}
 				break;
-			case MessageParameterType::KIND::FENCE:
+			case MessageParameterType::KIND::EXTENSION:
 				break; // inapplicable
 			default:
 			{
@@ -625,7 +652,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
-			case MessageParameterType::KIND::FENCE:
+			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			default:
 			{
@@ -666,7 +693,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break;
-			case MessageParameterType::KIND::FENCE:
+			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			default:
 			{
@@ -816,7 +843,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
-			case MessageParameterType::KIND::FENCE:
+			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			default:
 			{
@@ -964,7 +991,9 @@ void impl_generateParseFunction( FILE* header, Message& s )
 
 void generateMessage( FILE* header, FILE* src, Message& s )
 {
-	if ( !impl_checkMessageParamNameUniqueness(s) )
+	bool checked = impl_checkMessageParamNameUniqueness(s);
+	checked = impl_checkFollowingExtensionRules(s) && checked;
+	if ( !checked )
 		throw std::exception();
 
 	impl_generateMessageCommentBlock( header, s );

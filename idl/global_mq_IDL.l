@@ -76,7 +76,7 @@ int createToken(int token)
 	"FILE" { return createToken( KW_FILE ); }
 
 	"MESSAGE" { return createToken( KW_MESSAGE ); }
-	"FENCE" { return createToken( KW_FENCE ); }
+	"EXTENSION" { return createToken( KW_EXTENSION ); }
 	"NONEXTENDABLE" { return createToken( KW_NONEXTENDABLE ); }
 	"enum" { return createToken( KW_ENUM ); }
 

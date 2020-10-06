@@ -73,7 +73,7 @@ void processLineDirective(YYSTYPE line_number, YYSTYPE file_name);
 YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr);
 
 YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
-YYSTYPE insertFence(YYSTYPE decl);
+YYSTYPE insertExtensionMarker(YYSTYPE decl);
 
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
 
