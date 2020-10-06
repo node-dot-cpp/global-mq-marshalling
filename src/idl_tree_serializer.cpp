@@ -302,23 +302,6 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	fprintf( header, "\n" );
 }
 
-void impl_generateSrcFile( const char* hFileName, FILE* src, const std::set<string>& params )
-{
-	fprintf( src, 
-			"#include \"%s.h\"\n"
-			"\n"
-			"namespace m {\n"
-			"\n", hFileName );
-
-	// objects
-	for ( auto name : params )
-	{
-		fprintf( src, "static const %s_Type::TypeConverter %s;\n", name.c_str(), name.c_str() );
-	}
-	
-	fprintf( src, "\n} // namespace m\n" );
-}
-
 bool impl_checkMessageNameUniqueness(Root& s)
 {
 	bool ok = true;
@@ -416,7 +399,7 @@ bool impl_checkFollowingExtensionRules(Message& s)
 	return ok;
 }
 
-void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
+void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkMessageNameUniqueness(s);
 	ok = impl_processMessageNamesInVectorTypes(s) && ok;
@@ -425,8 +408,6 @@ void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 
 	std::set<string> params;
 	impl_CollectParamNamesFromRoot( params, s );
-
-	impl_generateSrcFile( fileName, src, params );
 
 	fprintf( header, "#ifndef %s_H\n"
 		"#define %s_H\n"
@@ -442,7 +423,7 @@ void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 	for ( auto& it : s.messages )
 	{
 		auto& obj_1 = it;
-		generate__unique_ptr_Message( header, src, obj_1 );
+		generate__unique_ptr_Message( header, obj_1 );
 	}
 
 	fprintf( header, "\n"
@@ -452,7 +433,7 @@ void generateRoot( const char* fileName, FILE* header, FILE* src, Root& s )
 		fileName );
 }
 
-void generate__unique_ptr_Message( FILE* header, FILE* src, unique_ptr<Message>& s ) {
+void generate__unique_ptr_Message( FILE* header, unique_ptr<Message>& s ) {
 
 	if ( s == nullptr )
 	{
@@ -460,7 +441,7 @@ void generate__unique_ptr_Message( FILE* header, FILE* src, unique_ptr<Message>&
 	}
 	else if ( typeid( *(s) ) == typeid( Message ) )
 	{
-		generateMessage( header, src, *(dynamic_cast<Message*>(&(*(s)))) );
+		generateMessage( header, *(dynamic_cast<Message*>(&(*(s)))) );
 	}
 }
 
@@ -1102,7 +1083,7 @@ void impl_generateParseFunction( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
-void generateMessage( FILE* header, FILE* src, Message& s )
+void generateMessage( FILE* header, Message& s )
 {
 	bool checked = impl_checkMessageParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
@@ -1114,18 +1095,6 @@ void generateMessage( FILE* header, FILE* src, Message& s )
 
 	impl_generateComposeFunction( header, s );
 	impl_generateParseFunction( header, s );
-
-	/*if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
-	{
-		impl_generateComposeFunctionGmq( header, s );
-		impl_generateParseFunctionGmq( header, s );
-	}
-
-	if ( s.protoList.find( Message::Proto::json ) != s.protoList.end() )
-	{
-		impl_generateComposeFunctionJson( header, s );
-		impl_generateParseFunctionJson( header, s );
-	}*/
 }
 
 
