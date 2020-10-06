@@ -247,6 +247,8 @@ void impl_CollectParamNamesFromMessage( std::set<string>& params, Message& s )
 	for ( auto& it : s.members )
 	{
 		auto& obj_1 = it;
+		if ( obj_1->type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		impl_CollectParamNamesFrom__unique_ptr_MessageParameter( params, obj_1 );
 	}
 }
@@ -375,6 +377,8 @@ bool impl_checkMessageParamNameUniqueness(Message& s)
 	std::map<string, Location> names;
 	for ( auto& it : s.members )
 	{
+		if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		auto ins = names.insert( std::make_pair( it->name, it->location ) );
 		if ( !ins.second )
 		{
@@ -473,6 +477,8 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 		if ( it != nullptr )
 		{
 			MessageParameter& param = *it;
+			if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+				continue;
 			if ( param.type.hasDefault )
 				switch ( param.type.kind )
 				{
@@ -513,9 +519,11 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 	{
 		assert( it != nullptr );
 
+		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		++count;
 
-		MessageParameter& param = *it;
 		if ( param.type.hasDefault )
 			switch ( param.type.kind )
 			{
@@ -558,6 +566,8 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 		assert( it != nullptr );
 
 		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		++count;
 
 		switch ( param.type.kind )
@@ -609,8 +619,6 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 						break;
 				}
 				break;
-			case MessageParameterType::KIND::EXTENSION:
-				break; // inapplicable
 			default:
 			{
 				assert( false ); // unexpected
@@ -630,6 +638,8 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 		assert( it != nullptr );
 
 		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		++count;
 
 		switch ( param.type.kind )
@@ -671,18 +681,20 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 		assert( it != nullptr );
 
 		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		++count;
 
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -691,7 +703,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, %s>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
@@ -714,6 +726,9 @@ void impl_generateMatchCountBlock( FILE* header, Message& s )
 		assert( it != nullptr );
 		MessageParameter& param = *it;
 			
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
+
 		if ( count )
 			fprintf( header, " + \n\t\t" );
 
@@ -752,8 +767,10 @@ void impl_generateMessageCommentBlock( FILE* header, Message& s )
 	for ( auto& it : s.members )
 	{
 		assert( it != nullptr );
-		++count;
 		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
+		++count;
 			
 		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 		{
@@ -821,6 +838,8 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 		assert( it != nullptr );
 
 		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		++count;
 
 		switch ( param.type.kind )
@@ -873,6 +892,8 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const 
 		assert( it != nullptr );
 
 		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
 		++count;
 
 		fprintf( header, "%s\t%s( key == \"%s\" )\n", offset, count == 1 ? "if " : "else if ", param.name.c_str() );
@@ -971,7 +992,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 					fprintf( header, 
 						"\t\tcase Proto::JSON:\n"
 						"\t\t{\n" );
-					impl_generateParamCallBlockForComposingJson( header, s, "\t" );
+					impl_generateParamCallBlockForComposingJson( header, s, "\t\t\t" );
 					fprintf( header, 
 							"\n\t\t\tbreak;\n"
 						"\t\t}\n" );
@@ -1010,7 +1031,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 	else
 	{
 		fprintf( header, 
-			"\tswitch ( composer.proto )\n"
+			"\tswitch ( p.proto )\n"
 			"\t{\n" );
 		// if present, keep GMQ first!
 		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
@@ -1034,7 +1055,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 					fprintf( header, 
 						"\t\tcase Proto::JSON:\n"
 						"\t\t{\n" );
-					impl_generateParamCallBlockForParsingJson( header, s, "\t" );
+					impl_generateParamCallBlockForParsingJson( header, s, "\t\t\t" );
 					fprintf( header, 
 							"\n\t\t\tbreak;\n"
 						"\t\t}\n" );
