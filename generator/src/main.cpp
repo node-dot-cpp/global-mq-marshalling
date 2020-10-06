@@ -35,9 +35,8 @@ int main()
 		Root* root = parseSourceFile("../src/global-mq-sample.idl", false);
 		printRoot( *root );
 
-		FILE* src = fopen( "../src/marshaling.cpp", "wb" );
 		FILE* header = fopen( "../src/marshaling.h", "wb" );
-		generateRoot( "marshaling", header, src, *root );
+		generateRoot( "marshaling", header, *root );
 	}
 	/*catch ( std::exception& x )
 	{
