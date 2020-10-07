@@ -28,20 +28,45 @@
 #include <parser.h>
 #include <idl_tree_serializer.h>
 
-int main()
+int main( int argc, char *argv[] )
 {
-//	try
+	if ( argc < 3 )
 	{
-		Root* root = parseSourceFile("../src/global-mq-sample.idl", false);
+		fmt::print( "Usage:\n" );
+		fmt::print( "generator path/to/idl path/to/header\n" );
+		return 0;
+	}
+
+	std::string idlPath = argv[1];
+	std::string targetPath = argv[2];
+	size_t lastSlash = targetPath.find_last_of( "\\/" );
+	if ( lastSlash == std::string::npos )
+		lastSlash = 0;
+	std::string fileName = targetPath.substr( lastSlash );
+	if ( fileName.size() == 0 )
+	{
+		fmt::print( "failed to identify header file name\n" );
+		return 0;
+	}
+	for (size_t i = 0; i<fileName.size(); ++i)
+	{
+		if ( !isalnum( fileName[i] ) ) {
+			fileName.replace(i, 1, "_");
+		}
+	}
+
+	try
+	{
+		Root* root = parseSourceFile(idlPath, false);
 		printRoot( *root );
 
-		FILE* header = fopen( "../src/marshaling.h", "wb" );
-		generateRoot( "marshaling", header, *root );
+		FILE* header = fopen( targetPath.c_str(), "wb" );
+		generateRoot( fileName.c_str(), header, *root );
 	}
-	/*catch ( std::exception& x )
+	catch ( std::exception& x )
 	{
 		fmt::print( "Exception happened: {}\n", x.what() );
-	}*/
+	}
  
 
 	return 0;

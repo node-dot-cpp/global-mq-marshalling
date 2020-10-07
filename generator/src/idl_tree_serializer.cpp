@@ -409,8 +409,8 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	std::set<string> params;
 	impl_CollectParamNamesFromRoot( params, s );
 
-	fprintf( header, "#ifndef %s_H\n"
-		"#define %s_H\n"
+	fprintf( header, "#ifndef %s_guard\n"
+		"#define %s_guard\n"
 		"\n"
 		"#include <named_params_core.h>\n"
 		"\n"
@@ -429,7 +429,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	fprintf( header, "\n"
 		"} // namespace m\n"
 		"\n"
-		"#endif // %s_H\n",
+		"#endif // %s_guard\n",
 		fileName );
 }
 
