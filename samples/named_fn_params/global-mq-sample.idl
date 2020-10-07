@@ -1,0 +1,23 @@
+
+
+MESSAGE PROTO=JSON,GMQ message_one {
+  INTEGER firstParam;
+  VECTOR<INTEGER> secondParam;
+  VECTOR<MESSAGE point3D> thirdParam;
+  UINTEGER forthParam;
+  CHARACTER-STRING fifthParam;
+  VECTOR<MESSAGE NONEXTENDABLE point> sixthParam;
+};
+
+MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
+  INTEGER x;
+  INTEGER y;
+};
+
+MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point3D {
+  INTEGER x;
+  INTEGER y;
+  INTEGER z;
+};
+
+
