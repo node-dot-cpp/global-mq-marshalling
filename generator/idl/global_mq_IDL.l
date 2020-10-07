@@ -88,6 +88,7 @@ int createToken(int token)
 
 	"INTEGER" { return createToken( KW_INTEGER ); }
 	"UINTEGER" { return createToken( KW_UINTEGER ); }
+	"REAL" { return createToken( KW_REAL ); }
 	"CHARACTER-STRING" { return createToken( KW_CHARACTER_STRING ); }
 	"BYTE_ARRAY" { return createToken( KW_BYTE_ARRAY ); }
 	"BLOB" { return createToken( KW_BLOB ); }

@@ -39,7 +39,7 @@
 %token IDENTIFIER
 %token KW_IDENTIFIER
 %token STRING_LITERAL INTEGER_LITERAL
-%token KW_INTEGER KW_UINTEGER
+%token KW_INTEGER KW_UINTEGER KW_REAL
 %token KW_CHARACTER_STRING
 %token KW_BLOB
 %token KW_VECTOR
@@ -81,6 +81,7 @@ message
 data_type
 	: integer_type
 	| unsigned_integer_type
+	| real_type
 	| character_string_type
 	| byte_array_type
 	| inline_enum_type
@@ -144,6 +145,35 @@ unsigned_integer_type
 	| KW_UINTEGER '(' expr ',' ']' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, false, $3, false, 0, true, $8); releaseYys5($2, $4, $5, $6, $7); }
 	| KW_UINTEGER '[' expr ',' ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, true, $3, false, 0, false, $8); releaseYys5($2, $4, $5, $6, $7); }
 	| KW_UINTEGER '(' expr ',' ')' KW_DEFAULT '=' expr { $$ = createUnsignedIntegerTypeWithDefaultAndLimits($1, true, false, $3, false, 0, false, $8); releaseYys5($2, $4, $5, $6, $7); }
+;
+
+real_type
+	: KW_REAL { $$ = createRealType($1); }
+	| KW_REAL KW_DEFAULT '=' expr { $$ = createRealTypeWithDefault($1, $4); releaseYys2($2, $3); }
+	| KW_REAL '[' expr ',' expr ']' { $$ = createRealTypeWithLimits($1, true, true, $3, true, $5, true); releaseYys3($2, $4, $6); }
+	| KW_REAL '(' expr ',' expr ']' { $$ = createRealTypeWithLimits($1, true, false, $3, true, $5, true); releaseYys3($2, $4, $6); }
+	| KW_REAL '[' expr ',' expr ')' { $$ = createRealTypeWithLimits($1, true, true, $3, true, $5, false); releaseYys3($2, $4, $6); }
+	| KW_REAL '(' expr ',' expr ')' { $$ = createRealTypeWithLimits($1, true, false, $3, true, $5, false); releaseYys3($2, $4, $6); }
+	| KW_REAL '[' ',' expr ']' { $$ = createRealTypeWithLimits($1, false, true, 0, true, $4, true); releaseYys3($2, $3, $5); }
+	| KW_REAL '(' ',' expr ']' { $$ = createRealTypeWithLimits($1, false, false, 0, true, $4, true); releaseYys3($2, $3, $5); }
+	| KW_REAL '[' ',' expr ')' { $$ = createRealTypeWithLimits($1, false, true, 0, true, $4, false); releaseYys3($2, $3, $5); }
+	| KW_REAL '(' ',' expr ')' { $$ = createRealTypeWithLimits($1, false, false, 0, true, $4, false); releaseYys3($2, $3, $5); }
+	| KW_REAL '[' expr ',' ']' { $$ = createRealTypeWithLimits($1, true, true, $3, false, 0, true); releaseYys3($2, $4, $5); }
+	| KW_REAL '(' expr ',' ']' { $$ = createRealTypeWithLimits($1, true, false, $3, false, 0, true); releaseYys3($2, $4, $5); }
+	| KW_REAL '[' expr ',' ')' { $$ = createRealTypeWithLimits($1, true, true, $3, false, 0, false); releaseYys3($2, $4, $5); }
+	| KW_REAL '(' expr ',' ')' { $$ = createRealTypeWithLimits($1, true, false, $3, false, 0, false); releaseYys3($2, $4, $5); }
+	| KW_REAL '[' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, true, $3, true, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_REAL '(' expr ',' expr ']' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, false, $3, true, $5, true, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_REAL '[' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, true, $3, true, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_REAL '(' expr ',' expr ')' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, false, $3, true, $5, false, $9); releaseYys5($2, $4, $6, $7, $8); }
+	| KW_REAL '[' ',' expr ']' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, false, true, 0, true, $4, true, $8); releaseYys5($2, $3, $5, $6, $7); }
+	| KW_REAL '(' ',' expr ']' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, false, false, 0, true, $4, true, $8); releaseYys5($2, $3, $5, $6, $7); }
+	| KW_REAL '[' ',' expr ')' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, false, true, 0, true, $4, false, $8); releaseYys5($2, $3, $5, $6, $7); }
+	| KW_REAL '(' ',' expr ')' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, false, false, 0, true, $4, false, $8); releaseYys5($2, $3, $5, $6, $7); }
+	| KW_REAL '[' expr ',' ']' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, true, $3, false, 0, true, $8); releaseYys5($2, $4, $5, $6, $7); }
+	| KW_REAL '(' expr ',' ']' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, false, $3, false, 0, true, $8); releaseYys5($2, $4, $5, $6, $7); }
+	| KW_REAL '[' expr ',' ')' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, true, $3, false, 0, false, $8); releaseYys5($2, $4, $5, $6, $7); }
+	| KW_REAL '(' expr ',' ')' KW_DEFAULT '=' expr { $$ = createRealTypeWithDefaultAndLimits($1, true, false, $3, false, 0, false, $8); releaseYys5($2, $4, $5, $6, $7); }
 ;
 
 
