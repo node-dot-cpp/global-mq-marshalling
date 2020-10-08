@@ -336,7 +336,6 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p)
 template<typename TypeToPick, bool required, typename Arg0, typename ... Args>
 void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p, Arg0&& arg0, Args&& ... args)
 {
-//	using Agr0Type = std::remove_pointer<Arg0>;
 	using Agr0Type = special_decay_t<Arg0>;
 	using Agr0DataType = typename std::remove_pointer<typename Agr0Type::Type>::type;
 	if constexpr ( std::is_same<typename Agr0Type::Name, typename TypeToPick::Name>::value ) // same parameter name
@@ -345,7 +344,7 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p,
 			p.parseSignedInteger( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
 			p.parseUnsignedInteger( arg0.get() );
-		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
+		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value && std::is_arithmetic<Agr0DataType>::value )
 			p.parseReal( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 			p.parseString( arg0.get() );
@@ -523,7 +522,7 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p
 			p.readSignedIntegerFromJson( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
 			p.readUnsignedIntegerFromJson( arg0.get() );
-		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
+		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value && std::is_arithmetic<Agr0DataType>::value )
 			p.readRealFromJson( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 			p.readStringFromJson( arg0.get() );
