@@ -9,6 +9,7 @@ using fifthParam_Type = NamedParameter<struct fifthParam_Struct>;
 using firstParam_Type = NamedParameter<struct firstParam_Struct>;
 using forthParam_Type = NamedParameter<struct forthParam_Struct>;
 using secondParam_Type = NamedParameter<struct secondParam_Struct>;
+using seventhParam_Type = NamedParameter<struct seventhParam_Struct>;
 using sixthParam_Type = NamedParameter<struct sixthParam_Struct>;
 using thirdParam_Type = NamedParameter<struct thirdParam_Struct>;
 using x_Type = NamedParameter<struct x_Struct>;
@@ -19,6 +20,7 @@ constexpr fifthParam_Type::TypeConverter fifthParam;
 constexpr firstParam_Type::TypeConverter firstParam;
 constexpr forthParam_Type::TypeConverter forthParam;
 constexpr secondParam_Type::TypeConverter secondParam;
+constexpr seventhParam_Type::TypeConverter seventhParam;
 constexpr sixthParam_Type::TypeConverter sixthParam;
 constexpr thirdParam_Type::TypeConverter thirdParam;
 constexpr x_Type::TypeConverter x;
@@ -26,13 +28,14 @@ constexpr y_Type::TypeConverter y;
 constexpr z_Type::TypeConverter z;
 
 //**********************************************************************
-// Message "message_one" Targets: JSON GMQ (6 parameters)
+// Message "message_one" Targets: JSON GMQ (7 parameters)
 // 1. INTEGER firstParam (REQUIRED)
 // 2. VECTOR<INTEGER> secondParam (REQUIRED)
 // 3. VECTOR< MESSAGE point3D> thirdParam (REQUIRED)
 // 4. UINTEGER forthParam (REQUIRED)
 // 5. CHARACTER_STRING fifthParam (REQUIRED)
 // 6. VECTOR<NONEXTENDABLE MESSAGE point> sixthParam (REQUIRED)
+// 7. REAL seventhParam (REQUIRED)
 
 //**********************************************************************
 
@@ -45,13 +48,15 @@ void message_one_compose(Composer& composer, Args&& ... args)
 	using arg_4_type = NamedParameterWithType<impl::UnsignedIntegralType, forthParam_Type::Name>;
 	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
 	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...);
+		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -67,6 +72,7 @@ void message_one_compose(Composer& composer, Args&& ... args)
 			impl::gmq::composeParamToGmq<arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_4_type::nameAndTypeID, composer, args...);
 			impl::gmq::composeParamToGmq<arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(arg_5_type::nameAndTypeID, composer, args...);
 			impl::gmq::composeParamToGmq<arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_6_type::nameAndTypeID, composer, args...);
+			impl::gmq::composeParamToGmq<arg_7_type, true, uint64_t, uint64_t, 0>(arg_7_type::nameAndTypeID, composer, args...);
 
 			break;
 		}
@@ -84,6 +90,8 @@ void message_one_compose(Composer& composer, Args&& ... args)
 			impl::json::composeParamToJson<arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>("fifthParam", arg_5_type::nameAndTypeID, composer, args...);
 			composer.buff.append( ",\n  ", 4 );
 			impl::json::composeParamToJson<arg_6_type, true, int64_t, int64_t, (int64_t)(0)>("sixthParam", arg_6_type::nameAndTypeID, composer, args...);
+			composer.buff.append( ",\n  ", 4 );
+			impl::json::composeParamToJson<arg_7_type, true, uint64_t, uint64_t, 0>("seventhParam", arg_7_type::nameAndTypeID, composer, args...);
 			composer.buff.append( "\n}", 2 );
 			break;
 		}
@@ -99,13 +107,15 @@ void message_one_parse(Parser& p, Args&& ... args)
 	using arg_4_type = NamedParameterWithType<impl::UnsignedIntegralType, forthParam_Type::Name>;
 	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
 	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...);
+		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -121,6 +131,7 @@ void message_one_parse(Parser& p, Args&& ... args)
 			impl::gmq::parseGmqParam<arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
 			impl::gmq::parseGmqParam<arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
 			impl::gmq::parseGmqParam<arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
+			impl::gmq::parseGmqParam<arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
 
 			break;
 		}
@@ -143,6 +154,8 @@ void message_one_parse(Parser& p, Args&& ... args)
 					impl::json::parseJsonParam<arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
 				else if ( key == "sixthParam" )
 					impl::json::parseJsonParam<arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
+				else if ( key == "seventhParam" )
+					impl::json::parseJsonParam<arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
 				p.skipSpacesEtc();
 				if ( p.isDelimiter( ',' ) )
 				{
