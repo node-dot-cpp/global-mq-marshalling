@@ -320,6 +320,8 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p)
 		p.skipSignedInteger();
 	else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value )
 		p.skipUnsignedInteger();
+	else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value )
+		p.skipReal();
 	else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 		p.skipString();
 	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
@@ -343,6 +345,8 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p,
 			p.parseSignedInteger( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
 			p.parseUnsignedInteger( arg0.get() );
+		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
+			p.parseReal( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 			p.parseString( arg0.get() );
 		else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
@@ -396,28 +400,33 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p,
 template<typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
 void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Composer& composer)
 {
-		static_assert( !required, "required parameter" );
-		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
-		{
-			static_assert ( std::is_integral<AssumedDefaultT>::value );
-			composeSignedInteger( composer, defaultValue );
-		}
-		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value )
-		{
-			static_assert ( std::is_integral<AssumedDefaultT>::value );
-			composeUnsignedInteger( composer, defaultValue );
-		}
-		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
-		{
-			composeString( composer, defaultValue );
-		}
-		else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
-		{
-			composeUnsignedInteger( composer, 0 );
-		}
-		// TODO: add supported types here
-		else
-			static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
+	static_assert( !required, "required parameter" );
+	if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
+	{
+		static_assert ( std::is_integral<AssumedDefaultT>::value );
+		composeSignedInteger( composer, defaultValue );
+	}
+	else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value )
+	{
+		static_assert ( std::is_integral<AssumedDefaultT>::value );
+		composeUnsignedInteger( composer, defaultValue );
+	}
+	else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value )
+	{
+		static_assert ( std::is_arithmetic<AssumedDefaultT>::value );
+		composeReal( composer, defaultValue );
+	}
+	else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
+	{
+		composeString( composer, defaultValue );
+	}
+	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
+	{
+		composeUnsignedInteger( composer, 0 );
+	}
+	// TODO: add supported types here
+	else
+		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
 
 template<typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
@@ -430,6 +439,8 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 			composeSignedInteger( composer, arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::UnsignedIntegralType>::value && (std::is_integral<typename Agr0Type::Type>::value || std::is_integral<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
 			composeUnsignedInteger( composer, arg0.get() );
+		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
+			composeReal( composer, arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::StringType>::value )
 			composeString( composer, arg0.get() );
 		else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
@@ -489,6 +500,8 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p
 		p.skipSignedIntegerFromJson();
 	else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value )
 		p.skipUnsignedIntegerFromJson();
+	else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value )
+		p.skipRealFromJson();
 	else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 		p.skipStringFromJson();
 	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
@@ -510,6 +523,8 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p
 			p.readSignedIntegerFromJson( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
 			p.readUnsignedIntegerFromJson( arg0.get() );
+		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
+			p.readRealFromJson( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 			p.readStringFromJson( arg0.get() );
 		else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
@@ -609,6 +624,11 @@ void composeParamToJson(std::string name, const typename TypeToPick::NameAndType
 			static_assert ( std::is_integral<AssumedDefaultT>::value );
 			composeNamedUnsignedInteger( composer, name, defaultValue );
 		}
+		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value )
+		{
+			static_assert ( std::is_integral<AssumedDefaultT>::value );
+			composeNamedReal( composer, name, defaultValue );
+		}
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 		{
 			composeNamedString( composer, name, defaultValue );
@@ -634,6 +654,8 @@ void composeParamToJson(std::string name, const typename TypeToPick::NameAndType
 			composeNamedSignedInteger( composer, name, arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::UnsignedIntegralType>::value && (std::is_integral<typename Agr0Type::Type>::value || std::is_integral<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
 			composeNamedUnsignedInteger( composer, name, arg0.get() );
+		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_reference<typename Agr0Type::Type>::type>::value) )
+			composeNamedReal( composer, name, arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, impl::StringType>::value )
 			composeNamedString( composer, name, arg0.get() );
 		else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
