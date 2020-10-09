@@ -55,10 +55,11 @@
      INTEGER_LITERAL = 271,
      KW_INTEGER = 272,
      KW_UINTEGER = 273,
-     KW_CHARACTER_STRING = 274,
-     KW_BLOB = 275,
-     KW_VECTOR = 276,
-     KW_PROTO = 277
+     KW_REAL = 274,
+     KW_CHARACTER_STRING = 275,
+     KW_BLOB = 276,
+     KW_VECTOR = 277,
+     KW_PROTO = 278
    };
 #endif
 

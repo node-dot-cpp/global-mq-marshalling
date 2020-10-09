@@ -87,6 +87,11 @@ YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr
 YYSTYPE createUnsignedIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag);
 YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
 
+YYSTYPE createRealType(YYSTYPE token);
+YYSTYPE createRealTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
+YYSTYPE createRealTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag);
+YYSTYPE createRealTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr);
+
 YYSTYPE createCharacterStringType(YYSTYPE token, bool hasMaxLength, YYSTYPE maxlength_expr, bool hasDefault, YYSTYPE default_expr);
 
 YYSTYPE createByteArrayType(YYSTYPE token, YYSTYPE size_expr);

@@ -563,7 +563,7 @@ YyDataType* createIntegerTypeImplBase(YYSTYPE token, bool isSigned)
 	return yy;
 }
 
-void setDefaultValueForInteger(YYSTYPE token, YyDataType* yy, YYSTYPE default_expr)
+void setDefaultValueForNumeric(YYSTYPE token, YyDataType* yy, YYSTYPE default_expr)
 {
 	double h = floatLiteralFromExpression(default_expr);
 	yy->dataType->numericalDefault = h;
@@ -578,7 +578,7 @@ void setDefaultValueForInteger(YYSTYPE token, YyDataType* yy, YYSTYPE default_ex
 		reportError(token->location, "Default value cannot be greater than high limit");
 }
 
-void setLimitsForInteger(YYSTYPE token, YyDataType* yy, bool hasLowlimit, bool low_flag, YYSTYPE low_expr, bool hasHighlimit, YYSTYPE high_expr, bool high_flag)
+void setLimitsForNumeric(YYSTYPE token, YyDataType* yy, bool hasLowlimit, bool low_flag, YYSTYPE low_expr, bool hasHighlimit, YYSTYPE high_expr, bool high_flag)
 {
 	if ( hasLowlimit )
 	{
@@ -618,7 +618,7 @@ YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr)
 	unique_ptr<YyBase> d3(default_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, true);
-	setDefaultValueForInteger(token, yy, default_expr);
+	setDefaultValueForNumeric(token, yy, default_expr);
 	return yy;
 }
 
@@ -628,7 +628,7 @@ YYSTYPE createUnsignedIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr
 	unique_ptr<YyBase> d3(default_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, false);
-	setDefaultValueForInteger(token, yy, default_expr);
+	setDefaultValueForNumeric(token, yy, default_expr);
 	return yy;
 }
 
@@ -646,7 +646,7 @@ YYSTYPE createIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_fl
 	unique_ptr<YyBase> d2(high_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, true);
-	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
+	setLimitsForNumeric(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
 	return yy;
 }
 
@@ -658,8 +658,8 @@ YYSTYPE createIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, b
 	unique_ptr<YyBase> d3(default_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, true);
-	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
-	setDefaultValueForInteger(token, yy, default_expr);
+	setLimitsForNumeric(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
+	setDefaultValueForNumeric(token, yy, default_expr);
 
 	return yy;
 }
@@ -671,7 +671,7 @@ YYSTYPE createUnsignedIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, boo
 	unique_ptr<YyBase> d2(high_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, false);
-	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
+	setLimitsForNumeric(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
 	return yy;
 }
 
@@ -683,8 +683,59 @@ YYSTYPE createUnsignedIntegerTypeWithDefaultAndLimits(YYSTYPE token, bool hasLow
 	unique_ptr<YyBase> d3(default_expr);
 
 	YyDataType* yy = createIntegerTypeImplBase(token, false);
-	setLimitsForInteger(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
-	setDefaultValueForInteger(token, yy, default_expr);
+	setLimitsForNumeric(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
+	setDefaultValueForNumeric(token, yy, default_expr);
+
+	return yy;
+}
+
+YyDataType* createRealTypeImplBase(YYSTYPE token)
+{
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::REAL;
+
+	return yy;
+}
+
+YYSTYPE createRealType(YYSTYPE token)
+{
+	unique_ptr<YyBase> d0(token);
+
+	return createRealTypeImplBase(token);
+}
+
+YYSTYPE createRealTypeWithDefault(YYSTYPE token, YYSTYPE default_expr)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d3(default_expr);
+
+	YyDataType* yy = createRealTypeImplBase(token);
+	setDefaultValueForNumeric(token, yy, default_expr);
+	return yy;
+}
+
+YYSTYPE createRealTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(low_expr);
+	unique_ptr<YyBase> d2(high_expr);
+
+	YyDataType* yy = createRealTypeImplBase(token);
+	setLimitsForNumeric(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
+	return yy;
+}
+
+YYSTYPE createRealTypeWithDefaultAndLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag, YYSTYPE default_expr )
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(low_expr);
+	unique_ptr<YyBase> d2(high_expr);
+	unique_ptr<YyBase> d3(default_expr);
+
+	YyDataType* yy = createRealTypeImplBase(token);
+	setLimitsForNumeric(token, yy, hasLowLimit, low_flag, low_expr, hasHighLimit, high_expr, high_flag);
+	setDefaultValueForNumeric(token, yy, default_expr);
 
 	return yy;
 }

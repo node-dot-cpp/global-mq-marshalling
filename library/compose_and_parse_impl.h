@@ -33,7 +33,45 @@
 #include <fmt/format.h>
 
 namespace m {
+	struct FloatingParts
+	{
+		int64_t fraction;
+		int64_t exponent;
+		FloatingParts( double d ) { fromFloating( d ); }
+		void fromFloating( double d ) { 
+			uint64_t fraction_ = *(uint64_t*)(&d) & 0x800fffffffffffffULL; 
+			fraction = *(int64_t*)(&fraction_);
+			uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 53;
+			exponent = *(uint64_t*)(&exponent_) - 1023;
+		}
+		double value() { 
+			int64_t exp_ = exponent + 1023;
+			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			assert( ( exp_ & ~0x7ffLLU ) == 0 );
+			return *(double*)(&res);
+		}
+	};
+
+	template<int64_t fraction_, int64_t exponent_>
+	struct FloatingDefault
+	{
+		static_assert( ( (uint64_t)(fraction_) & 0x7ff0000000000000 ) == 0 );
+		static_assert( ( exponent_ & ~0x7ff ) == 0 );
+		static constexpr int64_t fraction = fraction_;
+		static constexpr int64_t exponent = exponent_;
+		constexpr FloatingDefault() {}
+		static double value() {
+			int64_t exp_ = exponent + 1023;
+			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			assert( ( exp_ & ~0x7ff ) == 0 );
+			return *(double*)(&res);
+		}
+	};
+
 	static constexpr size_t MIN_BUFFER = 1024;
+
 	class Buffer {
 	private:
 		size_t _size = 0;
@@ -168,7 +206,8 @@ static constexpr size_t integer_max_size = 8;
 
 // supported types
 struct SignedIntegralType {static constexpr bool dummy = false;};
-struct UnsignedIntegralType {int d = 0;};
+struct UnsignedIntegralType {static constexpr bool dummy = false;};
+struct RealType {static constexpr bool dummy = false;};
 struct StringType {static constexpr bool dummy = false;};
 struct BlobType {static constexpr bool dummy = false;};
 struct ByteArrayType {static constexpr bool dummy = false;};
@@ -219,6 +258,15 @@ void composeUnsignedInteger(Composer& composer, T num )
 	}
 	/*temporary solution TODO: actual implementation*/ { 
 		uint64_t val = num; 
+		composer.buff.append( &val, sizeof( val ) );
+	}
+}
+
+template <typename T>
+void composeReal(Composer& composer, T num )
+{
+	/*temporary solution TODO: actual implementation*/ { 
+		double val = num; 
 		composer.buff.append( &val, sizeof( val ) );
 	}
 }
@@ -333,6 +381,13 @@ void composeNamedUnsignedInteger(Composer& composer, std::string name, T num )
 	}
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
+}
+
+template <typename T>
+void composeNamedReal(Composer& composer, std::string name, T num )
+{
+	addNamePart( composer, name );
+	composer.buff.appendString( fmt::format( "{}", num ) );
 }
 
 inline
@@ -478,6 +533,25 @@ public:
 			throw std::exception(); // TODO: (NaN)
 	}
 
+	template <typename T>
+	void readRealFromJson( T* num )
+	{
+		skipSpacesEtc();
+		auto start = begin;
+		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+		*num = (T)ret; // TODO: add boundary checking
+	}
+	void skipRealFromJson()
+	{
+		skipSpacesEtc();
+		auto start = begin;
+		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+	}
+
 	void readKey(std::string* s)
 	{
 		skipSpacesEtc();
@@ -608,6 +682,74 @@ public:
 	void skipUnsignedInteger()
 	{
 		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += impl::integer_max_size;
+		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+	}
+
+	template <typename T>
+	void parseReal( T* num )
+	{
+		static_assert( sizeof( T ) <= impl::integer_max_size );
+		/*temporary solution TODO: actual implementation*/ double val = *reinterpret_cast<double*>(begin); begin += sizeof( val );
+		if ( std::is_integral<T>::value )
+		{
+			static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+			if constexpr ( std::is_signed< T >::value )
+			{
+				if constexpr ( sizeof( T ) == 8 )
+					*num = (T)(val);
+				else if constexpr ( sizeof( T ) == 4 )
+				{
+					assert( val >= INT32_MIN && val <= INT32_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 2 )
+				{
+					assert( val >= INT16_MIN && val <= INT16_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 1 )
+				{
+					assert( val >= INT8_MIN && val <= INT8_MAX );
+					*num = (T)(val);
+				}
+				else
+					static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+			}
+			else
+			{
+				if constexpr ( sizeof( T ) == 8 )
+				{
+					assert( val >= 0 );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 4 )
+				{
+					assert( val >= 0 && val <= UINT32_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 2 )
+				{
+					assert( val >= 0 && val <= UINT16_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 1 )
+				{
+					assert( val >= 0 && val <= UINT8_MAX );
+					*num = (T)(val);
+				}
+				else
+					static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+			}
+		}
+		else
+		{
+			static_assert( std::is_floating_point<T>::value );
+			*num = val; // TODO: check limits for T = float
+		}
+	}
+	void skipReal()
+	{
+		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 	}
 

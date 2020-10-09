@@ -28,6 +28,26 @@
 #include "idl_tree_serializer.h"
 
 
+struct FloatingParts
+{
+	int64_t fraction;
+	int64_t exponent;
+	FloatingParts( double d ) { fromFloating( d ); }
+	void fromFloating( double d ) { 
+		uint64_t fraction_ = *(uint64_t*)(&d) & 0x800fffffffffffffULL; 
+		fraction = *(int64_t*)(&fraction_);
+		uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 53;
+		exponent = *(uint64_t*)(&exponent_) - 1023;
+	}
+	double value() { 
+		int64_t exp_ = exponent + 1023;
+		uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+		assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+		assert( ( exp_ & ~0x7ffLLU ) == 0 );
+		return *(double*)(&res);
+	}
+};
+
 const char* impl_kindToString( MessageParameterType::KIND kind )
 {
 	switch ( kind )
@@ -36,6 +56,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::UNDEFINED: return "UNDEFINED";
 		case MessageParameterType::KIND::INTEGER: return "INTEGER";
 		case MessageParameterType::KIND::UINTEGER: return "UINTEGER";
+		case MessageParameterType::KIND::REAL: return "REAL";
 		case MessageParameterType::KIND::CHARACTER_STRING: return "CHARACTER_STRING";
 		case MessageParameterType::KIND::BYTE_ARRAY: return "BYTE_ARRAY";
 		case MessageParameterType::KIND::BLOB: return "BLOB";
@@ -470,6 +491,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 					}
 					case MessageParameterType::KIND::INTEGER:
 					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
 						break;
 					case MessageParameterType::KIND::BYTE_ARRAY:
 					case MessageParameterType::KIND::BLOB:
@@ -510,6 +532,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 			{
 				case MessageParameterType::KIND::INTEGER:
 				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
 					break; // will be added right to respective calls
 				case MessageParameterType::KIND::VECTOR:
 					break; // TODO: revise
@@ -559,6 +582,9 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::UnsignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
+			case MessageParameterType::KIND::REAL:
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::RealType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::StringType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
@@ -578,6 +604,9 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::UINTEGER:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::REAL:
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
@@ -631,6 +660,13 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
+			case MessageParameterType::KIND::REAL:
+			{
+				FloatingParts parts(param.type.numericalDefault);
+//				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, double, double, %f>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
+				break;
+			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
 					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
@@ -675,6 +711,9 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				break;
+			case MessageParameterType::KIND::REAL:
 				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
@@ -774,6 +813,7 @@ void impl_generateMessageCommentBlock( FILE* header, Message& s )
 				case MessageParameterType::KIND::ENUM: fprintf( header, " (DEFAULT: %s::%s)", param.type.name.c_str(), param.type.stringDefault.c_str() ); break;
 				case MessageParameterType::KIND::INTEGER: fprintf( header, " (DEFAULT: %lld)", (int64_t)(param.type.numericalDefault) ); break;
 				case MessageParameterType::KIND::UINTEGER: fprintf( header, " (DEFAULT: %lld)", (uint64_t)(param.type.numericalDefault) ); break;
+				case MessageParameterType::KIND::REAL: fprintf( header, " (DEFAULT: %f)", param.type.numericalDefault ); break;
 				case MessageParameterType::KIND::CHARACTER_STRING: fprintf( header, " (DEFAULT: \"%s\")", param.type.stringDefault.c_str() ); break;
 			}
 		}
@@ -834,6 +874,13 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
+			case MessageParameterType::KIND::REAL:
+			{
+				FloatingParts parts(param.type.numericalDefault);
+//				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
+				break;
+			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
 					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );

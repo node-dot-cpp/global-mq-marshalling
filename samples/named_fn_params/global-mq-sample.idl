@@ -7,6 +7,7 @@ MESSAGE PROTO=JSON,GMQ message_one {
   UINTEGER forthParam;
   CHARACTER-STRING fifthParam;
   VECTOR<MESSAGE NONEXTENDABLE point> sixthParam;
+  REAL seventhParam;
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
