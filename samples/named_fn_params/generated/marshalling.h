@@ -72,7 +72,7 @@ void message_one_compose(Composer& composer, Args&& ... args)
 			impl::gmq::composeParamToGmq<arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_4_type::nameAndTypeID, composer, args...);
 			impl::gmq::composeParamToGmq<arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(arg_5_type::nameAndTypeID, composer, args...);
 			impl::gmq::composeParamToGmq<arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_6_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_7_type, true, uint64_t, uint64_t, 0>(arg_7_type::nameAndTypeID, composer, args...);
+			impl::gmq::composeParamToGmq<arg_7_type, true, FloatingDefault<0,-1023>, int, 0>(arg_7_type::nameAndTypeID, composer, args...);
 
 			break;
 		}
@@ -91,7 +91,7 @@ void message_one_compose(Composer& composer, Args&& ... args)
 			composer.buff.append( ",\n  ", 4 );
 			impl::json::composeParamToJson<arg_6_type, true, int64_t, int64_t, (int64_t)(0)>("sixthParam", arg_6_type::nameAndTypeID, composer, args...);
 			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_7_type, true, uint64_t, uint64_t, 0>("seventhParam", arg_7_type::nameAndTypeID, composer, args...);
+			impl::json::composeParamToJson<arg_7_type, true, FloatingDefault<0,-1023>, int, 0>("seventhParam", arg_7_type::nameAndTypeID, composer, args...);
 			composer.buff.append( "\n}", 2 );
 			break;
 		}

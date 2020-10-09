@@ -33,6 +33,24 @@
 #include <fmt/format.h>
 
 namespace m {
+
+	template<int64_t fraction_, int64_t exponent_>
+	struct FloatingDefault
+	{
+		static_assert( ( (uint64_t)(fraction_) & 0x7ff0000000000000 ) == 0 );
+		static_assert( ( exponent_ & ~0x7ff ) == 0 );
+		static constexpr int64_t fraction = fraction_;
+		static constexpr int64_t exponent = exponent_;
+		constexpr FloatingDefault() {}
+		static double value() {
+			int64_t exp_ = exponent + 1023;
+			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			assert( ( exp_ & ~0x7ff ) == 0 );
+			return *(double*)(&res);
+		}
+	};
+
 	static constexpr size_t MIN_BUFFER = 1024;
 	class Buffer {
 	private:

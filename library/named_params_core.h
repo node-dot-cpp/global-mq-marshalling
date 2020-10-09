@@ -412,8 +412,7 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 	}
 	else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value )
 	{
-		static_assert ( std::is_arithmetic<AssumedDefaultT>::value );
-		composeReal( composer, defaultValue );
+		composeReal( composer, AssumedDefaultT::value() );
 	}
 	else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 	{
@@ -625,8 +624,7 @@ void composeParamToJson(std::string name, const typename TypeToPick::NameAndType
 		}
 		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value )
 		{
-			static_assert ( std::is_integral<AssumedDefaultT>::value );
-			composeNamedReal( composer, name, defaultValue );
+			composeNamedReal( composer, name, AssumedDefaultT::value() );
 		}
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 		{
