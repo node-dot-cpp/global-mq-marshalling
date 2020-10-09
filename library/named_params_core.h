@@ -71,7 +71,6 @@ private:
 
 public:
 	explicit NamedParameterWithType(T const& value) : value_(value) {}
-//	explicit NamedParameterWithType(T&& value) : value_(std::move(value)) {}
 	T& get() { return value_; }
 	T const& get() const { return value_; }
 
@@ -119,12 +118,6 @@ public:
 		return lnext_( composer, ordinal ); 
 	}
 };
-template<class LambdaSize, class LambdaNext>
-CollectionWrapperForComposing<LambdaSize, LambdaNext> makeReadyForComposing(LambdaSize &&lsize, LambdaNext &&lnext) { 
-	static_assert( std::is_invocable<LambdaSize>::value, "lambda-expression is expected" );
-	static_assert( std::is_invocable<LambdaNext>::value, "lambda-expression is expected" );
-	return { std::forward<LambdaSize>(lsize), std::forward<LambdaNext>(lnext) };
-}
 
 template<class LambdaSize, class LambdaNext>
 class CollactionWrapperForParsing : public CollectionWrapperBase {
@@ -144,12 +137,6 @@ public:
 		lnext_( p, ordinal ); 
 	}
 };
-template<class LambdaSize, class LambdaNext>
-CollactionWrapperForParsing<LambdaSize, LambdaNext> makeReadyForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) { 
-	static_assert( std::is_same<nullptr_t, LambdaSize>::value || std::is_invocable<LambdaSize>::value, "lambda-expression is expected" );
-	static_assert( std::is_invocable<LambdaNext>::value, "lambda-expression is expected" );
-	return { std::forward<LambdaSize>(lsizeHint), std::forward<LambdaNext>(lnext) };
-}
 
 template<class T>
 class SimpleTypeCollectionWrapper : public SimpleTypeCollectionWrapperBase
