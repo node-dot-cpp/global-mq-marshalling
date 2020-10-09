@@ -28,6 +28,26 @@
 #include "idl_tree_serializer.h"
 
 
+struct FloatingParts
+{
+	int64_t fraction;
+	int64_t exponent;
+	FloatingParts( double d ) { fromFloating( d ); }
+	void fromFloating( double d ) { 
+		uint64_t fraction_ = *(uint64_t*)(&d) & 0x100fffffffffffffULL; 
+		fraction = *(uint64_t*)(&fraction_);
+		uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 52;
+		exponent = *(uint64_t*)(&exponent_) - 1023;
+	}
+	double value() { 
+		int64_t exp_ = exponent + 1023;
+		uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+		assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+		assert( ( exp_ & ~0x7ff ) == 0 );
+		return *(double*)(&res);
+	}
+};
+
 const char* impl_kindToString( MessageParameterType::KIND kind )
 {
 	switch ( kind )
@@ -641,8 +661,12 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, double, double, %f>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, count );
+			{
+				FloatingParts parts(param.type.numericalDefault);
+//				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, double, double, %f>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, FloatingDefault<%lld,%lld>, int, 0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
 				break;
+			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
 					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
@@ -851,8 +875,12 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
+			{
+				FloatingParts parts(param.type.numericalDefault);
+//				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, FloatingDefault<%lld,%lld>, int, 0>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
 				break;
+			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
 					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
