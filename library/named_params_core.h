@@ -30,6 +30,7 @@
 
 #include <tuple>
 #include <string>
+#include <cstddef>
 
 #include "compose_and_parse_impl.h"
 
@@ -131,10 +132,13 @@ class CollactionWrapperForParsing : public CollectionWrapperBase {
 	LambdaNext lnext_;
 public:
 	CollactionWrapperForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) : lsize_(std::forward<LambdaSize>(lsizeHint)), lnext_(std::forward<LambdaNext>(lnext)) {
+//		static_assert( std::is_same<std::nullptr_t, LambdaSize>::value || std::is_invocable<LambdaSize>::value, "lambda-expression is expected" );
+//		static_assert( std::is_invocable<LambdaNext>::value || std::is_invocable<std::remove_reference<LambdaNext>::type>::value, "lambda-expression is expected" );
 	}
 	void size_hint( size_t sz ) { 
-		if constexpr ( std::is_invocable<LambdaSize>::value )
-			lsize_( sz );
+		if constexpr ( !std::is_same<LambdaSize, std::nullptr_t>::value )
+			if ( sz != CollectionWrapperBase::unknown_size )
+				lsize_( sz );
 	}
 	void parse_next( m::Parser& p, size_t ordinal ) { 
 		lnext_( p, ordinal ); 
@@ -357,7 +361,7 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p,
 				auto& coll = arg0.get();
 				coll.size_hint( sz );
 				for ( size_t i=0; i<sz; ++i )
-					coll.parse_next_from_gmq<typename TypeToPick::Type>( p );
+					coll.template parse_next_from_gmq<typename TypeToPick::Type>( p );
 			}
 			else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
 			{
@@ -449,7 +453,7 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 				size_t collSz = coll.size();
 				composeUnsignedInteger( composer, collSz );
 				for ( size_t i=0; i<collSz; ++i )
-					coll.compose_next_to_gmq<typename TypeToPick::Type>(composer);
+					coll.template compose_next_to_gmq<typename TypeToPick::Type>(composer);
 			}
 			else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
 			{
@@ -536,7 +540,7 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p
 				{
 					for ( ;; )
 					{
-						coll.parse_next_from_json<typename TypeToPick::Type>( p );
+						coll.template parse_next_from_json<typename TypeToPick::Type>( p );
 						if ( p.isDelimiter( ',' ) )
 						{
 							p.skipDelimiter( ',' );
@@ -667,7 +671,7 @@ void composeParamToJson(std::string name, const typename TypeToPick::NameAndType
 				{
 					if ( i )
 						composer.buff.append( ", ", 2 );
-					bool ok = coll.compose_next_to_json<typename TypeToPick::Type>(composer);
+					bool ok = coll.template compose_next_to_json<typename TypeToPick::Type>(composer);
 				}
 				composer.buff.appendUint8( ']' );
 			}
