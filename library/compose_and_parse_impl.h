@@ -33,6 +33,25 @@
 #include <fmt/format.h>
 
 namespace m {
+	struct FloatingParts
+	{
+		int64_t fraction;
+		int64_t exponent;
+		FloatingParts( double d ) { fromFloating( d ); }
+		void fromFloating( double d ) { 
+			uint64_t fraction_ = *(uint64_t*)(&d) & 0x800fffffffffffffULL; 
+			fraction = *(int64_t*)(&fraction_);
+			uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 53;
+			exponent = *(uint64_t*)(&exponent_) - 1023;
+		}
+		double value() { 
+			int64_t exp_ = exponent + 1023;
+			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			assert( ( exp_ & ~0x7ffLLU ) == 0 );
+			return *(double*)(&res);
+		}
+	};
 
 	template<int64_t fraction_, int64_t exponent_>
 	struct FloatingDefault
@@ -52,6 +71,7 @@ namespace m {
 	};
 
 	static constexpr size_t MIN_BUFFER = 1024;
+
 	class Buffer {
 	private:
 		size_t _size = 0;
