@@ -27,10 +27,10 @@ void runSample( m::Proto protocol2use)
 	m::Buffer b;
 	m::Composer composer( protocol2use, b );
 	m::message_one_compose( composer, 
-		m::thirdParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](m::Composer& c, size_t ordinal){ m::point3D_compose( c, m::x = vectorOfPoints3D[ordinal].x, m::y = vectorOfPoints3D[ordinal].y, m::z = vectorOfPoints3D[ordinal].z );} ), 
+		m::thirdParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ m::point3D_compose( c, m::x = vectorOfPoints3D[ordinal].x, m::y = vectorOfPoints3D[ordinal].y, m::z = vectorOfPoints3D[ordinal].z );} ), 
 		m::firstParam = 1, m::fifthParam = std::string("def"), m::forthParam = 3, m::seventhParam = 3.1416, 
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbers ),
-		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](m::Composer& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
+		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
 
 	m::Parser parser( protocol2use, b );
@@ -44,8 +44,8 @@ void runSample( m::Proto protocol2use)
 	m::message_one_parse( parser, 
 		m::firstParam = &firstParam, m::forthParam = &forthParam, 
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
-		m::thirdParam = m::CollactionWrapperForParsing( nullptr, [&](m::Parser& p, size_t ordinal){ Point3D pt; m::point3D_parse( p, m::x = &(pt.x), m::y = &(pt.y), m::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
-		m::sixthParam = m::CollactionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](m::Parser& p, size_t ordinal){ Point pt; m::point_parse( p,  m::x = &(pt.x), m::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
+		m::thirdParam = m::CollactionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; m::point3D_parse( p, m::x = &(pt.x), m::y = &(pt.y), m::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
+		m::sixthParam = m::CollactionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; m::point_parse( p,  m::x = &(pt.x), m::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
 		m::fifthParam = &fifthParam, m::seventhParam = &seventhParam );
 
 	assert( firstParam == 1 );
