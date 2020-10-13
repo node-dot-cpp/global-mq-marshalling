@@ -1,1 +1,1 @@
-g++-10 ../main.cpp ../../../3rdparty/fmt/src/format.cc -I../../../3rdparty/fmt/include -I../../../library -std=c++2a -g -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-empty-body -DNDEBUG -O3  -o test.bin
+g++-10 ../main.cpp ../../../src/globalmq.cpp ../../../../3rdparty/fmt/src/format.cc -I../../../../3rdparty/fmt/include -I../../../src -std=c++2a -g -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-empty-body -DNDEBUG -O3  -o test.bin
