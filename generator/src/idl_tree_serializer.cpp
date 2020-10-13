@@ -655,23 +655,22 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
-//				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, double, double, %f>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, count );
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+					fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
 				else
-					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, count );
+					fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -680,7 +679,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
@@ -708,16 +707,16 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -726,7 +725,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
