@@ -39,9 +39,11 @@ constexpr z_Type::TypeConverter z;
 
 //**********************************************************************
 
-template<typename ... Args>
-void message_one_compose(Composer& composer, Args&& ... args)
+template<class ComposerT, typename ... Args>
+void message_one_compose(ComposerT& composer, Args&& ... args)
 {
+	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
+
 	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, firstParam_Type::Name>;
 	using arg_2_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, secondParam_Type::Name>;
 	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, thirdParam_Type::Name>;
@@ -62,45 +64,41 @@ void message_one_compose(Composer& composer, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	switch ( composer.proto )
+	if constexpr( ComposerT::proto == Proto::GMQ )
 	{
-		case Proto::GMQ:
-		{
-			impl::gmq::composeParamToGmq<arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(arg_1_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_2_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_3_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_3_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_4_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(arg_5_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(arg_6_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_7_type, true, FloatingDefault<0,-1023>, int, 0>(arg_7_type::nameAndTypeID, composer, args...);
-
-			break;
-		}
-		case Proto::JSON:
-		{
-			composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-			impl::json::composeParamToJson<arg_1_type, true, int64_t, int64_t, (int64_t)(0)>("firstParam", arg_1_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_2_type, true, int64_t, int64_t, (int64_t)(0)>("secondParam", arg_2_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_3_type, true, int64_t, int64_t, (int64_t)(0)>("thirdParam", arg_3_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>("forthParam", arg_4_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>("fifthParam", arg_5_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_6_type, true, int64_t, int64_t, (int64_t)(0)>("sixthParam", arg_6_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_7_type, true, FloatingDefault<0,-1023>, int, 0>("seventhParam", arg_7_type::nameAndTypeID, composer, args...);
-			composer.buff.append( "\n}", 2 );
-			break;
-		}
+		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_5_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_6_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_7_type::nameAndTypeID, args...);
 	}
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON );
+		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "firstParam", arg_1_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "secondParam", arg_2_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "thirdParam", arg_3_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, "forthParam", arg_4_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, "fifthParam", arg_5_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_6_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "sixthParam", arg_6_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "seventhParam", arg_7_type::nameAndTypeID, args...);
+		composer.buff.append( "\n}", 2 );	}
 }
 
-template<typename ... Args>
-void message_one_parse(Parser& p, Args&& ... args)
+template<class ParserT, typename ... Args>
+void message_one_parse(ParserT& p, Args&& ... args)
 {
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
 	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, firstParam_Type::Name>;
 	using arg_2_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, secondParam_Type::Name>;
 	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, thirdParam_Type::Name>;
@@ -121,56 +119,50 @@ void message_one_parse(Parser& p, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	switch ( p.proto )
+	if constexpr( ParserT::proto == Proto::GMQ )
 	{
-		case Proto::GMQ:
+		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_7_type, false>(p, arg_7_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON );
+		p.skipDelimiter( '{' );
+		for ( ;; )
 		{
-			impl::gmq::parseGmqParam<arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
-
-			break;
-		}
-		case Proto::JSON:
-		{
-			p.skipDelimiter( '{' );
-			for ( ;; )
+			std::string key;
+			p.readKey( &key );
+			if ( key == "firstParam" )
+				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			else if ( key == "secondParam" )
+				impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			else if ( key == "thirdParam" )
+				impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+			else if ( key == "forthParam" )
+				impl::json::parseJsonParam<ParserT, arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
+			else if ( key == "fifthParam" )
+				impl::json::parseJsonParam<ParserT, arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
+			else if ( key == "sixthParam" )
+				impl::json::parseJsonParam<ParserT, arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
+			else if ( key == "seventhParam" )
+				impl::json::parseJsonParam<ParserT, arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
+			p.skipSpacesEtc();
+			if ( p.isDelimiter( ',' ) )
 			{
-				std::string key;
-				p.readKey( &key );
-				if ( key == "firstParam" )
-					impl::json::parseJsonParam<arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-				else if ( key == "secondParam" )
-					impl::json::parseJsonParam<arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-				else if ( key == "thirdParam" )
-					impl::json::parseJsonParam<arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-				else if ( key == "forthParam" )
-					impl::json::parseJsonParam<arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
-				else if ( key == "fifthParam" )
-					impl::json::parseJsonParam<arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
-				else if ( key == "sixthParam" )
-					impl::json::parseJsonParam<arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
-				else if ( key == "seventhParam" )
-					impl::json::parseJsonParam<arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
-				p.skipSpacesEtc();
-				if ( p.isDelimiter( ',' ) )
-				{
-					p.skipDelimiter( ',' );
-					continue;
-				}
-				if ( p.isDelimiter( '}' ) )
-				{
-					p.skipDelimiter( '}' );
-					break;
-				}
-				throw std::exception(); // bad format
+				p.skipDelimiter( ',' );
+				continue;
 			}
-
-			break;
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				break;
+			}
+			throw std::exception(); // bad format
 		}
 	}
 }
@@ -182,9 +174,11 @@ void message_one_parse(Parser& p, Args&& ... args)
 
 //**********************************************************************
 
-template<typename ... Args>
-void point_compose(Composer& composer, Args&& ... args)
+template<class ComposerT, typename ... Args>
+void point_compose(ComposerT& composer, Args&& ... args)
 {
+	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
+
 	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
 	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
 
@@ -195,30 +189,26 @@ void point_compose(Composer& composer, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	switch ( composer.proto )
+	if constexpr( ComposerT::proto == Proto::GMQ )
 	{
-		case Proto::GMQ:
-		{
-			impl::gmq::composeParamToGmq<arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(arg_1_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(arg_2_type::nameAndTypeID, composer, args...);
-
-			break;
-		}
-		case Proto::JSON:
-		{
-			composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-			impl::json::composeParamToJson<arg_1_type, true, int64_t, int64_t, (int64_t)(0)>("x", arg_1_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_2_type, true, int64_t, int64_t, (int64_t)(0)>("y", arg_2_type::nameAndTypeID, composer, args...);
-			composer.buff.append( "\n}", 2 );
-			break;
-		}
+		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 	}
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON );
+		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
+		composer.buff.append( "\n}", 2 );	}
 }
 
-template<typename ... Args>
-void point_parse(Parser& p, Args&& ... args)
+template<class ParserT, typename ... Args>
+void point_parse(ParserT& p, Args&& ... args)
 {
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
 	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
 	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
 
@@ -229,41 +219,35 @@ void point_parse(Parser& p, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	switch ( p.proto )
+	if constexpr( ParserT::proto == Proto::GMQ )
 	{
-		case Proto::GMQ:
+		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON );
+		p.skipDelimiter( '{' );
+		for ( ;; )
 		{
-			impl::gmq::parseGmqParam<arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-
-			break;
-		}
-		case Proto::JSON:
-		{
-			p.skipDelimiter( '{' );
-			for ( ;; )
+			std::string key;
+			p.readKey( &key );
+			if ( key == "x" )
+				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			else if ( key == "y" )
+				impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			p.skipSpacesEtc();
+			if ( p.isDelimiter( ',' ) )
 			{
-				std::string key;
-				p.readKey( &key );
-				if ( key == "x" )
-					impl::json::parseJsonParam<arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-				else if ( key == "y" )
-					impl::json::parseJsonParam<arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-				p.skipSpacesEtc();
-				if ( p.isDelimiter( ',' ) )
-				{
-					p.skipDelimiter( ',' );
-					continue;
-				}
-				if ( p.isDelimiter( '}' ) )
-				{
-					p.skipDelimiter( '}' );
-					break;
-				}
-				throw std::exception(); // bad format
+				p.skipDelimiter( ',' );
+				continue;
 			}
-
-			break;
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				break;
+			}
+			throw std::exception(); // bad format
 		}
 	}
 }
@@ -276,9 +260,11 @@ void point_parse(Parser& p, Args&& ... args)
 
 //**********************************************************************
 
-template<typename ... Args>
-void point3D_compose(Composer& composer, Args&& ... args)
+template<class ComposerT, typename ... Args>
+void point3D_compose(ComposerT& composer, Args&& ... args)
 {
+	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
+
 	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
 	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
 	using arg_3_type = NamedParameterWithType<impl::SignedIntegralType, z_Type::Name>;
@@ -291,33 +277,29 @@ void point3D_compose(Composer& composer, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	switch ( composer.proto )
+	if constexpr( ComposerT::proto == Proto::GMQ )
 	{
-		case Proto::GMQ:
-		{
-			impl::gmq::composeParamToGmq<arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(arg_1_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(arg_2_type::nameAndTypeID, composer, args...);
-			impl::gmq::composeParamToGmq<arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(arg_3_type::nameAndTypeID, composer, args...);
-
-			break;
-		}
-		case Proto::JSON:
-		{
-			composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-			impl::json::composeParamToJson<arg_1_type, true, int64_t, int64_t, (int64_t)(0)>("x", arg_1_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_2_type, true, int64_t, int64_t, (int64_t)(0)>("y", arg_2_type::nameAndTypeID, composer, args...);
-			composer.buff.append( ",\n  ", 4 );
-			impl::json::composeParamToJson<arg_3_type, true, int64_t, int64_t, (int64_t)(0)>("z", arg_3_type::nameAndTypeID, composer, args...);
-			composer.buff.append( "\n}", 2 );
-			break;
-		}
+		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
 	}
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON );
+		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "z", arg_3_type::nameAndTypeID, args...);
+		composer.buff.append( "\n}", 2 );	}
 }
 
-template<typename ... Args>
-void point3D_parse(Parser& p, Args&& ... args)
+template<class ParserT, typename ... Args>
+void point3D_parse(ParserT& p, Args&& ... args)
 {
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
 	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
 	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
 	using arg_3_type = NamedParameterWithType<impl::SignedIntegralType, z_Type::Name>;
@@ -330,44 +312,38 @@ void point3D_parse(Parser& p, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	switch ( p.proto )
+	if constexpr( ParserT::proto == Proto::GMQ )
 	{
-		case Proto::GMQ:
+		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON );
+		p.skipDelimiter( '{' );
+		for ( ;; )
 		{
-			impl::gmq::parseGmqParam<arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-			impl::gmq::parseGmqParam<arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-
-			break;
-		}
-		case Proto::JSON:
-		{
-			p.skipDelimiter( '{' );
-			for ( ;; )
+			std::string key;
+			p.readKey( &key );
+			if ( key == "x" )
+				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			else if ( key == "y" )
+				impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			else if ( key == "z" )
+				impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+			p.skipSpacesEtc();
+			if ( p.isDelimiter( ',' ) )
 			{
-				std::string key;
-				p.readKey( &key );
-				if ( key == "x" )
-					impl::json::parseJsonParam<arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-				else if ( key == "y" )
-					impl::json::parseJsonParam<arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-				else if ( key == "z" )
-					impl::json::parseJsonParam<arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-				p.skipSpacesEtc();
-				if ( p.isDelimiter( ',' ) )
-				{
-					p.skipDelimiter( ',' );
-					continue;
-				}
-				if ( p.isDelimiter( '}' ) )
-				{
-					p.skipDelimiter( '}' );
-					break;
-				}
-				throw std::exception(); // bad format
+				p.skipDelimiter( ',' );
+				continue;
 			}
-
-			break;
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				break;
+			}
+			throw std::exception(); // bad format
 		}
 	}
 }

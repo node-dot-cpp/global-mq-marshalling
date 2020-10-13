@@ -19,13 +19,13 @@ struct Point3D
 	int z;
 };
 
-void runSample( m::Proto protocol2use)
+void runJsonSample()
 {
 	std::vector<int> vectorOfNumbers = { 0, 1, 2, 3, 4, 5 };
 	std::vector<Point> vectorOfPoints = { {0, 1}, {2, 3}, {4, 5} };
 	std::vector<Point3D> vectorOfPoints3D = { {0, 1, 2}, {3, 4, 5} };
 	m::Buffer b;
-	m::Composer composer( protocol2use, b );
+	m::JsonComposer composer( b );
 	m::message_one_compose( composer, 
 		m::thirdParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ m::point3D_compose( c, m::x = vectorOfPoints3D[ordinal].x, m::y = vectorOfPoints3D[ordinal].y, m::z = vectorOfPoints3D[ordinal].z );} ), 
 		m::firstParam = 1, m::fifthParam = std::string("def"), m::forthParam = 3, m::seventhParam = 3.1416, 
@@ -33,7 +33,8 @@ void runSample( m::Proto protocol2use)
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
 
-	m::Parser parser( protocol2use, b );
+
+	m::JsonParser<m::Buffer> parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string fifthParam;
@@ -72,6 +73,5 @@ void runSample( m::Proto protocol2use)
 
 int main()
 {
-	runSample( m::Proto::GMQ );
-	runSample( m::Proto::JSON );
+	runJsonSample();
 }
