@@ -433,7 +433,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	fprintf( header, "#ifndef %s_guard\n"
 		"#define %s_guard\n"
 		"\n"
-		"#include <named_params_core.h>\n"
+		"#include <globalmq.h>\n"
 		"\n"
 		"namespace m {\n\n",
 		fileName, fileName );

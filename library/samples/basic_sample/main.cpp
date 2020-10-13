@@ -2,7 +2,7 @@
 //
 
 #include <stdio.h>
-#include <named_params_core.h>
+#include <globalmq.h>
 #include "./generated/marshalling.h"
 //#include "../manual/test.h"
 
