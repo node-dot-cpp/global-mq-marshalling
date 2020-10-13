@@ -979,20 +979,21 @@ void impl_generateParseFunctionJson( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 {
-	if ( s.protoList.size() == 1 )
+	size_t protoCount = s.protoList.size();
+	if ( protoCount == 1 )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
 			case Message::Proto::gmq:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::GMQ );\n" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this message assumes only GMQ protocol\" );\n" );
 				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 				break;
 			}
 			case Message::Proto::json:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::JSON );\n" );
-				impl_generateParamCallBlockForComposingJson( header, s, "\t" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this message assumes only JSON protocol\" );\n" );
+				impl_generateParamCallBlockForComposingJson( header, s, "" );
 				break;
 			}
 			default:
@@ -1001,60 +1002,73 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 	}
 	else
 	{
-		fprintf( header, 
-			"\tswitch ( composer.proto )\n"
-			"\t{\n" );
+		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
 		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
 		{
+			++processedProtoCount;
 			fprintf( header, 
-				"\t\tcase Proto::GMQ:\n"
-				"\t\t{\n" );
-			impl_generateParamCallBlockForComposingGmq( header, s, "\t\t\t" );
-			fprintf( header, 
-					"\n\t\t\tbreak;\n"
-				"\t\t}\n" );
+				"\tif constexpr( ComposerT::proto == Proto::GMQ )\n"
+				"\t{\n" );
+			impl_generateParamCallBlockForComposingGmq( header, s, "\t\t" );
+			fprintf( header, "\t}\n" );
 		}
 		// then add the rest
 		for ( auto it:s.protoList )
+		{
+			++processedProtoCount;
 			switch ( it )
 			{
 				case Message::Proto::gmq:
 					break; // already done
 				case Message::Proto::json:
 				{
-					fprintf( header, 
-						"\t\tcase Proto::JSON:\n"
-						"\t\t{\n" );
-					impl_generateParamCallBlockForComposingJson( header, s, "\t\t\t" );
-					fprintf( header, 
-							"\n\t\t\tbreak;\n"
-						"\t\t}\n" );
+					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
+					if ( processedProtoCount == 0 )
+					{
+						fprintf( header, 
+							"\tif constexpr ( ComposerT::proto == Proto::JSON )\n"
+							"\t{\n" );
+					}
+					else
+					{
+						if ( processedProtoCount == protoCount )
+							fprintf( header, 
+								"\telse\n"
+								"\t{\n"
+								"\t\tstatic_assert( ComposerT::proto == Proto::JSON );\n" );
+						else
+							fprintf( header, 
+								"\telse if constexpr ( ComposerT::proto == Proto::JSON )\n"
+								"\t{\n" );
+					}
+					impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
+					fprintf( header, "\t}\n" );
 					break;
 				}
 				default:
 					assert( false );
 			}
-		fprintf( header, 
-			"\t}\n" );
+		}
 	}
 }
 
 void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 {
-	if ( s.protoList.size() == 1 )
+	size_t protoCount = s.protoList.size();
+	if ( protoCount == 1 )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
 			case Message::Proto::gmq:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::GMQ );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this message assumes only GMQ protocol\" );\n" );
 				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 				break;
 			}
 			case Message::Proto::json:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::JSON );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this message assumes only JSON protocol\" );\n" );
 				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 				break;
 			}
@@ -1064,50 +1078,63 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 	}
 	else
 	{
-		fprintf( header, 
-			"\tswitch ( p.proto )\n"
-			"\t{\n" );
+		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
 		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
 		{
+			++processedProtoCount;
 			fprintf( header, 
-				"\t\tcase Proto::GMQ:\n"
-				"\t\t{\n" );
-			impl_generateParamCallBlockForParsingGmq( header, s, "\t\t\t" );
-			fprintf( header, 
-					"\n\t\t\tbreak;\n"
-				"\t\t}\n" );
+				"\tif constexpr( ParserT::proto == Proto::GMQ )\n"
+				"\t{\n" );
+			impl_generateParamCallBlockForParsingGmq( header, s, "\t\t" );
+			fprintf( header, "\t}\n" );
 		}
 		// then add the rest
 		for ( auto it:s.protoList )
+		{
+			++processedProtoCount;
 			switch ( it )
 			{
 				case Message::Proto::gmq:
 					break; // already done
 				case Message::Proto::json:
 				{
-					fprintf( header, 
-						"\t\tcase Proto::JSON:\n"
-						"\t\t{\n" );
-					impl_generateParamCallBlockForParsingJson( header, s, "\t\t\t" );
-					fprintf( header, 
-							"\n\t\t\tbreak;\n"
-						"\t\t}\n" );
+					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
+					if ( processedProtoCount == 0 )
+					{
+						fprintf( header, 
+							"\tif constexpr ( ParserT::proto == Proto::JSON )\n"
+							"\t{\n" );
+					}
+					else
+					{
+						if ( processedProtoCount == protoCount )
+							fprintf( header, 
+								"\telse\n"
+								"\t{\n"
+								"\t\tstatic_assert( ParserT::proto == Proto::JSON );\n" );
+						else
+							fprintf( header, 
+								"\telse if constexpr ( ParserT::proto == Proto::JSON )\n"
+								"\t{\n" );
+					}
+					impl_generateParamCallBlockForParsingJson( header, s, "\t\t" );
+					fprintf( header, "\t}\n" );
 					break;
 				}
 				default:
 					assert( false );
 			}
-		fprintf( header, 
-			"\t}\n" );
+		}
 	}
 }
 
 void impl_generateComposeFunction( FILE* header, Message& s )
 {
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_compose(Composer& composer, Args&& ... args)\n"
+	fprintf( header, "template<class ComposerT, typename ... Args>\n"
+	"void %s_compose(ComposerT& composer, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerT, ComposerBase>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -1119,9 +1146,10 @@ void impl_generateComposeFunction( FILE* header, Message& s )
 
 void impl_generateParseFunction( FILE* header, Message& s )
 {
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parse(Parser& p, Args&& ... args)\n"
+	fprintf( header, "template<class ParserT, typename ... Args>\n"
+	"void %s_parse(ParserT& p, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ParserT, ParserBase>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
