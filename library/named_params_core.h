@@ -307,7 +307,7 @@ namespace impl {
 namespace gmq {
 
 template<typename ParserT, typename TypeToPick, bool required>
-void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, ParserT& p)
+void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected)
 {
 	if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
 		p.skipSignedInteger();
@@ -327,7 +327,7 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, ParserT& p
 }
 
 template<typename ParserT, typename TypeToPick, bool required, typename Arg0, typename ... Args>
-void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, ParserT& p, Arg0&& arg0, Args&& ... args)
+void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
 	using Agr0Type = special_decay_t<Arg0>;
 	using Agr0DataType = typename std::remove_pointer<typename Agr0Type::Type>::type;
@@ -383,14 +383,14 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, ParserT& p
 			static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 	}
 	else
-		parseGmqParam<TypeToPick, required>(expected, p, args...);
+		parseGmqParam<ParserT, TypeToPick, required>(p, expected, args...);
 }
 
 
 ///////////////////////////////////////////
 
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
-void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, ComposerT& composer)
+void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTypeID expected)
 {
 	static_assert( !required, "required parameter" );
 	if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
@@ -421,7 +421,7 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 }
 
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
-void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, ComposerT& composer, Arg0&& arg0, Args&& ... args)
+void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
 	using Agr0Type = special_decay_t<Arg0>;
 	if constexpr ( std::is_same<typename special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
@@ -477,7 +477,7 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 			static_assert( std::is_same<typename Agr0Type::Type, AllowedDataType>::value, "unsupported type" );
 	}
 	else
-		composeParamToGmq<TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(expected, composer, args...);
+		composeParamToGmq<ComposerT, TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(composer, expected, args...);
 }
 
 } // namespace gmq

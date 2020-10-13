@@ -436,6 +436,7 @@ protected:
 	uint8_t* begin = nullptr;
 	uint8_t* end = nullptr;
 
+public:
 	void adjustParsingPos( size_t toSkip )
 	{
 		begin += toSkip;
