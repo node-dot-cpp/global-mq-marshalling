@@ -186,14 +186,28 @@ namespace m {
 
 enum Proto { GMQ, JSON };
 
-class Composer
+struct ComposerBase {};
+
+template<class BufferT>
+class JsonComposer : public ComposerBase
 {
 public: // just temporary TODO: rework!
-	Proto proto;
-	Buffer& buff;
+	static constexpr Proto proto = Proto::JSON;
+	BufferT& buff;
 
 public:
-	Composer( Proto proto_, Buffer& buff_ ) : proto( proto_ ), buff( buff_ ) {}
+	JsonComposer( BufferT& buff_ ) : buff( buff_ ) {}
+};
+
+template<class BufferT>
+class GmqComposer : public ComposerBase
+{
+public: // just temporary TODO: rework!
+	static constexpr Proto proto = Proto::GMQ;
+	BufferT& buff;
+
+public:
+	GmqComposer( BufferT& buff_ ) : buff( buff_ ) {}
 };
 
 } // namespace m
@@ -235,8 +249,8 @@ struct StringLiteralForComposing
 
 // composing
 
-template <typename T>
-void composeSignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeSignedInteger(ComposerT& composer, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
@@ -249,8 +263,8 @@ void composeSignedInteger(Composer& composer, T num )
 	}
 }
 
-template <typename T>
-void composeUnsignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeUnsignedInteger(ComposerT& composer, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
@@ -262,8 +276,8 @@ void composeUnsignedInteger(Composer& composer, T num )
 	}
 }
 
-template <typename T>
-void composeReal(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeReal(ComposerT& composer, T num )
 {
 	/*temporary solution TODO: actual implementation*/ { 
 		double val = num; 
@@ -271,22 +285,22 @@ void composeReal(Composer& composer, T num )
 	}
 }
 
-inline
-void composeString(Composer& composer, const std::string& str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const std::string& str )
 {
 	composer.buff.appendString( str );
 	composer.buff.appendUint8( 0 );
 }
 
-inline
-void composeString(Composer& composer, const StringLiteralForComposing* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 {
 	composer.buff.append( str->str, str->size );
 	composer.buff.appendUint8( 0 );
 }
 
-inline
-void composeString(Composer& composer, const char* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.append( str, sz );
@@ -296,8 +310,8 @@ void composeString(Composer& composer, const char* str )
 namespace json
 {
 
-template <typename T>
-void composeSignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeSignedInteger(ComposerT& composer, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
@@ -307,8 +321,8 @@ void composeSignedInteger(Composer& composer, T num )
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-template <typename T>
-void composeUnsignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeUnsignedInteger(ComposerT& composer, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
@@ -317,32 +331,32 @@ void composeUnsignedInteger(Composer& composer, T num )
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-inline
-void composeString(Composer& composer, const std::string& str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const std::string& str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendString( str );
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeString(Composer& composer, const StringLiteralForComposing* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.append( str->str, str->size );
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeString(Composer& composer, std::string str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, std::string str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.append( str.c_str(), str.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeString(Composer& composer, const char* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.appendUint8( '\"' );
@@ -350,8 +364,8 @@ void composeString(Composer& composer, const char* str )
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void addNamePart(Composer& composer, std::string name )
+template<typename ComposerT>
+void addNamePart(ComposerT& composer, std::string name )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendString( name );
@@ -360,8 +374,8 @@ void addNamePart(Composer& composer, std::string name )
 	composer.buff.appendUint8( ' ' );
 }
 
-template <typename T>
-void composeNamedSignedInteger(Composer& composer, std::string name, T num )
+template<typename ComposerT, typename T>
+void composeNamedSignedInteger(ComposerT& composer, std::string name, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
@@ -372,8 +386,8 @@ void composeNamedSignedInteger(Composer& composer, std::string name, T num )
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-template <typename T>
-void composeNamedUnsignedInteger(Composer& composer, std::string name, T num )
+template<typename ComposerT, typename T>
+void composeNamedUnsignedInteger(ComposerT& composer, std::string name, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
@@ -383,15 +397,15 @@ void composeNamedUnsignedInteger(Composer& composer, std::string name, T num )
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-template <typename T>
-void composeNamedReal(Composer& composer, std::string name, T num )
+template<typename ComposerT, typename T>
+void composeNamedReal(ComposerT& composer, std::string name, T num )
 {
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", num ) );
 }
 
-inline
-void composeNamedString(Composer& composer, std::string name, const std::string& str )
+template<typename ComposerT>
+void composeNamedString(ComposerT& composer, std::string name, const std::string& str )
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
@@ -399,8 +413,8 @@ void composeNamedString(Composer& composer, std::string name, const std::string&
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeNamedString(Composer& composer, std::string name, const StringLiteralForComposing* str )
+template<typename ComposerT>
+void composeNamedString(ComposerT& composer, std::string name, const StringLiteralForComposing* str )
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
@@ -416,152 +430,29 @@ void composeNamedString(Composer& composer, std::string name, const StringLitera
 
 namespace m {
 
-class Parser
+class ParserBase
 {
+protected:
 	uint8_t* begin = nullptr;
 	uint8_t* end = nullptr;
-
-public: // TODO: Revise!
-	Proto proto;
-
-public:
-	Parser( Proto proto_, Buffer& b ) : proto( proto_ ) { begin = b.begin(); end = b.begin() + b.size(); }
-	Parser( Proto proto_, uint8_t* buff, size_t size ) : proto( proto_ ) { begin = buff; end = buff + size; }
-	Parser( const Parser& other, size_t size ) : proto( other.proto ) { begin = other.begin; end = other.begin + size; }
 
 	void adjustParsingPos( size_t toSkip )
 	{
 		begin += toSkip;
 	}
 
-	// JSON  ///////////////////////////////////////////////////////////////////
+};
 
-	void skipSpacesEtc()
-	{
-		while ( begin < end && ( *begin == ' ' || *begin == '\t' || *begin == '\r' || *begin == '\n' ) ) ++begin;
-	}
+template<class BufferT>
+class GmqParser : public ParserBase
+{
+public:
+	static constexpr Proto proto = Proto::GMQ;
 
-	bool isComma()
-	{
-		skipSpacesEtc();
-		return *begin == ',';
-	}
-
-	void skipComma()
-	{
-		if ( *begin++ != ',' )
-			throw std::exception(); // TODO
-	}
-
-	bool isDelimiter( char delim )
-	{
-		skipSpacesEtc();
-		return *begin == delim;
-	}
-
-	void skipDelimiter( char delim )
-	{
-		skipSpacesEtc();
-		if ( *begin++ != delim )
-			throw std::exception(); // TODO
-	}
-
-	bool isData() { return begin != end && *begin != 0;  }
-
-	void readStringFromJson(std::string* s)
-	{
-		skipSpacesEtc();
-		if ( *begin++ != '\"' )
-			throw std::exception(); // TODO
-		const char* start = reinterpret_cast<const char*>( begin );
-		while ( begin < end && *begin != '\"' ) ++begin;
-		*s = std::string( start, reinterpret_cast<const char*>( begin ) - start );
-		if ( begin == end )
-			throw std::exception(); // TODO
-		++begin;
-	}
-	void skipStringFromJson()
-	{
-		skipSpacesEtc();
-		if ( *begin++ != '\"' )
-			throw std::exception(); // TODO
-		while ( begin < end && *begin != '\"' ) ++begin;
-		if ( begin == end )
-			throw std::exception(); // TODO
-		++begin;
-	}
-
-	template <typename T>
-	void readUnsignedIntegerFromJson( T* num )
-	{
-		skipSpacesEtc();
-		if ( *begin == '-' )
-			throw std::exception(); // TODO: (negative is unexpected)
-		auto start = begin;
-		uint64_t ret = strtoull( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
-		*num = (T)ret; // TODO: add boundary checking
-	}
-	void skipUnsignedIntegerFromJson()
-	{
-		skipSpacesEtc();
-		if ( *begin == '-' )
-			throw std::exception(); // TODO: (negative is unexpected)
-		auto start = begin;
-		uint64_t ret = strtoull( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
-	}
-
-	template <typename T>
-	void readSignedIntegerFromJson( T* num )
-	{
-		skipSpacesEtc();
-		auto start = begin;
-		int64_t ret = strtoll( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
-		*num = (T)ret; // TODO: add boundary checking
-	}
-	void skipSignedIntegerFromJson()
-	{
-		skipSpacesEtc();
-		auto start = begin;
-		int64_t ret = strtoll( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
-	}
-
-	template <typename T>
-	void readRealFromJson( T* num )
-	{
-		skipSpacesEtc();
-		auto start = begin;
-		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
-		*num = (T)ret; // TODO: add boundary checking
-	}
-	void skipRealFromJson()
-	{
-		skipSpacesEtc();
-		auto start = begin;
-		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
-	}
-
-	void readKey(std::string* s)
-	{
-		skipSpacesEtc();
-		readStringFromJson(s);
-		skipSpacesEtc();
-		if ( *begin++ != ':' )
-			throw std::exception(); // TODO (expected ':')
-	}
-
-	// GMQ  ///////////////////////////////////////////////////////////////////
+public:
+	GmqParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
+	GmqParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
+	GmqParser( const GmqParser& other, size_t size ) { begin = other.begin; end = other.begin + size; }
 
 	template <typename T>
 	void parseSignedInteger( T* num )
@@ -769,6 +660,144 @@ public:
 	{
 		while( *begin++ != 0 );
 	}
+};
+
+template<class BufferT>
+class JsonParser : public ParserBase
+{
+public:
+	static constexpr Proto proto = Proto::JSON;
+
+public:
+	JsonParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
+	JsonParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
+	JsonParser( const JsonParser& other, size_t size ) { begin = other.begin; end = other.begin + size; }
+
+	void skipSpacesEtc()
+	{
+		while ( begin < end && ( *begin == ' ' || *begin == '\t' || *begin == '\r' || *begin == '\n' ) ) ++begin;
+	}
+
+	bool isComma()
+	{
+		skipSpacesEtc();
+		return *begin == ',';
+	}
+
+	void skipComma()
+	{
+		if ( *begin++ != ',' )
+			throw std::exception(); // TODO
+	}
+
+	bool isDelimiter( char delim )
+	{
+		skipSpacesEtc();
+		return *begin == delim;
+	}
+
+	void skipDelimiter( char delim )
+	{
+		skipSpacesEtc();
+		if ( *begin++ != delim )
+			throw std::exception(); // TODO
+	}
+
+	bool isData() { return begin != end && *begin != 0;  }
+
+	void readStringFromJson(std::string* s)
+	{
+		skipSpacesEtc();
+		if ( *begin++ != '\"' )
+			throw std::exception(); // TODO
+		const char* start = reinterpret_cast<const char*>( begin );
+		while ( begin < end && *begin != '\"' ) ++begin;
+		*s = std::string( start, reinterpret_cast<const char*>( begin ) - start );
+		if ( begin == end )
+			throw std::exception(); // TODO
+		++begin;
+	}
+	void skipStringFromJson()
+	{
+		skipSpacesEtc();
+		if ( *begin++ != '\"' )
+			throw std::exception(); // TODO
+		while ( begin < end && *begin != '\"' ) ++begin;
+		if ( begin == end )
+			throw std::exception(); // TODO
+		++begin;
+	}
+
+	template <typename T>
+	void readUnsignedIntegerFromJson( T* num )
+	{
+		skipSpacesEtc();
+		if ( *begin == '-' )
+			throw std::exception(); // TODO: (negative is unexpected)
+		auto start = begin;
+		uint64_t ret = strtoull( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+		*num = (T)ret; // TODO: add boundary checking
+	}
+	void skipUnsignedIntegerFromJson()
+	{
+		skipSpacesEtc();
+		if ( *begin == '-' )
+			throw std::exception(); // TODO: (negative is unexpected)
+		auto start = begin;
+		uint64_t ret = strtoull( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+	}
+
+	template <typename T>
+	void readSignedIntegerFromJson( T* num )
+	{
+		skipSpacesEtc();
+		auto start = begin;
+		int64_t ret = strtoll( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+		*num = (T)ret; // TODO: add boundary checking
+	}
+	void skipSignedIntegerFromJson()
+	{
+		skipSpacesEtc();
+		auto start = begin;
+		int64_t ret = strtoll( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+	}
+
+	template <typename T>
+	void readRealFromJson( T* num )
+	{
+		skipSpacesEtc();
+		auto start = begin;
+		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+		*num = (T)ret; // TODO: add boundary checking
+	}
+	void skipRealFromJson()
+	{
+		skipSpacesEtc();
+		auto start = begin;
+		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
+		if ( start == begin )
+			throw std::exception(); // TODO: (NaN)
+	}
+
+	void readKey(std::string* s)
+	{
+		skipSpacesEtc();
+		readStringFromJson(s);
+		skipSpacesEtc();
+		if ( *begin++ != ':' )
+			throw std::exception(); // TODO (expected ':')
+	}
+
 };
 
 } // namespace m
