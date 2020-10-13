@@ -657,6 +657,13 @@ public:
 		while( *begin++ != 0 );
 	}
 
+	void parseString( std::string_view* str )
+	{
+		const char* start = reinterpret_cast<char*>(begin);
+		while( *begin++ != 0 );
+		*str = std::string_view( start, reinterpret_cast<char*>(begin) - start - 1 );
+	}
+
 	void skipString()
 	{
 		while( *begin++ != 0 );
@@ -714,6 +721,18 @@ public:
 		const char* start = reinterpret_cast<const char*>( begin );
 		while ( begin < end && *begin != '\"' ) ++begin;
 		*s = std::string( start, reinterpret_cast<const char*>( begin ) - start );
+		if ( begin == end )
+			throw std::exception(); // TODO
+		++begin;
+	}
+	void readStringFromJson(std::string_view* s)
+	{
+		skipSpacesEtc();
+		if ( *begin++ != '\"' )
+			throw std::exception(); // TODO
+		const char* start = reinterpret_cast<const char*>( begin );
+		while ( begin < end && *begin != '\"' ) ++begin;
+		*s = std::string_view( start, reinterpret_cast<const char*>( begin ) - start );
 		if ( begin == end )
 			throw std::exception(); // TODO
 		++begin;
@@ -791,6 +810,14 @@ public:
 	}
 
 	void readKey(std::string* s)
+	{
+		skipSpacesEtc();
+		readStringFromJson(s);
+		skipSpacesEtc();
+		if ( *begin++ != ':' )
+			throw std::exception(); // TODO (expected ':')
+	}
+	void readKey(std::string_view* s)
 	{
 		skipSpacesEtc();
 		readStringFromJson(s);

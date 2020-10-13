@@ -33,11 +33,13 @@ void runJsonSample()
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
 
+	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
+	fmt::print( "{}\n", sview );
 
 	m::JsonParser<m::Buffer> parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
-	std::string fifthParam;
+	std::string_view fifthParam;
 	std::vector<int> vectorOfNumbersBack;
 	std::vector<Point> vectorOfPointsBack;
 	std::vector<Point3D> vectorOfPoints3DBack;
