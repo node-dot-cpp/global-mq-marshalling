@@ -1,0 +1,10 @@
+generator/build/.vs/generator/v16/.suo
+generator/build/.vs/generator/v16/Browse.VC.db
+generator/build/.vs/
+generator/build/x64/
+library/samples/basic_sample/build/.vs/
+library/samples/basic_sample/build/x64/
+library/samples/basic_sample/build/named_fn_params.vcxproj.user
+library/samples/basic_sample/build/named_fn_params.vcxproj.filters
+generator/build/generator.vcxproj.user
+generator/build/generator.vcxproj.filters
