@@ -869,23 +869,23 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
-//				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
+//				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+					fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				else
-					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.name.c_str(), count );
+					fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -894,7 +894,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
@@ -931,7 +931,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const 
 		++count;
 
 		fprintf( header, "%s\t%s( key == \"%s\" )\n", offset, count == 1 ? "if " : "else if ", param.name.c_str() );
-		fprintf( header, "%s\t\timpl::json::parseJsonParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+		fprintf( header, "%s\t\timpl::json::parseJsonParam<ParserT, arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 	}
 
 	fprintf( header, "%s\tp.skipSpacesEtc();\n", offset );
@@ -1134,7 +1134,7 @@ void impl_generateComposeFunction( FILE* header, Message& s )
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
 	"void %s_compose(ComposerT& composer, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
-	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerT, ComposerBase>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -1149,7 +1149,7 @@ void impl_generateParseFunction( FILE* header, Message& s )
 	fprintf( header, "template<class ParserT, typename ... Args>\n"
 	"void %s_parse(ParserT& p, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
-	fprintf( header, "\tstatic_assert( std::is_base_of<ParserT, ParserBase>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
