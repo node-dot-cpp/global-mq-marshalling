@@ -1,7 +1,7 @@
 #ifndef _marshalling_h_guard
 #define _marshalling_h_guard
 
-#include <named_params_core.h>
+#include <marshalling.h>
 
 namespace m {
 

@@ -32,7 +32,7 @@
 #include <string>
 #include <cstddef>
 
-#include "globalmq_compose_and_parse_impl.h"
+#include "marshalling_impl.h"
 
 namespace m {
 

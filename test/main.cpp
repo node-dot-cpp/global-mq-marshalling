@@ -2,8 +2,8 @@
 //
 
 #include <stdio.h>
-#include <globalmq.h>
-#include "./generated/marshalling.h"
+#include <marshalling.h>
+#include "./generated/test_marshalling.h"
 //#include "../manual/test.h"
 
 struct Point
@@ -28,7 +28,7 @@ void runGmqSample()
 	m::GmqComposer<m::Buffer> composer( b );
 	m::message_one_compose( composer, 
 		m::thirdParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ m::point3D_compose( c, m::x = vectorOfPoints3D[ordinal].x, m::y = vectorOfPoints3D[ordinal].y, m::z = vectorOfPoints3D[ordinal].z );} ), 
-		m::firstParam = 1, m::fifthParam = std::string("def"), m::forthParam = 3, m::seventhParam = 3.1416, 
+		m::firstParam = 1, m::fifthParam = "def", m::forthParam = 3, m::seventhParam = 3.1416, 
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbers ),
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
@@ -79,7 +79,7 @@ void runJsonSample()
 	m::JsonComposer composer( b );
 	m::message_one_compose( composer, 
 		m::thirdParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ m::point3D_compose( c, m::x = vectorOfPoints3D[ordinal].x, m::y = vectorOfPoints3D[ordinal].y, m::z = vectorOfPoints3D[ordinal].z );} ), 
-		m::firstParam = 1, m::fifthParam = std::string("def"), m::forthParam = 3, m::seventhParam = 3.1416, 
+		m::firstParam = 1, m::fifthParam = "def", m::forthParam = 3, m::seventhParam = 3.1416, 
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbers ),
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
