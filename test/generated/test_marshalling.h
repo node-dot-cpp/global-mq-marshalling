@@ -1,5 +1,5 @@
-#ifndef _marshalling_h_guard
-#define _marshalling_h_guard
+#ifndef _test_marshalling_h_guard
+#define _test_marshalling_h_guard
 
 #include <marshalling.h>
 
@@ -351,4 +351,4 @@ void point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace m
 
-#endif // _marshalling_h_guard
+#endif // _test_marshalling_h_guard

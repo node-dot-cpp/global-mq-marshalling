@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\fmt\src\format.cc" />
-    <ClCompile Include="..\..\library\src\globalmq.cpp" />
+    <ClCompile Include="..\..\library\src\marshalling.cpp" />
     <ClCompile Include="..\main.cpp" />
   </ItemGroup>
   <ItemGroup>
