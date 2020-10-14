@@ -8,3 +8,12 @@ library/samples/basic_sample/build/named_fn_params.vcxproj.user
 library/samples/basic_sample/build/named_fn_params.vcxproj.filters
 generator/build/generator.vcxproj.user
 generator/build/generator.vcxproj.filters
+idl_compiler/build/idl_compiler.vcxproj.user
+idl_compiler/build/idl_compiler.vcxproj.filters
+idl_compiler/build/.vs/generator/v16/.suo
+idl_compiler/build/.vs/
+idl_compiler/build/x64/
+test/build/test.vcxproj.filters
+test/build/test.vcxproj.user
+test/build/.vs/
+test/build/x64/
