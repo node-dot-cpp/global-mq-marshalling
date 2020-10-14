@@ -28,9 +28,27 @@
 #ifndef COMPOSE_AND_PARSE_IMPL_H
 #define COMPOSE_AND_PARSE_IMPL_H
 
-#include <type_traits>
-#include <assert.h> // TODO: replace by nodecpp assertion system
+#include <tuple>
+#include <cstddef>
 #include <fmt/format.h>
+
+/////////////////////////////////////////
+// means for replacing std:: by nodecpp::
+#ifdef GMQ_USE_EXTERNAL_DEFINITIONS
+#include GMQ_USE_EXTERNAL_DEFINITIONS
+#endif // GMQ_USE_EXTERNAL_DEFINITIONS
+
+#ifndef GMQ_ASSERT
+#include <assert.h>
+#define GMQ_ASSERT( condition, ... ) assert( condition )
+#endif // GMQ_ASSERT
+
+#ifndef GMQ_COLL
+#include <string>
+#define GMQ_COLL std::
+#endif // GMQ_COLL
+/////////////////////////////////////////
+
 
 namespace m {
 	struct FloatingParts
@@ -47,8 +65,8 @@ namespace m {
 		double value() { 
 			int64_t exp_ = exponent + 1023;
 			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
-			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
-			assert( ( exp_ & ~0x7ffLLU ) == 0 );
+			GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			GMQ_ASSERT( ( exp_ & ~0x7ffLLU ) == 0 );
 			return *(double*)(&res);
 		}
 	};
@@ -64,8 +82,8 @@ namespace m {
 		static double value() {
 			int64_t exp_ = exponent + 1023;
 			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
-			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
-			assert( ( exp_ & ~0x7ff ) == 0 );
+			GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			GMQ_ASSERT( ( exp_ & ~0x7ff ) == 0 );
 			return *(double*)(&res);
 		}
 	};
@@ -110,9 +128,9 @@ namespace m {
 		Buffer& operator = (const Buffer& p) = delete;
 
 		void reserve(size_t sz) {
-			assert( _size == 0 ); 
-			assert( _capacity == 0 );
-			assert( _data == nullptr );
+			GMQ_ASSERT( _size == 0 ); 
+			GMQ_ASSERT( _capacity == 0 );
+			GMQ_ASSERT( _data == nullptr );
 
 			size_t cp = std::max(sz, MIN_BUFFER);
 			std::unique_ptr<uint8_t[]> tmp(new uint8_t[cp]);
@@ -128,8 +146,8 @@ namespace m {
 		}
 
 		void trim(size_t sz) { // NOTE: keeps pointers
-			assert( sz <= _size );
-			assert( _data != nullptr || (_size == 0 && sz == 0) );
+			GMQ_ASSERT( sz <= _size );
+			GMQ_ASSERT( _data != nullptr || (_size == 0 && sz == 0) );
 			_size -= sz;
 		}
 
@@ -138,8 +156,8 @@ namespace m {
 		}
 
 		void set_size(size_t sz) { // NOTE: keeps pointers
-			assert( sz <= _capacity );
-			assert( _data != nullptr );
+			GMQ_ASSERT( sz <= _capacity );
+			GMQ_ASSERT( _data != nullptr );
 			_size = sz;
 		}
 
@@ -166,11 +184,11 @@ namespace m {
 		}
 
 		uint32_t readUInt8(size_t offset) const {
-			assert( offset + 1 <= _size );
+			GMQ_ASSERT( offset + 1 <= _size );
 			return *(begin() + offset);
 		}
 
-		size_t appendString( const std::string& str ) {
+		size_t appendString( const GMQ_COLL string& str ) {
 			append( str.c_str(), str.size() );
 			return _size;
 		}
@@ -178,9 +196,6 @@ namespace m {
 } // namespace m
 
 
-
-//using Buffer = nodecpp::Buffer;
-using String = std::string;
 
 namespace m {
 
@@ -255,7 +270,7 @@ void composeSignedInteger(ComposerT& composer, T num )
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
 	{
-		assert( num <= INT64_MAX );
+		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	/*temporary solution TODO: actual implementation*/ { 
 		int64_t val = num; 
@@ -268,7 +283,7 @@ void composeUnsignedInteger(ComposerT& composer, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
-		assert( num >= 0 );
+		GMQ_ASSERT( num >= 0 );
 	}
 	/*temporary solution TODO: actual implementation*/ { 
 		uint64_t val = num; 
@@ -286,7 +301,7 @@ void composeReal(ComposerT& composer, T num )
 }
 
 template<typename ComposerT>
-void composeString(ComposerT& composer, const std::string& str )
+void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
 	composer.buff.appendString( str );
 	composer.buff.appendUint8( 0 );
@@ -316,7 +331,7 @@ void composeSignedInteger(ComposerT& composer, T num )
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
 	{
-		assert( num <= INT64_MAX );
+		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
@@ -326,13 +341,13 @@ void composeUnsignedInteger(ComposerT& composer, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
-		assert( num >= 0 );
+		GMQ_ASSERT( num >= 0 );
 	}
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
 template<typename ComposerT>
-void composeString(ComposerT& composer, const std::string& str )
+void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendString( str );
@@ -348,7 +363,7 @@ void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 }
 
 template<typename ComposerT>
-void composeString(ComposerT& composer, std::string str )
+void composeString(ComposerT& composer, GMQ_COLL string str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.append( str.c_str(), str.size() );
@@ -365,7 +380,7 @@ void composeString(ComposerT& composer, const char* str )
 }
 
 template<typename ComposerT>
-void addNamePart(ComposerT& composer, std::string name )
+void addNamePart(ComposerT& composer, GMQ_COLL string name )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendString( name );
@@ -375,37 +390,37 @@ void addNamePart(ComposerT& composer, std::string name )
 }
 
 template<typename ComposerT, typename T>
-void composeNamedSignedInteger(ComposerT& composer, std::string name, T num )
+void composeNamedSignedInteger(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
 	{
-		assert( num <= INT64_MAX );
+		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
 template<typename ComposerT, typename T>
-void composeNamedUnsignedInteger(ComposerT& composer, std::string name, T num )
+void composeNamedUnsignedInteger(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
-		assert( num >= 0 );
+		GMQ_ASSERT( num >= 0 );
 	}
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
 template<typename ComposerT, typename T>
-void composeNamedReal(ComposerT& composer, std::string name, T num )
+void composeNamedReal(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", num ) );
 }
 
 template<typename ComposerT>
-void composeNamedString(ComposerT& composer, std::string name, const std::string& str )
+void composeNamedString(ComposerT& composer, GMQ_COLL string name, const GMQ_COLL string& str )
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
@@ -414,7 +429,7 @@ void composeNamedString(ComposerT& composer, std::string name, const std::string
 }
 
 template<typename ComposerT>
-void composeNamedString(ComposerT& composer, std::string name, const StringLiteralForComposing* str )
+void composeNamedString(ComposerT& composer, GMQ_COLL string name, const StringLiteralForComposing* str )
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
@@ -468,17 +483,17 @@ public:
 				*num = (T)(val);
 			else if constexpr ( sizeof( T ) == 4 )
 			{
-				assert( val >= INT32_MIN && val <= INT32_MAX );
+				GMQ_ASSERT( val >= INT32_MIN && val <= INT32_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 2 )
 			{
-				assert( val >= INT16_MIN && val <= INT16_MAX );
+				GMQ_ASSERT( val >= INT16_MIN && val <= INT16_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 1 )
 			{
-				assert( val >= INT8_MIN && val <= INT8_MAX );
+				GMQ_ASSERT( val >= INT8_MIN && val <= INT8_MAX );
 				*num = (T)(val);
 			}
 			else
@@ -488,22 +503,22 @@ public:
 		{
 			if constexpr ( sizeof( T ) == 8 )
 			{
-				assert( val >= 0 );
+				GMQ_ASSERT( val >= 0 );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 4 )
 			{
-				assert( val >= 0 && val <= UINT32_MAX );
+				GMQ_ASSERT( val >= 0 && val <= UINT32_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 2 )
 			{
-				assert( val >= 0 && val <= UINT16_MAX );
+				GMQ_ASSERT( val >= 0 && val <= UINT16_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 1 )
 			{
-				assert( val >= 0 && val <= UINT8_MAX );
+				GMQ_ASSERT( val >= 0 && val <= UINT8_MAX );
 				*num = (T)(val);
 			}
 			else
@@ -529,17 +544,17 @@ public:
 				*num = (T)(val);
 			else if constexpr ( sizeof( T ) == 4 )
 			{
-				assert( val <= UINT32_MAX );
+				GMQ_ASSERT( val <= UINT32_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 2 )
 			{
-				assert( val <= UINT16_MAX );
+				GMQ_ASSERT( val <= UINT16_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 1 )
 			{
-				assert( val <= UINT8_MAX );
+				GMQ_ASSERT( val <= UINT8_MAX );
 				*num = (T)(val);
 			}
 			else
@@ -549,22 +564,22 @@ public:
 		{
 			if constexpr ( sizeof( T ) == 8 )
 			{
-				assert( val <= INT64_MAX );
+				GMQ_ASSERT( val <= INT64_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 4 )
 			{
-				assert( val <= INT32_MAX );
+				GMQ_ASSERT( val <= INT32_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 2 )
 			{
-				assert( val <= INT16_MAX );
+				GMQ_ASSERT( val <= INT16_MAX );
 				*num = (T)(val);
 			}
 			else if constexpr ( sizeof( T ) == 1 )
 			{
-				assert( val <= INT8_MAX );
+				GMQ_ASSERT( val <= INT8_MAX );
 				*num = (T)(val);
 			}
 			else
@@ -591,17 +606,17 @@ public:
 					*num = (T)(val);
 				else if constexpr ( sizeof( T ) == 4 )
 				{
-					assert( val >= INT32_MIN && val <= INT32_MAX );
+					GMQ_ASSERT( val >= INT32_MIN && val <= INT32_MAX );
 					*num = (T)(val);
 				}
 				else if constexpr ( sizeof( T ) == 2 )
 				{
-					assert( val >= INT16_MIN && val <= INT16_MAX );
+					GMQ_ASSERT( val >= INT16_MIN && val <= INT16_MAX );
 					*num = (T)(val);
 				}
 				else if constexpr ( sizeof( T ) == 1 )
 				{
-					assert( val >= INT8_MIN && val <= INT8_MAX );
+					GMQ_ASSERT( val >= INT8_MIN && val <= INT8_MAX );
 					*num = (T)(val);
 				}
 				else
@@ -611,22 +626,22 @@ public:
 			{
 				if constexpr ( sizeof( T ) == 8 )
 				{
-					assert( val >= 0 );
+					GMQ_ASSERT( val >= 0 );
 					*num = (T)(val);
 				}
 				else if constexpr ( sizeof( T ) == 4 )
 				{
-					assert( val >= 0 && val <= UINT32_MAX );
+					GMQ_ASSERT( val >= 0 && val <= UINT32_MAX );
 					*num = (T)(val);
 				}
 				else if constexpr ( sizeof( T ) == 2 )
 				{
-					assert( val >= 0 && val <= UINT16_MAX );
+					GMQ_ASSERT( val >= 0 && val <= UINT16_MAX );
 					*num = (T)(val);
 				}
 				else if constexpr ( sizeof( T ) == 1 )
 				{
-					assert( val >= 0 && val <= UINT8_MAX );
+					GMQ_ASSERT( val >= 0 && val <= UINT8_MAX );
 					*num = (T)(val);
 				}
 				else
@@ -651,17 +666,17 @@ public:
 		while( *begin++ != 0 );
 	}
 
-	void parseString( std::string* str )
+	void parseString( GMQ_COLL string* str )
 	{
 		*str = reinterpret_cast<char*>(begin);
 		while( *begin++ != 0 );
 	}
 
-	void parseString( std::string_view* str )
+	void parseString( GMQ_COLL string_view* str )
 	{
 		const char* start = reinterpret_cast<char*>(begin);
 		while( *begin++ != 0 );
-		*str = std::string_view( start, reinterpret_cast<char*>(begin) - start - 1 );
+		*str = GMQ_COLL string_view( start, reinterpret_cast<char*>(begin) - start - 1 );
 	}
 
 	void skipString()
@@ -713,26 +728,26 @@ public:
 
 	bool isData() { return begin != end && *begin != 0;  }
 
-	void readStringFromJson(std::string* s)
+	void readStringFromJson(GMQ_COLL string* s)
 	{
 		skipSpacesEtc();
 		if ( *begin++ != '\"' )
 			throw std::exception(); // TODO
 		const char* start = reinterpret_cast<const char*>( begin );
 		while ( begin < end && *begin != '\"' ) ++begin;
-		*s = std::string( start, reinterpret_cast<const char*>( begin ) - start );
+		*s = GMQ_COLL string( start, reinterpret_cast<const char*>( begin ) - start );
 		if ( begin == end )
 			throw std::exception(); // TODO
 		++begin;
 	}
-	void readStringFromJson(std::string_view* s)
+	void readStringFromJson(GMQ_COLL string_view* s)
 	{
 		skipSpacesEtc();
 		if ( *begin++ != '\"' )
 			throw std::exception(); // TODO
 		const char* start = reinterpret_cast<const char*>( begin );
 		while ( begin < end && *begin != '\"' ) ++begin;
-		*s = std::string_view( start, reinterpret_cast<const char*>( begin ) - start );
+		*s = GMQ_COLL string_view( start, reinterpret_cast<const char*>( begin ) - start );
 		if ( begin == end )
 			throw std::exception(); // TODO
 		++begin;
@@ -809,7 +824,7 @@ public:
 			throw std::exception(); // TODO: (NaN)
 	}
 
-	void readKey(std::string* s)
+	void readKey(GMQ_COLL string* s)
 	{
 		skipSpacesEtc();
 		readStringFromJson(s);
@@ -817,7 +832,7 @@ public:
 		if ( *begin++ != ':' )
 			throw std::exception(); // TODO (expected ':')
 	}
-	void readKey(std::string_view* s)
+	void readKey(GMQ_COLL string_view* s)
 	{
 		skipSpacesEtc();
 		readStringFromJson(s);

@@ -28,10 +28,6 @@
 #ifndef NAMED_PARAMS_CORE_H
 #define NAMED_PARAMS_CORE_H
 
-#include <tuple>
-#include <string>
-#include <cstddef>
-
 #include "marshalling_impl.h"
 
 namespace m {
@@ -148,8 +144,8 @@ class SimpleTypeCollectionWrapper : public SimpleTypeCollectionWrapperBase
 
 public:
 	using value_type = typename T::value_type;
-	static_assert( std::is_same<T, std::vector<value_type>>::value, "vector type is expected only" ); // TODO: add list
-	static_assert( std::is_integral<value_type>::value || std::is_same<value_type, std::string>::value || std::is_enum<value_type>::value, "intended for simple idl types only" );
+	static_assert( std::is_same<T, GMQ_COLL vector<value_type>>::value, "vector type is expected only" ); // TODO: add list
+	static_assert( std::is_integral<value_type>::value || std::is_same<value_type, GMQ_COLL string>::value || std::is_enum<value_type>::value, "intended for simple idl types only" );
 
 	SimpleTypeCollectionWrapper( T& coll_ ) : coll( coll_ ), it( coll.begin() ) {};
 	size_t size() const { return coll.size(); }
@@ -162,7 +158,7 @@ public:
 				impl::composeSignedInteger( composer, *it );
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 				impl::composeUnsignedInteger( composer, *it );
-			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 				impl::composeString( composer, *it );
 			else
 				static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -181,7 +177,7 @@ public:
 				impl::json::composeSignedInteger( composer, *it );
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 				impl::json::composeUnsignedInteger( composer, *it );
-			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 				impl::json::composeString( composer, *it );
 			else
 				static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -195,7 +191,7 @@ public:
 	void size_hint( size_t count )
 	{
 		// Note: here we can do some preliminary steps based on a number of collection elements declared in the message (if such a number exists for a particular protocol) 
-		if constexpr ( std::is_same<T, std::vector<value_type>>::value )
+		if constexpr ( std::is_same<T, GMQ_COLL vector<value_type>>::value )
 		{
 			if ( count != unknown_size )
 				coll.reserve( count );
@@ -209,7 +205,7 @@ public:
 			p.parseSignedInteger( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.parseUnsignedInteger( val );
-		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 			p.parseString( val );
 		else
 			static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -223,7 +219,7 @@ public:
 			p.readSignedIntegerFromJson( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.readUnsignedIntegerFromJson( val );
-		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 			p.readStringFromJson( val );
 		else
 			static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -602,7 +598,7 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 }
 
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
-void composeParamToJson(ComposerT& composer, std::string name, const typename TypeToPick::NameAndTypeID expected)
+void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typename TypeToPick::NameAndTypeID expected)
 {
 		static_assert( !required, "required parameter" );
 		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
@@ -635,7 +631,7 @@ void composeParamToJson(ComposerT& composer, std::string name, const typename Ty
 }
 
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
-void composeParamToJson(ComposerT& composer, std::string name, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
+void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
 	using Agr0Type = special_decay_t<Arg0>;
 	if constexpr ( std::is_same<typename special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
