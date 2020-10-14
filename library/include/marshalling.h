@@ -28,11 +28,7 @@
 #ifndef NAMED_PARAMS_CORE_H
 #define NAMED_PARAMS_CORE_H
 
-#include <tuple>
-#include <string>
-#include <cstddef>
-
-#include "compose_and_parse_impl.h"
+#include "marshalling_impl.h"
 
 namespace m {
 
@@ -71,7 +67,6 @@ private:
 
 public:
 	explicit NamedParameterWithType(T const& value) : value_(value) {}
-//	explicit NamedParameterWithType(T&& value) : value_(std::move(value)) {}
 	T& get() { return value_; }
 	T const& get() const { return value_; }
 
@@ -115,16 +110,11 @@ class CollectionWrapperForComposing : public CollectionWrapperBase {
 public:
 	CollectionWrapperForComposing(LambdaSize &&lsize, LambdaNext &&lnext) : lsize_(std::forward<LambdaSize>(lsize)), lnext_(std::forward<LambdaNext>(lnext)) {}
 	size_t size() { return lsize_(); }
-	void compose_next( m::Composer& composer, size_t ordinal ) { 
+	template<typename ComposerT>
+	void compose_next( ComposerT& composer, size_t ordinal ) { 
 		return lnext_( composer, ordinal ); 
 	}
 };
-template<class LambdaSize, class LambdaNext>
-CollectionWrapperForComposing<LambdaSize, LambdaNext> makeReadyForComposing(LambdaSize &&lsize, LambdaNext &&lnext) { 
-	static_assert( std::is_invocable<LambdaSize>::value, "lambda-expression is expected" );
-	static_assert( std::is_invocable<LambdaNext>::value, "lambda-expression is expected" );
-	return { std::forward<LambdaSize>(lsize), std::forward<LambdaNext>(lnext) };
-}
 
 template<class LambdaSize, class LambdaNext>
 class CollactionWrapperForParsing : public CollectionWrapperBase {
@@ -140,16 +130,11 @@ public:
 			if ( sz != CollectionWrapperBase::unknown_size )
 				lsize_( sz );
 	}
-	void parse_next( m::Parser& p, size_t ordinal ) { 
+	template<typename ParserT>
+	void parse_next( ParserT& p, size_t ordinal ) { 
 		lnext_( p, ordinal ); 
 	}
 };
-template<class LambdaSize, class LambdaNext>
-CollactionWrapperForParsing<LambdaSize, LambdaNext> makeReadyForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) { 
-	static_assert( std::is_same<nullptr_t, LambdaSize>::value || std::is_invocable<LambdaSize>::value, "lambda-expression is expected" );
-	static_assert( std::is_invocable<LambdaNext>::value, "lambda-expression is expected" );
-	return { std::forward<LambdaSize>(lsizeHint), std::forward<LambdaNext>(lnext) };
-}
 
 template<class T>
 class SimpleTypeCollectionWrapper : public SimpleTypeCollectionWrapperBase
@@ -159,13 +144,13 @@ class SimpleTypeCollectionWrapper : public SimpleTypeCollectionWrapperBase
 
 public:
 	using value_type = typename T::value_type;
-	static_assert( std::is_same<T, std::vector<value_type>>::value, "vector type is expected only" ); // TODO: add list
-	static_assert( std::is_integral<value_type>::value || std::is_same<value_type, std::string>::value || std::is_enum<value_type>::value, "intended for simple idl types only" );
+	static_assert( std::is_same<T, GMQ_COLL vector<value_type>>::value, "vector type is expected only" ); // TODO: add list
+	static_assert( std::is_integral<value_type>::value || std::is_same<value_type, GMQ_COLL string>::value || std::is_enum<value_type>::value, "intended for simple idl types only" );
 
 	SimpleTypeCollectionWrapper( T& coll_ ) : coll( coll_ ), it( coll.begin() ) {};
 	size_t size() const { return coll.size(); }
-	template<class ExpectedType>
-	bool compose_next_to_gmq( Composer& composer )
+	template<class ExpectedType, class ComposerT>
+	bool compose_next_to_gmq( ComposerT& composer )
 	{ 
 		if ( it != coll.end() )
 		{
@@ -173,7 +158,7 @@ public:
 				impl::composeSignedInteger( composer, *it );
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 				impl::composeUnsignedInteger( composer, *it );
-			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 				impl::composeString( composer, *it );
 			else
 				static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -183,8 +168,8 @@ public:
 		else
 			return false;
 	}
-	template<class ExpectedType>
-	bool compose_next_to_json( Composer& composer )
+	template<class ExpectedType, class ComposerT>
+	bool compose_next_to_json( ComposerT& composer )
 	{ 
 		if ( it != coll.end() )
 		{
@@ -192,7 +177,7 @@ public:
 				impl::json::composeSignedInteger( composer, *it );
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 				impl::json::composeUnsignedInteger( composer, *it );
-			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 				impl::json::composeString( composer, *it );
 			else
 				static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -206,35 +191,35 @@ public:
 	void size_hint( size_t count )
 	{
 		// Note: here we can do some preliminary steps based on a number of collection elements declared in the message (if such a number exists for a particular protocol) 
-		if constexpr ( std::is_same<T, std::vector<value_type>>::value )
+		if constexpr ( std::is_same<T, GMQ_COLL vector<value_type>>::value )
 		{
 			if ( count != unknown_size )
 				coll.reserve( count );
 		}
 	}
-	template<class ExpectedType>
-	void parse_next_from_gmq( Parser& p )
+	template<class ExpectedType, class ParserT>
+	void parse_next_from_gmq( ParserT& p )
 	{
 		value_type val;
 		if constexpr ( std::is_same<typename ExpectedType::value_type, impl::SignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.parseSignedInteger( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.parseUnsignedInteger( val );
-		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 			p.parseString( val );
 		else
 			static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
 		coll.push_back( val );
 	}
-	template<class ExpectedType>
-	void parse_next_from_json( Parser& p )
+	template<class ExpectedType, class ParserT>
+	void parse_next_from_json( ParserT& p )
 	{
 		value_type val;
 		if constexpr ( std::is_same<typename ExpectedType::value_type, impl::SignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.readSignedIntegerFromJson( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.readUnsignedIntegerFromJson( val );
-		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, std::string>::value )
+		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 			p.readStringFromJson( val );
 		else
 			static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
@@ -317,8 +302,8 @@ namespace impl {
 
 namespace gmq {
 
-template<typename TypeToPick, bool required>
-void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p)
+template<typename ParserT, typename TypeToPick, bool required>
+void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected)
 {
 	if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
 		p.skipSignedInteger();
@@ -337,8 +322,8 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p)
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
 
-template<typename TypeToPick, bool required, typename Arg0, typename ... Args>
-void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p, Arg0&& arg0, Args&& ... args)
+template<typename ParserT, typename TypeToPick, bool required, typename Arg0, typename ... Args>
+void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
 	using Agr0Type = special_decay_t<Arg0>;
 	using Agr0DataType = typename std::remove_pointer<typename Agr0Type::Type>::type;
@@ -382,7 +367,7 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p,
 				{
 					size_t itemSz = 0;
 					p.parseUnsignedInteger( &itemSz );
-					Parser itemParser( p, itemSz );
+					ParserT itemParser( p, itemSz );
 					coll.parse_next( itemParser, i );
 					p.adjustParsingPos( itemSz );
 				}
@@ -394,14 +379,14 @@ void parseGmqParam(const typename TypeToPick::NameAndTypeID expected, Parser& p,
 			static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 	}
 	else
-		parseGmqParam<TypeToPick, required>(expected, p, args...);
+		parseGmqParam<ParserT, TypeToPick, required>(p, expected, args...);
 }
 
 
 ///////////////////////////////////////////
 
-template<typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
-void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Composer& composer)
+template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
+void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTypeID expected)
 {
 	static_assert( !required, "required parameter" );
 	if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
@@ -431,8 +416,8 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
 
-template<typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
-void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Composer& composer, Arg0&& arg0, Args&& ... args)
+template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
+void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
 	using Agr0Type = special_decay_t<Arg0>;
 	if constexpr ( std::is_same<typename special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
@@ -488,15 +473,15 @@ void composeParamToGmq(const typename TypeToPick::NameAndTypeID expected, Compos
 			static_assert( std::is_same<typename Agr0Type::Type, AllowedDataType>::value, "unsupported type" );
 	}
 	else
-		composeParamToGmq<TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(expected, composer, args...);
+		composeParamToGmq<ComposerT, TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(composer, expected, args...);
 }
 
 } // namespace gmq
 
 namespace json {
 
-template<typename TypeToPick, bool required>
-void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p)
+template<typename ParserT, typename TypeToPick, bool required>
+void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& p)
 {
 	if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
 		p.skipSignedIntegerFromJson();
@@ -513,8 +498,8 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
 
-template<typename TypeToPick, bool required, typename Arg0, typename ... Args>
-void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p, Arg0&& arg0, Args&& ... args)
+template<typename ParserT, typename TypeToPick, bool required, typename Arg0, typename ... Args>
+void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& p, Arg0&& arg0, Args&& ... args)
 {
 //	using Agr0Type = std::remove_pointer<Arg0>;
 	using Agr0Type = special_decay_t<Arg0>;
@@ -609,11 +594,11 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, Parser& p
 			static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 	}
 	else
-		parseJsonParam<TypeToPick, required>(expected, p, args...);
+		parseJsonParam<ParserT, TypeToPick, required>(expected, p, args...);
 }
 
-template<typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
-void composeParamToJson(std::string name, const typename TypeToPick::NameAndTypeID expected, Composer& composer)
+template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
+void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typename TypeToPick::NameAndTypeID expected)
 {
 		static_assert( !required, "required parameter" );
 		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value )
@@ -645,8 +630,8 @@ void composeParamToJson(std::string name, const typename TypeToPick::NameAndType
 			static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
 
-template<typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
-void composeParamToJson(std::string name, const typename TypeToPick::NameAndTypeID expected, Composer& composer, Arg0&& arg0, Args&& ... args)
+template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
+void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
 	using Agr0Type = special_decay_t<Arg0>;
 	if constexpr ( std::is_same<typename special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
@@ -708,7 +693,7 @@ void composeParamToJson(std::string name, const typename TypeToPick::NameAndType
 			static_assert( std::is_same<typename Agr0Type::Type, AllowedDataType>::value, "unsupported type" );
 	}
 	else
-		json::composeParamToJson<TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(name, expected, composer, args...);
+		json::composeParamToJson<ComposerT, TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(composer, name, expected, args...);
 }
 
 } // namespace json

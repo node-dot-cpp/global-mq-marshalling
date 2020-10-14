@@ -433,7 +433,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	fprintf( header, "#ifndef %s_guard\n"
 		"#define %s_guard\n"
 		"\n"
-		"#include <named_params_core.h>\n"
+		"#include <marshalling.h>\n"
 		"\n"
 		"namespace m {\n\n",
 		fileName, fileName );
@@ -655,23 +655,22 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
-//				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, double, double, %f>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, count );
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+					fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
 				else
-					fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, count );
+					fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -680,7 +679,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
@@ -708,16 +707,16 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -726,7 +725,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::parseGmqParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
@@ -869,23 +868,23 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
-//				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
+//				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+					fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				else
-					fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.name.c_str(), count );
+					fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -894,7 +893,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::json::composeParamToJson<arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
@@ -931,7 +930,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const 
 		++count;
 
 		fprintf( header, "%s\t%s( key == \"%s\" )\n", offset, count == 1 ? "if " : "else if ", param.name.c_str() );
-		fprintf( header, "%s\t\timpl::json::parseJsonParam<arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+		fprintf( header, "%s\t\timpl::json::parseJsonParam<ParserT, arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 	}
 
 	fprintf( header, "%s\tp.skipSpacesEtc();\n", offset );
@@ -979,20 +978,21 @@ void impl_generateParseFunctionJson( FILE* header, Message& s )
 
 void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 {
-	if ( s.protoList.size() == 1 )
+	size_t protoCount = s.protoList.size();
+	if ( protoCount == 1 )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
 			case Message::Proto::gmq:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::GMQ );\n" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this message assumes only GMQ protocol\" );\n" );
 				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 				break;
 			}
 			case Message::Proto::json:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::JSON );\n" );
-				impl_generateParamCallBlockForComposingJson( header, s, "\t" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this message assumes only JSON protocol\" );\n" );
+				impl_generateParamCallBlockForComposingJson( header, s, "" );
 				break;
 			}
 			default:
@@ -1001,60 +1001,73 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 	}
 	else
 	{
-		fprintf( header, 
-			"\tswitch ( composer.proto )\n"
-			"\t{\n" );
+		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
 		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
 		{
+			++processedProtoCount;
 			fprintf( header, 
-				"\t\tcase Proto::GMQ:\n"
-				"\t\t{\n" );
-			impl_generateParamCallBlockForComposingGmq( header, s, "\t\t\t" );
-			fprintf( header, 
-					"\n\t\t\tbreak;\n"
-				"\t\t}\n" );
+				"\tif constexpr( ComposerT::proto == Proto::GMQ )\n"
+				"\t{\n" );
+			impl_generateParamCallBlockForComposingGmq( header, s, "\t\t" );
+			fprintf( header, "\t}\n" );
 		}
 		// then add the rest
 		for ( auto it:s.protoList )
+		{
+			++processedProtoCount;
 			switch ( it )
 			{
 				case Message::Proto::gmq:
 					break; // already done
 				case Message::Proto::json:
 				{
-					fprintf( header, 
-						"\t\tcase Proto::JSON:\n"
-						"\t\t{\n" );
-					impl_generateParamCallBlockForComposingJson( header, s, "\t\t\t" );
-					fprintf( header, 
-							"\n\t\t\tbreak;\n"
-						"\t\t}\n" );
+					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
+					if ( processedProtoCount == 0 )
+					{
+						fprintf( header, 
+							"\tif constexpr ( ComposerT::proto == Proto::JSON )\n"
+							"\t{\n" );
+					}
+					else
+					{
+						if ( processedProtoCount == protoCount )
+							fprintf( header, 
+								"\telse\n"
+								"\t{\n"
+								"\t\tstatic_assert( ComposerT::proto == Proto::JSON );\n" );
+						else
+							fprintf( header, 
+								"\telse if constexpr ( ComposerT::proto == Proto::JSON )\n"
+								"\t{\n" );
+					}
+					impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
+					fprintf( header, "\t}\n" );
 					break;
 				}
 				default:
 					assert( false );
 			}
-		fprintf( header, 
-			"\t}\n" );
+		}
 	}
 }
 
 void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 {
-	if ( s.protoList.size() == 1 )
+	size_t protoCount = s.protoList.size();
+	if ( protoCount == 1 )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
 			case Message::Proto::gmq:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::GMQ );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this message assumes only GMQ protocol\" );\n" );
 				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 				break;
 			}
 			case Message::Proto::json:
 			{
-				fprintf( header, "\tassert( composer.proto == Proto::JSON );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this message assumes only JSON protocol\" );\n" );
 				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 				break;
 			}
@@ -1064,50 +1077,63 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 	}
 	else
 	{
-		fprintf( header, 
-			"\tswitch ( p.proto )\n"
-			"\t{\n" );
+		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
 		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
 		{
+			++processedProtoCount;
 			fprintf( header, 
-				"\t\tcase Proto::GMQ:\n"
-				"\t\t{\n" );
-			impl_generateParamCallBlockForParsingGmq( header, s, "\t\t\t" );
-			fprintf( header, 
-					"\n\t\t\tbreak;\n"
-				"\t\t}\n" );
+				"\tif constexpr( ParserT::proto == Proto::GMQ )\n"
+				"\t{\n" );
+			impl_generateParamCallBlockForParsingGmq( header, s, "\t\t" );
+			fprintf( header, "\t}\n" );
 		}
 		// then add the rest
 		for ( auto it:s.protoList )
+		{
+			++processedProtoCount;
 			switch ( it )
 			{
 				case Message::Proto::gmq:
 					break; // already done
 				case Message::Proto::json:
 				{
-					fprintf( header, 
-						"\t\tcase Proto::JSON:\n"
-						"\t\t{\n" );
-					impl_generateParamCallBlockForParsingJson( header, s, "\t\t\t" );
-					fprintf( header, 
-							"\n\t\t\tbreak;\n"
-						"\t\t}\n" );
+					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
+					if ( processedProtoCount == 0 )
+					{
+						fprintf( header, 
+							"\tif constexpr ( ParserT::proto == Proto::JSON )\n"
+							"\t{\n" );
+					}
+					else
+					{
+						if ( processedProtoCount == protoCount )
+							fprintf( header, 
+								"\telse\n"
+								"\t{\n"
+								"\t\tstatic_assert( ParserT::proto == Proto::JSON );\n" );
+						else
+							fprintf( header, 
+								"\telse if constexpr ( ParserT::proto == Proto::JSON )\n"
+								"\t{\n" );
+					}
+					impl_generateParamCallBlockForParsingJson( header, s, "\t\t" );
+					fprintf( header, "\t}\n" );
 					break;
 				}
 				default:
 					assert( false );
 			}
-		fprintf( header, 
-			"\t}\n" );
+		}
 	}
 }
 
 void impl_generateComposeFunction( FILE* header, Message& s )
 {
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_compose(Composer& composer, Args&& ... args)\n"
+	fprintf( header, "template<class ComposerT, typename ... Args>\n"
+	"void %s_compose(ComposerT& composer, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -1119,9 +1145,10 @@ void impl_generateComposeFunction( FILE* header, Message& s )
 
 void impl_generateParseFunction( FILE* header, Message& s )
 {
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parse(Parser& p, Args&& ... args)\n"
+	fprintf( header, "template<class ParserT, typename ... Args>\n"
+	"void %s_parse(ParserT& p, Args&& ... args)\n"
 	"{\n", s.name.c_str() );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );

@@ -28,9 +28,27 @@
 #ifndef COMPOSE_AND_PARSE_IMPL_H
 #define COMPOSE_AND_PARSE_IMPL_H
 
-#include <type_traits>
-#include <assert.h> // TODO: replace by nodecpp assertion system
+#include <tuple>
+#include <cstddef>
 #include <fmt/format.h>
+
+/////////////////////////////////////////
+// means for replacing std:: by nodecpp::
+#ifdef GMQ_USE_EXTERNAL_DEFINITIONS
+#include GMQ_USE_EXTERNAL_DEFINITIONS
+#endif // GMQ_USE_EXTERNAL_DEFINITIONS
+
+#ifndef GMQ_ASSERT
+#include <assert.h>
+#define GMQ_ASSERT( condition, ... ) assert( condition )
+#endif // GMQ_ASSERT
+
+#ifndef GMQ_COLL
+#include <string>
+#define GMQ_COLL std::
+#endif // GMQ_COLL
+/////////////////////////////////////////
+
 
 namespace m {
 	struct FloatingParts
@@ -47,8 +65,8 @@ namespace m {
 		double value() { 
 			int64_t exp_ = exponent + 1023;
 			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
-			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
-			assert( ( exp_ & ~0x7ffLLU ) == 0 );
+			GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			GMQ_ASSERT( ( exp_ & ~0x7ffLLU ) == 0 );
 			return *(double*)(&res);
 		}
 	};
@@ -64,8 +82,8 @@ namespace m {
 		static double value() {
 			int64_t exp_ = exponent + 1023;
 			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
-			assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
-			assert( ( exp_ & ~0x7ff ) == 0 );
+			GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+			GMQ_ASSERT( ( exp_ & ~0x7ff ) == 0 );
 			return *(double*)(&res);
 		}
 	};
@@ -110,9 +128,9 @@ namespace m {
 		Buffer& operator = (const Buffer& p) = delete;
 
 		void reserve(size_t sz) {
-			assert( _size == 0 ); 
-			assert( _capacity == 0 );
-			assert( _data == nullptr );
+			GMQ_ASSERT( _size == 0 ); 
+			GMQ_ASSERT( _capacity == 0 );
+			GMQ_ASSERT( _data == nullptr );
 
 			size_t cp = std::max(sz, MIN_BUFFER);
 			std::unique_ptr<uint8_t[]> tmp(new uint8_t[cp]);
@@ -128,8 +146,8 @@ namespace m {
 		}
 
 		void trim(size_t sz) { // NOTE: keeps pointers
-			assert( sz <= _size );
-			assert( _data != nullptr || (_size == 0 && sz == 0) );
+			GMQ_ASSERT( sz <= _size );
+			GMQ_ASSERT( _data != nullptr || (_size == 0 && sz == 0) );
 			_size -= sz;
 		}
 
@@ -138,8 +156,8 @@ namespace m {
 		}
 
 		void set_size(size_t sz) { // NOTE: keeps pointers
-			assert( sz <= _capacity );
-			assert( _data != nullptr );
+			GMQ_ASSERT( sz <= _capacity );
+			GMQ_ASSERT( _data != nullptr );
 			_size = sz;
 		}
 
@@ -166,11 +184,11 @@ namespace m {
 		}
 
 		uint32_t readUInt8(size_t offset) const {
-			assert( offset + 1 <= _size );
+			GMQ_ASSERT( offset + 1 <= _size );
 			return *(begin() + offset);
 		}
 
-		size_t appendString( const std::string& str ) {
+		size_t appendString( const GMQ_COLL string& str ) {
 			append( str.c_str(), str.size() );
 			return _size;
 		}
@@ -179,21 +197,32 @@ namespace m {
 
 
 
-//using Buffer = nodecpp::Buffer;
-using String = std::string;
-
 namespace m {
 
 enum Proto { GMQ, JSON };
 
-class Composer
+struct ComposerBase {};
+
+template<class BufferT>
+class JsonComposer : public ComposerBase
 {
 public: // just temporary TODO: rework!
-	Proto proto;
-	Buffer& buff;
+	static constexpr Proto proto = Proto::JSON;
+	BufferT& buff;
 
 public:
-	Composer( Proto proto_, Buffer& buff_ ) : proto( proto_ ), buff( buff_ ) {}
+	JsonComposer( BufferT& buff_ ) : buff( buff_ ) {}
+};
+
+template<class BufferT>
+class GmqComposer : public ComposerBase
+{
+public: // just temporary TODO: rework!
+	static constexpr Proto proto = Proto::GMQ;
+	BufferT& buff;
+
+public:
+	GmqComposer( BufferT& buff_ ) : buff( buff_ ) {}
 };
 
 } // namespace m
@@ -235,13 +264,13 @@ struct StringLiteralForComposing
 
 // composing
 
-template <typename T>
-void composeSignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeSignedInteger(ComposerT& composer, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
 	{
-		assert( num <= INT64_MAX );
+		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	/*temporary solution TODO: actual implementation*/ { 
 		int64_t val = num; 
@@ -249,12 +278,12 @@ void composeSignedInteger(Composer& composer, T num )
 	}
 }
 
-template <typename T>
-void composeUnsignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeUnsignedInteger(ComposerT& composer, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
-		assert( num >= 0 );
+		GMQ_ASSERT( num >= 0 );
 	}
 	/*temporary solution TODO: actual implementation*/ { 
 		uint64_t val = num; 
@@ -262,8 +291,8 @@ void composeUnsignedInteger(Composer& composer, T num )
 	}
 }
 
-template <typename T>
-void composeReal(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeReal(ComposerT& composer, T num )
 {
 	/*temporary solution TODO: actual implementation*/ { 
 		double val = num; 
@@ -271,22 +300,22 @@ void composeReal(Composer& composer, T num )
 	}
 }
 
-inline
-void composeString(Composer& composer, const std::string& str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
 	composer.buff.appendString( str );
 	composer.buff.appendUint8( 0 );
 }
 
-inline
-void composeString(Composer& composer, const StringLiteralForComposing* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 {
 	composer.buff.append( str->str, str->size );
 	composer.buff.appendUint8( 0 );
 }
 
-inline
-void composeString(Composer& composer, const char* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.append( str, sz );
@@ -296,53 +325,53 @@ void composeString(Composer& composer, const char* str )
 namespace json
 {
 
-template <typename T>
-void composeSignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeSignedInteger(ComposerT& composer, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
 	{
-		assert( num <= INT64_MAX );
+		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-template <typename T>
-void composeUnsignedInteger(Composer& composer, T num )
+template<typename ComposerT, typename T>
+void composeUnsignedInteger(ComposerT& composer, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
-		assert( num >= 0 );
+		GMQ_ASSERT( num >= 0 );
 	}
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-inline
-void composeString(Composer& composer, const std::string& str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendString( str );
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeString(Composer& composer, const StringLiteralForComposing* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.append( str->str, str->size );
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeString(Composer& composer, std::string str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, GMQ_COLL string str )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.append( str.c_str(), str.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeString(Composer& composer, const char* str )
+template<typename ComposerT>
+void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.appendUint8( '\"' );
@@ -350,8 +379,8 @@ void composeString(Composer& composer, const char* str )
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void addNamePart(Composer& composer, std::string name )
+template<typename ComposerT>
+void addNamePart(ComposerT& composer, GMQ_COLL string name )
 {
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendString( name );
@@ -360,38 +389,38 @@ void addNamePart(Composer& composer, std::string name )
 	composer.buff.appendUint8( ' ' );
 }
 
-template <typename T>
-void composeNamedSignedInteger(Composer& composer, std::string name, T num )
+template<typename ComposerT, typename T>
+void composeNamedSignedInteger(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	static_assert( std::is_integral<T>::value );
 	if constexpr ( std::is_unsigned<T>::value && sizeof( T ) >= integer_max_size )
 	{
-		assert( num <= INT64_MAX );
+		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-template <typename T>
-void composeNamedUnsignedInteger(Composer& composer, std::string name, T num )
+template<typename ComposerT, typename T>
+void composeNamedUnsignedInteger(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	if constexpr ( std::is_signed<T>::value )
 	{
-		assert( num >= 0 );
+		GMQ_ASSERT( num >= 0 );
 	}
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
-template <typename T>
-void composeNamedReal(Composer& composer, std::string name, T num )
+template<typename ComposerT, typename T>
+void composeNamedReal(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	addNamePart( composer, name );
 	composer.buff.appendString( fmt::format( "{}", num ) );
 }
 
-inline
-void composeNamedString(Composer& composer, std::string name, const std::string& str )
+template<typename ComposerT>
+void composeNamedString(ComposerT& composer, GMQ_COLL string name, const GMQ_COLL string& str )
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
@@ -399,8 +428,8 @@ void composeNamedString(Composer& composer, std::string name, const std::string&
 	composer.buff.appendUint8( '\"' );
 }
 
-inline
-void composeNamedString(Composer& composer, std::string name, const StringLiteralForComposing* str )
+template<typename ComposerT>
+void composeNamedString(ComposerT& composer, GMQ_COLL string name, const StringLiteralForComposing* str )
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
@@ -416,25 +445,256 @@ void composeNamedString(Composer& composer, std::string name, const StringLitera
 
 namespace m {
 
-class Parser
+class ParserBase
 {
+protected:
 	uint8_t* begin = nullptr;
 	uint8_t* end = nullptr;
 
-public: // TODO: Revise!
-	Proto proto;
-
 public:
-	Parser( Proto proto_, Buffer& b ) : proto( proto_ ) { begin = b.begin(); end = b.begin() + b.size(); }
-	Parser( Proto proto_, uint8_t* buff, size_t size ) : proto( proto_ ) { begin = buff; end = buff + size; }
-	Parser( const Parser& other, size_t size ) : proto( other.proto ) { begin = other.begin; end = other.begin + size; }
-
 	void adjustParsingPos( size_t toSkip )
 	{
 		begin += toSkip;
 	}
 
-	// JSON  ///////////////////////////////////////////////////////////////////
+};
+
+template<class BufferT>
+class GmqParser : public ParserBase
+{
+public:
+	static constexpr Proto proto = Proto::GMQ;
+
+public:
+	GmqParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
+	GmqParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
+	GmqParser( const GmqParser& other, size_t size ) { begin = other.begin; end = other.begin + size; }
+
+	template <typename T>
+	void parseSignedInteger( T* num )
+	{
+		static_assert( sizeof( T ) <= impl::integer_max_size );
+		static_assert( std::is_integral<T>::value );
+		/*temporary solution TODO: actual implementation*/ int64_t val = *reinterpret_cast<int64_t*>(begin); begin += sizeof( val );
+		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+		if constexpr ( std::is_signed< T >::value )
+		{
+			if constexpr ( sizeof( T ) == 8 )
+				*num = (T)(val);
+			else if constexpr ( sizeof( T ) == 4 )
+			{
+				GMQ_ASSERT( val >= INT32_MIN && val <= INT32_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 2 )
+			{
+				GMQ_ASSERT( val >= INT16_MIN && val <= INT16_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 1 )
+			{
+				GMQ_ASSERT( val >= INT8_MIN && val <= INT8_MAX );
+				*num = (T)(val);
+			}
+			else
+				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+		}
+		else
+		{
+			if constexpr ( sizeof( T ) == 8 )
+			{
+				GMQ_ASSERT( val >= 0 );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 4 )
+			{
+				GMQ_ASSERT( val >= 0 && val <= UINT32_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 2 )
+			{
+				GMQ_ASSERT( val >= 0 && val <= UINT16_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 1 )
+			{
+				GMQ_ASSERT( val >= 0 && val <= UINT8_MAX );
+				*num = (T)(val);
+			}
+			else
+				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+		}
+	}
+	void skipSignedInteger()
+	{
+		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
+		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+	}
+
+	template <typename T>
+	void parseUnsignedInteger( T* num )
+	{
+		static_assert( sizeof( T ) <= impl::integer_max_size );
+		static_assert( std::is_integral<T>::value );
+		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += sizeof( val );
+		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+		if constexpr ( std::is_unsigned< T >::value )
+		{
+			if constexpr ( sizeof( T ) == 8 )
+				*num = (T)(val);
+			else if constexpr ( sizeof( T ) == 4 )
+			{
+				GMQ_ASSERT( val <= UINT32_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 2 )
+			{
+				GMQ_ASSERT( val <= UINT16_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 1 )
+			{
+				GMQ_ASSERT( val <= UINT8_MAX );
+				*num = (T)(val);
+			}
+			else
+				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+		}
+		else
+		{
+			if constexpr ( sizeof( T ) == 8 )
+			{
+				GMQ_ASSERT( val <= INT64_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 4 )
+			{
+				GMQ_ASSERT( val <= INT32_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 2 )
+			{
+				GMQ_ASSERT( val <= INT16_MAX );
+				*num = (T)(val);
+			}
+			else if constexpr ( sizeof( T ) == 1 )
+			{
+				GMQ_ASSERT( val <= INT8_MAX );
+				*num = (T)(val);
+			}
+			else
+				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+		}
+	}
+	void skipUnsignedInteger()
+	{
+		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += impl::integer_max_size;
+		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+	}
+
+	template <typename T>
+	void parseReal( T* num )
+	{
+		static_assert( sizeof( T ) <= impl::integer_max_size );
+		/*temporary solution TODO: actual implementation*/ double val = *reinterpret_cast<double*>(begin); begin += sizeof( val );
+		if ( std::is_integral<T>::value )
+		{
+			static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+			if constexpr ( std::is_signed< T >::value )
+			{
+				if constexpr ( sizeof( T ) == 8 )
+					*num = (T)(val);
+				else if constexpr ( sizeof( T ) == 4 )
+				{
+					GMQ_ASSERT( val >= INT32_MIN && val <= INT32_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 2 )
+				{
+					GMQ_ASSERT( val >= INT16_MIN && val <= INT16_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 1 )
+				{
+					GMQ_ASSERT( val >= INT8_MIN && val <= INT8_MAX );
+					*num = (T)(val);
+				}
+				else
+					static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+			}
+			else
+			{
+				if constexpr ( sizeof( T ) == 8 )
+				{
+					GMQ_ASSERT( val >= 0 );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 4 )
+				{
+					GMQ_ASSERT( val >= 0 && val <= UINT32_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 2 )
+				{
+					GMQ_ASSERT( val >= 0 && val <= UINT16_MAX );
+					*num = (T)(val);
+				}
+				else if constexpr ( sizeof( T ) == 1 )
+				{
+					GMQ_ASSERT( val >= 0 && val <= UINT8_MAX );
+					*num = (T)(val);
+				}
+				else
+					static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
+			}
+		}
+		else
+		{
+			static_assert( std::is_floating_point<T>::value );
+			*num = val; // TODO: check limits for T = float
+		}
+	}
+	void skipReal()
+	{
+		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
+		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
+	}
+
+	void parseString( const char** str )
+	{
+		*str = reinterpret_cast<char*>(begin);
+		while( *begin++ != 0 );
+	}
+
+	void parseString( GMQ_COLL string* str )
+	{
+		*str = reinterpret_cast<char*>(begin);
+		while( *begin++ != 0 );
+	}
+
+	void parseString( GMQ_COLL string_view* str )
+	{
+		const char* start = reinterpret_cast<char*>(begin);
+		while( *begin++ != 0 );
+		*str = GMQ_COLL string_view( start, reinterpret_cast<char*>(begin) - start - 1 );
+	}
+
+	void skipString()
+	{
+		while( *begin++ != 0 );
+	}
+};
+
+template<class BufferT>
+class JsonParser : public ParserBase
+{
+public:
+	static constexpr Proto proto = Proto::JSON;
+
+public:
+	JsonParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
+	JsonParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
+	JsonParser( const JsonParser& other, size_t size ) { begin = other.begin; end = other.begin + size; }
 
 	void skipSpacesEtc()
 	{
@@ -468,14 +728,26 @@ public:
 
 	bool isData() { return begin != end && *begin != 0;  }
 
-	void readStringFromJson(std::string* s)
+	void readStringFromJson(GMQ_COLL string* s)
 	{
 		skipSpacesEtc();
 		if ( *begin++ != '\"' )
 			throw std::exception(); // TODO
 		const char* start = reinterpret_cast<const char*>( begin );
 		while ( begin < end && *begin != '\"' ) ++begin;
-		*s = std::string( start, reinterpret_cast<const char*>( begin ) - start );
+		*s = GMQ_COLL string( start, reinterpret_cast<const char*>( begin ) - start );
+		if ( begin == end )
+			throw std::exception(); // TODO
+		++begin;
+	}
+	void readStringFromJson(GMQ_COLL string_view* s)
+	{
+		skipSpacesEtc();
+		if ( *begin++ != '\"' )
+			throw std::exception(); // TODO
+		const char* start = reinterpret_cast<const char*>( begin );
+		while ( begin < end && *begin != '\"' ) ++begin;
+		*s = GMQ_COLL string_view( start, reinterpret_cast<const char*>( begin ) - start );
 		if ( begin == end )
 			throw std::exception(); // TODO
 		++begin;
@@ -552,7 +824,15 @@ public:
 			throw std::exception(); // TODO: (NaN)
 	}
 
-	void readKey(std::string* s)
+	void readKey(GMQ_COLL string* s)
+	{
+		skipSpacesEtc();
+		readStringFromJson(s);
+		skipSpacesEtc();
+		if ( *begin++ != ':' )
+			throw std::exception(); // TODO (expected ':')
+	}
+	void readKey(GMQ_COLL string_view* s)
 	{
 		skipSpacesEtc();
 		readStringFromJson(s);
@@ -561,214 +841,6 @@ public:
 			throw std::exception(); // TODO (expected ':')
 	}
 
-	// GMQ  ///////////////////////////////////////////////////////////////////
-
-	template <typename T>
-	void parseSignedInteger( T* num )
-	{
-		static_assert( sizeof( T ) <= impl::integer_max_size );
-		static_assert( std::is_integral<T>::value );
-		/*temporary solution TODO: actual implementation*/ int64_t val = *reinterpret_cast<int64_t*>(begin); begin += sizeof( val );
-		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
-		if constexpr ( std::is_signed< T >::value )
-		{
-			if constexpr ( sizeof( T ) == 8 )
-				*num = (T)(val);
-			else if constexpr ( sizeof( T ) == 4 )
-			{
-				assert( val >= INT32_MIN && val <= INT32_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 2 )
-			{
-				assert( val >= INT16_MIN && val <= INT16_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 1 )
-			{
-				assert( val >= INT8_MIN && val <= INT8_MAX );
-				*num = (T)(val);
-			}
-			else
-				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
-		}
-		else
-		{
-			if constexpr ( sizeof( T ) == 8 )
-			{
-				assert( val >= 0 );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 4 )
-			{
-				assert( val >= 0 && val <= UINT32_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 2 )
-			{
-				assert( val >= 0 && val <= UINT16_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 1 )
-			{
-				assert( val >= 0 && val <= UINT8_MAX );
-				*num = (T)(val);
-			}
-			else
-				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
-		}
-	}
-	void skipSignedInteger()
-	{
-		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
-		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
-	}
-
-	template <typename T>
-	void parseUnsignedInteger( T* num )
-	{
-		static_assert( sizeof( T ) <= impl::integer_max_size );
-		static_assert( std::is_integral<T>::value );
-		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += sizeof( val );
-		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
-		if constexpr ( std::is_unsigned< T >::value )
-		{
-			if constexpr ( sizeof( T ) == 8 )
-				*num = (T)(val);
-			else if constexpr ( sizeof( T ) == 4 )
-			{
-				assert( val <= UINT32_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 2 )
-			{
-				assert( val <= UINT16_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 1 )
-			{
-				assert( val <= UINT8_MAX );
-				*num = (T)(val);
-			}
-			else
-				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
-		}
-		else
-		{
-			if constexpr ( sizeof( T ) == 8 )
-			{
-				assert( val <= INT64_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 4 )
-			{
-				assert( val <= INT32_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 2 )
-			{
-				assert( val <= INT16_MAX );
-				*num = (T)(val);
-			}
-			else if constexpr ( sizeof( T ) == 1 )
-			{
-				assert( val <= INT8_MAX );
-				*num = (T)(val);
-			}
-			else
-				static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
-		}
-	}
-	void skipUnsignedInteger()
-	{
-		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += impl::integer_max_size;
-		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
-	}
-
-	template <typename T>
-	void parseReal( T* num )
-	{
-		static_assert( sizeof( T ) <= impl::integer_max_size );
-		/*temporary solution TODO: actual implementation*/ double val = *reinterpret_cast<double*>(begin); begin += sizeof( val );
-		if ( std::is_integral<T>::value )
-		{
-			static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
-			if constexpr ( std::is_signed< T >::value )
-			{
-				if constexpr ( sizeof( T ) == 8 )
-					*num = (T)(val);
-				else if constexpr ( sizeof( T ) == 4 )
-				{
-					assert( val >= INT32_MIN && val <= INT32_MAX );
-					*num = (T)(val);
-				}
-				else if constexpr ( sizeof( T ) == 2 )
-				{
-					assert( val >= INT16_MIN && val <= INT16_MAX );
-					*num = (T)(val);
-				}
-				else if constexpr ( sizeof( T ) == 1 )
-				{
-					assert( val >= INT8_MIN && val <= INT8_MAX );
-					*num = (T)(val);
-				}
-				else
-					static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
-			}
-			else
-			{
-				if constexpr ( sizeof( T ) == 8 )
-				{
-					assert( val >= 0 );
-					*num = (T)(val);
-				}
-				else if constexpr ( sizeof( T ) == 4 )
-				{
-					assert( val >= 0 && val <= UINT32_MAX );
-					*num = (T)(val);
-				}
-				else if constexpr ( sizeof( T ) == 2 )
-				{
-					assert( val >= 0 && val <= UINT16_MAX );
-					*num = (T)(val);
-				}
-				else if constexpr ( sizeof( T ) == 1 )
-				{
-					assert( val >= 0 && val <= UINT8_MAX );
-					*num = (T)(val);
-				}
-				else
-					static_assert( sizeof( T ) > impl::integer_max_size ); // kinda chitting with a compiler, which treats static_assert( false ) here as an unconditional error
-			}
-		}
-		else
-		{
-			static_assert( std::is_floating_point<T>::value );
-			*num = val; // TODO: check limits for T = float
-		}
-	}
-	void skipReal()
-	{
-		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
-		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
-	}
-
-	void parseString( const char** str )
-	{
-		*str = reinterpret_cast<char*>(begin);
-		while( *begin++ != 0 );
-	}
-
-	void parseString( std::string* str )
-	{
-		*str = reinterpret_cast<char*>(begin);
-		while( *begin++ != 0 );
-	}
-
-	void skipString()
-	{
-		while( *begin++ != 0 );
-	}
 };
 
 } // namespace m
