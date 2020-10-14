@@ -19,7 +19,7 @@ if (BISON_FOUND AND FLEX_FOUND)
 endif ()
 
 
-add_executable(generator
+add_executable(idl_compiler
     ${FLEX_OUTPUT}
     ${BISON_OUTPUT}
     src/global_mq_parser_helper.cpp
@@ -27,5 +27,5 @@ add_executable(generator
     src/main.cpp
 )
 
-target_include_directories(generator PUBLIC include)
-target_link_libraries(generator fmt::fmt)
+target_include_directories(idl_compiler PRIVATE include)
+target_link_libraries(idl_compiler fmt::fmt)
