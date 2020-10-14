@@ -25,7 +25,7 @@ void runGmqSample()
 	std::vector<Point> vectorOfPoints = { {0, 1}, {2, 3}, {4, 5} };
 	std::vector<Point3D> vectorOfPoints3D = { {0, 1, 2}, {3, 4, 5} };
 	m::Buffer b;
-	m::GmqComposer<m::Buffer> composer( b );
+	m::GmqComposer composer( b );
 	m::message_one_compose( composer, 
 		m::thirdParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ m::point3D_compose( c, m::x = vectorOfPoints3D[ordinal].x, m::y = vectorOfPoints3D[ordinal].y, m::z = vectorOfPoints3D[ordinal].z );} ), 
 		m::firstParam = 1, m::fifthParam = "def", m::forthParam = 3, m::seventhParam = 3.1416, 
@@ -33,7 +33,7 @@ void runGmqSample()
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
 
-	m::GmqParser<m::Buffer> parser( b );
+	m::GmqParser parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string_view fifthParam;
@@ -87,7 +87,7 @@ void runJsonSample()
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	m::JsonParser<m::Buffer> parser( b );
+	m::JsonParser parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string_view fifthParam;
