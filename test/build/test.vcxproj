@@ -24,9 +24,9 @@
     <ClCompile Include="..\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\generated\test_marshalling.h" />
     <ClInclude Include="..\..\library\include\marshalling_impl.h" />
     <ClInclude Include="..\..\library\include\marshalling.h" />
+    <ClInclude Include="..\marshalling\test_marshalling.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

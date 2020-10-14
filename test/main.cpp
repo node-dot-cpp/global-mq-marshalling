@@ -3,8 +3,7 @@
 
 #include <stdio.h>
 #include <marshalling.h>
-#include "./generated/test_marshalling.h"
-//#include "../manual/test.h"
+#include "./marshalling/test_marshalling.h"
 
 struct Point
 {
