@@ -17,8 +17,18 @@ public:
 		source.updateNode( {}, std::move( b ) );
 
 		b.clear();
-		b.appendString( "level msg" );
-		source.updateNode( {}, std::move( b ) );
+		b.appendString( "level 1 msg 1" );
+		source.insertNode( {}, 0, std::move( b ) );
+
+		b.clear();
+		b.appendString( "level 1 msg 2" );
+		source.insertNode( {}, 0, std::move( b ) );
+
+		b.clear();
+		b.appendString( "level 2 msg 1" );
+		source.insertNode( {1}, 0, std::move( b ) );
+
+		source.dbgPrintTree();
 	}
 };
 

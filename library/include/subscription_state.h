@@ -55,43 +55,60 @@ private:
 	SSNode root; 
 	uint64_t updateCount = 0;
 
-	std::pair<SSNode*, SSNode::NodeIterT> nodePosToIterator( PositionVectorT nodePos )
+	SSNode* nodePosToIterator( PositionVectorT nodePos, size_t cnt )
 	{
-		GMQ_ASSERT( nodePos.size() > 0 );
+		GMQ_ASSERT( cnt <= nodePos.size() );
 		SSNode* pnode = &root;
 		size_t i=0;
-		for ( ; i<nodePos.size() - 1; ++i )
+		for ( ; i<cnt; ++i )
 		{
 			size_t idx = nodePos[i];
 			GMQ_ASSERT( idx < pnode->nodes.size() );
 			pnode = &(pnode->nodes[i]);
 		}
-		size_t idx = nodePos[i];
-		GMQ_ASSERT( idx < pnode->nodes.size() );
-		return std::make_pair(pnode, pnode->nodes.begin() + idx);
+		return pnode;
 	}
 
 public:
-	void insertNode( PositionVectorT parent, size_t insertBefore, m::Buffer&& msg )
+	void insertNode( PositionVectorT parentPos, size_t insertBefore, m::Buffer&& msg )
 	{
-		auto resolved = nodePosToIterator( parent );
-		GMQ_ASSERT( insertBefore <= resolved.second->nodes.size() );
-		resolved.second->nodes.insert( resolved.second->nodes.begin() + insertBefore, SSNode( std::move( msg ), updateCount ) );
+		auto resolved = nodePosToIterator( parentPos, parentPos.size() );
+		GMQ_ASSERT( insertBefore <= resolved->nodes.size() );
+		resolved->nodes.insert( resolved->nodes.begin() + insertBefore, SSNode( std::move( msg ), updateCount ) );
 		++updateCount;
 	}
 	void removeNode( PositionVectorT nodePos )
 	{
-		auto resolved = nodePosToIterator( nodePos );
-		resolved.first->nodes.erase( resolved.second );
-		resolved.first->lastUpdate = updateCount;
+		GMQ_ASSERT( nodePos.size() );
+		auto resolved = nodePosToIterator( nodePos, nodePos.size() - 1 );
+		size_t idx = nodePos.back();
+		resolved->nodes.erase( resolved->nodes.begin() + idx );
+		resolved->lastUpdate = updateCount;
 		++updateCount;
 	}
 	void updateNode( PositionVectorT nodePos, m::Buffer&& msg )
 	{
-		auto resolved = nodePosToIterator( nodePos );
-		resolved.second->msgBuff = std::move( msg );
-		resolved.first->lastUpdate = updateCount;
+		auto resolved = nodePosToIterator( nodePos, nodePos.size() );
+		resolved->msgBuff = std::move( msg );
+		resolved->lastUpdate = updateCount;
 		++updateCount;
+	}
+
+	void dbgPrintNodeRecursively( SSNode& node, GMQ_COLL string offset, size_t depth, size_t currDepth )
+	{
+		fmt::print( "{}[{}] \"{}\"\n", offset, node.lastUpdate, GMQ_COLL string_view( reinterpret_cast<char*>(node.msgBuff.begin()), node.msgBuff.size() ) );
+		if ( depth == currDepth )
+		{
+			fmt::print( "{} <more nodes in depth>\n", offset );
+			return;
+		}
+		for ( size_t i=0; i<node.nodes.size(); ++i )
+			dbgPrintNodeRecursively( node.nodes[i], offset + "  ", depth, currDepth + 1 );
+	}
+
+	void dbgPrintTree()
+	{
+		dbgPrintNodeRecursively( root, "", 1000, 0 );
 	}
 };
 
