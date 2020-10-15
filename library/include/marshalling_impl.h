@@ -28,176 +28,50 @@
 #ifndef COMPOSE_AND_PARSE_IMPL_H
 #define COMPOSE_AND_PARSE_IMPL_H
 
+#include "common.h"
 #include <tuple>
 #include <cstddef>
-#include <fmt/format.h>
-
-/////////////////////////////////////////
-// means for replacing std:: by nodecpp::
-#ifdef GMQ_USE_EXTERNAL_DEFINITIONS
-#include GMQ_USE_EXTERNAL_DEFINITIONS
-#endif // GMQ_USE_EXTERNAL_DEFINITIONS
-
-#ifndef GMQ_ASSERT
-#include <assert.h>
-#define GMQ_ASSERT( condition, ... ) assert( condition )
-#endif // GMQ_ASSERT
-
-#ifndef GMQ_COLL
-#include <string>
-#define GMQ_COLL std::
-#endif // GMQ_COLL
-/////////////////////////////////////////
 
 
 namespace m {
-	struct FloatingParts
-	{
-		int64_t fraction;
-		int64_t exponent;
-		FloatingParts( double d ) { fromFloating( d ); }
-		void fromFloating( double d ) { 
-			uint64_t fraction_ = *(uint64_t*)(&d) & 0x800fffffffffffffULL; 
-			fraction = *(int64_t*)(&fraction_);
-			uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 53;
-			exponent = *(uint64_t*)(&exponent_) - 1023;
-		}
-		double value() { 
-			int64_t exp_ = exponent + 1023;
-			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
-			GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
-			GMQ_ASSERT( ( exp_ & ~0x7ffLLU ) == 0 );
-			return *(double*)(&res);
-		}
-	};
 
-	template<int64_t fraction_, int64_t exponent_>
-	struct FloatingDefault
-	{
-		static_assert( ( (uint64_t)(fraction_) & 0x7ff0000000000000 ) == 0 );
-		static_assert( ( exponent_ & ~0x7ff ) == 0 );
-		static constexpr int64_t fraction = fraction_;
-		static constexpr int64_t exponent = exponent_;
-		constexpr FloatingDefault() {}
-		static double value() {
-			int64_t exp_ = exponent + 1023;
-			uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
-			GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
-			GMQ_ASSERT( ( exp_ & ~0x7ff ) == 0 );
-			return *(double*)(&res);
-		}
-	};
+struct FloatingParts
+{
+	int64_t fraction;
+	int64_t exponent;
+	FloatingParts( double d ) { fromFloating( d ); }
+	void fromFloating( double d ) { 
+		uint64_t fraction_ = *(uint64_t*)(&d) & 0x800fffffffffffffULL; 
+		fraction = *(int64_t*)(&fraction_);
+		uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 53;
+		exponent = *(uint64_t*)(&exponent_) - 1023;
+	}
+	double value() { 
+		int64_t exp_ = exponent + 1023;
+		uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+		GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+		GMQ_ASSERT( ( exp_ & ~0x7ffLLU ) == 0 );
+		return *(double*)(&res);
+	}
+};
 
-	static constexpr size_t MIN_BUFFER = 1024;
+template<int64_t fraction_, int64_t exponent_>
+struct FloatingDefault
+{
+	static_assert( ( (uint64_t)(fraction_) & 0x7ff0000000000000 ) == 0 );
+	static_assert( ( exponent_ & ~0x7ff ) == 0 );
+	static constexpr int64_t fraction = fraction_;
+	static constexpr int64_t exponent = exponent_;
+	constexpr FloatingDefault() {}
+	static double value() {
+		int64_t exp_ = exponent + 1023;
+		uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+		GMQ_ASSERT( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+		GMQ_ASSERT( ( exp_ & ~0x7ff ) == 0 );
+		return *(double*)(&res);
+	}
+};
 
-	class Buffer {
-	private:
-		size_t _size = 0;
-		size_t _capacity = 0;
-		std::unique_ptr<uint8_t[]> _data;
-
-	private:
-		void ensureCapacity(size_t sz) { // NOTE: may invalidate pointers
-			if (_data == nullptr) {
-				reserve(sz);
-			}
-			else if (sz > _capacity) {
-				size_t cp = std::max(sz, MIN_BUFFER);
-				std::unique_ptr<uint8_t[]> tmp(new uint8_t[cp]);
-				memcpy(tmp.get(), _data.get(), _size);
-				_capacity = cp;
-				_data = std::move(tmp);
-			}
-		}
-
-	public:
-		Buffer() {}
-		Buffer(size_t res) { reserve(res); }
-		Buffer(Buffer&& p) {
-			std::swap(_size, p._size);
-			std::swap(_capacity, p._capacity);
-			std::swap(_data, p._data);
-		}
-		Buffer& operator = (Buffer&& p) {
-			std::swap(_size, p._size);
-			std::swap(_capacity, p._capacity);
-			std::swap(_data, p._data);
-			return *this;
-		}
-		Buffer(const Buffer&) = delete;
-		Buffer& operator = (const Buffer& p) = delete;
-
-		void reserve(size_t sz) {
-			GMQ_ASSERT( _size == 0 ); 
-			GMQ_ASSERT( _capacity == 0 );
-			GMQ_ASSERT( _data == nullptr );
-
-			size_t cp = std::max(sz, MIN_BUFFER);
-			std::unique_ptr<uint8_t[]> tmp(new uint8_t[cp]);
-
-			_capacity = cp;
-			_data = std::move(tmp);
-		}
-
-		void append(const void* dt, size_t sz) { // NOTE: may invalidate pointers
-			ensureCapacity(_size + sz);
-			memcpy(end(), dt, sz);
-			_size += sz;
-		}
-
-		void trim(size_t sz) { // NOTE: keeps pointers
-			GMQ_ASSERT( sz <= _size );
-			GMQ_ASSERT( _data != nullptr || (_size == 0 && sz == 0) );
-			_size -= sz;
-		}
-
-		void clear() {
-			trim(size());
-		}
-
-		void set_size(size_t sz) { // NOTE: keeps pointers
-			GMQ_ASSERT( sz <= _capacity );
-			GMQ_ASSERT( _data != nullptr );
-			_size = sz;
-		}
-
-		size_t size() const { return _size; }
-		bool empty() const { return _size == 0; }
-		size_t capacity() const { return _capacity; }
-		uint8_t* begin() { return _data.get(); }
-		const uint8_t* begin() const { return _data.get(); }
-		uint8_t* end() { return _data.get() + _size; }
-		const uint8_t* end() const { return _data.get() + _size; }
-
-		// TODO: revise and add other relevant calls
-		size_t writeInt8( int8_t val, size_t pos ) {
-			ensureCapacity(pos + 1);
-			*reinterpret_cast<uint8_t*>(begin() + pos ) = val;
-			if ( _size < pos + 1 )
-				_size = pos + 1;
-			return pos + 1;
-		}
-		size_t appendUint8( int8_t val ) {
-			ensureCapacity(size() + 1);
-			*reinterpret_cast<uint8_t*>(begin() + size() ) = val;
-			return ++_size;
-		}
-
-		uint32_t readUInt8(size_t offset) const {
-			GMQ_ASSERT( offset + 1 <= _size );
-			return *(begin() + offset);
-		}
-
-		size_t appendString( const GMQ_COLL string& str ) {
-			append( str.c_str(), str.size() );
-			return _size;
-		}
-	};
-} // namespace m
-
-
-
-namespace m {
 
 enum Proto { GMQ, JSON };
 
