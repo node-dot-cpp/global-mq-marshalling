@@ -30,15 +30,69 @@
 
 #include "common.h"
 
-struct SSNode
-{
-	m::Buffer msgBuff;
-	GMQ_COLL vector<SSNode> nodes;
-};
-
 class GmqSubscriptionState
 {
-	SSNode root;
+public:
+	using PositionVectorT = GMQ_COLL vector<size_t>;
+
+private:
+	struct SSNode
+	{
+		using VectorOfNodesT = GMQ_COLL vector<SSNode>;
+		using NodeIterT = typename VectorOfNodesT::iterator;
+		m::Buffer msgBuff;
+		VectorOfNodesT nodes;
+		uint64_t lastUpdate;
+
+		SSNode() {}
+		SSNode( m::Buffer&& msg, size_t lastUpdate_ ) : msgBuff( std::move( msg ) ), lastUpdate( lastUpdate_ ) {}
+		SSNode( const SSNode& ) = delete;
+		SSNode& operator = ( const SSNode& ) = delete;
+		SSNode( SSNode&& other ) = default;
+		SSNode& operator = ( SSNode&& other ) = default;
+	};
+
+	SSNode root; 
+	uint64_t updateCount = 0;
+
+	std::pair<SSNode*, SSNode::NodeIterT> nodePosToIterator( PositionVectorT nodePos )
+	{
+		GMQ_ASSERT( nodePos.size() > 0 );
+		SSNode* pnode = &root;
+		size_t i=0;
+		for ( ; i<nodePos.size() - 1; ++i )
+		{
+			size_t idx = nodePos[i];
+			GMQ_ASSERT( idx < pnode->nodes.size() );
+			pnode = &(pnode->nodes[i]);
+		}
+		size_t idx = nodePos[i];
+		GMQ_ASSERT( idx < pnode->nodes.size() );
+		return std::make_pair(pnode, pnode->nodes.begin() + idx);
+	}
+
+public:
+	void insertNode( PositionVectorT parent, size_t insertBefore, m::Buffer&& msg )
+	{
+		auto resolved = nodePosToIterator( parent );
+		GMQ_ASSERT( insertBefore <= resolved.second->nodes.size() );
+		resolved.second->nodes.insert( resolved.second->nodes.begin() + insertBefore, SSNode( std::move( msg ), updateCount ) );
+		++updateCount;
+	}
+	void removeNode( PositionVectorT nodePos )
+	{
+		auto resolved = nodePosToIterator( nodePos );
+		resolved.first->nodes.erase( resolved.second );
+		resolved.first->lastUpdate = updateCount;
+		++updateCount;
+	}
+	void updateNode( PositionVectorT nodePos, m::Buffer&& msg )
+	{
+		auto resolved = nodePosToIterator( nodePos );
+		resolved.second->msgBuff = std::move( msg );
+		resolved.first->lastUpdate = updateCount;
+		++updateCount;
+	}
 };
 
 #endif // SUBSCRIPTION_STATE_H

@@ -10,6 +10,15 @@ class SubscriptionPairTest
 public:
 	void test()
 	{
+		m::Buffer b;
+		GmqSubscriptionState::PositionVectorT v;
+
+		b.appendString( "root msg" );
+		source.updateNode( {}, std::move( b ) );
+
+		b.clear();
+		b.appendString( "level msg" );
+		source.updateNode( {}, std::move( b ) );
 	}
 };
 
