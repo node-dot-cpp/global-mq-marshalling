@@ -28,6 +28,7 @@
 
 %token KW_FILE
 %token KW_MESSAGE
+%token KW_PUBLISHABLE_STRUCT
 %token KW_NONEXTENDABLE
 %token KW_EXTENSION
 %token KW_HASH_LINE
@@ -58,7 +59,8 @@ extern int yylex();
 
 file : { $$ = 0; }
 	| file line_directive { $$ = 0; releaseYys2($1, $2); }
-    | file message { $$ = addToFile($1, $2); }
+	| file message { $$ = addMessageToFile($1, $2); }
+	| file publishable_struct { $$ = addPublishableStructToFile($1, $2); }
 ;
 
 line_directive
@@ -76,6 +78,15 @@ message_begin
 
 message
 	: message_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
+;
+
+publishable_struct_begin
+	: KW_PUBLISHABLE_STRUCT IDENTIFIER '{' { $$ = createPublishableStruct($1, $2); releaseYys($3); }
+	| publishable_struct_begin data_type IDENTIFIER ';' { $$ = addToPublishableStruct($1, createAttribute($2, $3)); releaseYys($4); }
+;
+
+publishable_struct
+	: publishable_struct_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
 ;
 
 data_type

@@ -433,13 +433,24 @@ YYSTYPE createStringLiteral(const char* text, int line)
 
 //////////////////////////////////////////////////////////////////////////////
 
-YYSTYPE addToFile(YYSTYPE file, YYSTYPE item)
+YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item)
 {
 	GLOBALMQASSERT(!file);
 	unique_ptr<YyBase> d0(item);
 
 	Message* s = releasePointedFromYyPtr<Message>(item);
 	currentRoot->messages.push_back(unique_ptr<Message>(s));
+
+	return 0;
+}
+
+YYSTYPE addPublishableStructToFile(YYSTYPE file, YYSTYPE item)
+{
+	GLOBALMQASSERT(!file);
+	unique_ptr<YyBase> d0(item);
+
+	PublishabeStruct* s = releasePointedFromYyPtr<PublishabeStruct>(item);
+	currentRoot->publishable_structs.push_back(unique_ptr<PublishabeStruct>(s));
 
 	return 0;
 }
@@ -468,6 +479,20 @@ YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr)
 	unique_ptr<YyBase> d1(attr);
 
 	Message* yy = getPointedFromYyPtr<Message>(decl);
+
+	MessageParameter* a = releasePointedFromYyPtr<MessageParameter>(attr);
+
+	yy->members.push_back(unique_ptr<MessageParameter>(a));
+
+	return d0.release();
+}
+
+YYSTYPE addToPublishableStruct(YYSTYPE decl, YYSTYPE attr)
+{
+	unique_ptr<YyBase> d0(decl);
+	unique_ptr<YyBase> d1(attr);
+
+	PublishabeStruct* yy = getPointedFromYyPtr<PublishabeStruct>(decl);
 
 	MessageParameter* a = releasePointedFromYyPtr<MessageParameter>(attr);
 
@@ -536,6 +561,19 @@ YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YY
 	}
 
 	return new YyPtr<Message>(yy);
+}
+
+YYSTYPE createPublishableStruct(YYSTYPE token, YYSTYPE id)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(id);
+
+	PublishabeStruct* yy = new PublishabeStruct();
+
+	yy->location = id->location;
+	yy->name = nameFromYyIdentifier(id);
+
+	return new YyPtr<PublishabeStruct>(yy);
 }
 
 static

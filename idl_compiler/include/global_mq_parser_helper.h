@@ -66,16 +66,19 @@ YYSTYPE createHexIntegerLiteral(const char* text, int line);
 YYSTYPE createStringLiteral(const char* text, int line);
 YYSTYPE createZeroLiteral(const char* text, int line);
 
-YYSTYPE addToFile(YYSTYPE file, YYSTYPE item);
+YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item);
+YYSTYPE addPublishableStructToFile(YYSTYPE file, YYSTYPE item);
 
 void processLineDirective(YYSTYPE line_number, YYSTYPE file_name);
 
 YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr);
+YYSTYPE addToPublishableStruct(YYSTYPE decl, YYSTYPE attr);
 
 YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
 YYSTYPE insertExtensionMarker(YYSTYPE decl);
 
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createPublishableStruct(YYSTYPE token, YYSTYPE id);
 
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);

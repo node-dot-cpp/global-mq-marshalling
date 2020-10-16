@@ -69,17 +69,29 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 
 void printRoot( Root& s )
 {
-	printf( "Root (%zd messages) {\n", s.messages.size() );
+	if ( s.messages.size() && s.publishable_structs.size() )
+		printf( "Root (%zd messages, %zd publishable structs) {\n", s.messages.size(), s.publishable_structs.size() );
+	else if ( s.messages.size() )
+		printf( "Root (%zd messages) {\n", s.messages.size() );
+	else if ( s.publishable_structs.size() )
+		printf( "Root (%zd publishable structs) {\n", s.publishable_structs.size() );
+	else
+		printf( "Root (no messages or publishable structs) {\n" );
 	for ( auto& it : s.messages )
 	{
 		auto& obj_1 = it;
 		print__unique_ptr_Message( obj_1, 4 );
 	}
+	for ( auto& it : s.publishable_structs )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_PublishableStruct( obj_1, 4 );
+	}
 	printf( "}\n" );
 }
 
-void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset ) {
-
+void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset )
+{
 	if ( s == nullptr )
 	{
 		char offsetch[1024];
@@ -90,6 +102,21 @@ void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset ) {
 	else if ( typeid( *(s) ) == typeid( Message ) )
 	{
 		printMessage( *(dynamic_cast<Message*>(&(*(s)))), offset );
+	}
+}
+
+void print__unique_ptr_PublishableStruct( unique_ptr<PublishabeStruct>& s, size_t offset )
+{
+	if ( s == nullptr )
+	{
+		char offsetch[1024];
+		memset( offsetch, ' ', offset );
+		offsetch[ offset ] = 0;
+		printf( "%sPublishable-struct <null> {}\n", offsetch );
+	}
+	else if ( typeid( *(s) ) == typeid( PublishabeStruct ) )
+	{
+		printPublishableStruct( *(dynamic_cast<PublishabeStruct*>(&(*(s)))), offset );
 	}
 }
 
@@ -113,7 +140,30 @@ void printMessage( Message& s, size_t offset )
 }
 
 
+void printPublishableStruct( PublishabeStruct& s, size_t offset )
+{
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
+
+	printf( "%sPublishabe-Struct: name = \"%s\"", offsetch, s.name.c_str() );
+	printf( "(%zd members) {\n", s.members.size() );
+	printPublishableStructMembers( s, offset + 4 );
+	printf( "%s}\n", offsetch );
+}
+
+
 void printMessageMembers( Message& s, size_t offset )
+{
+	for ( auto& it : s.members )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_MessageParameter( obj_1, offset + 4 );
+	}
+}
+
+
+void printPublishableStructMembers( PublishabeStruct& s, size_t offset )
 {
 	for ( auto& it : s.members )
 	{

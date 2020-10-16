@@ -33,13 +33,16 @@
 // printing global_mq tree
 void printRoot( Root& s );
 void printMessage( Message& s, size_t offset );
+void printPublishableStruct( PublishabeStruct& s, size_t offset );
 void printMessageParameter( MessageParameter& s, size_t offset );
 void printMessageMembers( Message& s, size_t offset );
+void printPublishableStructMembers( PublishabeStruct& s, size_t offset );
 void printLimit( Limit& s, size_t offset );
 void printLocation( Location& s, size_t offset );
 void printDataType( MessageParameterType& s, size_t offset );
 void print__unique_ptr_DataType( unique_ptr<MessageParameterType>& s, size_t offset );
 void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset );
+void print__unique_ptr_PublishableStruct( unique_ptr<PublishabeStruct>& s, size_t offset );
 void print__unique_ptr_MessageParameter( unique_ptr<MessageParameter>& s, size_t offset );
 
 void printDataType( MessageParameterType& s );

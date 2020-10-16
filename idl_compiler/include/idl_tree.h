@@ -103,14 +103,14 @@ public:
 };
 
 
-class MessageOrMsgParameter
+class ObjectBase
 {
 public:
 	Location location;
-	virtual ~MessageOrMsgParameter() {}
+	virtual ~ObjectBase() {}
 };
 
-class MessageParameter : public MessageOrMsgParameter
+class MessageParameter : public ObjectBase
 {
 public:
 	MessageParameterType type;
@@ -121,7 +121,7 @@ public:
 };
 
 
-class Message : public MessageOrMsgParameter
+class Message : public ObjectBase
 {
 public:
 	vector<unique_ptr<MessageParameter>> members;
@@ -131,10 +131,18 @@ public:
 	bool isNonExtendable = false;
 };
 
+class PublishabeStruct : public ObjectBase
+{
+public:
+	vector<unique_ptr<MessageParameter>> members;
+	string name;
+};
+
 class Root
 {
 public:
 	vector<unique_ptr<Message>> messages;
+	vector<unique_ptr<PublishabeStruct>> publishable_structs;
 };
 
 inline
