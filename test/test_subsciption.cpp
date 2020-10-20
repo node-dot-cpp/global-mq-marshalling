@@ -42,19 +42,19 @@ public:
 
 struct A
 {
-	int x;
+	int x = 17;
 };
 
 struct B
 {
-	float y;
+	float y = 3.14;
 };
 
 struct S
 {
 	std::string s;
 	A a;
-	B b;
+	GMQ_COLL vector<B> b = {B({2.33}),B({4.03})};
 };
 
 ////////////////////////////////////////////////////
@@ -78,11 +78,25 @@ class B_Ref_Wrapper
 {
 	TB& b;
 	static constexpr bool has_y = has_y_member<TB>;
-	static_assert( has_y, "type TA must have member TA::x of atype corresponding to IDL type REAL" );
+	static_assert( has_y, "type TB must have member TB::x of atype corresponding to IDL type REAL" );
 	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
 public:
 	B_Ref_Wrapper( TB& actual ) : b( actual ) {}
 	auto get_y() { return b.y; }
+};
+
+template<class TB>
+class Vector_of_B_Ref_Wrapper
+{
+	TB& b;
+//	static constexpr bool has_y = has_y_member<TB>;
+//	static_assert( has_y, "type TB must have member TB::x of atype corresponding to IDL type REAL" );
+//	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
+public:
+	Vector_of_B_Ref_Wrapper( TB& actual ) : b( actual ) {}
+	auto get_at( size_t idx ) { return B_Ref_Wrapper<TB::value_type>(b[idx]); }
+	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
+	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
 };
 
 template<typename T> concept has_A_value_member = requires { { T::a }; };
@@ -105,14 +119,14 @@ public:
 	S_Wrapper() {}
 	const auto& get_s() { return t.s; } // NOTE: for strings returning const ref
 	auto get_a() { return A_Ref_Wrapper<decltype(T::a)>(t.a); }
-	auto get_b() { return B_Ref_Wrapper<decltype(T::b)>(t.b); }
+	auto get_b() { return Vector_of_B_Ref_Wrapper(t.b); }
 };
 
 void test()
 {
 	S_Wrapper<S> s;
 	printf( "%d\n", s.get_a().get_x() );
-	printf( "%f\n", s.get_b().get_y() );
+	printf( "%f\n", s.get_b().get_at(1).get_y() );
 }
 
 template<typename T, typename U>
