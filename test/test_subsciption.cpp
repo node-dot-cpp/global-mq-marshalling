@@ -69,7 +69,7 @@ class A_Ref_Wrapper
 	static_assert( std::is_integral<decltype(TA::x)>::value, "member TA::x must be INTEGER type" );
 public:
 	A_Ref_Wrapper( TA& actual ) : a( actual ) {}
-	auto& get_x() { return a.x; }
+	auto get_x() { return a.x; }
 };
 	
 template<typename T> concept has_y_member = requires { { T::y }; };
@@ -82,7 +82,7 @@ class B_Ref_Wrapper
 	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
 public:
 	B_Ref_Wrapper( TB& actual ) : b( actual ) {}
-	auto& get_y() { return b.y; }
+	auto get_y() { return b.y; }
 };
 
 template<typename T> concept has_A_value_member = requires { { T::a }; };
@@ -103,7 +103,7 @@ class S_Wrapper
 
 public:
 	S_Wrapper() {}
-	auto& get_s() { return t.s; }
+	const auto& get_s() { return t.s; } // NOTE: for strings returning const ref
 	auto get_a() { return A_Ref_Wrapper<decltype(T::a)>(t.a); }
 	auto get_b() { return B_Ref_Wrapper<decltype(T::b)>(t.b); }
 };
