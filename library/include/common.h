@@ -26,7 +26,7 @@
 * -------------------------------------------------------------------------------*/
 
 #ifndef COMMON_H
-#define COMPMON_H
+#define COMMON_H
 
 #include <fmt/format.h>
 
