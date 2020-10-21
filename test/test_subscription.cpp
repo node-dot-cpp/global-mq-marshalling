@@ -116,7 +116,13 @@ public:
 		address.push_back (idx );
 	}
 	auto get_y() { return b.y; }
-	void set_y( decltype(TB::y) val) { b.y = val; }
+	void set_y( decltype(TB::y) val) { 
+		fmt::print( "updating B::y with value {}; path = [ ", val );
+		for ( size_t i=0; i<address.size(); ++i )
+		fmt::print( "{} ", address[i] );
+		fmt::print( "] \n" );
+		b.y = val; 
+	}
 };
 
 template<class TB>
@@ -182,7 +188,9 @@ void test()
 	S_Wrapper<S> s;
 	printf( "%d\n", s.get_a().get_x() );
 	printf( "%f\n", s.get_b().get_at(1).get_y() );
+	s.get4set_b().get4set_at(0).set_y( 0.1234 );
 	s.get4set_b().get4set_at(1).set_y( 1.2345 );
+	printf( "%f\n", s.get_b().get_at(0).get_y() );
 	printf( "%f\n", s.get_b().get_at(1).get_y() );
 }
 
