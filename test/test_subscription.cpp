@@ -61,40 +61,92 @@ struct S
 
 template<typename T> concept has_x_member = requires { { T::x }; };
 template<class TA>
-class A_Ref_Wrapper
+class A_RefWrapper
 {
-	TA& a;
 	static constexpr bool has_x = has_x_member<TA>;
 	static_assert( has_x, "type TA must have member TA::x of a type corresponding to IDL type INTEGER" );
 	static_assert( std::is_integral<decltype(TA::x)>::value, "member TA::x must be INTEGER type" );
+	TA& a;
 public:
-	A_Ref_Wrapper( TA& actual ) : a( actual ) {}
+	A_RefWrapper( TA& actual ) : a( actual ) {}
 	auto get_x() { return a.x; }
+};
+template<class TA, class RootT>
+class A_RefWrapper4setting
+{
+	static constexpr bool has_x = has_x_member<TA>;
+	static_assert( has_x, "type TA must have member TA::x of a type corresponding to IDL type INTEGER" );
+	static_assert( std::is_integral<decltype(TA::x)>::value, "member TA::x must be INTEGER type" );
+	TA& a;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+public:
+	A_RefWrapper4setting( TA& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : a( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_x() { return a.x; }
+	void set_x( decltype(TA::x) val) { a.x = val; }
 };
 	
 template<typename T> concept has_y_member = requires { { T::y }; };
 template<class TB>
-class B_Ref_Wrapper
+class B_RefWrapper
 {
-	TB& b;
 	static constexpr bool has_y = has_y_member<TB>;
 	static_assert( has_y, "type TB must have member TB::x of atype corresponding to IDL type REAL" );
 	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
+	TB& b;
 public:
-	B_Ref_Wrapper( TB& actual ) : b( actual ) {}
+	B_RefWrapper( TB& actual ) : b( actual ) {}
 	auto get_y() { return b.y; }
+};
+template<class TB, class RootT>
+class B_RefWrapper4Set
+{
+	static constexpr bool has_y = has_y_member<TB>;
+	static_assert( has_y, "type TB must have member TB::x of atype corresponding to IDL type REAL" );
+	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
+	TB& b;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+public:
+	B_RefWrapper4Set( TB& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_y() { return b.y; }
+	void set_y( decltype(TB::y) val) { b.y = val; }
 };
 
 template<class TB>
-class Vector_of_B_Ref_Wrapper
+class Vector_of_B_RefWrapper
 {
-	TB& b;
 //	static constexpr bool has_y = has_y_member<TB>;
 //	static_assert( has_y, "type TB must have member TB::x of atype corresponding to IDL type REAL" );
 //	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
+	TB& b;
 public:
-	Vector_of_B_Ref_Wrapper( TB& actual ) : b( actual ) {}
-	auto get_at( size_t idx ) { return B_Ref_Wrapper<TB::value_type>(b[idx]); }
+	Vector_of_B_RefWrapper( TB& actual ) : b( actual ) {}
+	auto get_at( size_t idx ) { return B_RefWrapper<typename TB::value_type>(b[idx]); }
+	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
+	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
+};
+template<class TB, class RootT>
+class Vector_of_B_RefWrapper4Set
+{
+//	static constexpr bool has_y = has_y_member<TB>;
+//	static_assert( has_y, "type TB must have member TB::x of atype corresponding to IDL type REAL" );
+//	static_assert( std::is_floating_point<decltype(TB::y)>::value, "member TB::y must be REAL type" );
+	TB& b;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+public:
+	Vector_of_B_RefWrapper4Set( TB& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_at( size_t idx ) { return B_RefWrapper4Set<typename TB::value_type, RootT>(b[idx], root, address, idx); }
 	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
 	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
 };
@@ -118,8 +170,11 @@ class S_Wrapper
 public:
 	S_Wrapper() {}
 	const auto& get_s() { return t.s; } // NOTE: for strings returning const ref
-	auto get_a() { return A_Ref_Wrapper<decltype(T::a)>(t.a); }
-	auto get_b() { return Vector_of_B_Ref_Wrapper(t.b); }
+	void set_s( GMQ_COLL string s_ ) {t.s = s_; }
+	auto get_a() { return A_RefWrapper<decltype(T::a)>(t.a); }
+	auto get4set_a() { return A_RefWrapper4Set<decltype(T::a), S_Wrapper>(t.a, *this, GMQ_COLL vector(), 1); }
+	auto get_b() { return Vector_of_B_RefWrapper(t.b); }
+	auto get4set_b() { return Vector_of_B_RefWrapper4Set<decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector(), 2); }
 };
 
 void test()
@@ -129,7 +184,7 @@ void test()
 	printf( "%f\n", s.get_b().get_at(1).get_y() );
 }
 
-template<typename T, typename U>
+/*template<typename T, typename U>
 concept can_add = requires(T t, U u) { t + u; };
 
 template<typename T>
@@ -151,7 +206,7 @@ int foo(T t)
         return t.count();
     else
         return 0;
-}
+}*/
 
 /*template <typename T>
 int foo(T t)
@@ -212,7 +267,7 @@ void testSubscriptionTest()
 
 	test();
 
-    struct bar
+    /*struct bar
     {
 		bool x;
         int count() const { return 6; }
@@ -241,5 +296,5 @@ void testSubscriptionTest()
 	printf( "%s, %s\n", has_3count ? "Y" : "N", has_3count1 ? "Y" : "N" );
 
 
-//    printf( "foo(bar{}): : %d\n", foo(bar{}) );
+//    printf( "foo(bar{}): : %d\n", foo(bar{}) );*/
 }
