@@ -146,7 +146,7 @@ public:
 		address = address_;
 		address.push_back (idx );
 	}
-	auto get_at( size_t idx ) { return B_RefWrapper4Set<typename TB::value_type, RootT>(b[idx], root, address, idx); }
+	auto get4set_at( size_t idx ) { return B_RefWrapper4Set<typename TB::value_type, RootT>(b[idx], root, address, idx); }
 	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
 	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
 };
@@ -174,13 +174,15 @@ public:
 	auto get_a() { return A_RefWrapper<decltype(T::a)>(t.a); }
 	auto get4set_a() { return A_RefWrapper4Set<decltype(T::a), S_Wrapper>(t.a, *this, GMQ_COLL vector(), 1); }
 	auto get_b() { return Vector_of_B_RefWrapper(t.b); }
-	auto get4set_b() { return Vector_of_B_RefWrapper4Set<decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector(), 2); }
+	auto get4set_b() { return Vector_of_B_RefWrapper4Set<decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector<size_t>(), 2); }
 };
 
 void test()
 {
 	S_Wrapper<S> s;
 	printf( "%d\n", s.get_a().get_x() );
+	printf( "%f\n", s.get_b().get_at(1).get_y() );
+	s.get4set_b().get4set_at(1).set_y( 1.2345 );
 	printf( "%f\n", s.get_b().get_at(1).get_y() );
 }
 
