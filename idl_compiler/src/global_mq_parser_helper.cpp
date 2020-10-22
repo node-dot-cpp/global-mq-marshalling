@@ -438,19 +438,30 @@ YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item)
 	GLOBALMQASSERT(!file);
 	unique_ptr<YyBase> d0(item);
 
-	Message* s = releasePointedFromYyPtr<Message>(item);
-	currentRoot->messages.push_back(unique_ptr<Message>(s));
+	CompositeType* s = releasePointedFromYyPtr<CompositeType>(item);
+	currentRoot->messages.push_back(unique_ptr<CompositeType>(s));
 
 	return 0;
 }
 
-YYSTYPE addPublishableStructToFile(YYSTYPE file, YYSTYPE item)
+YYSTYPE addPublishableToFile(YYSTYPE file, YYSTYPE item)
 {
 	GLOBALMQASSERT(!file);
 	unique_ptr<YyBase> d0(item);
 
-	PublishabeStruct* s = releasePointedFromYyPtr<PublishabeStruct>(item);
-	currentRoot->publishable_structs.push_back(unique_ptr<PublishabeStruct>(s));
+	CompositeType* s = releasePointedFromYyPtr<CompositeType>(item);
+	currentRoot->publishables.push_back(unique_ptr<CompositeType>(s));
+
+	return 0;
+}
+
+YYSTYPE addStructToFile(YYSTYPE file, YYSTYPE item)
+{
+	GLOBALMQASSERT(!file);
+	unique_ptr<YyBase> d0(item);
+
+	CompositeType* s = releasePointedFromYyPtr<CompositeType>(item);
+	currentRoot->structs.push_back(unique_ptr<CompositeType>(s));
 
 	return 0;
 }
@@ -473,12 +484,12 @@ void processLineDirective(YYSTYPE line_number, YYSTYPE file_name)
 }
 
 
-YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr)
+YYSTYPE addToCompositeType(YYSTYPE decl, YYSTYPE attr)
 {
 	unique_ptr<YyBase> d0(decl);
 	unique_ptr<YyBase> d1(attr);
 
-	Message* yy = getPointedFromYyPtr<Message>(decl);
+	CompositeType* yy = getPointedFromYyPtr<CompositeType>(decl);
 
 	MessageParameter* a = releasePointedFromYyPtr<MessageParameter>(attr);
 
@@ -487,19 +498,10 @@ YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr)
 	return d0.release();
 }
 
-YYSTYPE addToPublishableStruct(YYSTYPE decl, YYSTYPE attr)
-{
-	unique_ptr<YyBase> d0(decl);
-	unique_ptr<YyBase> d1(attr);
+YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
+YYSTYPE addToPublishable(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
+YYSTYPE addToStruct(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
 
-	PublishabeStruct* yy = getPointedFromYyPtr<PublishabeStruct>(decl);
-
-	MessageParameter* a = releasePointedFromYyPtr<MessageParameter>(attr);
-
-	yy->members.push_back(unique_ptr<MessageParameter>(a));
-
-	return d0.release();
-}
 
 static
 MessageParameter* makeDataMember(YYSTYPE type, YYSTYPE id)
@@ -529,51 +531,59 @@ YYSTYPE insertExtensionMarker(YYSTYPE decl)
 {
 	unique_ptr<YyBase> d0(decl);
 
-	Message* yy = getPointedFromYyPtr<Message>(decl);
+	CompositeType* yy = getPointedFromYyPtr<CompositeType>(decl);
 	MessageParameter* extension = new MessageParameter();
 	extension->type.kind = MessageParameterType::KIND::EXTENSION;
 	yy->members.push_back(unique_ptr<MessageParameter>(extension));
 
 	return d0.release();
 }
+YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl) { return insertExtensionMarker(decl);}
+YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensionMarker(decl);}
+YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
 
-YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE createMessageOrPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
 	unique_ptr<YyBase> d2(id);
 
-	Message* yy = new Message();
+	CompositeType* yy = new CompositeType();
 
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
 	yy->isNonExtendable = isNonExtendable;
-	YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
-	for ( auto& proto : pl->ids )
+	if ( protoList != nullptr )
 	{
-		if ( proto == "json" || proto == "JSON" )
-			yy->protoList.insert( Message::Proto::json );
-		else if ( proto == "gmq" || proto == "GMQ" )
-			yy->protoList.insert( Message::Proto::gmq );
-		else
-			reportError(token->location, "Unexpected value of PROTO");
+		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
+		for ( auto& proto : pl->ids )
+		{
+			if ( proto == "json" || proto == "JSON" )
+				yy->protoList.insert( CompositeType::Proto::json );
+			else if ( proto == "gmq" || proto == "GMQ" )
+				yy->protoList.insert( CompositeType::Proto::gmq );
+			else
+				reportError(token->location, "Unexpected value of PROTO");
+		}
 	}
 
-	return new YyPtr<Message>(yy);
+	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE createPublishableStruct(YYSTYPE token, YYSTYPE id)
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
-	unique_ptr<YyBase> d0(token);
-	unique_ptr<YyBase> d1(id);
+	return createMessageOrPublishable(token, isNonExtendable, protoList, id);
+}
 
-	PublishabeStruct* yy = new PublishabeStruct();
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+{
+	return createMessageOrPublishable(token, isNonExtendable, protoList, id);
+}
 
-	yy->location = id->location;
-	yy->name = nameFromYyIdentifier(id);
-
-	return new YyPtr<PublishabeStruct>(yy);
+YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
+{
+	return createMessageOrPublishable(token, isNonExtendable, nullptr, id);
 }
 
 static
@@ -854,20 +864,65 @@ YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault) { return cr
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BLOB, hasDefault ); }
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BYTE_ARRAY, hasDefault ); }
 
-YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault)
+YYSTYPE createVectorOfCompositeType(YYSTYPE token, YYSTYPE compositeTypeName, bool nonext, bool hasDefault, MessageParameterType::KIND kind)
 {
 	unique_ptr<YyBase> d0(token);
-	unique_ptr<YyBase> d1(messageName);
+	unique_ptr<YyBase> d1(compositeTypeName);
 
 	YyDataType* yy = new YyDataType();
 
 	yy->dataType->kind = MessageParameterType::VECTOR;
-	yy->dataType->vectorElemKind = MessageParameterType::MESSAGE;
+	yy->dataType->vectorElemKind = kind;
 	yy->dataType->hasDefault = hasDefault;
 	yy->dataType->isNonExtendable = nonext;
-	yy->dataType->messageName = nameFromYyIdentifier(messageName);
+	yy->dataType->compositeTypeName = nameFromYyIdentifier(compositeTypeName);
 
 	return yy;
+}
+
+YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault)
+{
+	return createVectorOfCompositeType(token, messageName, nonext, hasDefault, MessageParameterType::MESSAGE);
+}
+
+YYSTYPE createVectorOfPublishablesType(YYSTYPE token, YYSTYPE publishableName, bool nonext, bool hasDefault)
+{
+	return createVectorOfCompositeType(token, publishableName, nonext, hasDefault, MessageParameterType::PUBLISHABLE);
+}
+
+YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE structName, bool nonext, bool hasDefault)
+{
+	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::STRUCT);
+}
+
+YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, YYSTYPE memberName, MessageParameterType::KIND kind)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(compositeTypeName);
+	unique_ptr<YyBase> d2(memberName);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = kind;
+	yy->dataType->name = nameFromYyIdentifier(memberName);
+	yy->dataType->compositeTypeName = nameFromYyIdentifier(compositeTypeName);
+
+	return yy;
+}
+
+YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName, YYSTYPE memberName)
+{
+	return createCompositeType(token, isNonExtendable, messageName, memberName, MessageParameterType::MESSAGE);
+}
+
+YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName, YYSTYPE memberName)
+{
+	return createCompositeType(token, isNonExtendable, publishableName, memberName, MessageParameterType::PUBLISHABLE);
+}
+
+YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName, YYSTYPE memberName)
+{
+	return createCompositeType(token, isNonExtendable, structName, memberName, MessageParameterType::STRUCT);
 }
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)

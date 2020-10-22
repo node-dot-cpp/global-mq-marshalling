@@ -58,7 +58,7 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE };
+	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE, PUBLISHABLE, STRUCT };
 	KIND kind = UNDEFINED;
 	string name;
 	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING
@@ -77,7 +77,7 @@ public:
 
 	KIND vectorElemKind = UNDEFINED; // VECTOR
 	bool isNonExtendable = false; // VECTOR
-	string messageName; // VECTOR of MESSAGEs
+	string compositeTypeName; // MESSAGEs, PUBLISHABLEs, STRUCTs (incl in VECTORs)
 	size_t messageIdx; // VECTOR of MESSAGEs, reserved for postprocessing
 
 	map<string, uint32_t> enumValues; // ENUM
@@ -121,7 +121,7 @@ public:
 };
 
 
-class Message : public ObjectBase
+class CompositeType : public ObjectBase
 {
 public:
 	vector<unique_ptr<MessageParameter>> members;
@@ -131,18 +131,12 @@ public:
 	bool isNonExtendable = false;
 };
 
-class PublishabeStruct : public ObjectBase
-{
-public:
-	vector<unique_ptr<MessageParameter>> members;
-	string name;
-};
-
 class Root
 {
 public:
-	vector<unique_ptr<Message>> messages;
-	vector<unique_ptr<PublishabeStruct>> publishable_structs;
+	vector<unique_ptr<CompositeType>> messages;
+	vector<unique_ptr<CompositeType>> publishables;
+	vector<unique_ptr<CompositeType>> structs;
 };
 
 inline
