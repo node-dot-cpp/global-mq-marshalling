@@ -28,7 +28,8 @@
 
 %token KW_FILE
 %token KW_MESSAGE
-%token KW_PUBLISHABLE_STRUCT
+%token KW_PUBLISHABLE
+%token KW_STRUCT
 %token KW_NONEXTENDABLE
 %token KW_EXTENSION
 %token KW_HASH_LINE
@@ -60,7 +61,8 @@ extern int yylex();
 file : { $$ = 0; }
 	| file line_directive { $$ = 0; releaseYys2($1, $2); }
 	| file message { $$ = addMessageToFile($1, $2); }
-	| file publishable_struct { $$ = addPublishableStructToFile($1, $2); }
+	| file publishable { $$ = addPublishableStructToFile($1, $2); }
+	| file struct { $$ = addPublishableStructToFile($1, $2); }
 ;
 
 line_directive
@@ -73,20 +75,34 @@ message_begin
 	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, true, $5, $6); releaseYys4($2, $3, $4, $7); }
 	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createMessage($1, true, $4, $6); releaseYys4($2, $3, $5, $7); }
 	| message_begin data_type IDENTIFIER ';' { $$ = addToMessage($1, createAttribute($2, $3)); releaseYys($4); }
-	| message_begin KW_EXTENSION ':' { $$ = insertExtensionMarker($1); releaseYys2($2, $3); }
+	| message_begin KW_EXTENSION ':' { $$ = insertExtensionMarkerToMessage($1); releaseYys2($2, $3); }
 ;
 
 message
 	: message_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
 ;
 
-publishable_struct_begin
-	: KW_PUBLISHABLE_STRUCT IDENTIFIER '{' { $$ = createPublishableStruct($1, $2); releaseYys($3); }
-	| publishable_struct_begin data_type IDENTIFIER ';' { $$ = addToPublishableStruct($1, createAttribute($2, $3)); releaseYys($4); }
+publishable_begin
+	: KW_PUBLISHABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createPublishable($1, false, $4, $5); releaseYys3($2, $3, $6); }
+	| KW_PUBLISHABLE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createPublishable($1, true, $5, $6); releaseYys4($2, $3, $4, $7); }
+	| KW_PUBLISHABLE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createPublishable($1, true, $4, $6); releaseYys4($2, $3, $5, $7); }
+	| publishable_begin data_type IDENTIFIER ';' { $$ = addToPublishable($1, createAttribute($2, $3)); releaseYys($4); }
+	| publishable_begin KW_EXTENSION ':' { $$ = insertExtensionMarkerToPublishable($1); releaseYys2($2, $3); }
 ;
 
-publishable_struct
-	: publishable_struct_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
+publishable
+	: publishable_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
+;
+
+struct_begin
+	: KW_STRUCT IDENTIFIER '{' { $$ = createStruct($1, $2); releaseYys($3); }
+	| KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createPublishable($1, true, $5, $6); releaseYys4($2, $3, $4, $7); }
+	| struct_begin data_type IDENTIFIER ';' { $$ = addToStruct($1, createAttribute($2, $3)); releaseYys($4); }
+	| struct_begin KW_EXTENSION ':' { $$ = insertExtensionMarkerToStruct($1); releaseYys2($2, $3); }
+;
+
+struct
+	: struct_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
 ;
 
 data_type
@@ -98,6 +114,9 @@ data_type
 	| inline_enum_type
 	| blob_type
 	| vector_type
+	| message_type
+	| publishable_type
+	| struct_type
 ;
 
 integer_type
@@ -212,6 +231,10 @@ vector_type
 	| KW_VECTOR '<' KW_BYTE_ARRAY '>' { $$ = createVectorOfByteArrayType($1, false); releaseYys3($2, $3, $4); }
 	| KW_VECTOR '<' KW_MESSAGE IDENTIFIER '>' { $$ = createVectorOfMassagesType($1, $4, false, false); releaseYys3($2, $3, $5); }
 	| KW_VECTOR '<' KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfMassagesType($1, $5, true, false); releaseYys4($2, $3, $4, $6); }
+	| KW_VECTOR '<' KW_PUBLISHABLE IDENTIFIER '>' { $$ = createVectorOfPublishablesType($1, $4, false, false); releaseYys3($2, $3, $5); }
+	| KW_VECTOR '<' KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfPublishablesType($1, $5, true, false); releaseYys4($2, $3, $4, $6); }
+	| KW_VECTOR '<' KW_STRUCT IDENTIFIER '>' { $$ = createVectorOfStructsType($1, $4, false, false); releaseYys3($2, $3, $5); }
+	| KW_VECTOR '<' KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfStructsType($1, $5, true, false); releaseYys4($2, $3, $4, $6); }
 	| KW_VECTOR '<' KW_INTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfIntegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_UINTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfUintegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_CHARACTER_STRING '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfCharStringType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
@@ -220,7 +243,28 @@ vector_type
 	| KW_VECTOR '<' KW_MESSAGE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfMassagesType($1, $4, false, true); releaseYys6($2, $3, $5, $6, $7, $8); }
 	| KW_VECTOR '<' KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfMassagesType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
 	| KW_VECTOR '<' KW_NONEXTENDABLE KW_MESSAGE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfMassagesType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_PUBLISHABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfPublishablesType($1, $4, false, true); releaseYys6($2, $3, $5, $6, $7, $8); }
+	| KW_VECTOR '<' KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfPublishablesType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_NONEXTENDABLE KW_PUBLISHABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfPublishablesType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_STRUCT IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfStructsType($1, $4, false, true); releaseYys6($2, $3, $5, $6, $7, $8); }
+	| KW_VECTOR '<' KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfStructsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_NONEXTENDABLE KW_STRUCT IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfStructsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
 ;
+
+message_type
+	: KW_MESSAGE IDENTIFIER IDENTIFIER { $$ = createMessageType($1, $2, $3, false); }
+	| KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER IDENTIFIER { $$ = createMessageType($1, $2, $3, true); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_MESSAGE IDENTIFIER IDENTIFIER { $$ = createMessageType($1, $2, $3, true); releaseYys( $1 ); }
+
+publishable_type
+	: KW_PUBLISHABLE IDENTIFIER IDENTIFIER { $$ = createPublishableType($1, $2, $3, false); }
+	| KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER IDENTIFIER { $$ = createPublishableType($1, $2, $3, true); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_PUBLISHABLE IDENTIFIER IDENTIFIER { $$ = createPublishableType($1, $2, $3, true); releaseYys( $1 ); }
+
+struct_type
+	: KW_STRUCT IDENTIFIER IDENTIFIER { $$ = createStructType($1, $2, $3, false); }
+	| KW_STRUCT KW_NONEXTENDABLE IDENTIFIER IDENTIFIER { $$ = createStructType($1, $2, $3, true); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_STRUCT IDENTIFIER IDENTIFIER { $$ = createStructType($1, $2, $3, true); releaseYys( $1 ); }
 
 blob_type
 	: KW_BLOB { $$ = createBlobType($1); }
