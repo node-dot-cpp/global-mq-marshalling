@@ -63,7 +63,6 @@ void generateLimit( FILE* header, Limit& s );
 void generateLocation( FILE* header, Location& s );
 void generateDataType( FILE* header, MessageParameterType& s );
 void generate__unique_ptr_DataType( FILE* header, unique_ptr<MessageParameterType>& s );
-void generate__unique_ptr_Message( FILE* header, unique_ptr<CompositeType>& s );
 void generate__unique_ptr_MessageParameter( FILE* header, unique_ptr<MessageParameter>& s );
 
 void generateDataType( FILE* header, MessageParameterType& s );

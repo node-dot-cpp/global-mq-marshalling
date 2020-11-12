@@ -425,59 +425,97 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	fprintf( header, "\n" );
 }
 
-bool impl_checkMessageNameUniqueness(Root& s)
+bool impl_checkCompositeTypeNameUniqueness(vector<unique_ptr<CompositeType>>& coll, const char* typeName)
 {
 	bool ok = true;
 	std::map<string, Location> names;
-	for ( auto& it : s.messages )
+	for ( auto& it : coll )
 	{
 		auto ins = names.insert( std::make_pair( it->name, it->location ) );
 		if ( !ins.second )
 		{
-			fprintf( stderr, "CompositeType name \"%s\" has already been used, see %s : %d\n", it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			fprintf( stderr, "%s name \"%s\" has already been used, see %s : %d\n", typeName, it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
 			ok = false;
 		}
 	}
 	return ok;
 }
 
-bool impl_processMessageNamesInVectorTypes(Root& s)
+
+bool impl_checkCompositeTypeNameUniqueness(Root& s)
+{
+	bool ok = impl_checkCompositeTypeNameUniqueness(s.messages, "MESSAGE");
+	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
+	return ok;
+}
+
+bool impl_processCompositeTypeNamesInMessages(Root& s)
 {
 	bool ok = true;
 	for ( auto& msg : s.messages )
 		for ( auto& param : msg->members )
-			if ( param->type.kind == MessageParameterType::VECTOR && (param->type.vectorElemKind == MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE || param->type.vectorElemKind == MessageParameterType::KIND::STRUCT) )
+		{
+			if ( param->type.kind == MessageParameterType::VECTOR )
 			{
 				param->type.messageIdx = (size_t)(-1);
-				for ( size_t i=0; i<s.messages.size(); ++i )
-					if ( param->type.compositeTypeName == s.messages[i]->name )
-					{
-						param->type.messageIdx = i;
-						if ( param->type.isNonExtendable && !s.messages[i]->isNonExtendable )
+				if ( param->type.vectorElemKind == MessageParameterType::KIND::MESSAGE ) // extentability and protocols
+				{
+					for ( size_t i=0; i<s.messages.size(); ++i )
+						if ( param->type.compositeTypeName == s.messages[i]->name )
 						{
-							fprintf( stderr, "%s, line %d: CompositeType \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
-							ok = false;
-						}
-						for ( auto proto : msg->protoList )
-							if ( s.messages[i]->protoList.find( proto ) == s.messages[i]->protoList.end() )
+							param->type.messageIdx = i;
+							if ( param->type.isNonExtendable && !s.messages[i]->isNonExtendable )
 							{
-								fprintf( stderr, "%s, line %d: CompositeType \"%s\" does not support all protocols of current CompositeType\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str() );
-								fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", msg->location.fileName.c_str(), msg->location.lineNumber );
-								fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.compositeTypeName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+								fprintf( stderr, "%s, line %d: MESSAGE \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 								ok = false;
 							}
-						break;
+							for ( auto proto : msg->protoList )
+								if ( s.messages[i]->protoList.find( proto ) == s.messages[i]->protoList.end() )
+								{
+									fprintf( stderr, "%s, line %d: MESSAGE \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str() );
+									fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", msg->location.fileName.c_str(), msg->location.lineNumber );
+									fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.compositeTypeName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+									ok = false;
+								}
+							break;
+						}
+					if ( param->type.messageIdx == (size_t)(-1) )
+					{
+						fprintf( stderr, "%s, line %d: MESSAGE name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str() );
+						ok = false;
 					}
-				if ( param->type.messageIdx == (size_t)(-1) )
+				}
+				if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // extentability only
 				{
-					fprintf( stderr, "%s, line %d: CompositeType name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str() );
+					for ( size_t i=0; i<s.structs.size(); ++i )
+						if ( param->type.compositeTypeName == s.structs[i]->name )
+						{
+							param->type.messageIdx = i;
+							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
+							{
+								fprintf( stderr, "%s, line %d: STRUCT \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+								ok = false;
+							}
+							break;
+						}
+					if ( param->type.messageIdx == (size_t)(-1) )
+					{
+						fprintf( stderr, "%s, line %d: STRUCT name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str() );
+						ok = false;
+					}
+				}
+				else if ( param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE )
+				{
+					fprintf( stderr, "%s, line %d: PUBLISHABLE is not expected within messages\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.compositeTypeName.c_str() );
 					ok = false;
 				}
 			}
+		}
 	return ok;
 }
 
-bool impl_checkMessageParamNameUniqueness(CompositeType& s)
+bool impl_checkParamNameUniqueness(CompositeType& s)
 {
 	bool ok = true;
 	std::map<string, Location> names;
@@ -524,8 +562,8 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
-	bool ok = impl_checkMessageNameUniqueness(s);
-	ok = impl_processMessageNamesInVectorTypes(s) && ok;
+	bool ok = impl_checkCompositeTypeNameUniqueness(s);
+	ok = impl_processCompositeTypeNamesInMessages(s) && ok;
 	if ( !ok )
 		throw std::exception();
 
@@ -542,11 +580,16 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	generateParamNameBlock( header, params );
 
-//	fprintf( header, "Root (%zd messages) {\n", s.messages.size() );
 	for ( auto& it : s.messages )
 	{
 		auto& obj_1 = it;
-		generate__unique_ptr_Message( header, obj_1 );
+		if ( obj_1 == nullptr )
+			fprintf( header, "// CompositeType = <null>\n" );
+		else 
+		{
+			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+		}
 	}
 
 	fprintf( header, "\n"
@@ -554,18 +597,6 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		"\n"
 		"#endif // %s_guard\n",
 		fileName );
-}
-
-void generate__unique_ptr_Message( FILE* header, unique_ptr<CompositeType>& s ) {
-
-	if ( s == nullptr )
-	{
-		fprintf( header, "// CompositeType = <null>\n" );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(s)))) );
-	}
 }
 
 string impl_MessageNameToDefaultsNamespaceName( string name )
@@ -1264,7 +1295,7 @@ void impl_generateParseFunction( FILE* header, CompositeType& s )
 
 void generateMessage( FILE* header, CompositeType& s )
 {
-	bool checked = impl_checkMessageParamNameUniqueness(s);
+	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
 	if ( !checked )
 		throw std::exception();

@@ -18,6 +18,7 @@ struct Point3D
 	int z;
 };
 
+#if 0
 void runGmqSample()
 {
 	std::vector<int> vectorOfNumbers = { 0, 1, 2, 3, 4, 5 };
@@ -122,3 +123,4 @@ void runJsonSample()
 		assert( vectorOfPoints3D[i].z == vectorOfPoints3DBack[i].z );
 	}
 }
+#endif // 0

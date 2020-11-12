@@ -1,24 +1,31 @@
-
-
-MESSAGE PROTO=JSON,GMQ message_one {
-  INTEGER firstParam;
-  VECTOR<INTEGER> secondParam;
-  VECTOR<MESSAGE point3D> thirdParam;
-  UINTEGER forthParam;
-  CHARACTER-STRING fifthParam;
-  VECTOR<MESSAGE NONEXTENDABLE point> sixthParam;
-  REAL seventhParam;
+MESSAGE PROTO = JSON, GMQ PolygonSt{
+	VECTOR<MESSAGE PolygonMap> polygonMap;
+	VECTOR<MESSAGE PolygonMap> concaveMap;
+	VECTOR<MESSAGE ObstacleMap> obstacleMap;
+	VECTOR<MESSAGE LineMap> portalMap;
+	VECTOR<MESSAGE LineMap> jumpMap;
+	REAL polygonSpeed;
 };
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
-  INTEGER x;
-  INTEGER y;
+MESSAGE PROTO = JSON, GMQ LineMap{
+	VECTOR<MESSAGE Line> LineMap;
 };
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point3D {
+MESSAGE PROTO = JSON, GMQ Line{
+	VECTOR<MESSAGE NONEXTENDABLE Vertex> a;
+	VECTOR<MESSAGE NONEXTENDABLE Vertex> b;
+};
+
+MESSAGE PROTO = JSON, GMQ ObstacleMap{
+	VECTOR<MESSAGE PolygonMap> ObstacleMap;
+};
+
+MESSAGE PROTO = JSON, GMQ PolygonMap{
+	VECTOR<MESSAGE NONEXTENDABLE Vertex> PolygonMap;
+};
+
+MESSAGE PROTO = JSON, GMQ NONEXTENDABLE Vertex{
   INTEGER x;
   INTEGER y;
   INTEGER z;
 };
-
-
