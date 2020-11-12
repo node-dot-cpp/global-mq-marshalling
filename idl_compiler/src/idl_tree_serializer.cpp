@@ -516,7 +516,7 @@ bool impl_processCompositeTypeNamesInMessages(Root& s)
 				}
 				else if ( param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE )
 				{
-					fprintf( stderr, "%s, line %d: PUBLISHABLE is not expected within messages\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.name.c_str() );
+					fprintf( stderr, "%s, line %d: PUBLISHABLE is not expected within messages\n", param->location.fileName.c_str(), param->location.lineNumber );
 					ok = false;
 				}
 			}
@@ -539,6 +539,37 @@ bool impl_checkParamNameUniqueness(CompositeType& s)
 			ok = false;
 		}
 	}
+	return ok;
+}
+
+bool impl_checkCompositeTypeMembersAreStructsOnly(CompositeType& s)
+{
+	bool ok = true;
+		for ( auto& it : s.members )
+		{
+			if ( it->type.kind == MessageParameterType::KIND::MESSAGE || it->type.kind == MessageParameterType::KIND::PUBLISHABLE )
+			{
+				fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", it->location.fileName.c_str(), it->location.lineNumber, impl_kindToString( it->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+				ok = false;
+			}
+			else if (  it->type.kind == MessageParameterType::KIND::VECTOR && ( it->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || it->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
+			{
+				fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", it->location.fileName.c_str(), it->location.lineNumber, impl_kindToString( it->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+				ok = false;
+			}
+		}
+	return ok;
+}
+
+bool impl_checkCompositeTypeMembersAreStructsOnly(Root& r)
+{
+	bool ok = true;
+	for ( auto& s : r.messages )
+		ok = impl_checkCompositeTypeMembersAreStructsOnly( *s ) && ok;
+	for ( auto& s : r.publishables )
+		ok = impl_checkCompositeTypeMembersAreStructsOnly( *s ) && ok;
+	for ( auto& s : r.structs )
+		ok = impl_checkCompositeTypeMembersAreStructsOnly( *s ) && ok;
 	return ok;
 }
 
@@ -573,6 +604,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
 	ok = impl_processCompositeTypeNamesInMessages(s) && ok;
+	ok = impl_checkCompositeTypeMembersAreStructsOnly( s ) && ok;
 	if ( !ok )
 		throw std::exception();
 
