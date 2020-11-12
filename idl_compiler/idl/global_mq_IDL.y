@@ -252,19 +252,19 @@ vector_type
 ;
 
 message_type
-	: KW_MESSAGE IDENTIFIER IDENTIFIER { $$ = createMessageType($1, false, $2, $3); }
-	| KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER IDENTIFIER { $$ = createMessageType($1, true, $3, $4); releaseYys( $2 );}
-	| KW_NONEXTENDABLE KW_MESSAGE IDENTIFIER IDENTIFIER { $$ = createMessageType($2, true, $3, $4); releaseYys( $1 ); }
+	: KW_MESSAGE IDENTIFIER { $$ = createMessageType($1, false, $2); }
+	| KW_MESSAGE KW_NONEXTENDABLE IDENTIFIER { $$ = createMessageType($1, true, $3); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_MESSAGE IDENTIFIER { $$ = createMessageType($2, true, $3); releaseYys( $1 ); }
 
 publishable_type
-	: KW_PUBLISHABLE IDENTIFIER IDENTIFIER { $$ = createPublishableType($1, false, $2, $3); }
-	| KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER IDENTIFIER { $$ = createPublishableType($1, true, $3, $4); releaseYys( $2 );}
-	| KW_NONEXTENDABLE KW_PUBLISHABLE IDENTIFIER IDENTIFIER { $$ = createPublishableType($2, true, $3, $4); releaseYys( $1 ); }
+	: KW_PUBLISHABLE IDENTIFIER { $$ = createPublishableType($1, false, $2); }
+	| KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER { $$ = createPublishableType($1, true, $3); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_PUBLISHABLE IDENTIFIER { $$ = createPublishableType($2, true, $3); releaseYys( $1 ); }
 
 struct_type
-	: KW_STRUCT IDENTIFIER IDENTIFIER { $$ = createStructType($1, false, $2, $3); }
-	| KW_STRUCT KW_NONEXTENDABLE IDENTIFIER IDENTIFIER { $$ = createStructType($1, true, $3, $4); releaseYys( $2 );}
-	| KW_NONEXTENDABLE KW_STRUCT IDENTIFIER IDENTIFIER { $$ = createStructType($2, true, $3, $4); releaseYys( $1 ); }
+	: KW_STRUCT IDENTIFIER { $$ = createStructType($1, false, $2); }
+	| KW_STRUCT KW_NONEXTENDABLE IDENTIFIER { $$ = createStructType($1, true, $3); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_STRUCT IDENTIFIER { $$ = createStructType($2, true, $3); releaseYys( $1 ); }
 
 blob_type
 	: KW_BLOB { $$ = createBlobType($1); }

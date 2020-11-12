@@ -115,9 +115,9 @@ YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool none
 YYSTYPE createVectorOfPublishablesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
 YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
 
-YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName, YYSTYPE memberName);
-YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName, YYSTYPE memberName);
-YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName, YYSTYPE memberName);
+YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName);
+YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName);
+YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
 YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue);

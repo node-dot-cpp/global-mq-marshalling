@@ -77,7 +77,6 @@ public:
 
 	KIND vectorElemKind = UNDEFINED; // VECTOR
 	bool isNonExtendable = false; // VECTOR
-	string compositeTypeName; // MESSAGEs, PUBLISHABLEs, STRUCTs (incl in VECTORs)
 	size_t messageIdx; // VECTOR of MESSAGEs, reserved for postprocessing
 
 	map<string, uint32_t> enumValues; // ENUM

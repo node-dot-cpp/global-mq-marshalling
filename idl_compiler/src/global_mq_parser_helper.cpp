@@ -875,7 +875,7 @@ YYSTYPE createVectorOfCompositeType(YYSTYPE token, YYSTYPE compositeTypeName, bo
 	yy->dataType->vectorElemKind = kind;
 	yy->dataType->hasDefault = hasDefault;
 	yy->dataType->isNonExtendable = nonext;
-	yy->dataType->compositeTypeName = nameFromYyIdentifier(compositeTypeName);
+	yy->dataType->name = nameFromYyIdentifier(compositeTypeName);
 
 	return yy;
 }
@@ -895,34 +895,33 @@ YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE structName, bool nonext
 	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::STRUCT);
 }
 
-YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, YYSTYPE memberName, MessageParameterType::KIND kind)
+YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(compositeTypeName);
-	unique_ptr<YyBase> d2(memberName);
 
 	YyDataType* yy = new YyDataType();
 
 	yy->dataType->kind = kind;
-	yy->dataType->name = nameFromYyIdentifier(memberName);
-	yy->dataType->compositeTypeName = nameFromYyIdentifier(compositeTypeName);
+	yy->dataType->isNonExtendable = isNonExtendable;
+	yy->dataType->name = nameFromYyIdentifier(compositeTypeName);
 
 	return yy;
 }
 
-YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName, YYSTYPE memberName)
+YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName)
 {
-	return createCompositeType(token, isNonExtendable, messageName, memberName, MessageParameterType::MESSAGE);
+	return createCompositeType(token, isNonExtendable, messageName, MessageParameterType::MESSAGE);
 }
 
-YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName, YYSTYPE memberName)
+YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName)
 {
-	return createCompositeType(token, isNonExtendable, publishableName, memberName, MessageParameterType::PUBLISHABLE);
+	return createCompositeType(token, isNonExtendable, publishableName, MessageParameterType::PUBLISHABLE);
 }
 
-YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName, YYSTYPE memberName)
+YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName)
 {
-	return createCompositeType(token, isNonExtendable, structName, memberName, MessageParameterType::STRUCT);
+	return createCompositeType(token, isNonExtendable, structName, MessageParameterType::STRUCT);
 }
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)
