@@ -33,28 +33,36 @@ MESSAGE PROTO = JSON, GMQ NONEXTENDABLE Vertex{
 */
 
 
+STRUCT NONEXTENDABLE point {
+  INTEGER x;
+  INTEGER y;
+};
+
+STRUCT point3D {
+  INTEGER x;
+  INTEGER y;
+  INTEGER z;
+};
+
 
 MESSAGE PROTO=JSON,GMQ message_one {
   INTEGER firstParam;
   VECTOR<INTEGER> secondParam;
-  VECTOR<MESSAGE point3D> thirdParam;
+  VECTOR<STRUCT point3D> thirdParam;
   UINTEGER forthParam;
   CHARACTER-STRING fifthParam;
-  VECTOR<MESSAGE NONEXTENDABLE point> sixthParam;
+  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
   REAL seventhParam;
-  MESSAGE NONEXTENDABLE point justPointOne;
-  MESSAGE point justPointTwo;
+  STRUCT NONEXTENDABLE point justPointOne;
+  STRUCT point justPointTwo;
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
-  INTEGER x;
-  INTEGER y;
+  STRUCT point point;
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point3D {
-  INTEGER x;
-  INTEGER y;
-  INTEGER z;
+  STRUCT point3D pt;
 };
 
 

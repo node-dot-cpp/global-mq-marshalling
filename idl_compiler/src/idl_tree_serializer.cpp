@@ -338,8 +338,6 @@ void printDataType( MessageParameterType& s )
 			printf( "%s = %d", item.first.c_str(), item.second  );
 		printf( " }" );
 	}
-
-	printf( "}" );
 }
 
 void printLimit( Limit& s ) {
@@ -776,6 +774,8 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 				}
 				break;
 			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
+			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "//       MessageParameterType::KIND::MESSAGE !!!!!!!!!!!!!\n" );
 				break;
 			default:
@@ -833,6 +833,8 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
+			case MessageParameterType::KIND::STRUCT:
 				break; // TODO: treatment
 			default:
 			{
@@ -881,6 +883,8 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
+			case MessageParameterType::KIND::STRUCT:
 				break; // TODO: ...
 			default:
 			{
@@ -1052,6 +1056,8 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
+			case MessageParameterType::KIND::STRUCT:
 				break; // TODO: ...
 			default:
 			{
