@@ -459,70 +459,89 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 	return ok;
 }
 
-bool impl_processCompositeTypeNamesInMessages(Root& s)
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct)
 {
 	bool ok = true;
-	for ( auto& msg : s.messages )
-		for ( auto& param : msg->members )
+		for ( auto& param : ct.members )
 		{
-			if ( param->type.kind == MessageParameterType::VECTOR )
+			if ( param->type.kind == MessageParameterType::KIND::MESSAGE || param->type.kind == MessageParameterType::KIND::PUBLISHABLE )
 			{
-				param->type.messageIdx = (size_t)(-1);
-				if ( param->type.vectorElemKind == MessageParameterType::KIND::MESSAGE ) // extentability and protocols
+				fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+				ok = false;
+			}
+			else if ( param->type.kind == MessageParameterType::VECTOR )
+			{
+				if (  param->type.kind == MessageParameterType::KIND::VECTOR && ( param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
 				{
-					for ( size_t i=0; i<s.messages.size(); ++i )
-						if ( param->type.name == s.messages[i]->name )
-						{
-							param->type.messageIdx = i;
-							if ( param->type.isNonExtendable && !s.messages[i]->isNonExtendable )
-							{
-								fprintf( stderr, "%s, line %d: MESSAGE \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.name.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
-								ok = false;
-							}
-							for ( auto proto : msg->protoList )
-								if ( s.messages[i]->protoList.find( proto ) == s.messages[i]->protoList.end() )
-								{
-									fprintf( stderr, "%s, line %d: MESSAGE \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.name.c_str() );
-									fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", msg->location.fileName.c_str(), msg->location.lineNumber );
-									fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
-									ok = false;
-								}
-							break;
-						}
-					if ( param->type.messageIdx == (size_t)(-1) )
-					{
-						fprintf( stderr, "%s, line %d: MESSAGE name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.name.c_str() );
-						ok = false;
-					}
+					fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+					ok = false;
 				}
-				if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // extentability only
+				else if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
 				{
+					param->type.messageIdx = (size_t)(-1);
 					for ( size_t i=0; i<s.structs.size(); ++i )
 						if ( param->type.name == s.structs[i]->name )
 						{
 							param->type.messageIdx = i;
 							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
 							{
-								fprintf( stderr, "%s, line %d: STRUCT \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 								ok = false;
 							}
+							for ( auto proto : ct.protoList )
+								if ( s.structs[i]->protoList.find( proto ) == s.structs[i]->protoList.end() )
+								{
+									fprintf( stderr, "%s, line %d: %s \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
+									fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", ct.location.fileName.c_str(), ct.location.lineNumber );
+									fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+									ok = false;
+								}
 							break;
 						}
 					if ( param->type.messageIdx == (size_t)(-1) )
 					{
-						fprintf( stderr, "%s, line %d: STRUCT name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.name.c_str() );
+						fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
 						ok = false;
 					}
 				}
-				else if ( param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE )
+			}
+			else if ( param->type.kind == MessageParameterType::KIND::STRUCT ) // extentability only
+			{
+				param->type.messageIdx = (size_t)(-1);
+				for ( size_t i=0; i<s.structs.size(); ++i )
+					if ( param->type.name == s.structs[i]->name )
+					{
+						param->type.messageIdx = i;
+						if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
+						{
+							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+							ok = false;
+						}
+						break;
+					}
+				if ( param->type.messageIdx == (size_t)(-1) )
 				{
-					fprintf( stderr, "%s, line %d: PUBLISHABLE is not expected within messages\n", param->location.fileName.c_str(), param->location.lineNumber );
+					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
 					ok = false;
 				}
 			}
 		}
 	return ok;
 }
+
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
+{
+	bool ok = true;
+	for ( auto& s : r.messages )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	for ( auto& s : r.publishables )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	for ( auto& s : r.structs )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	return ok;
+}
+
+
 
 bool impl_checkParamNameUniqueness(CompositeType& s)
 {
@@ -539,37 +558,6 @@ bool impl_checkParamNameUniqueness(CompositeType& s)
 			ok = false;
 		}
 	}
-	return ok;
-}
-
-bool impl_checkCompositeTypeMembersAreStructsOnly(CompositeType& s)
-{
-	bool ok = true;
-		for ( auto& it : s.members )
-		{
-			if ( it->type.kind == MessageParameterType::KIND::MESSAGE || it->type.kind == MessageParameterType::KIND::PUBLISHABLE )
-			{
-				fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", it->location.fileName.c_str(), it->location.lineNumber, impl_kindToString( it->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
-				ok = false;
-			}
-			else if (  it->type.kind == MessageParameterType::KIND::VECTOR && ( it->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || it->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
-			{
-				fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", it->location.fileName.c_str(), it->location.lineNumber, impl_kindToString( it->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
-				ok = false;
-			}
-		}
-	return ok;
-}
-
-bool impl_checkCompositeTypeMembersAreStructsOnly(Root& r)
-{
-	bool ok = true;
-	for ( auto& s : r.messages )
-		ok = impl_checkCompositeTypeMembersAreStructsOnly( *s ) && ok;
-	for ( auto& s : r.publishables )
-		ok = impl_checkCompositeTypeMembersAreStructsOnly( *s ) && ok;
-	for ( auto& s : r.structs )
-		ok = impl_checkCompositeTypeMembersAreStructsOnly( *s ) && ok;
 	return ok;
 }
 
@@ -603,8 +591,7 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
-	ok = impl_processCompositeTypeNamesInMessages(s) && ok;
-	ok = impl_checkCompositeTypeMembersAreStructsOnly( s ) && ok;
+	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
 	if ( !ok )
 		throw std::exception();
 
