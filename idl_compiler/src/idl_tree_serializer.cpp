@@ -485,7 +485,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 							param->type.messageIdx = i;
 							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
 							{
-								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 								ok = false;
 							}
 							/*for ( auto proto : ct.protoList )
@@ -515,7 +515,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 						param->type.messageIdx = i;
 						if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
 						{
-							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 							ok = false;
 						}
 						break;
@@ -555,7 +555,7 @@ bool impl_checkParamNameUniqueness(CompositeType& s)
 		auto ins = names.insert( std::make_pair( it->name, it->location ) );
 		if ( !ins.second )
 		{
-			fprintf( stderr, "%s parameter \"%s\" has already been used within this CompositeType, see %s : %d\n", s.type2string(), it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			fprintf( stderr, "%s parameter \"%s\" has already been used within this %s, see %s : %d\n", s.type2string(), it->name.c_str(), s.type2string(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
 			ok = false;
 		}
 	}
@@ -964,7 +964,7 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 {
 	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// CompositeType \"%s\" %sTargets: ", s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
@@ -1018,8 +1018,8 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 void impl_generateComposeFunctionGmq( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_composeGmq(Composer& composer, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_composeGmq(Composer& composer, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -1032,8 +1032,8 @@ void impl_generateComposeFunctionGmq( FILE* header, CompositeType& s )
 void impl_generateParseFunctionGmq( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parseGmq(Parser& p, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_parseGmq(Parser& p, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -1179,13 +1179,13 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 		{
 			case CompositeType::Proto::gmq:
 			{
-				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this CompositeType assumes only GMQ protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 				break;
 			}
 			case CompositeType::Proto::json:
 			{
-				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this CompositeType assumes only JSON protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingJson( header, s, "" );
 				break;
 			}
@@ -1255,13 +1255,13 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 		{
 			case CompositeType::Proto::gmq:
 			{
-				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this CompositeType assumes only GMQ protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 				break;
 			}
 			case CompositeType::Proto::json:
 			{
-				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this CompositeType assumes only JSON protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 				break;
 			}
@@ -1325,8 +1325,8 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s_compose(ComposerT& composer, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
@@ -1340,8 +1340,8 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s )
 void impl_generateParseFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s_parse(ParserT& p, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_parse(ParserT& p, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
