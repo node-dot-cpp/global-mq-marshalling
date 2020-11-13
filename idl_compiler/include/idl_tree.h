@@ -123,6 +123,22 @@ public:
 class CompositeType : public ObjectBase
 {
 public:
+	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
+	Type type = Type::undefined;
+	const char* type2string()
+	{
+		switch ( type )
+		{
+			case Type::undefined: return "UNDEFINED";
+			case Type::message: return "MESSAGE";
+			case Type::publishable: return "UNDEFINED";
+			case Type::structure: return "STRUCTURE";
+			default:
+				assert( false );
+		}
+	}
+
+public:
 	vector<unique_ptr<MessageParameter>> members;
 	string name;
 	enum Proto { json, gmq };

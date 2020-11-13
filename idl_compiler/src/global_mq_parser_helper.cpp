@@ -543,7 +543,7 @@ YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensio
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
 
-YYSTYPE createMessageOrPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
@@ -551,6 +551,7 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE 
 
 	CompositeType* yy = new CompositeType();
 
+	yy->type = type;
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
 	yy->isNonExtendable = isNonExtendable;
@@ -573,17 +574,17 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE 
 
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, isNonExtendable, protoList, id);
+	return createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id);
 }
 
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, isNonExtendable, protoList, id);
+	return createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, protoList, id);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, isNonExtendable, nullptr, id);
+	return createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, nullptr, id);
 }
 
 static

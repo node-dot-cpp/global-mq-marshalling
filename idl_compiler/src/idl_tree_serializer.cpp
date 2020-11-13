@@ -555,7 +555,7 @@ bool impl_checkParamNameUniqueness(CompositeType& s)
 		auto ins = names.insert( std::make_pair( it->name, it->location ) );
 		if ( !ins.second )
 		{
-			fprintf( stderr, "CompositeType parameter \"%s\" has already been used within this CompositeType, see %s : %d\n", it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			fprintf( stderr, "%s parameter \"%s\" has already been used within this CompositeType, see %s : %d\n", s.type2string(), it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
 			ok = false;
 		}
 	}
@@ -574,12 +574,12 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 		{
 			if ( msg.type.hasDefault && !extMarkFound )
 			{
-				fprintf( stderr, "File %s, line %d: CompositeType parameter \"%s\" with default value cannot appear before extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, msg.name.c_str() );
+				fprintf( stderr, "File %s, line %d: %s parameter \"%s\" with default value cannot appear before extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, s.type2string(), msg.name.c_str() );
 				ok = false;
 			}
 			else if ( (!msg.type.hasDefault) && extMarkFound )
 			{
-				fprintf( stderr, "File %s, line %d: CompositeType parameter \"%s\" with no default value cannot appear inside extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, msg.name.c_str() );
+				fprintf( stderr, "File %s, line %d: %s parameter \"%s\" with no default value cannot appear inside extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, s.type2string(), msg.name.c_str() );
 				ok = false;
 			}
 		}
