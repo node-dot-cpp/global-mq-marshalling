@@ -488,14 +488,15 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see CompositeType declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 								ok = false;
 							}
-							for ( auto proto : ct.protoList )
+							/*for ( auto proto : ct.protoList )
 								if ( s.structs[i]->protoList.find( proto ) == s.structs[i]->protoList.end() )
 								{
 									fprintf( stderr, "%s, line %d: %s \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
 									fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", ct.location.fileName.c_str(), ct.location.lineNumber );
 									fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 									ok = false;
-								}
+								}*/
+							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
 							break;
 						}
 					if ( param->type.messageIdx == (size_t)(-1) )
@@ -612,7 +613,19 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	{
 		auto& obj_1 = it;
 		if ( obj_1 == nullptr )
-			fprintf( header, "// CompositeType = <null>\n" );
+			fprintf( header, "// Message = <null>\n" );
+		else 
+		{
+			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+		}
+	}
+
+	for ( auto& it : s.structs )
+	{
+		auto& obj_1 = it;
+		if ( obj_1 == nullptr )
+			fprintf( header, "// Struct = <null>\n" );
 		else 
 		{
 			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
