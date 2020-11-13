@@ -400,6 +400,11 @@ void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
 		auto& obj_1 = it;
 		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
 	}
+	for ( auto& it : s.structs )
+	{
+		auto& obj_1 = it;
+		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
+	}
 }
 
 string paramNameToNameTagStruct( string name )
@@ -796,20 +801,26 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::MESSAGE:
-					case MessageParameterType::KIND::PUBLISHABLE:
 					case MessageParameterType::KIND::STRUCT:
 						if ( param.type.isNonExtendable )
 							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						else
 							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
+					case MessageParameterType::KIND::PUBLISHABLE:
+					default:
+						assert( false ); // unexpected
+						break;
 				}
 				break;
 			case MessageParameterType::KIND::MESSAGE:
-			case MessageParameterType::KIND::PUBLISHABLE:
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "//       MessageParameterType::KIND::MESSAGE !!!!!!!!!!!!!\n" );
+				if ( param.type.isNonExtendable )
+					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				else
+					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
+			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -864,10 +875,11 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				break; // TODO: treatment
 			case MessageParameterType::KIND::MESSAGE:
 			case MessageParameterType::KIND::PUBLISHABLE:
-			case MessageParameterType::KIND::STRUCT:
-				break; // TODO: treatment
 			default:
 			{
 				assert( false ); // unexpected
@@ -914,10 +926,11 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				break; // TODO: ...
 			case MessageParameterType::KIND::MESSAGE:
 			case MessageParameterType::KIND::PUBLISHABLE:
-			case MessageParameterType::KIND::STRUCT:
-				break; // TODO: ...
 			default:
 			{
 				assert( false ); // unexpected
@@ -1015,7 +1028,7 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 	fprintf( header, "//**********************************************************************\n\n" );
 }
 
-void impl_generateComposeFunctionGmq( FILE* header, CompositeType& s )
+/*void impl_generateComposeFunctionGmq( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
 	"void %s_%s_composeGmq(Composer& composer, Args&& ... args)\n"
@@ -1040,7 +1053,7 @@ void impl_generateParseFunctionGmq( FILE* header, CompositeType& s )
 	impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 
 	fprintf( header, "}\n\n" );
-}
+}*/
 
 void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s, const char* offset )
 {
@@ -1087,10 +1100,11 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
+				break; // TODO: ...
 			case MessageParameterType::KIND::MESSAGE:
 			case MessageParameterType::KIND::PUBLISHABLE:
-			case MessageParameterType::KIND::STRUCT:
-				break; // TODO: ...
 			default:
 			{
 				assert( false ); // unexpected
@@ -1143,7 +1157,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, 
 	fprintf( header, "%s}\n", offset );
 }
 
-void impl_generateComposeFunctionJson( FILE* header, CompositeType& s )
+/*void impl_generateComposeFunctionJson( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
 	"void %s_composeJson(Composer& composer, Args&& ... args)\n"
@@ -1168,7 +1182,7 @@ void impl_generateParseFunctionJson( FILE* header, CompositeType& s )
 	impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 
 	fprintf( header, "}\n\n" );
-}
+}*/
 
 void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 {
@@ -1236,7 +1250,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 								"\t{\n" );
 					}
 					impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
-					fprintf( header, "\t}\n" );
+					fprintf( header, "\n\t}\n" );
 					break;
 				}
 				default:
