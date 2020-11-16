@@ -148,3 +148,94 @@ void runJsonSample()
 	assert( pt3D.y == pt3DBack.y );
 	assert( pt3D.z == pt3DBack.z );
 }
+
+struct Point3DReal
+{
+	float x;
+	float y;
+	float z;
+};
+
+struct Size3D
+{
+	float x;
+	float y;
+	float z;
+};
+
+struct CharacterParams
+{
+	size_t id;
+	Size3D size;
+};
+
+struct LevelTraceData
+{
+	CharacterParams charParams;
+	std::vector<Point3DReal> points;
+};
+
+void testParsingJsonFile()
+{
+	// NOTE: nodecpp provides proper means for file reading
+	//       here we just do all things manually
+	const char* path = "../sample_json.txt";
+	FILE* f = fopen( path, "rb" );
+	if ( f == nullptr )
+	{
+		fmt::print( "failed to open test file at \"{}\". Exiting\n", path );
+		return;
+	}
+	int ret = fseek( f, 0, SEEK_END );
+	if ( ret )
+	{
+		fmt::print( "failed to access test file at \"{}\". Exiting\n", path );
+		fclose( f );
+		return;
+	}
+	long int fsz = ftell( f );
+	if ( fsz < 0 )
+	{
+		fmt::print( "failed to access test file at \"{}\". Exiting\n", path );
+		fclose( f );
+		return;
+	}
+	fseek( f, 0, SEEK_SET );
+
+	m::Buffer b( fsz + 1 );
+
+	size_t rres = fread( b.begin(), 1, fsz, f );
+	fclose( f );
+	if ( rres != fsz )
+	{
+		fmt::print( "failed to read from test file at \"{}\". Exiting\n", path );
+		return;
+	}
+	b.set_size( rres );
+	b.appendUint8( 0 );
+
+	LevelTraceData data;
+	m::JsonParser parser( b );
+	m::MESSAGE_LevelTraceData_parse( 
+		parser, 
+		m::CharacterParam = m::MessageWrapperForParsing( [&](auto& parser)
+			{ 
+				m::STRUCTURE_CharacterParam_parse( 
+					parser, 
+					m::ID = &(data.charParams.id), 
+					m::Size = m::MessageWrapperForParsing( [&](auto& parser){ m::STRUCTURE_Size_parse( parser, m::X = &(data.charParams.size.X), m::Y = &(data.charParams.size.Y), m::Z = &(data.charParams.size.z) );} ) 
+				);
+			} 
+		), 
+		m::Points = m::CollactionWrapperForParsing( [&](size_t sz){data.points.reserve( sz );}, [&](auto& p, size_t ordinal){ Point3DReal pt; m::STRUCTURE_POINT3DREAL_parse( p,  m::X = &(pt.x), m::Y = &(pt.y), m::Z = &(pt.z) ); data.points.push_back( pt );} )
+	);
+		
+	fmt::print( "Character ID = {}\n", data.charParams.id );
+	fmt::print( "Character size = ({}, {}, {})\n", data.charParams.size.x, data.charParams.size.y, data.charParams.size.z );
+	fmt::print( "# of points traced: {}\n", data.points.size() );
+	if ( data.points.size() )
+	{
+		fmt::print( "Starting point: ({}, {}, {})\n", data.points[0].x, data.points[0].y, data.points[0].z );
+		fmt::print( "Ending point:   ({}, {}, {})\n", data.points.front().x, data.points.front().y, data.points.front().z );
+	}
+}

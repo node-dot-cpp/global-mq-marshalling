@@ -3,6 +3,7 @@
 
 void runGmqSample();
 void runJsonSample();
+void testParsingJsonFile();
 void testSubscriptionTest();
 
 #endif // TESTS_H

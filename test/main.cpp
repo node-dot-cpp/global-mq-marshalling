@@ -7,5 +7,6 @@ int main()
 {
 	runJsonSample();
 	runGmqSample();
+	testParsingJsonFile();
 //	testSubscriptionTest();
 }

@@ -1,4 +1,26 @@
 
+MESSAGE PROTO = JSON LevelTraceData{
+	STRUCT CharacterParam CharacterParam;
+	VECTOR<STRUCT POINT3DREAL> Points;
+};
+
+STRUCT CharacterParam{
+	INTEGER ID;
+	STRUCT Size Size;
+};
+
+STRUCT Size{
+  REAL X;
+  REAL Y;
+  REAL Z;
+};
+
+STRUCT POINT3DREAL{
+  REAL X;
+  REAL Y;
+  REAL Z;
+};
+
 MESSAGE PROTO = JSON, GMQ PolygonSt{
 	VECTOR<STRUCT PolygonMap> polygonMap;
 	VECTOR<STRUCT PolygonMap> concaveMap;
@@ -58,7 +80,6 @@ MESSAGE PROTO=JSON,GMQ message_one {
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
-  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
   STRUCT point point;
 };
 
