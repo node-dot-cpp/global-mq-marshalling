@@ -125,6 +125,9 @@ struct VectorOfNonextMessageTypesBase : public VectorType {static constexpr bool
 //struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {static constexpr bool dummy = false; using value_type = value_type_;};
 struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {static constexpr bool dummy = false;};
 
+struct MessageType {static constexpr bool dummy = false;};
+struct NonextMessageType : public MessageType {static constexpr bool dummy = false;};
+
 struct NoDefaultValueType {static constexpr bool dummy = false;};
 // helper types
 
@@ -565,6 +568,29 @@ class JsonParser : public ParserBase
 public:
 	static constexpr Proto proto = Proto::JSON;
 
+	void impl_skipBlockFromJson( char left, char right )
+	{
+		skipSpacesEtc();
+		if ( *begin++ != left )
+			throw std::exception(); // TODO
+		size_t ctr = 1;
+		while ( begin < end )
+		{
+			if ( *begin == left )
+				++ctr;
+			else if ( *begin == right )
+			{
+				--ctr;
+				if ( ctr == 0 )
+				{
+					++begin;
+					return;
+				}
+			}
+			++begin;
+		}
+	}
+
 public:
 	JsonParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
 	JsonParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
@@ -635,6 +661,15 @@ public:
 		if ( begin == end )
 			throw std::exception(); // TODO
 		++begin;
+	}
+
+	void skipVectorFromJson()
+	{
+		impl_skipBlockFromJson( '[', ']' );
+	}
+	void skipMessageFromJson()
+	{
+		impl_skipBlockFromJson( '{', '}' );
 	}
 
 	template <typename T>
