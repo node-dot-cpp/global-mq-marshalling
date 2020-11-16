@@ -5,9 +5,13 @@
 
 namespace m {
 
+using eighthParam_Type = NamedParameter<struct eighthParam_Struct>;
 using fifthParam_Type = NamedParameter<struct fifthParam_Struct>;
 using firstParam_Type = NamedParameter<struct firstParam_Struct>;
 using forthParam_Type = NamedParameter<struct forthParam_Struct>;
+using ninethParam_Type = NamedParameter<struct ninethParam_Struct>;
+using point_Type = NamedParameter<struct point_Struct>;
+using pt_Type = NamedParameter<struct pt_Struct>;
 using secondParam_Type = NamedParameter<struct secondParam_Struct>;
 using seventhParam_Type = NamedParameter<struct seventhParam_Struct>;
 using sixthParam_Type = NamedParameter<struct sixthParam_Struct>;
@@ -16,9 +20,13 @@ using x_Type = NamedParameter<struct x_Struct>;
 using y_Type = NamedParameter<struct y_Struct>;
 using z_Type = NamedParameter<struct z_Struct>;
 
+constexpr eighthParam_Type::TypeConverter eighthParam;
 constexpr fifthParam_Type::TypeConverter fifthParam;
 constexpr firstParam_Type::TypeConverter firstParam;
 constexpr forthParam_Type::TypeConverter forthParam;
+constexpr ninethParam_Type::TypeConverter ninethParam;
+constexpr point_Type::TypeConverter point;
+constexpr pt_Type::TypeConverter pt;
 constexpr secondParam_Type::TypeConverter secondParam;
 constexpr seventhParam_Type::TypeConverter seventhParam;
 constexpr sixthParam_Type::TypeConverter sixthParam;
@@ -28,19 +36,21 @@ constexpr y_Type::TypeConverter y;
 constexpr z_Type::TypeConverter z;
 
 //**********************************************************************
-// Message "message_one" Targets: JSON GMQ (7 parameters)
+// MESSAGE "message_one" Targets: JSON GMQ (9 parameters)
 // 1. INTEGER firstParam (REQUIRED)
 // 2. VECTOR<INTEGER> secondParam (REQUIRED)
-// 3. VECTOR< MESSAGE point3D> thirdParam (REQUIRED)
+// 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
 // 4. UINTEGER forthParam (REQUIRED)
 // 5. CHARACTER_STRING fifthParam (REQUIRED)
-// 6. VECTOR<NONEXTENDABLE MESSAGE point> sixthParam (REQUIRED)
+// 6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
 // 7. REAL seventhParam (REQUIRED)
+// 8. STRUCT eighthParam (REQUIRED)
+// 9. STRUCT ninethParam (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void message_one_compose(ComposerT& composer, Args&& ... args)
+void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -51,6 +61,8 @@ void message_one_compose(ComposerT& composer, Args&& ... args)
 	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
 	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
 	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
+	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
+	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -58,7 +70,9 @@ void message_one_compose(ComposerT& composer, Args&& ... args)
 		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...);
+		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_8_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -73,6 +87,8 @@ void message_one_compose(ComposerT& composer, Args&& ... args)
 		impl::gmq::composeParamToGmq<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_5_type::nameAndTypeID, args...);
 		impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_6_type::nameAndTypeID, args...);
 		impl::gmq::composeParamToGmq<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_7_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_8_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_8_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_9_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_9_type::nameAndTypeID, args...);
 	}
 	else
 	{
@@ -91,11 +107,16 @@ void message_one_compose(ComposerT& composer, Args&& ... args)
 		impl::json::composeParamToJson<ComposerT, arg_6_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "sixthParam", arg_6_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
 		impl::json::composeParamToJson<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "seventhParam", arg_7_type::nameAndTypeID, args...);
-		composer.buff.append( "\n}", 2 );	}
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_8_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "eighthParam", arg_8_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_9_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ninethParam", arg_9_type::nameAndTypeID, args...);
+		composer.buff.append( "\n}", 2 );
+	}
 }
 
 template<class ParserT, typename ... Args>
-void message_one_parse(ParserT& p, Args&& ... args)
+void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -106,6 +127,8 @@ void message_one_parse(ParserT& p, Args&& ... args)
 	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
 	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
 	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
+	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
+	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -113,7 +136,9 @@ void message_one_parse(ParserT& p, Args&& ... args)
 		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...);
+		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_8_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -128,6 +153,8 @@ void message_one_parse(ParserT& p, Args&& ... args)
 		impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
 		impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
 		impl::gmq::parseGmqParam<ParserT, arg_7_type, false>(p, arg_7_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_8_type, false>(p, arg_8_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_9_type, false>(p, arg_9_type::nameAndTypeID, args...);
 	}
 	else
 	{
@@ -151,6 +178,10 @@ void message_one_parse(ParserT& p, Args&& ... args)
 				impl::json::parseJsonParam<ParserT, arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
 			else if ( key == "seventhParam" )
 				impl::json::parseJsonParam<ParserT, arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
+			else if ( key == "eighthParam" )
+				impl::json::parseJsonParam<ParserT, arg_8_type, false>(arg_8_type::nameAndTypeID, p, args...);
+			else if ( key == "ninethParam" )
+				impl::json::parseJsonParam<ParserT, arg_9_type, false>(arg_9_type::nameAndTypeID, p, args...);
 			p.skipSpacesEtc();
 			if ( p.isDelimiter( ',' ) )
 			{
@@ -168,14 +199,175 @@ void message_one_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// Message "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
+// MESSAGE "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
+// 1. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
+// 2. STRUCT point (REQUIRED)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_point_compose(ComposerT& composer, Args&& ... args)
+{
+	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
+
+	using arg_1_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<impl::MessageType, point_Type::Name>;
+
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t argCount = sizeof ... (Args);
+	if constexpr ( argCount != 0 )
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	if constexpr( ComposerT::proto == Proto::GMQ )
+	{
+		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON );
+		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "sixthParam", arg_1_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "point", arg_2_type::nameAndTypeID, args...);
+		composer.buff.append( "\n}", 2 );
+	}
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_point_parse(ParserT& p, Args&& ... args)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using arg_1_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<impl::MessageType, point_Type::Name>;
+
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t argCount = sizeof ... (Args);
+	if constexpr ( argCount != 0 )
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	if constexpr( ParserT::proto == Proto::GMQ )
+	{
+		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON );
+		p.skipDelimiter( '{' );
+		for ( ;; )
+		{
+			std::string key;
+			p.readKey( &key );
+			if ( key == "sixthParam" )
+				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			else if ( key == "point" )
+				impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			p.skipSpacesEtc();
+			if ( p.isDelimiter( ',' ) )
+			{
+				p.skipDelimiter( ',' );
+				continue;
+			}
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				break;
+			}
+			throw std::exception(); // bad format
+		}
+	}
+}
+
+//**********************************************************************
+// MESSAGE "point3D" NONEXTENDABLE Targets: JSON GMQ (1 parameters)
+// 1. STRUCT pt (REQUIRED)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
+{
+	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
+
+	using arg_1_type = NamedParameterWithType<impl::MessageType, pt_Type::Name>;
+
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t argCount = sizeof ... (Args);
+	if constexpr ( argCount != 0 )
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	if constexpr( ComposerT::proto == Proto::GMQ )
+	{
+		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON );
+		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "pt", arg_1_type::nameAndTypeID, args...);
+		composer.buff.append( "\n}", 2 );
+	}
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using arg_1_type = NamedParameterWithType<impl::MessageType, pt_Type::Name>;
+
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t argCount = sizeof ... (Args);
+	if constexpr ( argCount != 0 )
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	if constexpr( ParserT::proto == Proto::GMQ )
+	{
+		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON );
+		p.skipDelimiter( '{' );
+		for ( ;; )
+		{
+			std::string key;
+			p.readKey( &key );
+			if ( key == "pt" )
+				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			p.skipSpacesEtc();
+			if ( p.isDelimiter( ',' ) )
+			{
+				p.skipDelimiter( ',' );
+				continue;
+			}
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				break;
+			}
+			throw std::exception(); // bad format
+		}
+	}
+}
+
+//**********************************************************************
+// STRUCTURE "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void point_compose(ComposerT& composer, Args&& ... args)
+void STRUCTURE_point_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -201,11 +393,12 @@ void point_compose(ComposerT& composer, Args&& ... args)
 		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
 		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
-		composer.buff.append( "\n}", 2 );	}
+		composer.buff.append( "\n}", 2 );
+	}
 }
 
 template<class ParserT, typename ... Args>
-void point_parse(ParserT& p, Args&& ... args)
+void STRUCTURE_point_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -253,7 +446,7 @@ void point_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// Message "point3D" NONEXTENDABLE Targets: JSON GMQ (3 parameters)
+// STRUCTURE "point3D" Targets: JSON GMQ (3 parameters)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 // 3. INTEGER z (REQUIRED)
@@ -261,7 +454,7 @@ void point_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void point3D_compose(ComposerT& composer, Args&& ... args)
+void STRUCTURE_point3D_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -292,11 +485,12 @@ void point3D_compose(ComposerT& composer, Args&& ... args)
 		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
 		impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "z", arg_3_type::nameAndTypeID, args...);
-		composer.buff.append( "\n}", 2 );	}
+		composer.buff.append( "\n}", 2 );
+	}
 }
 
 template<class ParserT, typename ... Args>
-void point3D_parse(ParserT& p, Args&& ... args)
+void STRUCTURE_point3D_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 

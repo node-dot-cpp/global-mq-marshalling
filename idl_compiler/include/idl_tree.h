@@ -58,7 +58,7 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE };
+	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE, PUBLISHABLE, STRUCT };
 	KIND kind = UNDEFINED;
 	string name;
 	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING
@@ -77,7 +77,6 @@ public:
 
 	KIND vectorElemKind = UNDEFINED; // VECTOR
 	bool isNonExtendable = false; // VECTOR
-	string messageName; // VECTOR of MESSAGEs
 	size_t messageIdx; // VECTOR of MESSAGEs, reserved for postprocessing
 
 	map<string, uint32_t> enumValues; // ENUM
@@ -103,14 +102,14 @@ public:
 };
 
 
-class MessageOrMsgParameter
+class ObjectBase
 {
 public:
 	Location location;
-	virtual ~MessageOrMsgParameter() {}
+	virtual ~ObjectBase() {}
 };
 
-class MessageParameter : public MessageOrMsgParameter
+class MessageParameter : public ObjectBase
 {
 public:
 	MessageParameterType type;
@@ -121,8 +120,24 @@ public:
 };
 
 
-class Message : public MessageOrMsgParameter
+class CompositeType : public ObjectBase
 {
+public:
+	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
+	Type type = Type::undefined;
+	const char* type2string()
+	{
+		switch ( type )
+		{
+			case Type::undefined: return "UNDEFINED";
+			case Type::message: return "MESSAGE";
+			case Type::publishable: return "UNDEFINED";
+			case Type::structure: return "STRUCTURE";
+			default:
+				assert( false );
+		}
+	}
+
 public:
 	vector<unique_ptr<MessageParameter>> members;
 	string name;
@@ -134,7 +149,9 @@ public:
 class Root
 {
 public:
-	vector<unique_ptr<Message>> messages;
+	vector<unique_ptr<CompositeType>> messages;
+	vector<unique_ptr<CompositeType>> publishables;
+	vector<unique_ptr<CompositeType>> structs;
 };
 
 inline

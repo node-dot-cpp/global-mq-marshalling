@@ -228,6 +228,33 @@ public:
 };
 
 
+struct MessageWrapperBase {
+	static constexpr size_t unknown_size = (size_t)(-1);
+};
+
+template<class LambdaCompose>
+class MessageWrapperForComposing : public MessageWrapperBase {
+	LambdaCompose lcompose_;
+public:
+	MessageWrapperForComposing(LambdaCompose &&lcompose) : lcompose_(std::forward<LambdaCompose>(lcompose)) {}
+	template<typename ComposerT>
+	void compose( ComposerT& composer ) { 
+		return lcompose_( composer ); 
+	}
+};
+
+template<class LambdaParse>
+class MessageWrapperForParsing : public MessageWrapperBase {
+	LambdaParse lparse_;
+public:
+	MessageWrapperForParsing(LambdaParse &&lparse) : lparse_(std::forward<LambdaParse>(lparse)) {
+	}
+	template<typename ParserT>
+	void parse( ParserT& p ) { 
+		lparse_( p ); 
+	}
+};
+
 template<typename BaseT, typename Arg0, typename ... Args>
 void findMatch(const Arg0 arg0, const Args ... args)
 {
@@ -317,6 +344,12 @@ void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected
 	{
 		size_t sz = 0;
 		p.parseUnsignedInteger( &sz );
+		if ( sz != 0 )
+			assert( false ); // not implemented
+	}
+	else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+	{
+		assert( false ); // not implemented
 	}
 	else
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
@@ -375,6 +408,23 @@ void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected
 			else
 				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 		}
+		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		{
+			if constexpr ( std::is_base_of<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				// TODO: check whether there is any difference between ext and non-ext cases
+				auto& msg = arg0.get();
+				msg.parse( p );
+			}
+			else if constexpr ( std::is_base_of<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				// TODO: check whether there is any difference between ext and non-ext cases
+				auto& msg = arg0.get();
+				msg.parse( p );
+			}
+			else
+				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
+		}
 		else
 			static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 	}
@@ -410,6 +460,9 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
 	{
 		composeUnsignedInteger( composer, 0 );
+	}
+	else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+	{
 	}
 	// TODO: add supported types here
 	else
@@ -469,6 +522,20 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 				}
 			}
 		}
+		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		{
+			if constexpr ( std::is_base_of<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				auto& msg = arg0.get();
+				msg.compose(composer);
+			}
+			else if constexpr ( std::is_base_of<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				auto& msg = arg0.get();
+				msg.compose( composer );
+				// TODO: anything else?
+			}
+		}
 		else
 			static_assert( std::is_same<typename Agr0Type::Type, AllowedDataType>::value, "unsupported type" );
 	}
@@ -492,8 +559,9 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 	else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 		p.skipStringFromJson();
 	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
-	{
-	}
+		p.skipVectorFromJson();
+	else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		p.skipMessageFromJson();
 	else
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
@@ -506,11 +574,11 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 	using Agr0DataType = typename std::remove_pointer<typename Agr0Type::Type>::type;
 	if constexpr ( std::is_same<typename Agr0Type::Name, typename TypeToPick::Name>::value ) // same parameter name
 	{
-		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
+		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value && (std::is_integral<typename Agr0Type::Type>::value || std::is_integral<typename std::remove_pointer<typename Agr0Type::Type>::type>::value) )
 			p.readSignedIntegerFromJson( arg0.get() );
-		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
+		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && (std::is_integral<typename Agr0Type::Type>::value || std::is_integral<typename std::remove_pointer<typename Agr0Type::Type>::type>::value) )
 			p.readUnsignedIntegerFromJson( arg0.get() );
-		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value && std::is_arithmetic<Agr0DataType>::value )
+		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_pointer<typename Agr0Type::Type>::type>::value) )
 			p.readRealFromJson( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 			p.readStringFromJson( arg0.get() );
@@ -590,6 +658,39 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 			else
 				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 		}
+		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+//		else if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value || std::is_same<MessageType, typename TypeToPick::Type>::value )
+		{
+			auto& msg = arg0.get();
+			if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				// TODO: check whether there is any difference between ext and non-ext cases
+				p.skipDelimiter( '{' );
+				if ( !p.isDelimiter( '}' ) ) // non-empty message
+				{
+					msg.parse( p );
+					assert( p.isDelimiter( '}' ) );
+					p.skipDelimiter( '}' );
+				}
+				else
+					p.skipDelimiter( '}' );
+			}
+			else if constexpr ( std::is_same<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				// TODO: check whether there is any difference between ext and non-ext cases
+				p.skipDelimiter( '{' );
+				if ( !p.isDelimiter( '}' ) ) // non-empty message
+				{
+					msg.parse( p );
+					assert( p.isDelimiter( '}' ) );
+					p.skipDelimiter( '}' );
+				}
+				else
+					p.skipDelimiter( '}' );
+			}
+			else
+				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
+		}
 		else
 			static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 	}
@@ -624,6 +725,12 @@ void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typenam
 			json::addNamePart( composer, name );
 			composer.buff.appendUint8( '[' );
 			composer.buff.appendUint8( ']' );
+		}
+		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		{
+			json::addNamePart( composer, name );
+			composer.buff.appendUint8( '{' );
+			composer.buff.appendUint8( '}' );
 		}
 		// TODO: add supported types here
 		else
@@ -687,6 +794,27 @@ void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typenam
 					coll.compose_next(composer, i);
 				}
 				composer.buff.appendUint8( ']' );
+			}
+		}
+		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		{
+			if constexpr ( std::is_base_of<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				// TODO: check whether there are any difference between ext and non-ext case
+				json::addNamePart( composer, name );
+				composer.buff.appendUint8( '{' );
+				auto& msg = arg0.get();
+				msg.compose(composer);
+				composer.buff.appendUint8( '}' );
+			}
+			else if constexpr ( std::is_base_of<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				// TODO: check whether there are any difference between ext and non-ext case
+				json::addNamePart( composer, name );
+				composer.buff.appendUint8( '{' );
+				auto& msg = arg0.get();
+				msg.compose(composer);
+				composer.buff.appendUint8( '}' );
 			}
 		}
 		else

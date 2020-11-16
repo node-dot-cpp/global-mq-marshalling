@@ -62,6 +62,8 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
 		case MessageParameterType::KIND::MESSAGE: return "MESSAGE";
+		case MessageParameterType::KIND::PUBLISHABLE: return "PUBLISHABLE";
+		case MessageParameterType::KIND::STRUCT: return "STRUCT";
 		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
 		default: assert( false ); return "";
 	}
@@ -69,17 +71,40 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 
 void printRoot( Root& s )
 {
-	printf( "Root (%zd messages) {\n", s.messages.size() );
+	if ( s.messages.size() == 0 && s.publishables.size() == 0 && s.structs.size() == 0 )
+	{
+		printf( "Root (no messages or publishable structs) {\n" );
+		printf( "}\n" );
+		return;
+	}
+	printf( "Root (" );
+	if ( s.messages.size() )
+		printf( "%zd messages ", s.messages.size() );
+	if ( s.publishables.size() )
+		printf( "%zd publishables ", s.publishables.size() );
+	if ( s.structs.size() )
+		printf( "%zd structs ", s.structs.size() );
+	printf( ") {\n" );
 	for ( auto& it : s.messages )
 	{
 		auto& obj_1 = it;
 		print__unique_ptr_Message( obj_1, 4 );
 	}
+	for ( auto& it : s.publishables )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_Publishable( obj_1, 4 );
+	}
+	for ( auto& it : s.structs )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_Struct( obj_1, 4 );
+	}
 	printf( "}\n" );
 }
 
-void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset ) {
-
+void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset )
+{
 	if ( s == nullptr )
 	{
 		char offsetch[1024];
@@ -87,13 +112,43 @@ void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset ) {
 		offsetch[ offset ] = 0;
 		printf( "%sMessage <null> {}\n", offsetch );
 	}
-	else if ( typeid( *(s) ) == typeid( Message ) )
+	else if ( typeid( *(s) ) == typeid( CompositeType ) )
 	{
-		printMessage( *(dynamic_cast<Message*>(&(*(s)))), offset );
+		printMessage( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
 	}
 }
 
-void printMessage( Message& s, size_t offset )
+void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset )
+{
+	if ( s == nullptr )
+	{
+		char offsetch[1024];
+		memset( offsetch, ' ', offset );
+		offsetch[ offset ] = 0;
+		printf( "%sPublishable <null> {}\n", offsetch );
+	}
+	else if ( typeid( *(s) ) == typeid( CompositeType ) )
+	{
+		printPublishable( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
+	}
+}
+
+void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset )
+{
+	if ( s == nullptr )
+	{
+		char offsetch[1024];
+		memset( offsetch, ' ', offset );
+		offsetch[ offset ] = 0;
+		printf( "%sStruct <null> {}\n", offsetch );
+	}
+	else if ( typeid( *(s) ) == typeid( CompositeType ) )
+	{
+		printStruct( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
+	}
+}
+
+void printMessage( CompositeType& s, size_t offset )
 {
 	char offsetch[1024];
 	memset( offsetch, ' ', offset );
@@ -103,8 +158,8 @@ void printMessage( Message& s, size_t offset )
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case Message::Proto::gmq: printf( "GMQ " ); break;
-			case Message::Proto::json: printf( "JSON " ); break;
+			case CompositeType::Proto::gmq: printf( "GMQ " ); break;
+			case CompositeType::Proto::json: printf( "JSON " ); break;
 			default: assert( false );
 		}
 	printf( "(%zd parameters) {\n", s.members.size() );
@@ -113,7 +168,53 @@ void printMessage( Message& s, size_t offset )
 }
 
 
-void printMessageMembers( Message& s, size_t offset )
+void printPublishable( CompositeType& s, size_t offset )
+{
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
+
+	printf( "%sPublishabe: name = \"%s\"", offsetch, s.name.c_str() );
+	printf( "(%zd members) {\n", s.members.size() );
+	printPublishableMembers( s, offset + 4 );
+	printf( "%s}\n", offsetch );
+}
+
+
+void printStruct( CompositeType& s, size_t offset )
+{
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
+
+	printf( "%sStruct: name = \"%s\"", offsetch, s.name.c_str() );
+	printf( "(%zd members) {\n", s.members.size() );
+	printStructMembers( s, offset + 4 );
+	printf( "%s}\n", offsetch );
+}
+
+
+void printMessageMembers( CompositeType& s, size_t offset )
+{
+	for ( auto& it : s.members )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_MessageParameter( obj_1, offset + 4 );
+	}
+}
+
+
+void printPublishableMembers( CompositeType& s, size_t offset )
+{
+	for ( auto& it : s.members )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_MessageParameter( obj_1, offset + 4 );
+	}
+}
+
+
+void printStructMembers( CompositeType& s, size_t offset )
 {
 	for ( auto& it : s.members )
 	{
@@ -171,16 +272,28 @@ void printDataType( MessageParameterType& s )
 {
 	if ( s.kind == MessageParameterType::KIND::VECTOR )
 	{
-		if ( s.vectorElemKind == MessageParameterType::KIND::MESSAGE )
-			printf( "%s<%s%s %s>", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", impl_kindToString( s.vectorElemKind ), s.messageName.c_str() );
+		bool isComposite = s.vectorElemKind == MessageParameterType::KIND::MESSAGE || s.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ||s.vectorElemKind == MessageParameterType::KIND::STRUCT;
+		if ( isComposite )
+			printf( "%s<%s%s %s>", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", impl_kindToString( s.vectorElemKind ), s.name.c_str() );
 		else
 			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
+	else if ( s.kind == MessageParameterType::KIND::MESSAGE || s.kind == MessageParameterType::KIND::PUBLISHABLE || s.kind == MessageParameterType::KIND::STRUCT )
+	{
+		printf( "%s %s %s", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", s.name.c_str() );
+	}
+	else if ( s.kind == MessageParameterType::KIND::ENUM )
+	{
+		printf( "%s %s", impl_kindToString( s.kind ), s.name.c_str() );
+	}
 	else
+	{
+		assert( s.name.empty() );
 		printf( "%s", impl_kindToString( s.kind ) );
+	}
 
-	if ( s.name.size() )
-		printf( "name: %s, ", s.name.c_str() );
+//	if ( s.name.size() )
+//		printf( "name: %s, ", s.name.c_str() );
 	if ( s.kind == MessageParameterType::KIND::INTEGER || s.kind == MessageParameterType::KIND::UINTEGER )
 	{
 		if ( s.hasLowLimit )
@@ -225,8 +338,6 @@ void printDataType( MessageParameterType& s )
 			printf( "%s = %d", item.first.c_str(), item.second  );
 		printf( " }" );
 	}
-
-	printf( "}" );
 }
 
 void printLimit( Limit& s ) {
@@ -263,7 +374,7 @@ void impl_CollectParamNamesFrom__unique_ptr_MessageParameter( std::set<string>& 
 		impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(s)))) );
 }
 
-void impl_CollectParamNamesFromMessage( std::set<string>& params, Message& s )
+void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s )
 {
 	for ( auto& it : s.members )
 	{
@@ -274,17 +385,22 @@ void impl_CollectParamNamesFromMessage( std::set<string>& params, Message& s )
 	}
 }
 
-void impl_CollectParamNamesFrom__unique_ptr_Message( std::set<string>& params, unique_ptr<Message>& s ) {
+void impl_CollectParamNamesFrom__unique_ptr_Message( std::set<string>& params, unique_ptr<CompositeType>& s ) {
 
-	if ( s != nullptr && typeid( *(s) ) == typeid( Message ) )
+	if ( s != nullptr && typeid( *(s) ) == typeid( CompositeType ) )
 	{
-		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<Message*>(&(*(s)))) );
+		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(s)))) );
 	}
 }
 
 void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
 {
 	for ( auto& it : s.messages )
+	{
+		auto& obj_1 = it;
+		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
+	}
+	for ( auto& it : s.structs )
 	{
 		auto& obj_1 = it;
 		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
@@ -323,59 +439,117 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	fprintf( header, "\n" );
 }
 
-bool impl_checkMessageNameUniqueness(Root& s)
+bool impl_checkCompositeTypeNameUniqueness(vector<unique_ptr<CompositeType>>& coll, const char* typeName)
 {
 	bool ok = true;
 	std::map<string, Location> names;
-	for ( auto& it : s.messages )
+	for ( auto& it : coll )
 	{
 		auto ins = names.insert( std::make_pair( it->name, it->location ) );
 		if ( !ins.second )
 		{
-			fprintf( stderr, "Message name \"%s\" has already been used, see %s : %d\n", it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			fprintf( stderr, "%s name \"%s\" has already been used, see %s : %d\n", typeName, it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
 			ok = false;
 		}
 	}
 	return ok;
 }
 
-bool impl_processMessageNamesInVectorTypes(Root& s)
+
+bool impl_checkCompositeTypeNameUniqueness(Root& s)
+{
+	bool ok = impl_checkCompositeTypeNameUniqueness(s.messages, "MESSAGE");
+	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
+	return ok;
+}
+
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct)
 {
 	bool ok = true;
-	for ( auto& msg : s.messages )
-		for ( auto& param : msg->members )
-			if ( param->type.kind == MessageParameterType::VECTOR && param->type.vectorElemKind == MessageParameterType::MESSAGE )
+		for ( auto& param : ct.members )
+		{
+			if ( param->type.kind == MessageParameterType::KIND::MESSAGE || param->type.kind == MessageParameterType::KIND::PUBLISHABLE )
 			{
-				param->type.messageIdx = (size_t)(-1);
-				for ( size_t i=0; i<s.messages.size(); ++i )
-					if ( param->type.messageName == s.messages[i]->name )
-					{
-						param->type.messageIdx = i;
-						if ( param->type.isNonExtendable && !s.messages[i]->isNonExtendable )
+				fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+				ok = false;
+			}
+			else if ( param->type.kind == MessageParameterType::VECTOR )
+			{
+				if (  param->type.kind == MessageParameterType::KIND::VECTOR && ( param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
+				{
+					fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+					ok = false;
+				}
+				else if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
+				{
+					param->type.messageIdx = (size_t)(-1);
+					for ( size_t i=0; i<s.structs.size(); ++i )
+						if ( param->type.name == s.structs[i]->name )
 						{
-							fprintf( stderr, "%s, line %d: message \"%s\" is not declared as NONEXTENDABLE (see message declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
-							ok = false;
-						}
-						for ( auto proto : msg->protoList )
-							if ( s.messages[i]->protoList.find( proto ) == s.messages[i]->protoList.end() )
+							param->type.messageIdx = i;
+							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
 							{
-								fprintf( stderr, "%s, line %d: message \"%s\" does not support all protocols of current message\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str() );
-								fprintf( stderr, "             see declaration of current message at %s, line %d\n", msg->location.fileName.c_str(), msg->location.lineNumber );
-								fprintf( stderr, "             see declaration of message \"%s\" at %s, line %d\n", param->type.messageName.c_str(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 								ok = false;
 							}
+							/*for ( auto proto : ct.protoList )
+								if ( s.structs[i]->protoList.find( proto ) == s.structs[i]->protoList.end() )
+								{
+									fprintf( stderr, "%s, line %d: %s \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
+									fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", ct.location.fileName.c_str(), ct.location.lineNumber );
+									fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+									ok = false;
+								}*/
+							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+							break;
+						}
+					if ( param->type.messageIdx == (size_t)(-1) )
+					{
+						fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
+						ok = false;
+					}
+				}
+			}
+			else if ( param->type.kind == MessageParameterType::KIND::STRUCT ) // extentability only
+			{
+				param->type.messageIdx = (size_t)(-1);
+				for ( size_t i=0; i<s.structs.size(); ++i )
+					if ( param->type.name == s.structs[i]->name )
+					{
+						param->type.messageIdx = i;
+						if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
+						{
+							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+							ok = false;
+						}
 						break;
 					}
 				if ( param->type.messageIdx == (size_t)(-1) )
 				{
-					fprintf( stderr, "%s, line %d: message name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, param->type.messageName.c_str() );
+					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
 					ok = false;
 				}
 			}
+		}
 	return ok;
 }
 
-bool impl_checkMessageParamNameUniqueness(Message& s)
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
+{
+	bool ok = true;
+	for ( auto& s : r.messages )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	for ( auto& s : r.publishables )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	for ( auto& s : r.structs )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	return ok;
+}
+
+
+
+bool impl_checkParamNameUniqueness(CompositeType& s)
 {
 	bool ok = true;
 	std::map<string, Location> names;
@@ -386,14 +560,14 @@ bool impl_checkMessageParamNameUniqueness(Message& s)
 		auto ins = names.insert( std::make_pair( it->name, it->location ) );
 		if ( !ins.second )
 		{
-			fprintf( stderr, "Message parameter \"%s\" has already been used within this message, see %s : %d\n", it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			fprintf( stderr, "%s parameter \"%s\" has already been used within this %s, see %s : %d\n", s.type2string(), it->name.c_str(), s.type2string(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
 			ok = false;
 		}
 	}
 	return ok;
 }
 
-bool impl_checkFollowingExtensionRules(Message& s)
+bool impl_checkFollowingExtensionRules(CompositeType& s)
 {
 	bool ok = true;
 	bool extMarkFound = false;
@@ -405,12 +579,12 @@ bool impl_checkFollowingExtensionRules(Message& s)
 		{
 			if ( msg.type.hasDefault && !extMarkFound )
 			{
-				fprintf( stderr, "File %s, line %d: Message parameter \"%s\" with default value cannot appear before extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, msg.name.c_str() );
+				fprintf( stderr, "File %s, line %d: %s parameter \"%s\" with default value cannot appear before extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, s.type2string(), msg.name.c_str() );
 				ok = false;
 			}
 			else if ( (!msg.type.hasDefault) && extMarkFound )
 			{
-				fprintf( stderr, "File %s, line %d: Message parameter \"%s\" with no default value cannot appear inside extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, msg.name.c_str() );
+				fprintf( stderr, "File %s, line %d: %s parameter \"%s\" with no default value cannot appear inside extension blocks\n", msg.location.fileName.c_str(), msg.location.lineNumber, s.type2string(), msg.name.c_str() );
 				ok = false;
 			}
 		}
@@ -422,8 +596,8 @@ bool impl_checkFollowingExtensionRules(Message& s)
 
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
-	bool ok = impl_checkMessageNameUniqueness(s);
-	ok = impl_processMessageNamesInVectorTypes(s) && ok;
+	bool ok = impl_checkCompositeTypeNameUniqueness(s);
+	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
 	if ( !ok )
 		throw std::exception();
 
@@ -440,11 +614,28 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	generateParamNameBlock( header, params );
 
-//	fprintf( header, "Root (%zd messages) {\n", s.messages.size() );
 	for ( auto& it : s.messages )
 	{
 		auto& obj_1 = it;
-		generate__unique_ptr_Message( header, obj_1 );
+		if ( obj_1 == nullptr )
+			fprintf( header, "// Message = <null>\n" );
+		else 
+		{
+			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+		}
+	}
+
+	for ( auto& it : s.structs )
+	{
+		auto& obj_1 = it;
+		if ( obj_1 == nullptr )
+			fprintf( header, "// Struct = <null>\n" );
+		else 
+		{
+			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+		}
 	}
 
 	fprintf( header, "\n"
@@ -454,24 +645,12 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		fileName );
 }
 
-void generate__unique_ptr_Message( FILE* header, unique_ptr<Message>& s ) {
-
-	if ( s == nullptr )
-	{
-		fprintf( header, "// Message = <null>\n" );
-	}
-	else if ( typeid( *(s) ) == typeid( Message ) )
-	{
-		generateMessage( header, *(dynamic_cast<Message*>(&(*(s)))) );
-	}
-}
-
 string impl_MessageNameToDefaultsNamespaceName( string name )
 {
 	return fmt::format( "Message_{}_defaults", name );
 }
 
-void impl_GenerateMessageDefaults( FILE* header, Message& s )
+void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 {
 	int count = 0; // let's see whether we need this block at all
 	for ( auto& it : s.members )
@@ -562,7 +741,7 @@ void impl_GenerateMessageDefaults( FILE* header, Message& s )
 	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
 }
 
-void impl_generateParamTypeLIst( FILE* header, Message& s )
+void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -622,13 +801,26 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::MESSAGE:
+					case MessageParameterType::KIND::STRUCT:
 						if ( param.type.isNonExtendable )
 							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						else
 							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
+					case MessageParameterType::KIND::PUBLISHABLE:
+					default:
+						assert( false ); // unexpected
+						break;
 				}
 				break;
+			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::STRUCT:
+				if ( param.type.isNonExtendable )
+					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				else
+					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				break;
+			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -640,7 +832,7 @@ void impl_generateParamTypeLIst( FILE* header, Message& s )
 	fprintf( header, "\n" );
 }
 
-void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const char* offset )
+void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -683,6 +875,11 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				break; // TODO: treatment
+			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -692,7 +889,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, Message& s, const
 	}
 }
 
-void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const char* offset )
+void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, const char* offset )
 {
 	int count = 0;
 	for ( auto& it : s.members )
@@ -729,6 +926,11 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				break; // TODO: ...
+			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -738,7 +940,7 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, Message& s, const c
 	}
 }
 
-void impl_generateMatchCountBlock( FILE* header, Message& s )
+void impl_generateMatchCountBlock( FILE* header, CompositeType& s )
 {
 	fprintf( header, "\tconstexpr size_t matchCount = " );
 
@@ -762,7 +964,7 @@ void impl_generateMatchCountBlock( FILE* header, Message& s )
 	fprintf( header, ";\n" );
 }
 
-void impl_addParamStatsCheckBlock( FILE* header, Message& s )
+void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 {
 	impl_generateMatchCountBlock( header, s );
 	fprintf( header, 
@@ -772,15 +974,15 @@ void impl_addParamStatsCheckBlock( FILE* header, Message& s )
 		"\tstatic_assert( argCount == matchCount, \"unexpected arguments found\" );\n\n" );
 }
 
-void impl_generateMessageCommentBlock( FILE* header, Message& s )
+void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 {
 	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// Message \"%s\" %sTargets: ", s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case Message::Proto::gmq: fprintf( header, "GMQ " ); break;
-			case Message::Proto::json: fprintf( header, "JSON " ); break;
+			case CompositeType::Proto::gmq: fprintf( header, "GMQ " ); break;
+			case CompositeType::Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
 	fprintf( header, "(%zd parameters)\n", s.members.size() );
@@ -796,8 +998,9 @@ void impl_generateMessageCommentBlock( FILE* header, Message& s )
 			
 		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			if ( param.type.vectorElemKind == MessageParameterType::KIND::MESSAGE )
-				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.messageName.c_str() );
+			bool isComposite = param.type.vectorElemKind == MessageParameterType::KIND::MESSAGE || param.type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE || param.type.vectorElemKind == MessageParameterType::KIND::STRUCT;
+			if ( isComposite )
+				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
 			else
 				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
 			fprintf( header, " %s", param.name.c_str() );
@@ -825,11 +1028,11 @@ void impl_generateMessageCommentBlock( FILE* header, Message& s )
 	fprintf( header, "//**********************************************************************\n\n" );
 }
 
-void impl_generateComposeFunctionGmq( FILE* header, Message& s )
+/*void impl_generateComposeFunctionGmq( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_composeGmq(Composer& composer, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_composeGmq(Composer& composer, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -839,20 +1042,20 @@ void impl_generateComposeFunctionGmq( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunctionGmq( FILE* header, Message& s )
+void impl_generateParseFunctionGmq( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parseGmq(Parser& p, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_parseGmq(Parser& p, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
 	impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 
 	fprintf( header, "}\n\n" );
-}
+}*/
 
-void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, const char* offset )
+void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s, const char* offset )
 {
 	fprintf( header, "%scomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n", offset );
 	int count = 0;
@@ -897,6 +1100,11 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
+				break; // TODO: ...
+			case MessageParameterType::KIND::MESSAGE:
+			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -911,7 +1119,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, Message& s, cons
 	fprintf( header, "%scomposer.buff.append( \"\\n}\", 2 );", offset );
 }
 
-void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const char* offset )
+void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, const char* offset )
 {
 	fprintf( header, "%sp.skipDelimiter( \'{\' );\n", offset );
 	fprintf( header, "%sfor ( ;; )\n", offset );
@@ -949,7 +1157,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, Message& s, const 
 	fprintf( header, "%s}\n", offset );
 }
 
-void impl_generateComposeFunctionJson( FILE* header, Message& s )
+/*void impl_generateComposeFunctionJson( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
 	"void %s_composeJson(Composer& composer, Args&& ... args)\n"
@@ -963,7 +1171,7 @@ void impl_generateComposeFunctionJson( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunctionJson( FILE* header, Message& s )
+void impl_generateParseFunctionJson( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<typename ... Args>\n"
 	"void %s_parseJson(Parser& p, Args&& ... args)\n"
@@ -974,24 +1182,24 @@ void impl_generateParseFunctionJson( FILE* header, Message& s )
 	impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 
 	fprintf( header, "}\n\n" );
-}
+}*/
 
-void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
+void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 {
 	size_t protoCount = s.protoList.size();
 	if ( protoCount == 1 )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
-			case Message::Proto::gmq:
+			case CompositeType::Proto::gmq:
 			{
-				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this message assumes only GMQ protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 				break;
 			}
-			case Message::Proto::json:
+			case CompositeType::Proto::json:
 			{
-				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this message assumes only JSON protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingJson( header, s, "" );
 				break;
 			}
@@ -1003,7 +1211,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 	{
 		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
-		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
+		if ( s.protoList.find( CompositeType::Proto::gmq ) != s.protoList.end() )
 		{
 			++processedProtoCount;
 			fprintf( header, 
@@ -1018,9 +1226,9 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 			++processedProtoCount;
 			switch ( it )
 			{
-				case Message::Proto::gmq:
+				case CompositeType::Proto::gmq:
 					break; // already done
-				case Message::Proto::json:
+				case CompositeType::Proto::json:
 				{
 					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
 					if ( processedProtoCount == 0 )
@@ -1042,7 +1250,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 								"\t{\n" );
 					}
 					impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
-					fprintf( header, "\t}\n" );
+					fprintf( header, "\n\t}\n" );
 					break;
 				}
 				default:
@@ -1052,22 +1260,22 @@ void impl_generateParamCallBlockForComposing( FILE* header, Message& s )
 	}
 }
 
-void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
+void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 {
 	size_t protoCount = s.protoList.size();
 	if ( protoCount == 1 )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
-			case Message::Proto::gmq:
+			case CompositeType::Proto::gmq:
 			{
-				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this message assumes only GMQ protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 				break;
 			}
-			case Message::Proto::json:
+			case CompositeType::Proto::json:
 			{
-				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this message assumes only JSON protocol\" );\n" );
+				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
 				break;
 			}
@@ -1079,7 +1287,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 	{
 		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
-		if ( s.protoList.find( Message::Proto::gmq ) != s.protoList.end() )
+		if ( s.protoList.find( CompositeType::Proto::gmq ) != s.protoList.end() )
 		{
 			++processedProtoCount;
 			fprintf( header, 
@@ -1094,9 +1302,9 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 			++processedProtoCount;
 			switch ( it )
 			{
-				case Message::Proto::gmq:
+				case CompositeType::Proto::gmq:
 					break; // already done
-				case Message::Proto::json:
+				case CompositeType::Proto::json:
 				{
 					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
 					if ( processedProtoCount == 0 )
@@ -1128,11 +1336,11 @@ void impl_generateParamCallBlockForParsing( FILE* header, Message& s )
 	}
 }
 
-void impl_generateComposeFunction( FILE* header, Message& s )
+void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s_compose(ComposerT& composer, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
@@ -1143,11 +1351,11 @@ void impl_generateComposeFunction( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunction( FILE* header, Message& s )
+void impl_generateParseFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s_parse(ParserT& p, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
+	"void %s_%s_parse(ParserT& p, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
@@ -1157,9 +1365,9 @@ void impl_generateParseFunction( FILE* header, Message& s )
 	fprintf( header, "}\n\n" );
 }
 
-void generateMessage( FILE* header, Message& s )
+void generateMessage( FILE* header, CompositeType& s )
 {
-	bool checked = impl_checkMessageParamNameUniqueness(s);
+	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
 	if ( !checked )
 		throw std::exception();

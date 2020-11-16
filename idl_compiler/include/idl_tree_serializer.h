@@ -32,14 +32,22 @@
 
 // printing global_mq tree
 void printRoot( Root& s );
-void printMessage( Message& s, size_t offset );
+
+void printMessage( CompositeType& s, size_t offset );
+void printPublishable( CompositeType& s, size_t offset );
+void printStruct( CompositeType& s, size_t offset );
+
 void printMessageParameter( MessageParameter& s, size_t offset );
-void printMessageMembers( Message& s, size_t offset );
+void printMessageMembers( CompositeType& s, size_t offset );
+void printPublishableMembers( CompositeType& s, size_t offset );
+void printStructMembers( CompositeType& s, size_t offset );
 void printLimit( Limit& s, size_t offset );
 void printLocation( Location& s, size_t offset );
 void printDataType( MessageParameterType& s, size_t offset );
 void print__unique_ptr_DataType( unique_ptr<MessageParameterType>& s, size_t offset );
-void print__unique_ptr_Message( unique_ptr<Message>& s, size_t offset );
+void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset );
+void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset );
+void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_MessageParameter( unique_ptr<MessageParameter>& s, size_t offset );
 
 void printDataType( MessageParameterType& s );
@@ -48,14 +56,13 @@ void printVariant( Variant& s );
 
 // code generation
 void generateRoot( const char* fileName, FILE* header, Root& s );
-void generateMessage( FILE* header, Message& s );
+void generateMessage( FILE* header, CompositeType& s );
 void generateMessageParameter( FILE* header, MessageParameter& s );
-void generateMessageMembers( FILE* header, Message& s );
+void generateMessageMembers( FILE* header, CompositeType& s );
 void generateLimit( FILE* header, Limit& s );
 void generateLocation( FILE* header, Location& s );
 void generateDataType( FILE* header, MessageParameterType& s );
 void generate__unique_ptr_DataType( FILE* header, unique_ptr<MessageParameterType>& s );
-void generate__unique_ptr_Message( FILE* header, unique_ptr<Message>& s );
 void generate__unique_ptr_MessageParameter( FILE* header, unique_ptr<MessageParameter>& s );
 
 void generateDataType( FILE* header, MessageParameterType& s );

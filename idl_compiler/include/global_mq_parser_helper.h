@@ -66,16 +66,24 @@ YYSTYPE createHexIntegerLiteral(const char* text, int line);
 YYSTYPE createStringLiteral(const char* text, int line);
 YYSTYPE createZeroLiteral(const char* text, int line);
 
-YYSTYPE addToFile(YYSTYPE file, YYSTYPE item);
+YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item);
+YYSTYPE addPublishableToFile(YYSTYPE file, YYSTYPE item);
+YYSTYPE addStructToFile(YYSTYPE file, YYSTYPE item);
 
 void processLineDirective(YYSTYPE line_number, YYSTYPE file_name);
 
 YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr);
+YYSTYPE addToPublishable(YYSTYPE decl, YYSTYPE attr);
+YYSTYPE addToStruct(YYSTYPE decl, YYSTYPE attr);
 
 YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
-YYSTYPE insertExtensionMarker(YYSTYPE decl);
+YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl);
+YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl);
+YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
 
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
@@ -104,6 +112,12 @@ YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
+YYSTYPE createVectorOfPublishablesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
+YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
+
+YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName);
+YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName);
+YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
 YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue);
