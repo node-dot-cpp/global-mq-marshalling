@@ -1,36 +1,36 @@
-/*
+
 MESSAGE PROTO = JSON, GMQ PolygonSt{
-	VECTOR<MESSAGE PolygonMap> polygonMap;
-	VECTOR<MESSAGE PolygonMap> concaveMap;
-	VECTOR<MESSAGE ObstacleMap> obstacleMap;
-	VECTOR<MESSAGE LineMap> portalMap;
-	VECTOR<MESSAGE LineMap> jumpMap;
+	VECTOR<STRUCT PolygonMap> polygonMap;
+	VECTOR<STRUCT PolygonMap> concaveMap;
+	VECTOR<STRUCT ObstacleMap> obstacleMap;
+	VECTOR<STRUCT LineMap> portalMap;
+	VECTOR<STRUCT LineMap> jumpMap;
 	REAL polygonSpeed;
 };
 
-MESSAGE PROTO = JSON, GMQ LineMap{
-	VECTOR<MESSAGE Line> LineMap;
+STRUCT LineMap{
+	VECTOR<STRUCT Line> LineMap;
 };
 
-MESSAGE PROTO = JSON, GMQ Line{
-	VECTOR<MESSAGE NONEXTENDABLE Vertex> a;
-	VECTOR<MESSAGE NONEXTENDABLE Vertex> b;
+STRUCT Line{
+	VECTOR<STRUCT NONEXTENDABLE Vertex> a;
+	VECTOR<STRUCT NONEXTENDABLE Vertex> b;
 };
 
-MESSAGE PROTO = JSON, GMQ ObstacleMap{
-	VECTOR<MESSAGE PolygonMap> ObstacleMap;
+STRUCT ObstacleMap{
+	VECTOR<STRUCT PolygonMap> ObstacleMap;
 };
 
-MESSAGE PROTO = JSON, GMQ PolygonMap{
-	VECTOR<MESSAGE NONEXTENDABLE Vertex> PolygonMap;
+STRUCT PolygonMap{
+	VECTOR<STRUCT NONEXTENDABLE Vertex> PolygonMap;
 };
 
-MESSAGE PROTO = JSON, GMQ NONEXTENDABLE Vertex{
+STRUCT NONEXTENDABLE Vertex{
   INTEGER x;
   INTEGER y;
   INTEGER z;
 };
-*/
+
 
 
 STRUCT NONEXTENDABLE point {
