@@ -5,7 +5,7 @@
 
 int main()
 {
-//	runJsonSample();
-//	runGmqSample();
-	testSubscriptionTest();
+	runJsonSample();
+	runGmqSample();
+//	testSubscriptionTest();
 }

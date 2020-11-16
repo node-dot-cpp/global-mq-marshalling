@@ -53,11 +53,12 @@ MESSAGE PROTO=JSON,GMQ message_one {
   CHARACTER-STRING fifthParam;
   VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
   REAL seventhParam;
-  STRUCT NONEXTENDABLE point justPointOne;
-  STRUCT point justPointTwo;
+  STRUCT NONEXTENDABLE point eighthParam;
+  STRUCT point3D ninethParam;
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
+  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
   STRUCT point point;
 };
 
