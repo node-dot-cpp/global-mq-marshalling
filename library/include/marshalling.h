@@ -524,12 +524,12 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 		}
 		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
 		{
-			if constexpr ( std::is_base_of<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
+			if constexpr ( std::is_base_of<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				auto& msg = arg0.get();
 				msg.compose(composer);
 			}
-			else if constexpr ( std::is_base_of<VectorOfMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			else if constexpr ( std::is_base_of<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				auto& msg = arg0.get();
 				msg.compose( composer );
@@ -558,8 +558,6 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 		p.skipRealFromJson();
 	else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 		p.skipStringFromJson();
-	else if constexpr ( std::is_same<typename TypeToPick::Type, MessageType>::value )
-		p.skipStringFromJson();
 	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
 		p.skipVectorFromJson();
 	else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
@@ -576,11 +574,11 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 	using Agr0DataType = typename std::remove_pointer<typename Agr0Type::Type>::type;
 	if constexpr ( std::is_same<typename Agr0Type::Name, typename TypeToPick::Name>::value ) // same parameter name
 	{
-		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
+		if constexpr ( std::is_same<typename TypeToPick::Type, SignedIntegralType>::value && (std::is_integral<typename Agr0Type::Type>::value || std::is_integral<typename std::remove_pointer<typename Agr0Type::Type>::type>::value) )
 			p.readSignedIntegerFromJson( arg0.get() );
-		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && std::is_integral<Agr0DataType>::value )
+		else if constexpr ( std::is_same<typename TypeToPick::Type, UnsignedIntegralType>::value && (std::is_integral<typename Agr0Type::Type>::value || std::is_integral<typename std::remove_pointer<typename Agr0Type::Type>::type>::value) )
 			p.readUnsignedIntegerFromJson( arg0.get() );
-		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value && std::is_arithmetic<Agr0DataType>::value )
+		else if constexpr ( std::is_same<typename TypeToPick::Type, RealType>::value && (std::is_arithmetic<typename Agr0Type::Type>::value || std::is_arithmetic<typename std::remove_pointer<typename Agr0Type::Type>::type>::value) )
 			p.readRealFromJson( arg0.get() );
 		else if constexpr ( std::is_same<typename TypeToPick::Type, StringType>::value )
 			p.readStringFromJson( arg0.get() );
@@ -661,9 +659,10 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 		}
 		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+//		else if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value || std::is_same<MessageType, typename TypeToPick::Type>::value )
 		{
 			auto& msg = arg0.get();
-			if constexpr ( std::is_base_of<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				// TODO: check whether there is any difference between ext and non-ext cases
 				p.skipDelimiter( '{' );
@@ -676,7 +675,7 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 				else
 					p.skipDelimiter( '}' );
 			}
-			else if constexpr ( std::is_base_of<VectorOfMessageType, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
+			else if constexpr ( std::is_same<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				// TODO: check whether there is any difference between ext and non-ext cases
 				p.skipDelimiter( '{' );
