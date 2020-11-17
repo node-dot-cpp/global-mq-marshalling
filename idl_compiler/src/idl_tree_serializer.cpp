@@ -555,16 +555,53 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 	return ok;
 }
 
-bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct )
 {
+	if ( !ct.processingOK )
+		return false;
+
 	std::vector<CompositeType*> stack;
 	bool ok = true;
+
+	if ( ct.isAlias )
+	{
+		stack.push_back( &ct );
+		size_t structIdx = (size_t)(-1);
+		for ( size_t i=0; i<s.structs.size(); ++i )
+			if ( ct.aliasOf == s.structs[i]->name )
+			{
+				structIdx = i;
+				if ( ct.isNonExtendable && !s.structs[i]->isNonExtendable )
+				{
+					fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str(), s.structs[i]->type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+					ok = false;
+				}
+				s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+				impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
+				break;
+			}
+		if ( structIdx == (size_t)(-1) )
+		{
+			fprintf( stderr, "%s, line %d: %s \"%s\" not found\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
+			ok = false;
+		}
+		return ok;
+	}
+	else
+	{
+		return impl_processCompositeTypeNamesInMessagesAndPublishables( s, ct, stack );
+	}
+
+}
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
+{
+	bool ok = true;
 	for ( auto& s : r.messages )
-		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
-	for ( auto& s : r.publishables )
-		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
-	for ( auto& s : r.structs )
-		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+//	for ( auto& s : r.publishables )
+//		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
+//	for ( auto& s : r.structs )
+//		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
 	return ok;
 }
 
@@ -643,7 +680,10 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		else 
 		{
 			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+			if ( !obj_1->isAlias )
+				generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+			else
+				generateMessageAlias( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
 		}
 	}
 
@@ -1398,6 +1438,40 @@ void generateMessage( FILE* header, CompositeType& s )
 
 	impl_generateComposeFunction( header, s );
 	impl_generateParseFunction( header, s );
+}
+
+void generateMessageAlias( FILE* header, CompositeType& s )
+{
+	bool checked = impl_checkFollowingExtensionRules(s);
+	if ( !checked )
+		throw std::exception();
+
+	fprintf( header, "//**********************************************************************\n" );
+	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	for ( auto t:s.protoList )
+		switch ( t )
+		{
+			case CompositeType::Proto::gmq: fprintf( header, "GMQ " ); break;
+			case CompositeType::Proto::json: fprintf( header, "JSON " ); break;
+			default: assert( false );
+		}
+	fprintf( header, "(Alias of %s)\n", s.aliasOf.c_str() );
+	fprintf( header, "\n" );
+	fprintf( header, "//**********************************************************************\n\n" );
+
+	// compose function
+	fprintf( header, "template<class ComposerT, typename ... Args>\n"
+	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
+	fprintf( header, "\t%s_%s_compose(composer, std::forward<Args>( args )...);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
+	fprintf( header, "}\n\n" );
+
+	// compose function
+	fprintf( header, "template<class ParserT, typename ... Args>\n"
+	"void %s_%s_parse(ParserT& p, Args&& ... args)\n"
+	"{\n", s.type2string(), s.name.c_str() );
+	fprintf( header, "\t%s_%s_parse(p, std::forward<Args>( args )...);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
+	fprintf( header, "}\n\n" );
 }
 
 

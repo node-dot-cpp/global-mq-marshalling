@@ -132,9 +132,10 @@ public:
 			case Type::undefined: return "UNDEFINED";
 			case Type::message: return "MESSAGE";
 			case Type::publishable: return "UNDEFINED";
-			case Type::structure: return "STRUCTURE";
+			case Type::structure: return "STRUCT";
 			default:
 				assert( false );
+				return "";
 		}
 	}
 
@@ -144,7 +145,10 @@ public:
 	enum Proto { json, gmq };
 	set<Proto> protoList;
 	bool isNonExtendable = false;
-	bool processingOK = true;
+	bool isAlias = false;
+	string aliasOf;
+
+	bool processingOK = true; // used by checker
 };
 
 class Root
