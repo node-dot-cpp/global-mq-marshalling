@@ -223,7 +223,7 @@ void testParsingJsonFile()
 				m::STRUCTURE_CharacterParam_parse( 
 					parser, 
 					m::ID = &(data.charParams.id), 
-					m::Size = m::MessageWrapperForParsing( [&](auto& parser){ m::STRUCTURE_Size_parse( parser, m::X = &(data.charParams.size.X), m::Y = &(data.charParams.size.Y), m::Z = &(data.charParams.size.z) );} ) 
+					m::Size = m::MessageWrapperForParsing( [&](auto& parser){ m::STRUCTURE_Size_parse( parser, m::X = &(data.charParams.size.x), m::Y = &(data.charParams.size.y), m::Z = &(data.charParams.size.z) );} ) 
 				);
 			} 
 		), 

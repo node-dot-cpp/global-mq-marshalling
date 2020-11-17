@@ -1,3 +1,19 @@
+/*/////////////////////////////////////
+// Error case: cyclic dependency
+
+MESSAGE PROTO=JSON,GMQ NONEXTENDABLE base {
+  STRUCT cyclic_1 c;
+};
+
+STRUCT cyclic_1 {
+	STRUCT cyclic_2 d;
+};
+
+STRUCT cyclic_2 {
+	STRUCT cyclic_1 e;
+};
+///////////////////////////////////*/
+
 
 MESSAGE PROTO = JSON LevelTraceData{
 	STRUCT CharacterParam CharacterParam;
