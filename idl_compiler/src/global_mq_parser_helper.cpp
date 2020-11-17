@@ -543,7 +543,7 @@ YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensio
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
 
-YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, bool isAlias = false, string aliasOf = "")
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
@@ -555,6 +555,14 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
 	yy->isNonExtendable = isNonExtendable;
+	yy->isAlias = isAlias;
+	if ( isAlias )
+	{
+		assert( aliasOf.size() != 0 );
+		yy->aliasOf = aliasOf;
+	}
+	else
+		assert( aliasOf.empty() );
 	if ( protoList != nullptr )
 	{
 		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
@@ -585,6 +593,13 @@ YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
 	return createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, nullptr, id);
+}
+
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId)
+{
+	unique_ptr<YyBase> d0(structId);
+	YyIdentifier* si = yystype_cast<YyIdentifier*>(structId);
+	return createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id, true, si->text);
 }
 
 static

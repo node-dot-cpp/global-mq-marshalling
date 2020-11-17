@@ -1,36 +1,76 @@
-/*
+/*/////////////////////////////////////
+// Error case: cyclic dependency
+
+MESSAGE PROTO=JSON,GMQ NONEXTENDABLE base {
+  STRUCT cyclic_1 c;
+};
+
+STRUCT cyclic_1 {
+	STRUCT cyclic_2 d;
+};
+
+STRUCT cyclic_2 {
+	STRUCT cyclic_1 e;
+};
+///////////////////////////////////*/
+
+MESSAGE PROTO = JSON, GMQ point32_alias = STRUCT point3D;
+
+
+MESSAGE PROTO = JSON LevelTraceData{
+	STRUCT CharacterParam CharacterParam;
+	VECTOR<STRUCT POINT3DREAL> Points;
+};
+
+STRUCT CharacterParam{
+	INTEGER ID;
+	STRUCT Size Size;
+};
+
+STRUCT Size{
+  REAL X;
+  REAL Y;
+  REAL Z;
+};
+
+STRUCT POINT3DREAL{
+  REAL X;
+  REAL Y;
+  REAL Z;
+};
+
 MESSAGE PROTO = JSON, GMQ PolygonSt{
-	VECTOR<MESSAGE PolygonMap> polygonMap;
-	VECTOR<MESSAGE PolygonMap> concaveMap;
-	VECTOR<MESSAGE ObstacleMap> obstacleMap;
-	VECTOR<MESSAGE LineMap> portalMap;
-	VECTOR<MESSAGE LineMap> jumpMap;
+	VECTOR<STRUCT PolygonMap> polygonMap;
+	VECTOR<STRUCT PolygonMap> concaveMap;
+	VECTOR<STRUCT ObstacleMap> obstacleMap;
+	VECTOR<STRUCT LineMap> portalMap;
+	VECTOR<STRUCT LineMap> jumpMap;
 	REAL polygonSpeed;
 };
 
-MESSAGE PROTO = JSON, GMQ LineMap{
-	VECTOR<MESSAGE Line> LineMap;
+STRUCT LineMap{
+	VECTOR<STRUCT Line> LineMap;
 };
 
-MESSAGE PROTO = JSON, GMQ Line{
-	VECTOR<MESSAGE NONEXTENDABLE Vertex> a;
-	VECTOR<MESSAGE NONEXTENDABLE Vertex> b;
+STRUCT Line{
+	VECTOR<STRUCT NONEXTENDABLE Vertex> a;
+	VECTOR<STRUCT NONEXTENDABLE Vertex> b;
 };
 
-MESSAGE PROTO = JSON, GMQ ObstacleMap{
-	VECTOR<MESSAGE PolygonMap> ObstacleMap;
+STRUCT ObstacleMap{
+	VECTOR<STRUCT PolygonMap> ObstacleMap;
 };
 
-MESSAGE PROTO = JSON, GMQ PolygonMap{
-	VECTOR<MESSAGE NONEXTENDABLE Vertex> PolygonMap;
+STRUCT PolygonMap{
+	VECTOR<STRUCT NONEXTENDABLE Vertex> PolygonMap;
 };
 
-MESSAGE PROTO = JSON, GMQ NONEXTENDABLE Vertex{
+STRUCT NONEXTENDABLE Vertex{
   INTEGER x;
   INTEGER y;
   INTEGER z;
 };
-*/
+
 
 
 STRUCT NONEXTENDABLE point {
@@ -58,7 +98,6 @@ MESSAGE PROTO=JSON,GMQ message_one {
 };
 
 MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
-  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
   STRUCT point point;
 };
 

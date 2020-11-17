@@ -61,6 +61,7 @@ extern int yylex();
 file : { $$ = 0; }
 	| file line_directive { $$ = 0; releaseYys2($1, $2); }
 	| file message { $$ = addMessageToFile($1, $2); }
+	| file message_alias { $$ = addMessageToFile($1, $2); }
 	| file publishable { $$ = addPublishableToFile($1, $2); }
 	| file struct { $$ = addStructToFile($1, $2); }
 ;
@@ -68,6 +69,12 @@ file : { $$ = 0; }
 line_directive
 	: KW_HASH_LINE INTEGER_LITERAL ';' { $$ = 0; processLineDirective($2, 0); releaseYys2($1, $3); }
 	| KW_HASH_LINE INTEGER_LITERAL STRING_LITERAL ';' { $$ = 0; processLineDirective($2, $3); releaseYys2($1, $4); }
+;
+
+message_alias
+	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, false, $4, $5, $8); releaseYys5($2, $3, $6, $7, $9); }
+	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, true, $5, $6, $9); releaseYys6($2, $3, $4, $7, $8, $10); }
+	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, true, $4, $6, $9); releaseYys6($2, $3, $5, $7, $8, $10); }
 ;
 
 message_begin

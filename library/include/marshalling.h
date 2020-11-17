@@ -665,28 +665,12 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 			if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				// TODO: check whether there is any difference between ext and non-ext cases
-				p.skipDelimiter( '{' );
-				if ( !p.isDelimiter( '}' ) ) // non-empty message
-				{
-					msg.parse( p );
-					assert( p.isDelimiter( '}' ) );
-					p.skipDelimiter( '}' );
-				}
-				else
-					p.skipDelimiter( '}' );
+				msg.parse( p );
 			}
 			else if constexpr ( std::is_same<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				// TODO: check whether there is any difference between ext and non-ext cases
-				p.skipDelimiter( '{' );
-				if ( !p.isDelimiter( '}' ) ) // non-empty message
-				{
-					msg.parse( p );
-					assert( p.isDelimiter( '}' ) );
-					p.skipDelimiter( '}' );
-				}
-				else
-					p.skipDelimiter( '}' );
+				msg.parse( p );
 			}
 			else
 				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
@@ -802,19 +786,15 @@ void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typenam
 			{
 				// TODO: check whether there are any difference between ext and non-ext case
 				json::addNamePart( composer, name );
-				composer.buff.appendUint8( '{' );
 				auto& msg = arg0.get();
 				msg.compose(composer);
-				composer.buff.appendUint8( '}' );
 			}
 			else if constexpr ( std::is_base_of<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				// TODO: check whether there are any difference between ext and non-ext case
 				json::addNamePart( composer, name );
-				composer.buff.appendUint8( '{' );
 				auto& msg = arg0.get();
 				msg.compose(composer);
-				composer.buff.appendUint8( '}' );
 			}
 		}
 		else

@@ -85,6 +85,8 @@ YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YY
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId);
+
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
 YYSTYPE createIntegerTypeWithLimits(YYSTYPE token, bool hasLowLimit, bool low_flag, YYSTYPE low_expr, bool hasHighLimit, YYSTYPE high_expr, bool high_flag);
