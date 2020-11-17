@@ -8,5 +8,6 @@ int main()
 	runJsonSample();
 	runGmqSample();
 	testParsingJsonFile();
+	testMessageAliases();
 //	testSubscriptionTest();
 }

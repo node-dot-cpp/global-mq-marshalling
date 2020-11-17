@@ -72,6 +72,23 @@ constexpr y_Type::TypeConverter y;
 constexpr z_Type::TypeConverter z;
 
 //**********************************************************************
+// MESSAGE "point32_alias" Targets: JSON GMQ (Alias of point3D)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_point32_alias_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_point3D_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_point32_alias_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
+}
+
+//**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
 // 1. STRUCT CharacterParam (REQUIRED)
 // 2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
@@ -584,14 +601,14 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "CharacterParam" Targets: JSON (2 parameters)
+// STRUCT "CharacterParam" Targets: JSON (2 parameters)
 // 1. INTEGER ID (REQUIRED)
 // 2. STRUCT Size (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_CharacterParam_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_CharacterParam_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -605,7 +622,7 @@ void STRUCTURE_CharacterParam_compose(ComposerT& composer, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	static_assert( ComposerT::proto == Proto::JSON, "this STRUCTURE assumes only JSON protocol" );
+	static_assert( ComposerT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
 impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ID", arg_1_type::nameAndTypeID, args...);
 composer.buff.append( ",\n  ", 4 );
@@ -613,7 +630,7 @@ impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (i
 composer.buff.append( "\n}", 2 );}
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_CharacterParam_parse(ParserT& p, Args&& ... args)
+void STRUCT_CharacterParam_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -627,7 +644,7 @@ void STRUCTURE_CharacterParam_parse(ParserT& p, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	static_assert( ParserT::proto == Proto::JSON, "this STRUCTURE assumes only JSON protocol" );
+	static_assert( ParserT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 	p.skipDelimiter( '{' );
 	for ( ;; )
 	{
@@ -653,7 +670,7 @@ void STRUCTURE_CharacterParam_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "Size" Targets: JSON (3 parameters)
+// STRUCT "Size" Targets: JSON (3 parameters)
 // 1. REAL X (REQUIRED)
 // 2. REAL Y (REQUIRED)
 // 3. REAL Z (REQUIRED)
@@ -661,7 +678,7 @@ void STRUCTURE_CharacterParam_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_Size_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_Size_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -677,7 +694,7 @@ void STRUCTURE_Size_compose(ComposerT& composer, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	static_assert( ComposerT::proto == Proto::JSON, "this STRUCTURE assumes only JSON protocol" );
+	static_assert( ComposerT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
 impl::json::composeParamToJson<ComposerT, arg_1_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "X", arg_1_type::nameAndTypeID, args...);
 composer.buff.append( ",\n  ", 4 );
@@ -687,7 +704,7 @@ impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,
 composer.buff.append( "\n}", 2 );}
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_Size_parse(ParserT& p, Args&& ... args)
+void STRUCT_Size_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -703,7 +720,7 @@ void STRUCTURE_Size_parse(ParserT& p, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	static_assert( ParserT::proto == Proto::JSON, "this STRUCTURE assumes only JSON protocol" );
+	static_assert( ParserT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 	p.skipDelimiter( '{' );
 	for ( ;; )
 	{
@@ -731,7 +748,7 @@ void STRUCTURE_Size_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "POINT3DREAL" Targets: JSON (3 parameters)
+// STRUCT "POINT3DREAL" Targets: JSON (3 parameters)
 // 1. REAL X (REQUIRED)
 // 2. REAL Y (REQUIRED)
 // 3. REAL Z (REQUIRED)
@@ -739,7 +756,7 @@ void STRUCTURE_Size_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -755,7 +772,7 @@ void STRUCTURE_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	static_assert( ComposerT::proto == Proto::JSON, "this STRUCTURE assumes only JSON protocol" );
+	static_assert( ComposerT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
 impl::json::composeParamToJson<ComposerT, arg_1_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "X", arg_1_type::nameAndTypeID, args...);
 composer.buff.append( ",\n  ", 4 );
@@ -765,7 +782,7 @@ impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,
 composer.buff.append( "\n}", 2 );}
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_POINT3DREAL_parse(ParserT& p, Args&& ... args)
+void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -781,7 +798,7 @@ void STRUCTURE_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 		ensureUniqueness(args.nameAndTypeID...);
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
-	static_assert( ParserT::proto == Proto::JSON, "this STRUCTURE assumes only JSON protocol" );
+	static_assert( ParserT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 	p.skipDelimiter( '{' );
 	for ( ;; )
 	{
@@ -809,13 +826,13 @@ void STRUCTURE_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "LineMap" Targets: JSON GMQ (1 parameters)
+// STRUCT "LineMap" Targets: JSON GMQ (1 parameters)
 // 1. VECTOR< STRUCT Line> LineMap (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_LineMap_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -841,7 +858,7 @@ void STRUCTURE_LineMap_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_LineMap_parse(ParserT& p, Args&& ... args)
+void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -884,14 +901,14 @@ void STRUCTURE_LineMap_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "Line" Targets: JSON GMQ (2 parameters)
+// STRUCT "Line" Targets: JSON GMQ (2 parameters)
 // 1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
 // 2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_Line_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_Line_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -922,7 +939,7 @@ void STRUCTURE_Line_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_Line_parse(ParserT& p, Args&& ... args)
+void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -970,13 +987,13 @@ void STRUCTURE_Line_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "ObstacleMap" Targets: JSON GMQ (1 parameters)
+// STRUCT "ObstacleMap" Targets: JSON GMQ (1 parameters)
 // 1. VECTOR< STRUCT PolygonMap> ObstacleMap (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1002,7 +1019,7 @@ void STRUCTURE_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_ObstacleMap_parse(ParserT& p, Args&& ... args)
+void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -1045,13 +1062,13 @@ void STRUCTURE_ObstacleMap_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "PolygonMap" Targets: JSON GMQ (1 parameters)
+// STRUCT "PolygonMap" Targets: JSON GMQ (1 parameters)
 // 1. VECTOR<NONEXTENDABLE STRUCT Vertex> PolygonMap (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_PolygonMap_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1077,7 +1094,7 @@ void STRUCTURE_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_PolygonMap_parse(ParserT& p, Args&& ... args)
+void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -1120,7 +1137,7 @@ void STRUCTURE_PolygonMap_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "Vertex" NONEXTENDABLE Targets: JSON GMQ (3 parameters)
+// STRUCT "Vertex" NONEXTENDABLE Targets: JSON GMQ (3 parameters)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 // 3. INTEGER z (REQUIRED)
@@ -1128,7 +1145,7 @@ void STRUCTURE_PolygonMap_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_Vertex_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_Vertex_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1164,7 +1181,7 @@ void STRUCTURE_Vertex_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_Vertex_parse(ParserT& p, Args&& ... args)
+void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -1217,14 +1234,14 @@ void STRUCTURE_Vertex_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
+// STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_point_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_point_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1255,7 +1272,7 @@ void STRUCTURE_point_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_point_parse(ParserT& p, Args&& ... args)
+void STRUCT_point_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -1303,7 +1320,7 @@ void STRUCTURE_point_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCTURE "point3D" Targets: JSON GMQ (3 parameters)
+// STRUCT "point3D" Targets: JSON GMQ (3 parameters)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 // 3. INTEGER z (REQUIRED)
@@ -1311,7 +1328,7 @@ void STRUCTURE_point_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCTURE_point3D_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_point3D_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1347,7 +1364,7 @@ void STRUCTURE_point3D_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCTURE_point3D_parse(ParserT& p, Args&& ... args)
+void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 

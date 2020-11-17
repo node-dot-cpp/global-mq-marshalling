@@ -14,6 +14,8 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
+MESSAGE PROTO = JSON, GMQ point32_alias = STRUCT point3D;
+
 
 MESSAGE PROTO = JSON LevelTraceData{
 	STRUCT CharacterParam CharacterParam;
