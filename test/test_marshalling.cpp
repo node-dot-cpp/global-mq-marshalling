@@ -236,7 +236,7 @@ void testParsingJsonFile()
 	if ( data.points.size() )
 	{
 		fmt::print( "Starting point: ({}, {}, {})\n", data.points[0].x, data.points[0].y, data.points[0].z );
-		fmt::print( "Ending point:   ({}, {}, {})\n", data.points.front().x, data.points.front().y, data.points.front().z );
+		fmt::print( "Ending point:   ({}, {}, {})\n", data.points.back().x, data.points.back().y, data.points.back().z );
 	}
 }
 
