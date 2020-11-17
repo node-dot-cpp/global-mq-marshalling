@@ -466,14 +466,21 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack )
 {
+	if ( !ct.processingOK )
+		return false;
+
 	for ( size_t i=0; i<stack.size(); ++i )
 	{
 		if ( &ct == stack[i] )
 		{
 			fprintf( stderr, "Error: cyclic dependency\n" );
 			for ( size_t j=i; j<stack.size(); ++j )
+			{
+				stack[j]->processingOK = false;
 				fprintf( stderr, "    File \"%s\", line %d: %s %s depends on ...\n", stack[j]->location.fileName.c_str(), stack[j]->location.lineNumber, stack[j]->type2string(), stack[j]->name.c_str() );
-			fprintf( stderr, "    File \"%s\", line %d: %s %s depends on ...\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
+			}
+			ct.processingOK = false;
+			fprintf( stderr, "    File \"%s\", line %d: %s %s\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
 			return false;
 		}
 	}
@@ -508,14 +515,6 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 							ok = false;
 						}
-						/*for ( auto proto : ct.protoList )
-							if ( s.structs[i]->protoList.find( proto ) == s.structs[i]->protoList.end() )
-							{
-								fprintf( stderr, "%s, line %d: %s \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
-								fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", ct.location.fileName.c_str(), ct.location.lineNumber );
-								fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
-								ok = false;
-							}*/
 						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
 						impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 						break;

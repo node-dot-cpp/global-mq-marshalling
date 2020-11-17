@@ -144,6 +144,7 @@ public:
 	enum Proto { json, gmq };
 	set<Proto> protoList;
 	bool isNonExtendable = false;
+	bool processingOK = true;
 };
 
 class Root
