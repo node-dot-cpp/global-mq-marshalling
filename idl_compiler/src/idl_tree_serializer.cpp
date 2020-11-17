@@ -464,54 +464,39 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 	return ok;
 }
 
-bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct)
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack )
 {
-	bool ok = true;
-		for ( auto& param : ct.members )
+	for ( size_t i=0; i<stack.size(); ++i )
+	{
+		if ( &ct == stack[i] )
 		{
-			if ( param->type.kind == MessageParameterType::KIND::MESSAGE || param->type.kind == MessageParameterType::KIND::PUBLISHABLE )
+			fprintf( stderr, "Error: cyclic dependency\n" );
+			for ( size_t j=i; j<stack.size(); ++j )
+				fprintf( stderr, "    File \"%s\", line %d: %s %s depends on ...\n", stack[j]->location.fileName.c_str(), stack[j]->location.lineNumber, stack[j]->type2string(), stack[j]->name.c_str() );
+			fprintf( stderr, "    File \"%s\", line %d: %s %s depends on ...\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
+			return false;
+		}
+	}
+
+	stack.push_back( &ct );
+
+	bool ok = true;
+
+	for ( auto& param : ct.members )
+	{
+		if ( param->type.kind == MessageParameterType::KIND::MESSAGE || param->type.kind == MessageParameterType::KIND::PUBLISHABLE )
+		{
+			fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+			ok = false;
+		}
+		else if ( param->type.kind == MessageParameterType::VECTOR )
+		{
+			if (  param->type.kind == MessageParameterType::KIND::VECTOR && ( param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
 			{
-				fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
+				fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
 				ok = false;
 			}
-			else if ( param->type.kind == MessageParameterType::VECTOR )
-			{
-				if (  param->type.kind == MessageParameterType::KIND::VECTOR && ( param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
-				{
-					fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
-					ok = false;
-				}
-				else if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
-				{
-					param->type.messageIdx = (size_t)(-1);
-					for ( size_t i=0; i<s.structs.size(); ++i )
-						if ( param->type.name == s.structs[i]->name )
-						{
-							param->type.messageIdx = i;
-							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
-							{
-								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
-								ok = false;
-							}
-							/*for ( auto proto : ct.protoList )
-								if ( s.structs[i]->protoList.find( proto ) == s.structs[i]->protoList.end() )
-								{
-									fprintf( stderr, "%s, line %d: %s \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
-									fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", ct.location.fileName.c_str(), ct.location.lineNumber );
-									fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
-									ok = false;
-								}*/
-							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-							break;
-						}
-					if ( param->type.messageIdx == (size_t)(-1) )
-					{
-						fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
-						ok = false;
-					}
-				}
-			}
-			else if ( param->type.kind == MessageParameterType::KIND::STRUCT ) // extentability only
+			else if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
 			{
 				param->type.messageIdx = (size_t)(-1);
 				for ( size_t i=0; i<s.structs.size(); ++i )
@@ -520,30 +505,67 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 						param->type.messageIdx = i;
 						if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
 						{
-							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 							ok = false;
 						}
+						/*for ( auto proto : ct.protoList )
+							if ( s.structs[i]->protoList.find( proto ) == s.structs[i]->protoList.end() )
+							{
+								fprintf( stderr, "%s, line %d: %s \"%s\" does not support all protocols of current MESSAGE\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
+								fprintf( stderr, "             see declaration of current CompositeType at %s, line %d\n", ct.location.fileName.c_str(), ct.location.lineNumber );
+								fprintf( stderr, "             see declaration of CompositeType \"%s\" at %s, line %d\n", param->type.name.c_str(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+								ok = false;
+							}*/
+						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+						impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 						break;
 					}
 				if ( param->type.messageIdx == (size_t)(-1) )
 				{
-					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
+					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
 					ok = false;
 				}
 			}
 		}
+		else if ( param->type.kind == MessageParameterType::KIND::STRUCT ) // extentability only
+		{
+			param->type.messageIdx = (size_t)(-1);
+			for ( size_t i=0; i<s.structs.size(); ++i )
+				if ( param->type.name == s.structs[i]->name )
+				{
+					param->type.messageIdx = i;
+					if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
+					{
+						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+						ok = false;
+					}
+					s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
+					break;
+				}
+			if ( param->type.messageIdx == (size_t)(-1) )
+			{
+				fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
+				ok = false;
+			}
+		}
+	}
+
+	stack.pop_back();
+
 	return ok;
 }
 
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
 {
+	std::vector<CompositeType*> stack;
 	bool ok = true;
 	for ( auto& s : r.messages )
-		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
 	for ( auto& s : r.publishables )
-		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
 	for ( auto& s : r.structs )
-		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
 	return ok;
 }
 
