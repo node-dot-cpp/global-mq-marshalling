@@ -16,6 +16,7 @@ add_custom_command(
 
 add_executable(test_marshalling
     main.cpp
+    test_marshalling.cpp
     ${IDL_OUTPUT}
 )
 
