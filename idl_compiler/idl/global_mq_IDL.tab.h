@@ -62,8 +62,7 @@
      KW_BLOB = 278,
      KW_VECTOR = 279,
      KW_PROTO = 280,
-     KW_SCOPE = 281,
-     KW_ID = 282
+     KW_SCOPE = 281
    };
 #endif
 

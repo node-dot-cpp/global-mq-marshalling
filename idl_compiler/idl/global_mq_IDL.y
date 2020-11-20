@@ -47,7 +47,6 @@
 %token KW_VECTOR
 %token KW_PROTO
 %token KW_SCOPE
-%token KW_ID
 
 %error-verbose
 %start file
