@@ -5,6 +5,30 @@
 
 namespace m {
 
+//////////////////////////////////////////////////////////////
+//
+//  Scopes:
+//
+//  scope_one
+//  {
+//    point32_alias
+//  }
+//
+//  level_trace
+//  {
+//    LevelTraceData
+//  }
+//
+//  infrastructural
+//  {
+//    PolygonSt
+//    message_one
+//    point
+//    point3D
+//  }
+//
+//////////////////////////////////////////////////////////////
+
 using CharacterParam_Type = NamedParameter<struct CharacterParam_Struct>;
 using ID_Type = NamedParameter<struct ID_Struct>;
 using LineMap_Type = NamedParameter<struct LineMap_Struct>;
@@ -71,6 +95,8 @@ constexpr x_Type::TypeConverter x;
 constexpr y_Type::TypeConverter y;
 constexpr z_Type::TypeConverter z;
 
+namespace scope_one {
+
 //**********************************************************************
 // MESSAGE "point32_alias" Targets: JSON GMQ (Alias of point3D)
 
@@ -87,6 +113,10 @@ void MESSAGE_point32_alias_parse(ParserT& p, Args&& ... args)
 {
 	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
 }
+
+} // namespace scope_one 
+
+namespace level_trace {
 
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
@@ -156,6 +186,10 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 		throw std::exception(); // bad format
 	}
 }
+
+} // namespace level_trace 
+
+namespace infrastructural {
 
 //**********************************************************************
 // MESSAGE "PolygonSt" Targets: JSON GMQ (6 parameters)
@@ -599,6 +633,8 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 		}
 	}
 }
+
+} // namespace infrastructural 
 
 //**********************************************************************
 // STRUCT "CharacterParam" Targets: JSON (2 parameters)
