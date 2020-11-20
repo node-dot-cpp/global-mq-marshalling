@@ -81,7 +81,7 @@ YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
 
-YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createMessage(YYSTYPE token, YYSTYPE scope, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
@@ -126,6 +126,8 @@ YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE value
 YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit);
 
 YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id);
+
+YYSTYPE createScopeValue(YYSTYPE id);
 
 YYSTYPE addIdentifier(YYSTYPE list, YYSTYPE id);
 YYSTYPE addExpression(YYSTYPE list, YYSTYPE id, YYSTYPE expr);

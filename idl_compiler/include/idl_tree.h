@@ -142,6 +142,7 @@ public:
 public:
 	vector<unique_ptr<MessageParameter>> members;
 	string name;
+	double scopeID = 0; // we will analize/sanitize it at time of code generation
 	enum Proto { json, gmq };
 	set<Proto> protoList;
 	bool isNonExtendable = false;

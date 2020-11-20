@@ -107,6 +107,10 @@ struct YyIdentifierList : public YyBase {
 	vector<string> ids;
 };
 
+struct YyScopeID : public YyBase {
+	double id;
+};
+
 struct YyToken : public YyBase {
 	int token;
 	std::string text;
@@ -543,7 +547,7 @@ YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensio
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
 
-YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, bool isAlias = false, string aliasOf = "")
+YYSTYPE createMessageOrPublishable(YYSTYPE token, double scopeID, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, bool isAlias = false, string aliasOf = "")
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
@@ -577,29 +581,38 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool
 		}
 	}
 
+	yy->scopeID = scopeID;
+
 	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE createMessage(YYSTYPE token, YYSTYPE scope, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id);
+	if ( scope != nullptr )
+	{
+		unique_ptr<YyBase> d0(scope);
+		double scopeID = (yystype_cast<YyScopeID*>(scope))->id;
+		return createMessageOrPublishable(token, scopeID, CompositeType::Type::message, isNonExtendable, protoList, id);
+	}
+	else
+		return createMessageOrPublishable(token, -1, CompositeType::Type::message, isNonExtendable, protoList, id);
 }
 
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, protoList, id);
+	return createMessageOrPublishable(token, -1, CompositeType::Type::publishable, isNonExtendable, protoList, id);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, nullptr, id);
+	return createMessageOrPublishable(token, -1, CompositeType::Type::structure, isNonExtendable, nullptr, id);
 }
 
 YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId)
 {
 	unique_ptr<YyBase> d0(structId);
 	YyIdentifier* si = yystype_cast<YyIdentifier*>(structId);
-	return createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id, true, si->text);
+	return createMessageOrPublishable(token, -1, CompositeType::Type::message, isNonExtendable, protoList, id, true, si->text);
 }
 
 static
@@ -1032,6 +1045,16 @@ YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id)
 	yy->ids.push_back(name);
 
 	return d0.release();
+}
+
+YYSTYPE createScopeValue(YYSTYPE id)
+{
+	unique_ptr<YyBase> d0(id);
+	YyScopeID* yy = new YyScopeID();
+
+	yy->id = floatLiteralFromExpression( id );
+
+	return yy;
 }
 
 

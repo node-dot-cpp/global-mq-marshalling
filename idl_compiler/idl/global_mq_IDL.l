@@ -83,6 +83,8 @@ int createToken(int token)
 	"enum" { return createToken( KW_ENUM ); }
 
 	"PROTO" { return createToken( KW_PROTO ); }
+	"SCOPE" { return createToken( KW_SCOPE ); }
+	"ID" { return createToken( KW_ID ); }
 
 	"DEFAULT" { return createToken( KW_DEFAULT ); }
 	"MAX_LENGTH" { return createToken( KW_MAX_LENGTH ); }

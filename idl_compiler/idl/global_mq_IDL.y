@@ -46,6 +46,8 @@
 %token KW_BLOB
 %token KW_VECTOR
 %token KW_PROTO
+%token KW_SCOPE
+%token KW_ID
 
 %error-verbose
 %start file
@@ -78,15 +80,24 @@ message_alias
 ;
 
 message_begin
-	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, false, $4, $5); releaseYys3($2, $3, $6); }
-	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, true, $5, $6); releaseYys4($2, $3, $4, $7); }
-	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createMessage($1, true, $4, $6); releaseYys4($2, $3, $5, $7); }
-	| message_begin data_type IDENTIFIER ';' { $$ = addToMessage($1, createAttribute($2, $3)); releaseYys($4); }
+	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, 0, false, $4, $5); releaseYys3($2, $3, $6); }
+	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, 0, true, $5, $6); releaseYys4($2, $3, $4, $7); }
+	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createMessage($1, 0, true, $4, $6); releaseYys4($2, $3, $5, $7); }
+	| KW_MESSAGE scope KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, $2, false, $5, $6); releaseYys3($3, $4, $7); }
+	| KW_MESSAGE KW_NONEXTENDABLE scope KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, $3, true, $6, $7); releaseYys4($2, $4, $5, $8); }
+	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE scope  IDENTIFIER '{' { $$ = createMessage($1, $6, true, $4, $7); releaseYys4($2, $3, $5, $8); }
+;
+
+message_and_body
+	: message_begin data_type IDENTIFIER ';' { $$ = addToMessage($1, createAttribute($2, $3)); releaseYys($4); }
 	| message_begin KW_EXTENSION ':' { $$ = insertExtensionMarkerToMessage($1); releaseYys2($2, $3); }
+	| message_and_body data_type IDENTIFIER ';' { $$ = addToMessage($1, createAttribute($2, $3)); releaseYys($4); }
+	| message_and_body KW_EXTENSION ':' { $$ = insertExtensionMarkerToMessage($1); releaseYys2($2, $3); }
 ;
 
 message
 	: message_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
+	| message_and_body '}' ';' { $$ = $1; releaseYys2($2, $3); }
 ;
 
 publishable_begin
@@ -292,6 +303,10 @@ enum_values
 proto_values
 	: IDENTIFIER { $$ = addProtoValue(0, $1); }
 	| proto_values ',' IDENTIFIER { $$ = addProtoValue($1, $3); releaseYys($2); }
+;
+
+scope
+	: KW_SCOPE ':' KW_ID '=' INTEGER_LITERAL { $$ = createScopeValue($5); releaseYys4($1, $2, $3, $4); }
 ;
 
 expr
