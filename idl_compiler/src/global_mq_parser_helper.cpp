@@ -602,7 +602,7 @@ YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoLis
 	unique_ptr<YyBase> d1(numID);
 
 	size_t nID = CompositeType::invalid_num_id;
-	double numID_ = (yystype_cast<YyScopeID*>(numID))->id;
+	double numID_ = (yystype_cast<YyIntegerLiteral*>(numID))->value;
 	if ( numID_ < 0 )
 		nID = CompositeType::invalid_num_id;
 	else
@@ -610,7 +610,7 @@ YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoLis
 
 	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id);
 
-	CompositeType* msg = (yystype_cast<CompositeType*>(&(*ret)));
+	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
 	msg->scopeName = nameFromYyIdentifier( scopeName );
 	msg->numID = nID;
 
@@ -637,7 +637,7 @@ YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoLis
 	unique_ptr<YyBase> d0(structId);
 	YyIdentifier* si = yystype_cast<YyIdentifier*>(structId);
 	auto ret = impl_createMessage(token, isNonExtendable, protoList, scopeName, id, numID);
-	CompositeType* msg = (yystype_cast<CompositeType*>(&(*ret)));
+	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
 	msg->isAlias = true;
 	msg->aliasOf = si->text;
 	return ret;
