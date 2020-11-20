@@ -123,6 +123,9 @@ public:
 class CompositeType : public ObjectBase
 {
 public:
+	static constexpr size_t invalid_num_id = (size_t)(-1);
+
+public:
 	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
 	Type type = Type::undefined;
 	const char* type2string()
@@ -141,8 +144,9 @@ public:
 
 public:
 	vector<unique_ptr<MessageParameter>> members;
+	string scopeName;
 	string name;
-	double scopeID = 0; // we will analize/sanitize it at time of code generation
+	size_t numID = invalid_num_id; // we will analize/sanitize it at time of code generation
 	enum Proto { json, gmq };
 	set<Proto> protoList;
 	bool isNonExtendable = false;
@@ -152,12 +156,19 @@ public:
 	bool processingOK = true; // used by checker
 };
 
+struct Scope // used in post-processing
+{
+	string name;
+	std::vector<CompositeType*> objectList;
+};
+
 class Root
 {
 public:
 	vector<unique_ptr<CompositeType>> messages;
 	vector<unique_ptr<CompositeType>> publishables;
 	vector<unique_ptr<CompositeType>> structs;
+	vector<Scope> scopes; // used in post-processing
 };
 
 inline

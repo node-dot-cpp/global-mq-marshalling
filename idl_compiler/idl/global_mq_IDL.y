@@ -74,18 +74,15 @@ line_directive
 ;
 
 message_alias
-	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, false, $4, $5, $8); releaseYys5($2, $3, $6, $7, $9); }
-	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, true, $5, $6, $9); releaseYys6($2, $3, $4, $7, $8, $10); }
-	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, true, $4, $6, $9); releaseYys6($2, $3, $5, $7, $8, $10); }
+	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, false, $4, $5, $7, $9, $12); releaseYys7($2, $3, $6, $8, $10, $11, $13); }
+	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, true, $5, $6, $8, $10, $13); releaseYys8($2, $3, $4, $7, $9, $11, $12, $14); }
+	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, true, $4, $6, $8, $10, $13); releaseYys8($2, $3, $5, $7, $9, $11, $12, $14); }
 ;
 
 message_begin
-	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, 0, false, $4, $5); releaseYys3($2, $3, $6); }
-	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, 0, true, $5, $6); releaseYys4($2, $3, $4, $7); }
-	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createMessage($1, 0, true, $4, $6); releaseYys4($2, $3, $5, $7); }
-	| KW_MESSAGE scope KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, $2, false, $5, $6); releaseYys3($3, $4, $7); }
-	| KW_MESSAGE KW_NONEXTENDABLE scope KW_PROTO '=' proto_values IDENTIFIER '{' { $$ = createMessage($1, $3, true, $6, $7); releaseYys4($2, $4, $5, $8); }
-	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE scope  IDENTIFIER '{' { $$ = createMessage($1, $6, true, $4, $7); releaseYys4($2, $3, $5, $8); }
+	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '{' { $$ = createMessage($1, false, $4, $5, $7, $9); releaseYys5($2, $3, $6, $8, $10); }
+	| KW_MESSAGE KW_NONEXTENDABLE KW_PROTO '=' proto_values IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '{' { $$ = createMessage($1, true, $5, $6, $8, $10); releaseYys6($2, $3, $4, $7, $9, $11); }
+	| KW_MESSAGE KW_PROTO '=' proto_values KW_NONEXTENDABLE IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '{' { $$ = createMessage($1, true, $4, $6, $8, $10); releaseYys6($2, $3, $5, $7, $9, $11); }
 ;
 
 message_and_body
@@ -303,10 +300,6 @@ enum_values
 proto_values
 	: IDENTIFIER { $$ = addProtoValue(0, $1); }
 	| proto_values ',' IDENTIFIER { $$ = addProtoValue($1, $3); releaseYys($2); }
-;
-
-scope
-	: KW_SCOPE ':' KW_ID '=' INTEGER_LITERAL { $$ = createScopeValue($5); releaseYys4($1, $2, $3, $4); }
 ;
 
 expr

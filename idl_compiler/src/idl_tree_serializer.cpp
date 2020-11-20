@@ -154,7 +154,7 @@ void printMessage( CompositeType& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sMessage: name = \"%s\" %sTargets: ", offsetch, s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	printf( "%sMessage: name = \"%s:%s=%zd\" %sTargets: ", offsetch, s.scopeName.c_str(), s.name.c_str(), s.numID, s.isNonExtendable ? "NONEXTENDABLE " : "" );
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
@@ -652,10 +652,47 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 	return ok;
 }
 
+bool impl_populateScopes( Root& r )
+{
+	bool ok = true;
+	for ( auto& it : r.messages )
+	{
+		if ( it->numID == CompositeType::invalid_num_id )
+		{
+			// todo report
+			ok = false;
+			continue;
+		}
+
+		bool found = false;
+		for ( auto& s : r.scopes )
+		{
+			if ( it->scopeName == s.name )
+			{
+				s.objectList.push_back( &(*it) );
+				found = true;
+				break;
+			}
+		}
+
+		if ( !found )
+		{
+			{
+				Scope scope;
+				scope.name = it->scopeName;
+				scope.objectList.push_back( &(*it) );
+				r.scopes.push_back( std::move( scope ) );
+			}
+		}
+	}
+	return ok;
+}
+
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
+	ok = impl_populateScopes(s) && ok;
 	if ( !ok )
 		throw std::exception();
 

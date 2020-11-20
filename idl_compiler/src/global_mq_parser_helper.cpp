@@ -380,6 +380,18 @@ void releaseYys7(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE
 	delete yys6;
 }
 
+void releaseYys8(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6, YYSTYPE yys7)
+{
+	delete yys0;
+	delete yys1;
+	delete yys2;
+	delete yys3;
+	delete yys4;
+	delete yys5;
+	delete yys6;
+	delete yys7;
+}
+
 YYSTYPE createYyToken(const char* text, int line, int token)
 {
 	YyToken* yy = new YyToken();
@@ -547,7 +559,7 @@ YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensio
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
 
-YYSTYPE createMessageOrPublishable(YYSTYPE token, double scopeID, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, bool isAlias = false, string aliasOf = "")
+YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
@@ -559,14 +571,14 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, double scopeID, CompositeType:
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
 	yy->isNonExtendable = isNonExtendable;
-	yy->isAlias = isAlias;
+	/*yy->isAlias = isAlias;
 	if ( isAlias )
 	{
 		assert( aliasOf.size() != 0 );
 		yy->aliasOf = aliasOf;
 	}
 	else
-		assert( aliasOf.empty() );
+		assert( aliasOf.empty() );*/
 	if ( protoList != nullptr )
 	{
 		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
@@ -581,38 +593,54 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, double scopeID, CompositeType:
 		}
 	}
 
-	yy->scopeID = scopeID;
-
 	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE createMessage(YYSTYPE token, YYSTYPE scope, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID)
 {
-	if ( scope != nullptr )
-	{
-		unique_ptr<YyBase> d0(scope);
-		double scopeID = (yystype_cast<YyScopeID*>(scope))->id;
-		return createMessageOrPublishable(token, scopeID, CompositeType::Type::message, isNonExtendable, protoList, id);
-	}
+	unique_ptr<YyBase> d0(scopeName);
+	unique_ptr<YyBase> d1(numID);
+
+	size_t nID = CompositeType::invalid_num_id;
+	double numID_ = (yystype_cast<YyScopeID*>(numID))->id;
+	if ( numID_ < 0 )
+		nID = CompositeType::invalid_num_id;
 	else
-		return createMessageOrPublishable(token, -1, CompositeType::Type::message, isNonExtendable, protoList, id);
+		nID = numID_;
+
+	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id);
+
+	CompositeType* msg = (yystype_cast<CompositeType*>(&(*ret)));
+	msg->scopeName = nameFromYyIdentifier( scopeName );
+	msg->numID = nID;
+
+	return ret;
+}
+
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID)
+{
+	return impl_createMessage(token, isNonExtendable, protoList, scopeName, id, numID);
 }
 
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, -1, CompositeType::Type::publishable, isNonExtendable, protoList, id);
+	return impl_createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, protoList, id);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, -1, CompositeType::Type::structure, isNonExtendable, nullptr, id);
+	return impl_createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, nullptr, id);
 }
 
-YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId)
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId)
 {
 	unique_ptr<YyBase> d0(structId);
 	YyIdentifier* si = yystype_cast<YyIdentifier*>(structId);
-	return createMessageOrPublishable(token, -1, CompositeType::Type::message, isNonExtendable, protoList, id, true, si->text);
+	auto ret = impl_createMessage(token, isNonExtendable, protoList, scopeName, id, numID);
+	CompositeType* msg = (yystype_cast<CompositeType*>(&(*ret)));
+	msg->isAlias = true;
+	msg->aliasOf = si->text;
+	return ret;
 }
 
 static

@@ -57,6 +57,7 @@ void releaseYys4(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3);
 void releaseYys5(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4);
 void releaseYys6(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5);
 void releaseYys7(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6);
+void releaseYys8(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6, YYSTYPE yys7);
 
 YYSTYPE createYyToken(const char* text, int line, int token);
 
@@ -81,11 +82,11 @@ YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
 
-YYSTYPE createMessage(YYSTYPE token, YYSTYPE scope, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
-YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId);
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId);
 
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
