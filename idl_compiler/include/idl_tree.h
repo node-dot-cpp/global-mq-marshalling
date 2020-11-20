@@ -123,7 +123,7 @@ public:
 class CompositeType : public ObjectBase
 {
 public:
-	static constexpr size_t invalid_num_id = (size_t)(-1);
+	static constexpr uint64_t invalid_num_id = (uint64_t)(-1);
 
 public:
 	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
@@ -146,7 +146,7 @@ public:
 	vector<unique_ptr<MessageParameter>> members;
 	string scopeName;
 	string name;
-	size_t numID = invalid_num_id; // we will analize/sanitize it at time of code generation
+	uint64_t numID = invalid_num_id; // we will analize/sanitize it at time of code generation
 	enum Proto { json, gmq };
 	set<Proto> protoList;
 	bool isNonExtendable = false;

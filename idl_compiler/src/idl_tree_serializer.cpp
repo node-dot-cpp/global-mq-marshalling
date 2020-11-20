@@ -712,6 +712,34 @@ void impl_insertScopeList( FILE* header, Root& r )
 	fprintf( header, "//////////////////////////////////////////////////////////////\n\n" );
 }
 
+void impl_generateScopeEnum( FILE* header, Scope& scope )
+{
+	fprintf( header, "enum Messages { " );
+	for ( auto msg : scope.objectList )
+		fprintf( header, "%s = %lld, ", msg->name.c_str(), msg->numID );
+	fprintf( header, "};\n\n" );
+}
+
+void impl_generateScopeHandler( FILE* header, Scope& scope )
+{
+	fprintf( header, 
+		"\ttemplate<class BufferT, class ... HandlersT >\n"
+		"\tvoid handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
+		"\t{\n"
+		"\t\tm::GmqParser parser( buffer );\n"
+		"\t\tuint64_t msgID;\n"
+		"\t\tparser.parseUnsignedInteger( msgID );\n"
+		"\t\tswitch ( msgID )\n"
+		"\t\t{\n" 
+	);
+	for ( auto msg : scope.objectList )
+		fprintf( header, "\t\t\tcase %s: impl::implHandleMessage<Messages::%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
+	fprintf( header, 
+		"\t\t}\n"
+		"\t}\n\n" );
+}
+
+
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
@@ -738,6 +766,9 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	for ( auto& scope : s.scopes )
 	{
 		fprintf( header, "namespace %s {\n\n", scope.name.c_str() );
+
+		impl_generateScopeEnum( header, scope );
+		impl_generateScopeHandler( header, scope );
 
 		for ( auto it : scope.objectList )
 		{

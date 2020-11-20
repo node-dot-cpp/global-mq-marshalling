@@ -601,7 +601,7 @@ YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoLis
 	unique_ptr<YyBase> d0(scopeName);
 	unique_ptr<YyBase> d1(numID);
 
-	size_t nID = CompositeType::invalid_num_id;
+	uint64_t nID = CompositeType::invalid_num_id;
 	double numID_ = (yystype_cast<YyIntegerLiteral*>(numID))->value;
 	if ( numID_ < 0 )
 		nID = CompositeType::invalid_num_id;
