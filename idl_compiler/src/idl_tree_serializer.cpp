@@ -688,6 +688,30 @@ bool impl_populateScopes( Root& r )
 	return ok;
 }
 
+void impl_insertScopeDetails( FILE* header, Scope& scope )
+{
+	assert( scope.objectList.size() != 0 );
+	fprintf( header, "//  %s\n", scope.name.c_str() );
+	fprintf( header, "//  {\n" );
+	for ( auto msg : scope.objectList )
+		fprintf( header, "//    %s\n", msg->name.c_str() );
+	fprintf( header, "//  }\n" );
+}
+
+void impl_insertScopeList( FILE* header, Root& r )
+{
+	fprintf( header, "//////////////////////////////////////////////////////////////\n" );
+	fprintf( header, "//\n" );
+	fprintf( header, "//  Scopes:\n" );
+	fprintf( header, "//\n" );
+	for ( auto& s : r.scopes )
+	{
+		impl_insertScopeDetails( header, s );
+		fprintf( header, "//\n" );
+	}
+	fprintf( header, "//////////////////////////////////////////////////////////////\n\n" );
+}
+
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
@@ -707,21 +731,29 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		"namespace m {\n\n",
 		fileName, fileName );
 
+	impl_insertScopeList( header, s );
+
 	generateParamNameBlock( header, params );
 
-	for ( auto& it : s.messages )
+	for ( auto& scope : s.scopes )
 	{
-		auto& obj_1 = it;
-		if ( obj_1 == nullptr )
-			fprintf( header, "// Message = <null>\n" );
-		else 
+		fprintf( header, "namespace %s {\n\n", scope.name.c_str() );
+
+		for ( auto it : scope.objectList )
 		{
-			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-			if ( !obj_1->isAlias )
-				generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
-			else
-				generateMessageAlias( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+			if ( it == nullptr )
+				fprintf( header, "// Message = <null>\n" );
+			else 
+			{
+				assert( typeid( *(it) ) == typeid( CompositeType ) );
+				if ( !it->isAlias )
+					generateMessage( header, *it );
+				else
+					generateMessageAlias( header, *it );
+			}
 		}
+
+		fprintf( header, "} // namespace %s \n\n", scope.name.c_str() );
 	}
 
 	for ( auto& it : s.structs )
