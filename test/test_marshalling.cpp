@@ -258,3 +258,14 @@ void testMessageAliases()
 	assert( pt3D.y == pt3DBack.y );
 	assert( pt3D.z == pt3DBack.z );
 }
+
+void testScopedMessageComposingAndParsing()
+{
+	Point3D pt3D = {123, 456, 789};
+	m::Buffer b;
+	m::scope_one::composeMessage<m::scope_one::Messages::point32_alias>( b, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z );
+
+	Point3D pt3DBack = {0, 0, 0};
+//	m::infrastructural::handleMessage( b, m::MessageHandler<m::infrastructural::Messages::point>([&](auto& parser){}) );
+	m::scope_one::handleMessage( b, m::MessageHandler([&](auto& parser){ m::STRUCT_point3D_parse( parser, m::x = &(pt3DBack.x), m::y = &(pt3DBack.y), m::z = &(pt3DBack.z) );}) );
+}

@@ -97,6 +97,22 @@ constexpr z_Type::TypeConverter z;
 
 namespace scope_one {
 
+enum Messages { point32_alias = 1, };
+
+	template<class BufferT, class ... HandlersT >
+	void handleMessage( BufferT& buffer, HandlersT ... handlers )
+	{
+		GmqParser parser( buffer );
+		uint64_t msgID;
+		parser.parseUnsignedInteger( &msgID );
+		switch ( msgID )
+		{
+			case point32_alias: impl::implHandleMessage<Messages::point32_alias>( parser, handlers... ); break;
+		}
+	}
+
+	template<Messages msgID, class BufferT, typename ... Args>
+	void composeMessage( BufferT& buffer, Args&& ... args );
 //**********************************************************************
 // MESSAGE "point32_alias" Targets: JSON GMQ (Alias of point3D)
 
@@ -114,10 +130,37 @@ void MESSAGE_point32_alias_parse(ParserT& p, Args&& ... args)
 	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
 }
 
+	template<Messages msgID, class BufferT, typename ... Args>
+	void composeMessage( BufferT& buffer, Args&& ... args )
+	{
+		m::GmqComposer composer( buffer );
+		impl::composeUnsignedInteger( composer, msgID );
+		switch ( msgID )
+		{
+			case point32_alias: MESSAGE_point32_alias_compose( composer, std::forward<Args>( args )... ); break;
+		}
+	}
+
 } // namespace scope_one 
 
 namespace level_trace {
 
+enum Messages { LevelTraceData = 1, };
+
+	template<class BufferT, class ... HandlersT >
+	void handleMessage( BufferT& buffer, HandlersT ... handlers )
+	{
+		GmqParser parser( buffer );
+		uint64_t msgID;
+		parser.parseUnsignedInteger( &msgID );
+		switch ( msgID )
+		{
+			case LevelTraceData: impl::implHandleMessage<Messages::LevelTraceData>( parser, handlers... ); break;
+		}
+	}
+
+	template<Messages msgID, class BufferT, typename ... Args>
+	void composeMessage( BufferT& buffer, Args&& ... args );
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
 // 1. STRUCT CharacterParam (REQUIRED)
@@ -187,10 +230,40 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 	}
 }
 
+	template<Messages msgID, class BufferT, typename ... Args>
+	void composeMessage( BufferT& buffer, Args&& ... args )
+	{
+		m::GmqComposer composer( buffer );
+		impl::composeUnsignedInteger( composer, msgID );
+		switch ( msgID )
+		{
+			case LevelTraceData: MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... ); break;
+		}
+	}
+
 } // namespace level_trace 
 
 namespace infrastructural {
 
+enum Messages { PolygonSt = 2, message_one = 3, point = 4, point3D = 5, };
+
+	template<class BufferT, class ... HandlersT >
+	void handleMessage( BufferT& buffer, HandlersT ... handlers )
+	{
+		GmqParser parser( buffer );
+		uint64_t msgID;
+		parser.parseUnsignedInteger( &msgID );
+		switch ( msgID )
+		{
+			case PolygonSt: impl::implHandleMessage<Messages::PolygonSt>( parser, handlers... ); break;
+			case message_one: impl::implHandleMessage<Messages::message_one>( parser, handlers... ); break;
+			case point: impl::implHandleMessage<Messages::point>( parser, handlers... ); break;
+			case point3D: impl::implHandleMessage<Messages::point3D>( parser, handlers... ); break;
+		}
+	}
+
+	template<Messages msgID, class BufferT, typename ... Args>
+	void composeMessage( BufferT& buffer, Args&& ... args );
 //**********************************************************************
 // MESSAGE "PolygonSt" Targets: JSON GMQ (6 parameters)
 // 1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
@@ -633,6 +706,20 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 		}
 	}
 }
+
+	template<Messages msgID, class BufferT, typename ... Args>
+	void composeMessage( BufferT& buffer, Args&& ... args )
+	{
+		m::GmqComposer composer( buffer );
+		impl::composeUnsignedInteger( composer, msgID );
+		switch ( msgID )
+		{
+			case PolygonSt: MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... ); break;
+			case message_one: MESSAGE_message_one_compose( composer, std::forward<Args>( args )... ); break;
+			case point: MESSAGE_point_compose( composer, std::forward<Args>( args )... ); break;
+			case point3D: MESSAGE_point3D_compose( composer, std::forward<Args>( args )... ); break;
+		}
+	}
 
 } // namespace infrastructural 
 
