@@ -812,12 +812,15 @@ void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typenam
 
 struct MessageHandlerBase {};
 
-template<class LambdaHandler, uint64_t msgID_>
+//template<uint64_t msgID_, class LambdaHandler>
+template<class LambdaHandler>
 class MessageHandler : public MessageHandlerBase
 {
-	static constexpr uint64_t msgID = msgID_;
 	LambdaHandler lhandler_;
-	MessageHandler(LambdaHandler &&lhandler) : lcompose_(std::forward<LambdaHandler>(lhandler)) {}
+public:
+//	static constexpr uint64_t msgID = msgID_;
+	static constexpr uint64_t msgID = 1;
+	MessageHandler(LambdaHandler &&lhandler) : lhandler_(std::forward<LambdaHandler>(lhandler)) {}
 	template<typename ParserT>
 	void handle( ParserT& parser ) { 
 		return lhandler_( parser ); 
@@ -826,18 +829,18 @@ class MessageHandler : public MessageHandlerBase
 
 namespace impl {
 
-template<uint64_t msgID>
-void implHandleMessage()
+template<uint64_t msgID, class ParserT>
+void implHandleMessage( ParserT& parser )
 {
 }
 
 template<uint64_t msgID, class ParserT, class HandlerT, class ... HandlersT >
 void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handlers )
 {
-	if constexpr ( handler::msgID == msgID )
+	if constexpr ( HandlerT::msgID == msgID )
 		handler.handle( parser );
 	else
-		implHandleMessage<msgID>( parser, handlers... );
+		implHandleMessage<msgID, ParserT, HandlersT...>( parser, handlers... );
 }
 
 } // namespace impl
