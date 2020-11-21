@@ -726,7 +726,7 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		"\ttemplate<class BufferT, class ... HandlersT >\n"
 		"\tvoid handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
 		"\t{\n"
-		"\t\tm::GmqParser parser( buffer );\n"
+		"\t\tGmqParser parser( buffer );\n"
 		"\t\tuint64_t msgID;\n"
 		"\t\tparser.parseUnsignedInteger( msgID );\n"
 		"\t\tswitch ( msgID )\n"
@@ -737,6 +737,19 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 	fprintf( header, 
 		"\t\t}\n"
 		"\t}\n\n" );
+}
+
+void impl_generateScopeComposer( FILE* header, Scope& scope )
+{
+	fprintf( header, 
+		"\ttemplate<Messages msgID, class BufferT, class MessageComposerT >\n"
+		"\tvoid composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
+		"\t{\n"
+		"\t\tm::GmqComposer composer( buffer );\n"
+		"\t\tcomposeUnsignedInteger( composer, msgID );\n"
+		"\t\tmsgComposer.compose( composer );\n"
+		"\t}\n\n"
+	);
 }
 
 
@@ -769,6 +782,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 		impl_generateScopeEnum( header, scope );
 		impl_generateScopeHandler( header, scope );
+		impl_generateScopeComposer( header, scope );
 
 		for ( auto it : scope.objectList )
 		{
