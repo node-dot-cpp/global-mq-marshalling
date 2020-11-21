@@ -738,7 +738,7 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		"\t{\n"
 		"\t\tGmqParser parser( buffer );\n"
 		"\t\tuint64_t msgID;\n"
-		"\t\tparser.parseUnsignedInteger( msgID );\n"
+		"\t\tparser.parseUnsignedInteger( &msgID );\n"
 		"\t\tswitch ( msgID )\n"
 		"\t\t{\n" 
 	);
@@ -765,7 +765,7 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 		"\tvoid composeMessage( BufferT& buffer, Args&& ... args )\n"
 		"\t{\n"
 		"\t\tm::GmqComposer composer( buffer );\n"
-		"\t\tcomposeUnsignedInteger( composer, msgID );\n"
+		"\t\timpl::composeUnsignedInteger( composer, msgID );\n"
 		"\t\tswitch ( msgID )\n"
 		"\t\t{\n" 
 	);
