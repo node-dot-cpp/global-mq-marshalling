@@ -759,6 +759,7 @@ void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
 
 void impl_generateScopeComposer( FILE* header, Scope& scope )
 {
+	assert( scope.objectList.size() != 0 );
 	/*fprintf( header, 
 		"\ttemplate<Messages msgID, class BufferT, class MessageComposerT >\n"
 		"\tvoid composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
@@ -774,13 +775,17 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 		"\t{\n"
 		"\t\tm::GmqComposer composer( buffer );\n"
 		"\t\timpl::composeUnsignedInteger( composer, msgID );\n"
-		"\t\tswitch ( msgID )\n"
-		"\t\t{\n" 
 	);
-	for ( auto msg : scope.objectList )
-		fprintf( header, "\t\t\tcase %s: %s( composer, std::forward<Args>( args )... ); break;\n", msg->name.c_str(), impl_generateComposeFunctionName(*msg).c_str() );
+	fprintf( header, "\t\tif constexpr ( msgID == %s )\n", scope.objectList[0]->name.c_str() );
+	fprintf( header, "\t\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
+	for ( size_t i=1; i<scope.objectList.size(); ++i )
+	{
+		fprintf( header, "\t\telse if constexpr ( msgID == %s )\n", scope.objectList[i]->name.c_str() );
+		fprintf( header, "\t\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[i])).c_str() );
+	}
 	fprintf( header, 
-		"\t\t}\n"
+		"\t\telse\n"
+		"\t\t\tstatic_assert( false, \"unexpected value of msgID\" );\n"
 		"\t}\n\n" );
 }
 

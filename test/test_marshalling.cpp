@@ -245,7 +245,7 @@ void testMessageAliases()
 	Point3D pt3D = {123, 456, 789};
 	m::Buffer b;
 	m::JsonComposer composer( b );
-	m::scope_one::MESSAGE_point32_alias_compose( composer, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z);
+	m::scope_one::MESSAGE_point3D_alias_compose( composer, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z);
 
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
@@ -253,7 +253,7 @@ void testMessageAliases()
 	m::JsonParser parser( b );
 	Point3D pt3DBack = {0, 0, 0};
 	double seventhParam = 0;
-	m::scope_one::MESSAGE_point32_alias_parse( parser, m::x = &(pt3DBack.x), m::y = &(pt3DBack.y), m::z = &(pt3DBack.z) );
+	m::scope_one::MESSAGE_point3D_alias_parse( parser, m::x = &(pt3DBack.x), m::y = &(pt3DBack.y), m::z = &(pt3DBack.z) );
 	assert( pt3D.x == pt3DBack.x );
 	assert( pt3D.y == pt3DBack.y );
 	assert( pt3D.z == pt3DBack.z );
@@ -261,11 +261,15 @@ void testMessageAliases()
 
 void testScopedMessageComposingAndParsing()
 {
+	Point3D pt = {444, 555};
 	Point3D pt3D = {123, 456, 789};
 	m::Buffer b;
-	m::scope_one::composeMessage<m::scope_one::Messages::point32_alias>( b, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z );
+	m::scope_one::composeMessage<m::scope_one::Messages::point3D_alias>( b, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z );
 
+	Point ptBack = {0, 0};
 	Point3D pt3DBack = {0, 0, 0};
-//	m::infrastructural::handleMessage( b, m::MessageHandler<m::infrastructural::Messages::point>([&](auto& parser){}) );
-	m::scope_one::handleMessage( b, m::MessageHandler([&](auto& parser){ m::STRUCT_point3D_parse( parser, m::x = &(pt3DBack.x), m::y = &(pt3DBack.y), m::z = &(pt3DBack.z) );}) );
+	m::scope_one::handleMessage( b, 
+		m::makeMessageHandler<m::scope_one::Messages::point3D_alias>([&](auto& parser){ m::STRUCT_point3D_parse( parser, m::x = &(pt3DBack.x), m::y = &(pt3DBack.y), m::z = &(pt3DBack.z) );}),
+		m::makeMessageHandler<m::scope_one::Messages::point_alias>([&](auto& parser){ m::STRUCT_point_parse( parser, m::x = &(ptBack.x), m::y = &(ptBack.y) );})
+	);
 }

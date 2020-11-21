@@ -14,7 +14,8 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
-MESSAGE PROTO = JSON, GMQ scope_one:point32_alias=1 = STRUCT point3D;
+MESSAGE PROTO = JSON, GMQ scope_one:point3D_alias=1 = STRUCT point3D;
+MESSAGE PROTO = JSON, GMQ scope_one:point_alias=2 = STRUCT point;
 
 
 MESSAGE PROTO = JSON level_trace:LevelTraceData=1{

@@ -11,7 +11,8 @@ namespace m {
 //
 //  scope_one
 //  {
-//    point32_alias
+//    point3D_alias
+//    point_alias
 //  }
 //
 //  level_trace
@@ -97,7 +98,7 @@ constexpr z_Type::TypeConverter z;
 
 namespace scope_one {
 
-enum Messages { point32_alias = 1, };
+enum Messages { point3D_alias = 1, point_alias = 2, };
 
 	template<class BufferT, class ... HandlersT >
 	void handleMessage( BufferT& buffer, HandlersT ... handlers )
@@ -107,27 +108,45 @@ enum Messages { point32_alias = 1, };
 		parser.parseUnsignedInteger( &msgID );
 		switch ( msgID )
 		{
-			case point32_alias: impl::implHandleMessage<Messages::point32_alias>( parser, handlers... ); break;
+			case point3D_alias: impl::implHandleMessage<Messages::point3D_alias>( parser, handlers... ); break;
+			case point_alias: impl::implHandleMessage<Messages::point_alias>( parser, handlers... ); break;
 		}
 	}
 
 	template<Messages msgID, class BufferT, typename ... Args>
 	void composeMessage( BufferT& buffer, Args&& ... args );
 //**********************************************************************
-// MESSAGE "point32_alias" Targets: JSON GMQ (Alias of point3D)
+// MESSAGE "point3D_alias" Targets: JSON GMQ (Alias of point3D)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void MESSAGE_point32_alias_compose(ComposerT& composer, Args&& ... args)
+void MESSAGE_point3D_alias_compose(ComposerT& composer, Args&& ... args)
 {
 	STRUCT_point3D_compose(composer, std::forward<Args>( args )...);
 }
 
 template<class ParserT, typename ... Args>
-void MESSAGE_point32_alias_parse(ParserT& p, Args&& ... args)
+void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
 {
 	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
+}
+
+//**********************************************************************
+// MESSAGE "point_alias" Targets: JSON GMQ (Alias of point)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_point_alias_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_point_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_point_parse(p, std::forward<Args>( args )...);
 }
 
 	template<Messages msgID, class BufferT, typename ... Args>
@@ -135,10 +154,12 @@ void MESSAGE_point32_alias_parse(ParserT& p, Args&& ... args)
 	{
 		m::GmqComposer composer( buffer );
 		impl::composeUnsignedInteger( composer, msgID );
-		switch ( msgID )
-		{
-			case point32_alias: MESSAGE_point32_alias_compose( composer, std::forward<Args>( args )... ); break;
-		}
+		if constexpr ( msgID == point3D_alias )
+			MESSAGE_point3D_alias_compose( composer, std::forward<Args>( args )... );
+		else if constexpr ( msgID == point_alias )
+			MESSAGE_point_alias_compose( composer, std::forward<Args>( args )... );
+		else
+			static_assert( false, "unexpected value of msgID" );
 	}
 
 } // namespace scope_one 
@@ -235,10 +256,10 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 	{
 		m::GmqComposer composer( buffer );
 		impl::composeUnsignedInteger( composer, msgID );
-		switch ( msgID )
-		{
-			case LevelTraceData: MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... ); break;
-		}
+		if constexpr ( msgID == LevelTraceData )
+			MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... );
+		else
+			static_assert( false, "unexpected value of msgID" );
 	}
 
 } // namespace level_trace 
@@ -712,13 +733,16 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	{
 		m::GmqComposer composer( buffer );
 		impl::composeUnsignedInteger( composer, msgID );
-		switch ( msgID )
-		{
-			case PolygonSt: MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... ); break;
-			case message_one: MESSAGE_message_one_compose( composer, std::forward<Args>( args )... ); break;
-			case point: MESSAGE_point_compose( composer, std::forward<Args>( args )... ); break;
-			case point3D: MESSAGE_point3D_compose( composer, std::forward<Args>( args )... ); break;
-		}
+		if constexpr ( msgID == PolygonSt )
+			MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... );
+		else if constexpr ( msgID == message_one )
+			MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
+		else if constexpr ( msgID == point )
+			MESSAGE_point_compose( composer, std::forward<Args>( args )... );
+		else if constexpr ( msgID == point3D )
+			MESSAGE_point3D_compose( composer, std::forward<Args>( args )... );
+		else
+			static_assert( false, "unexpected value of msgID" );
 	}
 
 } // namespace infrastructural 
