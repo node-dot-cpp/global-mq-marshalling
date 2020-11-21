@@ -69,6 +69,16 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 	}
 }
 
+std::string impl_generateComposeFunctionName( CompositeType& s )
+{
+	return fmt::format( "{}_{}_compose", s.type2string(), s.name );
+}
+
+std::string impl_generateParseFunctionName( CompositeType& s )
+{
+	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
+}
+
 void printRoot( Root& s )
 {
 	if ( s.messages.size() == 0 && s.publishables.size() == 0 && s.structs.size() == 0 )
@@ -741,7 +751,7 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 
 void impl_generateScopeComposer( FILE* header, Scope& scope )
 {
-	fprintf( header, 
+	/*fprintf( header, 
 		"\ttemplate<Messages msgID, class BufferT, class MessageComposerT >\n"
 		"\tvoid composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
 		"\t{\n"
@@ -749,7 +759,21 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 		"\t\tcomposeUnsignedInteger( composer, msgID );\n"
 		"\t\tmsgComposer.compose( composer );\n"
 		"\t}\n\n"
+	);*/
+	fprintf( header, 
+		"\ttemplate<Messages msgID, class BufferT, typename ... Args>\n"
+		"\tvoid composeMessage( BufferT& buffer, Args&& ... args )\n"
+		"\t{\n"
+		"\t\tm::GmqComposer composer( buffer );\n"
+		"\t\tcomposeUnsignedInteger( composer, msgID );\n"
+		"\t\tswitch ( msgID )\n"
+		"\t\t{\n" 
 	);
+	for ( auto msg : scope.objectList )
+		fprintf( header, "\t\t\tcase %s: %s( composer, std::forward<Args>( args )... ); break;\n", msg->name.c_str(), impl_generateComposeFunctionName(*msg).c_str() );
+	fprintf( header, 
+		"\t\t}\n"
+		"\t}\n\n" );
 }
 
 
@@ -1514,8 +1538,8 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
+	"void %s(ComposerT& composer, Args&& ... args)\n"
+	"{\n", impl_generateComposeFunctionName( s ).c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
@@ -1529,8 +1553,8 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s )
 void impl_generateParseFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s_%s_parse(ParserT& p, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
+	"void %s(ParserT& p, Args&& ... args)\n"
+	"{\n", impl_generateParseFunctionName( s ).c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
