@@ -749,6 +749,14 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		"\t}\n\n" );
 }
 
+void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
+{
+	fprintf( header, 
+		"\ttemplate<Messages msgID, class BufferT, typename ... Args>\n"
+		"\tvoid composeMessage( BufferT& buffer, Args&& ... args );\n"
+	);
+}
+
 void impl_generateScopeComposer( FILE* header, Scope& scope )
 {
 	/*fprintf( header, 
@@ -806,7 +814,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 		impl_generateScopeEnum( header, scope );
 		impl_generateScopeHandler( header, scope );
-		impl_generateScopeComposer( header, scope );
+		impl_generateScopeComposerForwardDeclaration( header, scope );
 
 		for ( auto it : scope.objectList )
 		{
@@ -821,6 +829,8 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 					generateMessageAlias( header, *it );
 			}
 		}
+
+		impl_generateScopeComposer( header, scope );
 
 		fprintf( header, "} // namespace %s \n\n", scope.name.c_str() );
 	}
