@@ -97,65 +97,24 @@ void printRoot( Root& s )
 	printf( ") {\n" );
 	for ( auto& it : s.messages )
 	{
-		auto& obj_1 = it;
-		print__unique_ptr_Message( obj_1, 4 );
+		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
+		printMessage( *(dynamic_cast<CompositeType*>(&(*(it)))), 4 );
 	}
 	for ( auto& it : s.publishables )
 	{
-		auto& obj_1 = it;
-		print__unique_ptr_Publishable( obj_1, 4 );
+		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
+		printPublishable( *(dynamic_cast<CompositeType*>(&(*(it)))), 4 );
 	}
 	for ( auto& it : s.structs )
 	{
-		auto& obj_1 = it;
-		print__unique_ptr_Struct( obj_1, 4 );
+		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
+		printStruct( *(dynamic_cast<CompositeType*>(&(*(it)))), 4 );
 	}
 	printf( "}\n" );
 }
 
-void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset )
 {
-	if ( s == nullptr )
-	{
-		char offsetch[1024];
-		memset( offsetch, ' ', offset );
-		offsetch[ offset ] = 0;
-		printf( "%sMessage <null> {}\n", offsetch );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		printMessage( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
-	}
-}
 
-void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset )
-{
-	if ( s == nullptr )
-	{
-		char offsetch[1024];
-		memset( offsetch, ' ', offset );
-		offsetch[ offset ] = 0;
-		printf( "%sPublishable <null> {}\n", offsetch );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		printPublishable( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
-	}
-}
-
-void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset )
-{
-	if ( s == nullptr )
-	{
-		char offsetch[1024];
-		memset( offsetch, ' ', offset );
-		offsetch[ offset ] = 0;
-		printf( "%sStruct <null> {}\n", offsetch );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		printStruct( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
-	}
 }
 
 void printMessage( CompositeType& s, size_t offset )
