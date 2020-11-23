@@ -812,12 +812,12 @@ void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typenam
 
 struct MessageHandlerBase {};
 
-template<uint64_t msgID_, class LambdaHandler>
+template<typename msgID_, class LambdaHandler>
 class MessageHandler : public MessageHandlerBase
 {
 	LambdaHandler lhandler_;
 public:
-	static constexpr uint64_t msgID = msgID_;
+	static constexpr uint64_t msgID = msgID_::id;
 	MessageHandler(LambdaHandler &&lhandler) : lhandler_(std::forward<LambdaHandler>(lhandler)) {}
 	template<typename ParserT>
 	void handle( ParserT& parser ) { 
@@ -826,8 +826,8 @@ public:
 };
 
 template<typename msgID_, class LambdaHandler>
-MessageHandler<msgID_::id, LambdaHandler> makeMessageHandler( LambdaHandler &&lhandler ) {
-	return MessageHandler<msgID_::id, LambdaHandler>(std::forward<LambdaHandler>(lhandler));
+MessageHandler<msgID_, LambdaHandler> makeMessageHandler( LambdaHandler &&lhandler ) {
+	return MessageHandler<msgID_, LambdaHandler>(std::forward<LambdaHandler>(lhandler));
 }
 
 namespace impl {
