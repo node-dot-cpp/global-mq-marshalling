@@ -85,11 +85,11 @@ YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
 
 YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoList);
 
-YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
-YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
-YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId);
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId);
 
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
