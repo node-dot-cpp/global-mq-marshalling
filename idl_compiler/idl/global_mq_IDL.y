@@ -242,6 +242,7 @@ byte_array_type
 vector_type
 	: KW_VECTOR '<' KW_INTEGER '>' { $$ = createVectorOfIntegerType($1, false); releaseYys3($2, $3, $4); }
 	| KW_VECTOR '<' KW_UINTEGER '>' { $$ = createVectorOfUintegerType($1, false); releaseYys3($2, $3, $4); }
+	| KW_VECTOR '<' KW_REAL '>' { $$ = createVectorOfRealType($1, false); releaseYys3($2, $3, $4); }
 	| KW_VECTOR '<' KW_CHARACTER_STRING '>' { $$ = createVectorOfCharStringType($1, false); releaseYys3($2, $3, $4); }
 	| KW_VECTOR '<' KW_BLOB '>' { $$ = createVectorOfBLOBType($1, false); releaseYys3($2, $3, $4); }
 	| KW_VECTOR '<' KW_BYTE_ARRAY '>' { $$ = createVectorOfByteArrayType($1, false); releaseYys3($2, $3, $4); }
@@ -253,6 +254,7 @@ vector_type
 	| KW_VECTOR '<' KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfStructsType($1, $5, true, false); releaseYys4($2, $3, $4, $6); }
 	| KW_VECTOR '<' KW_INTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfIntegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_UINTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfUintegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
+	| KW_VECTOR '<' KW_REAL '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfRealType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_CHARACTER_STRING '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfCharStringType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_BLOB '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfBLOBType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_BYTE_ARRAY '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfByteArrayType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }

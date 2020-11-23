@@ -953,6 +953,7 @@ YYSTYPE createVectorOfSympleTypeBase(YYSTYPE token, MessageParameterType::KIND k
 
 YYSTYPE createVectorOfIntegerType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::INTEGER, hasDefault ); }
 YYSTYPE createVectorOfUintegerType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::UINTEGER, hasDefault ); }
+YYSTYPE createVectorOfRealType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::REAL, hasDefault ); }
 YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::CHARACTER_STRING, hasDefault ); }
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BLOB, hasDefault ); }
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BYTE_ARRAY, hasDefault ); }

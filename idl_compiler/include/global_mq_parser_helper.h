@@ -114,6 +114,7 @@ YYSTYPE createBlobType(YYSTYPE token);
 
 YYSTYPE createVectorOfIntegerType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfUintegerType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfRealType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
