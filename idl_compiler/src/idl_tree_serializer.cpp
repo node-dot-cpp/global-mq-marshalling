@@ -734,27 +734,27 @@ void impl_generateScopeEnum( FILE* header, Scope& scope )
 void impl_generateScopeHandler( FILE* header, Scope& scope )
 {
 	fprintf( header, 
-		"\ttemplate<class BufferT, class ... HandlersT >\n"
-		"\tvoid handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
-		"\t{\n"
-		"\t\tGmqParser parser( buffer );\n"
-		"\t\tuint64_t msgID;\n"
-		"\t\tparser.parseUnsignedInteger( &msgID );\n"
-		"\t\tswitch ( msgID )\n"
-		"\t\t{\n" 
+		"template<class BufferT, class ... HandlersT >\n"
+		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
+		"{\n"
+		"\tGmqParser parser( buffer );\n"
+		"\tuint64_t msgID;\n"
+		"\tparser.parseUnsignedInteger( &msgID );\n"
+		"\tswitch ( msgID )\n"
+		"\t{\n" 
 	);
 	for ( auto msg : scope.objectList )
-		fprintf( header, "\t\t\tcase %s::id: impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
+		fprintf( header, "\t\tcase %s::id: impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
 	fprintf( header, 
-		"\t\t}\n"
-		"\t}\n\n" );
+		"\t}\n"
+		"}\n\n" );
 }
 
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
 {
 	fprintf( header, 
-		"\ttemplate<typename msgID, class BufferT, typename ... Args>\n"
-		"\tvoid composeMessage( BufferT& buffer, Args&& ... args );\n"
+		"template<typename msgID, class BufferT, typename ... Args>\n"
+		"void composeMessage( BufferT& buffer, Args&& ... args );\n\n"
 	);
 }
 
@@ -762,33 +762,33 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 {
 	assert( scope.objectList.size() != 0 );
 	/*fprintf( header, 
-		"\ttemplate<Messages msgID, class BufferT, class MessageComposerT >\n"
-		"\tvoid composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
-		"\t{\n"
-		"\t\tm::GmqComposer composer( buffer );\n"
-		"\t\tcomposeUnsignedInteger( composer, msgID );\n"
-		"\t\tmsgComposer.compose( composer );\n"
-		"\t}\n\n"
+		"template<Messages msgID, class BufferT, class MessageComposerT >\n"
+		"void composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
+		"{\n"
+		"\tm::GmqComposer composer( buffer );\n"
+		"\tcomposeUnsignedInteger( composer, msgID );\n"
+		"\tmsgComposer.compose( composer );\n"
+		"}\n\n"
 	);*/
 	fprintf( header, 
-		"\ttemplate<typename msgID, class BufferT, typename ... Args>\n"
-		"\tvoid composeMessage( BufferT& buffer, Args&& ... args )\n"
-		"\t{\n"
-		"\t\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n"
-		"\t\tm::GmqComposer composer( buffer );\n"
-		"\t\timpl::composeUnsignedInteger( composer, msgID::id );\n"
+		"template<typename msgID, class BufferT, typename ... Args>\n"
+		"void composeMessage( BufferT& buffer, Args&& ... args )\n"
+		"{\n"
+		"\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n"
+		"\tm::GmqComposer composer( buffer );\n"
+		"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
 	);
-	fprintf( header, "\t\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
-	fprintf( header, "\t\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
+	fprintf( header, "\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
+	fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
 	for ( size_t i=1; i<scope.objectList.size(); ++i )
 	{
-		fprintf( header, "\t\telse if constexpr ( msgID::id == %s::id )\n", scope.objectList[i]->name.c_str() );
-		fprintf( header, "\t\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[i])).c_str() );
+		fprintf( header, "\telse if constexpr ( msgID::id == %s::id )\n", scope.objectList[i]->name.c_str() );
+		fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[i])).c_str() );
 	}
 	fprintf( header, 
-		"\t\telse\n"
-		"\t\t\tstatic_assert( false, \"unexpected value of msgID\" );\n"
-		"\t}\n\n" );
+		"\telse\n"
+		"\t\tstatic_assert( false, \"unexpected value of msgID\" );\n"
+		"}\n\n" );
 }
 
 

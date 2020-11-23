@@ -98,23 +98,25 @@ constexpr z_Type::TypeConverter z;
 
 namespace scope_one {
 
-enum Messages { point3D_alias = 1, point_alias = 2, };
+using point3D_alias = impl::MessageName<1>;
+using point_alias = impl::MessageName<2>;
 
-	template<class BufferT, class ... HandlersT >
-	void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	GmqParser parser( buffer );
+	uint64_t msgID;
+	parser.parseUnsignedInteger( &msgID );
+	switch ( msgID )
 	{
-		GmqParser parser( buffer );
-		uint64_t msgID;
-		parser.parseUnsignedInteger( &msgID );
-		switch ( msgID )
-		{
-			case point3D_alias: impl::implHandleMessage<Messages::point3D_alias>( parser, handlers... ); break;
-			case point_alias: impl::implHandleMessage<Messages::point_alias>( parser, handlers... ); break;
-		}
+		case point3D_alias::id: impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
+		case point_alias::id: impl::implHandleMessage<point_alias>( parser, handlers... ); break;
 	}
+}
 
-	template<Messages msgID, class BufferT, typename ... Args>
-	void composeMessage( BufferT& buffer, Args&& ... args );
+template<typename msgID, class BufferT, typename ... Args>
+void composeMessage( BufferT& buffer, Args&& ... args );
+
 //**********************************************************************
 // MESSAGE "point3D_alias" Targets: JSON GMQ (Alias of point3D)
 
@@ -149,39 +151,41 @@ void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
 	STRUCT_point_parse(p, std::forward<Args>( args )...);
 }
 
-	template<Messages msgID, class BufferT, typename ... Args>
-	void composeMessage( BufferT& buffer, Args&& ... args )
-	{
-		m::GmqComposer composer( buffer );
-		impl::composeUnsignedInteger( composer, msgID );
-		if constexpr ( msgID == point3D_alias )
-			MESSAGE_point3D_alias_compose( composer, std::forward<Args>( args )... );
-		else if constexpr ( msgID == point_alias )
-			MESSAGE_point_alias_compose( composer, std::forward<Args>( args )... );
-		else
-			static_assert( false, "unexpected value of msgID" );
-	}
+template<typename msgID, class BufferT, typename ... Args>
+void composeMessage( BufferT& buffer, Args&& ... args )
+{
+	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	m::GmqComposer composer( buffer );
+	impl::composeUnsignedInteger( composer, msgID::id );
+	if constexpr ( msgID::id == point3D_alias::id )
+		MESSAGE_point3D_alias_compose( composer, std::forward<Args>( args )... );
+	else if constexpr ( msgID::id == point_alias::id )
+		MESSAGE_point_alias_compose( composer, std::forward<Args>( args )... );
+	else
+		static_assert( false, "unexpected value of msgID" );
+}
 
 } // namespace scope_one 
 
 namespace level_trace {
 
-enum Messages { LevelTraceData = 1, };
+using LevelTraceData = impl::MessageName<1>;
 
-	template<class BufferT, class ... HandlersT >
-	void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	GmqParser parser( buffer );
+	uint64_t msgID;
+	parser.parseUnsignedInteger( &msgID );
+	switch ( msgID )
 	{
-		GmqParser parser( buffer );
-		uint64_t msgID;
-		parser.parseUnsignedInteger( &msgID );
-		switch ( msgID )
-		{
-			case LevelTraceData: impl::implHandleMessage<Messages::LevelTraceData>( parser, handlers... ); break;
-		}
+		case LevelTraceData::id: impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
 	}
+}
 
-	template<Messages msgID, class BufferT, typename ... Args>
-	void composeMessage( BufferT& buffer, Args&& ... args );
+template<typename msgID, class BufferT, typename ... Args>
+void composeMessage( BufferT& buffer, Args&& ... args );
+
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
 // 1. STRUCT CharacterParam (REQUIRED)
@@ -251,40 +255,45 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 	}
 }
 
-	template<Messages msgID, class BufferT, typename ... Args>
-	void composeMessage( BufferT& buffer, Args&& ... args )
-	{
-		m::GmqComposer composer( buffer );
-		impl::composeUnsignedInteger( composer, msgID );
-		if constexpr ( msgID == LevelTraceData )
-			MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... );
-		else
-			static_assert( false, "unexpected value of msgID" );
-	}
+template<typename msgID, class BufferT, typename ... Args>
+void composeMessage( BufferT& buffer, Args&& ... args )
+{
+	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	m::GmqComposer composer( buffer );
+	impl::composeUnsignedInteger( composer, msgID::id );
+	if constexpr ( msgID::id == LevelTraceData::id )
+		MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... );
+	else
+		static_assert( false, "unexpected value of msgID" );
+}
 
 } // namespace level_trace 
 
 namespace infrastructural {
 
-enum Messages { PolygonSt = 2, message_one = 3, point = 4, point3D = 5, };
+using PolygonSt = impl::MessageName<2>;
+using message_one = impl::MessageName<3>;
+using point = impl::MessageName<4>;
+using point3D = impl::MessageName<5>;
 
-	template<class BufferT, class ... HandlersT >
-	void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	GmqParser parser( buffer );
+	uint64_t msgID;
+	parser.parseUnsignedInteger( &msgID );
+	switch ( msgID )
 	{
-		GmqParser parser( buffer );
-		uint64_t msgID;
-		parser.parseUnsignedInteger( &msgID );
-		switch ( msgID )
-		{
-			case PolygonSt: impl::implHandleMessage<Messages::PolygonSt>( parser, handlers... ); break;
-			case message_one: impl::implHandleMessage<Messages::message_one>( parser, handlers... ); break;
-			case point: impl::implHandleMessage<Messages::point>( parser, handlers... ); break;
-			case point3D: impl::implHandleMessage<Messages::point3D>( parser, handlers... ); break;
-		}
+		case PolygonSt::id: impl::implHandleMessage<PolygonSt>( parser, handlers... ); break;
+		case message_one::id: impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		case point::id: impl::implHandleMessage<point>( parser, handlers... ); break;
+		case point3D::id: impl::implHandleMessage<point3D>( parser, handlers... ); break;
 	}
+}
 
-	template<Messages msgID, class BufferT, typename ... Args>
-	void composeMessage( BufferT& buffer, Args&& ... args );
+template<typename msgID, class BufferT, typename ... Args>
+void composeMessage( BufferT& buffer, Args&& ... args );
+
 //**********************************************************************
 // MESSAGE "PolygonSt" Targets: JSON GMQ (6 parameters)
 // 1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
@@ -728,22 +737,23 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	}
 }
 
-	template<Messages msgID, class BufferT, typename ... Args>
-	void composeMessage( BufferT& buffer, Args&& ... args )
-	{
-		m::GmqComposer composer( buffer );
-		impl::composeUnsignedInteger( composer, msgID );
-		if constexpr ( msgID == PolygonSt )
-			MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... );
-		else if constexpr ( msgID == message_one )
-			MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
-		else if constexpr ( msgID == point )
-			MESSAGE_point_compose( composer, std::forward<Args>( args )... );
-		else if constexpr ( msgID == point3D )
-			MESSAGE_point3D_compose( composer, std::forward<Args>( args )... );
-		else
-			static_assert( false, "unexpected value of msgID" );
-	}
+template<typename msgID, class BufferT, typename ... Args>
+void composeMessage( BufferT& buffer, Args&& ... args )
+{
+	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	m::GmqComposer composer( buffer );
+	impl::composeUnsignedInteger( composer, msgID::id );
+	if constexpr ( msgID::id == PolygonSt::id )
+		MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... );
+	else if constexpr ( msgID::id == message_one::id )
+		MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
+	else if constexpr ( msgID::id == point::id )
+		MESSAGE_point_compose( composer, std::forward<Args>( args )... );
+	else if constexpr ( msgID::id == point3D::id )
+		MESSAGE_point3D_compose( composer, std::forward<Args>( args )... );
+	else
+		static_assert( false, "unexpected value of msgID" );
+}
 
 } // namespace infrastructural 
 
