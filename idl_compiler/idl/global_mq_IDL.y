@@ -65,12 +65,17 @@ file : { $$ = 0; }
 	| file message_alias { $$ = addMessageToFile($1, $2); }
 	| file publishable { $$ = addPublishableToFile($1, $2); }
 	| file struct { $$ = addStructToFile($1, $2); }
+	| file scope { $$ = addScopeToFile($1, $2); }
 ;
 
 line_directive
 	: KW_HASH_LINE INTEGER_LITERAL ';' { $$ = 0; processLineDirective($2, 0); releaseYys2($1, $3); }
 	| KW_HASH_LINE INTEGER_LITERAL STRING_LITERAL ';' { $$ = 0; processLineDirective($2, $3); releaseYys2($1, $4); }
 ;
+
+
+scope
+	: KW_SCOPE IDENTIFIER KW_PROTO '=' proto_values ';' { $$ = createScope($1, $2, $5); releaseYys3($3, $4, $6); }
 
 message_alias
 	: KW_MESSAGE KW_PROTO '=' proto_values IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, false, $4, $5, $7, $9, $12); releaseYys7($2, $3, $6, $8, $10, $11, $13); }

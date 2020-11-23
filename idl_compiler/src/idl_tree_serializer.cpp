@@ -95,6 +95,11 @@ void printRoot( Root& s )
 	if ( s.structs.size() )
 		printf( "%zd structs ", s.structs.size() );
 	printf( ") {\n" );
+	for ( auto& it : s.scopes )
+	{
+		assert( it != nullptr && typeid( *(it) ) == typeid( Scope ) );
+		printScope( *(dynamic_cast<Scope*>(&(*(it)))), 4 );
+	}
 	for ( auto& it : s.messages )
 	{
 		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
@@ -113,8 +118,24 @@ void printRoot( Root& s )
 	printf( "}\n" );
 }
 
+void printScope( Scope& s, size_t offset )
 {
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
 
+	printf( "%sScope: name = \"%s\" Protocols: ", offsetch, s.name.c_str() );
+	for ( auto t:s.protoList )
+		switch ( t )
+		{
+			case Proto::gmq: printf( "GMQ " ); break;
+			case Proto::json: printf( "JSON " ); break;
+			default: assert( false );
+		}
+	printf( "(%zd messages) {\n", s.objectList.size() );
+	for ( auto msg : s.objectList )
+		printf( "%s  %s\n", offsetch, msg->name.c_str() );
+	printf( "%s}\n", offsetch );
 }
 
 void printMessage( CompositeType& s, size_t offset )
@@ -127,8 +148,8 @@ void printMessage( CompositeType& s, size_t offset )
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case CompositeType::Proto::gmq: printf( "GMQ " ); break;
-			case CompositeType::Proto::json: printf( "JSON " ); break;
+			case Proto::gmq: printf( "GMQ " ); break;
+			case Proto::json: printf( "JSON " ); break;
 			default: assert( false );
 		}
 	printf( "(%zd parameters) {\n", s.members.size() );
@@ -621,9 +642,19 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 	return ok;
 }
 
-bool impl_populateScopes( Root& r )
+bool impl_processScopes( Root& r )
 {
 	bool ok = true;
+	for ( auto& s : r.scopes )
+	{
+		if ( s->protoList.size() == 0 )
+		{
+			fprintf( stderr, "File %s, line %d: Scope \"%s\" cannot have an empty protocol list\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
+			ok = false;
+		}
+	}
+	
+	// each message must be from one of declared scopes
 	for ( auto& it : r.messages )
 	{
 		if ( it->numID == CompositeType::invalid_num_id )
@@ -636,9 +667,11 @@ bool impl_populateScopes( Root& r )
 		bool found = false;
 		for ( auto& s : r.scopes )
 		{
-			if ( it->scopeName == s.name )
+			if ( it->scopeName == s->name )
 			{
-				s.objectList.push_back( &(*it) );
+//				s->objectList.push_back( &(*it) );
+				it->protoList.insert( s->protoList.begin(), s->protoList.end() );
+				s->objectList.push_back( &(*it) );
 				found = true;
 				break;
 			}
@@ -646,12 +679,15 @@ bool impl_populateScopes( Root& r )
 
 		if ( !found )
 		{
-			{
-				Scope scope;
-				scope.name = it->scopeName;
-				scope.objectList.push_back( &(*it) );
-				r.scopes.push_back( std::move( scope ) );
-			}
+			ok = false;
+			fprintf( stderr, "File %s, line %d: Scope \"%s\" has not been declared\n", it->location.fileName.c_str(), it->location.lineNumber, it->scopeName.c_str() );
+
+			/*{
+				Scope* scope = new Scope;
+				scope->name = it->scopeName;
+				scope->objectList.push_back( &(*it) );
+				r.scopes.push_back( unique_ptr<Scope>(scope) );
+			}*/
 		}
 	}
 	return ok;
@@ -675,7 +711,7 @@ void impl_insertScopeList( FILE* header, Root& r )
 	fprintf( header, "//\n" );
 	for ( auto& s : r.scopes )
 	{
-		impl_insertScopeDetails( header, s );
+		impl_insertScopeDetails( header, *s );
 		fprintf( header, "//\n" );
 	}
 	fprintf( header, "//////////////////////////////////////////////////////////////\n\n" );
@@ -754,8 +790,8 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
+	ok = impl_processScopes(s) && ok;
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
-	ok = impl_populateScopes(s) && ok;
 	if ( !ok )
 		throw std::exception();
 
@@ -776,13 +812,13 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	for ( auto& scope : s.scopes )
 	{
-		fprintf( header, "namespace %s {\n\n", scope.name.c_str() );
+		fprintf( header, "namespace %s {\n\n", scope->name.c_str() );
 
-		impl_generateScopeEnum( header, scope );
-		impl_generateScopeHandler( header, scope );
-		impl_generateScopeComposerForwardDeclaration( header, scope );
+		impl_generateScopeEnum( header, *scope );
+		impl_generateScopeHandler( header, *scope );
+		impl_generateScopeComposerForwardDeclaration( header, *scope );
 
-		for ( auto it : scope.objectList )
+		for ( auto it : scope->objectList )
 		{
 			if ( it == nullptr )
 				fprintf( header, "// Message = <null>\n" );
@@ -796,9 +832,9 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 			}
 		}
 
-		impl_generateScopeComposer( header, scope );
+		impl_generateScopeComposer( header, *scope );
 
-		fprintf( header, "} // namespace %s \n\n", scope.name.c_str() );
+		fprintf( header, "} // namespace %s \n\n", scope->name.c_str() );
 	}
 
 	for ( auto& it : s.structs )
@@ -1156,8 +1192,8 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case CompositeType::Proto::gmq: fprintf( header, "GMQ " ); break;
-			case CompositeType::Proto::json: fprintf( header, "JSON " ); break;
+			case Proto::gmq: fprintf( header, "GMQ " ); break;
+			case Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
 	fprintf( header, "(%zd parameters)\n", s.members.size() );
@@ -1366,13 +1402,13 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
-			case CompositeType::Proto::gmq:
+			case Proto::gmq:
 			{
 				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 				break;
 			}
-			case CompositeType::Proto::json:
+			case Proto::json:
 			{
 				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingJson( header, s, "" );
@@ -1386,7 +1422,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 	{
 		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
-		if ( s.protoList.find( CompositeType::Proto::gmq ) != s.protoList.end() )
+		if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
 		{
 			++processedProtoCount;
 			fprintf( header, 
@@ -1401,9 +1437,9 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 			++processedProtoCount;
 			switch ( it )
 			{
-				case CompositeType::Proto::gmq:
+				case Proto::gmq:
 					break; // already done
-				case CompositeType::Proto::json:
+				case Proto::json:
 				{
 					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
 					if ( processedProtoCount == 0 )
@@ -1442,13 +1478,13 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
-			case CompositeType::Proto::gmq:
+			case Proto::gmq:
 			{
 				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 				break;
 			}
-			case CompositeType::Proto::json:
+			case Proto::json:
 			{
 				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
@@ -1462,7 +1498,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 	{
 		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
-		if ( s.protoList.find( CompositeType::Proto::gmq ) != s.protoList.end() )
+		if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
 		{
 			++processedProtoCount;
 			fprintf( header, 
@@ -1477,9 +1513,9 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 			++processedProtoCount;
 			switch ( it )
 			{
-				case CompositeType::Proto::gmq:
+				case Proto::gmq:
 					break; // already done
-				case CompositeType::Proto::json:
+				case Proto::json:
 				{
 					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
 					if ( processedProtoCount == 0 )
@@ -1565,8 +1601,8 @@ void generateMessageAlias( FILE* header, CompositeType& s )
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case CompositeType::Proto::gmq: fprintf( header, "GMQ " ); break;
-			case CompositeType::Proto::json: fprintf( header, "JSON " ); break;
+			case Proto::gmq: fprintf( header, "GMQ " ); break;
+			case Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
 	fprintf( header, "(Alias of %s)\n", s.aliasOf.c_str() );

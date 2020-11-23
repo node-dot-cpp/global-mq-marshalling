@@ -119,6 +119,7 @@ public:
 	vector<string> whenDiscriminant;
 };
 
+enum Proto { json, gmq };
 
 class CompositeType : public ObjectBase
 {
@@ -147,19 +148,20 @@ public:
 	string scopeName;
 	string name;
 	uint64_t numID = invalid_num_id; // we will analize/sanitize it at time of code generation
-	enum Proto { json, gmq };
-	set<Proto> protoList;
 	bool isNonExtendable = false;
 	bool isAlias = false;
 	string aliasOf;
 
+	set<Proto> protoList; // populated at time of tree checking and code generation
 	bool processingOK = true; // used by checker
 };
 
-struct Scope // used in post-processing
+struct Scope : public ObjectBase // used in post-processing
 {
+public:
 	string name;
 	std::vector<CompositeType*> objectList;
+	set<Proto> protoList;
 };
 
 class Root
@@ -168,7 +170,7 @@ public:
 	vector<unique_ptr<CompositeType>> messages;
 	vector<unique_ptr<CompositeType>> publishables;
 	vector<unique_ptr<CompositeType>> structs;
-	vector<Scope> scopes; // used in post-processing
+	vector<unique_ptr<Scope>> scopes;
 };
 
 inline

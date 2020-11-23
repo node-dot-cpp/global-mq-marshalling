@@ -449,6 +449,17 @@ YYSTYPE createStringLiteral(const char* text, int line)
 
 //////////////////////////////////////////////////////////////////////////////
 
+YYSTYPE addScopeToFile(YYSTYPE file, YYSTYPE item)
+{
+	GLOBALMQASSERT(!file);
+	unique_ptr<YyBase> d0(item);
+
+	Scope* s = releasePointedFromYyPtr<Scope>(item);
+	currentRoot->scopes.push_back(unique_ptr<Scope>(s));
+
+	return 0;
+}
+
 YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item)
 {
 	GLOBALMQASSERT(!file);
@@ -558,6 +569,32 @@ YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl) { return insertExtensionMar
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensionMarker(decl);}
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
+YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoList)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(protoList);
+	unique_ptr<YyBase> d2(id);
+
+	Scope* yy = new Scope();
+
+	yy->location = id->location;
+	yy->name = nameFromYyIdentifier(id);
+	if ( protoList != nullptr )
+	{
+		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
+		for ( auto& proto : pl->ids )
+		{
+			if ( proto == "json" || proto == "JSON" )
+				yy->protoList.insert( Proto::json );
+			else if ( proto == "gmq" || proto == "GMQ" )
+				yy->protoList.insert( Proto::gmq );
+			else
+				reportError(token->location, "Unexpected value of PROTO");
+		}
+	}
+
+	return new YyPtr<Scope>(yy);
+}
 
 YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
 {
@@ -578,7 +615,7 @@ YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type,
 		yy->aliasOf = aliasOf;
 	}
 	else
-		assert( aliasOf.empty() );*/
+		assert( aliasOf.empty() );
 	if ( protoList != nullptr )
 	{
 		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
@@ -591,7 +628,7 @@ YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type,
 			else
 				reportError(token->location, "Unexpected value of PROTO");
 		}
-	}
+	}*/
 
 	return new YyPtr<CompositeType>(yy);
 }

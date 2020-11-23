@@ -67,6 +67,7 @@ YYSTYPE createHexIntegerLiteral(const char* text, int line);
 YYSTYPE createStringLiteral(const char* text, int line);
 YYSTYPE createZeroLiteral(const char* text, int line);
 
+YYSTYPE addScopeToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addPublishableToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addStructToFile(YYSTYPE file, YYSTYPE item);
@@ -81,6 +82,8 @@ YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
 YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
+
+YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoList);
 
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
