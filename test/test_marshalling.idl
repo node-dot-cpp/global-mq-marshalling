@@ -14,11 +14,15 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
-MESSAGE PROTO = JSON, GMQ scope_one:point3D_alias=1 = STRUCT point3D;
-MESSAGE PROTO = JSON, GMQ scope_one:point_alias=2 = STRUCT point;
+SCOPE scope_one PROTO = JSON, GMQ;
+SCOPE level_trace PROTO = JSON, GMQ;
+SCOPE infrastructural PROTO = JSON, GMQ;
+
+MESSAGE scope_one:point3D_alias=1 = STRUCT point3D;
+MESSAGE scope_one:point_alias=2 = STRUCT point;
 
 
-MESSAGE PROTO = JSON level_trace:LevelTraceData=1{
+MESSAGE level_trace:LevelTraceData=1{
 	STRUCT CharacterParam CharacterParam;
 	VECTOR<STRUCT POINT3DREAL> Points;
 };
@@ -40,7 +44,7 @@ STRUCT POINT3DREAL{
   REAL Z;
 };
 
-MESSAGE PROTO = JSON, GMQ infrastructural:PolygonSt=2{
+MESSAGE infrastructural:PolygonSt=2{
 	VECTOR<STRUCT PolygonMap> polygonMap;
 	VECTOR<STRUCT PolygonMap> concaveMap;
 	VECTOR<STRUCT ObstacleMap> obstacleMap;
@@ -86,7 +90,7 @@ STRUCT point3D {
 };
 
 
-MESSAGE PROTO=JSON,GMQ infrastructural:message_one=3 {
+MESSAGE infrastructural:message_one=3 {
   INTEGER firstParam;
   VECTOR<INTEGER> secondParam;
   VECTOR<STRUCT point3D> thirdParam;
@@ -96,13 +100,14 @@ MESSAGE PROTO=JSON,GMQ infrastructural:message_one=3 {
   REAL seventhParam;
   STRUCT NONEXTENDABLE point eighthParam;
   STRUCT point3D ninethParam;
+  VECTOR<REAL> tenthParam;
 };
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE infrastructural:point=4 {
+MESSAGE NONEXTENDABLE infrastructural:point=4 {
   STRUCT point point;
 };
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE infrastructural:point3D=5 {
+MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
   STRUCT point3D pt;
 };
 
