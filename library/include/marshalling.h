@@ -825,9 +825,28 @@ public:
 	}
 };
 
+struct DefaultMessageHandlerBase : public MessageHandlerBase {};
+
+template<class LambdaHandler>
+class DefaultMessageHandler : public DefaultMessageHandlerBase
+{
+	LambdaHandler lhandler_;
+public:
+	DefaultMessageHandler(LambdaHandler &&lhandler) : lhandler_(std::forward<LambdaHandler>(lhandler)) {}
+	template<typename ParserT>
+	void handle( ParserT& parser, uint64_t msgID ) { 
+		return lhandler_( parser, msgID ); 
+	}
+};
+
 template<typename msgID_, class LambdaHandler>
 MessageHandler<msgID_, LambdaHandler> makeMessageHandler( LambdaHandler &&lhandler ) {
 	return MessageHandler<msgID_, LambdaHandler>(std::forward<LambdaHandler>(lhandler));
+}
+
+template<class LambdaHandler>
+DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&lhandler ) {
+	return DefaultMessageHandler<LambdaHandler>(std::forward<LambdaHandler>(lhandler));
 }
 
 namespace impl {
@@ -847,11 +866,21 @@ void implHandleMessage( ParserT& parser )
 template<typename msgID, class ParserT, class HandlerT, class ... HandlersT >
 void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handlers )
 {
+	static_assert( std::is_base_of<MessageNameBase, msgID>::value, "(Default) message handler is expected" );
 	static_assert( std::is_base_of<MessageNameBase, msgID>::value );
-	if constexpr ( HandlerT::msgID == msgID::id )
-		handler.handle( parser );
+	if constexpr ( std::is_base_of<DefaultMessageHandlerBase, HandlerT>::value )
+	{
+		constexpr size_t remainingArgCount = sizeof ... (HandlersT);
+		static_assert ( remainingArgCount == 0, "Default handler, if present, must be the last argument" );
+		handler.handle( parser, msgID::id );
+	}
 	else
-		implHandleMessage<msgID, ParserT, HandlersT...>( parser, handlers... );
+	{
+		if constexpr ( HandlerT::msgID == msgID::id )
+			handler.handle( parser );
+		else
+			implHandleMessage<msgID, ParserT, HandlersT...>( parser, handlers... );
+	}
 }
 
 } // namespace impl
