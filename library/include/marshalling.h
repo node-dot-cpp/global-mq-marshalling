@@ -145,7 +145,7 @@ class SimpleTypeCollectionWrapper : public SimpleTypeCollectionWrapperBase
 public:
 	using value_type = typename T::value_type;
 	static_assert( std::is_same<T, GMQ_COLL vector<value_type>>::value, "vector type is expected only" ); // TODO: add list
-	static_assert( std::is_integral<value_type>::value || std::is_same<value_type, GMQ_COLL string>::value || std::is_enum<value_type>::value, "intended for simple idl types only" );
+	static_assert( std::is_arithmetic<value_type>::value || std::is_same<value_type, GMQ_COLL string>::value || std::is_enum<value_type>::value, "intended for simple idl types only" );
 
 	SimpleTypeCollectionWrapper( T& coll_ ) : coll( coll_ ), it( coll.begin() ) {};
 	size_t size() const { return coll.size(); }
@@ -208,11 +208,11 @@ public:
 		if constexpr ( std::is_same<typename ExpectedType::value_type, impl::SignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.parseSignedInteger( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
-			p.parseUnsignedInteger( val );
+			p.parseUnsignedInteger( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::RealType>::value && std::is_arithmetic<value_type>::value )
 			p.parseReal( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
-			p.parseString( val );
+			p.parseString( &val );
 		else
 			static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
 		coll.push_back( val );
@@ -224,11 +224,11 @@ public:
 		if constexpr ( std::is_same<typename ExpectedType::value_type, impl::SignedIntegralType>::value && std::is_integral<value_type>::value )
 			p.readSignedIntegerFromJson( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
-			p.readUnsignedIntegerFromJson( val );
+			p.readUnsignedIntegerFromJson( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::RealType>::value && std::is_arithmetic<value_type>::value )
 			p.readRealFromJson( &val );
 		else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
-			p.readStringFromJson( val );
+			p.readStringFromJson( &val );
 		else
 			static_assert( std::is_same<value_type, AllowedDataType>::value, "unsupported type" );
 		coll.push_back( val );

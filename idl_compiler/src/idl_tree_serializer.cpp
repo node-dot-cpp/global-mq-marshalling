@@ -994,10 +994,10 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::StringType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
