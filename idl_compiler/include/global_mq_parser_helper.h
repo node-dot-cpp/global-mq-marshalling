@@ -57,6 +57,7 @@ void releaseYys4(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3);
 void releaseYys5(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4);
 void releaseYys6(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5);
 void releaseYys7(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6);
+void releaseYys8(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6, YYSTYPE yys7);
 
 YYSTYPE createYyToken(const char* text, int line, int token);
 
@@ -66,6 +67,7 @@ YYSTYPE createHexIntegerLiteral(const char* text, int line);
 YYSTYPE createStringLiteral(const char* text, int line);
 YYSTYPE createZeroLiteral(const char* text, int line);
 
+YYSTYPE addScopeToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addPublishableToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addStructToFile(YYSTYPE file, YYSTYPE item);
@@ -81,11 +83,13 @@ YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl);
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
 
-YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
-YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id);
+YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoList);
+
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
-YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId);
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId);
 
 YYSTYPE createIntegerType(YYSTYPE token);
 YYSTYPE createIntegerTypeWithDefault(YYSTYPE token, YYSTYPE default_expr);
@@ -110,6 +114,7 @@ YYSTYPE createBlobType(YYSTYPE token);
 
 YYSTYPE createVectorOfIntegerType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfUintegerType(YYSTYPE token, bool hasDefault);
+YYSTYPE createVectorOfRealType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
@@ -126,6 +131,8 @@ YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE value
 YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit);
 
 YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id);
+
+YYSTYPE createScopeValue(YYSTYPE id);
 
 YYSTYPE addIdentifier(YYSTYPE list, YYSTYPE id);
 YYSTYPE addExpression(YYSTYPE list, YYSTYPE id, YYSTYPE expr);

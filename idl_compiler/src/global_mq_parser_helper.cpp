@@ -107,6 +107,10 @@ struct YyIdentifierList : public YyBase {
 	vector<string> ids;
 };
 
+struct YyScopeID : public YyBase {
+	double id;
+};
+
 struct YyToken : public YyBase {
 	int token;
 	std::string text;
@@ -376,6 +380,18 @@ void releaseYys7(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE
 	delete yys6;
 }
 
+void releaseYys8(YYSTYPE yys0, YYSTYPE yys1, YYSTYPE yys2, YYSTYPE yys3, YYSTYPE yys4, YYSTYPE yys5, YYSTYPE yys6, YYSTYPE yys7)
+{
+	delete yys0;
+	delete yys1;
+	delete yys2;
+	delete yys3;
+	delete yys4;
+	delete yys5;
+	delete yys6;
+	delete yys7;
+}
+
 YYSTYPE createYyToken(const char* text, int line, int token)
 {
 	YyToken* yy = new YyToken();
@@ -432,6 +448,17 @@ YYSTYPE createStringLiteral(const char* text, int line)
 
 
 //////////////////////////////////////////////////////////////////////////////
+
+YYSTYPE addScopeToFile(YYSTYPE file, YYSTYPE item)
+{
+	GLOBALMQASSERT(!file);
+	unique_ptr<YyBase> d0(item);
+
+	Scope* s = releasePointedFromYyPtr<Scope>(item);
+	currentRoot->scopes.push_back(unique_ptr<Scope>(s));
+
+	return 0;
+}
 
 YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item)
 {
@@ -542,12 +569,37 @@ YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl) { return insertExtensionMar
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensionMarker(decl);}
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
-
-YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, bool isAlias = false, string aliasOf = "")
+YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoList)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(protoList);
 	unique_ptr<YyBase> d2(id);
+
+	Scope* yy = new Scope();
+
+	yy->location = id->location;
+	yy->name = nameFromYyIdentifier(id);
+	if ( protoList != nullptr )
+	{
+		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
+		for ( auto& proto : pl->ids )
+		{
+			if ( proto == "json" || proto == "JSON" )
+				yy->protoList.insert( Proto::json );
+			else if ( proto == "gmq" || proto == "GMQ" )
+				yy->protoList.insert( Proto::gmq );
+			else
+				reportError(token->location, "Unexpected value of PROTO");
+		}
+	}
+
+	return new YyPtr<Scope>(yy);
+}
+
+YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id)
+{
+	unique_ptr<YyBase> d0(token);
+	unique_ptr<YyBase> d1(id);
 
 	CompositeType* yy = new CompositeType();
 
@@ -555,7 +607,7 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
 	yy->isNonExtendable = isNonExtendable;
-	yy->isAlias = isAlias;
+	/*yy->isAlias = isAlias;
 	if ( isAlias )
 	{
 		assert( aliasOf.size() != 0 );
@@ -575,31 +627,56 @@ YYSTYPE createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool
 			else
 				reportError(token->location, "Unexpected value of PROTO");
 		}
-	}
+	}*/
 
 	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID)
 {
-	return createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id);
+	unique_ptr<YyBase> d0(scopeName);
+	unique_ptr<YyBase> d1(numID);
+
+	uint64_t nID = CompositeType::invalid_num_id;
+	double numID_ = (yystype_cast<YyIntegerLiteral*>(numID))->value;
+	if ( numID_ < 0 )
+		nID = CompositeType::invalid_num_id;
+	else
+		nID = numID_;
+
+	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, id);
+
+	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
+	msg->scopeName = nameFromYyIdentifier( scopeName );
+	msg->numID = nID;
+
+	return ret;
 }
 
-YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id)
+YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID)
 {
-	return createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, protoList, id);
+	return impl_createMessage(token, isNonExtendable, scopeName, id, numID);
+}
+
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
+{
+	return impl_createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, id);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
-	return createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, nullptr, id);
+	return impl_createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, id);
 }
 
-YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE protoList, YYSTYPE id, YYSTYPE structId)
+YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId)
 {
 	unique_ptr<YyBase> d0(structId);
 	YyIdentifier* si = yystype_cast<YyIdentifier*>(structId);
-	return createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, protoList, id, true, si->text);
+	auto ret = impl_createMessage(token, isNonExtendable, scopeName, id, numID);
+	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
+	msg->isAlias = true;
+	msg->aliasOf = si->text;
+	return ret;
 }
 
 static
@@ -876,6 +953,7 @@ YYSTYPE createVectorOfSympleTypeBase(YYSTYPE token, MessageParameterType::KIND k
 
 YYSTYPE createVectorOfIntegerType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::INTEGER, hasDefault ); }
 YYSTYPE createVectorOfUintegerType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::UINTEGER, hasDefault ); }
+YYSTYPE createVectorOfRealType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::REAL, hasDefault ); }
 YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::CHARACTER_STRING, hasDefault ); }
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BLOB, hasDefault ); }
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault) { return createVectorOfSympleTypeBase( token, MessageParameterType::BYTE_ARRAY, hasDefault ); }
@@ -1032,6 +1110,16 @@ YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id)
 	yy->ids.push_back(name);
 
 	return d0.release();
+}
+
+YYSTYPE createScopeValue(YYSTYPE id)
+{
+	unique_ptr<YyBase> d0(id);
+	YyScopeID* yy = new YyScopeID();
+
+	yy->id = floatLiteralFromExpression( id );
+
+	return yy;
 }
 
 

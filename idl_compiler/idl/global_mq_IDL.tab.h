@@ -61,7 +61,8 @@
      KW_CHARACTER_STRING = 277,
      KW_BLOB = 278,
      KW_VECTOR = 279,
-     KW_PROTO = 280
+     KW_PROTO = 280,
+     KW_SCOPE = 281
    };
 #endif
 

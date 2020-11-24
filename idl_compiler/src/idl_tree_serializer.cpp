@@ -69,6 +69,16 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 	}
 }
 
+std::string impl_generateComposeFunctionName( CompositeType& s )
+{
+	return fmt::format( "{}_{}_compose", s.type2string(), s.name );
+}
+
+std::string impl_generateParseFunctionName( CompositeType& s )
+{
+	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
+}
+
 void printRoot( Root& s )
 {
 	if ( s.messages.size() == 0 && s.publishables.size() == 0 && s.structs.size() == 0 )
@@ -85,67 +95,47 @@ void printRoot( Root& s )
 	if ( s.structs.size() )
 		printf( "%zd structs ", s.structs.size() );
 	printf( ") {\n" );
+	for ( auto& it : s.scopes )
+	{
+		assert( it != nullptr && typeid( *(it) ) == typeid( Scope ) );
+		printScope( *(dynamic_cast<Scope*>(&(*(it)))), 4 );
+	}
 	for ( auto& it : s.messages )
 	{
-		auto& obj_1 = it;
-		print__unique_ptr_Message( obj_1, 4 );
+		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
+		printMessage( *(dynamic_cast<CompositeType*>(&(*(it)))), 4 );
 	}
 	for ( auto& it : s.publishables )
 	{
-		auto& obj_1 = it;
-		print__unique_ptr_Publishable( obj_1, 4 );
+		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
+		printPublishable( *(dynamic_cast<CompositeType*>(&(*(it)))), 4 );
 	}
 	for ( auto& it : s.structs )
 	{
-		auto& obj_1 = it;
-		print__unique_ptr_Struct( obj_1, 4 );
+		assert( it != nullptr && typeid( *(it) ) == typeid( CompositeType ) );
+		printStruct( *(dynamic_cast<CompositeType*>(&(*(it)))), 4 );
 	}
 	printf( "}\n" );
 }
 
-void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset )
+void printScope( Scope& s, size_t offset )
 {
-	if ( s == nullptr )
-	{
-		char offsetch[1024];
-		memset( offsetch, ' ', offset );
-		offsetch[ offset ] = 0;
-		printf( "%sMessage <null> {}\n", offsetch );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		printMessage( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
-	}
-}
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
 
-void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset )
-{
-	if ( s == nullptr )
-	{
-		char offsetch[1024];
-		memset( offsetch, ' ', offset );
-		offsetch[ offset ] = 0;
-		printf( "%sPublishable <null> {}\n", offsetch );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		printPublishable( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
-	}
-}
-
-void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset )
-{
-	if ( s == nullptr )
-	{
-		char offsetch[1024];
-		memset( offsetch, ' ', offset );
-		offsetch[ offset ] = 0;
-		printf( "%sStruct <null> {}\n", offsetch );
-	}
-	else if ( typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		printStruct( *(dynamic_cast<CompositeType*>(&(*(s)))), offset );
-	}
+	printf( "%sScope: name = \"%s\" Protocols: ", offsetch, s.name.c_str() );
+	for ( auto t:s.protoList )
+		switch ( t )
+		{
+			case Proto::gmq: printf( "GMQ " ); break;
+			case Proto::json: printf( "JSON " ); break;
+			default: assert( false );
+		}
+	printf( "(%zd messages) {\n", s.objectList.size() );
+	for ( auto msg : s.objectList )
+		printf( "%s  %s\n", offsetch, msg->name.c_str() );
+	printf( "%s}\n", offsetch );
 }
 
 void printMessage( CompositeType& s, size_t offset )
@@ -154,12 +144,12 @@ void printMessage( CompositeType& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sMessage: name = \"%s\" %sTargets: ", offsetch, s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	printf( "%sMessage: name = \"%s:%s=%zd\" %sTargets: ", offsetch, s.scopeName.c_str(), s.name.c_str(), s.numID, s.isNonExtendable ? "NONEXTENDABLE " : "" );
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case CompositeType::Proto::gmq: printf( "GMQ " ); break;
-			case CompositeType::Proto::json: printf( "JSON " ); break;
+			case Proto::gmq: printf( "GMQ " ); break;
+			case Proto::json: printf( "JSON " ); break;
 			default: assert( false );
 		}
 	printf( "(%zd parameters) {\n", s.members.size() );
@@ -652,9 +642,155 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 	return ok;
 }
 
+bool impl_processScopes( Root& r )
+{
+	bool ok = true;
+	for ( auto& s : r.scopes )
+	{
+		if ( s->protoList.size() == 0 )
+		{
+			fprintf( stderr, "File %s, line %d: Scope \"%s\" cannot have an empty protocol list\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
+			ok = false;
+		}
+	}
+	
+	// each message must be from one of declared scopes
+	for ( auto& it : r.messages )
+	{
+		if ( it->numID == CompositeType::invalid_num_id )
+		{
+			// todo report
+			ok = false;
+			continue;
+		}
+
+		bool found = false;
+		for ( auto& s : r.scopes )
+		{
+			if ( it->scopeName == s->name )
+			{
+//				s->objectList.push_back( &(*it) );
+				it->protoList.insert( s->protoList.begin(), s->protoList.end() );
+				s->objectList.push_back( &(*it) );
+				found = true;
+				break;
+			}
+		}
+
+		if ( !found )
+		{
+			ok = false;
+			fprintf( stderr, "File %s, line %d: Scope \"%s\" has not been declared\n", it->location.fileName.c_str(), it->location.lineNumber, it->scopeName.c_str() );
+
+			/*{
+				Scope* scope = new Scope;
+				scope->name = it->scopeName;
+				scope->objectList.push_back( &(*it) );
+				r.scopes.push_back( unique_ptr<Scope>(scope) );
+			}*/
+		}
+	}
+	return ok;
+}
+
+void impl_insertScopeDetails( FILE* header, Scope& scope )
+{
+	assert( scope.objectList.size() != 0 );
+	fprintf( header, "//  %s\n", scope.name.c_str() );
+	fprintf( header, "//  {\n" );
+	for ( auto msg : scope.objectList )
+		fprintf( header, "//    %s\n", msg->name.c_str() );
+	fprintf( header, "//  }\n" );
+}
+
+void impl_insertScopeList( FILE* header, Root& r )
+{
+	fprintf( header, "//////////////////////////////////////////////////////////////\n" );
+	fprintf( header, "//\n" );
+	fprintf( header, "//  Scopes:\n" );
+	fprintf( header, "//\n" );
+	for ( auto& s : r.scopes )
+	{
+		impl_insertScopeDetails( header, *s );
+		fprintf( header, "//\n" );
+	}
+	fprintf( header, "//////////////////////////////////////////////////////////////\n\n" );
+}
+
+void impl_generateScopeEnum( FILE* header, Scope& scope )
+{
+	for ( auto msg : scope.objectList )
+	{
+		fprintf( header, "using %s = impl::MessageName<%lld>;\n", msg->name.c_str(), msg->numID );
+	}
+	fprintf( header, "\n" );
+}
+
+void impl_generateScopeHandler( FILE* header, Scope& scope )
+{
+	fprintf( header, 
+		"template<class BufferT, class ... HandlersT >\n"
+		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
+		"{\n"
+		"\tGmqParser parser( buffer );\n"
+		"\tuint64_t msgID;\n"
+		"\tparser.parseUnsignedInteger( &msgID );\n"
+		"\tswitch ( msgID )\n"
+		"\t{\n" 
+	);
+	for ( auto msg : scope.objectList )
+		fprintf( header, "\t\tcase %s::id: impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
+	fprintf( header, 
+		"\t}\n"
+		"}\n\n" );
+}
+
+void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
+{
+	fprintf( header, 
+		"template<typename msgID, class BufferT, typename ... Args>\n"
+		"void composeMessage( BufferT& buffer, Args&& ... args );\n\n"
+	);
+}
+
+void impl_generateScopeComposer( FILE* header, Scope& scope )
+{
+	assert( scope.objectList.size() != 0 );
+	/*fprintf( header, 
+		"template<Messages msgID, class BufferT, class MessageComposerT >\n"
+		"void composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
+		"{\n"
+		"\tm::GmqComposer composer( buffer );\n"
+		"\tcomposeUnsignedInteger( composer, msgID );\n"
+		"\tmsgComposer.compose( composer );\n"
+		"}\n\n"
+	);*/
+	fprintf( header, 
+		"template<typename msgID, class BufferT, typename ... Args>\n"
+		"void composeMessage( BufferT& buffer, Args&& ... args )\n"
+		"{\n"
+		"\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n"
+		"\tm::GmqComposer composer( buffer );\n"
+		"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
+	);
+	fprintf( header, "\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
+	fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
+	for ( size_t i=1; i<scope.objectList.size(); ++i )
+	{
+		fprintf( header, "\telse if constexpr ( msgID::id == %s::id )\n", scope.objectList[i]->name.c_str() );
+		fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[i])).c_str() );
+	}
+	fprintf( header, 
+		"\telse\n"
+		"\t\tstatic_assert( false, \"unexpected value of msgID\" );\n"
+		"}\n\n" );
+}
+
+
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
+	ok = impl_processScopes(s) && ok;
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
 	if ( !ok )
 		throw std::exception();
@@ -670,21 +806,35 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		"namespace m {\n\n",
 		fileName, fileName );
 
+	impl_insertScopeList( header, s );
+
 	generateParamNameBlock( header, params );
 
-	for ( auto& it : s.messages )
+	for ( auto& scope : s.scopes )
 	{
-		auto& obj_1 = it;
-		if ( obj_1 == nullptr )
-			fprintf( header, "// Message = <null>\n" );
-		else 
+		fprintf( header, "namespace %s {\n\n", scope->name.c_str() );
+
+		impl_generateScopeEnum( header, *scope );
+		impl_generateScopeHandler( header, *scope );
+		impl_generateScopeComposerForwardDeclaration( header, *scope );
+
+		for ( auto it : scope->objectList )
 		{
-			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-			if ( !obj_1->isAlias )
-				generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
-			else
-				generateMessageAlias( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+			if ( it == nullptr )
+				fprintf( header, "// Message = <null>\n" );
+			else 
+			{
+				assert( typeid( *(it) ) == typeid( CompositeType ) );
+				if ( !it->isAlias )
+					generateMessage( header, *it );
+				else
+					generateMessageAlias( header, *it );
+			}
 		}
+
+		impl_generateScopeComposer( header, *scope );
+
+		fprintf( header, "} // namespace %s \n\n", scope->name.c_str() );
 	}
 
 	for ( auto& it : s.structs )
@@ -844,10 +994,10 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::StringType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
@@ -1042,8 +1192,8 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case CompositeType::Proto::gmq: fprintf( header, "GMQ " ); break;
-			case CompositeType::Proto::json: fprintf( header, "JSON " ); break;
+			case Proto::gmq: fprintf( header, "GMQ " ); break;
+			case Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
 	fprintf( header, "(%zd parameters)\n", s.members.size() );
@@ -1252,13 +1402,13 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
-			case CompositeType::Proto::gmq:
+			case Proto::gmq:
 			{
 				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
 				break;
 			}
-			case CompositeType::Proto::json:
+			case Proto::json:
 			{
 				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForComposingJson( header, s, "" );
@@ -1272,7 +1422,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 	{
 		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
-		if ( s.protoList.find( CompositeType::Proto::gmq ) != s.protoList.end() )
+		if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
 		{
 			++processedProtoCount;
 			fprintf( header, 
@@ -1287,9 +1437,9 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 			++processedProtoCount;
 			switch ( it )
 			{
-				case CompositeType::Proto::gmq:
+				case Proto::gmq:
 					break; // already done
-				case CompositeType::Proto::json:
+				case Proto::json:
 				{
 					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
 					if ( processedProtoCount == 0 )
@@ -1328,13 +1478,13 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 	{
 		switch ( *(s.protoList.begin()) )
 		{
-			case CompositeType::Proto::gmq:
+			case Proto::gmq:
 			{
 				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
 				break;
 			}
-			case CompositeType::Proto::json:
+			case Proto::json:
 			{
 				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
 				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
@@ -1348,7 +1498,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 	{
 		size_t processedProtoCount = 0;
 		// if present, keep GMQ first!
-		if ( s.protoList.find( CompositeType::Proto::gmq ) != s.protoList.end() )
+		if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
 		{
 			++processedProtoCount;
 			fprintf( header, 
@@ -1363,9 +1513,9 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 			++processedProtoCount;
 			switch ( it )
 			{
-				case CompositeType::Proto::gmq:
+				case Proto::gmq:
 					break; // already done
-				case CompositeType::Proto::json:
+				case Proto::json:
 				{
 					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
 					if ( processedProtoCount == 0 )
@@ -1400,8 +1550,8 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
+	"void %s(ComposerT& composer, Args&& ... args)\n"
+	"{\n", impl_generateComposeFunctionName( s ).c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
@@ -1415,8 +1565,8 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s )
 void impl_generateParseFunction( FILE* header, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s_%s_parse(ParserT& p, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
+	"void %s(ParserT& p, Args&& ... args)\n"
+	"{\n", impl_generateParseFunctionName( s ).c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
@@ -1451,8 +1601,8 @@ void generateMessageAlias( FILE* header, CompositeType& s )
 	for ( auto t:s.protoList )
 		switch ( t )
 		{
-			case CompositeType::Proto::gmq: fprintf( header, "GMQ " ); break;
-			case CompositeType::Proto::json: fprintf( header, "JSON " ); break;
+			case Proto::gmq: fprintf( header, "GMQ " ); break;
+			case Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
 	fprintf( header, "(Alias of %s)\n", s.aliasOf.c_str() );

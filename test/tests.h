@@ -5,6 +5,8 @@ void runGmqSample();
 void runJsonSample();
 void testParsingJsonFile();
 void testMessageAliases();
+void testScopedMessageComposingAndParsing();
+
 void testSubscriptionTest();
 
 #endif // TESTS_H

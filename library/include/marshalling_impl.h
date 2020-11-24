@@ -474,7 +474,7 @@ public:
 	{
 		static_assert( sizeof( T ) <= impl::integer_max_size );
 		/*temporary solution TODO: actual implementation*/ double val = *reinterpret_cast<double*>(begin); begin += sizeof( val );
-		if ( std::is_integral<T>::value )
+		if constexpr ( std::is_integral<T>::value )
 		{
 			static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 			if constexpr ( std::is_signed< T >::value )
