@@ -124,14 +124,13 @@ void printScope( Scope& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sScope: name = \"%s\" Protocols: ", offsetch, s.name.c_str() );
-	for ( auto t:s.protoList )
-		switch ( t )
-		{
-			case Proto::gmq: printf( "GMQ " ); break;
-			case Proto::json: printf( "JSON " ); break;
-			default: assert( false );
-		}
+	printf( "%sScope: name = \"%s\" Protocol: ", offsetch, s.name.c_str() );
+	switch ( s.proto )
+	{
+		case Proto::gmq: printf( "GMQ " ); break;
+		case Proto::json: printf( "JSON " ); break;
+		default: assert( false );
+	}
 	printf( "(%zd messages) {\n", s.objectList.size() );
 	for ( auto msg : s.objectList )
 		printf( "%s  %s\n", offsetch, msg->name.c_str() );
@@ -429,7 +428,8 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	fprintf( header, "\n" );
 }
 
-bool impl_checkCompositeTypeNameUniqueness(vector<unique_ptr<CompositeType>>& coll, const char* typeName)
+template<class CompositeObjPtrT>
+bool impl_checkCompositeTypeNameUniqueness(vector<CompositeObjPtrT>& coll, const char* typeName)
 {
 	bool ok = true;
 	std::map<string, Location> names;
@@ -448,7 +448,9 @@ bool impl_checkCompositeTypeNameUniqueness(vector<unique_ptr<CompositeType>>& co
 
 bool impl_checkCompositeTypeNameUniqueness(Root& s)
 {
-	bool ok = impl_checkCompositeTypeNameUniqueness(s.messages, "MESSAGE");
+	bool ok = true;
+	for ( auto& scope : s.scopes )
+		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList, "MESSAGE") && ok;
 	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
 	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
 	return ok;
@@ -647,9 +649,9 @@ bool impl_processScopes( Root& r )
 	bool ok = true;
 	for ( auto& s : r.scopes )
 	{
-		if ( s->protoList.size() == 0 )
+		if ( s->proto == Proto::undefined )
 		{
-			fprintf( stderr, "File %s, line %d: Scope \"%s\" cannot have an empty protocol list\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
+			fprintf( stderr, "File %s, line %d: Scope \"%s\" misses protocol\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
 			ok = false;
 		}
 	}
@@ -670,7 +672,8 @@ bool impl_processScopes( Root& r )
 			if ( it->scopeName == s->name )
 			{
 //				s->objectList.push_back( &(*it) );
-				it->protoList.insert( s->protoList.begin(), s->protoList.end() );
+				assert( it->protoList.empty() );
+				it->protoList.insert( s->proto );
 				s->objectList.push_back( &(*it) );
 				found = true;
 				break;

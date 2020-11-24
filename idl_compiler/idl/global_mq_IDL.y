@@ -75,7 +75,7 @@ line_directive
 
 
 scope
-	: KW_SCOPE IDENTIFIER KW_PROTO '=' proto_values ';' { $$ = createScope($1, $2, $5); releaseYys3($3, $4, $6); }
+	: KW_SCOPE IDENTIFIER KW_PROTO '=' IDENTIFIER ';' { $$ = createScope($1, $2, $5); releaseYys3($3, $4, $6); }
 
 message_alias
 	: KW_MESSAGE IDENTIFIER ':' IDENTIFIER '=' INTEGER_LITERAL '=' KW_STRUCT IDENTIFIER ';' { $$ = createMessageAlias($1, false, $2, $4, $6, $9); releaseYys5($3, $5, $7, $8, $10); }
@@ -276,11 +276,6 @@ enum_values
 	| enum_values ',' IDENTIFIER '=' INTEGER_LITERAL { $$ = addEnumValue($1, $3, $5); releaseYys2($2, $4); }
 	| KW_IDENTIFIER '(' STRING_LITERAL ')' '=' INTEGER_LITERAL { $$ = addEnumValue(0, $3, $6); releaseYys4($1, $2, $4, $5); }
 	| enum_values ',' KW_IDENTIFIER '(' STRING_LITERAL ')' '=' INTEGER_LITERAL { $$ = addEnumValue($1, $5, $8); releaseYys3($2, $3, $4); releaseYys2($6, $7); }
-;
-
-proto_values
-	: IDENTIFIER { $$ = addProtoValue(0, $1); }
-	| proto_values ',' IDENTIFIER { $$ = addProtoValue($1, $3); releaseYys($2); }
 ;
 
 expr
