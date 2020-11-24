@@ -223,6 +223,13 @@ void composeUnsignedInteger(ComposerT& composer, T num )
 	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
 }
 
+template<typename ComposerT, typename T>
+void composeReal(ComposerT& composer, T num )
+{
+	static_assert ( std::is_arithmetic<T>::value );
+	composer.buff.appendString( fmt::format( "{}", num ) );
+}
+
 template<typename ComposerT>
 void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
