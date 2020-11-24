@@ -782,7 +782,7 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 	}
 	fprintf( header, 
 		"\telse\n"
-		"\t\tstatic_assert( false, \"unexpected value of msgID\" );\n"
+		"\t\tstatic_assert( std::is_same<impl::MessageNameBase, msgID>::value, \"unexpected value of msgID\" ); // note: should be just static_assert(false,\"...\"); but it seems that in this case clang asserts yet before looking at constexpr conditions\n"
 		"}\n\n" );
 }
 

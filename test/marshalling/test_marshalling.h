@@ -164,7 +164,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 	else if constexpr ( msgID::id == point_alias::id )
 		MESSAGE_point_alias_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( false, "unexpected value of msgID" );
+		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 }
 
 } // namespace scope_one 
@@ -283,7 +283,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 	if constexpr ( msgID::id == LevelTraceData::id )
 		MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( false, "unexpected value of msgID" );
+		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 }
 
 } // namespace level_trace 
@@ -782,7 +782,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 	else if constexpr ( msgID::id == point3D::id )
 		MESSAGE_point3D_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( false, "unexpected value of msgID" );
+		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 }
 
 } // namespace infrastructural 

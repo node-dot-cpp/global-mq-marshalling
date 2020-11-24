@@ -275,7 +275,7 @@ void testMessageAliases()
 
 void testScopedMessageComposingAndParsing()
 {
-	Point3D pt = {444, 555};
+	Point pt = {444, 555};
 	Point3D pt3D = {123, 456, 789};
 	m::Buffer b;
 	m::scope_one::composeMessage<m::scope_one::point3D_alias>( b, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z );
