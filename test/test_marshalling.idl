@@ -1,7 +1,7 @@
 /*/////////////////////////////////////
 // Error case: cyclic dependency
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE base {
+MESSAGE SCOPE:ID=123 PROTO=JSON,GMQ NONEXTENDABLE base {
   STRUCT cyclic_1 c;
 };
 
@@ -14,10 +14,15 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
-MESSAGE PROTO = JSON, GMQ point32_alias = STRUCT point3D;
+SCOPE scope_one PROTO = JSON, GMQ;
+SCOPE level_trace PROTO = JSON, GMQ;
+SCOPE infrastructural PROTO = JSON, GMQ;
+
+MESSAGE scope_one:point3D_alias=1 = STRUCT point3D;
+MESSAGE scope_one:point_alias=2 = STRUCT point;
 
 
-MESSAGE PROTO = JSON LevelTraceData{
+MESSAGE level_trace:LevelTraceData=1{
 	STRUCT CharacterParam CharacterParam;
 	VECTOR<STRUCT POINT3DREAL> Points;
 };
@@ -39,7 +44,7 @@ STRUCT POINT3DREAL{
   REAL Z;
 };
 
-MESSAGE PROTO = JSON, GMQ PolygonSt{
+MESSAGE infrastructural:PolygonSt=2{
 	VECTOR<STRUCT PolygonMap> polygonMap;
 	VECTOR<STRUCT PolygonMap> concaveMap;
 	VECTOR<STRUCT ObstacleMap> obstacleMap;
@@ -85,7 +90,7 @@ STRUCT point3D {
 };
 
 
-MESSAGE PROTO=JSON,GMQ message_one {
+MESSAGE infrastructural:message_one=3 {
   INTEGER firstParam;
   VECTOR<INTEGER> secondParam;
   VECTOR<STRUCT point3D> thirdParam;
@@ -95,13 +100,14 @@ MESSAGE PROTO=JSON,GMQ message_one {
   REAL seventhParam;
   STRUCT NONEXTENDABLE point eighthParam;
   STRUCT point3D ninethParam;
+  VECTOR<REAL> tenthParam;
 };
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point {
+MESSAGE NONEXTENDABLE infrastructural:point=4 {
   STRUCT point point;
 };
 
-MESSAGE PROTO=JSON,GMQ NONEXTENDABLE point3D {
+MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
   STRUCT point3D pt;
 };
 

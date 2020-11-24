@@ -9,5 +9,6 @@ int main()
 	runGmqSample();
 	testParsingJsonFile();
 	testMessageAliases();
+	testScopedMessageComposingAndParsing();
 //	testSubscriptionTest();
 }

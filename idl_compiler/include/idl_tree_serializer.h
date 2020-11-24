@@ -33,6 +33,7 @@
 // printing global_mq tree
 void printRoot( Root& s );
 
+void printScope( Scope& s, size_t offset );
 void printMessage( CompositeType& s, size_t offset );
 void printPublishable( CompositeType& s, size_t offset );
 void printStruct( CompositeType& s, size_t offset );
