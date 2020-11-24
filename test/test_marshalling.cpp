@@ -21,6 +21,7 @@ struct Point3D
 void runGmqSample()
 {
 	std::vector<int> vectorOfNumbers = { 0, 1, 2, 3, 4, 5 };
+	std::vector<float> vectorOfRealNumbers = { 0.1, 1.2, 2.3 };
 	std::vector<Point> vectorOfPoints = { {0, 1}, {2, 3}, {4, 5} };
 	std::vector<Point3D> vectorOfPoints3D = { {0, 1, 2}, {3, 4, 5} };
 	Point pt = {175, 186};
@@ -33,6 +34,7 @@ void runGmqSample()
 		m::eighthParam = m::MessageWrapperForComposing( [&](auto& c){ m::STRUCT_point_compose( c, m::x = pt.x, m::y = pt.y );} ),
 		m::ninethParam = m::MessageWrapperForComposing( [&](auto& c){ m::STRUCT_point3D_compose( c, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z );} ),
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbers ),
+		m::tenthParam = m::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::STRUCT_point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
 
@@ -41,6 +43,7 @@ void runGmqSample()
 	int forthParam = -1;
 	std::string_view fifthParam;
 	std::vector<int> vectorOfNumbersBack;
+	std::vector<float> vectorOfRealNumbersBack;
 	std::vector<Point> vectorOfPointsBack;
 	std::vector<Point3D> vectorOfPoints3DBack;
 	Point ptBack = {0, 0};
@@ -49,6 +52,7 @@ void runGmqSample()
 	m::infrastructural::MESSAGE_message_one_parse( parser, 
 		m::firstParam = &firstParam, m::forthParam = &forthParam, 
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
+		m::tenthParam = m::SimpleTypeCollectionWrapper( vectorOfRealNumbersBack ), 
 		m::thirdParam = m::CollactionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; m::STRUCT_point3D_parse( p, m::x = &(pt.x), m::y = &(pt.y), m::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
 		m::sixthParam = m::CollactionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; m::STRUCT_point_parse( p,  m::x = &(pt.x), m::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
 		m::eighthParam = m::MessageWrapperForParsing( [&](auto& parser){ m::STRUCT_point_parse( parser, m::x = &(ptBack.x), m::y = &(ptBack.y) );} ),
@@ -62,6 +66,9 @@ void runGmqSample()
 	assert( vectorOfNumbers.size() == vectorOfNumbersBack.size() );
 	for ( size_t i=0; i<vectorOfNumbers.size(); ++i )
 		assert( vectorOfNumbers[i] == vectorOfNumbersBack[i] );
+	assert( vectorOfRealNumbers.size() == vectorOfRealNumbersBack.size() );
+	for ( size_t i=0; i<vectorOfRealNumbers.size(); ++i )
+		assert( vectorOfRealNumbers[i] == vectorOfRealNumbersBack[i] );
     assert( vectorOfPointsBack.size() == vectorOfPoints.size() );
     for ( size_t i=0; i<vectorOfPoints.size(); ++i )
     {
@@ -85,6 +92,7 @@ void runGmqSample()
 void runJsonSample()
 {
 	std::vector<int> vectorOfNumbers = { 0, 1, 2, 3, 4, 5 };
+	std::vector<float> vectorOfRealNumbers = { 0.1, 1.2, 2.3 };
 	std::vector<Point> vectorOfPoints = { {0, 1}, {2, 3}, {4, 5} };
 	std::vector<Point3D> vectorOfPoints3D = { {0, 1, 2}, {3, 4, 5} };
 	Point pt = {175, 186};
@@ -97,6 +105,7 @@ void runJsonSample()
 		m::eighthParam = m::MessageWrapperForComposing( [&](auto& c){ m::STRUCT_point_compose( c, m::x = pt.x, m::y = pt.y );} ),
 		m::ninethParam = m::MessageWrapperForComposing( [&](auto& c){ m::STRUCT_point3D_compose( c, m::x = pt3D.x, m::y = pt3D.y, m::z = pt3D.z );} ),
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbers ),
+		m::tenthParam = m::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
 		m::sixthParam = m::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ m::STRUCT_point_compose( c, m::x = vectorOfPoints[ordinal].x, m::y = vectorOfPoints[ordinal].y );} )
 	);
 
@@ -108,6 +117,7 @@ void runJsonSample()
 	int forthParam = -1;
 	std::string_view fifthParam;
 	std::vector<int> vectorOfNumbersBack;
+	std::vector<float> vectorOfRealNumbersBack;
 	std::vector<Point> vectorOfPointsBack;
 	std::vector<Point3D> vectorOfPoints3DBack;
 	Point ptBack = {0, 0};
@@ -116,6 +126,7 @@ void runJsonSample()
 	m::infrastructural::MESSAGE_message_one_parse( parser, 
 		m::firstParam = &firstParam, m::forthParam = &forthParam, 
 		m::secondParam = m::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
+		m::tenthParam = m::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
 		m::thirdParam = m::CollactionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; m::STRUCT_point3D_parse( p, m::x = &(pt.x), m::y = &(pt.y), m::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
 		m::sixthParam = m::CollactionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; m::STRUCT_point_parse( p,  m::x = &(pt.x), m::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
 		m::eighthParam = m::MessageWrapperForParsing( [&](auto& parser){ m::STRUCT_point_parse( parser, m::x = &(ptBack.x), m::y = &(ptBack.y) );} ),
@@ -129,6 +140,9 @@ void runJsonSample()
 	assert( vectorOfNumbers.size() == vectorOfNumbersBack.size() );
 	for ( size_t i=0; i<vectorOfNumbers.size(); ++i )
 		assert( vectorOfNumbers[i] == vectorOfNumbersBack[i] );
+	assert( vectorOfRealNumbers.size() == vectorOfRealNumbersBack.size() );
+	for ( size_t i=0; i<vectorOfRealNumbers.size(); ++i )
+		assert( vectorOfRealNumbers[i] == vectorOfRealNumbersBack[i] );
     assert( vectorOfPointsBack.size() == vectorOfPoints.size() );
     for ( size_t i=0; i<vectorOfPoints.size(); ++i )
     {

@@ -58,6 +58,7 @@ using pt_Type = NamedParameter<struct pt_Struct>;
 using secondParam_Type = NamedParameter<struct secondParam_Struct>;
 using seventhParam_Type = NamedParameter<struct seventhParam_Struct>;
 using sixthParam_Type = NamedParameter<struct sixthParam_Struct>;
+using tenthParam_Type = NamedParameter<struct tenthParam_Struct>;
 using thirdParam_Type = NamedParameter<struct thirdParam_Struct>;
 using x_Type = NamedParameter<struct x_Struct>;
 using y_Type = NamedParameter<struct y_Struct>;
@@ -91,6 +92,7 @@ constexpr pt_Type::TypeConverter pt;
 constexpr secondParam_Type::TypeConverter secondParam;
 constexpr seventhParam_Type::TypeConverter seventhParam;
 constexpr sixthParam_Type::TypeConverter sixthParam;
+constexpr tenthParam_Type::TypeConverter tenthParam;
 constexpr thirdParam_Type::TypeConverter thirdParam;
 constexpr x_Type::TypeConverter x;
 constexpr y_Type::TypeConverter y;
@@ -442,7 +444,7 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// MESSAGE "message_one" Targets: JSON GMQ (9 parameters)
+// MESSAGE "message_one" Targets: JSON GMQ (10 parameters)
 // 1. INTEGER firstParam (REQUIRED)
 // 2. VECTOR<INTEGER> secondParam (REQUIRED)
 // 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
@@ -452,6 +454,7 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 // 7. REAL seventhParam (REQUIRED)
 // 8. STRUCT eighthParam (REQUIRED)
 // 9. STRUCT ninethParam (REQUIRED)
+// 10. VECTOR<REAL> tenthParam (REQUIRED)
 
 //**********************************************************************
 
@@ -469,6 +472,7 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
 	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
 	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
+	using arg_10_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, tenthParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -478,7 +482,8 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_8_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...);
+		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_10_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -495,6 +500,7 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 		impl::gmq::composeParamToGmq<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_7_type::nameAndTypeID, args...);
 		impl::gmq::composeParamToGmq<ComposerT, arg_8_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_8_type::nameAndTypeID, args...);
 		impl::gmq::composeParamToGmq<ComposerT, arg_9_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_9_type::nameAndTypeID, args...);
+		impl::gmq::composeParamToGmq<ComposerT, arg_10_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_10_type::nameAndTypeID, args...);
 	}
 	else
 	{
@@ -517,6 +523,8 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 		impl::json::composeParamToJson<ComposerT, arg_8_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "eighthParam", arg_8_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
 		impl::json::composeParamToJson<ComposerT, arg_9_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ninethParam", arg_9_type::nameAndTypeID, args...);
+		composer.buff.append( ",\n  ", 4 );
+		impl::json::composeParamToJson<ComposerT, arg_10_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "tenthParam", arg_10_type::nameAndTypeID, args...);
 		composer.buff.append( "\n}", 2 );
 	}
 }
@@ -535,6 +543,7 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
 	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
 	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
+	using arg_10_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, tenthParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -544,7 +553,8 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_8_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...);
+		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_10_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -561,6 +571,7 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 		impl::gmq::parseGmqParam<ParserT, arg_7_type, false>(p, arg_7_type::nameAndTypeID, args...);
 		impl::gmq::parseGmqParam<ParserT, arg_8_type, false>(p, arg_8_type::nameAndTypeID, args...);
 		impl::gmq::parseGmqParam<ParserT, arg_9_type, false>(p, arg_9_type::nameAndTypeID, args...);
+		impl::gmq::parseGmqParam<ParserT, arg_10_type, false>(p, arg_10_type::nameAndTypeID, args...);
 	}
 	else
 	{
@@ -588,6 +599,8 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 				impl::json::parseJsonParam<ParserT, arg_8_type, false>(arg_8_type::nameAndTypeID, p, args...);
 			else if ( key == "ninethParam" )
 				impl::json::parseJsonParam<ParserT, arg_9_type, false>(arg_9_type::nameAndTypeID, p, args...);
+			else if ( key == "tenthParam" )
+				impl::json::parseJsonParam<ParserT, arg_10_type, false>(arg_10_type::nameAndTypeID, p, args...);
 			p.skipSpacesEtc();
 			if ( p.isDelimiter( ',' ) )
 			{
