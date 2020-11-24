@@ -180,7 +180,7 @@ public:
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::UnsignedIntegralType>::value && std::is_integral<value_type>::value )
 				impl::json::composeUnsignedInteger( composer, *it );
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::RealType>::value && std::is_arithmetic<value_type>::value )
-				impl::json::composeUnsignedInteger( composer, *it );
+				impl::json::composeReal( composer, *it );
 			else if constexpr ( std::is_same<typename ExpectedType::value_type, impl::StringType>::value && std::is_same<value_type, GMQ_COLL string>::value )
 				impl::json::composeString( composer, *it );
 			else
