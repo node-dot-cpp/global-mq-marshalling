@@ -14,9 +14,11 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
-SCOPE scope_one PROTO = JSON, GMQ;
-SCOPE level_trace PROTO = JSON, GMQ;
-SCOPE infrastructural PROTO = JSON, GMQ;
+SCOPE scope_one PROTO = JSON;
+SCOPE level_trace PROTO = JSON;
+SCOPE infrastructural PROTO = JSON;
+SCOPE test_gmq PROTO = GMQ;
+SCOPE test_json PROTO = JSON;
 
 MESSAGE scope_one:point3D_alias=1 = STRUCT point3D;
 MESSAGE scope_one:point_alias=2 = STRUCT point;
@@ -90,7 +92,20 @@ STRUCT point3D {
 };
 
 
-MESSAGE infrastructural:message_one=3 {
+MESSAGE test_gmq:message_one=3 {
+  INTEGER firstParam;
+  VECTOR<INTEGER> secondParam;
+  VECTOR<STRUCT point3D> thirdParam;
+  UINTEGER forthParam;
+  CHARACTER-STRING fifthParam;
+  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
+  REAL seventhParam;
+  STRUCT NONEXTENDABLE point eighthParam;
+  STRUCT point3D ninethParam;
+  VECTOR<REAL> tenthParam;
+};
+
+MESSAGE test_json:message_one=3 {
   INTEGER firstParam;
   VECTOR<INTEGER> secondParam;
   VECTOR<STRUCT point3D> thirdParam;
