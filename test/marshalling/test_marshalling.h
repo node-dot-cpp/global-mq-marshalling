@@ -123,20 +123,24 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 	parser.readKey(&key);
 	if (key != "msgid")
 		throw std::exception(); // bad format
-	parser.readUnsignedIntegerFromJson(&id);
+	parser.readUnsignedIntegerFromJson(&msgID);
 	parser.skipSpacesEtc();
-	if (!p.isDelimiter(','))
+	if (!parser.isDelimiter(','))
 		throw std::exception(); // bad format
 	parser.skipDelimiter(',');
 	parser.readKey(&key);
 	if (key != "msgbody")
 		throw std::exception(); // bad format
+	JsonParser p( parser );
 
 	switch ( msgID )
 	{
 		case point3D_alias::id: impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
 		case point_alias::id: impl::implHandleMessage<point_alias>( parser, handlers... ); break;
 	}
+
+	p.skipMessageFromJson();
+	parser = p;
 
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
@@ -185,13 +189,17 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 {
 	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
 	m::JsonComposer composer( buffer );
-	impl::composeUnsignedInteger( composer, msgID::id );
+	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
+	impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == point3D_alias::id )
 		MESSAGE_point3D_alias_compose( composer, std::forward<Args>( args )... );
 	else if constexpr ( msgID::id == point_alias::id )
 		MESSAGE_point_alias_compose( composer, std::forward<Args>( args )... );
 	else
 		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+	composer.buff.append( "\n}", 2 );
 }
 
 } // namespace scope_one 
@@ -211,19 +219,23 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 	parser.readKey(&key);
 	if (key != "msgid")
 		throw std::exception(); // bad format
-	parser.readUnsignedIntegerFromJson(&id);
+	parser.readUnsignedIntegerFromJson(&msgID);
 	parser.skipSpacesEtc();
-	if (!p.isDelimiter(','))
+	if (!parser.isDelimiter(','))
 		throw std::exception(); // bad format
 	parser.skipDelimiter(',');
 	parser.readKey(&key);
 	if (key != "msgbody")
 		throw std::exception(); // bad format
+	JsonParser p( parser );
 
 	switch ( msgID )
 	{
 		case LevelTraceData::id: impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
 	}
+
+	p.skipMessageFromJson();
+	parser = p;
 
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
@@ -307,11 +319,15 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 {
 	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
 	m::JsonComposer composer( buffer );
-	impl::composeUnsignedInteger( composer, msgID::id );
+	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
+	impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == LevelTraceData::id )
 		MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... );
 	else
 		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+	composer.buff.append( "\n}", 2 );
 }
 
 } // namespace level_trace 
@@ -333,14 +349,15 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 	parser.readKey(&key);
 	if (key != "msgid")
 		throw std::exception(); // bad format
-	parser.readUnsignedIntegerFromJson(&id);
+	parser.readUnsignedIntegerFromJson(&msgID);
 	parser.skipSpacesEtc();
-	if (!p.isDelimiter(','))
+	if (!parser.isDelimiter(','))
 		throw std::exception(); // bad format
 	parser.skipDelimiter(',');
 	parser.readKey(&key);
 	if (key != "msgbody")
 		throw std::exception(); // bad format
+	JsonParser p( parser );
 
 	switch ( msgID )
 	{
@@ -348,6 +365,9 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 		case point::id: impl::implHandleMessage<point>( parser, handlers... ); break;
 		case point3D::id: impl::implHandleMessage<point3D>( parser, handlers... ); break;
 	}
+
+	p.skipMessageFromJson();
+	parser = p;
 
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
@@ -587,7 +607,10 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 {
 	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
 	m::JsonComposer composer( buffer );
-	impl::composeUnsignedInteger( composer, msgID::id );
+	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
+	impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == PolygonSt::id )
 		MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... );
 	else if constexpr ( msgID::id == point::id )
@@ -596,6 +619,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 		MESSAGE_point3D_compose( composer, std::forward<Args>( args )... );
 	else
 		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+	composer.buff.append( "\n}", 2 );
 }
 
 } // namespace infrastructural 
@@ -753,19 +777,23 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 	parser.readKey(&key);
 	if (key != "msgid")
 		throw std::exception(); // bad format
-	parser.readUnsignedIntegerFromJson(&id);
+	parser.readUnsignedIntegerFromJson(&msgID);
 	parser.skipSpacesEtc();
-	if (!p.isDelimiter(','))
+	if (!parser.isDelimiter(','))
 		throw std::exception(); // bad format
 	parser.skipDelimiter(',');
 	parser.readKey(&key);
 	if (key != "msgbody")
 		throw std::exception(); // bad format
+	JsonParser p( parser );
 
 	switch ( msgID )
 	{
 		case message_one::id: impl::implHandleMessage<message_one>( parser, handlers... ); break;
 	}
+
+	p.skipMessageFromJson();
+	parser = p;
 
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
@@ -921,11 +949,15 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 {
 	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
 	m::JsonComposer composer( buffer );
-	impl::composeUnsignedInteger( composer, msgID::id );
+	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
+	impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == message_one::id )
 		MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
 	else
 		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+	composer.buff.append( "\n}", 2 );
 }
 
 } // namespace test_json 
