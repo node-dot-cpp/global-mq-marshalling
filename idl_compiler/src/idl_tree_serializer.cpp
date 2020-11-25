@@ -735,17 +735,58 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		"template<class BufferT, class ... HandlersT >\n"
 		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
 		"{\n"
-		"\tGmqParser parser( buffer );\n"
-		"\tuint64_t msgID;\n"
-		"\tparser.parseUnsignedInteger( &msgID );\n"
+		"\tuint64_t msgID;\n\n"
+	);
+	switch ( scope.proto )
+	{
+		case Proto::gmq:
+			fprintf( header, 
+				"\tGmqParser parser( buffer );\n"
+				"\tparser.parseUnsignedInteger( &msgID );\n"
+			);
+			break;
+		case Proto::json:
+			fprintf( header, 
+				"\tJsonParser parser( buffer );\n"
+				"\tparser.skipDelimiter(\'{\');\n"
+				"\tstd::string key;\n"
+				"\tparser.readKey(&key);\n"
+				"\tif (key != \"msgid\")\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tparser.readUnsignedIntegerFromJson(&id);\n"
+				"\tparser.skipSpacesEtc();\n"
+				"\tif (!p.isDelimiter(\',\'))\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tparser.skipDelimiter(\',\');\n"
+				"\tparser.readKey(&key);\n"
+				"\tif (key != \"msgbody\")\n"
+				"\t\tthrow std::exception(); // bad format\n\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+	fprintf( header, 
 		"\tswitch ( msgID )\n"
-		"\t{\n" 
+		"\t{\n"
 	);
 	for ( auto msg : scope.objectList )
 		fprintf( header, "\t\tcase %s::id: impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
-	fprintf( header, 
-		"\t}\n"
-		"}\n\n" );
+	fprintf( header, "\t}\n\n" );
+	switch ( scope.proto )
+	{
+		case Proto::gmq: break;
+		case Proto::json:
+			fprintf( header, 
+				"\tif (!parser.isDelimiter(\'}\'))\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tparser.skipDelimiter(\'}\');\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+	fprintf( header, "}\n\n" );
 }
 
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
@@ -768,13 +809,22 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 		"\tmsgComposer.compose( composer );\n"
 		"}\n\n"
 	);*/
+	const char* composer = nullptr;
+	switch ( scope.proto )
+	{
+		case Proto::gmq: composer = "GmqComposer"; break;
+		case Proto::json: composer = "JsonComposer"; break;
+		default:
+			assert( false );
+	}
 	fprintf( header, 
 		"template<typename msgID, class BufferT, typename ... Args>\n"
 		"void composeMessage( BufferT& buffer, Args&& ... args )\n"
 		"{\n"
 		"\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n"
-		"\tm::GmqComposer composer( buffer );\n"
-		"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
+		"\tm::%s composer( buffer );\n"
+		"\timpl::composeUnsignedInteger( composer, msgID::id );\n",
+		composer
 	);
 	fprintf( header, "\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
 	fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
