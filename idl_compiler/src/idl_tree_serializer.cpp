@@ -124,14 +124,13 @@ void printScope( Scope& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sScope: name = \"%s\" Protocols: ", offsetch, s.name.c_str() );
-	for ( auto t:s.protoList )
-		switch ( t )
-		{
-			case Proto::gmq: printf( "GMQ " ); break;
-			case Proto::json: printf( "JSON " ); break;
-			default: assert( false );
-		}
+	printf( "%sScope: name = \"%s\" Protocol: ", offsetch, s.name.c_str() );
+	switch ( s.proto )
+	{
+		case Proto::gmq: printf( "GMQ " ); break;
+		case Proto::json: printf( "JSON " ); break;
+		default: assert( false );
+	}
 	printf( "(%zd messages) {\n", s.objectList.size() );
 	for ( auto msg : s.objectList )
 		printf( "%s  %s\n", offsetch, msg->name.c_str() );
@@ -429,7 +428,8 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	fprintf( header, "\n" );
 }
 
-bool impl_checkCompositeTypeNameUniqueness(vector<unique_ptr<CompositeType>>& coll, const char* typeName)
+template<class CompositeObjPtrT>
+bool impl_checkCompositeTypeNameUniqueness(vector<CompositeObjPtrT>& coll, const char* typeName)
 {
 	bool ok = true;
 	std::map<string, Location> names;
@@ -448,7 +448,9 @@ bool impl_checkCompositeTypeNameUniqueness(vector<unique_ptr<CompositeType>>& co
 
 bool impl_checkCompositeTypeNameUniqueness(Root& s)
 {
-	bool ok = impl_checkCompositeTypeNameUniqueness(s.messages, "MESSAGE");
+	bool ok = true;
+	for ( auto& scope : s.scopes )
+		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList, "MESSAGE") && ok;
 	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
 	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
 	return ok;
@@ -647,9 +649,9 @@ bool impl_processScopes( Root& r )
 	bool ok = true;
 	for ( auto& s : r.scopes )
 	{
-		if ( s->protoList.size() == 0 )
+		if ( s->proto == Proto::undefined )
 		{
-			fprintf( stderr, "File %s, line %d: Scope \"%s\" cannot have an empty protocol list\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
+			fprintf( stderr, "File %s, line %d: Scope \"%s\" misses protocol\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
 			ok = false;
 		}
 	}
@@ -670,7 +672,8 @@ bool impl_processScopes( Root& r )
 			if ( it->scopeName == s->name )
 			{
 //				s->objectList.push_back( &(*it) );
-				it->protoList.insert( s->protoList.begin(), s->protoList.end() );
+				assert( it->protoList.empty() );
+				it->protoList.insert( s->proto );
 				s->objectList.push_back( &(*it) );
 				found = true;
 				break;
@@ -732,17 +735,61 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		"template<class BufferT, class ... HandlersT >\n"
 		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
 		"{\n"
-		"\tGmqParser parser( buffer );\n"
-		"\tuint64_t msgID;\n"
-		"\tparser.parseUnsignedInteger( &msgID );\n"
+		"\tuint64_t msgID;\n\n"
+	);
+	switch ( scope.proto )
+	{
+		case Proto::gmq:
+			fprintf( header, 
+				"\tGmqParser parser( buffer );\n"
+				"\tparser.parseUnsignedInteger( &msgID );\n"
+			);
+			break;
+		case Proto::json:
+			fprintf( header, 
+				"\tJsonParser parser( buffer );\n"
+				"\tparser.skipDelimiter(\'{\');\n"
+				"\tstd::string key;\n"
+				"\tparser.readKey(&key);\n"
+				"\tif (key != \"msgid\")\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tparser.readUnsignedIntegerFromJson(&msgID);\n"
+				"\tparser.skipSpacesEtc();\n"
+				"\tif (!parser.isDelimiter(\',\'))\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tparser.skipDelimiter(\',\');\n"
+				"\tparser.readKey(&key);\n"
+				"\tif (key != \"msgbody\")\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tJsonParser p( parser );\n\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+	fprintf( header, 
 		"\tswitch ( msgID )\n"
-		"\t{\n" 
+		"\t{\n"
 	);
 	for ( auto msg : scope.objectList )
 		fprintf( header, "\t\tcase %s::id: impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
-	fprintf( header, 
-		"\t}\n"
-		"}\n\n" );
+	fprintf( header, "\t}\n\n" );
+	switch ( scope.proto )
+	{
+		case Proto::gmq: break;
+		case Proto::json:
+			fprintf( header, 
+				"\tp.skipMessageFromJson();\n"
+				"\tparser = p;\n\n"
+				"\tif (!parser.isDelimiter(\'}\'))\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tparser.skipDelimiter(\'}\');\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+	fprintf( header, "}\n\n" );
 }
 
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
@@ -756,23 +803,33 @@ void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
 void impl_generateScopeComposer( FILE* header, Scope& scope )
 {
 	assert( scope.objectList.size() != 0 );
-	/*fprintf( header, 
-		"template<Messages msgID, class BufferT, class MessageComposerT >\n"
-		"void composeMessage( BufferT& buffer, MessageComposerT msgComposer )\n"
-		"{\n"
-		"\tm::GmqComposer composer( buffer );\n"
-		"\tcomposeUnsignedInteger( composer, msgID );\n"
-		"\tmsgComposer.compose( composer );\n"
-		"}\n\n"
-	);*/
 	fprintf( header, 
 		"template<typename msgID, class BufferT, typename ... Args>\n"
 		"void composeMessage( BufferT& buffer, Args&& ... args )\n"
 		"{\n"
-		"\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n"
-		"\tm::GmqComposer composer( buffer );\n"
-		"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
+		"\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n" 
 	);
+	switch ( scope.proto )
+	{
+		case Proto::gmq: 
+			fprintf( header, 
+				"\tm::GmqComposer composer( buffer );\n"
+				"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
+			);
+			break;
+		case Proto::json: 
+			fprintf( header, 
+				"\tm::JsonComposer composer( buffer );\n"
+				"\tcomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n"
+				"\timpl::json::composeNamedSignedInteger( composer, \"msgid\", msgID::id);\n"
+				"\tcomposer.buff.append( \",\\n  \", sizeof(\",\\n  \") - 1 );\n"
+				"\timpl::json::addNamePart( composer, \"msgbody\" );\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+
 	fprintf( header, "\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
 	fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
 	for ( size_t i=1; i<scope.objectList.size(); ++i )
@@ -782,7 +839,18 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 	}
 	fprintf( header, 
 		"\telse\n"
-		"\t\tstatic_assert( false, \"unexpected value of msgID\" );\n"
+		"\t\tstatic_assert( std::is_same<impl::MessageNameBase, msgID>::value, \"unexpected value of msgID\" ); // note: should be just static_assert(false,\"...\"); but it seems that in this case clang asserts yet before looking at constexpr conditions\n" );
+	switch ( scope.proto )
+	{
+		case Proto::gmq: break;
+		case Proto::json: 
+			fprintf( header, "\tcomposer.buff.append( \"\\n}\", 2 );\n"	);
+			break;
+		default:
+			assert( false );
+			break;
+	}
+	fprintf( header, 
 		"}\n\n" );
 }
 

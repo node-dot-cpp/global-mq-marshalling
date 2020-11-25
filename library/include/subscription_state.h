@@ -28,7 +28,7 @@
 #ifndef SUBSCRIPTION_STATE_H
 #define SUBSCRIPTION_STATE_H
 
-#include "common.h"
+#include "global_mq_common.h"
 
 class GmqSubscriptionState
 {
