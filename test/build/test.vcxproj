@@ -27,7 +27,7 @@
     <ClCompile Include="..\test_subscription.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\library\include\common.h" />
+    <ClInclude Include="..\..\library\include\global_mq_common.h" />
     <ClInclude Include="..\..\library\include\marshalling_impl.h" />
     <ClInclude Include="..\..\library\include\marshalling.h" />
     <ClInclude Include="..\..\library\include\subscription_state.h" />
