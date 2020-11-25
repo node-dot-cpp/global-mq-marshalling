@@ -28,7 +28,7 @@
 #ifndef COMPOSE_AND_PARSE_IMPL_H
 #define COMPOSE_AND_PARSE_IMPL_H
 
-#include "common.h"
+#include "global_mq_common.h"
 #include <tuple>
 #include <cstddef>
 

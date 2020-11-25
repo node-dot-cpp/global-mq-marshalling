@@ -667,7 +667,6 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 				static_assert( std::is_same<Agr0DataType, AllowedDataType>::value, "unsupported type" );
 		}
 		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
-//		else if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value || std::is_same<MessageType, typename TypeToPick::Type>::value )
 		{
 			auto& msg = arg0.get();
 			if constexpr ( std::is_same<NonextMessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )

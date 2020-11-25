@@ -569,29 +569,23 @@ YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl) { return insertExtensionMar
 YYSTYPE insertExtensionMarkerToPublishable(YYSTYPE decl) { return insertExtensionMarker(decl);}
 YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl) { return insertExtensionMarker(decl);}
 
-YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoList)
+YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoID)
 {
 	unique_ptr<YyBase> d0(token);
-	unique_ptr<YyBase> d1(protoList);
+	unique_ptr<YyBase> d1(protoID);
 	unique_ptr<YyBase> d2(id);
 
 	Scope* yy = new Scope();
 
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
-	if ( protoList != nullptr )
-	{
-		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
-		for ( auto& proto : pl->ids )
-		{
-			if ( proto == "json" || proto == "JSON" )
-				yy->protoList.insert( Proto::json );
-			else if ( proto == "gmq" || proto == "GMQ" )
-				yy->protoList.insert( Proto::gmq );
-			else
-				reportError(token->location, "Unexpected value of PROTO");
-		}
-	}
+	string proto = nameFromYyIdentifier(protoID);
+	if ( proto == "json" || proto == "JSON" )
+		yy->proto = Proto::json;
+	else if ( proto == "gmq" || proto == "GMQ" )
+		yy->proto = Proto::gmq;
+	else
+		reportError(token->location, "Unexpected value of PROTO");
 
 	return new YyPtr<Scope>(yy);
 }
@@ -607,27 +601,6 @@ YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type,
 	yy->location = id->location;
 	yy->name = nameFromYyIdentifier(id);
 	yy->isNonExtendable = isNonExtendable;
-	/*yy->isAlias = isAlias;
-	if ( isAlias )
-	{
-		assert( aliasOf.size() != 0 );
-		yy->aliasOf = aliasOf;
-	}
-	else
-		assert( aliasOf.empty() );
-	if ( protoList != nullptr )
-	{
-		YyIdentifierList* pl = yystype_cast<YyIdentifierList*>(protoList);
-		for ( auto& proto : pl->ids )
-		{
-			if ( proto == "json" || proto == "JSON" )
-				yy->protoList.insert( CompositeType::Proto::json );
-			else if ( proto == "gmq" || proto == "GMQ" )
-				yy->protoList.insert( CompositeType::Proto::gmq );
-			else
-				reportError(token->location, "Unexpected value of PROTO");
-		}
-	}*/
 
 	return new YyPtr<CompositeType>(yy);
 }
@@ -974,16 +947,6 @@ YYSTYPE createVectorOfCompositeType(YYSTYPE token, YYSTYPE compositeTypeName, bo
 	return yy;
 }
 
-YYSTYPE createVectorOfMassagesType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault)
-{
-	return createVectorOfCompositeType(token, messageName, nonext, hasDefault, MessageParameterType::MESSAGE);
-}
-
-YYSTYPE createVectorOfPublishablesType(YYSTYPE token, YYSTYPE publishableName, bool nonext, bool hasDefault)
-{
-	return createVectorOfCompositeType(token, publishableName, nonext, hasDefault, MessageParameterType::PUBLISHABLE);
-}
-
 YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE structName, bool nonext, bool hasDefault)
 {
 	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::STRUCT);
@@ -1001,16 +964,6 @@ YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE composi
 	yy->dataType->name = nameFromYyIdentifier(compositeTypeName);
 
 	return yy;
-}
-
-YYSTYPE createMessageType(YYSTYPE token, bool isNonExtendable, YYSTYPE messageName)
-{
-	return createCompositeType(token, isNonExtendable, messageName, MessageParameterType::MESSAGE);
-}
-
-YYSTYPE createPublishableType(YYSTYPE token, bool isNonExtendable, YYSTYPE publishableName)
-{
-	return createCompositeType(token, isNonExtendable, publishableName, MessageParameterType::PUBLISHABLE);
 }
 
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName)
@@ -1087,27 +1040,6 @@ YYSTYPE addEnumValue(YYSTYPE list, YYSTYPE id, YYSTYPE int_lit)
 	uint32_t value = static_cast<uint32_t>(integerLiteralFromExpression(int_lit, 0, UINT32_MAX));
 
 	yy->enumValues.emplace(name, value);
-
-	return d0.release();
-}
-
-YYSTYPE addProtoValue(YYSTYPE list, YYSTYPE id)
-{
-	unique_ptr<YyBase> d0(list);
-	unique_ptr<YyBase> d1(id);
-
-	YyIdentifierList* yy = 0;
-	if (list)
-		yy = yystype_cast<YyIdentifierList*>(list);
-	else
-	{
-		yy = new YyIdentifierList();
-		d0.reset(yy);
-	}
-
-	string name = nameFromYyIdentifier(id);
-
-	yy->ids.push_back(name);
 
 	return d0.release();
 }

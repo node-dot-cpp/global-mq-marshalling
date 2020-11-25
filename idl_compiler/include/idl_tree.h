@@ -119,7 +119,7 @@ public:
 	vector<string> whenDiscriminant;
 };
 
-enum Proto { json, gmq };
+enum Proto { undefined, json, gmq };
 
 class CompositeType : public ObjectBase
 {
@@ -161,7 +161,7 @@ struct Scope : public ObjectBase // used in post-processing
 public:
 	string name;
 	std::vector<CompositeType*> objectList;
-	set<Proto> protoList;
+	Proto proto = Proto::undefined;
 };
 
 class Root

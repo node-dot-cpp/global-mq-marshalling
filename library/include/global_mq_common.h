@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef GLOBAL_MQ_COMMON_H
+#define GLOBAL_MQ_COMMON_H
 
 #include <fmt/format.h>
 
@@ -159,4 +159,4 @@ namespace m {
 } // namespace m
 
 
-#endif // COMMON_H
+#endif // GLOBAL_MQ_COMMON_H
