@@ -760,7 +760,8 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 				"\tparser.skipDelimiter(\',\');\n"
 				"\tparser.readKey(&key);\n"
 				"\tif (key != \"msgbody\")\n"
-				"\t\tthrow std::exception(); // bad format\n\n"
+				"\t\tthrow std::exception(); // bad format\n"
+				"\tJsonParser p( parser );\n\n"
 			);
 			break;
 		default:
@@ -778,6 +779,8 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		case Proto::gmq: break;
 		case Proto::json:
 			fprintf( header, 
+				"\tp.skipMessageFromJson();\n"
+				"\tparser = p;\n\n"
 				"\tif (!parser.isDelimiter(\'}\'))\n"
 				"\t\tthrow std::exception(); // bad format\n"
 				"\tparser.skipDelimiter(\'}\');\n"
