@@ -72,9 +72,22 @@ namespace m {
 			}
 		}
 
+	protected:
+		void reserve(size_t sz) {
+			GMQ_ASSERT( _size == 0 ); 
+			GMQ_ASSERT( _capacity == 0 );
+			GMQ_ASSERT( _data == nullptr );
+
+			size_t cp = std::max(sz, MIN_BUFFER);
+			std::unique_ptr<uint8_t[]> tmp(new uint8_t[cp]);
+
+			_capacity = cp;
+			_data = std::move(tmp);
+		}
+
 	public:
 		Buffer() {}
-		Buffer(size_t res) { reserve(res); }
+//		Buffer(size_t res) { reserve(res); }
 		Buffer(Buffer&& p) {
 			std::swap(_size, p._size);
 			std::swap(_capacity, p._capacity);
@@ -89,17 +102,13 @@ namespace m {
 		Buffer(const Buffer&) = delete;
 		Buffer& operator = (const Buffer& p) = delete;
 
-		void reserve(size_t sz) {
-			GMQ_ASSERT( _size == 0 ); 
-			GMQ_ASSERT( _capacity == 0 );
-			GMQ_ASSERT( _data == nullptr );
-
-			size_t cp = std::max(sz, MIN_BUFFER);
-			std::unique_ptr<uint8_t[]> tmp(new uint8_t[cp]);
-
-			_capacity = cp;
-			_data = std::move(tmp);
-		}
+		size_t size() const { return _size; }
+		bool empty() const { return _size == 0; }
+//		size_t capacity() const { return _capacity; }
+		uint8_t* begin() { return _data.get(); }
+		const uint8_t* begin() const { return _data.get(); }
+		uint8_t* end() { return _data.get() + _size; }
+		const uint8_t* end() const { return _data.get() + _size; }
 
 		void append(const void* dt, size_t sz) { // NOTE: may invalidate pointers
 			ensureCapacity(_size + sz);
@@ -107,7 +116,13 @@ namespace m {
 			_size += sz;
 		}
 
-		void trim(size_t sz) { // NOTE: keeps pointers
+		size_t appendUint8( int8_t val ) {
+			ensureCapacity(size() + 1);
+			*reinterpret_cast<uint8_t*>(begin() + size() ) = val;
+			return ++_size;
+		}
+
+		/*void trim(size_t sz) { // NOTE: keeps pointers
 			GMQ_ASSERT( sz <= _size );
 			GMQ_ASSERT( _data != nullptr || (_size == 0 && sz == 0) );
 			_size -= sz;
@@ -115,7 +130,7 @@ namespace m {
 
 		void clear() {
 			trim(size());
-		}
+		}*/
 
 		void set_size(size_t sz) { // NOTE: keeps pointers
 			GMQ_ASSERT( sz <= _capacity );
@@ -123,37 +138,24 @@ namespace m {
 			_size = sz;
 		}
 
-		size_t size() const { return _size; }
-		bool empty() const { return _size == 0; }
-		size_t capacity() const { return _capacity; }
-		uint8_t* begin() { return _data.get(); }
-		const uint8_t* begin() const { return _data.get(); }
-		uint8_t* end() { return _data.get() + _size; }
-		const uint8_t* end() const { return _data.get() + _size; }
-
 		// TODO: revise and add other relevant calls
-		size_t writeInt8( int8_t val, size_t pos ) {
+		/*size_t writeInt8( int8_t val, size_t pos ) {
 			ensureCapacity(pos + 1);
 			*reinterpret_cast<uint8_t*>(begin() + pos ) = val;
 			if ( _size < pos + 1 )
 				_size = pos + 1;
 			return pos + 1;
 		}
-		size_t appendUint8( int8_t val ) {
-			ensureCapacity(size() + 1);
-			*reinterpret_cast<uint8_t*>(begin() + size() ) = val;
-			return ++_size;
-		}
-
-		uint32_t readUInt8(size_t offset) const {
+		uint8_t readUInt8(size_t offset) const {
 			GMQ_ASSERT( offset + 1 <= _size );
 			return *(begin() + offset);
-		}
+		}*/
+	};
 
-		size_t appendString( const GMQ_COLL string& str ) {
-			append( str.c_str(), str.size() );
-			return _size;
-		}
+	class FileReadBuffer : public Buffer // rather a temporary solution
+	{
+	public:
+		FileReadBuffer(size_t res) { Buffer::reserve(res); }
 	};
 	
 } // namespace m

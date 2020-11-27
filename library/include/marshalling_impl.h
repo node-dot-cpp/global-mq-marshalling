@@ -180,7 +180,7 @@ void composeReal(ComposerT& composer, T num )
 template<typename ComposerT>
 void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
-	composer.buff.appendString( str );
+	composer.buff.append( str.c_str(), str.size() );
 	composer.buff.appendUint8( 0 );
 }
 
@@ -210,7 +210,8 @@ void composeSignedInteger(ComposerT& composer, T num )
 	{
 		GMQ_ASSERT( num <= INT64_MAX );
 	}
-	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
+	auto str = fmt::format( "{}", (int64_t)num );
+	composer.buff.append( str.c_str(), str.size() );
 }
 
 template<typename ComposerT, typename T>
@@ -220,21 +221,23 @@ void composeUnsignedInteger(ComposerT& composer, T num )
 	{
 		GMQ_ASSERT( num >= 0 );
 	}
-	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
+	auto str = fmt::format( "{}", (uint64_t)num );
+	composer.buff.append( str.c_str(), str.size() );
 }
 
 template<typename ComposerT, typename T>
 void composeReal(ComposerT& composer, T num )
 {
 	static_assert ( std::is_arithmetic<T>::value );
-	composer.buff.appendString( fmt::format( "{}", num ) );
+	auto str = fmt::format( "{}", num );
+	composer.buff.append( str.c_str(), str.size() );
 }
 
 template<typename ComposerT>
 void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
 	composer.buff.appendUint8( '\"' );
-	composer.buff.appendString( str );
+	composer.buff.append( str.c_str(), str.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
@@ -259,7 +262,7 @@ void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str, sz );
+	composer.buff.append( str.c_str(), str.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
@@ -267,7 +270,7 @@ template<typename ComposerT>
 void addNamePart(ComposerT& composer, GMQ_COLL string name )
 {
 	composer.buff.appendUint8( '\"' );
-	composer.buff.appendString( name );
+	composer.buff.append( name.c_str(), name.size() );
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendUint8( ':' );
 	composer.buff.appendUint8( ' ' );
@@ -282,7 +285,8 @@ void composeNamedSignedInteger(ComposerT& composer, GMQ_COLL string name, T num 
 		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	addNamePart( composer, name );
-	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
+	auto str = fmt::format( "{}", (int64_t)num );
+	composer.buff.append( str.c_str(), str.size() );
 }
 
 template<typename ComposerT, typename T>
@@ -293,14 +297,16 @@ void composeNamedUnsignedInteger(ComposerT& composer, GMQ_COLL string name, T nu
 		GMQ_ASSERT( num >= 0 );
 	}
 	addNamePart( composer, name );
-	composer.buff.appendString( fmt::format( "{}", (int64_t)num ) );
+	auto str = fmt::format( "{}", (uint64_t)num );
+	composer.buff.append( str.c_str(), str.size() );
 }
 
 template<typename ComposerT, typename T>
 void composeNamedReal(ComposerT& composer, GMQ_COLL string name, T num )
 {
 	addNamePart( composer, name );
-	composer.buff.appendString( fmt::format( "{}", num ) );
+	auto str = fmt::format( "{}", num );
+	composer.buff.append( str.c_str(), str.size() );
 }
 
 template<typename ComposerT>
@@ -308,7 +314,7 @@ void composeNamedString(ComposerT& composer, GMQ_COLL string name, const GMQ_COL
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.appendString( str );
+	composer.buff.append( str.c_str(), str.size() );
 	composer.buff.appendUint8( '\"' );
 }
 

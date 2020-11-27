@@ -216,7 +216,7 @@ void testParsingJsonFile()
 	}
 	fseek( f, 0, SEEK_SET );
 
-	m::Buffer b( fsz + 1 );
+	m::FileReadBuffer b( fsz + 1 );
 
 	size_t rres = fread( b.begin(), 1, fsz, f );
 	fclose( f );
