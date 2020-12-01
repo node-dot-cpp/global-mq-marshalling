@@ -345,7 +345,7 @@ public:
 	static constexpr Proto proto = Proto::GMQ;
 
 public:
-	GmqParser( MessageT& msg ) { riter = msg.getReadIter(); }
+	GmqParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
 	GmqParser( const GmqParser& other, size_t size ) { riter = other.riter; }
 
 	template <typename T>
@@ -610,7 +610,7 @@ public:
 	}
 
 public:
-	JsonParser( MessageT& msg ) { riter = msg.getReadIter(); }
+	JsonParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
 	JsonParser( const JsonParser& other, size_t size ) { riter = other.riter; }
 
 	void skipSpacesEtc()
