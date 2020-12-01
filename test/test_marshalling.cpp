@@ -41,7 +41,7 @@ void runGmqSample()
 	m::GmqParser parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
-	std::string_view fifthParam;
+	std::string fifthParam;
 	std::vector<int> vectorOfNumbersBack;
 	std::vector<double> vectorOfRealNumbersBack;
 	std::vector<Point> vectorOfPointsBack;
@@ -115,7 +115,7 @@ void runJsonSample()
 	m::JsonParser parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
-	std::string_view fifthParam;
+	std::string fifthParam;
 	std::vector<int> vectorOfNumbersBack;
 	std::vector<double> vectorOfRealNumbersBack;
 	std::vector<Point> vectorOfPointsBack;
@@ -216,7 +216,7 @@ void testParsingJsonFile()
 	}
 	fseek( f, 0, SEEK_SET );
 
-	m::Buffer b( fsz + 1 );
+	m::FileReadBuffer b( fsz + 1 );
 
 	size_t rres = fread( b.begin(), 1, fsz, f );
 	fclose( f );
