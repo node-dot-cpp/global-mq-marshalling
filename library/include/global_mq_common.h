@@ -53,6 +53,56 @@ namespace m {
 	static constexpr size_t MIN_BUFFER = 1024;
 
 	class Buffer {
+	public:
+		class ReadIter
+		{
+			const uint8_t* begin = nullptr;
+			const uint8_t* end = nullptr;
+		public:
+			ReadIter() {}
+			ReadIter( const Buffer& buff ) {
+				begin = buff.begin();
+				end = buff.begin() + buff.size();
+			}
+			bool isData() { return end > begin; }
+			uint8_t operator * ()
+			{
+				GMQ_ASSERT( begin != end ); 
+				return *begin;
+			}
+			void operator ++ () 
+			{
+				begin++;
+			}
+			size_t read( void* buff, size_t size )
+			{
+				if ( begin )
+				{
+					size = size <= (end - begin ) ? size : end - begin;
+					memcpy( buff, begin, size );
+					begin += size;
+				}
+				else
+					size = 0;
+				return size; 
+			}
+			size_t skip( size_t size )
+			{
+				if ( begin )
+				{
+					size = size <= (end - begin ) ? size : end - begin;
+					begin += size;
+				}
+				else
+					size = 0;
+				return size;
+			}
+		};
+
+		using ReadIteratorT = ReadIter;
+
+		ReadIter getReadIter() { return ReadIter( *this ); }
+
 	private:
 		size_t _size = 0;
 		size_t _capacity = 0;
@@ -122,34 +172,11 @@ namespace m {
 			return ++_size;
 		}
 
-		/*void trim(size_t sz) { // NOTE: keeps pointers
-			GMQ_ASSERT( sz <= _size );
-			GMQ_ASSERT( _data != nullptr || (_size == 0 && sz == 0) );
-			_size -= sz;
-		}
-
-		void clear() {
-			trim(size());
-		}*/
-
 		void set_size(size_t sz) { // NOTE: keeps pointers
 			GMQ_ASSERT( sz <= _capacity );
 			GMQ_ASSERT( _data != nullptr );
 			_size = sz;
 		}
-
-		// TODO: revise and add other relevant calls
-		/*size_t writeInt8( int8_t val, size_t pos ) {
-			ensureCapacity(pos + 1);
-			*reinterpret_cast<uint8_t*>(begin() + pos ) = val;
-			if ( _size < pos + 1 )
-				_size = pos + 1;
-			return pos + 1;
-		}
-		uint8_t readUInt8(size_t offset) const {
-			GMQ_ASSERT( offset + 1 <= _size );
-			return *(begin() + offset);
-		}*/
 	};
 
 	class FileReadBuffer : public Buffer // rather a temporary solution

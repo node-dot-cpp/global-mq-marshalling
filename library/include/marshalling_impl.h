@@ -335,37 +335,25 @@ void composeNamedString(ComposerT& composer, GMQ_COLL string name, const StringL
 
 namespace m {
 
-class ParserBase
-{
-protected:
-	uint8_t* begin = nullptr;
-	uint8_t* end = nullptr;
+class ParserBase {};
 
-public:
-	void adjustParsingPos( size_t toSkip )
-	{
-		begin += toSkip;
-	}
-
-};
-
-template<class BufferT>
+template<class MessageT>
 class GmqParser : public ParserBase
 {
+	typename MessageT::ReadIteratorT riter;
 public:
 	static constexpr Proto proto = Proto::GMQ;
 
 public:
-	GmqParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
-	GmqParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
-	GmqParser( const GmqParser& other, size_t size ) { begin = other.begin; end = other.begin + size; }
+	GmqParser( MessageT& msg ) { riter = msg.getReadIter(); }
+	GmqParser( const GmqParser& other, size_t size ) { riter = other.riter; }
 
 	template <typename T>
 	void parseSignedInteger( T* num )
 	{
 		static_assert( sizeof( T ) <= impl::integer_max_size );
 		static_assert( std::is_integral<T>::value );
-		/*temporary solution TODO: actual implementation*/ int64_t val = *reinterpret_cast<int64_t*>(begin); begin += sizeof( val );
+		/*temporary solution TODO: actual implementation*/ int64_t val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 		if constexpr ( std::is_signed< T >::value )
 		{
@@ -417,7 +405,7 @@ public:
 	}
 	void skipSignedInteger()
 	{
-		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
+		/*temporary solution TODO: actual implementation*/ size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 	}
 
@@ -426,7 +414,7 @@ public:
 	{
 		static_assert( sizeof( T ) <= impl::integer_max_size );
 		static_assert( std::is_integral<T>::value );
-		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += sizeof( val );
+		/*temporary solution TODO: actual implementation*/ uint64_t val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 		if constexpr ( std::is_unsigned< T >::value )
 		{
@@ -478,7 +466,7 @@ public:
 	}
 	void skipUnsignedInteger()
 	{
-		/*temporary solution TODO: actual implementation*/ uint64_t val = *reinterpret_cast<uint64_t*>(begin); begin += impl::integer_max_size;
+		/*temporary solution TODO: actual implementation*/ size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 	}
 
@@ -486,7 +474,7 @@ public:
 	void parseReal( T* num )
 	{
 		static_assert( sizeof( T ) <= impl::integer_max_size );
-		/*temporary solution TODO: actual implementation*/ double val = *reinterpret_cast<double*>(begin); begin += sizeof( val );
+		/*temporary solution TODO: actual implementation*/ double val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
 		if constexpr ( std::is_integral<T>::value )
 		{
 			static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
@@ -546,134 +534,158 @@ public:
 	}
 	void skipReal()
 	{
-		/*temporary solution TODO: actual implementation*/ begin += impl::integer_max_size;
+		/*temporary solution TODO: actual implementation*/ size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 	}
 
-	void parseString( const char** str )
+	/*void parseString( const char** str )
 	{
 		*str = reinterpret_cast<char*>(begin);
 		while( *begin++ != 0 );
-	}
+	}*/
 
 	void parseString( GMQ_COLL string* str )
 	{
-		*str = reinterpret_cast<char*>(begin);
-		while( *begin++ != 0 );
+		while( riter.isData() && *riter != 0 )
+		{
+			*str += *riter;
+			++riter;
+		}
+		GMQ_ASSERT( riter.isData() );
+		++riter;
 	}
 
-	void parseString( GMQ_COLL string_view* str )
+	/*void parseString( GMQ_COLL string_view* str )
 	{
 		const char* start = reinterpret_cast<char*>(begin);
 		while( *begin++ != 0 );
 		*str = GMQ_COLL string_view( start, reinterpret_cast<char*>(begin) - start - 1 );
-	}
+	}*/
 
 	void skipString()
 	{
-		while( *begin++ != 0 );
+		while( riter.isData() && *riter != 0 )
+			++riter;
+		GMQ_ASSERT( riter.isData() );
+		++riter;
+	}
+
+	void adjustParsingPos( size_t sz )
+	{
+		size_t sksz = riter.skip( sz );
+		if ( sksz != sz )
+			throw std::exception(); // TODO (expected ':')
 	}
 };
 
-template<class BufferT>
+template<class MessageT>
 class JsonParser : public ParserBase
 {
+	typename MessageT::ReadIteratorT riter;
 public:
 	static constexpr Proto proto = Proto::JSON;
 
 	void impl_skipBlockFromJson( char left, char right )
 	{
 		skipSpacesEtc();
-		if ( *begin++ != left )
+		if ( *riter != left )
 			throw std::exception(); // TODO
+		++riter;
 		size_t ctr = 1;
-		while ( begin < end )
+		while ( riter.isData() )
 		{
-			if ( *begin == left )
+			if ( *riter == left )
 				++ctr;
-			else if ( *begin == right )
+			else if ( *riter == right )
 			{
 				--ctr;
 				if ( ctr == 0 )
 				{
-					++begin;
+					++riter;
 					return;
 				}
 			}
-			++begin;
+			++riter;
 		}
 	}
 
 public:
-	JsonParser( BufferT& b ) { begin = b.begin(); end = b.begin() + b.size(); }
-	JsonParser( uint8_t* buff, size_t size ) { begin = buff; end = buff + size; }
-	JsonParser( const JsonParser& other, size_t size ) { begin = other.begin; end = other.begin + size; }
+	JsonParser( MessageT& msg ) { riter = msg.getReadIter(); }
+	JsonParser( const JsonParser& other, size_t size ) { riter = other.riter; }
 
 	void skipSpacesEtc()
 	{
-		while ( begin < end && ( *begin == ' ' || *begin == '\t' || *begin == '\r' || *begin == '\n' ) ) ++begin;
+		while ( riter.isData() && ( *riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ) ) ++riter;
 	}
 
 	bool isComma()
 	{
 		skipSpacesEtc();
-		return *begin == ',';
+		return *riter == ',';
 	}
 
 	void skipComma()
 	{
-		if ( *begin++ != ',' )
+		if ( *riter != ',' )
 			throw std::exception(); // TODO
+		++riter;
 	}
 
 	bool isDelimiter( char delim )
 	{
 		skipSpacesEtc();
-		return *begin == delim;
+		return *riter == delim;
 	}
 
 	void skipDelimiter( char delim )
 	{
 		skipSpacesEtc();
-		if ( *begin++ != delim )
+		if ( *riter != delim )
 			throw std::exception(); // TODO
+		++riter;
 	}
 
-	bool isData() { return begin != end && *begin != 0;  }
+	bool isData() { return riter.isData();  }
 
 	void readStringFromJson(GMQ_COLL string* s)
 	{
+		s->clear();
 		skipSpacesEtc();
-		if ( *begin++ != '\"' )
+		if ( *riter != '\"' )
 			throw std::exception(); // TODO
-		const char* start = reinterpret_cast<const char*>( begin );
-		while ( begin < end && *begin != '\"' ) ++begin;
-		*s = GMQ_COLL string( start, reinterpret_cast<const char*>( begin ) - start );
-		if ( begin == end )
+		++riter;
+		while ( riter.isData() && *riter != '\"' )
+		{
+			*s += *riter;
+			++riter;
+		}
+		if ( !riter.isData() )
 			throw std::exception(); // TODO
-		++begin;
+		++riter;
 	}
-	void readStringFromJson(GMQ_COLL string_view* s)
+	/*void readStringFromJson(GMQ_COLL string_view* s)
 	{
 		skipSpacesEtc();
 		if ( *begin++ != '\"' )
 			throw std::exception(); // TODO
 		const char* start = reinterpret_cast<const char*>( begin );
-		while ( begin < end && *begin != '\"' ) ++begin;
+		while ( riter.isData() && *riter != '\"' ) ++riter;
 		*s = GMQ_COLL string_view( start, reinterpret_cast<const char*>( begin ) - start );
-		if ( begin == end )
+		if ( !riter.isData() )
 			throw std::exception(); // TODO
-		++begin;
-	}
+		++riter;
+	}*/
 	void skipStringFromJson()
 	{
 		skipSpacesEtc();
-		if ( *begin++ != '\"' )
+		if ( *riter != '\"' )
 			throw std::exception(); // TODO
-		while ( begin < end && *begin != '\"' ) ++begin;
-		if ( begin == end )
+		++riter;
+		while ( riter.isData() && *riter != '\"' )
+			++riter;
+		if ( !riter.isData() )
 			throw std::exception(); // TODO
-		++begin;
+		++riter;
 	}
 
 	void skipVectorFromJson()
@@ -689,77 +701,128 @@ public:
 	void readUnsignedIntegerFromJson( T* num )
 	{
 		skipSpacesEtc();
-		if ( *begin == '-' )
+		if ( *riter == '-' )
 			throw std::exception(); // TODO: (negative is unexpected)
-		auto start = begin;
-		uint64_t ret = strtoull( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
+		GMQ_COLL string s;
+		while ( riter.isData() && (*riter >= '0' && *riter <= '9') )
+		{
+			s += *riter;
+			++riter;
+		}
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
+		char* end = const_cast<char*>(s.c_str());
+		uint64_t ret = strtoull( s.c_str(), &end, 10 );
+		if ( s.c_str() == end )
 			throw std::exception(); // TODO: (NaN)
 		*num = (T)ret; // TODO: add boundary checking
 	}
 	void skipUnsignedIntegerFromJson()
 	{
 		skipSpacesEtc();
-		if ( *begin == '-' )
+		if ( *riter == '-' )
 			throw std::exception(); // TODO: (negative is unexpected)
-		auto start = begin;
-		uint64_t ret = strtoull( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
+		while ( riter.isData() && (*riter >= '0' && *riter <= '9') )
+			++riter;
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
 	}
 
 	template <typename T>
 	void readSignedIntegerFromJson( T* num )
 	{
 		skipSpacesEtc();
-		auto start = begin;
-		int64_t ret = strtoll( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
+		GMQ_COLL string s;
+		if ( *riter == '-' )
+		{
+			s += *riter;
+			++riter;
+		}
+		while ( riter.isData() && (*riter >= '0' && *riter <= '9') )
+		{
+			s += *riter;
+			++riter;
+		}
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
+		char* end = const_cast<char*>(s.c_str());
+		uint64_t ret = strtoull( s.c_str(), &end, 10 );
+		if ( s.c_str() == end )
 			throw std::exception(); // TODO: (NaN)
 		*num = (T)ret; // TODO: add boundary checking
 	}
 	void skipSignedIntegerFromJson()
 	{
 		skipSpacesEtc();
-		auto start = begin;
-		int64_t ret = strtoll( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ), 10 );
-		if ( start == begin )
-			throw std::exception(); // TODO: (NaN)
+		if ( *riter == '-' )
+			++riter;
+		while ( riter.isData() && (*riter >= '0' && *riter <= '9') )
+			++riter;
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
 	}
 
 	template <typename T>
 	void readRealFromJson( T* num )
 	{
 		skipSpacesEtc();
-		auto start = begin;
-		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
-		if ( start == begin )
+		GMQ_COLL string s;
+//		while ( riter.isData() && ((*riter >= '0' && *riter <= '9') || *riter == '.') ) // TODO: more than one '.' in json with errors
+		while ( riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' || *riter == ',' || *riter == ']' || *riter == '}') ) // expected terminators
+		{
+			s += *riter;
+			++riter;
+		}
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
+		char* end = const_cast<char*>(s.c_str());
+		double ret = strtod( s.c_str(), &end );
+		if ( s.c_str() == end )
 			throw std::exception(); // TODO: (NaN)
 		*num = (T)ret; // TODO: add boundary checking
 	}
 	void skipRealFromJson()
 	{
 		skipSpacesEtc();
-		auto start = begin;
-		double ret = strtod( reinterpret_cast<const char*>( begin ), reinterpret_cast<char**>( &begin ) );
-		if ( start == begin )
+		GMQ_COLL string s;
+//		while ( riter.isData() && ((*riter >= '0' && *riter <= '9') || *riter == '.') ) // TODO: more than one '.' in json with errors
+		while ( riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' || *riter == ',' || *riter == ']' || *riter == '}') ) // expected terminators
+		{
+			s += *riter;
+			++riter;
+		}
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
+		char* end = const_cast<char*>(s.c_str());
+		strtod( s.c_str(), &end ); // let it decide whether it's a number and not some bs
+		if ( s.c_str() == end )
 			throw std::exception(); // TODO: (NaN)
 	}
 
 	void readKey(GMQ_COLL string* s)
 	{
+		s->clear();
 		skipSpacesEtc();
 		readStringFromJson(s);
 		skipSpacesEtc();
-		if ( *begin++ != ':' )
+		if ( *riter != ':' )
 			throw std::exception(); // TODO (expected ':')
+		++riter;
 	}
-	void readKey(GMQ_COLL string_view* s)
+	/*void readKey(GMQ_COLL string_view* s)
 	{
 		skipSpacesEtc();
 		readStringFromJson(s);
 		skipSpacesEtc();
-		if ( *begin++ != ':' )
+		if ( *riter != ':' )
+			throw std::exception(); // TODO (expected ':')
+		++riter;
+	}*/
+
+	void adjustParsingPos( size_t sz )
+	{
+		size_t sksz = riter.skip( sz );
+		if ( sksz != sz )
 			throw std::exception(); // TODO (expected ':')
 	}
 
