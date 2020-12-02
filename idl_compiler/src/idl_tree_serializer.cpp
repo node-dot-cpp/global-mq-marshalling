@@ -488,9 +488,9 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 			fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
 			ok = false;
 		}
-		else if ( param->type.kind == MessageParameterType::VECTOR )
+		else if ( param->type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			if (  param->type.kind == MessageParameterType::KIND::VECTOR && ( param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ))
+			if (  param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE )
 			{
 				fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
 				ok = false;
@@ -507,7 +507,22 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 							ok = false;
 						}
-						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+						switch ( ct.type )
+						{
+							case CompositeType::Type::message:
+								s.structs[i]->isStruct4Messaging = true;
+								s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+								break;
+							case CompositeType::Type::publishable:
+								s.structs[i]->isStruct4Publishing = true;
+								break;
+							case CompositeType::Type::structure:
+								s.structs[i]->isStruct4Messaging = ct.isStruct4Messaging;
+								s.structs[i]->isStruct4Publishing = ct.isStruct4Publishing;
+								break;
+							default:
+								assert( false );
+						}
 						impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 						break;
 					}
@@ -530,6 +545,8 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 						ok = false;
 					}
+					s.structs[i]->isStruct4Messaging = ct.isStruct4Messaging;
+					s.structs[i]->isStruct4Publishing = ct.isStruct4Publishing;
 					s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
 					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 					break;
@@ -590,8 +607,8 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
 	bool ok = true;
 	for ( auto& s : r.messages )
 		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
-//	for ( auto& s : r.publishables )
-//		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
+	for ( auto& s : r.publishables )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
 //	for ( auto& s : r.structs )
 //		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
 	return ok;
@@ -888,16 +905,13 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 		for ( auto it : scope->objectList )
 		{
-			if ( it == nullptr )
-				fprintf( header, "// Message = <null>\n" );
-			else 
-			{
-				assert( typeid( *(it) ) == typeid( CompositeType ) );
-				if ( !it->isAlias )
-					generateMessage( header, *it );
-				else
-					generateMessageAlias( header, *it );
-			}
+			assert( it != nullptr );
+			assert( typeid( *(it) ) == typeid( CompositeType ) );
+			assert( it->type == CompositeType::Type::message );
+			if ( !it->isAlias )
+				generateMessage( header, *it );
+			else
+				generateMessageAlias( header, *it );
 		}
 
 		impl_generateScopeComposer( header, *scope );
@@ -905,16 +919,21 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		fprintf( header, "} // namespace %s \n\n", scope->name.c_str() );
 	}
 
+	for ( auto& it : s.publishables )
+	{
+		auto& obj_1 = it;
+		assert( obj_1 != nullptr );
+		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+		assert( obj_1->type == CompositeType::Type::publishable );
+	}
+
 	for ( auto& it : s.structs )
 	{
 		auto& obj_1 = it;
-		if ( obj_1 == nullptr )
-			fprintf( header, "// Struct = <null>\n" );
-		else 
-		{
-			assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
-		}
+		assert( obj_1 != nullptr );
+		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+		assert( obj_1->type == CompositeType::Type::structure );
+		generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
 	}
 
 	fprintf( header, "\n"
