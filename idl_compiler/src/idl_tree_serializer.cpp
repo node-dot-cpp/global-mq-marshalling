@@ -368,7 +368,7 @@ void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType&
 	}
 }
 
-void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
+void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, Root& s )
 {
 	for ( auto& it : s.messages )
 	{
@@ -383,6 +383,25 @@ void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure );
 		if ( it->isStruct4Messaging )
+			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+}
+
+void impl_CollectPublishableMemberNamesFromRoot( std::set<string>& params, Root& s )
+{
+	for ( auto& it : s.publishables )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::publishable );
+		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+	for ( auto& it : s.structs )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Publishing )
 			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 }
@@ -402,7 +421,7 @@ string paramNameToNameObject( string name )
 	return name;
 }
 
-void generateParamNameBlock( FILE* header, const std::set<string>& params )
+void generateMessageParamNameBlock( FILE* header, const std::set<string>& params )
 {
 	// types
 	for ( auto name : params )
@@ -416,7 +435,15 @@ void generateParamNameBlock( FILE* header, const std::set<string>& params )
 	{
 		fprintf( header, "constexpr %s::TypeConverter %s;\n", paramNameToNameTagType( name ).c_str(), paramNameToNameObject( name ).c_str() );
 	}
-	fprintf( header, "\n" );
+	fprintf( header, "\n\n" );
+}
+
+void generatePublishableMemberNameBlock( FILE* header, const std::set<string>& names )
+{
+	fprintf( header, "// member name presence checkers\n" );
+	for ( auto name : names )
+		fprintf( header, "template<typename T> concept has_%s_member = requires { { T::%s }; };\n", name.c_str(), name.c_str() );
+	fprintf( header, "\n\n" );
 }
 
 template<class CompositeObjPtrT>
@@ -871,8 +898,11 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	if ( !ok )
 		throw std::exception();
 
-	std::set<string> params;
-	impl_CollectParamNamesFromRoot( params, s );
+	std::set<string> msgParams;
+	impl_CollectMessageParamNamesFromRoot( msgParams, s );
+
+	std::set<string> publishableMembers;
+	impl_CollectPublishableMemberNamesFromRoot( publishableMembers, s );
 
 	fprintf( header, "#ifndef %s_guard\n"
 		"#define %s_guard\n"
@@ -884,7 +914,8 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	impl_insertScopeList( header, s );
 
-	generateParamNameBlock( header, params );
+	generateMessageParamNameBlock( header, msgParams );
+	generatePublishableMemberNameBlock( header, publishableMembers );
 
 	for ( auto& scope : s.scopes )
 	{
