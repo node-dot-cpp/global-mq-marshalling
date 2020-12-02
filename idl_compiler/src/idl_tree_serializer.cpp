@@ -535,8 +535,9 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 								s.structs[i]->isStruct4Publishing = true;
 								break;
 							case CompositeType::Type::structure:
-								s.structs[i]->isStruct4Messaging = ct.isStruct4Messaging;
-								s.structs[i]->isStruct4Publishing = ct.isStruct4Publishing;
+								s.structs[i]->isStruct4Messaging = s.structs[i]->isStruct4Messaging || ct.isStruct4Messaging;
+								s.structs[i]->isStruct4Publishing = s.structs[i]->isStruct4Publishing || ct.isStruct4Publishing;
+								s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
 								break;
 							default:
 								assert( false );
@@ -563,9 +564,23 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 						ok = false;
 					}
-					s.structs[i]->isStruct4Messaging = ct.isStruct4Messaging;
-					s.structs[i]->isStruct4Publishing = ct.isStruct4Publishing;
-					s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+					switch ( ct.type )
+					{
+						case CompositeType::Type::message:
+							s.structs[i]->isStruct4Messaging = true;
+							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+							break;
+						case CompositeType::Type::publishable:
+							s.structs[i]->isStruct4Publishing = true;
+							break;
+						case CompositeType::Type::structure:
+							s.structs[i]->isStruct4Messaging = s.structs[i]->isStruct4Messaging || ct.isStruct4Messaging;
+							s.structs[i]->isStruct4Publishing = s.structs[i]->isStruct4Publishing || ct.isStruct4Publishing;
+							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+							break;
+						default:
+							assert( false );
+					}
 					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 					break;
 				}
@@ -603,7 +618,23 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 					fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str(), s.structs[i]->type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 					ok = false;
 				}
-				s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+				switch ( ct.type )
+				{
+					case CompositeType::Type::message:
+						s.structs[i]->isStruct4Messaging = true;
+						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+						break;
+					case CompositeType::Type::publishable:
+						s.structs[i]->isStruct4Publishing = true;
+						break;
+					case CompositeType::Type::structure:
+						s.structs[i]->isStruct4Messaging = s.structs[i]->isStruct4Messaging || ct.isStruct4Messaging;
+						s.structs[i]->isStruct4Publishing = s.structs[i]->isStruct4Publishing || ct.isStruct4Publishing;
+						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
+						break;
+					default:
+						assert( false );
+				}
 				impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 				break;
 			}
@@ -628,7 +659,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
 	for ( auto& s : r.publishables )
 		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
 //	for ( auto& s : r.structs )
-//		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s, stack ) && ok;
+//		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
 	return ok;
 }
 
@@ -951,11 +982,11 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	for ( auto& it : s.structs )
 	{
-		auto& obj_1 = it;
-		assert( obj_1 != nullptr );
-		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-		assert( obj_1->type == CompositeType::Type::structure );
-		generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(obj_1)))) );
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Messaging )
+			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
 	fprintf( header, "\n"
@@ -1409,7 +1440,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			fprintf( header, "%scomposer.buff.append( \",\\n  \", 4 );\n", offset );
 	}
 
-	fprintf( header, "%scomposer.buff.append( \"\\n}\", 2 );", offset );
+	fprintf( header, "%scomposer.buff.append( \"\\n}\", 2 );\n", offset );
 }
 
 void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, const char* offset )
@@ -1466,7 +1497,7 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 			case Proto::json:
 			{
 				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
-				impl_generateParamCallBlockForComposingJson( header, s, "" );
+				impl_generateParamCallBlockForComposingJson( header, s, "\t" );
 				break;
 			}
 			default:
