@@ -357,28 +357,14 @@ void impl_CollectParamNamesFromeMessageParameter( std::set<string>& params, Mess
 	params.insert( s.name );
 }
 
-void impl_CollectParamNamesFrom__unique_ptr_MessageParameter( std::set<string>& params, unique_ptr<MessageParameter>& s )
-{
-	if ( s != nullptr ) 
-		impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(s)))) );
-}
-
 void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s )
 {
 	for ( auto& it : s.members )
 	{
-		auto& obj_1 = it;
-		if ( obj_1->type.kind == MessageParameterType::KIND::EXTENSION )
+		assert( it != nullptr );
+		if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
 			continue;
-		impl_CollectParamNamesFrom__unique_ptr_MessageParameter( params, obj_1 );
-	}
-}
-
-void impl_CollectParamNamesFrom__unique_ptr_Message( std::set<string>& params, unique_ptr<CompositeType>& s ) {
-
-	if ( s != nullptr && typeid( *(s) ) == typeid( CompositeType ) )
-	{
-		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(s)))) );
+		impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(it)))) );
 	}
 }
 
@@ -386,13 +372,18 @@ void impl_CollectParamNamesFromRoot( std::set<string>& params, Root& s )
 {
 	for ( auto& it : s.messages )
 	{
-		auto& obj_1 = it;
-		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::message );
+		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 	for ( auto& it : s.structs )
 	{
-		auto& obj_1 = it;
-		impl_CollectParamNamesFrom__unique_ptr_Message( params, obj_1 );
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Messaging )
+			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 }
 
