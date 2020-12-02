@@ -1326,33 +1326,6 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 	fprintf( header, "//**********************************************************************\n\n" );
 }
 
-/*void impl_generateComposeFunctionGmq( FILE* header, CompositeType& s )
-{
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_%s_composeGmq(Composer& composer, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
-
-	impl_generateParamTypeLIst( header, s );
-	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
-
-
-	fprintf( header, "}\n\n" );
-}
-
-void impl_generateParseFunctionGmq( FILE* header, CompositeType& s )
-{
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_%s_parseGmq(Parser& p, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
-
-	impl_generateParamTypeLIst( header, s );
-	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
-
-	fprintf( header, "}\n\n" );
-}*/
-
 void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s, const char* offset )
 {
 	fprintf( header, "%scomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n", offset );
@@ -1454,33 +1427,6 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, 
 
 	fprintf( header, "%s}\n", offset );
 }
-
-/*void impl_generateComposeFunctionJson( FILE* header, CompositeType& s )
-{
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_composeJson(Composer& composer, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
-
-	impl_generateParamTypeLIst( header, s );
-	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForComposingJson( header, s, "\t" );
-
-
-	fprintf( header, "}\n\n" );
-}
-
-void impl_generateParseFunctionJson( FILE* header, CompositeType& s )
-{
-	fprintf( header, "template<typename ... Args>\n"
-	"void %s_parseJson(Parser& p, Args&& ... args)\n"
-	"{\n", s.name.c_str() );
-
-	impl_generateParamTypeLIst( header, s );
-	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForParsingJson( header, s, "\t" );
-
-	fprintf( header, "}\n\n" );
-}*/
 
 void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 {
