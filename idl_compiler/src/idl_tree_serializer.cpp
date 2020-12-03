@@ -474,6 +474,28 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 	return ok;
 }
 
+void impl_propagateParentPropsToStruct( CompositeType& parent, CompositeType& memberOrArrayElementType )
+{
+	assert( memberOrArrayElementType.type == CompositeType::Type::structure );
+	switch ( parent.type )
+	{
+		case CompositeType::Type::message:
+			memberOrArrayElementType.isStruct4Messaging = true;
+			memberOrArrayElementType.protoList.insert( parent.protoList.begin(), parent.protoList.end() );
+			break;
+		case CompositeType::Type::publishable:
+			memberOrArrayElementType.isStruct4Publishing = true;
+			break;
+		case CompositeType::Type::structure:
+			memberOrArrayElementType.isStruct4Messaging = memberOrArrayElementType.isStruct4Messaging || parent.isStruct4Messaging;
+			memberOrArrayElementType.isStruct4Publishing = memberOrArrayElementType.isStruct4Publishing || parent.isStruct4Publishing;
+			memberOrArrayElementType.protoList.insert( parent.protoList.begin(), parent.protoList.end() );
+			break;
+		default:
+			assert( false );
+	}
+}
+
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack )
 {
 	if ( !ct.processingOK )
@@ -525,23 +547,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
 							ok = false;
 						}
-						switch ( ct.type )
-						{
-							case CompositeType::Type::message:
-								s.structs[i]->isStruct4Messaging = true;
-								s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-								break;
-							case CompositeType::Type::publishable:
-								s.structs[i]->isStruct4Publishing = true;
-								break;
-							case CompositeType::Type::structure:
-								s.structs[i]->isStruct4Messaging = s.structs[i]->isStruct4Messaging || ct.isStruct4Messaging;
-								s.structs[i]->isStruct4Publishing = s.structs[i]->isStruct4Publishing || ct.isStruct4Publishing;
-								s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-								break;
-							default:
-								assert( false );
-						}
+						impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
 						impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 						break;
 					}
@@ -564,23 +570,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 						ok = false;
 					}
-					switch ( ct.type )
-					{
-						case CompositeType::Type::message:
-							s.structs[i]->isStruct4Messaging = true;
-							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-							break;
-						case CompositeType::Type::publishable:
-							s.structs[i]->isStruct4Publishing = true;
-							break;
-						case CompositeType::Type::structure:
-							s.structs[i]->isStruct4Messaging = s.structs[i]->isStruct4Messaging || ct.isStruct4Messaging;
-							s.structs[i]->isStruct4Publishing = s.structs[i]->isStruct4Publishing || ct.isStruct4Publishing;
-							s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-							break;
-						default:
-							assert( false );
-					}
+					impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
 					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 					break;
 				}
@@ -618,23 +608,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 					fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str(), s.structs[i]->type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 					ok = false;
 				}
-				switch ( ct.type )
-				{
-					case CompositeType::Type::message:
-						s.structs[i]->isStruct4Messaging = true;
-						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-						break;
-					case CompositeType::Type::publishable:
-						s.structs[i]->isStruct4Publishing = true;
-						break;
-					case CompositeType::Type::structure:
-						s.structs[i]->isStruct4Messaging = s.structs[i]->isStruct4Messaging || ct.isStruct4Messaging;
-						s.structs[i]->isStruct4Publishing = s.structs[i]->isStruct4Publishing || ct.isStruct4Publishing;
-						s.structs[i]->protoList.insert( ct.protoList.begin(), ct.protoList.end() );
-						break;
-					default:
-						assert( false );
-				}
+				impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
 				impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 				break;
 			}
