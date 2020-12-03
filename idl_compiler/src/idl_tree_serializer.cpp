@@ -1101,21 +1101,21 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 {
 	assert( s.type == CompositeType::Type::publishable );
 	if ( param.type.isNumericType() )
-		fprintf( header, "\t\tauto get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
+		fprintf( header, "\tauto get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
 	else
-		fprintf( header, "\t\tconst auto& get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
+		fprintf( header, "\tconst auto& get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
 }
 
 void impl_GeneratePublishableStateMemberGetter4SetStruct( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
 {
 	assert( param.type.kind == MessageParameterType::KIND::STRUCT );
-	fprintf( header, "\t\tauto get_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+	fprintf( header, "\tauto get_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
 }
 
 void impl_GeneratePublishableStateMemberGetter4SetVector( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
 {
 	assert( param.type.kind == MessageParameterType::KIND::VECTOR );
-	fprintf( header, "\t\tauto get_%s() { return Vector_of_%s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+	fprintf( header, "\tauto get_%s() { return Vector_of_%s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
 }
 
 void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
@@ -1139,10 +1139,10 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 	assert( s.type == CompositeType::Type::publishable );
 
 	fprintf( header, 
-		"\ttemplate<class T>\n"
-		"\tclass %s_Wrapper\n"
-		"\t{\n"
-		"\t\tT t;\n",
+		"template<class T>\n"
+		"class %s_Wrapper\n"
+		"{\n"
+		"\tT t;\n",
 		s.name.c_str()
 	);
 
@@ -1695,6 +1695,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 
 void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
+	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure );
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
 	"void %s(ComposerT& composer, Args&& ... args)\n"
 	"{\n", impl_generateComposeFunctionName( s ).c_str() );
@@ -1743,11 +1744,7 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s )
 	if ( !checked )
 		throw std::exception();
 
-//	impl_generatePublishableCommentBlock( header, s );
 	impl_GeneratePublishableStateWrapper( header, root, s );
-
-	impl_generateComposeFunction( header, s );
-	impl_generateParseFunction( header, s );
 }
 
 void generateMessageAlias( FILE* header, CompositeType& s )
