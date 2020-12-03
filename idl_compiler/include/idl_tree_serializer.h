@@ -58,6 +58,7 @@ void printVariant( Variant& s );
 // code generation
 void generateRoot( const char* fileName, FILE* header, Root& s );
 void generateMessage( FILE* header, CompositeType& s );
+void generatePublishable( FILE* header, Root& root, CompositeType& s );
 void generateMessageAlias( FILE* header, CompositeType& s );
 void generateMessageParameter( FILE* header, MessageParameter& s );
 void generateMessageMembers( FILE* header, CompositeType& s );

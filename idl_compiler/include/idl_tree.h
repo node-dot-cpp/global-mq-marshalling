@@ -58,8 +58,12 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE, PUBLISHABLE, STRUCT };
+	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, STRUCT };
+	static bool isNumericType( KIND kind ) { return kind == KIND::INTEGER || kind == KIND::UINTEGER || kind == KIND::REAL; }
+	static bool isNamedType( KIND kind ) { return kind == KIND::ENUM || kind == KIND::STRUCT; }
 	KIND kind = UNDEFINED;
+	bool isNumericType() { return isNumericType( kind ); }
+	bool isNamedType() { return isNamedType( kind ); }
 	string name;
 	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING
 	bool hasLowLimit = false; // INTEGER, UINTEGER

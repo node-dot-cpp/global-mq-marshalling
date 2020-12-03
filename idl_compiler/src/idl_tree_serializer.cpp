@@ -61,9 +61,39 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::BYTE_ARRAY: return "BYTE_ARRAY";
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
-		case MessageParameterType::KIND::MESSAGE: return "MESSAGE";
-		case MessageParameterType::KIND::PUBLISHABLE: return "PUBLISHABLE";
 		case MessageParameterType::KIND::STRUCT: return "STRUCT";
+		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
+		default: assert( false ); return "";
+	}
+}
+
+string impl_parameterTypeToString( Root& s, const MessageParameterType& type )
+{
+	switch ( type.kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "INTEGER";
+		case MessageParameterType::KIND::UINTEGER: return "UINTEGER";
+		case MessageParameterType::KIND::REAL: return "REAL";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "CHARACTER_STRING";
+		case MessageParameterType::KIND::BYTE_ARRAY: return "BYTE_ARRAY";
+		case MessageParameterType::KIND::BLOB: return "BLOB";
+
+		case MessageParameterType::KIND::STRUCT: 
+			assert( type.messageIdx <= s.structs.size() );
+			return fmt::format( "STRUCT {}", s.structs[type.messageIdx]->name );
+		case MessageParameterType::KIND::VECTOR: 
+			if ( type.vectorElemKind == MessageParameterType::KIND::STRUCT )
+			{
+				assert( type.messageIdx <= s.structs.size() );
+				return fmt::format( "VECTOR<STRUCT {}>", s.structs[type.messageIdx]->name );
+			}
+			else if ( type.vectorElemKind == MessageParameterType::KIND::ENUM )
+				return fmt::format( "VECTOR<ENUM {}>", type.name );
+			else
+				return fmt::format( "VECTOR<{}>", impl_kindToString( type.vectorElemKind ) );
+
+		case MessageParameterType::KIND::ENUM: return ( "ENUM {}", type.name );
+		case MessageParameterType::KIND::UNDEFINED: return "UNDEFINED";
 		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
 		default: assert( false ); return "";
 	}
@@ -261,13 +291,12 @@ void printDataType( MessageParameterType& s )
 {
 	if ( s.kind == MessageParameterType::KIND::VECTOR )
 	{
-		bool isComposite = s.vectorElemKind == MessageParameterType::KIND::MESSAGE || s.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE ||s.vectorElemKind == MessageParameterType::KIND::STRUCT;
-		if ( isComposite )
+		if ( s.vectorElemKind == MessageParameterType::KIND::STRUCT )
 			printf( "%s<%s%s %s>", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", impl_kindToString( s.vectorElemKind ), s.name.c_str() );
 		else
 			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
-	else if ( s.kind == MessageParameterType::KIND::MESSAGE || s.kind == MessageParameterType::KIND::PUBLISHABLE || s.kind == MessageParameterType::KIND::STRUCT )
+	else if ( s.kind == MessageParameterType::KIND::STRUCT )
 	{
 		printf( "%s %s %s", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", s.name.c_str() );
 	}
@@ -523,19 +552,9 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 
 	for ( auto& param : ct.members )
 	{
-		if ( param->type.kind == MessageParameterType::KIND::MESSAGE || param->type.kind == MessageParameterType::KIND::PUBLISHABLE )
+		if ( param->type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			fprintf( stderr, "File \"%s\", line %d: error: parameter type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
-			ok = false;
-		}
-		else if ( param->type.kind == MessageParameterType::KIND::VECTOR )
-		{
-			if (  param->type.vectorElemKind ==  MessageParameterType::KIND::MESSAGE || param->type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE )
-			{
-				fprintf( stderr, "File \"%s\", line %d: error: vector element type cannot be %s (but can be a %s)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), impl_kindToString( MessageParameterType::KIND::STRUCT ) );
-				ok = false;
-			}
-			else if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
+			if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
 			{
 				param->type.messageIdx = (size_t)(-1);
 				for ( size_t i=0; i<s.structs.size(); ++i )
@@ -952,6 +971,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		assert( obj_1 != nullptr );
 		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
 		assert( obj_1->type == CompositeType::Type::publishable );
+		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
 	for ( auto& it : s.structs )
@@ -1066,6 +1086,83 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
 }
 
+void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable );
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+		fprintf( header, "\tstatic constexpr bool has_%s = has_%s_member<T>;\n", it->name.c_str(), it->name.c_str() );
+		fprintf( header, "\tstatic_assert( has_a, \"type T must have member T::%s of a type corresponding to IDL type %s\" );\n", it->name.c_str(), impl_parameterTypeToString( root, it->type ).c_str() );
+	}
+}
+
+void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
+{
+	assert( s.type == CompositeType::Type::publishable );
+	if ( param.type.isNumericType() )
+		fprintf( header, "\t\tauto get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
+	else
+		fprintf( header, "\t\tconst auto& get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
+}
+
+void impl_GeneratePublishableStateMemberGetter4SetStruct( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
+{
+	assert( param.type.kind == MessageParameterType::KIND::STRUCT );
+	fprintf( header, "\t\tauto get_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+}
+
+void impl_GeneratePublishableStateMemberGetter4SetVector( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
+{
+	assert( param.type.kind == MessageParameterType::KIND::VECTOR );
+	fprintf( header, "\t\tauto get_%s() { return Vector_of_%s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+}
+
+void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
+{
+	assert( s.type == CompositeType::Type::publishable );
+//	for ( auto& it : s.members )
+	for ( size_t i=0; i<s.members.size(); ++i )
+	{
+		auto& it = s.members[i];
+		assert( it != nullptr );
+		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
+		if ( it->type.kind == MessageParameterType::KIND::STRUCT )
+			impl_GeneratePublishableStateMemberGetter4SetStruct( header, root, s, *it, i );
+		if ( it->type.kind == MessageParameterType::KIND::VECTOR )
+			impl_GeneratePublishableStateMemberGetter4SetVector( header, root, s, *it, i );
+	}
+}
+
+void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable );
+
+	fprintf( header, 
+		"\ttemplate<class T>\n"
+		"\tclass %s_Wrapper\n"
+		"\t{\n"
+		"\t\tT t;\n",
+		s.name.c_str()
+	);
+
+	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+
+	fprintf( header, 
+		"\npublic:\n" 
+		"\t%s_Wrapper() {}\n" ,
+		s.name.c_str()
+	);
+
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+		impl_GeneratePublishableStateMemberAccessors( header, root, s, *it );
+	}
+
+	fprintf( header, "};\n\n" );
+}
+
 void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 {
 	int count = 0;
@@ -1125,27 +1222,23 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 					case MessageParameterType::KIND::ENUM:
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
-					case MessageParameterType::KIND::MESSAGE:
 					case MessageParameterType::KIND::STRUCT:
 						if ( param.type.isNonExtendable )
 							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						else
 							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
-					case MessageParameterType::KIND::PUBLISHABLE:
 					default:
 						assert( false ); // unexpected
 						break;
 				}
 				break;
-			case MessageParameterType::KIND::MESSAGE:
 			case MessageParameterType::KIND::STRUCT:
 				if ( param.type.isNonExtendable )
 					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				else
 					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
-			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -1203,8 +1296,6 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break; // TODO: treatment
-			case MessageParameterType::KIND::MESSAGE:
-			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -1254,8 +1345,6 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break; // TODO: ...
-			case MessageParameterType::KIND::MESSAGE:
-			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -1323,8 +1412,7 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 			
 		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			bool isComposite = param.type.vectorElemKind == MessageParameterType::KIND::MESSAGE || param.type.vectorElemKind == MessageParameterType::KIND::PUBLISHABLE || param.type.vectorElemKind == MessageParameterType::KIND::STRUCT;
-			if ( isComposite )
+			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
 			else
 				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
@@ -1401,8 +1489,6 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
 				break; // TODO: ...
-			case MessageParameterType::KIND::MESSAGE:
-			case MessageParameterType::KIND::PUBLISHABLE:
 			default:
 			{
 				assert( false ); // unexpected
@@ -1645,6 +1731,20 @@ void generateMessage( FILE* header, CompositeType& s )
 
 	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
+
+	impl_generateComposeFunction( header, s );
+	impl_generateParseFunction( header, s );
+}
+
+void generatePublishable( FILE* header, Root& root, CompositeType& s )
+{
+	bool checked = impl_checkParamNameUniqueness(s);
+	checked = impl_checkFollowingExtensionRules(s) && checked;
+	if ( !checked )
+		throw std::exception();
+
+//	impl_generatePublishableCommentBlock( header, s );
+	impl_GeneratePublishableStateWrapper( header, root, s );
 
 	impl_generateComposeFunction( header, s );
 	impl_generateParseFunction( header, s );
