@@ -1390,6 +1390,7 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 
 void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 {
+	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure );
 	fprintf( header, "//**********************************************************************\n" );
 	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
 	for ( auto t:s.protoList )
@@ -1438,6 +1439,44 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 	}
 
 	fprintf( header, "\n" );
+	fprintf( header, "//**********************************************************************\n\n" );
+}
+
+void impl_generatePublishableCommentBlock( FILE* header, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable );
+	fprintf( header, "//**********************************************************************\n" );
+	fprintf( header, "// %s %s (%zd parameters)\n", s.type2string(), s.name.c_str(), s.members.size() );
+
+	int count = 0;
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+		MessageParameter& param = *it;
+		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
+		++count;
+			
+		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
+		{
+			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
+				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
+			else
+				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
+			fprintf( header, " %s", param.name.c_str() );
+		}
+		else if ( param.type.kind == MessageParameterType::KIND::STRUCT )
+		{
+			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", param.type.name.c_str() );
+			fprintf( header, " %s", param.name.c_str() );
+		}
+		else
+			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
+
+		assert( !param.type.hasDefault );
+		fprintf( header, "\n" );
+	}
+
 	fprintf( header, "//**********************************************************************\n\n" );
 }
 
@@ -1744,6 +1783,7 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s )
 	if ( !checked )
 		throw std::exception();
 
+	impl_generatePublishableCommentBlock( header, s );
 	impl_GeneratePublishableStateWrapper( header, root, s );
 }
 

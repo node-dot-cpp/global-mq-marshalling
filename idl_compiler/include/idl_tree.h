@@ -139,7 +139,7 @@ public:
 		{
 			case Type::undefined: return "UNDEFINED";
 			case Type::message: return "MESSAGE";
-			case Type::publishable: return "UNDEFINED";
+			case Type::publishable: return "PUBLISHABLE";
 			case Type::structure: return "STRUCT";
 			default:
 				assert( false );
