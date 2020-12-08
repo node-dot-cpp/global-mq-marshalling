@@ -1012,7 +1012,7 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::publishable );
+	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
 	for ( auto& it : s.members )
 	{
 		assert( it != nullptr );
@@ -1023,7 +1023,7 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
 {
-	assert( s.type == CompositeType::Type::publishable );
+	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
 	if ( param.type.isNumericType() )
 		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
@@ -1064,7 +1064,12 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, const 
 	fprintf( header, 
 		"\tvoid set_%s( decltype(T::%s) val) { \n"
 		"\t\tt.%s = val; \n"
-		"\t\tt// TODO: form respective message or register change otherwise\n"
+		"\t\t// NOTE: fake code balow\n"
+		"\t\t// TODO: form respective message or register change otherwise\n"
+		"\t\tfmt::print( \"updating B::y with value {}; path = [ \", val );\n"
+		"\t\tfor ( size_t i=0; i<address.size(); ++i )\n"
+		"\t\tfmt::print( \"{} \", address[i] );\n"
+		"\t\tfmt::print( \"] \\n\" );\n"
 		"\t}\n",
 		param.name.c_str(), param.name.c_str(), param.name.c_str()
 	);
@@ -1126,7 +1131,7 @@ void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeT
 
 	fprintf( header, 
 		"\npublic:\n" 
-		"\t%s_Wrapper( T& actual ) : t( actual ) {}\n" ,
+		"\t%s_RefWrapper( T& actual ) : t( actual ) {}\n" ,
 		s.name.c_str()
 	);
 
@@ -1898,7 +1903,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		if ( it->isStruct4Publishing )
 		{
 			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapper4Set( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 		}
 	}
 
