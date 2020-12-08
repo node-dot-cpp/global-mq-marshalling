@@ -1059,17 +1059,34 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	}
 }
 
-void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, const char* rootName, MessageParameter& param )
+void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot, const char* rootName, MessageParameter& param )
 {
+	assert( (forRoot && rootName != nullptr) || (forRoot == false && rootName == nullptr) );
+	if ( !forRoot )
+		rootName = "RootT";
 	fprintf( header, 
 		"\tvoid set_%s( decltype(T::%s) val) { \n"
-		"\t\tt.%s = val; \n"
-		"\t\t// NOTE: fake code balow\n"
-		"\t\t// TODO: form respective message or register change otherwise\n"
-		"\t\tfmt::print( \"updating B::y with value {}; path = [ \", val );\n"
-		"\t\tfor ( size_t i=0; i<address.size(); ++i )\n"
-		"\t\tfmt::print( \"{} \", address[i] );\n"
-		"\t\tfmt::print( \"] \\n\" );\n"
+		"\t\tt.%s = val; \n",
+		param.name.c_str(), param.name.c_str(), param.name.c_str()
+	);
+	if ( forRoot )
+		fprintf( header, 
+			"\t\t// NOTE: fake code balow\n"
+			"\t\t// TODO: form respective message or register change otherwise\n"
+			"\t\tfmt::print( \"updating T::%s with value {};\", val );\n",
+			param.name.c_str()
+		);
+	else
+		fprintf( header, 
+			"\t\t// NOTE: fake code balow\n"
+			"\t\t// TODO: form respective message or register change otherwise\n"
+			"\t\tfmt::print( \"updating T::%s with value {}; path = [ \", val );\n"
+			"\t\tfor ( size_t i=0; i<address.size(); ++i )\n"
+			"\t\t\tfmt::print( \"{} \", address[i] );\n"
+			"\t\tfmt::print( \"] \\n\" );\n",
+			param.name.c_str()
+		);
+	fprintf( header, 
 		"\t}\n",
 		param.name.c_str(), param.name.c_str(), param.name.c_str()
 	);
@@ -1078,14 +1095,15 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, const 
 void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s, bool allowSeters )
 {
 	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
-	const char* rootName = s.type == CompositeType::Type::publishable ? s.name.c_str() : "RootT";
+	bool forRoot = s.type == CompositeType::Type::publishable;
+	const char* rootName = forRoot ? s.name.c_str() : nullptr;
 	for ( size_t i=0; i<s.members.size(); ++i )
 	{
 		auto& it = s.members[i];
 		assert( it != nullptr );
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
 		if ( allowSeters )
-			impl_GeneratePublishableStateMemberSetter( header, root, rootName, *it );
+			impl_GeneratePublishableStateMemberSetter( header, root, forRoot, rootName, *it );
 		impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
 	}
 }
