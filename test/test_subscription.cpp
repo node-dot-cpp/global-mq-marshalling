@@ -19,7 +19,7 @@ struct POINT3DREAL{
 struct PublishableSample {
 	int ID = 333;
 	Size size;
-	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 313}, {320, 321, 322}};
+	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
 	std::vector<int> vector_of_int = {111, 112, 113};
 };
 
@@ -28,14 +28,31 @@ void publishableTestOne()
 	m::publishable_sample_Wrapper<PublishableSample> publishableSampleWrapper;
 
 	// quick test for getting right after ctoring
-	fmt::print( "ID = {}\n", publishableSampleWrapper.get_ID() );
+	int id = publishableSampleWrapper.get_ID();
+	assert( id == 333 );
+	fmt::print( "ID = {}\n", id );
 	auto& size = publishableSampleWrapper.get_size();
+	assert( size.X == 1.0 );
+	assert( size.Y == 2.0 );
+	assert( size.Z == 3.0 );
 	fmt::print( "size = {}, {}, {}\n", size.X, size.Y, size.Z );
 	auto voi = publishableSampleWrapper.get_vector_of_int();
+	assert( voi.size() == 3 );
 	fmt::print( "vector_of_int[0] = {}\n", voi.get_at(0) );
 	auto vosp3d = publishableSampleWrapper.get_vector_struct_point3dreal();
+	assert( vosp3d.size() == 2 );
 	auto vosp3d_0 = vosp3d.get_at( 0 );
+	assert( vosp3d_0.get_X() == 310 );
+	assert( vosp3d_0.get_Y() == 311 );
+	assert( vosp3d_0.get_Z() == 312 );
+	fmt::print( "vector_of_int.size() = {}\n", vosp3d.size() );
 	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );
+
+	// updating (some) values
+	int ins1 = 17;
+	publishableSampleWrapper.get4set_vector_of_int().insert_before( 0, ins1 );
+	int ins1_back = publishableSampleWrapper.get_vector_of_int().get_at(0);
+	assert( ins1 == ins1_back );
 }
 
 

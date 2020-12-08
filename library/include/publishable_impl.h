@@ -82,8 +82,9 @@ public:
 		address = address_;
 		address.push_back (idx );
 	}
-	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_bafore( VectorT& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
+	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
+	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
+	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
 };
 
 template<class RefWrapper4SetT, class VectorT, class RootT>
@@ -98,8 +99,9 @@ public:
 		address.push_back (idx );
 	}
 	auto get4set_at( size_t idx ) { return RefWrapper4SetT(b[idx], root, address, idx); }
-	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_bafore( VectorT& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
+	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
+	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
+	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
 };
 
 
