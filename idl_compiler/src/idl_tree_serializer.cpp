@@ -914,83 +914,6 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 }
 
 
-void generateRoot( const char* fileName, FILE* header, Root& s )
-{
-	bool ok = impl_checkCompositeTypeNameUniqueness(s);
-	ok = impl_processScopes(s) && ok;
-	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
-	if ( !ok )
-		throw std::exception();
-
-	std::set<string> msgParams;
-	impl_CollectMessageParamNamesFromRoot( msgParams, s );
-
-	std::set<string> publishableMembers;
-	impl_CollectPublishableMemberNamesFromRoot( publishableMembers, s );
-
-	fprintf( header, "#ifndef %s_guard\n"
-		"#define %s_guard\n"
-		"\n"
-		"#include <marshalling.h>\n"
-		"#include <publishable_impl.h>\n"
-		"\n"
-		"namespace m {\n\n",
-		fileName, fileName );
-
-	impl_insertScopeList( header, s );
-
-	generateMessageParamNameBlock( header, msgParams );
-	generatePublishableMemberNameBlock( header, publishableMembers );
-
-	for ( auto& scope : s.scopes )
-	{
-		fprintf( header, "namespace %s {\n\n", scope->name.c_str() );
-
-		impl_generateScopeEnum( header, *scope );
-		impl_generateScopeHandler( header, *scope );
-		impl_generateScopeComposerForwardDeclaration( header, *scope );
-
-		for ( auto it : scope->objectList )
-		{
-			assert( it != nullptr );
-			assert( typeid( *(it) ) == typeid( CompositeType ) );
-			assert( it->type == CompositeType::Type::message );
-			if ( !it->isAlias )
-				generateMessage( header, *it );
-			else
-				generateMessageAlias( header, *it );
-		}
-
-		impl_generateScopeComposer( header, *scope );
-
-		fprintf( header, "} // namespace %s \n\n", scope->name.c_str() );
-	}
-
-	for ( auto& it : s.publishables )
-	{
-		auto& obj_1 = it;
-		assert( obj_1 != nullptr );
-		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-		assert( obj_1->type == CompositeType::Type::publishable );
-		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	}
-
-	for ( auto& it : s.structs )
-	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
-		if ( it->isStruct4Messaging )
-			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	}
-
-	fprintf( header, "\n"
-		"} // namespace m\n"
-		"\n"
-		"#endif // %s_guard\n",
-		fileName );
-}
-
 string impl_MessageNameToDefaultsNamespaceName( string name )
 {
 	return fmt::format( "Message_{}_defaults", name );
@@ -1136,15 +1059,29 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	}
 }
 
-void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, const char* rootName, MessageParameter& param )
 {
-	assert( s.type == CompositeType::Type::publishable );
+	fprintf( header, 
+		"\tvoid set_%s( decltype(T::%s) val) { \n"
+		"\t\tt.%s = val; \n"
+		"\t\tt// TODO: form respective message or register change otherwise\n"
+		"\t}\n",
+		param.name.c_str(), param.name.c_str(), param.name.c_str()
+	);
+}
+
+void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s, bool allowSeters )
+{
+	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
+	const char* rootName = s.type == CompositeType::Type::publishable ? s.name.c_str() : "RootT";
 	for ( size_t i=0; i<s.members.size(); ++i )
 	{
 		auto& it = s.members[i];
 		assert( it != nullptr );
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
-		impl_GeneratePublishableStateMemberGetter4Set( header, root, s.name.c_str(), *it, i );
+		if ( allowSeters )
+			impl_GeneratePublishableStateMemberSetter( header, root, rootName, *it );
+		impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
 	}
 }
 
@@ -1168,7 +1105,62 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 		s.name.c_str()
 	);
 
-	impl_GeneratePublishableStateMemberAccessors( header, root, s );
+	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
+
+	fprintf( header, "};\n\n" );
+}
+
+void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::structure );
+
+	fprintf( header, 
+		"template<class T>\n"
+		"class %s_RefWrapper\n"
+		"{\n"
+		"\tT& t;\n",
+		s.name.c_str()
+	);
+
+	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+
+	fprintf( header, 
+		"\npublic:\n" 
+		"\t%s_Wrapper( T& actual ) : t( actual ) {}\n" ,
+		s.name.c_str()
+	);
+
+	impl_GeneratePublishableStateMemberAccessors( header, root, s, false );
+
+	fprintf( header, "};\n\n" );
+}
+
+void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::structure );
+
+	fprintf( header, 
+		"template<class T, class RootT>\n"
+		"class %s_RefWrapper4Set\n"
+		"{\n"
+		"\tT& t;\n"
+		"\tRootT& root;\n"
+		"\tGMQ_COLL vector<size_t> address;\n",
+		s.name.c_str()
+	);
+
+	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+
+	fprintf( header, 
+		"\npublic:\n" 
+		"\t%s_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {\n"
+		"\t\taddress = address_;\n"
+		"\t\taddress.push_back (idx );\n"
+		"\t}\n",
+		s.name.c_str()
+	);
+
+	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
 
 	fprintf( header, "};\n\n" );
 }
@@ -1836,4 +1828,93 @@ void generateMessageAlias( FILE* header, CompositeType& s )
 	fprintf( header, "}\n\n" );
 }
 
+
+void generateRoot( const char* fileName, FILE* header, Root& s )
+{
+	bool ok = impl_checkCompositeTypeNameUniqueness(s);
+	ok = impl_processScopes(s) && ok;
+	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
+	if ( !ok )
+		throw std::exception();
+
+	std::set<string> msgParams;
+	impl_CollectMessageParamNamesFromRoot( msgParams, s );
+
+	std::set<string> publishableMembers;
+	impl_CollectPublishableMemberNamesFromRoot( publishableMembers, s );
+
+	fprintf( header, "#ifndef %s_guard\n"
+		"#define %s_guard\n"
+		"\n"
+		"#include <marshalling.h>\n"
+		"#include <publishable_impl.h>\n"
+		"\n"
+		"namespace m {\n\n",
+		fileName, fileName );
+
+	impl_insertScopeList( header, s );
+
+	generateMessageParamNameBlock( header, msgParams );
+	generatePublishableMemberNameBlock( header, publishableMembers );
+
+	for ( auto& scope : s.scopes )
+	{
+		fprintf( header, "namespace %s {\n\n", scope->name.c_str() );
+
+		impl_generateScopeEnum( header, *scope );
+		impl_generateScopeHandler( header, *scope );
+		impl_generateScopeComposerForwardDeclaration( header, *scope );
+
+		for ( auto it : scope->objectList )
+		{
+			assert( it != nullptr );
+			assert( typeid( *(it) ) == typeid( CompositeType ) );
+			assert( it->type == CompositeType::Type::message );
+			if ( !it->isAlias )
+				generateMessage( header, *it );
+			else
+				generateMessageAlias( header, *it );
+		}
+
+		impl_generateScopeComposer( header, *scope );
+
+		fprintf( header, "} // namespace %s \n\n", scope->name.c_str() );
+	}
+
+	for ( auto& it : s.publishables )
+	{
+		auto& obj_1 = it;
+		assert( obj_1 != nullptr );
+		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+		assert( obj_1->type == CompositeType::Type::publishable );
+		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+
+	for ( auto& it : s.structs )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Publishing )
+		{
+			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+		}
+	}
+
+	for ( auto& it : s.structs )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Messaging )
+			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+
+	fprintf( header, "\n"
+		"} // namespace m\n"
+		"\n"
+		"#endif // %s_guard\n",
+		fileName );
+}
 
