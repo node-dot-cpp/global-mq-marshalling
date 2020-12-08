@@ -1047,7 +1047,7 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
-		if ( param.type.vectorElemKind != MessageParameterType::KIND::STRUCT )
+		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 		{
 			assert( root.structs.size() > param.type.messageIdx );
 			fprintf( header, "\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<%s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>, decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 

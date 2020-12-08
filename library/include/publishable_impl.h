@@ -33,14 +33,15 @@
 
 namespace m {
 
-template<class TB>
+template<class VectorT>
 class VectorOfSimpleTypeRefWrapper
 {
-	TB& b;
+	VectorT& b;
 public:
-	VectorOfSimpleTypeRefWrapper( TB& actual ) : b( actual ) {}
+	VectorOfSimpleTypeRefWrapper( VectorT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
 	auto get_at( size_t idx ) { 
-		if constexpr ( std::is_arithmetic<typename TB::value_type>::value )
+		if constexpr ( std::is_arithmetic<typename VectorT::value_type>::value )
 			return b[idx];
 		else
 		{
@@ -50,53 +51,55 @@ public:
 	}
 };
 
-template<class TB>
+template<class VectorT>
 class VectorOfCompositeTypeRefWrapper
 {
-	TB& b;
+	VectorT& b;
 public:
-	VectorOfCompositeTypeRefWrapper( TB& actual ) : b( actual ) {}
+	VectorOfCompositeTypeRefWrapper( VectorT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
 	const auto& get_at( size_t idx ) { return b[idx]; }
 };
 
-template<class RefWrapperT, class TB>
+template<class RefWrapperT, class VectorT>
 class VectorOfStructRefWrapper
 {
-	TB& b;
+	VectorT& b;
 public:
-	VectorOfStructRefWrapper( TB& actual ) : b( actual ) {}
+	VectorOfStructRefWrapper( VectorT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
 	auto get_at( size_t idx ) { return RefWrapperT(b[idx]); }
 };
 
-template<class TB, class RootT>
+template<class VectorT, class RootT>
 class VectorOfSimpleTypeRefWrapper4Set
 {
-	TB& b;
+	VectorT& b;
 	RootT& root;
 	GMQ_COLL vector<size_t> address;
 public:
-	VectorOfSimpleTypeRefWrapper4Set( TB& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+	VectorOfSimpleTypeRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
 		address = address_;
 		address.push_back (idx );
 	}
 	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
+	void insert_bafore( VectorT& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
 };
 
-template<class RefWrapper4SetT, class TB, class RootT>
+template<class RefWrapper4SetT, class VectorT, class RootT>
 class VectorOfStructRefWrapper4Set
 {
-	TB& b;
+	VectorT& b;
 	RootT& root;
 	GMQ_COLL vector<size_t> address;
 public:
-	VectorOfStructRefWrapper4Set( TB& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
 		address = address_;
 		address.push_back (idx );
 	}
 	auto get4set_at( size_t idx ) { return RefWrapper4SetT(b[idx], root, address, idx); }
 	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
+	void insert_bafore( VectorT& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
 };
 
 

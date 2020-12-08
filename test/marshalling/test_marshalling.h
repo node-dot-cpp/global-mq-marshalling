@@ -927,7 +927,7 @@ public:
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::vector_of_int with value {};", val );
 	}
-	auto get4set_vector_of_int() { return m::VectorOfStructRefWrapper4Set<CharacterParam_RefWrapper4Set<typename decltype(T::vector_of_int)::value_type, publishable_sample_Wrapper>, decltype(T::vector_of_int), publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_of_int), publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
@@ -935,7 +935,7 @@ public:
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::vector_struct_point3dreal with value {};", val );
 	}
-	auto get4set_vector_struct_point3dreal() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 3); }
 };
 
 template<class T>
