@@ -67,7 +67,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 	}
 }
 
-string impl_parameterTypeToString( Root& s, const MessageParameterType& type )
+string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterType& type )
 {
 	switch ( type.kind )
 	{
@@ -932,6 +932,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		"#define %s_guard\n"
 		"\n"
 		"#include <marshalling.h>\n"
+		"#include <publishable_impl.h>\n"
 		"\n"
 		"namespace m {\n\n",
 		fileName, fileName );
@@ -1093,7 +1094,7 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 	{
 		assert( it != nullptr );
 		fprintf( header, "\tstatic constexpr bool has_%s = has_%s_member<T>;\n", it->name.c_str(), it->name.c_str() );
-		fprintf( header, "\tstatic_assert( has_a, \"type T must have member T::%s of a type corresponding to IDL type %s\" );\n", it->name.c_str(), impl_parameterTypeToString( root, it->type ).c_str() );
+		fprintf( header, "\tstatic_assert( has_%s, \"type T must have member T::%s of a type corresponding to IDL type %s\" );\n", it->name.c_str(), it->name.c_str(), impl_parameterTypeToDescriptiveString( root, it->type ).c_str() );
 	}
 }
 
@@ -1101,36 +1102,60 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 {
 	assert( s.type == CompositeType::Type::publishable );
 	if ( param.type.isNumericType() )
-		fprintf( header, "\tauto get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
+		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
+	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
+	{
+		if ( param.type.vectorElemKind != MessageParameterType::KIND::STRUCT )
+		{
+			assert( root.structs.size() > param.type.messageIdx );
+			fprintf( header, "\tauto get_%s() { return m::VectorOfStructRefWrapper<%s_RefWrapper<typename decltype(T::%s)::value_type>, decltype(T::%s)>(t.%s); }\n", 
+				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+		}
+		else
+			fprintf( header, "\tauto get_%s() { return m::VectorOfSimpleTypeRefWrapper(t.%s); }\n", param.name.c_str(), param.name.c_str() );
+	}
 	else
-		fprintf( header, "\tconst auto& get_%s() { return b.%s; }\n", param.name.c_str(), param.name.c_str() );
+		fprintf( header, "\tconst auto& get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
 }
 
-void impl_GeneratePublishableStateMemberGetter4SetStruct( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
+void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, const char* rootName, MessageParameter& param, size_t idx )
 {
-	assert( param.type.kind == MessageParameterType::KIND::STRUCT );
-	fprintf( header, "\tauto get_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
+		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
+	{
+		if ( param.type.vectorElemKind != MessageParameterType::KIND::STRUCT )
+		{
+			assert( root.structs.size() > param.type.messageIdx );
+			fprintf( header, "\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<%s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>, decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), rootName, param.name.c_str(), rootName, param.name.c_str(), idx );
+		}
+		else
+			fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+				param.name.c_str(), param.name.c_str(), rootName, param.name.c_str(), idx );
+	}
 }
 
-void impl_GeneratePublishableStateMemberGetter4SetVector( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
+/*void impl_GeneratePublishableStateMemberGetter4SetVector( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
 {
 	assert( param.type.kind == MessageParameterType::KIND::VECTOR );
-	fprintf( header, "\tauto get_%s() { return Vector_of_%s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
-}
+//	fprintf( header, "\tauto get4set_%s() { Vector_of_%s_RefWrapper4Set<decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", param.type..c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str(), idx );
+	if ( param.type.vectorElemKind != MessageParameterType::KIND::STRUCT )
+		fprintf( header, "\tauto get4set_%s() { Vector_of_%s_RefWrapper4Set<decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", param.type..c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str(), idx );
+}*/
 
-void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
+void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable );
-//	for ( auto& it : s.members )
 	for ( size_t i=0; i<s.members.size(); ++i )
 	{
 		auto& it = s.members[i];
 		assert( it != nullptr );
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
-		if ( it->type.kind == MessageParameterType::KIND::STRUCT )
-			impl_GeneratePublishableStateMemberGetter4SetStruct( header, root, s, *it, i );
+			impl_GeneratePublishableStateMemberGetter4Set( header, root, s.name.c_str(), *it, i );
+		/*if ( it->type.kind == MessageParameterType::KIND::STRUCT )
 		if ( it->type.kind == MessageParameterType::KIND::VECTOR )
-			impl_GeneratePublishableStateMemberGetter4SetVector( header, root, s, *it, i );
+			impl_GeneratePublishableStateMemberGetter4SetVector( header, root, s, *it, i );*/
 	}
 }
 
@@ -1154,11 +1179,7 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 		s.name.c_str()
 	);
 
-	for ( auto& it : s.members )
-	{
-		assert( it != nullptr );
-		impl_GeneratePublishableStateMemberAccessors( header, root, s, *it );
-	}
+	impl_GeneratePublishableStateMemberAccessors( header, root, s );
 
 	fprintf( header, "};\n\n" );
 }
@@ -1419,6 +1440,11 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
 			fprintf( header, " %s", param.name.c_str() );
 		}
+		else if ( param.type.kind == MessageParameterType::KIND::STRUCT )
+		{
+			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
+			fprintf( header, " %s", param.name.c_str() );
+		}
 		else
 			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
 
@@ -1467,7 +1493,7 @@ void impl_generatePublishableCommentBlock( FILE* header, CompositeType& s )
 		}
 		else if ( param.type.kind == MessageParameterType::KIND::STRUCT )
 		{
-			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", param.type.name.c_str() );
+			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
 			fprintf( header, " %s", param.name.c_str() );
 		}
 		else
