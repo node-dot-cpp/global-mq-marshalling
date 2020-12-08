@@ -1028,7 +1028,7 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
-		if ( param.type.vectorElemKind != MessageParameterType::KIND::STRUCT )
+		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 		{
 			assert( root.structs.size() > param.type.messageIdx );
 			fprintf( header, "\tauto get_%s() { return m::VectorOfStructRefWrapper<%s_RefWrapper<typename decltype(T::%s)::value_type>, decltype(T::%s)>(t.%s); }\n", 

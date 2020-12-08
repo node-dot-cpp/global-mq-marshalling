@@ -26,7 +26,7 @@
 * -------------------------------------------------------------------------------*/
 
 #ifndef PUBLISHABLE_IMPL_H
-#define PUBLISHABLE_H
+#define PUBLISHABLE_IMPL_H
 
 #include "global_mq_common.h"
 
@@ -102,4 +102,4 @@ public:
 
 } // namespace m
 
-#endif // PUBLISHABLE_H
+#endif // PUBLISHABLE_IMPL_H
