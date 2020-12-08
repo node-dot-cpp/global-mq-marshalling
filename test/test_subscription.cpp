@@ -1,6 +1,43 @@
 
 #include <stdio.h>
 #include <subscription_state.h>
+#include <publishable_impl.h>
+#include "marshalling/test_marshalling.h"
+
+struct Size{
+  double X = 1.0;
+  double Y = 2.0;
+  double Z = 3.0;
+};
+
+struct POINT3DREAL{
+  double X = 4.0;
+  double Y = 5.0;
+  double Z = 6.0;
+};
+
+struct PublishableSample {
+	int ID = 333;
+	Size size;
+	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 313}, {320, 321, 322}};
+	std::vector<int> vector_of_int = {111, 112, 113};
+};
+
+void publishableTestOne()
+{
+	m::publishable_sample_Wrapper<PublishableSample> publishableSampleWrapper;
+
+	// quick test for getting right after ctoring
+	fmt::print( "ID = {}\n", publishableSampleWrapper.get_ID() );
+	auto& size = publishableSampleWrapper.get_size();
+	fmt::print( "size = {}, {}, {}\n", size.X, size.Y, size.Z );
+	auto voi = publishableSampleWrapper.get_vector_of_int();
+	fmt::print( "vector_of_int[0] = {}\n", voi.get_at(0) );
+	auto vosp3d = publishableSampleWrapper.get_vector_struct_point3dreal();
+	auto vosp3d_0 = vosp3d.get_at( 0 );
+	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );
+}
+
 
 /*template<class T>
 class C

@@ -14,9 +14,16 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
+PUBLISHABLE publishable_sample {
+	INTEGER ID;
+	STRUCT Size size;
+	VECTOR<INTEGER> vector_of_int;
+	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
+};
+
 SCOPE scope_one PROTO = JSON;
 SCOPE level_trace PROTO = JSON;
-SCOPE infrastructural PROTO = JSON;
+SCOPE infrastructural PROTO = GMQ;
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 

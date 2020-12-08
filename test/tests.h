@@ -7,6 +7,7 @@ void testParsingJsonFile();
 void testMessageAliases();
 void testScopedMessageComposingAndParsing();
 
+void publishableTestOne();
 void testSubscriptionTest();
 
 #endif // TESTS_H
