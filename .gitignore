@@ -17,3 +17,5 @@ test/build/test.vcxproj.filters
 test/build/test.vcxproj.user
 test/build/.vs/
 test/build/x64/
+.vs/
+out/

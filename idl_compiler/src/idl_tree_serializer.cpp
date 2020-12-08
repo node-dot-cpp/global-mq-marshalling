@@ -1136,14 +1136,6 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	}
 }
 
-/*void impl_GeneratePublishableStateMemberGetter4SetVector( FILE* header, Root& root, CompositeType& s, MessageParameter& param, size_t idx )
-{
-	assert( param.type.kind == MessageParameterType::KIND::VECTOR );
-//	fprintf( header, "\tauto get4set_%s() { Vector_of_%s_RefWrapper4Set<decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", param.type..c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str(), idx );
-	if ( param.type.vectorElemKind != MessageParameterType::KIND::STRUCT )
-		fprintf( header, "\tauto get4set_%s() { Vector_of_%s_RefWrapper4Set<decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", param.type..c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str(), idx );
-}*/
-
 void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable );
@@ -1152,10 +1144,7 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 		auto& it = s.members[i];
 		assert( it != nullptr );
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
-			impl_GeneratePublishableStateMemberGetter4Set( header, root, s.name.c_str(), *it, i );
-		/*if ( it->type.kind == MessageParameterType::KIND::STRUCT )
-		if ( it->type.kind == MessageParameterType::KIND::VECTOR )
-			impl_GeneratePublishableStateMemberGetter4SetVector( header, root, s, *it, i );*/
+		impl_GeneratePublishableStateMemberGetter4Set( header, root, s.name.c_str(), *it, i );
 	}
 }
 
