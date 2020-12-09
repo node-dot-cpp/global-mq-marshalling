@@ -53,6 +53,15 @@ void publishableTestOne()
 	publishableSampleWrapper.get4set_vector_of_int().insert_before( 0, ins1 );
 	int ins1_back = publishableSampleWrapper.get_vector_of_int().get_at(0);
 	assert( ins1 == ins1_back );
+	POINT3DREAL point3dreal = {410, 411, 412};
+	publishableSampleWrapper.get4set_vector_struct_point3dreal().insert_before( 1, point3dreal );
+	auto point3dreal_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 );
+	assert( point3dreal.X == point3dreal_back.get_X() );
+	assert( point3dreal.Y == point3dreal_back.get_Y() );
+	assert( point3dreal.Z == point3dreal_back.get_Z() );
+	publishableSampleWrapper.get4set_vector_struct_point3dreal().get4set_at( 1 ).set_Y( 555 );
+	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
+	assert( point3dreal_Y_back == 555 );
 }
 
 
