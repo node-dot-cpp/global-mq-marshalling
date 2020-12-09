@@ -4,6 +4,14 @@
 #include <publishable_impl.h>
 #include "marshalling/test_marshalling.h"
 
+class SampleNode
+{
+	size_t ctr = 0;
+public:
+	SampleNode() {}
+	void addAccess() {++ctr;}
+};
+
 struct Size{
   double X = 1.0;
   double Y = 2.0;
@@ -17,15 +25,19 @@ struct POINT3DREAL{
 };
 
 struct PublishableSample {
+	SampleNode* node = nullptr;
 	int ID = 333;
 	Size size;
 	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
 	std::vector<int> vector_of_int = {111, 112, 113};
+
+	PublishableSample( SampleNode* node_ ) { node = node_; }
 };
 
 void publishableTestOne()
 {
-	m::publishable_sample_Wrapper<PublishableSample> publishableSampleWrapper;
+	SampleNode node;
+	m::publishable_sample_Wrapper<PublishableSample> publishableSampleWrapper( &node );
 
 	// quick test for getting right after ctoring
 	int id = publishableSampleWrapper.get_ID();

@@ -1073,7 +1073,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 		fprintf( header, 
 			"\t\t// NOTE: fake code balow\n"
 			"\t\t// TODO: form respective message or register change otherwise\n"
-			"\t\tfmt::print( \"updating T::%s with value {};\", val );\n",
+			"\t\tfmt::print( \"updating T::%s with value {};\\n\", val );\n",
 			param.name.c_str()
 		);
 	else
@@ -1124,7 +1124,9 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 
 	fprintf( header, 
 		"\npublic:\n" 
-		"\t%s_Wrapper() {}\n" ,
+		"\ttemplate<class ... ArgsT>\n"
+		"\tpublishable_sample_Wrapper( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n"
+		"\tconst T& getState() { return t; }\n",
 		s.name.c_str()
 	);
 

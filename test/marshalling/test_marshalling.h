@@ -904,20 +904,22 @@ class publishable_sample_Wrapper
 	static_assert( has_vector_struct_point3dreal, "type T must have member T::vector_struct_point3dreal of a type corresponding to IDL type VECTOR<STRUCT POINT3DREAL>" );
 
 public:
-	publishable_sample_Wrapper() {}
+	template<class ... ArgsT>
+	publishable_sample_Wrapper( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	const T& getState() { return t; }
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
 		// NOTE: fake code balow
 		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::ID with value {};", val );
+		fmt::print( "updating T::ID with value {};\n", val );
 	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
 		// NOTE: fake code balow
 		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::size with value {};", val );
+		fmt::print( "updating T::size with value {};\n", val );
 	}
 	auto get4set_size() { return size_RefWrapper<decltype(T::size)>(t.size); }
 	auto get_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
@@ -925,7 +927,7 @@ public:
 		t.vector_of_int = val; 
 		// NOTE: fake code balow
 		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::vector_of_int with value {};", val );
+		fmt::print( "updating T::vector_of_int with value {};\n", val );
 	}
 	auto get4set_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_of_int), publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
@@ -933,7 +935,7 @@ public:
 		t.vector_struct_point3dreal = val; 
 		// NOTE: fake code balow
 		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::vector_struct_point3dreal with value {};", val );
+		fmt::print( "updating T::vector_struct_point3dreal with value {};\n", val );
 	}
 	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 3); }
 };
