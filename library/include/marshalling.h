@@ -902,7 +902,7 @@ void composeStateUpdateMessageBegin(ComposerT& composer)
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.append( "{changes=[", sizeof("{changes=[") );
+		composer.buff.append( "{changes=[", sizeof("{changes=[")-1 );
 	}
 }
 
@@ -933,11 +933,13 @@ template<typename ComposerT>
 void composeStateUpdateMessageEnd(ComposerT& composer)
 {
 	if constexpr ( ComposerT::proto == Proto::GMQ )
-		; // do nothing
+	{
+		composeSignedInteger( composer, 0 );
+	}
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.append( "]}", 2 );
+		composer.buff.append( "{}]}", 4 );
 	}
 }
 
@@ -961,6 +963,62 @@ void parseStateUpdateMessageEnd(ParserT& p)
 	}
 }
 
+
+#if 0
+template<typename ComposerT>
+void composeStateUpdateBlockBegin(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.append( "{", 1 );
+	}
+}
+
+template<typename ParserT>
+void parseStateUpdateBlockBegin(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		if ( p.isDelimiter( '{' ) )
+			p.skipDelimiter( '{' );
+		else
+			throw std::exception(); // bad format
+	}
+}
+
+template<typename ComposerT>
+void composeStateUpdateBlockEnd(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.append( "}", 1 );
+	}
+}
+
+template<typename ParserT>
+void parseStateUpdateBlockEnd(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		if ( p.isDelimiter( '}' ) )
+			p.skipDelimiter( '}' );
+		else
+			throw std::exception(); // bad format
+	}
+}
+#endif
+
 template<typename ComposerT, typename ArgT>
 void directComposeInteger(ComposerT& composer, ArgT arg)
 {
@@ -971,6 +1029,8 @@ void directComposeInteger(ComposerT& composer, ArgT arg)
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 		json::composeNamedSignedInteger( composer, "value", arg );
+		composer.buff.append( "}", 1 );
+		composer.buff.append( ",", 1 );
 	}
 }
 
@@ -1001,6 +1061,8 @@ void directComposeUnsignedInteger(ComposerT& composer, ArgT arg)
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 		json::composeNamedUnsignedInteger( composer, "value", arg );
+		composer.buff.append( "}", 1 );
+		composer.buff.append( ",", 1 );
 	}
 }
 
@@ -1031,6 +1093,8 @@ void directComposeReal(ComposerT& composer, ArgT arg)
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 		json::composeNamedReal( composer, "value", arg );
+		composer.buff.append( "}", 1 );
+		composer.buff.append( ",", 1 );
 	}
 }
 
@@ -1060,6 +1124,8 @@ void directComposeString(ComposerT& composer, const ArgT& arg)
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 		json::composeNamedString( composer, "value", arg );
+		composer.buff.append( "}", 1 );
+		composer.buff.append( ",", 1 );
 	}
 }
 
@@ -1092,39 +1158,51 @@ void directComposeAddressInPublishable( ComposerT& composer, const GMQ_COLL vect
 	}
 	else
 	{
+		composer.buff.append( "{", 1 );
 		json::addNamePart( composer, "addr" );
 		composer.buff.appendUint8( '[' );
 		size_t collSz = addr.size();
 		for ( size_t i=0; i<collSz; ++i )
 		{
-			if ( i )
-				composer.buff.append( ", ", 2 );
 			json::composeUnsignedInteger( composer, addr[i] );
+			composer.buff.append( ", ", 2 );
 		}
-		composer.buff.append( ", ", 2 );
 		json::composeUnsignedInteger( composer, last );
 		composer.buff.appendUint8( ']' );
+		composer.buff.appendUint8( ',' );
 	}
 }
 
 template<typename ParserT, typename ArgT>
-void directParseInteger(ParserT& p, GMQ_COLL vector<size_t>& addr)
+bool directParseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
 	{
 		size_t cnt;
 		parseUnsignedInteger( p, &cnt );
+		if ( cnt == 0 )
+			return false;
 		size_t tmp;
 		for ( size_t i=0; i<cnt; ++i )
 		{
 			parseUnsignedInteger( p, &tmp );
 			addr.push_back( tmp );
 		}
+		return true;
 	}
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		if ( p.isDelimiter( '{' ) )
+			p.skipDelimiter( '{' );
+		else if ( p.isDelimiter( ']' ) )
+		{
+			p.skipDelimiter( ']' );
+			p.skipDelimiter( '}' );
+			return false;
+		}
+		
 		std::string key;
 		p.readKey( &key );
 		if ( key != "value" )
@@ -1151,6 +1229,11 @@ void directParseInteger(ParserT& p, GMQ_COLL vector<size_t>& addr)
 		}
 		else
 			p.skipDelimiter( ']' );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+		else
+			throw std::exception(); // bad format
+		return true;
 	}
 }
 
