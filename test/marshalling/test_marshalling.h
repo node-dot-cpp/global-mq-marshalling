@@ -890,10 +890,11 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 // 4. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
 //**********************************************************************
 
-template<class T>
+template<class T, class ComposerT>
 class publishable_sample_Wrapper
 {
 	T t;
+	ComposerT* composer;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_size = has_size_member<T>;
@@ -907,17 +908,64 @@ public:
 	template<class ... ArgsT>
 	publishable_sample_Wrapper( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
+	ComposerT& getComposer() { return *composer; }
+	void resetComposer( ComposerT* composer_ ) {
+		composer = composer_; 
+		m::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );
+	}
+	void finalizeComposing() {
+		m::impl::composeStateUpdateMessageEnd( *composer );
+	}
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser) {
+		m::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( impl::directParseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					m::impl::directParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					break;
+				case 1:
+					if ( addr.size() == 1 )
+						throw std::exception(); // bad format, TODO: ...
+					// TODO: forward to child
+					break;
+				case 2:
+					if ( addr.size() == 1 )
+						throw std::exception(); // bad format, TODO: ...
+					// TODO: forward to child
+					break;
+				case 3:
+					if ( addr.size() == 1 )
+						throw std::exception(); // bad format, TODO: ...
+					// TODO: forward to child
+					break;
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-		// NOTE: fake code balow
+		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
+		m::impl::directComposeInteger( *composer, val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::ID with value {};\n", val );
 	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
-		// NOTE: fake code balow
+		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
+	//assert( false ); // NOT IMPLEMENTED (YET);
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::size with value {};\n", val );
 	}
@@ -925,7 +973,9 @@ public:
 	auto get_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
-		// NOTE: fake code balow
+		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
+	//assert( false ); // NOT IMPLEMENTED (YET);
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::vector_of_int with value {};\n", val );
 	}
@@ -933,7 +983,9 @@ public:
 	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
-		// NOTE: fake code balow
+		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
+	//assert( false ); // NOT IMPLEMENTED (YET);
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::vector_struct_point3dreal with value {};\n", val );
 	}
@@ -979,7 +1031,9 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
-		// NOTE: fake code balow
+	return;
+		m::impl::directComposeReal( root.getComposer(), val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::X with value {}; path = [ ", val );
 		for ( size_t i=0; i<address.size(); ++i )
@@ -989,7 +1043,9 @@ public:
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
-		// NOTE: fake code balow
+	return;
+		m::impl::directComposeReal( root.getComposer(), val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::Y with value {}; path = [ ", val );
 		for ( size_t i=0; i<address.size(); ++i )
@@ -999,7 +1055,9 @@ public:
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
-		// NOTE: fake code balow
+	return;
+		m::impl::directComposeReal( root.getComposer(), val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::Z with value {}; path = [ ", val );
 		for ( size_t i=0; i<address.size(); ++i )
@@ -1047,7 +1105,9 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
-		// NOTE: fake code balow
+	return;
+		m::impl::directComposeReal( root.getComposer(), val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::X with value {}; path = [ ", val );
 		for ( size_t i=0; i<address.size(); ++i )
@@ -1057,7 +1117,9 @@ public:
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
-		// NOTE: fake code balow
+	return;
+		m::impl::directComposeReal( root.getComposer(), val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::Y with value {}; path = [ ", val );
 		for ( size_t i=0; i<address.size(); ++i )
@@ -1067,7 +1129,9 @@ public:
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
-		// NOTE: fake code balow
+	return;
+		m::impl::directComposeReal( root.getComposer(), val );
+		// NOTE: fake code below
 		// TODO: form respective message or register change otherwise
 		fmt::print( "updating T::Z with value {}; path = [ ", val );
 		for ( size_t i=0; i<address.size(); ++i )

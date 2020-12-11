@@ -1073,7 +1073,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 	);
 	if ( forRoot )
 	fprintf( header, 
-		"\tm::impl::directComposeAddressInPublishable( %s, %s, %zd );\n",
+		"\t\tm::impl::directComposeAddressInPublishable( %s, %s, %zd );\n",
 		composer, addrVector, idx
 	);
 	else
@@ -1081,16 +1081,16 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 	switch ( param.type.kind )
 	{
 		case MessageParameterType::KIND::INTEGER:
-			fprintf( header, "\tm::impl::directComposeInteger( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::directComposeInteger( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::UINTEGER:
-			fprintf( header, "\tm::impl::directComposeUnsignedInteger( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::directComposeUnsignedInteger( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::REAL:
-			fprintf( header, "\tm::impl::directComposeReal( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::directComposeReal( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::CHARACTER_STRING:
-			fprintf( header, "\tm::impl::directComposeString( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::directComposeString( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::VECTOR:
 		case MessageParameterType::KIND::STRUCT:

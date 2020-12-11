@@ -1069,7 +1069,7 @@ void directComposeUnsignedInteger(ComposerT& composer, ArgT arg)
 }
 
 template<typename ParserT, typename ArgT>
-void directParsUnsignedeInteger(ParserT& p, ArgT* arg)
+void directParseUnsignedInteger(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
