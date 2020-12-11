@@ -902,7 +902,7 @@ void composeStateUpdateMessageBegin(ComposerT& composer)
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.append( "{changes=[", sizeof("{changes=[")-1 );
+		composer.buff.append( "{\"changes\":[", sizeof("{\"changes\":[")-1 );
 	}
 }
 
@@ -1047,7 +1047,9 @@ void directParseInteger(ParserT& p, ArgT* arg)
 		p.readKey( &key );
 		if ( key != "value" )
 			throw std::exception(); // bad format
-		p.parseSignedInteger( arg );
+		p.readSignedIntegerFromJson( arg );
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
 	}
 }
 
@@ -1079,7 +1081,9 @@ void directParsUnsignedeInteger(ParserT& p, ArgT* arg)
 		p.readKey( &key );
 		if ( key != "value" )
 			throw std::exception(); // bad format
-		p.parseUnsignedInteger( arg );
+		p.readUnsignedIntegerFromJson( arg );
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
 	}
 }
 
@@ -1111,7 +1115,9 @@ void directParseReal(ParserT& p, ArgT* arg)
 		p.readKey( &key );
 		if ( key != "value" )
 			throw std::exception(); // bad format
-		p.parseReal( arg );
+		p.readRealFromJson( arg );
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
 	}
 }
 
@@ -1141,7 +1147,9 @@ void directParseString(ParserT& p, ArgT* arg)
 		p.readKey( &key );
 		if ( key != "value" )
 			throw std::exception(); // bad format
-		p.parseString( arg );
+		p.readStringFromJson( arg );
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
 	}
 }
 
@@ -1176,7 +1184,6 @@ void directComposeAddressInPublishable( ComposerT& composer, const GMQ_COLL vect
 template<typename ParserT, typename ArgT>
 bool directParseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 {
-	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
 	{
 		size_t cnt;
@@ -1195,7 +1202,16 @@ bool directParseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
 		if ( p.isDelimiter( '{' ) )
+		{
 			p.skipDelimiter( '{' );
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				p.skipDelimiter( ']' );
+				p.skipDelimiter( '}' );
+				return false;
+			}
+		}
 		else if ( p.isDelimiter( ']' ) )
 		{
 			p.skipDelimiter( ']' );
@@ -1205,7 +1221,7 @@ bool directParseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 		
 		std::string key;
 		p.readKey( &key );
-		if ( key != "value" )
+		if ( key != "addr" )
 			throw std::exception(); // bad format
 		p.skipDelimiter( '[' );
 		if ( !p.isDelimiter( ']' ) ) // there are some items there
@@ -1213,7 +1229,7 @@ bool directParseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 			size_t tmp;
 			for ( ;; )
 			{
-				p.parseUnsignedInteger( &tmp );
+				p.readUnsignedIntegerFromJson( &tmp );
 				addr.push_back( tmp );
 				if ( p.isDelimiter( ',' ) )
 				{
