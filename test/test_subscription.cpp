@@ -52,6 +52,12 @@ void publishableTestOne()
 	assert( size.Y == 2.0 );
 	assert( size.Z == 3.0 );
 	fmt::print( "size = {}, {}, {}\n", size.X, size.Y, size.Z );
+	publishableSampleWrapper.set_size( {901., 902., 903} );
+	auto& size1 = publishableSampleWrapper.get_size();
+	assert( size1.X == 901.0 );
+	assert( size1.Y == 902.0 );
+	assert( size1.Z == 903.0 );
+
 	auto voi = publishableSampleWrapper.get_vector_of_int();
 	assert( voi.size() == 3 );
 	fmt::print( "vector_of_int[0] = {}\n", voi.get_at(0) );

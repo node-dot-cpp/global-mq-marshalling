@@ -902,19 +902,21 @@ void composePublishableStructBegin(ComposerT& composer )
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.appendByte( "{" );
+		composer.buff.append( "{", 1 );
 	}
 }
 
 template<typename ComposerT>
-void composePublishableStructEnd(ComposerT& composer )
+void composePublishableStructEnd(ComposerT& composer, bool addListSeparator )
 {
 	if constexpr ( ComposerT::proto == Proto::GMQ )
 		; // do nothing
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.appendByte( "}" );
+		composer.buff.append( "}", 1 );
+		if ( addListSeparator )
+			composer.buff.append( ",", 1 );
 	}
 }
 
