@@ -99,6 +99,30 @@ string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterTyp
 	}
 }
 
+std::string impl_generateComposeFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
+{
+	assert( s.type.kind == MessageParameterType::KIND::STRUCT );
+	return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+}
+
+std::string impl_generateComposeFunctionNameForPublishableStruct( CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::structure );
+	return fmt::format( "publishable_{}_{}_compose", s.type2string(), s.name );
+}
+
+std::string impl_generateParseFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
+{
+	assert( s.type.kind == MessageParameterType::KIND::STRUCT );
+	return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+}
+
+std::string impl_generateParseFunctionNameForPublishableStruct( CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::structure );
+	return fmt::format( "publishable_{}_{}_parse", s.type2string(), s.name );
+}
+
 std::string impl_generateComposeFunctionName( CompositeType& s )
 {
 	return fmt::format( "{}_{}_compose", s.type2string(), s.name );
@@ -1059,6 +1083,63 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	}
 }
 
+
+void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+{
+	fprintf( header, 
+		"template<class ComposerT, class T>\n"
+		"void %s( ComposerT& composer, const T& t )\n"
+		"{\n",
+		impl_generateComposeFunctionNameForPublishableStruct( obj ).c_str()
+	);
+
+	const char* composer = "composer";
+
+	for ( size_t i=0; i<obj.members.size(); ++i )
+	{
+		auto& it = obj.members[i];
+		assert( it != nullptr );
+		auto member = *it;
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, "\t\tm::impl::directComposeInteger( %s, t.%s );\n", composer, member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "\tm::impl::directComposeUnsignedInteger( %s, t.%s );\n", composer, member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::REAL:
+				fprintf( header, "\tm::impl::directComposeReal( %s, t.%s );\n", composer, member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\tm::impl::directComposeString( %s, t.%s );\n", composer, member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, "\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\t%s( %s, t.%s );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( member ).c_str(), composer, member.name.c_str() );
+				break;
+			default:
+				assert( false ); // not implemented (yet)
+		}
+	}
+
+	fprintf( header, "}\n\n" );
+}
+
+void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+{
+	fprintf( header, 
+		"template<class ParserT, class T>\n"
+		"void %s( ParserT& parser, T* t )\n"
+		"{\n",
+		impl_generateParseFunctionNameForPublishableStruct( obj ).c_str()
+	);
+
+	fprintf( header, "}\n\n" );
+}
+
 void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot, const char* rootName, MessageParameter& param, size_t idx )
 {
 	assert( (forRoot && rootName != nullptr) || (forRoot == false && rootName == nullptr) );
@@ -1093,23 +1174,27 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			fprintf( header, "\t\tm::impl::directComposeString( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::VECTOR:
-		case MessageParameterType::KIND::STRUCT:
-			fprintf( header, "\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer );
+			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer );
 			break;
+		case MessageParameterType::KIND::STRUCT:
+			fprintf( header, "\t\t%s( %s, val );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( param ).c_str(), composer );
+			break;
+		default:
+			assert( false ); // not implemented (yet)
 	}
 	
 	if ( forRoot )
 	{
-		fprintf( header, 
+		/*fprintf( header, 
 			"\t\t// NOTE: fake code below\n"
 			"\t\t// TODO: form respective message or register change otherwise\n"
 			"\t\tfmt::print( \"updating T::%s with value {};\\n\", val );\n",
 			param.name.c_str()
-		);
+		);*/
 	}
 	else
 	{
-		fprintf( header, 
+		/*fprintf( header, 
 			"\t\t// NOTE: fake code below\n"
 			"\t\t// TODO: form respective message or register change otherwise\n"
 			"\t\tfmt::print( \"updating T::%s with value {}; path = [ \", val );\n"
@@ -1117,7 +1202,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			"\t\t\tfmt::print( \"{} \", address[i] );\n"
 			"\t\tfmt::print( \"] \\n\" );\n",
 			param.name.c_str()
-		);
+		);*/
 	}
 	fprintf( header, "\t}\n" );
 }
@@ -1197,6 +1282,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
 					"\t\t\t\t\t// TODO: forward to child\n"
 				);
+				fprintf( header, "\t\t\t\t\t%s( parser, &(t.%s) );\n", impl_generateParseFunctionNameForStructMemeberOfPublishable( member ).c_str(), member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, 
@@ -2005,6 +2091,18 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	generateMessageParamNameBlock( header, msgParams );
 	generatePublishableMemberNameBlock( header, publishableMembers );
+
+	for ( auto& it : s.structs )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Publishing )
+		{
+			impl_generateComposeFunctionForPublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_generateParseFunctionForPublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+		}
+	}
 
 	for ( auto& scope : s.scopes )
 	{

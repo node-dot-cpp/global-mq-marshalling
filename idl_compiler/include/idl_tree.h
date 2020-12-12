@@ -133,9 +133,9 @@ public:
 public:
 	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
 	Type type = Type::undefined;
-	const char* type2string()
+	static const char* type2string( Type type_ )
 	{
-		switch ( type )
+		switch ( type_ )
 		{
 			case Type::undefined: return "UNDEFINED";
 			case Type::message: return "MESSAGE";
@@ -146,6 +146,7 @@ public:
 				return "";
 		}
 	}
+	const char* type2string() { return type2string( type ); }
 
 public:
 	vector<unique_ptr<MessageParameter>> members;
