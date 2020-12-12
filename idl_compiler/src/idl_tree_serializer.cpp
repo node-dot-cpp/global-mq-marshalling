@@ -1100,25 +1100,28 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		auto& it = obj.members[i];
 		assert( it != nullptr );
 		auto member = *it;
+		const char* addSepar = i + 1 < obj.members.size() ? "true": "false";
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\t\tm::impl::publishableComposeLeafeInteger( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\t\tm::impl::publishableStructComposeLeafeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\tm::impl::publishableComposeLeafeUnsignedInteger( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableStructComposeLeafeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\tm::impl::publishableComposeLeafeReal( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableStructComposeLeafeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tm::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableStructComposeLeafeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s );\n", composer );
 				fprintf( header, "\t%s( %s, t.%s );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( member ).c_str(), composer, member.name.c_str() );
+				fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
 				break;
 			default:
 				assert( false ); // not implemented (yet)
@@ -1177,7 +1180,12 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer );
 			break;
 		case MessageParameterType::KIND::STRUCT:
-			fprintf( header, "\t\t%s( %s, val );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( param ).c_str(), composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
+			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s );\n", composer );
+//			fprintf( header, "\t\t%s( %s, val );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( param ).c_str(), composer );
+			fprintf( header, "\t\t%s( %s, t.%s );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( param ).c_str(), composer, param.name.c_str() );
+			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 			break;
 		default:
 			assert( false ); // not implemented (yet)
@@ -1277,12 +1285,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				);
 				break;
 			case  MessageParameterType::KIND::STRUCT:
-				fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() == 1 )\n"
-					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\t// TODO: forward to child\n"
-				);
+				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
 				fprintf( header, "\t\t\t\t\t%s( parser, &(t.%s) );\n", impl_generateParseFunctionNameForStructMemeberOfPublishable( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, 
