@@ -894,6 +894,140 @@ void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handler
 
 namespace impl {
 
+template<typename ComposerT, typename ArgT, typename NameT>
+void publishableStructComposeLeafeInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
+{
+	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_reference<ArgT>::type>::value );
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		composeSignedInteger( composer, arg );
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::composeNamedSignedInteger( composer, name, arg );
+		if ( addListSeparator )
+			composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT, typename ArgT, typename NameT>
+void publishableParseLeafeInteger(ParserT& p, ArgT* arg, NameT expectedName)
+{
+	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		parseSignedInteger( p, arg );
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+		p.readSignedIntegerFromJson( arg );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+	}
+}
+
+template<typename ComposerT, typename ArgT, typename NameT>
+void publishableStructComposeLeafeUnsignedInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
+{
+	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_reference<ArgT>::type>::value );
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		composeUnsignedInteger( composer, arg );
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::composeNamedUnsignedInteger( composer, name, arg );
+		if ( addListSeparator )
+			composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT, typename ArgT, typename NameT>
+void publishableParseLeafeUnsignedInteger(ParserT& p, ArgT* arg, NameT expectedName)
+{
+	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		parseUnsignedInteger( p, arg );
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+		p.readUnsignedIntegerFromJson( arg );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+	}
+}
+
+template<typename ComposerT, typename ArgT, typename NameT>
+void publishableStructComposeLeafeReal(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
+{
+	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_reference<ArgT>::type>::value );
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		composeReal( composer, arg );
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::composeNamedReal( composer, name, arg );
+		if ( addListSeparator )
+			composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT, typename ArgT, typename NameT>
+void publishableParseLeafeReal(ParserT& p, ArgT* arg, NameT expectedName)
+{
+	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_pointer<ArgT>::type>::value );
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		parseReal( p, arg );
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+		p.readRealFromJson( arg );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+	}
+}
+
+template<typename ComposerT, typename ArgT, typename NameT>
+void publishableStructComposeLeafeString(ComposerT& composer, const ArgT& arg, NameT name, bool addListSeparator)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		composeString( composer, arg );
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::composeNamedString( composer, name, arg );
+		if ( addListSeparator )
+			composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT, typename ArgT, typename NameT>
+void publishableParseLeafeString(ParserT& p, ArgT* arg, NameT expectedName)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		parseString( p, arg );
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+		p.readStringFromJson( arg );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+	}
+}
+
 template<typename ComposerT>
 void composePublishableStructBegin(ComposerT& composer )
 {
@@ -1178,6 +1312,60 @@ void publishableParseLeafeString(ParserT& p, ArgT* arg)
 		p.skipDelimiter( ',' );
 	}
 }
+
+template<typename ComposerT>
+void publishableComposeLeafeStructBegin(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::addNamePart( composer, "value" );
+	}
+}
+
+template<typename ComposerT>
+void publishableComposeLeafeStructEnd(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.append( "}", 1 );
+		composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT>
+void publishableParseLeafeStructBegin(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != "value" )
+			throw std::exception(); // bad format
+	}
+}
+
+template<typename ParserT>
+void publishableParseLeafeStructEnd(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
+	}
+}
+
 
 template<typename ComposerT>
 void composeAddressInPublishable( ComposerT& composer, const GMQ_COLL vector<size_t>& addr, size_t last )
