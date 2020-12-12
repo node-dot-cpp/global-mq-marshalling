@@ -37,12 +37,16 @@ struct PublishableSample {
 void publishableTestOne()
 {
 	SampleNode node;
-	m::publishable_sample_Wrapper<PublishableSample> publishableSampleWrapper( &node );
+	m::Buffer b;
+	m::JsonComposer composer( b );
+	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
+	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	int id = publishableSampleWrapper.get_ID();
 	assert( id == 333 );
 	fmt::print( "ID = {}\n", id );
+
 	auto& size = publishableSampleWrapper.get_size();
 	assert( size.X == 1.0 );
 	assert( size.Y == 2.0 );
@@ -61,6 +65,8 @@ void publishableTestOne()
 	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );
 
 	// updating (some) values
+	publishableSampleWrapper.set_ID( 38 );
+	assert( publishableSampleWrapper.get_ID() == 38 );
 	int ins1 = 17;
 	publishableSampleWrapper.get4set_vector_of_int().insert_before( 0, ins1 );
 	int ins1_back = publishableSampleWrapper.get_vector_of_int().get_at(0);
@@ -74,6 +80,15 @@ void publishableTestOne()
 	publishableSampleWrapper.get4set_vector_struct_point3dreal().get4set_at( 1 ).set_Y( 555 );
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
 	assert( point3dreal_Y_back == 555 );
+
+	publishableSampleWrapper.finalizeComposing();
+	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
+	fmt::print( "{}\n", sview );
+
+	m::JsonParser parser( b );
+	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapperSlave( &node );
+	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
+	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 }
 
 
@@ -130,6 +145,7 @@ struct S
 	std::string s;
 	A a;
 	GMQ_COLL vector<B> b = {B({2.33}),B({4.03})};
+	GMQ_COLL vector<int> c = {17,18};
 };
 
 ////////////////////////////////////////////////////
@@ -176,6 +192,7 @@ public:
 	B_RefWrapper( TB& actual ) : b( actual ) {}
 	auto get_y() { return b.y; }
 };
+
 template<class TB, class RootT>
 class B_RefWrapper4Set
 {
@@ -200,7 +217,7 @@ public:
 	}
 };
 
-template<class TB>
+/*template<class TB>
 class Vector_of_B_RefWrapper
 {
 //	static constexpr bool has_y = has_y_member<TB>;
@@ -230,10 +247,11 @@ public:
 	auto get4set_at( size_t idx ) { return B_RefWrapper4Set<typename TB::value_type, RootT>(b[idx], root, address, idx); }
 	void remove( size_t idx ) { GMA_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
 	void insert_bafore( TB& what, size_t idx ) { GMA_ASSERT( idx < b.size()); b.insert( what, b.begin() + idx ); }
-};
+};*/
 
 template<typename T> concept has_A_value_member = requires { { T::a }; };
 template<typename T> concept has_B_value_member = requires { { T::b }; };
+template<typename T> concept has_C_value_member = requires { { T::c }; };
 template<typename T> concept has_string_value_member = requires { { T::s }; };
 
 template<class T>
@@ -244,6 +262,8 @@ class S_Wrapper
 	static_assert( has_a, "type T must have member T::a of a type corresponding to IDL type PUBLISHABLE A" );
 	static constexpr bool has_b = has_B_value_member<T>;
 	static_assert( has_b, "type T must have member T::b of a type corresponding to IDL type PUBLISHABLE B" );
+	static constexpr bool has_c = has_C_value_member<T>;
+	static_assert( has_c, "type T must have member T::c of a type corresponding to IDL type PUBLISHABLE C" );
 	static constexpr bool has_s = has_string_value_member<T>;
 	static_assert( has_s, "member T::a of type CHARACTER-STRING is expected" );
 	static_assert( std::is_convertible<decltype(T::s), GMQ_COLL string>::value, "member TB::s must be of type convertible to GMQ_COLL string" );
@@ -253,9 +273,13 @@ public:
 	const auto& get_s() { return t.s; } // NOTE: for strings returning const ref
 	void set_s( GMQ_COLL string s_ ) {t.s = s_; }
 	auto get_a() { return A_RefWrapper<decltype(T::a)>(t.a); }
-	auto get4set_a() { return A_RefWrapper4Set<decltype(T::a), S_Wrapper>(t.a, *this, GMQ_COLL vector(), 1); }
-	auto get_b() { return Vector_of_B_RefWrapper(t.b); }
-	auto get4set_b() { return Vector_of_B_RefWrapper4Set<decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_a() { return A_RefWrapper4Set<decltype(T::a), S_Wrapper>(t.a, *this, GMQ_COLL vector<size_t>(), 1); }
+//	auto get_b() { return Vector_of_B_RefWrapper(t.b); }
+//	auto get4set_b() { return Vector_of_B_RefWrapper4Set<decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get_b() { return m::VectorOfStructRefWrapper<B_RefWrapper<typename decltype(T::b)::value_type>, decltype(T::b)>(t.b); }
+	auto get4set_b() { return m::VectorOfStructRefWrapper4Set<B_RefWrapper4Set<typename decltype(T::b)::value_type, S_Wrapper>, decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get_c() { return m::VectorOfSimpleTypeRefWrapper(t.c); }
+	auto get4set_c() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::c), S_Wrapper>(t.c, *this, GMQ_COLL vector<size_t>(), 2); }
 };
 
 void test()
@@ -313,23 +337,23 @@ public:
 		m::Buffer b;
 		GmqSubscriptionState::PositionVectorT v;
 
-		b.appendString( "root msg" );
+		b.append( "root msg", sizeof( "root msg" ) - 1 );
 		source.updateNode( {}, std::move( b ) );
 
-		b.clear();
-		b.appendString( "level 1 msg 1" );
+//		b.clear();
+		b.append( "level 1 msg 1", sizeof( "level 1 msg 1" ) - 1 );
 		source.insertNode( {}, 0, std::move( b ) );
 
-		b.clear();
-		b.appendString( "level 1 msg 2" );
+//		b.clear();
+		b.append( "level 1 msg 2", sizeof( "level 1 msg 2" ) - 1 );
 		source.insertNode( {}, 0, std::move( b ) );
 
-		b.clear();
-		b.appendString( "level 1 msg 3" );
+//		b.clear();
+		b.append( "level 1 msg 3", sizeof( "level 1 msg 3" ) - 1 );
 		source.insertNode( {}, 2, std::move( b ) );
 
-		b.clear();
-		b.appendString( "level 2 msg 1" );
+//		b.clear();
+		b.append( "level 2 msg 1", sizeof( "level 2 msg 1" ) - 1 );
 		source.insertNode( {1}, 0, std::move( b ) );
 
 		source.dbgPrintTree();
