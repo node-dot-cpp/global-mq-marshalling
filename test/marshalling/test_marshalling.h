@@ -120,7 +120,7 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 
 
 template<class ComposerT, class T>
-void publishable_STRUCT_Size_compose( ComposerT& composer, const T& t )
+void publishable_STRUCT_SIZE_compose( ComposerT& composer, const T& t )
 {
 	m::impl::publishableStructComposeLeafeReal( composer, t.X, "X", true );
 	m::impl::publishableStructComposeLeafeReal( composer, t.Y, "Y", true );
@@ -128,7 +128,7 @@ void publishable_STRUCT_Size_compose( ComposerT& composer, const T& t )
 }
 
 template<class ParserT, class T>
-void publishable_STRUCT_Size_parse( ParserT& parser, T& t )
+void publishable_STRUCT_SIZE_parse( ParserT& parser, T& t )
 {
 	m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
@@ -917,7 +917,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 //**********************************************************************
 // PUBLISHABLE publishable_sample (4 parameters)
 // 1. INTEGER ID
-// 2. STRUCT Size size
+// 2. STRUCT SIZE size
 // 3. VECTOR<INTEGER> vector_of_int
 // 4. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
 //**********************************************************************
@@ -930,7 +930,7 @@ class publishable_sample_Wrapper
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_size = has_size_member<T>;
-	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT Size" );
+	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
 	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
 	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
@@ -965,7 +965,7 @@ public:
 				case 1:
 					m::impl::publishableParseLeafeStructBegin( parser );
 					m::impl::parsePublishableStructBegin( parser );
-					publishable_STRUCT_Size_parse( parser, t.size );
+					publishable_STRUCT_SIZE_parse( parser, t.size );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
@@ -997,7 +997,7 @@ public:
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
 		m::impl::composePublishableStructBegin( *composer );
-		publishable_STRUCT_Size_compose( *composer, t.size );
+		publishable_STRUCT_SIZE_compose( *composer, t.size );
 		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
@@ -1019,7 +1019,7 @@ public:
 };
 
 template<class T>
-class Size_RefWrapper
+class SIZE_RefWrapper
 {
 	T& t;
 	static constexpr bool has_X = has_X_member<T>;
@@ -1030,14 +1030,14 @@ class Size_RefWrapper
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
 
 public:
-	Size_RefWrapper( T& actual ) : t( actual ) {}
+	SIZE_RefWrapper( T& actual ) : t( actual ) {}
 	auto get_X() { return t.X; }
 	auto get_Y() { return t.Y; }
 	auto get_Z() { return t.Z; }
 };
 
 template<class T, class RootT>
-class Size_RefWrapper4Set
+class SIZE_RefWrapper4Set
 {
 	T& t;
 	RootT& root;
@@ -1050,7 +1050,7 @@ class Size_RefWrapper4Set
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
 
 public:
-	Size_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+	SIZE_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
 		address = address_;
 		address.push_back (idx );
 	}
@@ -1133,7 +1133,7 @@ public:
 //**********************************************************************
 // STRUCT "CharacterParam" Targets: JSON (2 parameters)
 // 1. INTEGER ID (REQUIRED)
-// 2. STRUCT Size Size (REQUIRED)
+// 2. STRUCT SIZE Size (REQUIRED)
 
 //**********************************************************************
 
@@ -1201,7 +1201,7 @@ void STRUCT_CharacterParam_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// STRUCT "Size" Targets: JSON (3 parameters)
+// STRUCT "SIZE" Targets: JSON (3 parameters)
 // 1. REAL X (REQUIRED)
 // 2. REAL Y (REQUIRED)
 // 3. REAL Z (REQUIRED)
@@ -1209,7 +1209,7 @@ void STRUCT_CharacterParam_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCT_Size_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_SIZE_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1236,7 +1236,7 @@ void STRUCT_Size_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCT_Size_parse(ParserT& p, Args&& ... args)
+void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 

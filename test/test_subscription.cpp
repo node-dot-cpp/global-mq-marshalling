@@ -12,7 +12,7 @@ public:
 	void addAccess() {++ctr;}
 };
 
-struct Size{
+struct SIZE{
   double X = 1.0;
   double Y = 2.0;
   double Z = 3.0;
@@ -27,7 +27,7 @@ struct POINT3DREAL{
 struct PublishableSample {
 	SampleNode* node = nullptr;
 	int ID = 333;
-	Size size;
+	SIZE size;
 	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
 	std::vector<int> vector_of_int = {111, 112, 113};
 

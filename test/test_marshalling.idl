@@ -16,7 +16,7 @@ STRUCT cyclic_2 {
 
 PUBLISHABLE publishable_sample {
 	INTEGER ID;
-	STRUCT Size size;
+	STRUCT SIZE size;
 	VECTOR<INTEGER> vector_of_int;
 	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
 };
@@ -38,10 +38,10 @@ MESSAGE level_trace:LevelTraceData=1{
 
 STRUCT CharacterParam{
 	INTEGER ID;
-	STRUCT Size Size;
+	STRUCT SIZE Size;
 };
 
-STRUCT Size{
+STRUCT SIZE{
   REAL X;
   REAL Y;
   REAL Z;
