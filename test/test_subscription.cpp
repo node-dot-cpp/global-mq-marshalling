@@ -24,10 +24,16 @@ struct POINT3DREAL{
   double Z = 6.0;
 };
 
+struct CharacterParam{
+	uint64_t ID = 600;
+	SIZE Size = {11., 12., 13};
+};
+
 struct PublishableSample {
 	SampleNode* node = nullptr;
 	int ID = 333;
 	SIZE size;
+	CharacterParam chp;
 	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
 	std::vector<int> vector_of_int = {111, 112, 113};
 
@@ -87,6 +93,9 @@ void publishableTestOne()
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
 	assert( point3dreal_Y_back == 555 );
 
+	CharacterParam chp( { 186, {55., 56., 57.}} );
+	publishableSampleWrapper.set_chp( chp );
+
 	publishableSampleWrapper.finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
@@ -99,6 +108,9 @@ void publishableTestOne()
 	assert( size1Slave.X == 901.0 );
 	assert( size1Slave.Y == 902.0 );
 	assert( size1Slave.Z == 903.0 );
+
+	auto& chpSlave = publishableSampleWrapper.get_chp();
+	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
 }
 
 

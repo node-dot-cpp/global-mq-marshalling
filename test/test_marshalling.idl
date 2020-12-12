@@ -17,6 +17,7 @@ STRUCT cyclic_2 {
 PUBLISHABLE publishable_sample {
 	INTEGER ID;
 	STRUCT SIZE size;
+	STRUCT CharacterParam chp;
 	VECTOR<INTEGER> vector_of_int;
 	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
 };

@@ -111,13 +111,33 @@ constexpr z_Type::TypeConverter z;
 
 // member name presence checkers
 template<typename T> concept has_ID_member = requires { { T::ID }; };
+template<typename T> concept has_Size_member = requires { { T::Size }; };
 template<typename T> concept has_X_member = requires { { T::X }; };
 template<typename T> concept has_Y_member = requires { { T::Y }; };
 template<typename T> concept has_Z_member = requires { { T::Z }; };
+template<typename T> concept has_chp_member = requires { { T::chp }; };
 template<typename T> concept has_size_member = requires { { T::size }; };
 template<typename T> concept has_vector_of_int_member = requires { { T::vector_of_int }; };
 template<typename T> concept has_vector_struct_point3dreal_member = requires { { T::vector_struct_point3dreal }; };
 
+
+template<class ComposerT, class T>
+void publishable_STRUCT_CharacterParam_compose( ComposerT& composer, const T& t )
+{
+		m::impl::publishableStructComposeLeafeInteger( composer, t.ID, "ID", true );
+		m::impl::composePublishableStructBegin( composer );
+	publishable_STRUCT_SIZE_compose( composer, t.Size );
+		m::impl::composePublishableStructEnd( composer, false );
+}
+
+template<class ParserT, class T>
+void publishable_STRUCT_CharacterParam_parse( ParserT& parser, T& t )
+{
+	m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+	m::impl::publishableParseLeafeStructBegin( parser );
+	publishable_STRUCT_SIZE_parse( parser, t.Size );
+	m::impl::publishableParseLeafeStructEnd( parser );
+}
 
 template<class ComposerT, class T>
 void publishable_STRUCT_SIZE_compose( ComposerT& composer, const T& t )
@@ -915,11 +935,12 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 } // namespace test_json 
 
 //**********************************************************************
-// PUBLISHABLE publishable_sample (4 parameters)
+// PUBLISHABLE publishable_sample (5 parameters)
 // 1. INTEGER ID
 // 2. STRUCT SIZE size
-// 3. VECTOR<INTEGER> vector_of_int
-// 4. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
+// 3. STRUCT CharacterParam chp
+// 4. VECTOR<INTEGER> vector_of_int
+// 5. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
 //**********************************************************************
 
 template<class T, class ComposerT>
@@ -931,6 +952,8 @@ class publishable_sample_Wrapper
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_size = has_size_member<T>;
 	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
+	static constexpr bool has_chp = has_chp_member<T>;
+	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParam" );
 	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
 	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
@@ -970,11 +993,18 @@ public:
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
 				case 2:
+					m::impl::publishableParseLeafeStructBegin( parser );
+					m::impl::parsePublishableStructBegin( parser );
+					publishable_STRUCT_CharacterParam_parse( parser, t.chp );
+					m::impl::parsePublishableStructEnd( parser );
+					m::impl::publishableParseLeafeStructEnd( parser );
+					break;
+				case 3:
 					if ( addr.size() == 1 )
 						throw std::exception(); // bad format, TODO: ...
 					// TODO: forward to child
 					break;
-				case 3:
+				case 4:
 					if ( addr.size() == 1 )
 						throw std::exception(); // bad format, TODO: ...
 					// TODO: forward to child
@@ -1002,20 +1032,82 @@ public:
 		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
 	auto get4set_size() { return size_RefWrapper<decltype(T::size)>(t.size); }
+	const auto& get_chp() { return t.chp; }
+	void set_chp( decltype(T::chp) val) { 
+		t.chp = val; 
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
+		m::impl::publishableComposeLeafeStructBegin( *composer );
+		m::impl::composePublishableStructBegin( *composer );
+		publishable_STRUCT_CharacterParam_compose( *composer, t.chp );
+		m::impl::composePublishableStructEnd( *composer, false );
+		m::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_chp() { return chp_RefWrapper<decltype(T::chp)>(t.chp); }
 	auto get_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
-		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
-		//assert( false ); // NOT IMPLEMENTED (YET);
-	}
-	auto get4set_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_of_int), publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 2); }
-	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
-	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
-		t.vector_struct_point3dreal = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
 		//assert( false ); // NOT IMPLEMENTED (YET);
 	}
-	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_of_int), publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
+	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
+		t.vector_struct_point3dreal = val; 
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 4 );
+		//assert( false ); // NOT IMPLEMENTED (YET);
+	}
+	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
+};
+
+template<class T>
+class CharacterParam_RefWrapper
+{
+	T& t;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_Size = has_Size_member<T>;
+	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
+
+public:
+	CharacterParam_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_ID() { return t.ID; }
+	const auto& get_Size() { return t.Size; }
+	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }
+};
+
+template<class T, class RootT>
+class CharacterParam_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_Size = has_Size_member<T>;
+	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
+
+public:
+	CharacterParam_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_ID() { return t.ID; }
+	void set_ID( decltype(T::ID) val) { 
+		t.ID = val; 
+	return;
+		m::impl::publishableComposeLeafeInteger( root.getComposer(), val );
+	}
+	const auto& get_Size() { return t.Size; }
+	void set_Size( decltype(T::Size) val) { 
+		t.Size = val; 
+	return;
+		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
+		m::impl::composePublishableStructBegin( root.getComposer() );
+		publishable_STRUCT_SIZE_compose( root.getComposer(), t.Size );
+		m::impl::composePublishableStructEnd( root.getComposer(), false );
+		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+	}
+	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }
 };
 
 template<class T>
