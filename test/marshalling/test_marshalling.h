@@ -119,6 +119,38 @@ template<typename T> concept has_vector_of_int_member = requires { { T::vector_o
 template<typename T> concept has_vector_struct_point3dreal_member = requires { { T::vector_struct_point3dreal }; };
 
 
+template<class ComposerT, class T>
+void publishable_STRUCT_Size_compose( ComposerT& composer, const T& t )
+{
+	m::impl::publishableStructComposeLeafeReal( composer, t.X, "X", true );
+	m::impl::publishableStructComposeLeafeReal( composer, t.Y, "Y", true );
+	m::impl::publishableStructComposeLeafeReal( composer, t.Z, "Z", false );
+}
+
+template<class ParserT, class T>
+void publishable_STRUCT_Size_parse( ParserT& parser, T& t )
+{
+	m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+}
+
+template<class ComposerT, class T>
+void publishable_STRUCT_POINT3DREAL_compose( ComposerT& composer, const T& t )
+{
+	m::impl::publishableStructComposeLeafeReal( composer, t.X, "X", true );
+	m::impl::publishableStructComposeLeafeReal( composer, t.Y, "Y", true );
+	m::impl::publishableStructComposeLeafeReal( composer, t.Z, "Z", false );
+}
+
+template<class ParserT, class T>
+void publishable_STRUCT_POINT3DREAL_parse( ParserT& parser, T& t )
+{
+	m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+}
+
 namespace scope_one {
 
 using point3D_alias = impl::MessageName<1>;
@@ -931,10 +963,11 @@ public:
 					m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				case 1:
-					if ( addr.size() == 1 )
-						throw std::exception(); // bad format, TODO: ...
-					// TODO: forward to child
-					publishable_STRUCT_Size_parse( parser, &(t.size) );
+					m::impl::publishableParseLeafeStructBegin( parser );
+					m::impl::parsePublishableStructBegin( parser );
+					publishable_STRUCT_Size_parse( parser, t.size );
+					m::impl::parsePublishableStructEnd( parser );
+					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
 				case 2:
 					if ( addr.size() == 1 )
@@ -962,7 +995,11 @@ public:
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
-		publishable_STRUCT_Size_compose( *composer, val );
+		m::impl::publishableComposeLeafeStructBegin( *composer );
+		m::impl::composePublishableStructBegin( *composer );
+		publishable_STRUCT_Size_compose( *composer, t.size );
+		m::impl::composePublishableStructEnd( *composer, false );
+		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
 	auto get4set_size() { return size_RefWrapper<decltype(T::size)>(t.size); }
 	auto get_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }

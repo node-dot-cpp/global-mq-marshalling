@@ -95,6 +95,10 @@ void publishableTestOne()
 	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapperSlave( &node );
 	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
+	auto& size1Slave = publishableSampleWrapperSlave.get_size();
+	assert( size1Slave.X == 901.0 );
+	assert( size1Slave.Y == 902.0 );
+	assert( size1Slave.Z == 903.0 );
 }
 
 
