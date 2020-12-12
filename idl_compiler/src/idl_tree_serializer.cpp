@@ -1135,10 +1135,57 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 {
 	fprintf( header, 
 		"template<class ParserT, class T>\n"
-		"void %s( ParserT& parser, T* t )\n"
+		"void %s( ParserT& parser, T& t )\n"
 		"{\n",
 		impl_generateParseFunctionNameForPublishableStruct( obj ).c_str()
 	);
+
+	for ( size_t i=0; i<obj.members.size(); ++i )
+	{
+		assert( obj.members[i] != nullptr );
+		auto& member = *(obj.members[i]);
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, 
+					"\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, 
+					"\tm::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::REAL:
+				fprintf( header, 
+					"\tm::impl::publishableParseLeafeReal<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, 
+					"\tm::impl::publishableParseLeafeString<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case  MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
+				fprintf( header, "\t%s( parser, t.%s );\n", impl_generateParseFunctionNameForStructMemeberOfPublishable( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
+				break;
+			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, 
+					"\t\t\t\t\tif ( addr.size() == 1 )\n"
+					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
+					"\t\t\t\t\t// TODO: forward to child\n"
+				);
+				break;
+			default:
+				assert( false );
+		}
+	}
 
 	fprintf( header, "}\n\n" );
 }
@@ -1252,7 +1299,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 		auto& member = *(s.members[i]);
 		switch ( member.type.kind )
 		{
-		case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::INTEGER:
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
@@ -1284,9 +1331,11 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					member.name.c_str(), member.name.c_str()
 				);
 				break;
-			case  MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
-				fprintf( header, "\t\t\t\t\t%s( parser, &(t.%s) );\n", impl_generateParseFunctionNameForStructMemeberOfPublishable( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructBegin( parser );\n" );
+				fprintf( header, "\t\t\t\t\t%s( parser, t.%s );\n", impl_generateParseFunctionNameForStructMemeberOfPublishable( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
