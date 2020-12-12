@@ -1103,16 +1103,16 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\t\tm::impl::directComposeInteger( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\t\tm::impl::publishableComposeLeafeInteger( %s, t.%s );\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\tm::impl::directComposeUnsignedInteger( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableComposeLeafeUnsignedInteger( %s, t.%s );\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\tm::impl::directComposeReal( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableComposeLeafeReal( %s, t.%s );\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tm::impl::directComposeString( %s, t.%s );\n", composer, member.name.c_str() );
+				fprintf( header, "\tm::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, member.name.c_str() );
@@ -1154,7 +1154,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 	);
 	if ( forRoot )
 	fprintf( header, 
-		"\t\tm::impl::directComposeAddressInPublishable( %s, %s, %zd );\n",
+		"\t\tm::impl::composeAddressInPublishable( %s, %s, %zd );\n",
 		composer, addrVector, idx
 	);
 	else
@@ -1162,16 +1162,16 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 	switch ( param.type.kind )
 	{
 		case MessageParameterType::KIND::INTEGER:
-			fprintf( header, "\t\tm::impl::directComposeInteger( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeInteger( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::UINTEGER:
-			fprintf( header, "\t\tm::impl::directComposeUnsignedInteger( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeUnsignedInteger( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::REAL:
-			fprintf( header, "\t\tm::impl::directComposeReal( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeReal( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::CHARACTER_STRING:
-			fprintf( header, "\t\tm::impl::directComposeString( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeString( %s, val );\n", composer );
 			break;
 		case MessageParameterType::KIND::VECTOR:
 			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer );
@@ -1230,7 +1230,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 		"\tvoid applyMessageWithUpdates(ParserT& parser) {\n"
 		"\t\tm::impl::parseStateUpdateMessageBegin( parser );\n"
 		"\t\tGMQ_COLL vector<size_t> addr;\n"
-		"\t\twhile( impl::directParseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )\n"
+		"\t\twhile( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )\n"
 		"\t\t{\n"
 		"\t\t\tGMQ_ASSERT( addr.size() );\n"
 		"\t\t\tswitch ( addr[0] )\n"
@@ -1248,7 +1248,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::directParseInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					"\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1256,7 +1256,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::directParseUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					"\t\t\t\t\tm::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1264,7 +1264,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::directParseReal<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					"\t\t\t\t\tm::impl::publishableParseLeafeReal<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1272,7 +1272,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::directParseString<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					"\t\t\t\t\tm::impl::publishableParseLeafeString<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				break;

@@ -920,7 +920,7 @@ public:
 	void applyMessageWithUpdates(ParserT& parser) {
 		m::impl::parseStateUpdateMessageBegin( parser );
 		GMQ_COLL vector<size_t> addr;
-		while( impl::directParseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		while( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
 		{
 			GMQ_ASSERT( addr.size() );
 			switch ( addr[0] )
@@ -928,12 +928,13 @@ public:
 				case 0:
 					if ( addr.size() > 1 )
 						throw std::exception(); // bad format, TODO: ...
-					m::impl::directParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				case 1:
 					if ( addr.size() == 1 )
 						throw std::exception(); // bad format, TODO: ...
 					// TODO: forward to child
+					publishable_STRUCT_Size_parse( parser, &(t.size) );
 					break;
 				case 2:
 					if ( addr.size() == 1 )
@@ -954,40 +955,28 @@ public:
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
-		m::impl::directComposeInteger( *composer, val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::ID with value {};\n", val );
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
+		m::impl::publishableComposeLeafeInteger( *composer, val );
 	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
-		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
-	//assert( false ); // NOT IMPLEMENTED (YET);
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::size with value {};\n", val );
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
+		publishable_STRUCT_Size_compose( *composer, val );
 	}
 	auto get4set_size() { return size_RefWrapper<decltype(T::size)>(t.size); }
 	auto get_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
-		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
-	//assert( false ); // NOT IMPLEMENTED (YET);
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::vector_of_int with value {};\n", val );
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
+		//assert( false ); // NOT IMPLEMENTED (YET);
 	}
 	auto get4set_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_of_int), publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
-		m::impl::directComposeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
-	//assert( false ); // NOT IMPLEMENTED (YET);
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::vector_struct_point3dreal with value {};\n", val );
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
+		//assert( false ); // NOT IMPLEMENTED (YET);
 	}
 	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 3); }
 };
@@ -1032,37 +1021,19 @@ public:
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
 	return;
-		m::impl::directComposeReal( root.getComposer(), val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::X with value {}; path = [ ", val );
-		for ( size_t i=0; i<address.size(); ++i )
-			fmt::print( "{} ", address[i] );
-		fmt::print( "] \n" );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
 	return;
-		m::impl::directComposeReal( root.getComposer(), val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::Y with value {}; path = [ ", val );
-		for ( size_t i=0; i<address.size(); ++i )
-			fmt::print( "{} ", address[i] );
-		fmt::print( "] \n" );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
 	return;
-		m::impl::directComposeReal( root.getComposer(), val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::Z with value {}; path = [ ", val );
-		for ( size_t i=0; i<address.size(); ++i )
-			fmt::print( "{} ", address[i] );
-		fmt::print( "] \n" );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
 	}
 };
 
@@ -1106,37 +1077,19 @@ public:
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
 	return;
-		m::impl::directComposeReal( root.getComposer(), val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::X with value {}; path = [ ", val );
-		for ( size_t i=0; i<address.size(); ++i )
-			fmt::print( "{} ", address[i] );
-		fmt::print( "] \n" );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
 	return;
-		m::impl::directComposeReal( root.getComposer(), val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::Y with value {}; path = [ ", val );
-		for ( size_t i=0; i<address.size(); ++i )
-			fmt::print( "{} ", address[i] );
-		fmt::print( "] \n" );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
 	return;
-		m::impl::directComposeReal( root.getComposer(), val );
-		// NOTE: fake code below
-		// TODO: form respective message or register change otherwise
-		fmt::print( "updating T::Z with value {}; path = [ ", val );
-		for ( size_t i=0; i<address.size(); ++i )
-			fmt::print( "{} ", address[i] );
-		fmt::print( "] \n" );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
 	}
 };
 

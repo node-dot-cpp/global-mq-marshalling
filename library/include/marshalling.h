@@ -895,6 +895,30 @@ void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handler
 namespace impl {
 
 template<typename ComposerT>
+void composePublishableStructBegin(ComposerT& composer )
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.appendByte( "{" );
+	}
+}
+
+template<typename ComposerT>
+void composePublishableStructEnd(ComposerT& composer )
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.appendByte( "}" );
+	}
+}
+
+template<typename ComposerT>
 void composeStateUpdateMessageBegin(ComposerT& composer)
 {
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -1020,7 +1044,7 @@ void parseStateUpdateBlockEnd(ParserT& p)
 #endif
 
 template<typename ComposerT, typename ArgT>
-void directComposeInteger(ComposerT& composer, ArgT arg)
+void publishableComposeLeafeInteger(ComposerT& composer, ArgT arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_reference<ArgT>::type>::value );
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -1035,7 +1059,7 @@ void directComposeInteger(ComposerT& composer, ArgT arg)
 }
 
 template<typename ParserT, typename ArgT>
-void directParseInteger(ParserT& p, ArgT* arg)
+void publishableParseLeafeInteger(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
@@ -1054,7 +1078,7 @@ void directParseInteger(ParserT& p, ArgT* arg)
 }
 
 template<typename ComposerT, typename ArgT>
-void directComposeUnsignedInteger(ComposerT& composer, ArgT arg)
+void publishableComposeLeafeUnsignedInteger(ComposerT& composer, ArgT arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_reference<ArgT>::type>::value );
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -1069,7 +1093,7 @@ void directComposeUnsignedInteger(ComposerT& composer, ArgT arg)
 }
 
 template<typename ParserT, typename ArgT>
-void directParseUnsignedInteger(ParserT& p, ArgT* arg)
+void publishableParseLeafeUnsignedInteger(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
@@ -1088,7 +1112,7 @@ void directParseUnsignedInteger(ParserT& p, ArgT* arg)
 }
 
 template<typename ComposerT, typename ArgT>
-void directComposeReal(ComposerT& composer, ArgT arg)
+void publishableComposeLeafeReal(ComposerT& composer, ArgT arg)
 {
 	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_reference<ArgT>::type>::value );
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -1103,7 +1127,7 @@ void directComposeReal(ComposerT& composer, ArgT arg)
 }
 
 template<typename ParserT, typename ArgT>
-void directParseReal(ParserT& p, ArgT* arg)
+void publishableParseLeafeReal(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
@@ -1122,7 +1146,7 @@ void directParseReal(ParserT& p, ArgT* arg)
 }
 
 template<typename ComposerT, typename ArgT>
-void directComposeString(ComposerT& composer, const ArgT& arg)
+void publishableComposeLeafeString(ComposerT& composer, const ArgT& arg)
 {
 	if constexpr ( ComposerT::proto == Proto::GMQ )
 		composeString( composer, arg );
@@ -1136,7 +1160,7 @@ void directComposeString(ComposerT& composer, const ArgT& arg)
 }
 
 template<typename ParserT, typename ArgT>
-void directParseString(ParserT& p, ArgT* arg)
+void publishableParseLeafeString(ParserT& p, ArgT* arg)
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
 		parseString( p, arg );
@@ -1154,7 +1178,7 @@ void directParseString(ParserT& p, ArgT* arg)
 }
 
 template<typename ComposerT>
-void directComposeAddressInPublishable( ComposerT& composer, const GMQ_COLL vector<size_t>& addr, size_t last )
+void composeAddressInPublishable( ComposerT& composer, const GMQ_COLL vector<size_t>& addr, size_t last )
 {
 	if constexpr ( ComposerT::proto == Proto::GMQ )
 	{
@@ -1182,7 +1206,7 @@ void directComposeAddressInPublishable( ComposerT& composer, const GMQ_COLL vect
 }
 
 template<typename ParserT, typename ArgT>
-bool directParseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
+bool parseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
 	{
