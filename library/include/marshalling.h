@@ -1010,6 +1010,38 @@ void publishableStructComposeLeafeString(ComposerT& composer, const ArgT& arg, N
 	}
 }
 
+template<typename ParserT>
+void parsePublishableStructBegin(ParserT& p )
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		if ( p.isDelimiter( '{' ) )
+			p.skipDelimiter( '{' );
+		else
+			throw std::exception(); // TODO: bad format
+	}
+}
+
+template<typename ParserT>
+void parsePublishableStructEnd(ParserT& p )
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		if ( p.isDelimiter( '}' ) )
+			p.skipDelimiter( '}' );
+		else
+			throw std::exception(); // TODO: bad format
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+	}
+}
+
 template<typename ParserT, typename ArgT, typename NameT>
 void publishableParseLeafeString(ParserT& p, ArgT* arg, NameT expectedName)
 {
