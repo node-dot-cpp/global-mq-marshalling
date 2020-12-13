@@ -1104,24 +1104,24 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\t\tm::impl::publishableStructComposeLeafeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\tm::impl::publishableStructComposeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\tm::impl::publishableStructComposeLeafeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\tm::impl::publishableStructComposeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\tm::impl::publishableStructComposeLeafeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\tm::impl::publishableStructComposeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tm::impl::publishableStructComposeLeafeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\tm::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, "\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s );\n", composer );
+				fprintf( header, "\tm::impl::composePublishableStructBegin( %s );\n", composer );
 				fprintf( header, "\t%s( %s, t.%s );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( member ).c_str(), composer, member.name.c_str() );
-				fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
+				fprintf( header, "\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
 				break;
 			default:
 				assert( false ); // not implemented (yet)
@@ -1148,25 +1148,25 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		{
 			case MessageParameterType::KIND::INTEGER:
 				fprintf( header, 
-					"\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					"\tm::impl::publishableParseInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf( header, 
-					"\tm::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					"\tm::impl::publishableParseUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case MessageParameterType::KIND::REAL:
 				fprintf( header, 
-					"\tm::impl::publishableParseLeafeReal<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					"\tm::impl::publishableParseReal<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, 
-					"\tm::impl::publishableParseLeafeString<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					"\tm::impl::publishableParseString<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;

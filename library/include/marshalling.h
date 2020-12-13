@@ -895,7 +895,7 @@ void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handler
 namespace impl {
 
 template<typename ComposerT, typename ArgT, typename NameT>
-void publishableStructComposeLeafeInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
+void publishableStructComposeInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_reference<ArgT>::type>::value );
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -910,7 +910,7 @@ void publishableStructComposeLeafeInteger(ComposerT& composer, ArgT arg, NameT n
 }
 
 template<typename ParserT, typename ArgT, typename NameT>
-void publishableParseLeafeInteger(ParserT& p, ArgT* arg, NameT expectedName)
+void publishableParseInteger(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
@@ -929,7 +929,7 @@ void publishableParseLeafeInteger(ParserT& p, ArgT* arg, NameT expectedName)
 }
 
 template<typename ComposerT, typename ArgT, typename NameT>
-void publishableStructComposeLeafeUnsignedInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
+void publishableStructComposeUnsignedInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_reference<ArgT>::type>::value );
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -944,7 +944,7 @@ void publishableStructComposeLeafeUnsignedInteger(ComposerT& composer, ArgT arg,
 }
 
 template<typename ParserT, typename ArgT, typename NameT>
-void publishableParseLeafeUnsignedInteger(ParserT& p, ArgT* arg, NameT expectedName)
+void publishableParseUnsignedInteger(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
@@ -963,7 +963,7 @@ void publishableParseLeafeUnsignedInteger(ParserT& p, ArgT* arg, NameT expectedN
 }
 
 template<typename ComposerT, typename ArgT, typename NameT>
-void publishableStructComposeLeafeReal(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
+void publishableStructComposeReal(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
 {
 	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_reference<ArgT>::type>::value );
 	if constexpr ( ComposerT::proto == Proto::GMQ )
@@ -978,7 +978,7 @@ void publishableStructComposeLeafeReal(ComposerT& composer, ArgT arg, NameT name
 }
 
 template<typename ParserT, typename ArgT, typename NameT>
-void publishableParseLeafeReal(ParserT& p, ArgT* arg, NameT expectedName)
+void publishableParseReal(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
@@ -997,7 +997,7 @@ void publishableParseLeafeReal(ParserT& p, ArgT* arg, NameT expectedName)
 }
 
 template<typename ComposerT, typename ArgT, typename NameT>
-void publishableStructComposeLeafeString(ComposerT& composer, const ArgT& arg, NameT name, bool addListSeparator)
+void publishableStructComposeString(ComposerT& composer, const ArgT& arg, NameT name, bool addListSeparator)
 {
 	if constexpr ( ComposerT::proto == Proto::GMQ )
 		composeString( composer, arg );
@@ -1043,7 +1043,7 @@ void parsePublishableStructEnd(ParserT& p )
 }
 
 template<typename ParserT, typename ArgT, typename NameT>
-void publishableParseLeafeString(ParserT& p, ArgT* arg, NameT expectedName)
+void publishableParseString(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
 		parseString( p, arg );

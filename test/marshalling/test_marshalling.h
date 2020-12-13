@@ -124,16 +124,16 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 template<class ComposerT, class T>
 void publishable_STRUCT_CharacterParam_compose( ComposerT& composer, const T& t )
 {
-		m::impl::publishableStructComposeLeafeInteger( composer, t.ID, "ID", true );
-		m::impl::composePublishableStructBegin( composer );
+	m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+	m::impl::composePublishableStructBegin( composer );
 	publishable_STRUCT_SIZE_compose( composer, t.Size );
-		m::impl::composePublishableStructEnd( composer, false );
+	m::impl::composePublishableStructEnd( composer, false );
 }
 
 template<class ParserT, class T>
 void publishable_STRUCT_CharacterParam_parse( ParserT& parser, T& t )
 {
-	m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+	m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 	m::impl::parsePublishableStructBegin( parser );
 	publishable_STRUCT_SIZE_parse( parser, t.Size );
 	m::impl::parsePublishableStructEnd( parser );
@@ -142,33 +142,33 @@ void publishable_STRUCT_CharacterParam_parse( ParserT& parser, T& t )
 template<class ComposerT, class T>
 void publishable_STRUCT_SIZE_compose( ComposerT& composer, const T& t )
 {
-	m::impl::publishableStructComposeLeafeReal( composer, t.X, "X", true );
-	m::impl::publishableStructComposeLeafeReal( composer, t.Y, "Y", true );
-	m::impl::publishableStructComposeLeafeReal( composer, t.Z, "Z", false );
+	m::impl::publishableStructComposeReal( composer, t.X, "X", true );
+	m::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+	m::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
 }
 
 template<class ParserT, class T>
 void publishable_STRUCT_SIZE_parse( ParserT& parser, T& t )
 {
-	m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+	m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+	m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+	m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 }
 
 template<class ComposerT, class T>
 void publishable_STRUCT_POINT3DREAL_compose( ComposerT& composer, const T& t )
 {
-	m::impl::publishableStructComposeLeafeReal( composer, t.X, "X", true );
-	m::impl::publishableStructComposeLeafeReal( composer, t.Y, "Y", true );
-	m::impl::publishableStructComposeLeafeReal( composer, t.Z, "Z", false );
+	m::impl::publishableStructComposeReal( composer, t.X, "X", true );
+	m::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+	m::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
 }
 
 template<class ParserT, class T>
 void publishable_STRUCT_POINT3DREAL_parse( ParserT& parser, T& t )
 {
-	m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-	m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+	m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+	m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+	m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 }
 
 namespace scope_one {
