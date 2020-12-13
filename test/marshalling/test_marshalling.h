@@ -134,9 +134,9 @@ template<class ParserT, class T>
 void publishable_STRUCT_CharacterParam_parse( ParserT& parser, T& t )
 {
 	m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-	m::impl::publishableParseLeafeStructBegin( parser );
+	m::impl::parsePublishableStructBegin( parser );
 	publishable_STRUCT_SIZE_parse( parser, t.Size );
-	m::impl::publishableParseLeafeStructEnd( parser );
+	m::impl::parsePublishableStructEnd( parser );
 }
 
 template<class ComposerT, class T>

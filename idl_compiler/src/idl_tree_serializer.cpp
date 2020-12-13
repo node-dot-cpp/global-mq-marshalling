@@ -1171,9 +1171,9 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				);
 				break;
 			case  MessageParameterType::KIND::STRUCT:
-				fprintf( header, "\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
+				fprintf( header, "\tm::impl::parsePublishableStructBegin( parser );\n" );
 				fprintf( header, "\t%s( parser, t.%s );\n", impl_generateParseFunctionNameForStructMemeberOfPublishable( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
+				fprintf( header, "\tm::impl::parsePublishableStructEnd( parser );\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf( header, 
