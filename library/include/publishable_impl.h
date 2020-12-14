@@ -29,6 +29,7 @@
 #define PUBLISHABLE_IMPL_H
 
 #include "global_mq_common.h"
+#include "marshalling.h"
 
 
 namespace m {
@@ -71,7 +72,7 @@ public:
 	auto get_at( size_t idx ) { return RefWrapperT(b[idx]); }
 };
 
-template<class VectorT, class RootT>
+template<class VectorT, class ElemTypeT, class RootT>
 class VectorOfSimpleTypeRefWrapper4Set
 {
 	VectorT& b;
@@ -82,9 +83,23 @@ public:
 		address = address_;
 		address.push_back (idx );
 	}
-	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
-	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
+	void remove( size_t idx ) { 
+		GMQ_ASSERT( idx < b.size()); 
+		b.erase( b.begin() + idx );
+	}
+	void insert_before( size_t idx, VectorT& what ) { 
+		GMQ_ASSERT( idx < b.size()); 
+		b.insert( b.begin() + idx, what.begin(), what.end() );
+	}
+	void insert_before( size_t idx, typename VectorT::value_type& what ) { 
+		GMQ_ASSERT( idx < b.size());
+		b.insert( b.begin() + idx, what );
+	}
+	void set_at( typename VectorT::value_type what, size_t idx ) {
+		GMQ_ASSERT( idx < b.size());
+		b[idx] = what;
+//		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+	}
 };
 
 template<class RefWrapper4SetT, class VectorT, class RootT>

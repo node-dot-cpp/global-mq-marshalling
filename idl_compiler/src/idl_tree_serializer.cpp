@@ -1090,8 +1090,19 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), rootName, param.name.c_str(), rootName, param.name.c_str(), idx );
 		}
 		else
-			fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-				param.name.c_str(), param.name.c_str(), rootName, param.name.c_str(), idx );
+		{
+			const char* libType = nullptr;
+			switch( param.type.vectorElemKind )
+			{
+				case MessageParameterType::KIND::INTEGER: libType = "SignedIntegralType"; break;
+				case MessageParameterType::KIND::UINTEGER: libType = "UnsignedIntegralType"; break;
+				case MessageParameterType::KIND::REAL: libType = "RealType"; break;
+				case MessageParameterType::KIND::CHARACTER_STRING: libType = "StringType"; break;
+			}
+			if ( libType )
+				fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+					param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
+		}
 	}
 }
 
