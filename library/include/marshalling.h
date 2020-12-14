@@ -1010,14 +1010,63 @@ void publishableStructComposeString(ComposerT& composer, const ArgT& arg, NameT 
 	}
 }
 
-template<typename ParserT>
-void parsePublishableStructBegin(ParserT& p )
+template<typename ParserT, typename ArgT, typename NameT>
+void publishableParseString(ParserT& p, ArgT* arg, NameT expectedName)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		parseString( p, arg );
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+		p.readStringFromJson( arg );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+	}
+}
+
+template<typename ComposerT, class NameT>
+void composePublishableStructBegin(ComposerT& composer, NameT name )
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::addNamePart( composer, name );
+		composer.buff.append( "{", 1 );
+	}
+}
+
+template<typename ComposerT>
+void composePublishableStructEnd(ComposerT& composer, bool addListSeparator )
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.append( "}", 1 );
+		if ( addListSeparator )
+			composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT, typename NameT>
+void parsePublishableStructBegin(ParserT& p, NameT expectedName )
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
 		; // do nothing
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
 		if ( p.isDelimiter( '{' ) )
 			p.skipDelimiter( '{' );
 		else
@@ -1042,49 +1091,6 @@ void parsePublishableStructEnd(ParserT& p )
 	}
 }
 
-template<typename ParserT, typename ArgT, typename NameT>
-void publishableParseString(ParserT& p, ArgT* arg, NameT expectedName)
-{
-	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseString( p, arg );
-	else
-	{
-		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-		std::string key;
-		p.readKey( &key );
-		if ( key != expectedName )
-			throw std::exception(); // bad format
-		p.readStringFromJson( arg );
-		if ( p.isDelimiter( ',' ) )
-			p.skipDelimiter( ',' );
-	}
-}
-
-template<typename ComposerT>
-void composePublishableStructBegin(ComposerT& composer )
-{
-	if constexpr ( ComposerT::proto == Proto::GMQ )
-		; // do nothing
-	else
-	{
-		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.append( "{", 1 );
-	}
-}
-
-template<typename ComposerT>
-void composePublishableStructEnd(ComposerT& composer, bool addListSeparator )
-{
-	if constexpr ( ComposerT::proto == Proto::GMQ )
-		; // do nothing
-	else
-	{
-		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.append( "}", 1 );
-		if ( addListSeparator )
-			composer.buff.append( ",", 1 );
-	}
-}
 
 template<typename ComposerT>
 void composeStateUpdateMessageBegin(ComposerT& composer)

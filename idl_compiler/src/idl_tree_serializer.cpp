@@ -1131,7 +1131,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 				fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s );\n", composer );
+				fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, member.name.c_str() );
 				fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), composer, member.name.c_str() );
 				fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
 				break;
@@ -1183,7 +1183,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				);
 				break;
 			case  MessageParameterType::KIND::STRUCT:
-				fprintf( header, "\t\tm::impl::parsePublishableStructBegin( parser );\n" );
+				fprintf( header, "\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				break;
@@ -1242,28 +1242,28 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 		"\t\tm::impl::composeAddressInPublishable( %s, %s, %zd );\n",
 		composer, addrVector, idx
 	);
-	else
-	fprintf( header, "\treturn;\n", composer );
+//	else
+//	fprintf( header, "\treturn;\n", composer );
 	switch ( param.type.kind )
 	{
 		case MessageParameterType::KIND::INTEGER:
-			fprintf( header, "\t\tm::impl::publishableComposeLeafeInteger( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeInteger( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::UINTEGER:
-			fprintf( header, "\t\tm::impl::publishableComposeLeafeUnsignedInteger( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeUnsignedInteger( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::REAL:
-			fprintf( header, "\t\tm::impl::publishableComposeLeafeReal( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeReal( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::CHARACTER_STRING:
-			fprintf( header, "\t\tm::impl::publishableComposeLeafeString( %s, val );\n", composer );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
-			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer );
+			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::STRUCT:
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s );\n", composer );
+			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, param.name.c_str() );
 //			fprintf( header, "\t\t%s( %s, val );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( param ).c_str(), composer );
 			fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, param.name.c_str() );
 			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
@@ -1368,7 +1368,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
-				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructBegin( parser );\n" );
+				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );

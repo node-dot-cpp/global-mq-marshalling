@@ -132,7 +132,7 @@ struct publishable_STRUCT_CharacterParam
 	void compose( ComposerT& composer, const T& t )
 	{
 		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
-		m::impl::composePublishableStructBegin( composer );
+		m::impl::composePublishableStructBegin( composer, "Size" );
 		publishable_STRUCT_SIZE::compose( composer, t.Size );
 		m::impl::composePublishableStructEnd( composer, false );
 	}
@@ -142,7 +142,7 @@ struct publishable_STRUCT_CharacterParam
 	void parse( ParserT& parser, T& t )
 	{
 		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-		m::impl::parsePublishableStructBegin( parser );
+		m::impl::parsePublishableStructBegin( parser, "Size" );
 		publishable_STRUCT_SIZE::parse( parser, t.Size );
 		m::impl::parsePublishableStructEnd( parser );
 	}
@@ -1006,14 +1006,14 @@ public:
 					break;
 				case 1:
 					m::impl::publishableParseLeafeStructBegin( parser );
-					m::impl::parsePublishableStructBegin( parser );
+					m::impl::parsePublishableStructBegin( parser, "size" );
 					publishable_STRUCT_SIZE::parse( parser, t.size );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
 				case 2:
 					m::impl::publishableParseLeafeStructBegin( parser );
-					m::impl::parsePublishableStructBegin( parser );
+					m::impl::parsePublishableStructBegin( parser, "chp" );
 					publishable_STRUCT_CharacterParam::parse( parser, t.chp );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
@@ -1038,14 +1038,14 @@ public:
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
-		m::impl::publishableComposeLeafeInteger( *composer, val );
+		m::impl::publishableComposeLeafeInteger( *composer, t.ID );
 	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
-		m::impl::composePublishableStructBegin( *composer );
+		m::impl::composePublishableStructBegin( *composer, "size" );
 		publishable_STRUCT_SIZE::compose( *composer, t.size );
 		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
@@ -1056,7 +1056,7 @@ public:
 		t.chp = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
-		m::impl::composePublishableStructBegin( *composer );
+		m::impl::composePublishableStructBegin( *composer, "chp" );
 		publishable_STRUCT_CharacterParam::compose( *composer, t.chp );
 		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
@@ -1113,15 +1113,13 @@ public:
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-	return;
-		m::impl::publishableComposeLeafeInteger( root.getComposer(), val );
+		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
 	}
 	const auto& get_Size() { return t.Size; }
 	void set_Size( decltype(T::Size) val) { 
 		t.Size = val; 
-	return;
 		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		m::impl::composePublishableStructBegin( root.getComposer() );
+		m::impl::composePublishableStructBegin( root.getComposer(), "Size" );
 		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
 		m::impl::composePublishableStructEnd( root.getComposer(), false );
 		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
@@ -1168,20 +1166,17 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
-	return;
-		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
-	return;
-		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
-	return;
-		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
 };
 
@@ -1224,20 +1219,17 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
-	return;
-		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
-	return;
-		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
-	return;
-		m::impl::publishableComposeLeafeReal( root.getComposer(), val );
+		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
 };
 
