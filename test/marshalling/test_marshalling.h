@@ -121,55 +121,74 @@ template<typename T> concept has_vector_of_int_member = requires { { T::vector_o
 template<typename T> concept has_vector_struct_point3dreal_member = requires { { T::vector_struct_point3dreal }; };
 
 
-template<class ComposerT, class T>
-void publishable_STRUCT_CharacterParam_compose( ComposerT& composer, const T& t )
-{
-	m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
-	m::impl::composePublishableStructBegin( composer );
-	publishable_STRUCT_SIZE_compose( composer, t.Size );
-	m::impl::composePublishableStructEnd( composer, false );
-}
+struct publishable_STRUCT_CharacterParam;
+struct publishable_STRUCT_SIZE;
+struct publishable_STRUCT_POINT3DREAL;
 
-template<class ParserT, class T>
-void publishable_STRUCT_CharacterParam_parse( ParserT& parser, T& t )
+struct publishable_STRUCT_CharacterParam
 {
-	m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-	m::impl::parsePublishableStructBegin( parser );
-	publishable_STRUCT_SIZE_parse( parser, t.Size );
-	m::impl::parsePublishableStructEnd( parser );
-}
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		m::impl::composePublishableStructBegin( composer );
+		publishable_STRUCT_SIZE::compose( composer, t.Size );
+		m::impl::composePublishableStructEnd( composer, false );
+	}
 
-template<class ComposerT, class T>
-void publishable_STRUCT_SIZE_compose( ComposerT& composer, const T& t )
-{
-	m::impl::publishableStructComposeReal( composer, t.X, "X", true );
-	m::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
-	m::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
-}
+	template<class ParserT, class T>
+	static
+	void parse( ParserT& parser, T& t )
+	{
+		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		m::impl::parsePublishableStructBegin( parser );
+		publishable_STRUCT_SIZE::parse( parser, t.Size );
+		m::impl::parsePublishableStructEnd( parser );
+	}
+};
 
-template<class ParserT, class T>
-void publishable_STRUCT_SIZE_parse( ParserT& parser, T& t )
+struct publishable_STRUCT_SIZE
 {
-	m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-	m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-	m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-}
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		m::impl::publishableStructComposeReal( composer, t.X, "X", true );
+		m::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+		m::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
+	}
 
-template<class ComposerT, class T>
-void publishable_STRUCT_POINT3DREAL_compose( ComposerT& composer, const T& t )
-{
-	m::impl::publishableStructComposeReal( composer, t.X, "X", true );
-	m::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
-	m::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
-}
+	template<class ParserT, class T>
+	static
+	void parse( ParserT& parser, T& t )
+	{
+		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+		m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+	}
+};
 
-template<class ParserT, class T>
-void publishable_STRUCT_POINT3DREAL_parse( ParserT& parser, T& t )
+struct publishable_STRUCT_POINT3DREAL
 {
-	m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-	m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-	m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-}
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		m::impl::publishableStructComposeReal( composer, t.X, "X", true );
+		m::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+		m::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
+	}
+
+	template<class ParserT, class T>
+	static
+	void parse( ParserT& parser, T& t )
+	{
+		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+		m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+	}
+};
 
 namespace scope_one {
 
@@ -988,14 +1007,14 @@ public:
 				case 1:
 					m::impl::publishableParseLeafeStructBegin( parser );
 					m::impl::parsePublishableStructBegin( parser );
-					publishable_STRUCT_SIZE_parse( parser, t.size );
+					publishable_STRUCT_SIZE::parse( parser, t.size );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
 				case 2:
 					m::impl::publishableParseLeafeStructBegin( parser );
 					m::impl::parsePublishableStructBegin( parser );
-					publishable_STRUCT_CharacterParam_parse( parser, t.chp );
+					publishable_STRUCT_CharacterParam::parse( parser, t.chp );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
@@ -1027,7 +1046,7 @@ public:
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
 		m::impl::composePublishableStructBegin( *composer );
-		publishable_STRUCT_SIZE_compose( *composer, t.size );
+		publishable_STRUCT_SIZE::compose( *composer, t.size );
 		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
@@ -1038,7 +1057,7 @@ public:
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
 		m::impl::composePublishableStructBegin( *composer );
-		publishable_STRUCT_CharacterParam_compose( *composer, t.chp );
+		publishable_STRUCT_CharacterParam::compose( *composer, t.chp );
 		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
@@ -1103,7 +1122,7 @@ public:
 	return;
 		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
 		m::impl::composePublishableStructBegin( root.getComposer() );
-		publishable_STRUCT_SIZE_compose( root.getComposer(), t.Size );
+		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
 		m::impl::composePublishableStructEnd( root.getComposer(), false );
 		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
