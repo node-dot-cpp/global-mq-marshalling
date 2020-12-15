@@ -1161,6 +1161,25 @@ void parseStateUpdateMessageEnd(ParserT& p)
 	}
 }
 
+template<typename ParserT>
+void parseStateUpdateBlockEnd(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		if ( p.isDelimiter( '}' ) )
+			p.skipDelimiter( '}' );
+		else
+			throw std::exception(); // bad format
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+		else
+			throw std::exception(); // bad format
+	}
+}
+
 
 #if 0
 template<typename ComposerT>
@@ -1502,6 +1521,50 @@ bool parseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 		else
 			throw std::exception(); // bad format
 		return true;
+	}
+}
+
+template<typename ComposerT>
+void composeActionInPublishable( ComposerT& composer, size_t action, bool noData )
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+	{
+		composeUnsignedInteger( composer, action );
+	}
+	else
+	{
+		json::addNamePart( composer, "action" );
+		json::composeUnsignedInteger( composer, action );
+		if ( noData )
+		{
+			composer.buff.append( "}", 1 );
+			composer.buff.append( ",", 1 );
+		}
+		else
+			composer.buff.appendUint8( ',' );
+	}
+}
+
+template<typename ParserT>
+void parseActionInPublishable(ParserT& p, size_t& action)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+	{
+		parseUnsignedInteger( p, &action );
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		
+		std::string key;
+		p.readKey( &key );
+		if ( key != "action" )
+			throw std::exception(); // bad format
+		p.readUnsignedIntegerFromJson( &action );
+		if ( p.isDelimiter( ',' ) )
+			p.skipDelimiter( ',' );
+		else
+			throw std::exception(); // bad format
 	}
 }
 

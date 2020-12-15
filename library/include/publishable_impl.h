@@ -34,6 +34,8 @@
 
 namespace m {
 
+	enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
+
 template<class VectorT>
 class VectorOfSimpleTypeRefWrapper
 {
@@ -86,19 +88,44 @@ public:
 	void remove( size_t idx ) { 
 		GMQ_ASSERT( idx < b.size()); 
 		b.erase( b.begin() + idx );
-	}
-	void insert_before( size_t idx, VectorT& what ) { 
-		GMQ_ASSERT( idx < b.size()); 
-		b.insert( b.begin() + idx, what.begin(), what.end() );
+		impl::composeAddressInPublishable( root.getComposer(), address, idx );
+		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::remove_at, true );
 	}
 	void insert_before( size_t idx, typename VectorT::value_type& what ) { 
 		GMQ_ASSERT( idx < b.size());
 		b.insert( b.begin() + idx, what );
+		impl::composeAddressInPublishable( root.getComposer(), address, idx );
+		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::insert_single_before, false );
+		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			impl::publishableComposeLeafeInteger( root.getComposer(), what );
+		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), what );
+		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			impl::publishableComposeLeafeReal( root.getComposer(), what );
+		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			impl::publishableComposeLeafeString( root.getComposer(), what );
+		else
+			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 	}
+	/*void insert_before( size_t idx, VectorT& what ) { 
+		GMQ_ASSERT( idx < b.size()); 
+		b.insert( b.begin() + idx, what.begin(), what.end() );
+	}*/
 	void set_at( typename VectorT::value_type what, size_t idx ) {
 		GMQ_ASSERT( idx < b.size());
 		b[idx] = what;
-//		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+		impl::composeAddressInPublishable( root.getComposer(), address, idx );
+		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::update_at, false );
+		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			impl::publishableComposeLeafeInteger( root.getComposer(), what );
+		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), what );
+		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			impl::publishableComposeLeafeReal( root.getComposer(), what );
+		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			impl::publishableComposeLeafeString( root.getComposer(), what );
+		else
+			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 	}
 };
 
@@ -117,6 +144,11 @@ public:
 	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
 	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
 	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
+	void set_at( typename VectorT::value_type what, size_t idx ) {
+		GMQ_ASSERT( idx < b.size());
+		b[idx] = what;
+//		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+	}
 };
 
 
