@@ -139,12 +139,24 @@ struct publishable_STRUCT_CharacterParam
 
 	template<class ParserT, class T>
 	static
-	void parse( ParserT& parser, T& t )
+	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
-		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-		m::impl::parsePublishableStructBegin( parser, "Size" );
-		publishable_STRUCT_SIZE::parse( parser, t.Size );
-		m::impl::parsePublishableStructEnd( parser );
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+				break;
+			case 1:
+				assert( addr.size() > offset + 1 );
+				m::impl::parsePublishableStructBegin( parser, "Size" );
+				publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
+				m::impl::parsePublishableStructEnd( parser );
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
 	}
 };
 
@@ -161,11 +173,26 @@ struct publishable_STRUCT_SIZE
 
 	template<class ParserT, class T>
 	static
-	void parse( ParserT& parser, T& t )
+	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
-		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+				break;
+			case 1:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+				break;
+			case 2:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
 	}
 };
 
@@ -182,11 +209,26 @@ struct publishable_STRUCT_POINT3DREAL
 
 	template<class ParserT, class T>
 	static
-	void parse( ParserT& parser, T& t )
+	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
-		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+				break;
+			case 1:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+				break;
+			case 2:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
 	}
 };
 
@@ -1005,25 +1047,29 @@ public:
 					m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				case 1:
+					assert( addr.size() > 1 );
 					m::impl::publishableParseLeafeStructBegin( parser );
 					m::impl::parsePublishableStructBegin( parser, "size" );
-					publishable_STRUCT_SIZE::parse( parser, t.size );
+					publishable_STRUCT_SIZE::parse( parser, t.size, addr, 1 );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
 				case 2:
+					assert( addr.size() > 1 );
 					m::impl::publishableParseLeafeStructBegin( parser );
 					m::impl::parsePublishableStructBegin( parser, "chp" );
-					publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+					publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );
 					m::impl::parsePublishableStructEnd( parser );
 					m::impl::publishableParseLeafeStructEnd( parser );
 					break;
 				case 3:
+					assert( addr.size() > 1 );
 					if ( addr.size() == 1 )
 						throw std::exception(); // bad format, TODO: ...
 					// TODO: forward to child
 					break;
 				case 4:
+					assert( addr.size() > 1 );
 					if ( addr.size() == 1 )
 						throw std::exception(); // bad format, TODO: ...
 					// TODO: forward to child
