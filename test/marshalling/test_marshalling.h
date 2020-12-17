@@ -161,9 +161,9 @@ struct publishable_STRUCT_CharacterParam
 			case 1:
 				if ( addr.size() > offset + 1 )
 				{
-					m::impl::parsePublishableStructBegin( parser, "Size" );
+					m::impl::publishableParseLeafeStructBegin( parser );
 					publishable_STRUCT_SIZE::parse( parser, t.Size );
-					m::impl::parsePublishableStructEnd( parser );
+					m::impl::publishableParseLeafeStructEnd( parser );
 				}
 				else
 					publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
@@ -1082,9 +1082,7 @@ public:
 					if ( addr.size() == 1 )
 					{
 							m::impl::publishableParseLeafeStructBegin( parser );
-//							m::impl::parsePublishableStructBegin( parser, "size" );
 							publishable_STRUCT_SIZE::parse( parser, t.size );
-							m::impl::parsePublishableStructEnd( parser );
 							m::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else
@@ -1098,9 +1096,7 @@ public:
 					if ( addr.size() == 1 )
 					{
 							m::impl::publishableParseLeafeStructBegin( parser );
-//							m::impl::parsePublishableStructBegin( parser, "chp" );
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp );
-							m::impl::parsePublishableStructEnd( parser );
 							m::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else
@@ -1139,9 +1135,7 @@ public:
 		t.size = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
-//		m::impl::composePublishableStructBegin( *composer, "size" );
 		publishable_STRUCT_SIZE::compose( *composer, t.size );
-		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
 	auto get4set_size() { return size_RefWrapper<decltype(T::size)>(t.size); }
@@ -1150,9 +1144,7 @@ public:
 		t.chp = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
 		m::impl::publishableComposeLeafeStructBegin( *composer );
-//		m::impl::composePublishableStructBegin( *composer, "chp" );
 		publishable_STRUCT_CharacterParam::compose( *composer, t.chp );
-		m::impl::composePublishableStructEnd( *composer, false );
 		m::impl::publishableComposeLeafeStructEnd( *composer );
 	}
 	auto get4set_chp() { return chp_RefWrapper<decltype(T::chp)>(t.chp); }
@@ -1213,9 +1205,7 @@ public:
 	void set_Size( decltype(T::Size) val) { 
 		t.Size = val; 
 		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		m::impl::composePublishableStructBegin( root.getComposer(), "Size" );
 		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
-		m::impl::composePublishableStructEnd( root.getComposer(), false );
 		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
 	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }

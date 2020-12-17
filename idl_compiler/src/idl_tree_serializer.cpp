@@ -1204,9 +1204,11 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			case  MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\tif ( addr.size() > offset + 1 )\n" );
 				fprintf( header, "\t\t\t\t{\n" );
-				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+//				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n", member.name.c_str() );
 				fprintf( header, "\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
+				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
+//				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t}\n" );
 				fprintf( header, "\t\t\t\telse\n" );
 				fprintf( header, "\t\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
@@ -1367,10 +1369,9 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			break;
 		case MessageParameterType::KIND::STRUCT:
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, param.name.c_str() );
-//			fprintf( header, "\t\t%s( %s, val );\n", impl_generateComposeFunctionNameForStructMemeberOfPublishable( param ).c_str(), composer );
+//			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, param.name.c_str() );
 			fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, param.name.c_str() );
-			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
+//			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 			break;
 		default:
@@ -1474,9 +1475,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 )\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
 				fprintf( header, "\t\t\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
-				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\t}\n" );
 				fprintf( header, "\t\t\t\t\telse\n" );
