@@ -1365,7 +1365,37 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
-			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, param.name.c_str() );
+			fprintf( header, "\t\tm::impl::publishableComposeLeafeValueBegin( %s );\n", composer );
+			switch ( param.type.vectorElemKind )
+			{
+				case MessageParameterType::KIND::INTEGER:
+					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					break;
+				case MessageParameterType::KIND::UINTEGER:
+					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					break;
+				case MessageParameterType::KIND::REAL:
+					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::RealType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					break;
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::StringType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					break;
+				case MessageParameterType::KIND::VECTOR:
+					assert( false ); // unexpected
+					break;
+				case MessageParameterType::KIND::STRUCT:
+					/*fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
+		//			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, param.name.c_str() );
+					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, param.name.c_str() );
+		//			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
+					fprintf( header, "\t\tm::impl::publishableComposeLeafeStructEnd( %s );\n", composer );*/
+					break;
+				default:
+					assert( false ); // not implemented (yet)
+			}
+
+//			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, param.name.c_str() );
+			fprintf( header, "\t\tm::impl::composeStateUpdateBlockEnd( %s );\n", composer );
 			break;
 		case MessageParameterType::KIND::STRUCT:
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
