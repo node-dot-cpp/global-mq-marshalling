@@ -80,6 +80,7 @@ void publishableTestOne()
 	publishableSampleWrapper.set_ID( 38 );
 	assert( publishableSampleWrapper.get_ID() == 38 );
 	int ins1 = 17;
+	publishableSampleWrapper.set_vector_of_int({44,45,46});
 	publishableSampleWrapper.get4set_vector_of_int().insert_before( 0, ins1 );
 	int ins1_back = publishableSampleWrapper.get_vector_of_int().get_at(0);
 	assert( ins1 == ins1_back );
@@ -111,6 +112,12 @@ void publishableTestOne()
 
 	auto& chpSlave = publishableSampleWrapper.get_chp();
 	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
+
+	auto voint = publishableSampleWrapper.get_vector_of_int();
+	assert( voint.size() == 3 );
+	assert( voint.get_at( 0 ) == 44 );
+	assert( voint.get_at( 1 ) == 45 );
+	assert( voint.get_at( 2 ) == 46 );
 }
 
 
