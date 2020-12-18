@@ -127,6 +127,112 @@ public:
 		else
 			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 	}
+	template<class ParserT, class T>
+	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset ) {
+	}
+};
+
+class VectorOfSimpleTypeBody
+{
+public:
+	template<class ComposerT, class VectorT, class ElemTypeT, class RootT>
+	static
+	void compose( ComposerT& composer, VectorT& what ) { 
+		size_t collSz = what.size();
+		if constexpr ( ComposerT::proto == Proto::GMQ )
+		{
+			composeUnsignedInteger( composer, collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					impl::composeSignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					impl::composeUnsignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					impl::composeReal( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					impl::composeString( composer, what[i] );
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+			}
+		}
+		else
+		{
+			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					impl::json::composeSignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					impl::json::composeUnsignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					impl::json::composeReal( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					impl::json::composeString( composer, what[i] );
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				if constexpr ( ComposerT::proto == Proto::GMQ )
+				{
+					if ( i + 1 < collSz ) 
+						composer.buff.append( ", ", 2 );
+				}
+			}
+		}
+	}
+	template<class ParserT, class VectorT, class ElemTypeT, class RootT>
+	static
+	void parse( ParserT& parser, VectorT& dest ) { 
+		if constexpr ( ParserT::proto == Proto::GMQ )
+		{
+			size_t collSz;
+			parseUnsignedInteger( parser, &collSz );
+			dest.reserve( collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				typename VectorT::value_type what;
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					parser.parseSignedInteger( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					parser.parseUnsignedInteger( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					parser.parseReal( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					parser.parseString( &what );
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				dest.push_back( what );
+			}
+		}
+		else
+		{
+			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+			for( ;; )
+			{
+				typename VectorT::value_type what;
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					parser.parseSignedInteger( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					parser.parseUnsignedInteger( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					parser.parseReal( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					parser.parseString( &what );
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				dest.push_back( what );
+				if ( parser.isDelimiter( ',' ) )
+				{
+					parser.skipDelimiter( ',' );
+					continue;
+				}
+				if ( parser.isDelimiter( ']' ) )
+				{
+//					parser.skipDelimiter( ']' );
+					break;
+				}
+			}
+		}
+	}
 };
 
 template<class RefWrapper4SetT, class VectorT, class RootT>
