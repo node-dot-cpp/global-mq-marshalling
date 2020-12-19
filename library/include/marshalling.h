@@ -1161,6 +1161,18 @@ void parseStateUpdateMessageEnd(ParserT& p)
 	}
 }
 
+template<typename ComposerT>
+void composeStateUpdateBlockEnd(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.append( "},", 2 );
+	}
+}
+
 template<typename ParserT>
 void parseStateUpdateBlockEnd(ParserT& p)
 {
@@ -1179,7 +1191,6 @@ void parseStateUpdateBlockEnd(ParserT& p)
 			throw std::exception(); // bad format
 	}
 }
-
 
 #if 0
 template<typename ComposerT>
@@ -1217,7 +1228,7 @@ void composeStateUpdateBlockEnd(ComposerT& composer)
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-		composer.buff.append( "}", 1 );
+		composer.buff.append( "},", 2 );
 	}
 }
 
@@ -1228,10 +1239,8 @@ void parseStateUpdateBlockEnd(ParserT& p)
 		; // do nothing
 	else
 	{
-		if ( p.isDelimiter( '}' ) )
-			p.skipDelimiter( '}' );
-		else
-			throw std::exception(); // bad format
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
 	}
 }
 #endif
@@ -1379,6 +1388,34 @@ void publishableComposeLeafeStructBegin(ComposerT& composer)
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 		json::addNamePart( composer, "value" );
+		composer.buff.append( "{", 1 );
+	}
+}
+
+template<typename ComposerT>
+void publishableComposeLeafeValueBegin(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::addNamePart( composer, "value" );
+	}
+}
+
+template<typename ParserT>
+void publishableParseLeafeValueBegin(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != "value" )
+			throw std::exception(); // bad format
 	}
 }
 
@@ -1407,6 +1444,7 @@ void publishableParseLeafeStructBegin(ParserT& p)
 		p.readKey( &key );
 		if ( key != "value" )
 			throw std::exception(); // bad format
+		p.skipDelimiter( '{' );
 	}
 }
 
@@ -1419,6 +1457,61 @@ void publishableParseLeafeStructEnd(ParserT& p)
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
 		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
+	}
+}
+
+template<typename ComposerT>
+void publishableComposeLeafeVectorBegin(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::addNamePart( composer, "value" );
+		composer.buff.append( "[", 1 );
+	}
+}
+
+template<typename ComposerT>
+void publishableComposeLeafeVectorEnd(ComposerT& composer)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		composer.buff.append( "]", 1 );
+		composer.buff.append( ",", 1 );
+	}
+}
+
+template<typename ParserT>
+void publishableParseLeafeVectorBegin(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != "value" )
+			throw std::exception(); // bad format
+		p.skipDelimiter( '[' );
+	}
+}
+
+template<typename ParserT>
+void publishableParseLeafeVectorEnd(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		p.skipDelimiter( ']' );
 		p.skipDelimiter( ',' );
 	}
 }
