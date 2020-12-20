@@ -146,7 +146,7 @@ class VectorOfSimpleTypeBody
 	static
 	void parseSingleValue( ParserT& parser, typename VectorT::value_type& value ) { 
 		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-			impl::IntegerProcessor::parse( parser, value );
+			impl::IntegerProcessor::parse<ParserT, typename VectorT::value_type>( parser, &value );
 		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
 			impl::UnsignedIntegerProcessor::parse( parser, value );
 		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
@@ -295,31 +295,37 @@ public:
 		switch ( action )
 		{
 			case ActionOnVector::remove_at:
-				parseStateUpdateBlockEnd( parser );
+			{
+				impl::parseStateUpdateBlockEnd( parser );
 				assert( addr.size() == offset + 1 );
 				size_t pos = addr[offset];
 				assert( pos < dest.size() );
 				dest.erase( dest.begin() + pos );
 				break;
+			}
 			case ActionOnVector::update_at:
+			{
 				assert( addr.size() == offset + 1 );
 				size_t pos = addr[offset];
 				assert( pos < dest.size() );
 				typename VectorT::value_type& value = dest[pos];
 				impl::publishableParseLeafeValueBegin( parser );
-				parseSingleValue( parser, value );
+				parseSingleValue<ParserT, VectorT, ElemTypeT, ProcType/*, class RootT*/>( parser, value );
 				impl::parseStateUpdateBlockEnd( parser );
 				break;
+			}
 			case ActionOnVector::insert_single_before:
+			{
 				assert( addr.size() == offset + 1 );
 				size_t pos = addr[offset];
 				assert( pos <= dest.size() );
 				typename VectorT::value_type value;
 				impl::publishableParseLeafeValueBegin( parser );
-				parseSingleValue( parser, value );
+				parseSingleValue<ParserT, VectorT, ElemTypeT, ProcType/*, class RootT*/>( parser, value );
 				impl::parseStateUpdateBlockEnd( parser );
 				dest.insert( dest.begin() + pos, value );
 				break;
+			}
 			default:
 				throw std::exception();
 		}
