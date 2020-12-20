@@ -34,7 +34,7 @@
 
 namespace m {
 
-	enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
+enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
 
 template<class VectorT>
 class VectorOfSimpleTypeRefWrapper
@@ -75,87 +75,94 @@ public:
 };
 
 template<class VectorT, class ElemTypeT, class RootT>
-class VectorOfSimpleTypeRefWrapper4Set
+class VectorRefWrapper4Set
 {
+	void finalizeInsertOrUpdateAt( size_t idx ) { 
+		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			impl::publishableComposeLeafeInteger( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			impl::publishableComposeLeafeReal( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			impl::publishableComposeLeafeString( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+		{
+			impl::publishableComposeLeafeStructBegin( root.getComposer() );
+			ElemTypeT::compose( root.getComposer(), b[idx] );
+			impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		}
+		else
+			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+	}
+
+protected:
 	VectorT& b;
 	RootT& root;
 	GMQ_COLL vector<size_t> address;
+
 public:
-	VectorOfSimpleTypeRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+	VectorRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
 		address = address_;
 		address.push_back (idx );
 	}
+
 	void remove( size_t idx ) { 
 		GMQ_ASSERT( idx < b.size()); 
 		b.erase( b.begin() + idx );
 		impl::composeAddressInPublishable( root.getComposer(), address, idx );
 		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::remove_at, true );
 	}
+
 	void insert_before( size_t idx, typename VectorT::value_type& what ) { 
 		GMQ_ASSERT( idx < b.size());
 		b.insert( b.begin() + idx, what );
 		impl::composeAddressInPublishable( root.getComposer(), address, idx );
 		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::insert_single_before, false );
-		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-			impl::publishableComposeLeafeInteger( root.getComposer(), what );
-		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), what );
-		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-			impl::publishableComposeLeafeReal( root.getComposer(), what );
-		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-			impl::publishableComposeLeafeString( root.getComposer(), what );
-		else
-			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+		finalizeInsertOrUpdateAt( idx );
 	}
-	/*void insert_before( size_t idx, VectorT& what ) { 
-		GMQ_ASSERT( idx < b.size()); 
-		b.insert( b.begin() + idx, what.begin(), what.end() );
-	}*/
+
 	void set_at( typename VectorT::value_type what, size_t idx ) {
 		GMQ_ASSERT( idx < b.size());
 		b[idx] = what;
 		impl::composeAddressInPublishable( root.getComposer(), address, idx );
 		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::update_at, false );
-		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-			impl::publishableComposeLeafeInteger( root.getComposer(), what );
-		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), what );
-		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-			impl::publishableComposeLeafeReal( root.getComposer(), what );
-		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-			impl::publishableComposeLeafeString( root.getComposer(), what );
-		else
-			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-	}
-	template<class ParserT, class T>
-	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset ) {
+		finalizeInsertOrUpdateAt( idx );
 	}
 };
 
-template<class RefWrapper4SetT, class VectorT, class RootT>
-class VectorOfStructRefWrapper4Set
+template<class VectorT, class ElemTypeT, class RootT, class RefWrapper4SetT>
+class VectorOfStructRefWrapper4Set : public VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>
 {
-	VectorT& b;
-	RootT& root;
-	GMQ_COLL vector<size_t> address;
 public:
-	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
-	}
-	auto get4set_at( size_t idx ) { return RefWrapper4SetT(b[idx], root, address, idx); }
-	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
-	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
-	void set_at( typename VectorT::value_type what, size_t idx ) {
-		GMQ_ASSERT( idx < b.size());
-		b[idx] = what;
-//		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-	}
+	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : 
+		VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>( actual, root_, address_, idx ) {}
+	auto get4set_at( size_t idx ) { return RefWrapper4SetT(VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::b[idx], VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::root, VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::address, idx); }
 };
 
 class VectorOfSimpleTypeBody
 {
+	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
+	static
+	void parseSingleValue( ParserT& parser, typename VectorT::value_type& value ) { 
+		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			impl::IntegerProcessor::parse( parser, value );
+		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			impl::UnsignedIntegerProcessor::parse( parser, value );
+		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			impl::RealProcessor::parse( parser, value );
+		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			impl::StringProcessor::parse( parser, value );
+		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+		{
+			impl::parseStructBegin( parser );
+			ElemTypeT::parse( parser, value );
+			impl::parseStructEnd( parser );
+		}
+		else
+			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+	}
+
 public:
 	template<class ComposerT, class VectorT, class ElemTypeT/*, class RootT*/>
 	static
@@ -174,6 +181,12 @@ public:
 					impl::composeReal( composer, what[i] );
 				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
 					impl::composeString( composer, what[i] );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::composeStructBegin( composer );
+					ElemTypeT::compose( composer, what );
+					impl::composeStructEnd( composer );
+				}
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 			}
@@ -192,6 +205,12 @@ public:
 					impl::json::composeReal( composer, what[i] );
 				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
 					impl::json::composeString( composer, what[i] );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::composeStructBegin( composer );
+					ElemTypeT::compose( composer, what );
+					impl::composeStructEnd( composer );
+				}
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 				if ( i + 1 < collSz ) 
@@ -219,6 +238,12 @@ public:
 					parser.parseReal( &what );
 				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
 					parser.parseString( &what );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::parseStructBegin( parser );
+					ElemTypeT::parse( parser, what );
+					impl::parseStructEnd( parser );
+				}
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 				dest.push_back( what );
@@ -239,6 +264,12 @@ public:
 					parser.readRealFromJson( &what );
 				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
 					parser.readStringFromJson( &what );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::parseStructBegin( parser );
+					ElemTypeT::parse( parser, what );
+					impl::parseStructEnd( parser );
+				}
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 				dest.push_back( what );
@@ -255,8 +286,47 @@ public:
 			}
 		}
 	}
+
+	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
+	static
+	void parse( ParserT& parser, VectorT& dest, GMQ_COLL vector<size_t>& addr, size_t offset ) { 
+		size_t action;
+		impl::parseActionInPublishable( parser, action );
+		switch ( action )
+		{
+			case ActionOnVector::remove_at:
+				parseStateUpdateBlockEnd( parser );
+				assert( addr.size() == offset + 1 );
+				size_t pos = addr[offset];
+				assert( pos < dest.size() );
+				dest.erase( dest.begin() + pos );
+				break;
+			case ActionOnVector::update_at:
+				assert( addr.size() == offset + 1 );
+				size_t pos = addr[offset];
+				assert( pos < dest.size() );
+				typename VectorT::value_type& value = dest[pos];
+				impl::publishableParseLeafeValueBegin( parser );
+				parseSingleValue( parser, value );
+				impl::parseStateUpdateBlockEnd( parser );
+				break;
+			case ActionOnVector::insert_single_before:
+				assert( addr.size() == offset + 1 );
+				size_t pos = addr[offset];
+				assert( pos <= dest.size() );
+				typename VectorT::value_type value;
+				impl::publishableParseLeafeValueBegin( parser );
+				parseSingleValue( parser, value );
+				impl::parseStateUpdateBlockEnd( parser );
+				dest.insert( dest.begin() + pos, value );
+				break;
+			default:
+				throw std::exception();
+		}
+	}
 };
 
+#if 0
 class VectorOfStructBody
 {
 public:
@@ -287,6 +357,7 @@ public:
 			composer.buff.append( "]", 1 );
 		}
 	}
+
 	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
@@ -326,7 +397,64 @@ public:
 			}
 		}
 	}
+
+	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
+	static
+	void parse( ParserT& parser, VectorT& dest, GMQ_COLL vector<size_t>& addr, size_t offset, size_t action ) { 
+		switch ( action )
+		{
+			case ActionOnVector::remove_at:
+				parseStateUpdateBlockEnd( parser );
+				assert( addr.size() == offset + 1 );
+				size_t pos = addr[size];
+				assert( pos < dest.size() );
+				dest.erase( dest.begin() + pos );
+				break;
+			case ActionOnVector::update_at:
+				assert( addr.size() == offset + 1 );
+				size_t pos = addr[size];
+				assert( pos < dest.size() );
+				dest.erase( dest.begin() + pos );
+				break;
+		}
+		if constexpr ( ParserT::proto == Proto::GMQ )
+		{
+			size_t collSz;
+			parseUnsignedInteger( parser, &collSz );
+			dest.reserve( collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				typename VectorT::value_type what;
+				ProcType::parse( parser, what );
+				dest.push_back( what );
+			}
+		}
+		else
+		{
+			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+			parser.skipDelimiter( '[' );
+			for( ;; )
+			{
+				typename VectorT::value_type what;
+				parser.skipDelimiter( '{' );
+				ProcType::parse( parser, what );
+				parser.skipDelimiter( '}' );
+				dest.push_back( what );
+				if ( parser.isDelimiter( ',' ) )
+				{
+					parser.skipDelimiter( ',' );
+					continue;
+				}
+				if ( parser.isDelimiter( ']' ) )
+				{
+					parser.skipDelimiter( ']' );
+					break;
+				}
+			}
+		}
+	}
 };
+#endif // 0
 
 
 } // namespace m

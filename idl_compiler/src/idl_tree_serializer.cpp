@@ -1098,10 +1098,27 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 				case MessageParameterType::KIND::UINTEGER: libType = "UnsignedIntegralType"; break;
 				case MessageParameterType::KIND::REAL: libType = "RealType"; break;
 				case MessageParameterType::KIND::CHARACTER_STRING: libType = "StringType"; break;
+				case MessageParameterType::KIND::STRUCT: libType = "StructType"; break;
 			}
-			if ( libType )
-				fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-					param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
+			switch( param.type.vectorElemKind )
+			{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+//					fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+//						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
+					fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
+					break;
+				case MessageParameterType::KIND::STRUCT:
+					assert( param.type.messageIdx < root.structs.size() );
+					fprintf( header, "\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper, %s_RefWrapper4Set>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+						param.name.c_str(), param.name.c_str(), libType, rootName, root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), idx );
+					break;
+				default:
+					assert( false ); // not (yet) implemented
+			}
 		}
 	}
 }
@@ -1214,6 +1231,21 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				fprintf( header, "\t\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, 
+					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"
+					"\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\tm::impl::publishableParseLeafeValueBegin( parser );\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ComposerT, decltype(T::vector_of_int), impl::UnsignedIntegralType>( parser, t.vector_of_int );\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tm::impl::parseStateUpdateBlockEnd( parser );\n"
+					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\telse\n"
+					"\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t}\n"
+				);
 				fprintf( header, "\t\t\t\tassert( addr.size() > offset + 1 );\n" );
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"

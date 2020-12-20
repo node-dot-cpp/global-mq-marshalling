@@ -283,6 +283,7 @@ template<typename T> concept has_B_value_member = requires { { T::b }; };
 template<typename T> concept has_C_value_member = requires { { T::c }; };
 template<typename T> concept has_string_value_member = requires { { T::s }; };
 
+#if 0
 template<class T>
 class S_Wrapper
 {
@@ -308,7 +309,7 @@ public:
 	auto get_b() { return m::VectorOfStructRefWrapper<B_RefWrapper<typename decltype(T::b)::value_type>, decltype(T::b)>(t.b); }
 	auto get4set_b() { return m::VectorOfStructRefWrapper4Set<B_RefWrapper4Set<typename decltype(T::b)::value_type, S_Wrapper>, decltype(T::b), S_Wrapper>(t.b, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_c() { return m::VectorOfSimpleTypeRefWrapper(t.c); }
-	auto get4set_c() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::c), S_Wrapper>(t.c, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_c() { return m::VectorRefWrapper4Set<decltype(T::c), S_Wrapper>(t.c, *this, GMQ_COLL vector<size_t>(), 2); }
 };
 
 void test()
@@ -321,7 +322,9 @@ void test()
 	printf( "%f\n", s.get_b().get_at(0).get_y() );
 	printf( "%f\n", s.get_b().get_at(1).get_y() );
 }
-
+#else
+void test() {}
+#endif
 /*template<typename T, typename U>
 concept can_add = requires(T t, U u) { t + u; };
 

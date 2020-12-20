@@ -1152,14 +1152,17 @@ public:
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
-		//assert( false ); // NOT IMPLEMENTED (YET);
+		m::impl::publishableComposeLeafeValueBegin( *composer );
+		VectorOfSimpleTypeBody::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
+		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
-	auto get4set_vector_of_int() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::vector_of_int), impl::SignedIntegralType, publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_vector_of_int() { return m::VectorRefWrapper4Set<decltype(T::vector_of_int), impl::SignedIntegralType, publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 4 );
-		//assert( false ); // NOT IMPLEMENTED (YET);
+		m::impl::publishableComposeLeafeValueBegin( *composer );
+		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
 };
