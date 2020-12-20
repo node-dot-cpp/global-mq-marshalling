@@ -1245,8 +1245,8 @@ void composeStructEnd(ComposerT& composer, bool addListSeparator )
 	}
 }
 
-template<typename ParserT, typename NameT>
-void parseStructBegin(ParserT& p, NameT expectedName )
+template<typename ParserT>
+void parseStructBegin(ParserT& p )
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
 		; // do nothing
@@ -1606,6 +1606,7 @@ void publishableComposeLeafeStructEnd(ComposerT& composer)
 	{
 		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 		composer.buff.append( "}", 1 );
+		composer.buff.append( "}", 1 );
 		composer.buff.append( ",", 1 );
 	}
 }
@@ -1634,6 +1635,7 @@ void publishableParseLeafeStructEnd(ParserT& p)
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		p.skipDelimiter( '}' );
 		p.skipDelimiter( '}' );
 		p.skipDelimiter( ',' );
 	}

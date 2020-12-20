@@ -148,15 +148,15 @@ class VectorOfSimpleTypeBody
 		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
 			impl::IntegerProcessor::parse<ParserT, typename VectorT::value_type>( parser, &value );
 		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-			impl::UnsignedIntegerProcessor::parse( parser, value );
+			impl::UnsignedIntegerProcessor::parse( parser, &value );
 		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-			impl::RealProcessor::parse( parser, value );
+			impl::RealProcessor::parse( parser, &value );
 		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-			impl::StringProcessor::parse( parser, value );
+			impl::StringProcessor::parse( parser, &value );
 		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 		{
 			impl::parseStructBegin( parser );
-			ElemTypeT::parse( parser, value );
+			ProcType::parse( parser, value );
 			impl::parseStructEnd( parser );
 		}
 		else

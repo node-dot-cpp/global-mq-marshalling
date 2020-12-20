@@ -125,7 +125,7 @@ struct publishable_STRUCT_CharacterParam;
 struct publishable_STRUCT_SIZE;
 struct publishable_STRUCT_POINT3DREAL;
 
-struct publishable_STRUCT_CharacterParam
+struct publishable_STRUCT_CharacterParam : public impl::StructType
 {
 	template<class ComposerT, class T>
 	static
@@ -174,7 +174,7 @@ struct publishable_STRUCT_CharacterParam
 	}
 };
 
-struct publishable_STRUCT_SIZE
+struct publishable_STRUCT_SIZE : public impl::StructType
 {
 	template<class ComposerT, class T>
 	static
@@ -219,7 +219,7 @@ struct publishable_STRUCT_SIZE
 	}
 };
 
-struct publishable_STRUCT_POINT3DREAL
+struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 {
 	template<class ComposerT, class T>
 	static
@@ -1108,15 +1108,13 @@ public:
 					break;
 				case 3:
 					assert( addr.size() > 1 );
-					if ( addr.size() == 1 )
-						throw std::exception(); // bad format, TODO: ...
-					// TODO: forward to child
+					assert ( addr.size() > 1 );
+				VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_STRUCT_CharacterParam>( parser, t.vector_of_int, addr, 1 );
 					break;
 				case 4:
 					assert( addr.size() > 1 );
-					if ( addr.size() == 1 )
-						throw std::exception(); // bad format, TODO: ...
-					// TODO: forward to child
+					assert ( addr.size() > 1 );
+				VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					break;
 				default:
 					throw std::exception(); // bad format, TODO: ...
@@ -1156,7 +1154,7 @@ public:
 		VectorOfSimpleTypeBody::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
 		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
-	auto get4set_vector_of_int() { return m::VectorRefWrapper4Set<decltype(T::vector_of_int), impl::SignedIntegralType, publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_vector_of_int() { return m::VectorRefWrapper4Set<decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
@@ -1164,7 +1162,7 @@ public:
 		m::impl::publishableComposeLeafeValueBegin( *composer );
 		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
-	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>, decltype(T::vector_struct_point3dreal), publishable_sample_Wrapper>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
+	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_Wrapper, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
 };
 
 template<class T>

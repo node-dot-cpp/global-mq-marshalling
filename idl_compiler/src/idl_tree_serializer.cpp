@@ -67,6 +67,19 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 	}
 }
 
+const char* paramTypeToLibType( MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::m::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::m::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::m::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::m::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: return "::m::impl::StructType";
+		default: return nullptr;
+	}
+}
+
 string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterType& type )
 {
 	switch ( type.kind )
@@ -1083,23 +1096,16 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
-		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
+		/*if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 		{
 			assert( root.structs.size() > param.type.messageIdx );
 			fprintf( header, "\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<%s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>, decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
 				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), rootName, param.name.c_str(), rootName, param.name.c_str(), idx );
 		}
-		else
+		else*/
 		{
-			const char* libType = nullptr;
-			switch( param.type.vectorElemKind )
-			{
-				case MessageParameterType::KIND::INTEGER: libType = "SignedIntegralType"; break;
-				case MessageParameterType::KIND::UINTEGER: libType = "UnsignedIntegralType"; break;
-				case MessageParameterType::KIND::REAL: libType = "RealType"; break;
-				case MessageParameterType::KIND::CHARACTER_STRING: libType = "StringType"; break;
-				case MessageParameterType::KIND::STRUCT: libType = "StructType"; break;
-			}
+			const char* libType = paramTypeToLibType( param.type.vectorElemKind );
+			assert( libType != nullptr );
 			switch( param.type.vectorElemKind )
 			{
 				case MessageParameterType::KIND::INTEGER:
@@ -1108,13 +1114,21 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 				case MessageParameterType::KIND::CHARACTER_STRING:
 //					fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
 //						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
-					fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+					fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
 						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
 					break;
 				case MessageParameterType::KIND::STRUCT:
 					assert( param.type.messageIdx < root.structs.size() );
-					fprintf( header, "\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper, %s_RefWrapper4Set>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-						param.name.c_str(), param.name.c_str(), libType, rootName, root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), idx );
+					fprintf( header, 
+						"\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>>"
+						"(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+						param.name.c_str(), param.name.c_str(),
+						impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), 
+						rootName, 
+						root.structs[param.type.messageIdx]->name.c_str(), 
+						param.name.c_str(),
+						rootName, 
+						param.name.c_str(), idx );
 					break;
 				default:
 					assert( false ); // not (yet) implemented
@@ -1349,7 +1363,7 @@ void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root,
 void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
 	fprintf( header, 
-		"struct %s\n"
+		"struct %s : public impl::StructType\n"
 		"{\n",
 		impl_generatePublishableStructName( obj ).c_str()
 	);
@@ -1548,13 +1562,20 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, "\t\t\t\t\t}\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
+			{
+				assert( member.type.messageIdx < root.structs.size() );
+				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, "\t\t\t\t\tassert( addr.size() > 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() == 1 )\n"
-					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\t// TODO: forward to child\n"
+					"\t\t\t\t\tassert ( addr.size() > 1 );\n"
+					"\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
+					member.name.c_str(),
+					libType, 
+					impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(),
+					member.name.c_str()
 				);
 				break;
+			}
 			default:
 				assert( false );
 		}
