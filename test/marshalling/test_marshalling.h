@@ -156,7 +156,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+				m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
 			case 1:
 				if ( addr.size() > offset + 1 )
@@ -203,15 +203,15 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+				m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+				m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+				m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 				break;
 			default:
 				throw std::exception(); // unexpected
@@ -248,15 +248,15 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+				m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+				m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
 				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+				m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 				break;
 			default:
 				throw std::exception(); // unexpected
@@ -1108,12 +1108,10 @@ public:
 					break;
 				case 3:
 					assert( addr.size() > 1 );
-					assert ( addr.size() > 1 );
 				VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_STRUCT_CharacterParam>( parser, t.vector_of_int, addr, 1 );
 					break;
 				case 4:
 					assert( addr.size() > 1 );
-					assert ( addr.size() > 1 );
 				VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					break;
 				default:
@@ -1200,11 +1198,13 @@ public:
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
 	}
 	const auto& get_Size() { return t.Size; }
 	void set_Size( decltype(T::Size) val) { 
 		t.Size = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
 		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
 		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
@@ -1251,16 +1251,19 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
 };
@@ -1304,16 +1307,19 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
 };

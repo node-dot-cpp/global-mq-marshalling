@@ -49,7 +49,7 @@ void publishableTestOne()
 	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
-	int id = publishableSampleWrapper.get_ID();
+	/**/int id = publishableSampleWrapper.get_ID();
 	assert( id == 333 );
 	fmt::print( "ID = {}\n", id );
 
@@ -63,6 +63,9 @@ void publishableTestOne()
 	assert( size1.X == 901.0 );
 	assert( size1.Y == 902.0 );
 	assert( size1.Z == 903.0 );
+
+	CharacterParam chp( { 186, {55., 56., 57.}} );
+	publishableSampleWrapper.set_chp( chp );
 
 	auto voi = publishableSampleWrapper.get_vector_of_int();
 	assert( voi.size() == 3 );
@@ -79,8 +82,9 @@ void publishableTestOne()
 	// updating (some) values
 	publishableSampleWrapper.set_ID( 38 );
 	assert( publishableSampleWrapper.get_ID() == 38 );
-	int ins1 = 17;
 	publishableSampleWrapper.set_vector_of_int({44,45,46});
+
+	/**/int ins1 = 17;
 	publishableSampleWrapper.get4set_vector_of_int().insert_before( 0, ins1 );
 	int ins1_back = publishableSampleWrapper.get_vector_of_int().get_at(0);
 	assert( ins1 == ins1_back );
@@ -89,13 +93,10 @@ void publishableTestOne()
 	auto point3dreal_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 );
 	assert( point3dreal.X == point3dreal_back.get_X() );
 	assert( point3dreal.Y == point3dreal_back.get_Y() );
-	assert( point3dreal.Z == point3dreal_back.get_Z() );
+	assert( point3dreal.Z == point3dreal_back.get_Z() );/**/
 	publishableSampleWrapper.get4set_vector_struct_point3dreal().get4set_at( 1 ).set_Y( 555 );
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
-	assert( point3dreal_Y_back == 555 );
-
-	CharacterParam chp( { 186, {55., 56., 57.}} );
-	publishableSampleWrapper.set_chp( chp );
+	assert( point3dreal_Y_back == 555 );/**/
 
 	publishableSampleWrapper.finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
@@ -104,7 +105,7 @@ void publishableTestOne()
 	m::JsonParser parser( b );
 	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapperSlave( &node );
 	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
-	assert( publishableSampleWrapperSlave.get_ID() == 38 );
+	/*assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
 	assert( size1Slave.X == 901.0 );
 	assert( size1Slave.Y == 902.0 );
@@ -117,7 +118,7 @@ void publishableTestOne()
 	assert( voint.size() == 3 );
 	assert( voint.get_at( 0 ) == 44 );
 	assert( voint.get_at( 1 ) == 45 );
-	assert( voint.get_at( 2 ) == 46 );
+	assert( voint.get_at( 2 ) == 46 );*/
 }
 
 

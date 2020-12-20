@@ -1059,6 +1059,8 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
@@ -1207,36 +1209,36 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			case MessageParameterType::KIND::INTEGER:
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
+					"\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
+					"\t\t\t\tm::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case MessageParameterType::KIND::REAL:
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseReal<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
+					"\t\t\t\tm::impl::publishableParseLeafeReal<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseString<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
+					"\t\t\t\tm::impl::publishableParseLeafeString<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\tif ( addr.size() > offset + 1 )\n" );
 				fprintf( header, "\t\t\t\t{\n" );
 //				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n", member.name.c_str() );
+				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
 				fprintf( header, "\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
 //				fprintf( header, "\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
@@ -1389,7 +1391,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 		"\t\tt.%s = val; \n",
 		param.name.c_str(), param.name.c_str(), param.name.c_str()
 	);
-	if ( forRoot )
+//	if ( forRoot )
 	fprintf( header, 
 		"\t\tm::impl::composeAddressInPublishable( %s, %s, %zd );\n",
 		composer, addrVector, idx
@@ -1565,9 +1567,8 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			{
 				assert( member.type.messageIdx < root.structs.size() );
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-				fprintf( header, "\t\t\t\t\tassert( addr.size() > 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\t\tassert ( addr.size() > 1 );\n"
+					"\t\t\t\t\tassert( addr.size() > 1 );\n"
 					"\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
 					member.name.c_str(),
 					libType, 
