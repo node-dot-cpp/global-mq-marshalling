@@ -132,10 +132,32 @@ public:
 	}
 };
 
+template<class RefWrapper4SetT, class VectorT, class RootT>
+class VectorOfStructRefWrapper4Set
+{
+	VectorT& b;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+public:
+	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get4set_at( size_t idx ) { return RefWrapper4SetT(b[idx], root, address, idx); }
+	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
+	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
+	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
+	void set_at( typename VectorT::value_type what, size_t idx ) {
+		GMQ_ASSERT( idx < b.size());
+		b[idx] = what;
+//		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+	}
+};
+
 class VectorOfSimpleTypeBody
 {
 public:
-	template<class ComposerT, class VectorT, class ElemTypeT, class RootT>
+	template<class ComposerT, class VectorT, class ElemTypeT/*, class RootT*/>
 	static
 	void compose( ComposerT& composer, VectorT& what ) { 
 		size_t collSz = what.size();
@@ -159,6 +181,7 @@ public:
 		else
 		{
 			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			composer.buff.append( "[", 1 );
 			for ( size_t i=0; i<collSz; ++i )
 			{
 				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
@@ -171,15 +194,13 @@ public:
 					impl::json::composeString( composer, what[i] );
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-				if constexpr ( ComposerT::proto == Proto::GMQ )
-				{
-					if ( i + 1 < collSz ) 
-						composer.buff.append( ", ", 2 );
-				}
+				if ( i + 1 < collSz ) 
+					composer.buff.append( ", ", 2 );
 			}
+			composer.buff.append( "]", 1 );
 		}
 	}
-	template<class ParserT, class VectorT, class ElemTypeT, class RootT>
+	template<class ParserT, class VectorT, class ElemTypeT/*, class RootT*/>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
 		if constexpr ( ParserT::proto == Proto::GMQ )
@@ -206,17 +227,18 @@ public:
 		else
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+			parser.skipDelimiter( '[' );
 			for( ;; )
 			{
 				typename VectorT::value_type what;
 				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-					parser.parseSignedInteger( &what );
+					parser.readSignedIntegerFromJson( &what );
 				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-					parser.parseUnsignedInteger( &what );
+					parser.readUnsignedIntegerFromJson( &what );
 				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-					parser.parseReal( &what );
+					parser.readRealFromJson( &what );
 				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-					parser.parseString( &what );
+					parser.readStringFromJson( &what );
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 				dest.push_back( what );
@@ -227,7 +249,7 @@ public:
 				}
 				if ( parser.isDelimiter( ']' ) )
 				{
-//					parser.skipDelimiter( ']' );
+					parser.skipDelimiter( ']' );
 					break;
 				}
 			}
@@ -235,25 +257,74 @@ public:
 	}
 };
 
-template<class RefWrapper4SetT, class VectorT, class RootT>
-class VectorOfStructRefWrapper4Set
+class VectorOfStructBody
 {
-	VectorT& b;
-	RootT& root;
-	GMQ_COLL vector<size_t> address;
 public:
-	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
+	template<class ComposerT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
+	static
+	void compose( ComposerT& composer, VectorT& what ) { 
+		size_t collSz = what.size();
+		if constexpr ( ComposerT::proto == Proto::GMQ )
+		{
+			composeUnsignedInteger( composer, collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				m::impl::composePublishableStructBegin( composer, "Size" );
+				ProcType::compose( composer, what[i] );
+				m::impl::composePublishableStructEnd( composer, false );
+			}
+		}
+		else
+		{
+			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			composer.buff.append( "[", 1 );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				m::impl::composePublishableStructBegin( composer, "Size" );
+				ProcType::compose( composer, what[i] );
+				m::impl::composePublishableStructEnd( composer, false );
+			}
+			composer.buff.append( "]", 1 );
+		}
 	}
-	auto get4set_at( size_t idx ) { return RefWrapper4SetT(b[idx], root, address, idx); }
-	void remove( size_t idx ) { GMQ_ASSERT( idx < b.size()); b.erase( b.begin() + idx ); }
-	void insert_before( size_t idx, VectorT& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what.begin(), what.end() ); }
-	void insert_before( size_t idx, typename VectorT::value_type& what ) { GMQ_ASSERT( idx < b.size()); b.insert( b.begin() + idx, what ); }
-	void set_at( typename VectorT::value_type what, size_t idx ) {
-		GMQ_ASSERT( idx < b.size());
-		b[idx] = what;
-//		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
+	static
+	void parse( ParserT& parser, VectorT& dest ) { 
+		if constexpr ( ParserT::proto == Proto::GMQ )
+		{
+			size_t collSz;
+			parseUnsignedInteger( parser, &collSz );
+			dest.reserve( collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				typename VectorT::value_type what;
+				ProcType::parse( parser, what );
+				dest.push_back( what );
+			}
+		}
+		else
+		{
+			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+			parser.skipDelimiter( '[' );
+			for( ;; )
+			{
+				typename VectorT::value_type what;
+				parser.skipDelimiter( '{' );
+				ProcType::parse( parser, what );
+				parser.skipDelimiter( '}' );
+				dest.push_back( what );
+				if ( parser.isDelimiter( ',' ) )
+				{
+					parser.skipDelimiter( ',' );
+					continue;
+				}
+				if ( parser.isDelimiter( ']' ) )
+				{
+					parser.skipDelimiter( ']' );
+					break;
+				}
+			}
+		}
 	}
 };
 
