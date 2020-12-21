@@ -49,7 +49,7 @@ void publishableTestOne()
 	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
-	/**/int id = publishableSampleWrapper.get_ID();
+	int id = publishableSampleWrapper.get_ID();
 	assert( id == 333 );
 	fmt::print( "ID = {}\n", id );
 
@@ -77,14 +77,14 @@ void publishableTestOne()
 	assert( vosp3d_0.get_Y() == 311 );
 	assert( vosp3d_0.get_Z() == 312 );
 	fmt::print( "vector_of_int.size() = {}\n", vosp3d.size() );
-	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );
+	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );/**/
 
 	// updating (some) values
 	publishableSampleWrapper.set_ID( 38 );
 	assert( publishableSampleWrapper.get_ID() == 38 );
 	publishableSampleWrapper.set_vector_of_int({44,45,46});
 
-	/**/int ins1 = 17;
+	int ins1 = 17;
 	publishableSampleWrapper.get4set_vector_of_int().insert_before( 0, ins1 );
 	int ins1_back = publishableSampleWrapper.get_vector_of_int().get_at(0);
 	assert( ins1 == ins1_back );
@@ -93,7 +93,7 @@ void publishableTestOne()
 	auto point3dreal_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 );
 	assert( point3dreal.X == point3dreal_back.get_X() );
 	assert( point3dreal.Y == point3dreal_back.get_Y() );
-	assert( point3dreal.Z == point3dreal_back.get_Z() );/**/
+	assert( point3dreal.Z == point3dreal_back.get_Z() );
 	publishableSampleWrapper.get4set_vector_struct_point3dreal().get4set_at( 1 ).set_Y( 555 );
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
 	assert( point3dreal_Y_back == 555 );/**/
@@ -105,7 +105,7 @@ void publishableTestOne()
 	m::JsonParser parser( b );
 	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapperSlave( &node );
 	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
-	/*assert( publishableSampleWrapperSlave.get_ID() == 38 );
+	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
 	assert( size1Slave.X == 901.0 );
 	assert( size1Slave.Y == 902.0 );
@@ -115,10 +115,11 @@ void publishableTestOne()
 	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
 
 	auto voint = publishableSampleWrapper.get_vector_of_int();
-	assert( voint.size() == 3 );
-	assert( voint.get_at( 0 ) == 44 );
-	assert( voint.get_at( 1 ) == 45 );
-	assert( voint.get_at( 2 ) == 46 );*/
+	assert( voint.size() == 4 );
+	assert( voint.get_at( 0 ) == 17 );
+	assert( voint.get_at( 1 ) == 44 );
+	assert( voint.get_at( 2 ) == 45 );
+	assert( voint.get_at( 3 ) == 46 );
 }
 
 
@@ -326,14 +327,16 @@ void test()
 #else
 void test() {}
 #endif
-/*template<typename T, typename U>
+
+
+template<typename T, typename U>
 concept can_add = requires(T t, U u) { t + u; };
 
-template<typename T>
+/*template<typename T>
 concept has_bool_value_member = requires { { T::value } -> std::convertible_to<bool>; };
 
 template<typename T>
-concept has_count_call_member = requires { { T::count() } -> std::convertible_to<int>; };
+concept has_count_call_member = requires { { T::count() } -> std::convertible_to<int>; };*/
 
 template<typename T>
 concept has_count_call_member2 = requires { { T::count() }; };
@@ -341,18 +344,28 @@ concept has_count_call_member2 = requires { { T::count() }; };
 template<typename T>
 concept has_count_call_member3 = requires(T t) { { t.count() }; };
 
-template <typename T>
+/*template <typename T>
 int foo(T t)
 {
     if constexpr (requires (T t){ { t.count() } -> std::convertible_to<int>; })
         return t.count();
     else
         return 0;
-}*/
+}
 
-/*template <typename T>
-int foo(T t)
+template <typename T>
+int foo2(T t)
 {
+    if constexpr (requires (T t){ { t.count() } -> std::convertible_to<int>; })
+        return t.count();
+    else
+        return 0;
+}
+
+template <typename T>
+int foo3(T t)
+{
+
     if constexpr (requires (T t){ { t.count() } -> std::convertible_to<int>; })
         return t.count();
     else
@@ -409,7 +422,7 @@ void testSubscriptionTest()
 
 	test();
 
-    /*struct bar
+    struct bar
     {
 		bool x;
         int count() const { return 6; }
@@ -421,13 +434,13 @@ void testSubscriptionTest()
 //        static int count() { return 6; }
         static void count() { return; }
     };
-	constexpr bool has_bool = has_bool_value_member<bar>;
+	/*constexpr bool has_bool = has_bool_value_member<bar>;
 	constexpr bool has_bool1 = has_bool_value_member<bar1>;
 	printf( "%s, %s\n", has_bool ? "Y" : "N", has_bool1 ? "Y" : "N" );
 
 	constexpr bool has_count = has_count_call_member<bar>;
 	constexpr bool has_count1 = has_count_call_member<bar1>;
-	printf( "%s, %s\n", has_count ? "Y" : "N", has_count1 ? "Y" : "N" );
+	printf( "%s, %s\n", has_count ? "Y" : "N", has_count1 ? "Y" : "N" );*/
 
 	constexpr bool has_2count = has_count_call_member3<bar>;
 	constexpr bool has_2count1 = has_count_call_member3<bar1>;
@@ -438,5 +451,5 @@ void testSubscriptionTest()
 	printf( "%s, %s\n", has_3count ? "Y" : "N", has_3count1 ? "Y" : "N" );
 
 
-//    printf( "foo(bar{}): : %d\n", foo(bar{}) );*/
+ //   printf( "foo(bar{}): : %d\n", foo(bar{}) );
 }

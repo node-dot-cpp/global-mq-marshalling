@@ -1679,7 +1679,7 @@ void publishableParseLeafeVectorBegin(ParserT& p)
 		p.readKey( &key );
 		if ( key != "value" )
 			throw std::exception(); // bad format
-		p.skipDelimiter( '[' );
+//		p.skipDelimiter( '[' );
 	}
 }
 
@@ -1691,7 +1691,8 @@ void publishableParseLeafeVectorEnd(ParserT& p)
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-		p.skipDelimiter( ']' );
+//		p.skipDelimiter( ']' );
+		p.skipDelimiter( '}' );
 		p.skipDelimiter( ',' );
 	}
 }

@@ -1117,15 +1117,23 @@ public:
 					break;
 				case 3:
 					if ( addr.size() > 1 )
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_STRUCT_CharacterParam>( parser, t.vector_of_int, addr, 1 );
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
 					else
+					{
+						m::impl::publishableParseLeafeVectorBegin( parser );
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+						m::impl::publishableParseLeafeVectorEnd( parser );
+					}
 					break;
 				case 4:
 					if ( addr.size() > 1 )
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					else
+					{
+						m::impl::publishableParseLeafeVectorBegin( parser );
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+						m::impl::publishableParseLeafeVectorEnd( parser );
+					}
 					break;
 				default:
 					throw std::exception(); // bad format, TODO: ...
@@ -1171,6 +1179,9 @@ public:
 		t.vector_struct_point3dreal = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 4 );
 		m::impl::publishableComposeLeafeValueBegin( *composer );
+		m::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_POINT3DREAL::compose( *composer, t.vector_struct_point3dreal );
+		m::impl::publishableComposeLeafeStructEnd( *composer );
 		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_Wrapper, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }

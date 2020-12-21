@@ -219,6 +219,7 @@ public:
 			composer.buff.append( "]", 1 );
 		}
 	}
+
 	template<class ParserT, class VectorT, class ElemTypeT/*, class RootT*/>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
