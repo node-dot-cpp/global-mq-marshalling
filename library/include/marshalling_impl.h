@@ -262,7 +262,7 @@ void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str.c_str(), str.size() );
+	composer.buff.append( str, strlen( str ) );
 	composer.buff.appendUint8( '\"' );
 }
 
