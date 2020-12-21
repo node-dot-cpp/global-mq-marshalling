@@ -156,11 +156,13 @@ public:
 	bool isNonExtendable = false;
 	bool isAlias = false;
 	string aliasOf;
-
-	bool isStruct4Messaging = false; // used for STRUCT only, filled at time of preprocessing for code generation
-	set<Proto> protoList; // populated at time of tree checking and code generation
-	bool processingOK = true; // used by checker
+	
+	// preprocessing for code generation
+	bool processingOK = true;
+	bool isStruct4Messaging = false; // used for STRUCT only
 	bool isStruct4Publishing = false; // used for STRUCT only, filled at time of preprocessing for code generation
+	set<Proto> protoList; // populated at time of tree checking and code generation
+	int dependsOnCnt = 0;
 };
 
 struct Scope : public ObjectBase // used in post-processing

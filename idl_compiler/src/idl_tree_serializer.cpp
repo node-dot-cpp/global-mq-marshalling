@@ -2369,6 +2369,33 @@ void generateMessageAlias( FILE* header, CompositeType& s )
 	fprintf( header, "}\n\n" );
 }
 
+void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vector<CompositeType*>& out )
+{
+	size_t processed = 0;
+	vector<CompositeType*> tmpStructs;
+	while ( processed < structs.size() )
+	{
+		for ( auto& s : structs )
+			if ( s->dependsOnCnt != -1 )
+				for ( auto& member : s->members )
+					if ( member->type.kind == MessageParameterType::KIND::STRUCT )
+						structs[member->type.messageIdx]->dependsOnCnt = 1;
+		for ( auto& s : structs )
+			if ( s->dependsOnCnt == 0 )
+			{
+				tmpStructs.push_back( s.get() );
+				s->dependsOnCnt = -1;
+				++processed;
+			}
+		for ( auto& s : structs )
+			if ( s->dependsOnCnt != -1 )
+				s->dependsOnCnt = 0;
+	}
+	for ( size_t i=0; i<tmpStructs.size(); ++i )
+		out.push_back( tmpStructs[tmpStructs.size()-1-i] );
+	assert( out.size() == structs.size() );
+}
+
 
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
@@ -2398,6 +2425,9 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	generateMessageParamNameBlock( header, msgParams );
 	generatePublishableMemberNameBlock( header, publishableMembers );
 
+	vector<CompositeType*> structsOrderedByDependency;
+	orderStructsByDependency( s.structs, structsOrderedByDependency );
+
 	for ( auto& it : s.structs )
 	{
 		assert( it != nullptr );
@@ -2408,12 +2438,13 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 			impl_GeneratePublishableStructWrapper4SetForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			fprintf( header, "\n" );
 		}
 	}
 
 	fprintf( header, "\n" );
 
-	for ( auto& it : s.structs )
+	for ( auto it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
@@ -2455,7 +2486,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
-	for ( auto& it : s.structs )
+	for ( auto& it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );

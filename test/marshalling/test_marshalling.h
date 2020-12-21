@@ -124,61 +124,15 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 struct publishable_STRUCT_CharacterParam;
 template<class T> class CharacterParam_RefWrapper;
 template<class T, class RootT> class CharacterParam_RefWrapper4Set;
+
 struct publishable_STRUCT_SIZE;
 template<class T> class SIZE_RefWrapper;
 template<class T, class RootT> class SIZE_RefWrapper4Set;
+
 struct publishable_STRUCT_POINT3DREAL;
 template<class T> class POINT3DREAL_RefWrapper;
 template<class T, class RootT> class POINT3DREAL_RefWrapper4Set;
 
-struct publishable_STRUCT_CharacterParam : public impl::StructType
-{
-	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
-	{
-		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
-		m::impl::composePublishableStructBegin( composer, "Size" );
-		publishable_STRUCT_SIZE::compose( composer, t.Size );
-		m::impl::composePublishableStructEnd( composer, false );
-	}
-
-	template<class ParserT, class T>
-	static
-	void parse( ParserT& parser, T& t )
-	{
-		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-		m::impl::parsePublishableStructBegin( parser, "Size" );
-		publishable_STRUCT_SIZE::parse( parser, t.Size );
-		m::impl::parsePublishableStructEnd( parser );
-	}
-
-	template<class ParserT, class T>
-	static
-	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
-	{
-		GMQ_ASSERT( addr.size() );
-		switch ( addr[offset] )
-		{
-			case 0:
-				assert( addr.size() == offset + 1 );
-				m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
-				break;
-			case 1:
-				if ( addr.size() > offset + 1 )
-				{
-					m::impl::publishableParseLeafeStructBegin( parser );
-					publishable_STRUCT_SIZE::parse( parser, t.Size );
-					m::impl::publishableParseLeafeStructEnd( parser );
-				}
-				else
-					publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
-				break;
-			default:
-				throw std::exception(); // unexpected
-		}
-	}
-};
 
 struct publishable_STRUCT_SIZE : public impl::StructType
 {
@@ -263,6 +217,55 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			case 2:
 				assert( addr.size() == offset + 1 );
 				m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
+	}
+};
+
+struct publishable_STRUCT_CharacterParam : public impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		m::impl::composePublishableStructBegin( composer, "Size" );
+		publishable_STRUCT_SIZE::compose( composer, t.Size );
+		m::impl::composePublishableStructEnd( composer, false );
+	}
+
+	template<class ParserT, class T>
+	static
+	void parse( ParserT& parser, T& t )
+	{
+		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		m::impl::parsePublishableStructBegin( parser, "Size" );
+		publishable_STRUCT_SIZE::parse( parser, t.Size );
+		m::impl::parsePublishableStructEnd( parser );
+	}
+
+	template<class ParserT, class T>
+	static
+	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+				assert( addr.size() == offset + 1 );
+				m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+				break;
+			case 1:
+				if ( addr.size() > offset + 1 )
+				{
+					m::impl::publishableParseLeafeStructBegin( parser );
+					publishable_STRUCT_SIZE::parse( parser, t.Size );
+					m::impl::publishableParseLeafeStructEnd( parser );
+				}
+				else
+					publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
 				break;
 			default:
 				throw std::exception(); // unexpected
@@ -1122,7 +1125,7 @@ public:
 					if ( addr.size() > 1 )
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					else
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType>( parser, t.vector_struct_point3dreal );
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 					break;
 				default:
 					throw std::exception(); // bad format, TODO: ...
@@ -1171,55 +1174,6 @@ public:
 		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_Wrapper, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
-};
-
-template<class T>
-class CharacterParam_RefWrapper
-{
-	T& t;
-	static constexpr bool has_ID = has_ID_member<T>;
-	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_Size = has_Size_member<T>;
-	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
-
-public:
-	CharacterParam_RefWrapper( T& actual ) : t( actual ) {}
-	auto get_ID() { return t.ID; }
-	const auto& get_Size() { return t.Size; }
-	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }
-};
-
-template<class T, class RootT>
-class CharacterParam_RefWrapper4Set
-{
-	T& t;
-	RootT& root;
-	GMQ_COLL vector<size_t> address;
-	static constexpr bool has_ID = has_ID_member<T>;
-	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_Size = has_Size_member<T>;
-	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
-
-public:
-	CharacterParam_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
-	}
-	auto get_ID() { return t.ID; }
-	void set_ID( decltype(T::ID) val) { 
-		t.ID = val; 
-		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
-	}
-	const auto& get_Size() { return t.Size; }
-	void set_Size( decltype(T::Size) val) { 
-		t.Size = val; 
-		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
-		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
-	}
-	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }
 };
 
 template<class T>
@@ -1332,6 +1286,55 @@ public:
 		m::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
 		m::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
+};
+
+template<class T>
+class CharacterParam_RefWrapper
+{
+	T& t;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_Size = has_Size_member<T>;
+	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
+
+public:
+	CharacterParam_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_ID() { return t.ID; }
+	const auto& get_Size() { return t.Size; }
+	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }
+};
+
+template<class T, class RootT>
+class CharacterParam_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_Size = has_Size_member<T>;
+	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
+
+public:
+	CharacterParam_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_ID() { return t.ID; }
+	void set_ID( decltype(T::ID) val) { 
+		t.ID = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
+	}
+	const auto& get_Size() { return t.Size; }
+	void set_Size( decltype(T::Size) val) { 
+		t.Size = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
+		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
+		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+	}
+	auto get4set_Size() { return Size_RefWrapper<decltype(T::Size)>(t.Size); }
 };
 
 //**********************************************************************
