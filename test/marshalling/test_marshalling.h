@@ -122,8 +122,14 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 
 
 struct publishable_STRUCT_CharacterParam;
+template<class T> class CharacterParam_RefWrapper;
+template<class T, class RootT> class CharacterParam_RefWrapper4Set;
 struct publishable_STRUCT_SIZE;
+template<class T> class SIZE_RefWrapper;
+template<class T, class RootT> class SIZE_RefWrapper4Set;
 struct publishable_STRUCT_POINT3DREAL;
+template<class T> class POINT3DREAL_RefWrapper;
+template<class T, class RootT> class POINT3DREAL_RefWrapper4Set;
 
 struct publishable_STRUCT_CharacterParam : public impl::StructType
 {
@@ -1107,12 +1113,16 @@ public:
 					}
 					break;
 				case 3:
-					assert( addr.size() > 1 );
-				VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_STRUCT_CharacterParam>( parser, t.vector_of_int, addr, 1 );
+					if ( addr.size() > 1 )
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_STRUCT_CharacterParam>( parser, t.vector_of_int, addr, 1 );
+					else
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
 					break;
 				case 4:
-					assert( addr.size() > 1 );
-				VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
+					if ( addr.size() > 1 )
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
+					else
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType>( parser, t.vector_struct_point3dreal );
 					break;
 				default:
 					throw std::exception(); // bad format, TODO: ...

@@ -1631,6 +1631,16 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 	fprintf( header, "};\n\n" );
 }
 
+void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::structure );
+
+	fprintf( header, 
+		"template<class T> class %s_RefWrapper;\n",
+		s.name.c_str()
+	);
+}
+
 void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::structure );
@@ -1654,6 +1664,16 @@ void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeT
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, false );
 
 	fprintf( header, "};\n\n" );
+}
+
+void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::structure );
+
+	fprintf( header, 
+		"template<class T, class RootT> class %s_RefWrapper4Set;\n",
+		s.name.c_str()
+	);
 }
 
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s )
@@ -2384,7 +2404,11 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure );
 		if ( it->isStruct4Publishing )
+		{
 			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapper4SetForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+		}
 	}
 
 	fprintf( header, "\n" );
