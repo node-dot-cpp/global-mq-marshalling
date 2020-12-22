@@ -80,6 +80,30 @@ const char* paramTypeToLibType( MessageParameterType::KIND kind )
 	}
 }
 
+const char* paramTypeToLeafeParser( MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "publishableParseLeafeInteger";
+		case MessageParameterType::KIND::UINTEGER: return "publishableParseLeafeUnsignedInteger";
+		case MessageParameterType::KIND::REAL: return "publishableParseLeafeReal";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseLeafeString";
+		default: return nullptr;
+	}
+}
+
+const char* paramTypeToParser( MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "publishableParseInteger";
+		case MessageParameterType::KIND::UINTEGER: return "publishableParseUnsignedInteger";
+		case MessageParameterType::KIND::REAL: return "publishableParseReal";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseString";
+		default: return nullptr;
+	}
+}
+
 string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterType& type )
 {
 	switch ( type.kind )
@@ -1220,31 +1244,13 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
-				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
-				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
-				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseLeafeReal<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\tm::impl::publishableParseLeafeString<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
+					"\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case  MessageParameterType::KIND::STRUCT:
@@ -1316,27 +1322,12 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, 
-					"\t\tm::impl::publishableParseInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, 
-					"\t\tm::impl::publishableParseUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, 
-					"\t\tm::impl::publishableParseReal<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, 
-					"\t\tm::impl::publishableParseString<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
+					"\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
 			case  MessageParameterType::KIND::STRUCT:
@@ -1562,36 +1553,47 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() > 1 )\n"
-					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() > 1 )\n"
-					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() > 1 )\n"
-					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::publishableParseLeafeReal<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\tm::impl::publishableParseLeafeString<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+				);
+				fprintf( header, 
+					"\t\t\t\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s )\n"
+					"\t\t\t\t\t{\n",
 					member.name.c_str(), member.name.c_str()
 				);
+				fprintf( header, 
+					"\t\t\t\t\t\tdecltype(T::%s) newVal;\n"
+					"\t\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &newVal );\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\tif ( newVal != t.%s )\n"
+					"\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tt.notifyBefore_%s();\n"
+					"\t\t\t\t\t\t\tt.%s = newVal;\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\tt.notifyAfter_%s();\n"
+					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t}\n"
+					"\t\t\t\t\telse\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str()
+				);
+				break;
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 )\n" );
