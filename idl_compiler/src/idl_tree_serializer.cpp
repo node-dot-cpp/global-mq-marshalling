@@ -1063,18 +1063,31 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
 	for ( auto& it : s.members )
 	{
 		assert( it != nullptr );
 		fprintf( header, "\tstatic constexpr bool has_%s = has_%s_member<T>;\n", it->name.c_str(), it->name.c_str() );
 		fprintf( header, "\tstatic_assert( has_%s, \"type T must have member T::%s of a type corresponding to IDL type %s\" );\n", it->name.c_str(), it->name.c_str(), impl_parameterTypeToDescriptiveString( root, it->type ).c_str() );
 	}
+	fprintf( header, "\n" );
+}
+
+void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
+	for ( auto& it : s.members )
+	{
+		assert( it != nullptr );
+		fprintf( header, "\tstatic constexpr bool has_prenotifier_for_%s = has_prenotifier_call_for_%s<T>;\n", it->name.c_str(), it->name.c_str() );
+		fprintf( header, "\tstatic constexpr bool has_postnotifier_for_%s = has_postnotifier_call_for_%s<T>;\n", it->name.c_str(), it->name.c_str() );
+	}
+	fprintf( header, "\n" );
 }
 
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
 {
-	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
 	if ( param.type.isNumericType() )
 		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
@@ -1245,6 +1258,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				fprintf( header, "\t\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
+			{
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"
@@ -1273,6 +1287,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\t// TODO: forward to child\n"
 				);
 				break;
+			}
 			default:
 				assert( false );
 		}
@@ -1652,6 +1667,7 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 	);
 
 	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s );
 
 	fprintf( header, 
 		"\npublic:\n" 
@@ -1700,6 +1716,7 @@ void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeT
 	);
 
 	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s );
 
 	fprintf( header, 
 		"\npublic:\n" 
@@ -2442,6 +2459,44 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 	assert( out.size() == structs.size() );
 }
 
+void collectMemberNamesFromPublishableObjects( vector<unique_ptr<CompositeType>> &structs, set<string>& names )
+{
+	for ( auto& s : structs )
+	{
+		assert( s != nullptr );
+		assert( s->type == CompositeType::structure || s->type == CompositeType::publishable );
+		if ( s->type == CompositeType::publishable || ( s->type == CompositeType::structure && s->isStruct4Publishing ) )
+			for ( auto& member : s->members )
+			{
+				assert( member != nullptr );
+				names.insert( member->name );
+			}
+	}
+}
+
+void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
+{
+	set<string> names;
+	collectMemberNamesFromPublishableObjects( root.publishables, names );
+	collectMemberNamesFromPublishableObjects( root.structs, names );
+
+	fprintf( header, "// member update notifier presence checks\n" );
+	for ( auto& name : names )
+	{
+		fprintf( header, 
+			"template<typename T> concept has_prenotifier_call_for_%s = requires(T t) { { t.notifyBefore_%s() }; };\n",
+//			"template<typename StateT, typename NodeT> concept has_prenotifier_call_for_%s = requires { { std::declval<StateT>().notifyBefore_%s(std::declval<NodeT>()) }; };\n",
+			name.c_str(), name.c_str()
+		);
+		fprintf( header, 
+			"template<typename T> concept has_postnotifier_call_for_%s = requires(T t) { { t.notifyAfter_%s() }; };\n",
+//			"template<typename StateT, typename NodeT> concept has_postnotifier_call_for_%s = requires { { std::declval<StateT>().notifyAfter_%s(std::declval<NodeT>()) }; };\n",
+			name.c_str(), name.c_str()
+		);
+	}
+	fprintf( header, "\n" );
+}
+
 
 void generateRoot( const char* fileName, FILE* header, Root& s )
 {
@@ -2470,6 +2525,7 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 
 	generateMessageParamNameBlock( header, msgParams );
 	generatePublishableMemberNameBlock( header, publishableMembers );
+	generateNotifierPresenceTesterBlock( header, s );
 
 	vector<CompositeType*> structsOrderedByDependency;
 	orderStructsByDependency( s.structs, structsOrderedByDependency );

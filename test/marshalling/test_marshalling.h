@@ -121,6 +121,26 @@ template<typename T> concept has_vector_of_int_member = requires { { T::vector_o
 template<typename T> concept has_vector_struct_point3dreal_member = requires { { T::vector_struct_point3dreal }; };
 
 
+// member update notifier presence checks
+template<typename T> concept has_prenotifier_call_for_ID = requires(T t) { { t.notifyBefore_ID() }; };
+template<typename T> concept has_postnotifier_call_for_ID = requires(T t) { { t.notifyAfter_ID() }; };
+template<typename T> concept has_prenotifier_call_for_Size = requires(T t) { { t.notifyBefore_Size() }; };
+template<typename T> concept has_postnotifier_call_for_Size = requires(T t) { { t.notifyAfter_Size() }; };
+template<typename T> concept has_prenotifier_call_for_X = requires(T t) { { t.notifyBefore_X() }; };
+template<typename T> concept has_postnotifier_call_for_X = requires(T t) { { t.notifyAfter_X() }; };
+template<typename T> concept has_prenotifier_call_for_Y = requires(T t) { { t.notifyBefore_Y() }; };
+template<typename T> concept has_postnotifier_call_for_Y = requires(T t) { { t.notifyAfter_Y() }; };
+template<typename T> concept has_prenotifier_call_for_Z = requires(T t) { { t.notifyBefore_Z() }; };
+template<typename T> concept has_postnotifier_call_for_Z = requires(T t) { { t.notifyAfter_Z() }; };
+template<typename T> concept has_prenotifier_call_for_chp = requires(T t) { { t.notifyBefore_chp() }; };
+template<typename T> concept has_postnotifier_call_for_chp = requires(T t) { { t.notifyAfter_chp() }; };
+template<typename T> concept has_prenotifier_call_for_size = requires(T t) { { t.notifyBefore_size() }; };
+template<typename T> concept has_postnotifier_call_for_size = requires(T t) { { t.notifyAfter_size() }; };
+template<typename T> concept has_prenotifier_call_for_vector_of_int = requires(T t) { { t.notifyBefore_vector_of_int() }; };
+template<typename T> concept has_postnotifier_call_for_vector_of_int = requires(T t) { { t.notifyAfter_vector_of_int() }; };
+template<typename T> concept has_prenotifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyBefore_vector_struct_point3dreal() }; };
+template<typename T> concept has_postnotifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyAfter_vector_struct_point3dreal() }; };
+
 struct publishable_STRUCT_CharacterParam;
 template<class T> class CharacterParam_RefWrapper;
 template<class T, class RootT> class CharacterParam_RefWrapper4Set;
@@ -1061,6 +1081,18 @@ class publishable_sample_Wrapper
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
 	static_assert( has_vector_struct_point3dreal, "type T must have member T::vector_struct_point3dreal of a type corresponding to IDL type VECTOR<STRUCT POINT3DREAL>" );
 
+	static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
+	static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
+	static constexpr bool has_prenotifier_for_size = has_prenotifier_call_for_size<T>;
+	static constexpr bool has_postnotifier_for_size = has_postnotifier_call_for_size<T>;
+	static constexpr bool has_prenotifier_for_chp = has_prenotifier_call_for_chp<T>;
+	static constexpr bool has_postnotifier_for_chp = has_postnotifier_call_for_chp<T>;
+	static constexpr bool has_prenotifier_for_vector_of_int = has_prenotifier_call_for_vector_of_int<T>;
+	static constexpr bool has_postnotifier_for_vector_of_int = has_postnotifier_call_for_vector_of_int<T>;
+	static constexpr bool has_prenotifier_for_vector_struct_point3dreal = has_prenotifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_postnotifier_for_vector_struct_point3dreal = has_postnotifier_call_for_vector_struct_point3dreal<T>;
+
+
 public:
 	template<class ... ArgsT>
 	publishable_sample_Wrapper( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
@@ -1085,7 +1117,21 @@ public:
 				case 0:
 					if ( addr.size() > 1 )
 						throw std::exception(); // bad format, TODO: ...
-					m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID )
+					{
+						decltype(T::ID) newVal;
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
+						if ( newVal != t.ID )
+						{
+							if constexpr ( has_prenotifier_for_ID )
+								t.notifyBefore_ID();
+							t.ID = newVal;
+							if constexpr ( has_postnotifier_for_ID )
+								t.notifyAfter_ID();
+						}
+					}
+					else
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				case 1:
 					if ( addr.size() == 1 )
@@ -1198,6 +1244,14 @@ class SIZE_RefWrapper
 	static constexpr bool has_Z = has_Z_member<T>;
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
 
+	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
+	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
+	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
+	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
+	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
+	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+
+
 public:
 	SIZE_RefWrapper( T& actual ) : t( actual ) {}
 	auto get_X() { return t.X; }
@@ -1217,6 +1271,7 @@ class SIZE_RefWrapper4Set
 	static_assert( has_Y, "type T must have member T::Y of a type corresponding to IDL type REAL" );
 	static constexpr bool has_Z = has_Z_member<T>;
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
+
 
 public:
 	SIZE_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
@@ -1254,6 +1309,14 @@ class POINT3DREAL_RefWrapper
 	static constexpr bool has_Z = has_Z_member<T>;
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
 
+	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
+	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
+	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
+	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
+	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
+	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+
+
 public:
 	POINT3DREAL_RefWrapper( T& actual ) : t( actual ) {}
 	auto get_X() { return t.X; }
@@ -1273,6 +1336,7 @@ class POINT3DREAL_RefWrapper4Set
 	static_assert( has_Y, "type T must have member T::Y of a type corresponding to IDL type REAL" );
 	static constexpr bool has_Z = has_Z_member<T>;
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
+
 
 public:
 	POINT3DREAL_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
@@ -1308,6 +1372,12 @@ class CharacterParam_RefWrapper
 	static constexpr bool has_Size = has_Size_member<T>;
 	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
 
+	static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
+	static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
+	static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
+	static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
+
+
 public:
 	CharacterParam_RefWrapper( T& actual ) : t( actual ) {}
 	auto get_ID() { return t.ID; }
@@ -1325,6 +1395,7 @@ class CharacterParam_RefWrapper4Set
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_Size = has_Size_member<T>;
 	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
+
 
 public:
 	CharacterParam_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
