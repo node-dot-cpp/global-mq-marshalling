@@ -1132,46 +1132,53 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, const char* rootName, MessageParameter& param, size_t idx )
 {
 	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
-		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper<decltype(T::%s)>(t.%s); }\n", param.name.c_str(), param.name.c_str(), param.name.c_str(), param.name.c_str() );
+	{
+		string rootType;
+		string addr;
+		if ( rootName == nullptr )
+		{
+			rootType = "RootT";
+			addr = "address";
+		}
+		else
+		{
+			rootType = fmt::format( "{}_Wrapper", rootName );
+			addr = "GMQ_COLL vector<size_t>()";
+		}
+		assert( param.type.messageIdx < root.structs.size() );
+		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<decltype(T::%s), %s>(t.%s, *this, %s, %zd); }\n", 
+			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), rootType.c_str(), param.name.c_str(), addr.c_str(), idx );
+	}
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
-		/*if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
+		const char* libType = paramTypeToLibType( param.type.vectorElemKind );
+		assert( libType != nullptr );
+		switch( param.type.vectorElemKind )
 		{
-			assert( root.structs.size() > param.type.messageIdx );
-			fprintf( header, "\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<%s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>, decltype(T::%s), %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), rootName, param.name.c_str(), rootName, param.name.c_str(), idx );
-		}
-		else*/
-		{
-			const char* libType = paramTypeToLibType( param.type.vectorElemKind );
-			assert( libType != nullptr );
-			switch( param.type.vectorElemKind )
-			{
-				case MessageParameterType::KIND::INTEGER:
-				case MessageParameterType::KIND::UINTEGER:
-				case MessageParameterType::KIND::REAL:
-				case MessageParameterType::KIND::CHARACTER_STRING:
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
 //					fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
 //						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
-					fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
-					break;
-				case MessageParameterType::KIND::STRUCT:
-					assert( param.type.messageIdx < root.structs.size() );
-					fprintf( header, 
-						"\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>>"
-						"(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-						param.name.c_str(), param.name.c_str(),
-						impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), 
-						rootName, 
-						root.structs[param.type.messageIdx]->name.c_str(), 
-						param.name.c_str(),
-						rootName, 
-						param.name.c_str(), idx );
-					break;
-				default:
-					assert( false ); // not (yet) implemented
-			}
+				fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+					param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
+				break;
+			case MessageParameterType::KIND::STRUCT:
+				assert( param.type.messageIdx < root.structs.size() );
+				fprintf( header, 
+					"\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>>"
+					"(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+					param.name.c_str(), param.name.c_str(),
+					impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), 
+					rootName, 
+					root.structs[param.type.messageIdx]->name.c_str(), 
+					param.name.c_str(),
+					rootName, 
+					param.name.c_str(), idx );
+				break;
+			default:
+				assert( false ); // not (yet) implemented
 		}
 	}
 }
@@ -1231,6 +1238,9 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		"\tstatic\n"
 		"\tvoid parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
 		"\t{\n"
+	);
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj );
+	fprintf( header, 
 		"\t\tGMQ_ASSERT( addr.size() );\n"
 		"\t\tswitch ( addr[offset] )\n"
 		"\t\t{\n"
@@ -1249,7 +1259,36 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					"\t\t\t\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s )\n"
+					"\t\t\t\t\t{\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\tdecltype(T::%s) newVal;\n"
+					"\t\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &newVal );\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\tif ( newVal != t.%s )\n"
+					"\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tt.notifyBefore_%s();\n"
+					"\t\t\t\t\t\t\tt.%s = newVal;\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\tt.notifyAfter_%s();\n"
+					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t}\n"
+					"\t\t\t\t\telse\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
 					paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1314,6 +1353,8 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		"\tvoid parse( ParserT& parser, T& t )\n"
 		"\t{\n"
 	);
+
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj );
 
 	for ( size_t i=0; i<obj.members.size(); ++i )
 	{
@@ -1520,14 +1561,17 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
 	bool forRoot = s.type == CompositeType::Type::publishable;
 	const char* rootName = forRoot ? s.name.c_str() : nullptr;
+//	const char* rootName = forRoot ? s.name.c_str() : "RootT";
 	for ( size_t i=0; i<s.members.size(); ++i )
 	{
 		auto& it = s.members[i];
 		assert( it != nullptr );
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
 		if ( allowSeters )
+		{
 			impl_GeneratePublishableStateMemberSetter( header, root, forRoot, rootName, *it, i );
-		impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
+			impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
+		}
 	}
 }
 
@@ -1593,7 +1637,6 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
 					paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str()
 				);
-				break;
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 )\n" );
