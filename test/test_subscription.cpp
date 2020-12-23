@@ -6,10 +6,12 @@
 
 class SampleNode
 {
-	size_t ctr = 0;
 public:
+	size_t preCtr = 0;
+	size_t postCtr = 0;
 	SampleNode() {}
-	void addAccess() {++ctr;}
+	void addPreAccess() {++preCtr;}
+	void addPostAccess() {++postCtr;}
 };
 
 struct SIZE{
@@ -27,6 +29,11 @@ struct POINT3DREAL{
 struct CharacterParam{
 	uint64_t ID = 600;
 	SIZE Size = {11., 12., 13};
+
+	void prenotifyBefore_ID( SampleNode* node_ ) { node_->addPreAccess(); }
+	void notifyAfter_ID() { /*node_->addPreAccess();*/ printf( "CharacterParam::notifyAfter_ID()\n" ); }
+	void prenotifyBefore_Size( SampleNode* node_ ) { node_->addPreAccess(); }
+	void notifyAfter_Size() { /*node_->addPreAccess();*/ printf( "CharacterParam::notifyAfter_Size()\n" ); }
 };
 
 struct PublishableSample {
@@ -38,6 +45,9 @@ struct PublishableSample {
 	std::vector<int> vector_of_int = {111, 112, 113};
 
 	PublishableSample( SampleNode* node_ ) { node = node_; }
+
+	void notifyBefore_ID() { /*node_->addPreAccess();*/ printf( "PublishableSample::notifyBefore_ID()\n" ); }
+	void notifyAfter_ID() { /*node_->addPreAccess();*/ printf( "PublishableSample::notifyAfter_ID()\n" ); }
 };
 
 void publishableTestOne()
@@ -49,7 +59,7 @@ void publishableTestOne()
 	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
-	int id = publishableSampleWrapper.get_ID();
+	/**/int id = publishableSampleWrapper.get_ID();
 	assert( id == 333 );
 	fmt::print( "ID = {}\n", id );
 
@@ -64,6 +74,8 @@ void publishableTestOne()
 	assert( size1.Y == 902.0 );
 	assert( size1.Z == 903.0 );
 
+	publishableSampleWrapper.get4set_chp().set_ID( 13 );
+
 	CharacterParam chp( { 186, {55., 56., 57.}} );
 	publishableSampleWrapper.set_chp( chp );
 
@@ -77,7 +89,7 @@ void publishableTestOne()
 	assert( vosp3d_0.get_Y() == 311 );
 	assert( vosp3d_0.get_Z() == 312 );
 	fmt::print( "vector_of_int.size() = {}\n", vosp3d.size() );
-	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );/**/
+	fmt::print( "vector_of_int[0] = {}, {}, {}\n", vosp3d_0.get_X(), vosp3d_0.get_Y(), vosp3d_0.get_Z() );
 
 	// updating (some) values
 	publishableSampleWrapper.set_ID( 38 );
@@ -96,7 +108,7 @@ void publishableTestOne()
 	assert( point3dreal.Z == point3dreal_back.get_Z() );
 	publishableSampleWrapper.get4set_vector_struct_point3dreal().get4set_at( 1 ).set_Y( 555 );
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
-	assert( point3dreal_Y_back == 555 );/**/
+	assert( point3dreal_Y_back == 555 );
 
 	publishableSampleWrapper.finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
@@ -105,6 +117,7 @@ void publishableTestOne()
 	m::JsonParser parser( b );
 	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapperSlave( &node );
 	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
+
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
 	assert( size1Slave.X == 901.0 );
@@ -341,8 +354,11 @@ concept has_count_call_member = requires { { T::count() } -> std::convertible_to
 template<typename T>
 concept has_count_call_member2 = requires { { T::count() }; };
 
-template<typename T>
-concept has_count_call_member3 = requires(T t) { { t.count() }; };
+template<typename StateT>
+concept has_count_call_member3 = requires(StateT t) { { t.count() }; };
+
+template<typename StateT, typename NodeT>
+concept has_count_call_member4 = requires { { std::declval<StateT>().count(std::declval<NodeT>()) }; };
 
 /*template <typename T>
 int foo(T t)
@@ -424,15 +440,16 @@ void testSubscriptionTest()
 
     struct bar
     {
+		int * intptr;
 		bool x;
-        int count() const { return 6; }
+        int count(int*) const { return 6; }
     };
     struct bar1
     {
 		bool value;
         int count_() const { return 6; }
 //        static int count() { return 6; }
-        static void count() { return; }
+        static void count(int*) { return; }
     };
 	/*constexpr bool has_bool = has_bool_value_member<bar>;
 	constexpr bool has_bool1 = has_bool_value_member<bar1>;
@@ -442,13 +459,17 @@ void testSubscriptionTest()
 	constexpr bool has_count1 = has_count_call_member<bar1>;
 	printf( "%s, %s\n", has_count ? "Y" : "N", has_count1 ? "Y" : "N" );*/
 
-	constexpr bool has_2count = has_count_call_member3<bar>;
-	constexpr bool has_2count1 = has_count_call_member3<bar1>;
+	constexpr bool has_2count = has_count_call_member2<bar>;
+	constexpr bool has_2count1 = has_count_call_member2<bar1>;
 	printf( "%s, %s\n", has_2count ? "Y" : "N", has_2count1 ? "Y" : "N" );
 
 	constexpr bool has_3count = has_count_call_member3<bar>;
 	constexpr bool has_3count1 = has_count_call_member3<bar1>;
 	printf( "%s, %s\n", has_3count ? "Y" : "N", has_3count1 ? "Y" : "N" );
+
+	constexpr bool has_4count = has_count_call_member4<bar, int*>;
+	constexpr bool has_4count1 = has_count_call_member4<bar1, int*>;
+	printf( "%s, %s\n", has_4count ? "Y" : "N", has_4count1 ? "Y" : "N" );
 
 
  //   printf( "foo(bar{}): : %d\n", foo(bar{}) );
