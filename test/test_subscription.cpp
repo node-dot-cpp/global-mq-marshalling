@@ -147,26 +147,26 @@ void testCurrentNodeDataManipulation()
 	assert( n == *cn2 );
 }
 
-void testCallervalueInCall_1()
+void testCallerValueInCall_1()
 {
 	auto cn = getHiddenParam<double>();
 	assert( *cn == 1.234 );
 }
 
-void testCallervalueInCall_2()
+void testCallerValueInCall_2()
 {
 	auto cn = getHiddenParam<double>();
 	assert( cn == nullptr );
 }
 
-void testCallervalue()
+void testCallerValue()
 {
 	double x = 1.234;
 	{
 		CallerValue<double> any( &x );
-		testCallervalueInCall_1();
+		testCallerValueInCall_1();
 	}
-	testCallervalueInCall_2();
+	testCallerValueInCall_2();
 }
 
 
@@ -181,24 +181,36 @@ public:
 };
 
 struct SIZE{
-  double X = 1.0;
-  double Y = 2.0;
-  double Z = 3.0;
+	double X = 1.0;
+	double Y = 2.0;
+	double Z = 3.0;
+	void prenotifyBefore_X( SampleNode* node_ ) { node_->addPreAccess(); printf( "SIZE::notifyBefore_X()\n" ); }
+	void notifyAfter_X() { /*node_->addPreAccess();*/ printf( "SIZE::notifyAfter_X()\n" ); }
+	void prenotifyBefore_Y( SampleNode* node_ ) { node_->addPreAccess(); printf( "SIZE::notifyBefore_Y()\n" ); }
+	void notifyAfter_Y() { /*node_->addPreAccess();*/ printf( "SIZE::notifyAfter_Y()\n" ); }
+	void prenotifyBefore_Z( SampleNode* node_ ) { node_->addPreAccess(); printf( "SIZE::notifyBefore_Z()\n" ); }
+	void notifyAfter_Z() { /*node_->addPreAccess();*/ printf( "SIZE::notifyAfter_Z()\n" ); }
 };
 
 struct POINT3DREAL{
   double X = 4.0;
   double Y = 5.0;
   double Z = 6.0;
+	void prenotifyBefore_X( SampleNode* node_ ) { node_->addPreAccess(); printf( "POINT3DREAL::notifyBefore_X()\n" ); }
+	void notifyAfter_X() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_X()\n" ); }
+	void prenotifyBefore_Y( SampleNode* node_ ) { node_->addPreAccess(); printf( "POINT3DREAL::notifyBefore_Y()\n" ); }
+	void notifyAfter_Y() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_Y()\n" ); }
+	void prenotifyBefore_Z( SampleNode* node_ ) { node_->addPreAccess(); printf( "POINT3DREAL::notifyBefore_Z()\n" ); }
+	void notifyAfter_Z() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_Z()\n" ); }
 };
 
 struct CharacterParam{
 	uint64_t ID = 600;
 	SIZE Size = {11., 12., 13};
 
-	void prenotifyBefore_ID( SampleNode* node_ ) { node_->addPreAccess(); }
+	void prenotifyBefore_ID( SampleNode* node_ ) { node_->addPreAccess(); printf( "CharacterParam::notifyBefore_ID()\n" ); }
 	void notifyAfter_ID() { /*node_->addPreAccess();*/ printf( "CharacterParam::notifyAfter_ID()\n" ); }
-	void prenotifyBefore_Size( SampleNode* node_ ) { node_->addPreAccess(); }
+	void prenotifyBefore_Size( SampleNode* node_ ) { node_->addPreAccess(); printf( "CharacterParam::notifyBeforer_ID()\n" ); }
 	void notifyAfter_Size() { /*node_->addPreAccess();*/ printf( "CharacterParam::notifyAfter_Size()\n" ); }
 };
 
@@ -218,6 +230,9 @@ struct PublishableSample {
 
 void publishableTestOne()
 {
+	testCurrentNodeDataManipulation();
+	testCallerValue();
+//	return;
 	SampleNode node;
 	m::Buffer b;
 	m::JsonComposer composer( b );
