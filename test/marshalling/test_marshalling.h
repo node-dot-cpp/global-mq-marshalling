@@ -176,9 +176,54 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
 		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
 
-		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		if constexpr( has_prenotifier_for_X || has_postnotifier_for_X )
+		{
+			decltype(T::X) newVal;
+			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
+			if ( newVal != t.X )
+			{
+				if constexpr ( has_prenotifier_for_X )
+					t.notifyBefore_X();
+				t.X = newVal;
+				if constexpr ( has_postnotifier_for_X )
+					t.notifyAfter_X();
+			}
+		}
+		else
+			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+
+		if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y )
+		{
+			decltype(T::Y) newVal;
+			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
+			if ( newVal != t.Y )
+			{
+				if constexpr ( has_prenotifier_for_Y )
+					t.notifyBefore_Y();
+				t.Y = newVal;
+				if constexpr ( has_postnotifier_for_Y )
+					t.notifyAfter_Y();
+			}
+		}
+		else
+			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+
+		if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z )
+		{
+			decltype(T::Z) newVal;
+			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
+			if ( newVal != t.Z )
+			{
+				if constexpr ( has_prenotifier_for_Z )
+					t.notifyBefore_Z();
+				t.Z = newVal;
+				if constexpr ( has_postnotifier_for_Z )
+					t.notifyAfter_Z();
+			}
+		}
+		else
+			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+
 	}
 
 	template<class ParserT, class T>
@@ -277,9 +322,54 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
 		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
 
-		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-		m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		if constexpr( has_prenotifier_for_X || has_postnotifier_for_X )
+		{
+			decltype(T::X) newVal;
+			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
+			if ( newVal != t.X )
+			{
+				if constexpr ( has_prenotifier_for_X )
+					t.notifyBefore_X();
+				t.X = newVal;
+				if constexpr ( has_postnotifier_for_X )
+					t.notifyAfter_X();
+			}
+		}
+		else
+			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+
+		if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y )
+		{
+			decltype(T::Y) newVal;
+			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
+			if ( newVal != t.Y )
+			{
+				if constexpr ( has_prenotifier_for_Y )
+					t.notifyBefore_Y();
+				t.Y = newVal;
+				if constexpr ( has_postnotifier_for_Y )
+					t.notifyAfter_Y();
+			}
+		}
+		else
+			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+
+		if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z )
+		{
+			decltype(T::Z) newVal;
+			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
+			if ( newVal != t.Z )
+			{
+				if constexpr ( has_prenotifier_for_Z )
+					t.notifyBefore_Z();
+				t.Z = newVal;
+				if constexpr ( has_postnotifier_for_Z )
+					t.notifyAfter_Z();
+			}
+		}
+		else
+			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+
 	}
 
 	template<class ParserT, class T>
@@ -377,7 +467,22 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
 		static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
 
-		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID )
+		{
+			decltype(T::ID) newVal;
+			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &newVal, "ID" );
+			if ( newVal != t.ID )
+			{
+				if constexpr ( has_prenotifier_for_ID )
+					t.notifyBefore_ID();
+				t.ID = newVal;
+				if constexpr ( has_postnotifier_for_ID )
+					t.notifyAfter_ID();
+			}
+		}
+		else
+			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
 		m::impl::parsePublishableStructBegin( parser, "Size" );
 		publishable_STRUCT_SIZE::parse( parser, t.Size );
 		m::impl::parsePublishableStructEnd( parser );

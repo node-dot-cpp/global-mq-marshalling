@@ -1367,9 +1367,40 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, 
-					"\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
+					"\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s )\n"
+					"\t\t{\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\tdecltype(T::%s) newVal;\n"
+					"\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &newVal, \"%s\" );\n",
+					member.name.c_str(), 
+					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\tif ( newVal != t.%s )\n"
+					"\t\t\t{\n"
+					"\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\tt.notifyBefore_%s();\n"
+					"\t\t\t\tt.%s = newVal;\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
+					"\t\t\t\t\tt.notifyAfter_%s();\n"
+					"\t\t\t}\n"
+					"\t\t}\n"
+					"\t\telse\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
 					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
+				fprintf( header, "\n" );
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 				/*fprintf( header, "\t\tif ( addr.size() == offset + 1 )\n" );
