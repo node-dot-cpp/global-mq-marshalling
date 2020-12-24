@@ -1348,10 +1348,12 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
 	fprintf( header, 
-		"\ttemplate<class ParserT, class T>\n"
+		"\ttemplate<class ParserT, class T, class RetT = void>\n"
 		"\tstatic\n"
 		"\tvoid parse( ParserT& parser, T& t )\n"
 		"\t{\n"
+		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
+		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
 	);
 
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
@@ -1367,7 +1369,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, 
-					"\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s )\n"
+					"\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s || reportChanges )\n"
 					"\t\t{\n",
 					member.name.c_str(), member.name.c_str()
 				);
@@ -1378,7 +1380,8 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\tif ( newVal != t.%s )\n"
+					"\t\t\tbool changed = newVal != t.%s;\n"
+					"\t\t\tif ( changed )\n"
 					"\t\t\t{\n"
 					"\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
 					member.name.c_str(), member.name.c_str()
@@ -1392,6 +1395,8 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					"\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
 					"\t\t\t\t\tt.notifyAfter_%s();\n"
 					"\t\t\t}\n"
+					"\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\treturn changed;\n"
 					"\t\t}\n"
 					"\t\telse\n",
 					member.name.c_str(), member.name.c_str()
