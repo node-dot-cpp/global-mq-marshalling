@@ -4,6 +4,172 @@
 #include <publishable_impl.h>
 #include "marshalling/test_marshalling.h"
 
+#include <typeinfo>
+#include <typeindex>
+#include <unordered_map>
+
+struct CurrentNode
+{
+	std::type_index typeidx = std::type_index(typeid(void));
+	void* ptr = nullptr;
+};
+CurrentNode currentNode;
+/*template<class NodeT>
+void setCurrentNode( NodeT* nodeptr ) { 
+	currentNode.typeidx = std::type_index(typeid(NodeT)); 
+	currentNode.ptr = nodeptr;
+}
+template<class NodeT>
+NodeT* getCurrentNode() { 
+	auto tidx = std::type_index(typeid(NodeT));
+	bool ok = currentNode.typeidx == tidx;
+	if ( !ok )
+		throw std::exception(); 
+	return reinterpret_cast<NodeT*>(currentNode.ptr);
+}*/
+
+
+
+
+struct implCallerValue
+{
+	std::type_index typeidx = std::type_index(typeid(void));
+	void* ptr = nullptr;
+	implCallerValue* prev = nullptr;
+
+	implCallerValue( std::type_index idx, void* ptr_, implCallerValue* prev_) : typeidx( idx ), ptr( ptr_ ), prev( prev_ ) {}
+	implCallerValue() {}
+	implCallerValue( const implCallerValue& other ) = delete;
+	implCallerValue& operator = ( const implCallerValue& other ) = delete;
+	implCallerValue( implCallerValue&& other )
+	{
+		typeidx = other.typeidx;
+		other.typeidx = std::type_index(typeid(void));
+		ptr = other.ptr;
+		other.ptr = nullptr;
+		prev = other.prev;
+		other.prev = nullptr;
+	}
+	implCallerValue& operator = ( implCallerValue&& other )
+	{
+		typeidx = other.typeidx;
+		other.typeidx = std::type_index(typeid(void));
+		ptr = other.ptr;
+		other.ptr = nullptr;
+		prev = other.prev;
+		other.prev = nullptr;
+		return *this;
+	}
+};
+
+thread_local std::unordered_map<std::type_index, implCallerValue> implCallerValues;
+
+template<class LabelT, class ActualT = LabelT>
+void pushHiddenParam( ActualT* param ) {
+	auto ins = implCallerValues.insert( std::make_pair( std::type_index(typeid(LabelT)), implCallerValue({std::type_index(typeid(ActualT)), param, nullptr}) ) );
+	if ( !ins.second )
+	{
+		implCallerValue cv( std::type_index(typeid(ActualT)), param, new implCallerValue( std::move( ins.first->second ) ) );
+		auto ins1 = implCallerValues.insert( std::make_pair( std::type_index(typeid(LabelT)), std::move(cv) ) );
+		assert( ins.second );
+	}
+}
+
+template<class LabelT, class ActualT = LabelT>
+ActualT* getHiddenParam() {
+	auto findres = implCallerValues.find( std::type_index(typeid(LabelT)) );
+	if ( findres != implCallerValues.end() )
+	{
+		auto tidx = std::type_index(typeid(ActualT));
+		bool ok = findres->second.typeidx == tidx;
+		if ( ok )
+			return reinterpret_cast<ActualT*>(findres->second.ptr);
+		else return nullptr;
+	}
+	else
+		return nullptr;
+}
+
+template<class LabelT>
+void popHiddenParam() {
+	auto findres = implCallerValues.find( std::type_index(typeid(LabelT)) );
+	if ( findres != implCallerValues.end() )
+	{
+		if ( findres->second.prev != nullptr )
+			findres->second = std::move( *(findres->second.prev) );
+		else
+			implCallerValues.erase( findres );
+	}
+}
+
+template<class LabelT, class UserT = LabelT>
+struct CallerValue
+{
+	CallerValue() { pushHiddenParam<LabelT, UserT>(nullptr); }
+	CallerValue( UserT* ptr ) { pushHiddenParam<LabelT, UserT>(ptr); }
+	CallerValue( const CallerValue<UserT>& other ) = delete;
+	CallerValue& operator = ( const CallerValue<UserT>& other ) = delete;
+	CallerValue( CallerValue<UserT>&& other ) = delete;
+	CallerValue<UserT>& operator = ( CallerValue<UserT>&& other ) = delete;
+	~CallerValue() { popHiddenParam<LabelT>(); }
+};
+
+
+struct CurrentNodeLabel {};
+
+template<class NodeT>
+void setCurrentNode( NodeT* nodeptr ) { 
+	popHiddenParam<CurrentNodeLabel>();
+	pushHiddenParam<CurrentNodeLabel, NodeT>( nodeptr );
+}
+template<class NodeT>
+NodeT* getCurrentNode() { 
+	auto ret = getHiddenParam<CurrentNodeLabel, NodeT>();
+	if ( ret != nullptr )
+		return ret;
+	throw std:: exception();
+	return nullptr;
+}
+
+void testCurrentNodeDataManipulation()
+{
+	double x = 1.234;
+	setCurrentNode( &x );
+	try { auto cn = getCurrentNode<int>(); fmt::print( "Cannot be here; value = {}\n", *cn ); }
+	catch (...) { printf( "Bad attempt to get cn failed\n" ); }
+	auto cn = getCurrentNode<double>();
+	assert( &x == cn );
+	assert( x == *cn );
+	int n = 17;
+	setCurrentNode( &n );
+	auto cn2 = getCurrentNode<int>();
+	assert( &n == cn2 );
+	assert( n == *cn2 );
+}
+
+void testCallervalueInCall_1()
+{
+	auto cn = getHiddenParam<double>();
+	assert( *cn == 1.234 );
+}
+
+void testCallervalueInCall_2()
+{
+	auto cn = getHiddenParam<double>();
+	assert( cn == nullptr );
+}
+
+void testCallervalue()
+{
+	double x = 1.234;
+	{
+		CallerValue<double> any( &x );
+		testCallervalueInCall_1();
+	}
+	testCallervalueInCall_2();
+}
+
+
 class SampleNode
 {
 public:
