@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\fmt\src\format.cc" />
     <ClCompile Include="..\..\library\src\marshalling.cpp" />
-    <ClCompile Include="..\..\library\src\subscription_state.cpp" />
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\test_marshalling.cpp" />
     <ClCompile Include="..\test_subscription.cpp">
@@ -36,7 +35,6 @@
     <ClInclude Include="..\..\library\include\marshalling_impl.h" />
     <ClInclude Include="..\..\library\include\marshalling.h" />
     <ClInclude Include="..\..\library\include\publishable_impl.h" />
-    <ClInclude Include="..\..\library\include\subscription_state.h" />
     <ClInclude Include="..\marshalling\test_marshalling.h" />
     <ClInclude Include="..\tests.h" />
   </ItemGroup>
