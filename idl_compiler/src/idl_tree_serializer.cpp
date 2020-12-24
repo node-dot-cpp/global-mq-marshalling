@@ -1097,14 +1097,14 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 	fprintf( header, "\n" );
 }
 
-void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s, const char* offset )
 {
 	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
 	for ( auto& it : s.members )
 	{
 		assert( it != nullptr );
-		fprintf( header, "\tstatic constexpr bool has_prenotifier_for_%s = has_prenotifier_call_for_%s<T>;\n", it->name.c_str(), it->name.c_str() );
-		fprintf( header, "\tstatic constexpr bool has_postnotifier_for_%s = has_postnotifier_call_for_%s<T>;\n", it->name.c_str(), it->name.c_str() );
+		fprintf( header, "%sstatic constexpr bool has_prenotifier_for_%s = has_prenotifier_call_for_%s<T>;\n", offset, it->name.c_str(), it->name.c_str() );
+		fprintf( header, "%sstatic constexpr bool has_postnotifier_for_%s = has_postnotifier_call_for_%s<T>;\n", offset, it->name.c_str(), it->name.c_str() );
 	}
 	fprintf( header, "\n" );
 }
@@ -1239,7 +1239,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		"\tvoid parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
 		"\t{\n"
 	);
-	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj );
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 	fprintf( header, 
 		"\t\tGMQ_ASSERT( addr.size() );\n"
 		"\t\tswitch ( addr[offset] )\n"
@@ -1354,7 +1354,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		"\t{\n"
 	);
 
-	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj );
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 
 	for ( size_t i=0; i<obj.members.size(); ++i )
 	{
@@ -1712,7 +1712,7 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 	);
 
 	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
-	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s );
+	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
 	fprintf( header, 
 		"\npublic:\n" 
@@ -1761,7 +1761,7 @@ void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeT
 	);
 
 	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
-	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s );
+//	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
 	fprintf( header, 
 		"\npublic:\n" 

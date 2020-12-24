@@ -169,12 +169,12 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	static
 	void parse( ParserT& parser, T& t )
 	{
-	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
+		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
+		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
+		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
+		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
+		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
 
 		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
@@ -185,12 +185,12 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	static
 	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
-	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
+		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
+		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
+		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
+		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
+		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
 
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
@@ -270,12 +270,12 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	static
 	void parse( ParserT& parser, T& t )
 	{
-	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
+		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
+		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
+		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
+		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
+		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
 
 		m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 		m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
@@ -286,12 +286,12 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	static
 	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
-	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
+		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
+		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
+		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
+		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
+		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
 
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
@@ -372,10 +372,10 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static
 	void parse( ParserT& parser, T& t )
 	{
-	static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
-	static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
-	static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
-	static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
+		static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
+		static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
+		static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
+		static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
 
 		m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 		m::impl::parsePublishableStructBegin( parser, "Size" );
@@ -387,10 +387,10 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static
 	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
-	static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
-	static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
-	static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
-	static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
+		static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
+		static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
+		static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
+		static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
 
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
@@ -1376,13 +1376,6 @@ class SIZE_RefWrapper
 	static constexpr bool has_Z = has_Z_member<T>;
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
 
-	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
-
 
 public:
 	SIZE_RefWrapper( T& actual ) : t( actual ) {}
@@ -1441,13 +1434,6 @@ class POINT3DREAL_RefWrapper
 	static constexpr bool has_Z = has_Z_member<T>;
 	static_assert( has_Z, "type T must have member T::Z of a type corresponding to IDL type REAL" );
 
-	static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-	static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-	static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-	static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-	static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-	static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
-
 
 public:
 	POINT3DREAL_RefWrapper( T& actual ) : t( actual ) {}
@@ -1503,11 +1489,6 @@ class CharacterParam_RefWrapper
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_Size = has_Size_member<T>;
 	static_assert( has_Size, "type T must have member T::Size of a type corresponding to IDL type STRUCT SIZE" );
-
-	static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
-	static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
-	static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
-	static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
 
 
 public:
