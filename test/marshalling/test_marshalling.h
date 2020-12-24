@@ -237,10 +237,12 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 
 	}
 
-	template<class ParserT, class T>
+	template<class ParserT, class T, class RetT = void>
 	static
 	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
 		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
 		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
@@ -253,11 +255,12 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X )
+					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X || reportChanges )
 					{
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
-						if ( newVal != t.X )
+						bool changed = newVal != t.X;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_X )
 								t.notifyBefore_X();
@@ -265,17 +268,20 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 							if constexpr ( has_postnotifier_for_X )
 								t.notifyAfter_X();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y )
+					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y || reportChanges )
 					{
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
-						if ( newVal != t.Y )
+						bool changed = newVal != t.Y;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_Y )
 								t.notifyBefore_Y();
@@ -283,17 +289,20 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 							if constexpr ( has_postnotifier_for_Y )
 								t.notifyAfter_Y();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z )
+					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z || reportChanges )
 					{
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
-						if ( newVal != t.Z )
+						bool changed = newVal != t.Z;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_Z )
 								t.notifyBefore_Z();
@@ -301,6 +310,8 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 							if constexpr ( has_postnotifier_for_Z )
 								t.notifyAfter_Z();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
@@ -394,10 +405,12 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 
 	}
 
-	template<class ParserT, class T>
+	template<class ParserT, class T, class RetT = void>
 	static
 	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
 		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
 		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
@@ -410,11 +423,12 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X )
+					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X || reportChanges )
 					{
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
-						if ( newVal != t.X )
+						bool changed = newVal != t.X;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_X )
 								t.notifyBefore_X();
@@ -422,17 +436,20 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 							if constexpr ( has_postnotifier_for_X )
 								t.notifyAfter_X();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y )
+					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y || reportChanges )
 					{
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
-						if ( newVal != t.Y )
+						bool changed = newVal != t.Y;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_Y )
 								t.notifyBefore_Y();
@@ -440,17 +457,20 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 							if constexpr ( has_postnotifier_for_Y )
 								t.notifyAfter_Y();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z )
+					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z || reportChanges )
 					{
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
-						if ( newVal != t.Z )
+						bool changed = newVal != t.Z;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_Z )
 								t.notifyBefore_Z();
@@ -458,6 +478,8 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 							if constexpr ( has_postnotifier_for_Z )
 								t.notifyAfter_Z();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
@@ -515,10 +537,12 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		m::impl::parsePublishableStructEnd( parser );
 	}
 
-	template<class ParserT, class T>
+	template<class ParserT, class T, class RetT = void>
 	static
 	void parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
 		static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
 		static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
@@ -529,11 +553,12 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID )
+					if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) newVal;
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
-						if ( newVal != t.ID )
+						bool changed = newVal != t.ID;
+						if ( changed )
 						{
 							if constexpr ( has_prenotifier_for_ID )
 								t.notifyBefore_ID();
@@ -541,6 +566,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 							if constexpr ( has_postnotifier_for_ID )
 								t.notifyAfter_ID();
 						}
+						if constexpr ( reportChanges )
+							return changed;
 					}
 					else
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
