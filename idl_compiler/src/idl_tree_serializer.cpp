@@ -1265,8 +1265,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tdecltype(T::%s) newVal;\n"
-					"\t\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &newVal );\n",
-					member.name.c_str(), member.name.c_str()
+					"\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &newVal );\n",
+					member.name.c_str(), paramTypeToLeafeParser( member.type.kind ), member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( newVal != t.%s )\n"
@@ -1647,9 +1647,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, "\t\t\t\t\t}\n" );
 				fprintf( header, "\t\t\t\t\telse\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
-				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+//				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
+//				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\t}\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:

@@ -200,7 +200,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X )
 					{
 						decltype(T::X) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::X)>( parser, &newVal );
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
 						if ( newVal != t.X )
 						{
 							if constexpr ( has_prenotifier_for_X )
@@ -218,7 +218,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y )
 					{
 						decltype(T::Y) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::Y)>( parser, &newVal );
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
 						if ( newVal != t.Y )
 						{
 							if constexpr ( has_prenotifier_for_Y )
@@ -236,7 +236,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z )
 					{
 						decltype(T::Z) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::Z)>( parser, &newVal );
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
 						if ( newVal != t.Z )
 						{
 							if constexpr ( has_prenotifier_for_Z )
@@ -301,7 +301,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X )
 					{
 						decltype(T::X) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::X)>( parser, &newVal );
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
 						if ( newVal != t.X )
 						{
 							if constexpr ( has_prenotifier_for_X )
@@ -319,7 +319,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y )
 					{
 						decltype(T::Y) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::Y)>( parser, &newVal );
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
 						if ( newVal != t.Y )
 						{
 							if constexpr ( has_prenotifier_for_Y )
@@ -337,7 +337,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z )
 					{
 						decltype(T::Z) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::Z)>( parser, &newVal );
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
 						if ( newVal != t.Z )
 						{
 							if constexpr ( has_prenotifier_for_Z )
@@ -1278,9 +1278,7 @@ public:
 					}
 					else
 					{
-							m::impl::parsePublishableStructBegin( parser, "size" );
 							publishable_STRUCT_SIZE::parse( parser, t.size, addr, 1 );
-							m::impl::parsePublishableStructEnd( parser );
 					}
 					break;
 				case 2:
@@ -1292,9 +1290,7 @@ public:
 					}
 					else
 					{
-							m::impl::parsePublishableStructBegin( parser, "chp" );
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );
-							m::impl::parsePublishableStructEnd( parser );
 					}
 					break;
 				case 3:
