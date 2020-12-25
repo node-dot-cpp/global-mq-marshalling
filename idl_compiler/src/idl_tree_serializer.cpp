@@ -1236,10 +1236,11 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 	fprintf( header, 
 		"\ttemplate<class ParserT, class T, class RetT = void>\n"
 		"\tstatic\n"
-		"\tvoid parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
+		"\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
 		"\t{\n"
 		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
 		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
+		"\t\tbool changed = false;\n"
 	);
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 	fprintf( header, 
@@ -1272,7 +1273,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					member.name.c_str(), paramTypeToLeafeParser( member.type.kind ), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\tbool changed = newVal != t.%s;\n"
+					"\t\t\t\t\t\tchanged = changed || newVal != t.%s;\n"
 					"\t\t\t\t\t\tif ( changed )\n"
 					"\t\t\t\t\t\t{\n"
 					"\t\t\t\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
@@ -1287,8 +1288,6 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\tt.notifyAfter_%s();\n"
 					"\t\t\t\t\t\t}\n"
-					"\t\t\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\t\t\treturn changed;\n"
 					"\t\t\t\t\t}\n"
 					"\t\t\t\t\telse\n",
 					member.name.c_str(), member.name.c_str()
@@ -1348,8 +1347,12 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 
 	fprintf( header, "\t\t\tdefault:\n" );
 	fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
-	fprintf( header, "\t\t}\n" );
-	fprintf( header, "\t}\n" );
+	fprintf( header, 
+		"\t\t}\n"
+		"\t\tif constexpr ( reportChanges )\n"
+		"\t\t\treturn changed;\n"
+		"\t}\n"
+	);
 }
 
 void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
@@ -1357,10 +1360,11 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 	fprintf( header, 
 		"\ttemplate<class ParserT, class T, class RetT = void>\n"
 		"\tstatic\n"
-		"\tvoid parse( ParserT& parser, T& t )\n"
+		"\tRetT parse( ParserT& parser, T& t )\n"
 		"\t{\n"
 		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
 		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
+		"\t\tbool changed = false;\n"
 	);
 
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
@@ -1388,7 +1392,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\tbool changed = newVal != t.%s;\n"
+					"\t\t\tchanged = changed || newVal != t.%s;\n"
 					"\t\t\tif ( changed )\n"
 					"\t\t\t{\n"
 					"\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
@@ -1403,8 +1407,6 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					"\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
 					"\t\t\t\t\tt.notifyAfter_%s();\n"
 					"\t\t\t}\n"
-					"\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\treturn changed;\n"
 					"\t\t}\n"
 					"\t\telse\n",
 					member.name.c_str(), member.name.c_str()
@@ -1433,7 +1435,23 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				fprintf( header, "\t\t}\n" );*/
 
 				fprintf( header, "\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+				fprintf( header, 
+					"\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s || reportChanges )\n"
+					"\t\t{\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, "\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+				fprintf( header, 
+					"\t\t\tif constexpr( has_postnotifier_for_%s )\n"
+					"\t\t\t\tt.notifyAfter_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\tchanged = changed || changedCurrent;\n"
+					"\t\t}\n"
+					"\t\telse\n"
+				);
+				fprintf( header, "\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
@@ -1472,7 +1490,12 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		}
 	}
 
-	fprintf( header, "\t}\n" );
+	fprintf( header, 
+		"\n"
+		"\t\tif constexpr ( reportChanges )\n"
+		"\t\t\treturn changed;\n"
+		"\t}\n"
+	);
 }
 void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj )
 {
