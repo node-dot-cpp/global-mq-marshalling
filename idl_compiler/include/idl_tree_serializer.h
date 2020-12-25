@@ -30,6 +30,45 @@
 
 #include "idl_tree.h"
 
+struct FloatingParts
+{
+	int64_t fraction;
+	int64_t exponent;
+	FloatingParts( double d ) { fromFloating( d ); }
+	void fromFloating( double d ) { 
+		uint64_t fraction_ = *(uint64_t*)(&d) & 0x800fffffffffffffULL; 
+		fraction = *(int64_t*)(&fraction_);
+		uint64_t exponent_ = ( *(uint64_t*)(&d) << 1 ) >> 53;
+		exponent = *(uint64_t*)(&exponent_) - 1023;
+	}
+	double value() { 
+		int64_t exp_ = exponent + 1023;
+		uint64_t res = (*(uint64_t*)(&exp_) << 52) | *(uint64_t*)(&fraction);
+		assert( ( *(uint64_t*)(&fraction) & 0x7ff0000000000000 ) == 0 );
+		assert( ( exp_ & ~0x7ffLLU ) == 0 );
+		return *(double*)(&res);
+	}
+};
+
+const char* impl_kindToString( MessageParameterType::KIND kind );
+bool impl_checkParamNameUniqueness(CompositeType& s);
+bool impl_checkFollowingExtensionRules(CompositeType& s);
+void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s );
+bool impl_processScopes( Root& r );
+void impl_generateScopeHandler( FILE* header, Scope& scope );
+void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope );
+void impl_generateScopeComposer( FILE* header, Scope& scope );
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack );
+string paramNameToNameTagType( string name );
+void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj );
+void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj );
+void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root& root, CompositeType& s );
+void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s );
+void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s );
+void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s );
+
+
+
 // printing global_mq tree
 void printRoot( Root& s );
 
