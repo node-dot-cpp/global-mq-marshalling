@@ -183,8 +183,9 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		{
 			decltype(T::X) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
-			changed = changed || newVal != t.X;
-			if ( changed )
+			bool currentChanged = newVal != t.X;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_X )
 					t.notifyBefore_X();
@@ -200,8 +201,9 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		{
 			decltype(T::Y) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
-			changed = changed || newVal != t.Y;
-			if ( changed )
+			bool currentChanged = newVal != t.Y;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_Y )
 					t.notifyBefore_Y();
@@ -217,8 +219,9 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		{
 			decltype(T::Z) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
-			changed = changed || newVal != t.Z;
-			if ( changed )
+			bool currentChanged = newVal != t.Z;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_Z )
 					t.notifyBefore_Z();
@@ -258,8 +261,9 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					{
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
-						changed = changed || newVal != t.X;
-						if ( changed )
+						bool currentChanged = newVal != t.X;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_X )
 								t.notifyBefore_X();
@@ -277,8 +281,9 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					{
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
-						changed = changed || newVal != t.Y;
-						if ( changed )
+						bool currentChanged = newVal != t.Y;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_Y )
 								t.notifyBefore_Y();
@@ -296,8 +301,9 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					{
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
-						changed = changed || newVal != t.Z;
-						if ( changed )
+						bool currentChanged = newVal != t.Z;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_Z )
 								t.notifyBefore_Z();
@@ -346,8 +352,9 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		{
 			decltype(T::X) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
-			changed = changed || newVal != t.X;
-			if ( changed )
+			bool currentChanged = newVal != t.X;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_X )
 					t.notifyBefore_X();
@@ -363,8 +370,9 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		{
 			decltype(T::Y) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
-			changed = changed || newVal != t.Y;
-			if ( changed )
+			bool currentChanged = newVal != t.Y;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_Y )
 					t.notifyBefore_Y();
@@ -380,8 +388,9 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		{
 			decltype(T::Z) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
-			changed = changed || newVal != t.Z;
-			if ( changed )
+			bool currentChanged = newVal != t.Z;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_Z )
 					t.notifyBefore_Z();
@@ -421,8 +430,9 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					{
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
-						changed = changed || newVal != t.X;
-						if ( changed )
+						bool currentChanged = newVal != t.X;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_X )
 								t.notifyBefore_X();
@@ -440,8 +450,9 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					{
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
-						changed = changed || newVal != t.Y;
-						if ( changed )
+						bool currentChanged = newVal != t.Y;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_Y )
 								t.notifyBefore_Y();
@@ -459,8 +470,9 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					{
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
-						changed = changed || newVal != t.Z;
-						if ( changed )
+						bool currentChanged = newVal != t.Z;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_Z )
 								t.notifyBefore_Z();
@@ -508,8 +520,9 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		{
 			decltype(T::ID) newVal;
 			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &newVal, "ID" );
-			changed = changed || newVal != t.ID;
-			if ( changed )
+			bool currentChanged = newVal != t.ID;
+			changed = currentChanged || changed;
+			if ( currentChanged )
 			{
 				if constexpr ( has_prenotifier_for_ID )
 					t.notifyBefore_ID();
@@ -558,8 +571,9 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 					{
 						decltype(T::ID) newVal;
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
-						changed = changed || newVal != t.ID;
-						if ( changed )
+						bool currentChanged = newVal != t.ID;
+						changed = currentChanged || changed;
+						if ( currentChanged )
 						{
 							if constexpr ( has_prenotifier_for_ID )
 								t.notifyBefore_ID();

@@ -1273,8 +1273,9 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					member.name.c_str(), paramTypeToLeafeParser( member.type.kind ), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\tchanged = changed || newVal != t.%s;\n"
-					"\t\t\t\t\t\tif ( changed )\n"
+					"\t\t\t\t\t\tbool currentChanged = newVal != t.%s;\n"
+					"\t\t\t\t\t\tchanged = currentChanged || changed;\n"
+					"\t\t\t\t\t\tif ( currentChanged )\n"
 					"\t\t\t\t\t\t{\n"
 					"\t\t\t\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
 					member.name.c_str(), member.name.c_str()
@@ -1392,8 +1393,9 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\tchanged = changed || newVal != t.%s;\n"
-					"\t\t\tif ( changed )\n"
+					"\t\t\tbool currentChanged = newVal != t.%s;\n"
+					"\t\t\tchanged = currentChanged || changed;\n"
+					"\t\t\tif ( currentChanged )\n"
 					"\t\t\t{\n"
 					"\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
 					member.name.c_str(), member.name.c_str()
