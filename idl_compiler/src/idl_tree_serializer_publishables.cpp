@@ -841,6 +841,68 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 	);
 }
 
+void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s )
+{
+	fprintf( header, 
+		"struct Publishable_%s_Copier {\n"
+		"\ttemplate<typename UserT>\n"
+		"\tstatic void copy(const UserT& src, UserT& dst) {\n",
+		s.name.c_str()
+	);
+
+	for ( size_t i=0; i<s.members.size(); ++i )
+	{
+		assert( s.members[i] != nullptr );
+		auto& member = *(s.members[i]);
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, 
+					"\t\tdst.%s = src.%s;\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\t\tPublishable_%s_Copier::copy( src.%s, dst.%s );\n",
+					s.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				assert( member.type.messageIdx < root.structs.size() );
+				switch ( member.type.kind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), impl::%s>( src.%s, dst.%s );\n",
+							s.name.c_str(), paramTypeToLibType( member.type.vectorElemKind ), member.name.c_str(), member.name.c_str()
+						);
+						break;
+					case MessageParameterType::KIND::STRUCT:
+						fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), Publishable_%s_Copier>( src.%s, dst.%s );\n",
+							member.name.c_str(), s.name.c_str(), member.name.c_str(), member.name.c_str()
+						);
+						break;
+					default:
+						assert( false ); // TODO: revise or add cases
+				}
+			}
+			default:
+				assert( false ); // TODO: revise or add cases
+		}
+	}
+
+	fprintf( header, 
+		"\t}\n"
+		"};\n\n"
+	);
+}
+
 void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable );

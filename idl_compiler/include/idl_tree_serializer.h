@@ -66,6 +66,7 @@ void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root
 void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s );
+void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s );
 
 
 

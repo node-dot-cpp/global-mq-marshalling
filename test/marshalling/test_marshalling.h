@@ -592,13 +592,13 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 					if constexpr( has_prenotifier_for_Size || has_postnotifier_for_Size || reportChanges )
 					{
 						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-						if constexpr( has_postnotifier_for_Size )
+					if constexpr( has_postnotifier_for_Size )
 						t.notifyAfter_Size();
 					changed = changed || changedCurrent;
 					}
 					else
 					{
-						publishable_STRUCT_SIZE::parse( parser, t.Size );
+					publishable_STRUCT_SIZE::parse( parser, t.Size );
 					}
 					m::impl::publishableParseLeafeStructEnd( parser );
 				}
@@ -1609,6 +1609,15 @@ public:
 	}
 };
 
+struct Publishable_SIZE_Copier {
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.X = src.X;
+		dst.Y = src.Y;
+		dst.Z = src.Z;
+	}
+};
+
 template<class T>
 class POINT3DREAL_RefWrapper
 {
@@ -1667,6 +1676,15 @@ public:
 	}
 };
 
+struct Publishable_POINT3DREAL_Copier {
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.X = src.X;
+		dst.Y = src.Y;
+		dst.Z = src.Z;
+	}
+};
+
 template<class T>
 class CharacterParam_RefWrapper
 {
@@ -1715,6 +1733,14 @@ public:
 		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
 	auto get4set_Size() { return SIZE_RefWrapper4Set<decltype(T::Size), RootT>(t.Size, *this, address, 1); }
+};
+
+struct Publishable_CharacterParam_Copier {
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.ID = src.ID;
+		Publishable_CharacterParam_Copier::copy( src.Size, dst.Size );
+	}
 };
 
 //**********************************************************************
