@@ -345,6 +345,29 @@ public:
 	}
 };
 
+namespace impl {
+	template<class VectorT, class ElemTypeT>
+	void copyVector( const VectorT& src, VectorT& dst )
+	{
+		dst.resize( src.size() );
+		for ( size_t i=0; i<src.size(); ++i )
+		{
+			if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+				dst[i] = src[i];
+			else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+				dst[i] = src[i];
+			else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+				dst[i] = src[i];
+			else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+				dst[i] = src[i];
+			else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				ElemTypeT::copy( src, dst );
+			else
+				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+		}
+	}
+} // namespace impl
+
 #if 0
 class VectorOfStructBody
 {
