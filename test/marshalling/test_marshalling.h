@@ -589,11 +589,23 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 				if ( addr.size() > offset + 1 )
 				{
 					m::impl::publishableParseLeafeStructBegin( parser );
-					publishable_STRUCT_SIZE::parse( parser, t.Size );
+					if constexpr( has_prenotifier_for_Size || has_postnotifier_for_Size || reportChanges )
+					{
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+						if constexpr( has_postnotifier_for_Size )
+						t.notifyAfter_Size();
+					changed = changed || changedCurrent;
+					}
+					else
+					{
+						publishable_STRUCT_SIZE::parse( parser, t.Size );
+					}
 					m::impl::publishableParseLeafeStructEnd( parser );
 				}
 				else
-					publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
+				{
+						publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
+				}
 				break;
 			default:
 				throw std::exception(); // unexpected
