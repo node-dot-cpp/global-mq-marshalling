@@ -604,7 +604,6 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 				changed = true;
 			}
 		}
-		}
 		else
 			publishable_STRUCT_SIZE::parse( parser, t.Size );
 		m::impl::parsePublishableStructEnd( parser );
@@ -651,25 +650,36 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
 			case 1:
-				if ( addr.size() > offset + 1 )
+				if ( addr.size() > offset + 1 ) // let chiled continue parsing
 				{
 					m::impl::publishableParseLeafeStructBegin( parser );
-					if constexpr( has_prenotifier_for_Size || has_postnotifier_for_Size || reportChanges )
+					if constexpr( has_update_notifier_for_Size )
+					{
+						decltype(T::Size) temp_Size;
+						publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+						if ( changedCurrent )
+						{
+							if constexpr( has_void_update_notifier_for_Size )
+								t.notifyUpdated_Size();
+							if constexpr( has_update_notifier_for_Size )
+								t.notifyUpdated_Size( temp_Size );
+							changed = true;
+						}
+					}
+					else if constexpr( has_void_update_notifier_for_Size || reportChanges )
 					{
 						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-					if constexpr( has_postnotifier_for_Size )
-						t.notifyAfter_Size();
-					changed = changed || changedCurrent;
+						if ( changedCurrent )
+						{
+							if constexpr( has_void_update_notifier_for_Size )
+								t.notifyUpdated_Size();
+							changed = true;
+						}
 					}
-					else
+					else // we have to parse changes of this child
 					{
-					publishable_STRUCT_SIZE::parse( parser, t.Size );
 					}
-					m::impl::publishableParseLeafeStructEnd( parser );
-				}
-				else
-				{
-						publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
 				}
 				break;
 			default:
