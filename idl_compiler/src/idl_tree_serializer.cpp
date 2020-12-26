@@ -446,6 +446,19 @@ void collectVectorMemberNamesFromPublishableObjects( vector<unique_ptr<Composite
 
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 {
+	/* Short summary:
+		has_void_update_notifier_call_for_%s            notifyUpdated_%s()
+		has_update_notifier_call_for_%s                 notifyUpdated_%s(std::declval<NodeT>())
+		// for vectors
+		has_element_updated_void_notifier_call_for_%s   notifyElementUpdated_%s()
+		has_element_updated_notifier_call_for_%s        notifyElementUpdated_%s(std::declval<index_type_for_array_notifiers>()) }
+		has_full_element_updated_notifier_call_for_%s   notifyElementUpdated_%s(std::declval<index_type_for_array_notifiers>(), std::declval<NodeT>())
+		has_void_insert_notifier_call_for_%s            notifyInserted_%s() }
+		has_insert_notifier_call_for_%s                 notifyInserted_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }
+		has_void_erased_notifier_call_for_%s            notifyErased_%s() }
+		has_erased_notifier_call_for_%s                 notifyErased_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; }
+		has_erased_notifier_call_for_%s                 notifyErased_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<NodeT>()) }	
+	*/
 	set<string> names;
 	collectMemberNamesFromPublishableObjects( root.publishables, names );
 	collectMemberNamesFromPublishableObjects( root.structs, names );
