@@ -428,25 +428,81 @@ void collectMemberNamesFromPublishableObjects( vector<unique_ptr<CompositeType>>
 	}
 }
 
+void collectVectorMemberNamesFromPublishableObjects( vector<unique_ptr<CompositeType>> &structs, set<string>& names )
+{
+	for ( auto& s : structs )
+	{
+		assert( s != nullptr );
+		assert( s->type == CompositeType::structure || s->type == CompositeType::publishable );
+		if ( s->type == CompositeType::publishable || ( s->type == CompositeType::structure && s->isStruct4Publishing ) )
+			for ( auto& member : s->members )
+			{
+				assert( member != nullptr );
+				if ( member->type.kind == MessageParameterType::KIND::VECTOR )
+					names.insert( member->name );
+			}
+	}
+}
+
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 {
 	set<string> names;
 	collectMemberNamesFromPublishableObjects( root.publishables, names );
 	collectMemberNamesFromPublishableObjects( root.structs, names );
+	set<string> namesOfVectors;
+	collectVectorMemberNamesFromPublishableObjects( root.publishables, namesOfVectors );
+	collectVectorMemberNamesFromPublishableObjects( root.structs, namesOfVectors );
 
 	fprintf( header, "// member update notifier presence checks\n" );
+	fprintf( header, "using index_type_for_array_notifiers = size_t&;\n" );
 	for ( auto& name : names )
 	{
 		fprintf( header, 
-			"template<typename T> concept has_prenotifier_call_for_%s = requires(T t) { { t.notifyBefore_%s() }; };\n",
-//			"template<typename StateT, typename NodeT> concept has_prenotifier_call_for_%s = requires { { std::declval<StateT>().notifyBefore_%s(std::declval<NodeT>()) }; };\n",
+			"template<typename T> concept has_void_update_notifier_call_for_%s = requires(T t) { { t.notifyUpdated_%s() }; };\n",
 			name.c_str(), name.c_str()
 		);
 		fprintf( header, 
-			"template<typename T> concept has_postnotifier_call_for_%s = requires(T t) { { t.notifyAfter_%s() }; };\n",
-//			"template<typename StateT, typename NodeT> concept has_postnotifier_call_for_%s = requires { { std::declval<StateT>().notifyAfter_%s(std::declval<NodeT>()) }; };\n",
+			"template<typename StateT, typename NodeT> concept has_update_notifier_call_for_%s = requires { { std::declval<StateT>().notifyUpdated_%s(std::declval<NodeT>()) }; };\n",
 			name.c_str(), name.c_str()
 		);
+
+		if ( namesOfVectors.find( name ) != namesOfVectors.end() )
+		{
+			fprintf( header, 
+				"template<typename T> concept has_element_updated_void_notifier_call_for_%s = requires(T t) { { t.notifyElementUpdated_%s() }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT> concept has_element_updated_notifier_call_for_%s = requires { { std::declval<StateT>().notifyElementUpdated_%s(std::declval<index_type_for_array_notifiers>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename NodeT> concept has_full_element_updated_notifier_call_for_%s = requires { { std::declval<StateT>().notifyElementUpdated_%s(std::declval<index_type_for_array_notifiers>(), std::declval<NodeT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+
+			fprintf( header, 
+				"template<typename T> concept has_void_insert_notifier_call_for_%s = requires(T t) { { t.notifyInserted_%s() }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT> concept has_insert_notifier_call_for_%s = requires { { std::declval<StateT>().notifyInserted_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+
+			fprintf( header, 
+				"template<typename T> concept has_void_erased_notifier_call_for_%s = requires(T t) { { t.notifyErased_%s() }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT> concept has_erased_notifier_call_for_%s = requires { { std::declval<StateT>().notifyErased_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename NodeT> concept has_erased_notifier_call_for_%s = requires { { std::declval<StateT>().notifyErased_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<NodeT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+		}
 	}
 	fprintf( header, "\n" );
 }
