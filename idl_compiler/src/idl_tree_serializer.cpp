@@ -539,7 +539,6 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		{
 			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 			impl_GeneratePublishableStructWrapper4Set( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-			impl_GeneratePublishableStructCopyFn( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 		}
 	}
 

@@ -650,7 +650,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
 			case 1:
-				if ( addr.size() > offset + 1 ) // let chiled continue parsing
+				if ( addr.size() > offset + 1 ) // let child continue parsing
 				{
 					m::impl::publishableParseLeafeStructBegin( parser );
 					if constexpr( has_update_notifier_for_Size )
@@ -677,7 +677,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 							changed = true;
 						}
 					}
-					else // we have to parse changes of this child
+					else // we have to parse and apply changes of this child
 					{
 					}
 				}
@@ -692,7 +692,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
 		dst.ID = src.ID;
-		Publishable_CharacterParam_Copier::copy( src.Size, dst.Size );
+		publishable_STRUCT_SIZE::copy( src.Size, dst.Size );
 	}
 };
 
@@ -1695,12 +1695,6 @@ public:
 	}
 };
 
-	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
-		dst.X = src.X;
-		dst.Y = src.Y;
-		dst.Z = src.Z;
-	}
 template<class T>
 class POINT3DREAL_RefWrapper
 {
@@ -1759,12 +1753,6 @@ public:
 	}
 };
 
-	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
-		dst.X = src.X;
-		dst.Y = src.Y;
-		dst.Z = src.Z;
-	}
 template<class T>
 class CharacterParam_RefWrapper
 {
@@ -1815,11 +1803,6 @@ public:
 	auto get4set_Size() { return SIZE_RefWrapper4Set<decltype(T::Size), RootT>(t.Size, *this, address, 1); }
 };
 
-	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
-		dst.ID = src.ID;
-		Publishable_CharacterParam_Copier::copy( src.Size, dst.Size );
-	}
 //**********************************************************************
 // STRUCT "CharacterParam" Targets: JSON (2 parameters)
 // 1. INTEGER ID (REQUIRED)
