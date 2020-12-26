@@ -67,6 +67,7 @@ void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeT
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s );
+void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
 
 
