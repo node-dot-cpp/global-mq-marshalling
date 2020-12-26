@@ -161,11 +161,27 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 	*	has_erased_notifier_call3_for_%s                notifyErased_%s<T, MemberT>(index_type_for_array_notifiers, index_type_for_array_notifiers, MemberT>()	
 	*/
 	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
-	for ( auto& it : s.members )
+	for ( auto& member : s.members )
 	{
-		assert( it != nullptr );
-		fprintf( header, "%sstatic constexpr bool has_prenotifier_for_%s = has_prenotifier_call_for_%s<T>;\n", offset, it->name.c_str(), it->name.c_str() );
-		fprintf( header, "%sstatic constexpr bool has_postnotifier_for_%s = has_postnotifier_call_for_%s<T>;\n", offset, it->name.c_str(), it->name.c_str() );
+		assert( member != nullptr );
+		fprintf( header, "%sstatic constexpr bool has_void_update_notifier_for_%s = has_void_update_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+		fprintf( header, "%sstatic constexpr bool has_update_notifier_for_%s = has_update_notifier_call_for_%s<T, decltype(T::%s)>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+		/*if ( member->type.kind == MessageParameterType::KIND::VECTOR )
+		{
+			fprintf( header, "%sstatic constexpr bool has_element_updated_void_notifier_for_%s = has_element_updated_void_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_element_updated_notifier_for_%s = has_element_updated_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%susing %sT = decltype(T::%s);\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_full_element_updated_notifier_for_%s = has_full_element_updated_notifier_call_for_%s<T, %sT&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_void_insert_notifier_for_%s = has_void_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_insert_notifier_for_%s = has_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_void_erased_notifier_for_%s = has_void_erased_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_erased_notifier2_for_%s = has_erased_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_erased_notifier3_for_%s = has_erased_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+		}
+		else*/
+			fprintf( header, "%sstatic constexpr bool has_any_notifier_for_%s = has_void_update_notifier_for_%s || has_update_notifier_for_%s;\n", 
+				offset, member->name.c_str(), member->name.c_str(), member->name.c_str()
+			);
 	}
 	fprintf( header, "\n" );
 }
@@ -324,9 +340,9 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			{
 				fprintf( header, "\t\t\t\tassert( addr.size() == offset + 1 );\n" );
 				fprintf( header, 
-					"\t\t\t\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s || reportChanges )\n"
+					"\t\t\t\t\tif constexpr( has_any_notifier_for_%s|| reportChanges )\n"
 					"\t\t\t\t\t{\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tdecltype(T::%s) newVal;\n"
@@ -337,22 +353,27 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\tbool currentChanged = newVal != t.%s;\n"
 					"\t\t\t\t\t\tchanged = currentChanged || changed;\n"
 					"\t\t\t\t\t\tif ( currentChanged )\n"
-					"\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif constexpr ( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\tt.notifyBefore_%s();\n"
+					"\t\t\t\t\t\t\tif constexpr ( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( t.%s );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
 					"\t\t\t\t\t\t\tt.%s = newVal;\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyAfter_%s();\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
-					"\t\t\t\t\telse\n",
-					member.name.c_str(), member.name.c_str()
+					"\t\t\t\t\telse\n"
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
@@ -468,9 +489,9 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
 				fprintf( header, 
-					"\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s || reportChanges )\n"
+					"\t\tif constexpr( has_any_notifier_for_%s || reportChanges )\n"
 					"\t\t{\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\tdecltype(T::%s) newVal;\n"
@@ -482,22 +503,27 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					"\t\t\tbool currentChanged = newVal != t.%s;\n"
 					"\t\t\tchanged = currentChanged || changed;\n"
 					"\t\t\tif ( currentChanged )\n"
-					"\t\t\t{\n"
-					"\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
+					"\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\tif constexpr ( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\tt.notifyUpdated_%s();\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\tt.notifyBefore_%s();\n"
+					"\t\t\t\tif constexpr ( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\tt.notifyUpdated_%s( t.%s );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
 					"\t\t\t\tt.%s = newVal;\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
-					"\t\t\t\t\tt.notifyAfter_%s();\n"
 					"\t\t\t}\n"
 					"\t\t}\n"
-					"\t\telse\n",
-					member.name.c_str(), member.name.c_str()
+					"\t\telse\n"
 				);
 				fprintf( header, 
 					"\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
@@ -762,9 +788,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
 				);
 				fprintf( header, 
-					"\t\t\t\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s )\n"
+					"\t\t\t\t\tif constexpr( has_any_notifier_for_%s )\n"
 					"\t\t\t\t\t{\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tdecltype(T::%s) newVal;\n"
@@ -773,22 +799,27 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( newVal != t.%s )\n"
-					"\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\tif constexpr ( has_prenotifier_for_%s )\n",
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif constexpr ( has_void_update_notifier_call_for_%s )\n"
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\tt.notifyBefore_%s();\n"
+					"\t\t\t\t\t\t\tif constexpr ( has_update_notifier_call_for_%s )\n"
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( t.%s );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
 					"\t\t\t\t\t\t\tt.%s = newVal;\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr ( has_postnotifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyAfter_%s();\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
-					"\t\t\t\t\telse\n",
-					member.name.c_str(), member.name.c_str()
+					"\t\t\t\t\telse\n"
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",

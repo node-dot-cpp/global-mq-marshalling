@@ -122,24 +122,41 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 
 
 // member update notifier presence checks
-template<typename T> concept has_prenotifier_call_for_ID = requires(T t) { { t.notifyBefore_ID() }; };
-template<typename T> concept has_postnotifier_call_for_ID = requires(T t) { { t.notifyAfter_ID() }; };
-template<typename T> concept has_prenotifier_call_for_Size = requires(T t) { { t.notifyBefore_Size() }; };
-template<typename T> concept has_postnotifier_call_for_Size = requires(T t) { { t.notifyAfter_Size() }; };
-template<typename T> concept has_prenotifier_call_for_X = requires(T t) { { t.notifyBefore_X() }; };
-template<typename T> concept has_postnotifier_call_for_X = requires(T t) { { t.notifyAfter_X() }; };
-template<typename T> concept has_prenotifier_call_for_Y = requires(T t) { { t.notifyBefore_Y() }; };
-template<typename T> concept has_postnotifier_call_for_Y = requires(T t) { { t.notifyAfter_Y() }; };
-template<typename T> concept has_prenotifier_call_for_Z = requires(T t) { { t.notifyBefore_Z() }; };
-template<typename T> concept has_postnotifier_call_for_Z = requires(T t) { { t.notifyAfter_Z() }; };
-template<typename T> concept has_prenotifier_call_for_chp = requires(T t) { { t.notifyBefore_chp() }; };
-template<typename T> concept has_postnotifier_call_for_chp = requires(T t) { { t.notifyAfter_chp() }; };
-template<typename T> concept has_prenotifier_call_for_size = requires(T t) { { t.notifyBefore_size() }; };
-template<typename T> concept has_postnotifier_call_for_size = requires(T t) { { t.notifyAfter_size() }; };
-template<typename T> concept has_prenotifier_call_for_vector_of_int = requires(T t) { { t.notifyBefore_vector_of_int() }; };
-template<typename T> concept has_postnotifier_call_for_vector_of_int = requires(T t) { { t.notifyAfter_vector_of_int() }; };
-template<typename T> concept has_prenotifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyBefore_vector_struct_point3dreal() }; };
-template<typename T> concept has_postnotifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyAfter_vector_struct_point3dreal() }; };
+using index_type_for_array_notifiers = size_t&;
+template<typename T> concept has_void_update_notifier_call_for_ID = requires(T t) { { t.notifyUpdated_ID() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_ID = requires { { std::declval<StateT>().notifyUpdated_ID(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_Size = requires(T t) { { t.notifyUpdated_Size() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_Size = requires { { std::declval<StateT>().notifyUpdated_Size(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_X = requires(T t) { { t.notifyUpdated_X() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_X = requires { { std::declval<StateT>().notifyUpdated_X(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_Y = requires(T t) { { t.notifyUpdated_Y() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_Y = requires { { std::declval<StateT>().notifyUpdated_Y(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_Z = requires(T t) { { t.notifyUpdated_Z() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_Z = requires { { std::declval<StateT>().notifyUpdated_Z(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_chp = requires(T t) { { t.notifyUpdated_chp() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_chp = requires { { std::declval<StateT>().notifyUpdated_chp(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_size = requires(T t) { { t.notifyUpdated_size() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_size = requires { { std::declval<StateT>().notifyUpdated_size(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_vector_of_int = requires(T t) { { t.notifyUpdated_vector_of_int() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_vector_of_int = requires { { std::declval<StateT>().notifyUpdated_vector_of_int(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_vector_of_int = requires(T t) { { t.notifyElementUpdated_vector_of_int() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_vector_of_int = requires { { std::declval<StateT>().notifyElementUpdated_vector_of_int(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_vector_of_int = requires { { std::declval<StateT>().notifyElementUpdated_vector_of_int(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_vector_of_int = requires(T t) { { t.notifyInserted_vector_of_int() }; };
+template<typename StateT> concept has_insert_notifier_call_for_vector_of_int = requires { { std::declval<StateT>().notifyInserted_vector_of_int(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename T> concept has_void_erased_notifier_call_for_vector_of_int = requires(T t) { { t.notifyErased_vector_of_int() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_vector_of_int = requires { { std::declval<StateT>().notifyErased_vector_of_int(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vector_of_int = requires { { std::declval<StateT>().notifyErased_vector_of_int(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyUpdated_vector_struct_point3dreal() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyUpdated_vector_struct_point3dreal(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyElementUpdated_vector_struct_point3dreal() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyElementUpdated_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyElementUpdated_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyInserted_vector_struct_point3dreal() }; };
+template<typename StateT> concept has_insert_notifier_call_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyInserted_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename T> concept has_void_erased_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyErased_vector_struct_point3dreal() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
 
 struct publishable_STRUCT_CharacterParam;
 template<class T> class CharacterParam_RefWrapper;
@@ -172,14 +189,17 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_void_update_notifier_for_X = has_void_update_notifier_call_for_X<T>;
+		static constexpr bool has_update_notifier_for_X = has_update_notifier_call_for_X<T, decltype(T::X)>;
+		static constexpr bool has_any_notifier_for_X = has_void_update_notifier_for_X || has_update_notifier_for_X;
+		static constexpr bool has_void_update_notifier_for_Y = has_void_update_notifier_call_for_Y<T>;
+		static constexpr bool has_update_notifier_for_Y = has_update_notifier_call_for_Y<T, decltype(T::Y)>;
+		static constexpr bool has_any_notifier_for_Y = has_void_update_notifier_for_Y || has_update_notifier_for_Y;
+		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
+		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
+		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 
-		if constexpr( has_prenotifier_for_X || has_postnotifier_for_X || reportChanges )
+		if constexpr( has_any_notifier_for_X || reportChanges )
 		{
 			decltype(T::X) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
@@ -187,17 +207,17 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_X )
-					t.notifyBefore_X();
+				if constexpr ( has_void_update_notifier_for_X )
+					t.notifyUpdated_X();
+				if constexpr ( has_update_notifier_for_X )
+					t.notifyUpdated_X( t.X );
 				t.X = newVal;
-				if constexpr ( has_postnotifier_for_X )
-					t.notifyAfter_X();
 			}
 		}
 		else
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-		if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y || reportChanges )
+		if constexpr( has_any_notifier_for_Y || reportChanges )
 		{
 			decltype(T::Y) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
@@ -205,17 +225,17 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_Y )
-					t.notifyBefore_Y();
+				if constexpr ( has_void_update_notifier_for_Y )
+					t.notifyUpdated_Y();
+				if constexpr ( has_update_notifier_for_Y )
+					t.notifyUpdated_Y( t.Y );
 				t.Y = newVal;
-				if constexpr ( has_postnotifier_for_Y )
-					t.notifyAfter_Y();
 			}
 		}
 		else
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-		if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z || reportChanges )
+		if constexpr( has_any_notifier_for_Z || reportChanges )
 		{
 			decltype(T::Z) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
@@ -223,11 +243,11 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_Z )
-					t.notifyBefore_Z();
+				if constexpr ( has_void_update_notifier_for_Z )
+					t.notifyUpdated_Z();
+				if constexpr ( has_update_notifier_for_Z )
+					t.notifyUpdated_Z( t.Z );
 				t.Z = newVal;
-				if constexpr ( has_postnotifier_for_Z )
-					t.notifyAfter_Z();
 			}
 		}
 		else
@@ -245,19 +265,22 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_void_update_notifier_for_X = has_void_update_notifier_call_for_X<T>;
+		static constexpr bool has_update_notifier_for_X = has_update_notifier_call_for_X<T, decltype(T::X)>;
+		static constexpr bool has_any_notifier_for_X = has_void_update_notifier_for_X || has_update_notifier_for_X;
+		static constexpr bool has_void_update_notifier_for_Y = has_void_update_notifier_call_for_Y<T>;
+		static constexpr bool has_update_notifier_for_Y = has_update_notifier_call_for_Y<T, decltype(T::Y)>;
+		static constexpr bool has_any_notifier_for_Y = has_void_update_notifier_for_Y || has_update_notifier_for_Y;
+		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
+		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
+		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X || reportChanges )
+					if constexpr( has_any_notifier_for_X|| reportChanges )
 					{
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
@@ -265,11 +288,11 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_X )
-								t.notifyBefore_X();
+							if constexpr ( has_void_update_notifier_for_X )
+								t.notifyUpdated_X();
+							if constexpr ( has_update_notifier_for_X )
+								t.notifyUpdated_X( t.X );
 							t.X = newVal;
-							if constexpr ( has_postnotifier_for_X )
-								t.notifyAfter_X();
 						}
 					}
 					else
@@ -277,7 +300,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 				break;
 			case 1:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y || reportChanges )
+					if constexpr( has_any_notifier_for_Y|| reportChanges )
 					{
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
@@ -285,11 +308,11 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_Y )
-								t.notifyBefore_Y();
+							if constexpr ( has_void_update_notifier_for_Y )
+								t.notifyUpdated_Y();
+							if constexpr ( has_update_notifier_for_Y )
+								t.notifyUpdated_Y( t.Y );
 							t.Y = newVal;
-							if constexpr ( has_postnotifier_for_Y )
-								t.notifyAfter_Y();
 						}
 					}
 					else
@@ -297,7 +320,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 				break;
 			case 2:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z || reportChanges )
+					if constexpr( has_any_notifier_for_Z|| reportChanges )
 					{
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
@@ -305,11 +328,11 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_Z )
-								t.notifyBefore_Z();
+							if constexpr ( has_void_update_notifier_for_Z )
+								t.notifyUpdated_Z();
+							if constexpr ( has_update_notifier_for_Z )
+								t.notifyUpdated_Z( t.Z );
 							t.Z = newVal;
-							if constexpr ( has_postnotifier_for_Z )
-								t.notifyAfter_Z();
 						}
 					}
 					else
@@ -341,14 +364,17 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_void_update_notifier_for_X = has_void_update_notifier_call_for_X<T>;
+		static constexpr bool has_update_notifier_for_X = has_update_notifier_call_for_X<T, decltype(T::X)>;
+		static constexpr bool has_any_notifier_for_X = has_void_update_notifier_for_X || has_update_notifier_for_X;
+		static constexpr bool has_void_update_notifier_for_Y = has_void_update_notifier_call_for_Y<T>;
+		static constexpr bool has_update_notifier_for_Y = has_update_notifier_call_for_Y<T, decltype(T::Y)>;
+		static constexpr bool has_any_notifier_for_Y = has_void_update_notifier_for_Y || has_update_notifier_for_Y;
+		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
+		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
+		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 
-		if constexpr( has_prenotifier_for_X || has_postnotifier_for_X || reportChanges )
+		if constexpr( has_any_notifier_for_X || reportChanges )
 		{
 			decltype(T::X) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
@@ -356,17 +382,17 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_X )
-					t.notifyBefore_X();
+				if constexpr ( has_void_update_notifier_for_X )
+					t.notifyUpdated_X();
+				if constexpr ( has_update_notifier_for_X )
+					t.notifyUpdated_X( t.X );
 				t.X = newVal;
-				if constexpr ( has_postnotifier_for_X )
-					t.notifyAfter_X();
 			}
 		}
 		else
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-		if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y || reportChanges )
+		if constexpr( has_any_notifier_for_Y || reportChanges )
 		{
 			decltype(T::Y) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
@@ -374,17 +400,17 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_Y )
-					t.notifyBefore_Y();
+				if constexpr ( has_void_update_notifier_for_Y )
+					t.notifyUpdated_Y();
+				if constexpr ( has_update_notifier_for_Y )
+					t.notifyUpdated_Y( t.Y );
 				t.Y = newVal;
-				if constexpr ( has_postnotifier_for_Y )
-					t.notifyAfter_Y();
 			}
 		}
 		else
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-		if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z || reportChanges )
+		if constexpr( has_any_notifier_for_Z || reportChanges )
 		{
 			decltype(T::Z) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
@@ -392,11 +418,11 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_Z )
-					t.notifyBefore_Z();
+				if constexpr ( has_void_update_notifier_for_Z )
+					t.notifyUpdated_Z();
+				if constexpr ( has_update_notifier_for_Z )
+					t.notifyUpdated_Z( t.Z );
 				t.Z = newVal;
-				if constexpr ( has_postnotifier_for_Z )
-					t.notifyAfter_Z();
 			}
 		}
 		else
@@ -414,19 +440,22 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_prenotifier_for_X = has_prenotifier_call_for_X<T>;
-		static constexpr bool has_postnotifier_for_X = has_postnotifier_call_for_X<T>;
-		static constexpr bool has_prenotifier_for_Y = has_prenotifier_call_for_Y<T>;
-		static constexpr bool has_postnotifier_for_Y = has_postnotifier_call_for_Y<T>;
-		static constexpr bool has_prenotifier_for_Z = has_prenotifier_call_for_Z<T>;
-		static constexpr bool has_postnotifier_for_Z = has_postnotifier_call_for_Z<T>;
+		static constexpr bool has_void_update_notifier_for_X = has_void_update_notifier_call_for_X<T>;
+		static constexpr bool has_update_notifier_for_X = has_update_notifier_call_for_X<T, decltype(T::X)>;
+		static constexpr bool has_any_notifier_for_X = has_void_update_notifier_for_X || has_update_notifier_for_X;
+		static constexpr bool has_void_update_notifier_for_Y = has_void_update_notifier_call_for_Y<T>;
+		static constexpr bool has_update_notifier_for_Y = has_update_notifier_call_for_Y<T, decltype(T::Y)>;
+		static constexpr bool has_any_notifier_for_Y = has_void_update_notifier_for_Y || has_update_notifier_for_Y;
+		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
+		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
+		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_X || has_postnotifier_for_X || reportChanges )
+					if constexpr( has_any_notifier_for_X|| reportChanges )
 					{
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
@@ -434,11 +463,11 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_X )
-								t.notifyBefore_X();
+							if constexpr ( has_void_update_notifier_for_X )
+								t.notifyUpdated_X();
+							if constexpr ( has_update_notifier_for_X )
+								t.notifyUpdated_X( t.X );
 							t.X = newVal;
-							if constexpr ( has_postnotifier_for_X )
-								t.notifyAfter_X();
 						}
 					}
 					else
@@ -446,7 +475,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 				break;
 			case 1:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Y || has_postnotifier_for_Y || reportChanges )
+					if constexpr( has_any_notifier_for_Y|| reportChanges )
 					{
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
@@ -454,11 +483,11 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_Y )
-								t.notifyBefore_Y();
+							if constexpr ( has_void_update_notifier_for_Y )
+								t.notifyUpdated_Y();
+							if constexpr ( has_update_notifier_for_Y )
+								t.notifyUpdated_Y( t.Y );
 							t.Y = newVal;
-							if constexpr ( has_postnotifier_for_Y )
-								t.notifyAfter_Y();
 						}
 					}
 					else
@@ -466,7 +495,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 				break;
 			case 2:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_Z || has_postnotifier_for_Z || reportChanges )
+					if constexpr( has_any_notifier_for_Z|| reportChanges )
 					{
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
@@ -474,11 +503,11 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_Z )
-								t.notifyBefore_Z();
+							if constexpr ( has_void_update_notifier_for_Z )
+								t.notifyUpdated_Z();
+							if constexpr ( has_update_notifier_for_Z )
+								t.notifyUpdated_Z( t.Z );
 							t.Z = newVal;
-							if constexpr ( has_postnotifier_for_Z )
-								t.notifyAfter_Z();
 						}
 					}
 					else
@@ -511,12 +540,14 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
-		static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
-		static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
-		static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
+		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+		static constexpr bool has_void_update_notifier_for_Size = has_void_update_notifier_call_for_Size<T>;
+		static constexpr bool has_update_notifier_for_Size = has_update_notifier_call_for_Size<T, decltype(T::Size)>;
+		static constexpr bool has_any_notifier_for_Size = has_void_update_notifier_for_Size || has_update_notifier_for_Size;
 
-		if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID || reportChanges )
+		if constexpr( has_any_notifier_for_ID || reportChanges )
 		{
 			decltype(T::ID) newVal;
 			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &newVal, "ID" );
@@ -524,11 +555,11 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
-				if constexpr ( has_prenotifier_for_ID )
-					t.notifyBefore_ID();
+				if constexpr ( has_void_update_notifier_for_ID )
+					t.notifyUpdated_ID();
+				if constexpr ( has_update_notifier_for_ID )
+					t.notifyUpdated_ID( t.ID );
 				t.ID = newVal;
-				if constexpr ( has_postnotifier_for_ID )
-					t.notifyAfter_ID();
 			}
 		}
 		else
@@ -557,17 +588,19 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
-		static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
-		static constexpr bool has_prenotifier_for_Size = has_prenotifier_call_for_Size<T>;
-		static constexpr bool has_postnotifier_for_Size = has_postnotifier_call_for_Size<T>;
+		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+		static constexpr bool has_void_update_notifier_for_Size = has_void_update_notifier_call_for_Size<T>;
+		static constexpr bool has_update_notifier_for_Size = has_update_notifier_call_for_Size<T, decltype(T::Size)>;
+		static constexpr bool has_any_notifier_for_Size = has_void_update_notifier_for_Size || has_update_notifier_for_Size;
 
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
 			case 0:
 				assert( addr.size() == offset + 1 );
-					if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID || reportChanges )
+					if constexpr( has_any_notifier_for_ID|| reportChanges )
 					{
 						decltype(T::ID) newVal;
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
@@ -575,11 +608,11 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
-							if constexpr ( has_prenotifier_for_ID )
-								t.notifyBefore_ID();
+							if constexpr ( has_void_update_notifier_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_for_ID )
+								t.notifyUpdated_ID( t.ID );
 							t.ID = newVal;
-							if constexpr ( has_postnotifier_for_ID )
-								t.notifyAfter_ID();
 						}
 					}
 					else
@@ -1403,16 +1436,21 @@ class publishable_sample_Wrapper
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
 	static_assert( has_vector_struct_point3dreal, "type T must have member T::vector_struct_point3dreal of a type corresponding to IDL type VECTOR<STRUCT POINT3DREAL>" );
 
-	static constexpr bool has_prenotifier_for_ID = has_prenotifier_call_for_ID<T>;
-	static constexpr bool has_postnotifier_for_ID = has_postnotifier_call_for_ID<T>;
-	static constexpr bool has_prenotifier_for_size = has_prenotifier_call_for_size<T>;
-	static constexpr bool has_postnotifier_for_size = has_postnotifier_call_for_size<T>;
-	static constexpr bool has_prenotifier_for_chp = has_prenotifier_call_for_chp<T>;
-	static constexpr bool has_postnotifier_for_chp = has_postnotifier_call_for_chp<T>;
-	static constexpr bool has_prenotifier_for_vector_of_int = has_prenotifier_call_for_vector_of_int<T>;
-	static constexpr bool has_postnotifier_for_vector_of_int = has_postnotifier_call_for_vector_of_int<T>;
-	static constexpr bool has_prenotifier_for_vector_struct_point3dreal = has_prenotifier_call_for_vector_struct_point3dreal<T>;
-	static constexpr bool has_postnotifier_for_vector_struct_point3dreal = has_postnotifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+	static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+	static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+	static constexpr bool has_void_update_notifier_for_size = has_void_update_notifier_call_for_size<T>;
+	static constexpr bool has_update_notifier_for_size = has_update_notifier_call_for_size<T, decltype(T::size)>;
+	static constexpr bool has_any_notifier_for_size = has_void_update_notifier_for_size || has_update_notifier_for_size;
+	static constexpr bool has_void_update_notifier_for_chp = has_void_update_notifier_call_for_chp<T>;
+	static constexpr bool has_update_notifier_for_chp = has_update_notifier_call_for_chp<T, decltype(T::chp)>;
+	static constexpr bool has_any_notifier_for_chp = has_void_update_notifier_for_chp || has_update_notifier_for_chp;
+	static constexpr bool has_void_update_notifier_for_vector_of_int = has_void_update_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_update_notifier_for_vector_of_int = has_update_notifier_call_for_vector_of_int<T, decltype(T::vector_of_int)>;
+	static constexpr bool has_any_notifier_for_vector_of_int = has_void_update_notifier_for_vector_of_int || has_update_notifier_for_vector_of_int;
+	static constexpr bool has_void_update_notifier_for_vector_struct_point3dreal = has_void_update_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_update_notifier_for_vector_struct_point3dreal = has_update_notifier_call_for_vector_struct_point3dreal<T, decltype(T::vector_struct_point3dreal)>;
+	static constexpr bool has_any_notifier_for_vector_struct_point3dreal = has_void_update_notifier_for_vector_struct_point3dreal || has_update_notifier_for_vector_struct_point3dreal;
 
 
 public:
@@ -1439,17 +1477,17 @@ public:
 				case 0:
 					if ( addr.size() > 1 )
 						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_prenotifier_for_ID || has_postnotifier_for_ID )
+					if constexpr( has_any_notifier_for_ID )
 					{
 						decltype(T::ID) newVal;
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
 						if ( newVal != t.ID )
 						{
-							if constexpr ( has_prenotifier_for_ID )
-								t.notifyBefore_ID();
+							if constexpr ( has_void_update_notifier_call_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_call_for_ID )
+								t.notifyUpdated_ID( t.ID );
 							t.ID = newVal;
-							if constexpr ( has_postnotifier_for_ID )
-								t.notifyAfter_ID();
 						}
 					}
 					else
