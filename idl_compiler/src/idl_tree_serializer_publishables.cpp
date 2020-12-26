@@ -533,39 +533,69 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				break;
 			}
 			case  MessageParameterType::KIND::STRUCT:
-				/*fprintf( header, "\t\tif ( addr.size() == offset + 1 )\n" );
-				fprintf( header, "\t\t{\n" );
-				fprintf( header, "\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
-				fprintf( header, "\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
-				fprintf( header, "\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
-				fprintf( header, "\t\t}\n" );
-				fprintf( header, "\t\telse\n" );
-				fprintf( header, "\t\t{\n" );
-				fprintf( header, "\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
-				fprintf( header, "\t\t}\n" );*/
-
 				fprintf( header, "\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+
 				fprintf( header, 
-					"\t\tif constexpr( has_prenotifier_for_%s || has_postnotifier_for_%s || reportChanges )\n"
+					"\t\tif constexpr( has_update_notifier_for_%s )\n"
 					"\t\t{\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, "\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, 
-					"\t\t\tif constexpr( has_postnotifier_for_%s )\n"
-					"\t\t\t\tt.notifyAfter_%s();\n",
-					member.name.c_str(), member.name.c_str()
+					member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\tchanged = changed || changedCurrent;\n"
+					"\t\t\tdecltype(T::%s) temp_%s;\n"
+					"\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", 
+					member.name.c_str(), member.name.c_str(), impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, "\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\tif ( changedCurrent )\n"
+					"\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\tt.notifyUpdated_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\tchanged = true;\n"
+					"\t\t\t}\n"
+					"\t\t}\n"
+				);
+				fprintf( header, 
+					"\t\telse if constexpr( has_void_update_notifier_for_%s || reportChanges )\n"
+					"\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, "\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\tif ( changedCurrent )\n"
+					"\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\tt.notifyUpdated_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\tchanged = true;\n"
+					"\t\t\t}\n"
+					"\t\t}\n"
+				);
+
+				fprintf( header, 
 					"\t\t}\n"
 					"\t\telse\n"
 				);
 				fprintf( header, "\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+
 				fprintf( header, "\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
@@ -633,6 +663,8 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	impl_generateParseFunctionForPublishableStruct( header, root, obj );
 	fprintf( header, "\n" );
 	impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
+	fprintf( header, "\n" );
+	impl_GeneratePublishableStructCopyFn( header, root, obj );
 
 	fprintf( header, "};\n\n" );
 }
@@ -715,27 +747,6 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			assert( false ); // not implemented (yet)
 	}
 	
-	if ( forRoot )
-	{
-		/*fprintf( header, 
-			"\t\t// NOTE: fake code below\n"
-			"\t\t// TODO: form respective message or register change otherwise\n"
-			"\t\tfmt::print( \"updating T::%s with value {};\\n\", val );\n",
-			param.name.c_str()
-		);*/
-	}
-	else
-	{
-		/*fprintf( header, 
-			"\t\t// NOTE: fake code below\n"
-			"\t\t// TODO: form respective message or register change otherwise\n"
-			"\t\tfmt::print( \"updating T::%s with value {}; path = [ \", val );\n"
-			"\t\tfor ( size_t i=0; i<address.size(); ++i )\n"
-			"\t\t\tfmt::print( \"{} \", address[i] );\n"
-			"\t\tfmt::print( \"] \\n\" );\n",
-			param.name.c_str()
-		);*/
-	}
 	fprintf( header, "\t}\n" );
 }
 
@@ -889,10 +900,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s )
 {
 	fprintf( header, 
-		"struct Publishable_%s_Copier {\n"
+//		"struct Publishable_%s_Copier {\n"
 		"\ttemplate<typename UserT>\n"
-		"\tstatic void copy(const UserT& src, UserT& dst) {\n",
-		s.name.c_str()
+		"\tstatic void copy(const UserT& src, UserT& dst) {\n"
 	);
 
 	for ( size_t i=0; i<s.members.size(); ++i )
@@ -944,7 +954,7 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 
 	fprintf( header, 
 		"\t}\n"
-		"};\n\n"
+//		"};\n\n"
 	);
 }
 

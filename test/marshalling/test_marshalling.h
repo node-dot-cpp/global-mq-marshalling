@@ -344,6 +344,13 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		if constexpr ( reportChanges )
 			return changed;
 	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.X = src.X;
+		dst.Y = src.Y;
+		dst.Z = src.Z;
+	}
 };
 
 struct publishable_STRUCT_POINT3DREAL : public impl::StructType
@@ -519,6 +526,13 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		if constexpr ( reportChanges )
 			return changed;
 	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.X = src.X;
+		dst.Y = src.Y;
+		dst.Z = src.Z;
+	}
 };
 
 struct publishable_STRUCT_CharacterParam : public impl::StructType
@@ -566,12 +580,30 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
 		m::impl::parsePublishableStructBegin( parser, "Size" );
-		if constexpr( has_prenotifier_for_Size || has_postnotifier_for_Size || reportChanges )
+		if constexpr( has_update_notifier_for_Size )
+		{
+			decltype(T::Size) temp_Size;
+			publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
+			bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+			if ( changedCurrent )
+			{
+				if constexpr( has_void_update_notifier_for_Size )
+					t.notifyUpdated_Size();
+				if constexpr( has_update_notifier_for_Size )
+					t.notifyUpdated_Size( temp_Size );
+				changed = true;
+			}
+		}
+		else if constexpr( has_void_update_notifier_for_Size || reportChanges )
 		{
 			bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-			if constexpr( has_postnotifier_for_Size )
-				t.notifyAfter_Size();
-			changed = changed || changedCurrent;
+			if ( changedCurrent )
+			{
+				if constexpr( has_void_update_notifier_for_Size )
+					t.notifyUpdated_Size();
+				changed = true;
+			}
+		}
 		}
 		else
 			publishable_STRUCT_SIZE::parse( parser, t.Size );
@@ -645,6 +677,12 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		}
 		if constexpr ( reportChanges )
 			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.ID = src.ID;
+		Publishable_CharacterParam_Copier::copy( src.Size, dst.Size );
 	}
 };
 
@@ -1647,15 +1685,12 @@ public:
 	}
 };
 
-struct Publishable_SIZE_Copier {
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
 		dst.X = src.X;
 		dst.Y = src.Y;
 		dst.Z = src.Z;
 	}
-};
-
 template<class T>
 class POINT3DREAL_RefWrapper
 {
@@ -1714,15 +1749,12 @@ public:
 	}
 };
 
-struct Publishable_POINT3DREAL_Copier {
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
 		dst.X = src.X;
 		dst.Y = src.Y;
 		dst.Z = src.Z;
 	}
-};
-
 template<class T>
 class CharacterParam_RefWrapper
 {
@@ -1773,14 +1805,11 @@ public:
 	auto get4set_Size() { return SIZE_RefWrapper4Set<decltype(T::Size), RootT>(t.Size, *this, address, 1); }
 };
 
-struct Publishable_CharacterParam_Copier {
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
 		dst.ID = src.ID;
 		Publishable_CharacterParam_Copier::copy( src.Size, dst.Size );
 	}
-};
-
 //**********************************************************************
 // STRUCT "CharacterParam" Targets: JSON (2 parameters)
 // 1. INTEGER ID (REQUIRED)
