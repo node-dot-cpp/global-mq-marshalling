@@ -315,6 +315,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		"\tstatic\n"
 		"\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
 		"\t{\n"
+		"\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" 
 		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
 		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
 		"\t\tbool changed = false;\n"
@@ -383,6 +384,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				break;
 			}
 			case  MessageParameterType::KIND::STRUCT:
+			{
 				fprintf( header, "\t\t\t\tif ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child\n" );
 				fprintf( header, "\t\t\t\t{\n" );
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
@@ -453,9 +455,6 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				fprintf( header, 
 					"\t\t\t\telse // let child continue parsing\n"
 					"\t\t\t\t{\n"
-					"\t\t\t\t\t//******************************************************************************************************************************************************************\n" 
-					"\t\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n",
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
 				);
 
 
@@ -523,6 +522,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
 				);
 				break;
+			}
 			case MessageParameterType::KIND::VECTOR:
 			{
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
@@ -577,6 +577,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		"\tstatic\n"
 		"\tRetT parse( ParserT& parser, T& t )\n"
 		"\t{\n"
+		"\t\t//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************\n" 
 		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
 		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
 		"\t\tbool changed = false;\n"
@@ -641,6 +642,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				break;
 			}
 			case  MessageParameterType::KIND::STRUCT:
+			{
 				fprintf( header, "\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 
 				fprintf( header, 
@@ -671,7 +673,8 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\tchanged = true;\n"
+					"\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\tchanged = true;\n"
 					"\t\t\t}\n"
 					"\t\t}\n"
 				);
@@ -693,7 +696,8 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\tchanged = true;\n"
+					"\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\tchanged = true;\n"
 					"\t\t\t}\n"
 					"\t\t}\n"
 					"\t\telse\n"
@@ -703,6 +707,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 
 				fprintf( header, "\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				break;
+			}
 			case MessageParameterType::KIND::VECTOR:
 			{
 				assert( member.type.messageIdx < root.structs.size() );
@@ -940,6 +945,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 	fprintf( header, 
 		"\ttemplate<typename ParserT>\n"
 		"\tvoid applyMessageWithUpdates(ParserT& parser) {\n"
+		"\t\t//****  ApplyUpdateMessageMemberFn  **************************************************************************************************************************************************************\n" 
 		"\t\tm::impl::parseStateUpdateMessageBegin( parser );\n"
 		"\t\tGMQ_COLL vector<size_t> addr;\n"
 		"\t\twhile( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )\n"
@@ -970,12 +976,12 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\tdecltype(T::%s) newVal;\n"
-					"\t\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &newVal );\n",
-					member.name.c_str(), member.name.c_str()
+					"\t\t\t\t\t\tdecltype(T::%s) oldVal = t.%s;\n"
+					"\t\t\t\t\t\tm::impl::publishableParseLeafeInteger<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\tif ( newVal != t.%s )\n"
+					"\t\t\t\t\t\tif ( oldVal != t.%s )\n"
 					"\t\t\t\t\t\t{\n",
 					member.name.c_str()
 				);
@@ -986,12 +992,8 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\tif constexpr ( has_update_notifier_call_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( t.%s );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tt.%s = newVal;\n",
-					member.name.c_str()
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( oldVal );\n",
+					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t}\n"
@@ -1004,19 +1006,124 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				);
 				break;
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 )\n" );
+			{
+fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 ) // we have to parse and apply changes of this child\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
-				fprintf( header, "\t\t\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
+				fprintf( header, "\t\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
+				fprintf( header, "\n" );
+
+				fprintf( header,
+					"\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n"
+					"\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", 
+					member.name.c_str(), member.name.c_str(), impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() 
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif ( changedCurrent )\n"
+					"\t\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n"
+					"\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t}\n",
+					member.name.c_str(), member.name.c_str()
+				);
+
+				fprintf( header,
+					"\t\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() 
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif ( changedCurrent )\n"
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n"
+					"\t\t\t\t\t\t}\n"
+					"\n",
+					member.name.c_str()
+				);
+
+				fprintf( header, "\t\t\t\t\t\telse\n" );
 				fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
+
+				fprintf( header, "\n" );
+				fprintf( header, "\t\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\t}\n" );
-				fprintf( header, "\t\t\t\t\telse\n" );
+				fprintf( header, "\t\t\t\t\telse // let child continue parsing\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
-//				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-//				fprintf( header, "\t\t\t\t\t\t\tm::impl::parsePublishableStructEnd( parser );\n" );
-				fprintf( header, "\t\t\t\t\t}\n" );
+
+				fprintf( header,
+					"\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n"
+					"\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", 
+					member.name.c_str(), member.name.c_str(), impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, 1 );\n", 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() 
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif ( changedCurrent )\n"
+					"\t\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t}\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s, addr, 1 );\n", 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif ( changedCurrent )\n"
+					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\telse\n"
+					"\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, 1 );\n"
+					"\t\t\t\t\t}\n",
+//					"\t\t\t\t}\n" 
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
+				);
+
 				break;
+			}
 			case MessageParameterType::KIND::VECTOR:
 			{
 				assert( member.type.messageIdx < root.structs.size() );

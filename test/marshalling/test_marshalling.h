@@ -186,6 +186,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
+		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -265,6 +266,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
+		//****  ContinueParsing  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -374,6 +376,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
+		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -453,6 +456,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
+		//****  ContinueParsing  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -563,6 +567,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
+		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -604,7 +609,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 					t.notifyUpdated_Size();
 				if constexpr( has_update_notifier_for_Size )
 					t.notifyUpdated_Size( temp_Size );
-				changed = true;
+				if constexpr ( reportChanges )
+					changed = true;
 			}
 		}
 		else if constexpr( has_void_update_notifier_for_Size || reportChanges )
@@ -614,7 +620,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 			{
 				if constexpr( has_void_update_notifier_for_Size )
 					t.notifyUpdated_Size();
-				changed = true;
+				if constexpr ( reportChanges )
+					changed = true;
 			}
 		}
 		else
@@ -629,6 +636,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
+		//****  ContinueParsing  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -701,8 +709,6 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 				}
 				else // let child continue parsing
 				{
-					//******************************************************************************************************************************************************************
-					publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
 					if constexpr( has_update_notifier_for_Size )
 					{
 						decltype(T::Size) temp_Size;
@@ -1568,6 +1574,7 @@ public:
 	}
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser) {
+		//****  ApplyUpdateMessageMemberFn  **************************************************************************************************************************************************************
 		m::impl::parseStateUpdateMessageBegin( parser );
 		GMQ_COLL vector<size_t> addr;
 		while( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
@@ -1580,41 +1587,124 @@ public:
 						throw std::exception(); // bad format, TODO: ...
 					if constexpr( has_any_notifier_for_ID )
 					{
-						decltype(T::ID) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
-						if ( newVal != t.ID )
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						if ( oldVal != t.ID )
 						{
 							if constexpr ( has_void_update_notifier_call_for_ID )
 								t.notifyUpdated_ID();
 							if constexpr ( has_update_notifier_call_for_ID )
-								t.notifyUpdated_ID( t.ID );
-							t.ID = newVal;
+								t.notifyUpdated_ID( oldVal );
 						}
 					}
 					else
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				case 1:
-					if ( addr.size() == 1 )
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
-							m::impl::publishableParseLeafeStructBegin( parser );
+						m::impl::publishableParseLeafeStructBegin( parser );
+
+						if constexpr( has_update_notifier_for_size )
+						{
+							decltype(T::size) temp_size;
+							publishable_STRUCT_SIZE::copy<decltype(T::size), decltype(T::size)>( t.size, temp_size );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::size), bool>( parser, t.size );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_size )
+									t.notifyUpdated_size();
+								t.notifyUpdated_size( temp_size );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_size )
+						{
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::size), bool>( parser, t.size );
+							if ( changedCurrent )
+								t.notifyUpdated_size();
+						}
+
+						else
 							publishable_STRUCT_SIZE::parse( parser, t.size );
-							m::impl::publishableParseLeafeStructEnd( parser );
+
+						m::impl::publishableParseLeafeStructEnd( parser );
 					}
-					else
+					else // let child continue parsing
 					{
+						if constexpr( has_update_notifier_for_size )
+						{
+							decltype(T::size) temp_size;
+							publishable_STRUCT_SIZE::copy<decltype(T::size), decltype(T::size)>( t.size, temp_size );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::size), bool>( parser, t.size, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_size )
+									t.notifyUpdated_size();
+								t.notifyUpdated_size( temp_size );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_size )
+						{
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.size, addr, 1 );
+							if ( changedCurrent )
+								t.notifyUpdated_size();
+						}
+						else
 							publishable_STRUCT_SIZE::parse( parser, t.size, addr, 1 );
 					}
 					break;
 				case 2:
-					if ( addr.size() == 1 )
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
-							m::impl::publishableParseLeafeStructBegin( parser );
+						m::impl::publishableParseLeafeStructBegin( parser );
+
+						if constexpr( has_update_notifier_for_chp )
+						{
+							decltype(T::chp) temp_chp;
+							publishable_STRUCT_CharacterParam::copy<decltype(T::chp), decltype(T::chp)>( t.chp, temp_chp );
+							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_chp )
+									t.notifyUpdated_chp();
+								t.notifyUpdated_chp( temp_chp );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_chp )
+						{
+							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
+							if ( changedCurrent )
+								t.notifyUpdated_chp();
+						}
+
+						else
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp );
-							m::impl::publishableParseLeafeStructEnd( parser );
+
+						m::impl::publishableParseLeafeStructEnd( parser );
 					}
-					else
+					else // let child continue parsing
 					{
+						if constexpr( has_update_notifier_for_chp )
+						{
+							decltype(T::chp) temp_chp;
+							publishable_STRUCT_CharacterParam::copy<decltype(T::chp), decltype(T::chp)>( t.chp, temp_chp );
+							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_chp )
+									t.notifyUpdated_chp();
+								t.notifyUpdated_chp( temp_chp );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_chp )
+						{
+							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::Size), bool>( parser, t.chp, addr, 1 );
+							if ( changedCurrent )
+								t.notifyUpdated_chp();
+						}
+						else
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );
 					}
 					break;
