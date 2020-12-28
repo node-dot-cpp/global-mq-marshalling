@@ -677,9 +677,15 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 							changed = true;
 						}
 					}
-					else // we have to parse and apply changes of this child
+					else
 					{
+						publishable_STRUCT_SIZE::parse( parser, t.Size );
 					}
+					m::impl::publishableParseLeafeStructEnd( parser );
+				}
+				else // we have to parse and apply changes of this child
+				{
+					//******************************************************************************************************************************************************************
 				}
 				break;
 			default:

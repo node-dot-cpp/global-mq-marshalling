@@ -439,8 +439,18 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
-					"\t\t\t\t\telse // we have to parse and apply changes of this child\n"
+					"\t\t\t\t\telse\n"
 					"\t\t\t\t\t{\n" 
+					"\t\t\t\t\t\t%s::parse( parser, t.%s );\n"
+					"\t\t\t\t\t}\n"
+					"\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n"
+					"\t\t\t\t}\n" ,
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\telse // we have to parse and apply changes of this child\n"
+					"\t\t\t\t{\n"
+					"\t\t\t\t\t//******************************************************************************************************************************************************************\n" 
 				);
 
 
@@ -466,7 +476,6 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				fprintf( header, "\t\t\t\telse\n" );
 				fprintf( header, "\t\t\t\t{\n" );
 				fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );*/
-				fprintf( header, "\t\t\t\t\t}\n" );
 				fprintf( header, "\t\t\t\t}\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
