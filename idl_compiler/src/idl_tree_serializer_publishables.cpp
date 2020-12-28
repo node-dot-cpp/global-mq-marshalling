@@ -821,6 +821,67 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 	);
 }
 
+void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, CompositeType& s )
+{
+	fprintf( header, 
+//		"struct Publishable_%s_Copier {\n"
+		"\ttemplate<typename UserT>\n"
+		"\tstatic bool isSame(const UserT& s1, const UserT& s2) {\n"
+	);
+
+	for ( size_t i=0; i<s.members.size(); ++i )
+	{
+		assert( s.members[i] != nullptr );
+		auto& member = *(s.members[i]);
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, 
+					"\t\tif ( s1.%s != s2.%s ) return false;\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\t\tif( ! %s::isSame( s1.%s, s2.%s ) ) return false;\n",
+					impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str()
+				);
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				assert( member.type.messageIdx < root.structs.size() );
+				switch ( member.type.kind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), impl::%s>( s1.%s, s2.%s ) ) return false;\n",
+							s.name.c_str(), paramTypeToLibType( member.type.vectorElemKind ), member.name.c_str(), member.name.c_str()
+						);
+						break;
+					case MessageParameterType::KIND::STRUCT:
+						fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), Publishable_%s_Copier>( s1.%s, s2.%s ) ) return false;\n",
+							member.name.c_str(), s.name.c_str(), member.name.c_str(), member.name.c_str()
+						);
+						break;
+					default:
+						assert( false ); // TODO: revise or add cases
+				}
+			}
+			default:
+				assert( false ); // TODO: revise or add cases
+		}
+	}
+
+	fprintf( header, 
+		"\t\treturn true;\n"
+		"\t}\n"
+	);
+}
+
 void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
 	fprintf( header, 
@@ -836,6 +897,8 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
 	fprintf( header, "\n" );
 	impl_GeneratePublishableStructCopyFn( header, root, obj );
+	fprintf( header, "\n" );
+	impl_GeneratePublishableStructIsSameFn( header, root, obj );
 
 	fprintf( header, "};\n\n" );
 }

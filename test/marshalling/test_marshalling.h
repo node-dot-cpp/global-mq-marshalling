@@ -359,6 +359,14 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		dst.Y = src.Y;
 		dst.Z = src.Z;
 	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.X != s2.X ) return false;
+		if ( s1.Y != s2.Y ) return false;
+		if ( s1.Z != s2.Z ) return false;
+		return true;
+	}
 };
 
 struct publishable_STRUCT_POINT3DREAL : public impl::StructType
@@ -548,6 +556,14 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		dst.X = src.X;
 		dst.Y = src.Y;
 		dst.Z = src.Z;
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.X != s2.X ) return false;
+		if ( s1.Y != s2.Y ) return false;
+		if ( s1.Z != s2.Z ) return false;
+		return true;
 	}
 };
 
@@ -752,6 +768,13 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static void copy(const UserT& src, UserT& dst) {
 		dst.ID = src.ID;
 		publishable_STRUCT_SIZE::copy( src.Size, dst.Size );
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.ID != s2.ID ) return false;
+		if( ! publishable_STRUCT_SIZE::isSame( s1.Size, s2.Size ) ) return false;
+		return true;
 	}
 };
 
