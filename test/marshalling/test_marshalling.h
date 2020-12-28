@@ -650,7 +650,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
 			case 1:
-				if ( addr.size() > offset + 1 ) // let child continue parsing
+				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 				{
 					m::impl::publishableParseLeafeStructBegin( parser );
 					if constexpr( has_update_notifier_for_Size )
@@ -683,9 +683,38 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 					}
 					m::impl::publishableParseLeafeStructEnd( parser );
 				}
-				else // we have to parse and apply changes of this child
+				else // let child continue parsing
 				{
 					//******************************************************************************************************************************************************************
+					publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
+					if constexpr( has_update_notifier_for_Size )
+					{
+						decltype(T::Size) temp_Size;
+						publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+						if ( changedCurrent )
+						{
+							if constexpr( has_void_update_notifier_for_Size )
+								t.notifyUpdated_Size();
+							if constexpr( has_update_notifier_for_Size )
+								t.notifyUpdated_Size( temp_Size );
+							changed = true;
+						}
+					}
+					else if constexpr( has_void_update_notifier_for_Size || reportChanges )
+					{
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+						if ( changedCurrent )
+						{
+							if constexpr( has_void_update_notifier_for_Size )
+								t.notifyUpdated_Size();
+							changed = true;
+						}
+					}
+					else
+					{
+						publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
+					}
 				}
 				break;
 			default:
