@@ -1578,9 +1578,27 @@ class publishable_sample_Wrapper
 	static constexpr bool has_void_update_notifier_for_vector_of_int = has_void_update_notifier_call_for_vector_of_int<T>;
 	static constexpr bool has_update_notifier_for_vector_of_int = has_update_notifier_call_for_vector_of_int<T, decltype(T::vector_of_int)>;
 	static constexpr bool has_any_notifier_for_vector_of_int = has_void_update_notifier_for_vector_of_int || has_update_notifier_for_vector_of_int;
+	static constexpr bool has_element_updated_void_notifier_for_vector_of_int = has_element_updated_void_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_element_updated_notifier_for_vector_of_int = has_element_updated_notifier_call_for_vector_of_int<T>;
+	using vector_of_intT = decltype(T::vector_of_int);
+	static constexpr bool has_full_element_updated_notifier_for_vector_of_int = has_full_element_updated_notifier_call_for_vector_of_int<T, vector_of_intT&>;
+	static constexpr bool has_void_insert_notifier_for_vector_of_int = has_void_insert_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_insert_notifier_for_vector_of_int = has_insert_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_void_erased_notifier_for_vector_of_int = has_void_erased_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_erased_notifier2_for_vector_of_int = has_erased_notifier_call2_for_vector_of_int<T>;
+	static constexpr bool has_erased_notifier3_for_vector_of_int = has_erased_notifier_call3_for_vector_of_int<T, GMQ_COLL vector<vector_of_intT>&>;
 	static constexpr bool has_void_update_notifier_for_vector_struct_point3dreal = has_void_update_notifier_call_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_update_notifier_for_vector_struct_point3dreal = has_update_notifier_call_for_vector_struct_point3dreal<T, decltype(T::vector_struct_point3dreal)>;
 	static constexpr bool has_any_notifier_for_vector_struct_point3dreal = has_void_update_notifier_for_vector_struct_point3dreal || has_update_notifier_for_vector_struct_point3dreal;
+	static constexpr bool has_element_updated_void_notifier_for_vector_struct_point3dreal = has_element_updated_void_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_element_updated_notifier_for_vector_struct_point3dreal = has_element_updated_notifier_call_for_vector_struct_point3dreal<T>;
+	using vector_struct_point3drealT = decltype(T::vector_struct_point3dreal);
+	static constexpr bool has_full_element_updated_notifier_for_vector_struct_point3dreal = has_full_element_updated_notifier_call_for_vector_struct_point3dreal<T, vector_struct_point3drealT&>;
+	static constexpr bool has_void_insert_notifier_for_vector_struct_point3dreal = has_void_insert_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_insert_notifier_for_vector_struct_point3dreal = has_insert_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_void_erased_notifier_for_vector_struct_point3dreal = has_void_erased_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_erased_notifier2_for_vector_struct_point3dreal = has_erased_notifier_call2_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_erased_notifier3_for_vector_struct_point3dreal = has_erased_notifier_call3_for_vector_struct_point3dreal<T, GMQ_COLL vector<vector_struct_point3drealT>&>;
 
 
 public:
@@ -1730,11 +1748,13 @@ public:
 					}
 					break;
 				case 3:
-					if ( addr.size() > 1 )
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
-					else
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
+					}
+					else // replacement of the whole vector
+					{
 						m::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( has_any_notifier_for_vector_of_int )
@@ -1758,11 +1778,13 @@ public:
 					}
 					break;
 				case 4:
-					if ( addr.size() > 1 )
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
-					else
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
+					}
+					else // replacement of the whole vector
+					{
 						m::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( has_any_notifier_for_vector_struct_point3dreal )

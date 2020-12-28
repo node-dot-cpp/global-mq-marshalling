@@ -186,7 +186,7 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 		fprintf( header, "%sstatic constexpr bool has_any_notifier_for_%s = has_void_update_notifier_for_%s || has_update_notifier_for_%s;\n", 
 			offset, member->name.c_str(), member->name.c_str(), member->name.c_str()
 		);
-		/*if ( member->type.kind == MessageParameterType::KIND::VECTOR )
+		if ( member->type.kind == MessageParameterType::KIND::VECTOR )
 		{
 			fprintf( header, "%sstatic constexpr bool has_element_updated_void_notifier_for_%s = has_element_updated_void_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_element_updated_notifier_for_%s = has_element_updated_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
@@ -198,7 +198,6 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier2_for_%s = has_erased_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier3_for_%s = has_erased_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 		}
-		else*/
 	}
 	fprintf( header, "\n" );
 }
@@ -1214,7 +1213,8 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			{
 				assert( member.type.messageIdx < root.structs.size() );
 				fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() > 1 )\n"
+					"\t\t\t\t\tif ( addr.size() > 1 ) // one of actions over elements of the vector\n"
+					"\t\t\t\t\t{\n"
 				);
 fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
@@ -1226,7 +1226,8 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\telse\n"
+					"\t\t\t\t\t}\n"
+					"\t\t\t\t\telse // replacement of the whole vector\n"
 					"\t\t\t\t\t{\n"
 				);
 				fprintf( header, 
