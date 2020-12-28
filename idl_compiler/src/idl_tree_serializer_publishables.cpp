@@ -1007,7 +1007,6 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			{
-fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 ) // we have to parse and apply changes of this child\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
 				fprintf( header, "\t\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
@@ -1142,13 +1141,79 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					"\t\t\t\t\telse\n"
 					"\t\t\t\t\t{\n"
 				);
+fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				fprintf( header, 
 					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorBegin( parser );\n"
-					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n" 
-					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorEnd( parser );\n",
+					"\n"
+				);
+
+				/*fprintf( header, 
+					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
 					member.name.c_str(),
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
 					member.name.c_str()
+				);*/
+
+				fprintf( header,
+					"\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n"
+					"\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), impl::%s>( t.%s, temp_%s );\n", 
+					member.name.c_str(), member.name.c_str(), 
+					member.name.c_str(), 
+					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
+					member.name.c_str(),
+					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t}\n"
+				);
+
+				fprintf( header,
+					"\t\t\t\t\t\telse if constexpr( has_void update_notifier_for_%s )\n"
+					"\t\t\t\t\t\t{\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
+					member.name.c_str(),
+					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tt.notifyUpdated_%s();\n"
+					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\telse\n",
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
+					member.name.c_str(),
+					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
+					member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\n"
+					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorEnd( parser );\n"
 				);
 				fprintf( header, 
 					"\t\t\t\t\t}\n"

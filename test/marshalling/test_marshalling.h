@@ -1601,7 +1601,6 @@ public:
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				case 1:
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
 						m::impl::publishableParseLeafeStructBegin( parser );
@@ -1655,7 +1654,6 @@ public:
 					}
 					break;
 				case 2:
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
 						m::impl::publishableParseLeafeStructBegin( parser );
@@ -1713,8 +1711,27 @@ public:
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
 					else
 					{
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						m::impl::publishableParseLeafeVectorBegin( parser );
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+
+						if constexpr( has_update_notifier_for_vector_of_int )
+						{
+							decltype(T::vector_of_int) temp_vector_of_int;
+							impl::copyVector<decltype(T::vector_of_int), impl::::m::impl::SignedIntegralType>( t.vector_of_int, temp_vector_of_int );
+							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+								if constexpr( has_void_update_notifier_for_vector_of_int )
+									t.notifyUpdated_vector_of_int();
+								if constexpr( has_update_notifier_for_vector_of_int )
+									t.notifyUpdated_vector_of_int( temp_vector_of_int );
+						}
+						else if constexpr( has_void update_notifier_for_vector_of_int )
+						{
+							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+							t.notifyUpdated_vector_of_int();
+						}
+						else
+							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+
 						m::impl::publishableParseLeafeVectorEnd( parser );
 					}
 					break;
@@ -1723,8 +1740,27 @@ public:
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					else
 					{
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						m::impl::publishableParseLeafeVectorBegin( parser );
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+
+						if constexpr( has_update_notifier_for_vector_struct_point3dreal )
+						{
+							decltype(T::vector_struct_point3dreal) temp_vector_struct_point3dreal;
+							impl::copyVector<decltype(T::vector_struct_point3dreal), impl::publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, temp_vector_struct_point3dreal );
+							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+								if constexpr( has_void_update_notifier_for_vector_struct_point3dreal )
+									t.notifyUpdated_vector_struct_point3dreal();
+								if constexpr( has_update_notifier_for_vector_struct_point3dreal )
+									t.notifyUpdated_vector_struct_point3dreal( temp_vector_struct_point3dreal );
+						}
+						else if constexpr( has_void update_notifier_for_vector_struct_point3dreal )
+						{
+							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+							t.notifyUpdated_vector_struct_point3dreal();
+						}
+						else
+							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+
 						m::impl::publishableParseLeafeVectorEnd( parser );
 					}
 					break;
