@@ -351,12 +351,13 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tbool currentChanged = newVal != t.%s;\n"
-					"\t\t\t\t\t\tchanged = currentChanged || changed;\n"
 					"\t\t\t\t\t\tif ( currentChanged )\n"
 					"\t\t\t\t\t\t{\n",
 					member.name.c_str()
 				);
 				fprintf( header, 
+					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\t\t\t\tif constexpr ( has_void_update_notifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
 					member.name.c_str(), member.name.c_str()
@@ -414,7 +415,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tchanged = true;\n"
+					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
 				);
@@ -436,7 +438,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tchanged = true;\n"
+					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
 					"\t\t\t\t\telse\n"
@@ -485,7 +488,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tchanged = true;\n"
+					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
 				);
@@ -507,7 +511,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tchanged = true;\n"
+					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t}\n"
 					"\t\t\t\t\telse\n"
@@ -603,12 +608,13 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				);
 				fprintf( header, 
 					"\t\t\tbool currentChanged = newVal != t.%s;\n"
-					"\t\t\tchanged = currentChanged || changed;\n"
 					"\t\t\tif ( currentChanged )\n"
 					"\t\t\t{\n",
 					member.name.c_str()
 				);
 				fprintf( header, 
+					"\t\t\t\tif constexpr ( reportChanges )\n"
+					"\t\t\t\t\tchanged = true;\n"
 					"\t\t\t\tif constexpr ( has_void_update_notifier_for_%s )\n"
 					"\t\t\t\t\tt.notifyUpdated_%s();\n",
 					member.name.c_str(), member.name.c_str()

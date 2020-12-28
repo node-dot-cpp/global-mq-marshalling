@@ -204,9 +204,10 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 			decltype(T::X) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
 			bool currentChanged = newVal != t.X;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_X )
 					t.notifyUpdated_X();
 				if constexpr ( has_update_notifier_for_X )
@@ -222,9 +223,10 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 			decltype(T::Y) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
 			bool currentChanged = newVal != t.Y;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_Y )
 					t.notifyUpdated_Y();
 				if constexpr ( has_update_notifier_for_Y )
@@ -240,9 +242,10 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 			decltype(T::Z) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
 			bool currentChanged = newVal != t.Z;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_Z )
 					t.notifyUpdated_Z();
 				if constexpr ( has_update_notifier_for_Z )
@@ -285,9 +288,10 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
 						bool currentChanged = newVal != t.X;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_X )
 								t.notifyUpdated_X();
 							if constexpr ( has_update_notifier_for_X )
@@ -305,9 +309,10 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
 						bool currentChanged = newVal != t.Y;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_Y )
 								t.notifyUpdated_Y();
 							if constexpr ( has_update_notifier_for_Y )
@@ -325,9 +330,10 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
 						bool currentChanged = newVal != t.Z;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_Z )
 								t.notifyUpdated_Z();
 							if constexpr ( has_update_notifier_for_Z )
@@ -386,9 +392,10 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			decltype(T::X) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
 			bool currentChanged = newVal != t.X;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_X )
 					t.notifyUpdated_X();
 				if constexpr ( has_update_notifier_for_X )
@@ -404,9 +411,10 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			decltype(T::Y) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
 			bool currentChanged = newVal != t.Y;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_Y )
 					t.notifyUpdated_Y();
 				if constexpr ( has_update_notifier_for_Y )
@@ -422,9 +430,10 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 			decltype(T::Z) newVal;
 			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
 			bool currentChanged = newVal != t.Z;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_Z )
 					t.notifyUpdated_Z();
 				if constexpr ( has_update_notifier_for_Z )
@@ -467,9 +476,10 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						decltype(T::X) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
 						bool currentChanged = newVal != t.X;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_X )
 								t.notifyUpdated_X();
 							if constexpr ( has_update_notifier_for_X )
@@ -487,9 +497,10 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						decltype(T::Y) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
 						bool currentChanged = newVal != t.Y;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_Y )
 								t.notifyUpdated_Y();
 							if constexpr ( has_update_notifier_for_Y )
@@ -507,9 +518,10 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						decltype(T::Z) newVal;
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
 						bool currentChanged = newVal != t.Z;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_Z )
 								t.notifyUpdated_Z();
 							if constexpr ( has_update_notifier_for_Z )
@@ -566,9 +578,10 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 			decltype(T::ID) newVal;
 			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &newVal, "ID" );
 			bool currentChanged = newVal != t.ID;
-			changed = currentChanged || changed;
 			if ( currentChanged )
 			{
+				if constexpr ( reportChanges )
+					changed = true;
 				if constexpr ( has_void_update_notifier_for_ID )
 					t.notifyUpdated_ID();
 				if constexpr ( has_update_notifier_for_ID )
@@ -636,9 +649,10 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						decltype(T::ID) newVal;
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
 						bool currentChanged = newVal != t.ID;
-						changed = currentChanged || changed;
 						if ( currentChanged )
 						{
+							if constexpr ( reportChanges )
+								changed = true;
 							if constexpr ( has_void_update_notifier_for_ID )
 								t.notifyUpdated_ID();
 							if constexpr ( has_update_notifier_for_ID )
@@ -664,7 +678,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 								t.notifyUpdated_Size();
 							if constexpr( has_update_notifier_for_Size )
 								t.notifyUpdated_Size( temp_Size );
-							changed = true;
+							if constexpr ( reportChanges )
+								changed = true;
 						}
 					}
 					else if constexpr( has_void_update_notifier_for_Size || reportChanges )
@@ -674,7 +689,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						{
 							if constexpr( has_void_update_notifier_for_Size )
 								t.notifyUpdated_Size();
-							changed = true;
+							if constexpr ( reportChanges )
+								changed = true;
 						}
 					}
 					else
@@ -698,7 +714,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 								t.notifyUpdated_Size();
 							if constexpr( has_update_notifier_for_Size )
 								t.notifyUpdated_Size( temp_Size );
-							changed = true;
+							if constexpr ( reportChanges )
+								changed = true;
 						}
 					}
 					else if constexpr( has_void_update_notifier_for_Size || reportChanges )
@@ -708,7 +725,8 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						{
 							if constexpr( has_void_update_notifier_for_Size )
 								t.notifyUpdated_Size();
-							changed = true;
+							if constexpr ( reportChanges )
+								changed = true;
 						}
 					}
 					else
