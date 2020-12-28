@@ -807,8 +807,8 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert( member.type.messageIdx < root.structs.size() );
-				switch ( member.type.kind )
+				/*assert( member.type.messageIdx < root.structs.size() );
+				switch ( member.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
 					case MessageParameterType::KIND::UINTEGER:
@@ -825,7 +825,11 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 						break;
 					default:
 						assert( false ); // TODO: revise or add cases
-				}
+					
+				}*/
+				fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
+					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
+				);
 			}
 			default:
 				assert( false ); // TODO: revise or add cases
@@ -868,8 +872,8 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert( member.type.messageIdx < root.structs.size() );
-				switch ( member.type.kind )
+				/*assert( member.type.messageIdx < root.structs.size() );
+				switch ( member.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
 					case MessageParameterType::KIND::UINTEGER:
@@ -886,7 +890,10 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 						break;
 					default:
 						assert( false ); // TODO: revise or add cases
-				}
+				}*/
+					fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
+					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
+				);
 			}
 			default:
 				assert( false ); // TODO: revise or add cases
@@ -1209,6 +1216,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 				);
+fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, 
 					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
@@ -1221,18 +1229,10 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\telse\n"
 					"\t\t\t\t\t{\n"
 				);
-fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				fprintf( header, 
 					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorBegin( parser );\n"
 					"\n"
 				);
-
-				/*fprintf( header, 
-					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
-					member.name.c_str(),
-					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
-					member.name.c_str()
-				);*/
 
 				fprintf( header,
 					"\t\t\t\t\t\tif constexpr( has_any_notifier_for_%s )\n"
@@ -1272,12 +1272,9 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				fprintf( header, 
 					"\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\telse\n"
 				);
 
-				fprintf( header, 
-					"\t\t\t\t\t\telse\n",
-					member.name.c_str()
-				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
 					member.name.c_str(),
