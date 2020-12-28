@@ -1737,20 +1737,19 @@ public:
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						m::impl::publishableParseLeafeVectorBegin( parser );
 
-						if constexpr( has_update_notifier_for_vector_of_int )
+						if constexpr( has_any_notifier_for_vector_of_int )
 						{
 							decltype(T::vector_of_int) temp_vector_of_int;
-							impl::copyVector<decltype(T::vector_of_int), impl::::m::impl::SignedIntegralType>( t.vector_of_int, temp_vector_of_int );
+							impl::copyVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( t.vector_of_int, temp_vector_of_int );
 							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+							bool changed = !impl::isSameVector<decltype(T::publishable_sample), ::m::impl::SignedIntegralType>( temp_vector_of_int, t.vector_of_int );
+							if ( changed )
+							{
 								if constexpr( has_void_update_notifier_for_vector_of_int )
 									t.notifyUpdated_vector_of_int();
 								if constexpr( has_update_notifier_for_vector_of_int )
 									t.notifyUpdated_vector_of_int( temp_vector_of_int );
-						}
-						else if constexpr( has_void update_notifier_for_vector_of_int )
-						{
-							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
-							t.notifyUpdated_vector_of_int();
+							}
 						}
 						else
 							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
@@ -1766,20 +1765,19 @@ public:
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						m::impl::publishableParseLeafeVectorBegin( parser );
 
-						if constexpr( has_update_notifier_for_vector_struct_point3dreal )
+						if constexpr( has_any_notifier_for_vector_struct_point3dreal )
 						{
 							decltype(T::vector_struct_point3dreal) temp_vector_struct_point3dreal;
-							impl::copyVector<decltype(T::vector_struct_point3dreal), impl::publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, temp_vector_struct_point3dreal );
+							impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, temp_vector_struct_point3dreal );
 							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+							bool changed = !impl::isSameVector<decltype(T::publishable_sample), publishable_STRUCT_POINT3DREAL>( temp_vector_struct_point3dreal, t.vector_struct_point3dreal );
+							if ( changed )
+							{
 								if constexpr( has_void_update_notifier_for_vector_struct_point3dreal )
 									t.notifyUpdated_vector_struct_point3dreal();
 								if constexpr( has_update_notifier_for_vector_struct_point3dreal )
 									t.notifyUpdated_vector_struct_point3dreal( temp_vector_struct_point3dreal );
-						}
-						else if constexpr( has_void update_notifier_for_vector_struct_point3dreal )
-						{
-							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
-							t.notifyUpdated_vector_struct_point3dreal();
+							}
 						}
 						else
 							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );

@@ -40,6 +40,23 @@ const char* paramTypeToLibType( MessageParameterType::KIND kind )
 	}
 }
 
+string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	switch( type.vectorElemKind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::m::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::m::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::m::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::m::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: 
+			assert( type.messageIdx < root.structs.size() );
+			return fmt::format( "publishable_STRUCT_{}", root.structs[type.messageIdx]->name );
+		default: 
+			assert( false );
+			return "";
+	}
+}
+
 string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterType& type )
 {
 	switch ( type.kind )
@@ -166,6 +183,9 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 		assert( member != nullptr );
 		fprintf( header, "%sstatic constexpr bool has_void_update_notifier_for_%s = has_void_update_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 		fprintf( header, "%sstatic constexpr bool has_update_notifier_for_%s = has_update_notifier_call_for_%s<T, decltype(T::%s)>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+		fprintf( header, "%sstatic constexpr bool has_any_notifier_for_%s = has_void_update_notifier_for_%s || has_update_notifier_for_%s;\n", 
+			offset, member->name.c_str(), member->name.c_str(), member->name.c_str()
+		);
 		/*if ( member->type.kind == MessageParameterType::KIND::VECTOR )
 		{
 			fprintf( header, "%sstatic constexpr bool has_element_updated_void_notifier_for_%s = has_element_updated_void_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
@@ -179,9 +199,6 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier3_for_%s = has_erased_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 		}
 		else*/
-			fprintf( header, "%sstatic constexpr bool has_any_notifier_for_%s = has_void_update_notifier_for_%s || has_update_notifier_for_%s;\n", 
-				offset, member->name.c_str(), member->name.c_str(), member->name.c_str()
-			);
 	}
 	fprintf( header, "\n" );
 }
@@ -1218,13 +1235,13 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				);*/
 
 				fprintf( header,
-					"\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
+					"\t\t\t\t\t\tif constexpr( has_any_notifier_for_%s )\n"
 					"\t\t\t\t\t\t{\n",
 					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n"
-					"\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), impl::%s>( t.%s, temp_%s );\n", 
+					"\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, temp_%s );\n", 
 					member.name.c_str(), member.name.c_str(), 
 					member.name.c_str(), 
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
@@ -1237,6 +1254,12 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					member.name.c_str()
 				);
 				fprintf( header, 
+					"\t\t\t\t\t\t\tbool changed = !impl::isSameVector<decltype(T::%s), %s>( temp_%s, t.%s );\n",
+						s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tif ( changed )\n"
+					"\t\t\t\t\t\t\t{\n"
 					"\t\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
 					member.name.c_str(), member.name.c_str()
@@ -1247,23 +1270,11 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
+					"\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t}\n"
 				);
 
-				fprintf( header,
-					"\t\t\t\t\t\telse if constexpr( has_void update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t{\n",
-					member.name.c_str()
-				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
-					member.name.c_str(),
-					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tt.notifyUpdated_%s();\n"
-					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\telse\n",
 					member.name.c_str()
 				);
