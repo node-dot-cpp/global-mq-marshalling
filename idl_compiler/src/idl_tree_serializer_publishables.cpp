@@ -1237,8 +1237,43 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t\t{\n"
 					"\t\t\t\t\t\t\t\tcase ActionOnVector::remove_at:\n"
 					"\t\t\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n"
+//					"\t\t\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n"
 				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n"
+					"\t\t\t\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", 
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), 
+					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s( pos, oldVal );\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_erased_notifier2_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s( pos );\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_void_erased_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s();\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\tbreak;\n"
 					"\t\t\t\t\t\t\t\t}\n"

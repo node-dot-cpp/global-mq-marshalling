@@ -1768,7 +1768,23 @@ public:
 							{
 								case ActionOnVector::remove_at:
 								{
-									impl::parseStateUpdateBlockEnd( parser );
+									if constexpr ( has_erased_notifier3_for_vector_of_int )
+									{
+										decltype(T::vector_of_int) oldVal;
+										impl::copyVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( t.vector_of_int, oldVal );
+										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
+										t.notifyErased_vector_of_int( pos, oldVal );
+									}
+									if constexpr ( has_erased_notifier2_for_vector_of_int )
+									{
+										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
+										t.notifyErased_vector_of_int( pos );
+									}
+									if constexpr ( has_void_erased_notifier_for_vector_of_int )
+									{
+										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
+										t.notifyErased_vector_of_int();
+									}
 									break;
 								}
 								case ActionOnVector::update_at:
@@ -1842,7 +1858,23 @@ public:
 							{
 								case ActionOnVector::remove_at:
 								{
-									impl::parseStateUpdateBlockEnd( parser );
+									if constexpr ( has_erased_notifier3_for_vector_struct_point3dreal )
+									{
+										decltype(T::vector_struct_point3dreal) oldVal;
+										impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
+										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
+										t.notifyErased_vector_struct_point3dreal( pos, oldVal );
+									}
+									if constexpr ( has_erased_notifier2_for_vector_struct_point3dreal )
+									{
+										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
+										t.notifyErased_vector_struct_point3dreal( pos );
+									}
+									if constexpr ( has_void_erased_notifier_for_vector_struct_point3dreal )
+									{
+										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
+										t.notifyErased_vector_struct_point3dreal();
+									}
 									break;
 								}
 								case ActionOnVector::update_at:
