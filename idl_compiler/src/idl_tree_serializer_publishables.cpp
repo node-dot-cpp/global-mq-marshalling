@@ -1215,6 +1215,10 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 ) // one of actions over elements of the vector\n"
 					"\t\t\t\t\t{\n"
+					"\t\t\t\t\t\tsize_t pos = addr[1];\n"
+					"\t\t\t\t\t\tif ( pos >= t.%s.size() )\n"
+					"\t\t\t\t\t\t\tthrow std::exception();\n",
+					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( addr.size() > 2 ) // update for a member of a particular vector element\n"
@@ -1224,9 +1228,6 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\telse // update of one or more elelments as a whole\n"
 					"\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\tsize_t pos = addr[1];\n"
-					"\t\t\t\t\t\t\tassert( pos < t.%s.size() );\n",
-					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\tsize_t action;\n"
@@ -1248,6 +1249,14 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t\t\tcase ActionOnVector::insert_single_before:\n"
 					"\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\timpl::publishableParseLeafeValueBegin( parser );\n"
+					"\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type value;\n"
+					"\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n",
+					member.name.c_str(), member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n",
+					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\tbreak;\n"

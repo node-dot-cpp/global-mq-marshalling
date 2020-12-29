@@ -1750,13 +1750,14 @@ public:
 				case 3:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
+						size_t pos = addr[1];
+						if ( pos >= t.vector_of_int.size() )
+							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
 						}
 						else // update of one or more elelments as a whole
 						{
-							size_t pos = addr[1];
-							assert( pos < t.vector_of_int.size() );
 							size_t action;
 							impl::parseActionInPublishable( parser, action );
 							switch ( action )
@@ -1772,6 +1773,10 @@ public:
 								}
 								case ActionOnVector::insert_single_before:
 								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_of_int)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
+									t.vector_of_int.insert( t.vector_of_int.begin() + pos, value );
 									break;
 								}
 								default:
@@ -1809,13 +1814,14 @@ public:
 				case 4:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
+						size_t pos = addr[1];
+						if ( pos >= t.vector_struct_point3dreal.size() )
+							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
 						}
 						else // update of one or more elelments as a whole
 						{
-							size_t pos = addr[1];
-							assert( pos < t.vector_struct_point3dreal.size() );
 							size_t action;
 							impl::parseActionInPublishable( parser, action );
 							switch ( action )
@@ -1831,6 +1837,10 @@ public:
 								}
 								case ActionOnVector::insert_single_before:
 								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_struct_point3dreal)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
+									t.vector_struct_point3dreal.insert( t.vector_struct_point3dreal.begin() + pos, value );
 									break;
 								}
 								default:
