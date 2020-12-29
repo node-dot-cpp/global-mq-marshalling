@@ -548,7 +548,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\t\tm::impl::publishableParseLeafeValueBegin( parser );\n"
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ComposerT, decltype(T::%s), impl::%s>( parser, t.%s );\n", 
+					"\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ComposerT, decltype(T::%s), impl::%s>( parser, t.%s );\n", 
 					member.name.c_str(), 
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
 					member.name.c_str()
@@ -732,7 +732,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				);
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, 
-					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
+					"\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
 					member.name.c_str(),
 					libType, 
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
@@ -744,7 +744,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorBegin( parser );\n"
-					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n" 
+					"\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n" 
 					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorEnd( parser );\n",
 					member.name.c_str(),
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
@@ -964,16 +964,16 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			switch ( param.type.vectorElemKind )
 			{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::RealType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::RealType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf( header, "\t\tVectorOfSimpleTypeBody::compose<ComposerT, decltype(T::%s), impl::StringType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::StringType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert( false ); // unexpected
@@ -1224,21 +1224,46 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\telse // update of one or more elelments as a whole\n"
 					"\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\tsize_t pos = addr[1];\n"
+					"\t\t\t\t\t\t\tassert( pos < t.%s.size() );\n",
+					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\tsize_t action;\n"
 					"\t\t\t\t\t\t\timpl::parseActionInPublishable( parser, action );\n"
 					"\t\t\t\t\t\t\tswitch ( action )\n"
 					"\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\tcase ActionOnVector::remove_at:\n"
+					"\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tbreak;\n"
+					"\t\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t\t\tcase ActionOnVector::update_at:\n"
+					"\t\t\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tbreak;\n"
+					"\t\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t\t\tcase ActionOnVector::insert_single_before:\n"
+					"\t\t\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tbreak;\n"
+					"\t\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t\t\tdefault:\n"
+					"\t\t\t\t\t\t\t\t\tthrow std::exception();\n"
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n"
 					"\t\t\t\t\t\t}\n"
 				);
 fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, 
-					"\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
+					"\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
 					member.name.c_str(),
 					libType, 
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
@@ -1269,7 +1294,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					member.name.c_str(), member.name.c_str()
 				);
 				fprintf( header, 
-					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
+					"\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
 					member.name.c_str(),
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
 					member.name.c_str()
@@ -1297,7 +1322,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				);
 
 				fprintf( header, 
-					"\t\t\t\t\t\t\tVectorOfSimpleTypeBody::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
+					"\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
 					member.name.c_str(),
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
 					member.name.c_str()

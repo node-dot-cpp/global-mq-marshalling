@@ -1755,14 +1755,32 @@ public:
 						}
 						else // update of one or more elelments as a whole
 						{
+							size_t pos = addr[1];
+							assert( pos < t.vector_of_int.size() );
 							size_t action;
 							impl::parseActionInPublishable( parser, action );
 							switch ( action )
 							{
+								case ActionOnVector::remove_at:
+								{
+									impl::parseStateUpdateBlockEnd( parser );
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									break;
+								}
+								default:
+									throw std::exception();
 							}
+							impl::parseStateUpdateBlockEnd( parser );
 						}
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
+						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
 					}
 					else // replacement of the whole vector
 					{
@@ -1772,7 +1790,7 @@ public:
 						{
 							decltype(T::vector_of_int) temp_vector_of_int;
 							impl::copyVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( t.vector_of_int, temp_vector_of_int );
-							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
 							bool changed = !impl::isSameVector<decltype(T::publishable_sample), ::m::impl::SignedIntegralType>( temp_vector_of_int, t.vector_of_int );
 							if ( changed )
 							{
@@ -1783,7 +1801,7 @@ public:
 							}
 						}
 						else
-							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
+							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
 
 						m::impl::publishableParseLeafeVectorEnd( parser );
 					}
@@ -1796,14 +1814,32 @@ public:
 						}
 						else // update of one or more elelments as a whole
 						{
+							size_t pos = addr[1];
+							assert( pos < t.vector_struct_point3dreal.size() );
 							size_t action;
 							impl::parseActionInPublishable( parser, action );
 							switch ( action )
 							{
+								case ActionOnVector::remove_at:
+								{
+									impl::parseStateUpdateBlockEnd( parser );
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									break;
+								}
+								default:
+									throw std::exception();
 							}
+							impl::parseStateUpdateBlockEnd( parser );
 						}
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
+						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					}
 					else // replacement of the whole vector
 					{
@@ -1813,7 +1849,7 @@ public:
 						{
 							decltype(T::vector_struct_point3dreal) temp_vector_struct_point3dreal;
 							impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, temp_vector_struct_point3dreal );
-							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 							bool changed = !impl::isSameVector<decltype(T::publishable_sample), publishable_STRUCT_POINT3DREAL>( temp_vector_struct_point3dreal, t.vector_struct_point3dreal );
 							if ( changed )
 							{
@@ -1824,7 +1860,7 @@ public:
 							}
 						}
 						else
-							VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 
 						m::impl::publishableParseLeafeVectorEnd( parser );
 					}
@@ -1864,7 +1900,7 @@ public:
 		t.vector_of_int = val; 
 		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
 		m::impl::publishableComposeLeafeValueBegin( *composer );
-		VectorOfSimpleTypeBody::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
 		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
 	auto get4set_vector_of_int() { return m::VectorRefWrapper4Set<decltype(T::vector_of_int), ::m::impl::SignedIntegralType, publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
