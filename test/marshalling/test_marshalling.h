@@ -1759,6 +1759,8 @@ public:
 							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
 						}
 						else // update of one or more elelments as a whole
 						{
@@ -1799,16 +1801,26 @@ public:
 										impl::copyVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( t.vector_of_int, oldVal );
 										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
 										t.notifyElementUpdated_vector_of_int( pos, oldVal );
+										if constexpr ( has_element_updated_notifier_for_vector_of_int )
+											t.notifyElementUpdated_vector_of_int();
+										if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
+											t.notifyElementUpdated_vector_of_int();
 									}
-									if constexpr ( has_element_updated_notifier_for_vector_of_int )
+									else if constexpr ( has_element_updated_notifier_for_vector_of_int )
 									{
 										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
 										t.notifyElementUpdated_vector_of_int( pos );
+										if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
+											t.notifyElementUpdated_vector_of_int();
 									}
-									if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
+									else if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
 									{
 										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
 										t.notifyElementUpdated_vector_of_int();
+									}
+									else
+									{
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
 									}
 									break;
 								}
@@ -1835,8 +1847,6 @@ public:
 							}
 							impl::parseStateUpdateBlockEnd( parser );
 						}
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
 					}
 					else // replacement of the whole vector
 					{
@@ -1870,6 +1880,8 @@ public:
 							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 						}
 						else // update of one or more elelments as a whole
 						{
@@ -1910,16 +1922,26 @@ public:
 										impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
 										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
 										t.notifyElementUpdated_vector_struct_point3dreal( pos, oldVal );
+										if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
+											t.notifyElementUpdated_vector_struct_point3dreal();
+										if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+											t.notifyElementUpdated_vector_struct_point3dreal();
 									}
-									if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
+									else if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
 									{
 										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
 										t.notifyElementUpdated_vector_struct_point3dreal( pos );
+										if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+											t.notifyElementUpdated_vector_struct_point3dreal();
 									}
-									if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+									else if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
 									{
 										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
 										t.notifyElementUpdated_vector_struct_point3dreal();
+									}
+									else
+									{
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
 									}
 									break;
 								}
@@ -1946,8 +1968,6 @@ public:
 							}
 							impl::parseStateUpdateBlockEnd( parser );
 						}
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					}
 					else // replacement of the whole vector
 					{

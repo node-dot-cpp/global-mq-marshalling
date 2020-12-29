@@ -1212,6 +1212,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
+				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				assert( member.type.messageIdx < root.structs.size() );
 				fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 ) // one of actions over elements of the vector\n"
@@ -1224,6 +1225,14 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( addr.size() > 2 ) // update for a member of a particular vector element\n"
 					"\t\t\t\t\t\t{\n"
+				);
+fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+				fprintf( header, 
+					"\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
+					member.name.c_str(),
+					libType, 
+					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
+					member.name.c_str()
 				);
 				fprintf( header, 
 					"\t\t\t\t\t\t}\n"
@@ -1313,24 +1322,30 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
 					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldVal );\n"
+					"\t\t\t\t\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
 					"\t\t\t\t\t\t\t\t\t}\n",
 					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-					member.name.c_str()
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\t\t{\n"
 					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
 					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n"
+					"\t\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
 					"\t\t\t\t\t\t\t\t\t}\n", 
 					member.name.c_str(),
 					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-					member.name.c_str()
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
 				);
 
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\t\t{\n"
 					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
 					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
@@ -1338,6 +1353,14 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					member.name.c_str(),
 					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
 					member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\telse\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str()
 				);
 
 				fprintf( header, 
@@ -1393,15 +1416,6 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n"
 					"\t\t\t\t\t\t}\n"
-				);
-fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
-				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-				fprintf( header, 
-					"\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
-					member.name.c_str(),
-					libType, 
-					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
-					member.name.c_str()
 				);
 
 				fprintf( header, 
