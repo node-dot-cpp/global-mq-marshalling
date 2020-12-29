@@ -193,7 +193,8 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 			fprintf( header, "%susing %sT = decltype(T::%s);\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_full_element_updated_notifier_for_%s = has_full_element_updated_notifier_call_for_%s<T, %sT&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_void_insert_notifier_for_%s = has_void_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
-			fprintf( header, "%sstatic constexpr bool has_insert_notifier_for_%s = has_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_insert_notifier2_for_%s = has_insert_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_insert_notifier3_for_%s = has_insert_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_void_erased_notifier_for_%s = has_void_erased_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier2_for_%s = has_erased_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier3_for_%s = has_erased_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
@@ -1254,6 +1255,35 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n",
 					member.name.c_str(), member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str()
 				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n"
+					"\t\t\t\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", 
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), 
+//					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
+					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\t\tt.notifyInserted_%s( pos, oldVal );\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyInserted_%s( pos );\n",
+					member.name.c_str(), member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyInserted_%s();\n",
+					member.name.c_str(), member.name.c_str()
+				);
+
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n",
 					member.name.c_str(), member.name.c_str()
@@ -1588,7 +1618,11 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 				name.c_str(), name.c_str()
 			);
 			fprintf( header, 
-				"template<typename StateT> concept has_insert_notifier_call_for_%s = requires { { std::declval<StateT>().notifyInserted_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };\n",
+				"template<typename StateT> concept has_insert_notifier_call2_for_%s = requires { { std::declval<StateT>().notifyInserted_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename MemberT> concept has_insert_notifier_call3_for_%s = requires { { std::declval<StateT>().notifyInserted_%s(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()), std::declval<MemberT>() }; };\n",
 				name.c_str(), name.c_str()
 			);
 
