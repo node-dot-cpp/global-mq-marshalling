@@ -168,14 +168,14 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 	*	has_void_update_notifier_call_for_%s            notifyUpdated_%s<T>()
 	*	has_update_notifier_call_for_%s                 notifyUpdated_%s<T, MemberT>(MemberT&)
 	*	// for vectors
-	*	has_element_updated_void_notifier_call_for_%s   notifyElementUpdated_%s<T>()
-	*	has_element_updated_notifier_call_for_%s        notifyElementUpdated_%s<T>(index_type_for_array_notifiers)
-	*	has_full_element_updated_notifier_call_for_%s   notifyElementUpdated_%s<T, MemberT>(index_type_for_array_notifiers, MemberT)
 	*	has_void_insert_notifier_call_for_%s            notifyInserted_%s<T>()
 	*	has_insert_notifier_call_for_%s                 notifyInserted_%s<T>(index_type_for_array_notifiers, index_type_for_array_notifiers)
 	*	has_void_erased_notifier_call_for_%s            notifyErased_%s<T>()
 	*	has_erased_notifier_call2_for_%s                notifyErased_%s<T>(index_type_for_array_notifiers, index_type_for_array_notifiers)
 	*	has_erased_notifier_call3_for_%s                notifyErased_%s<T, MemberT>(index_type_for_array_notifiers, index_type_for_array_notifiers, MemberT>()	
+	*	has_element_updated_void_notifier_call_for_%s   notifyElementUpdated_%s<T>()
+	*	has_element_updated_notifier_call_for_%s        notifyElementUpdated_%s<T>(index_type_for_array_notifiers)
+	*	has_full_element_updated_notifier_call_for_%s   notifyElementUpdated_%s<T, MemberT>(index_type_for_array_notifiers, MemberT)
 	*/
 	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
 	for ( auto& member : s.members )
@@ -188,16 +188,16 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 		);
 		if ( member->type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			fprintf( header, "%sstatic constexpr bool has_element_updated_void_notifier_for_%s = has_element_updated_void_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
-			fprintf( header, "%sstatic constexpr bool has_element_updated_notifier_for_%s = has_element_updated_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%susing %sT = decltype(T::%s);\n", offset, member->name.c_str(), member->name.c_str() );
-			fprintf( header, "%sstatic constexpr bool has_full_element_updated_notifier_for_%s = has_full_element_updated_notifier_call_for_%s<T, %sT&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_void_insert_notifier_for_%s = has_void_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_insert_notifier2_for_%s = has_insert_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_insert_notifier3_for_%s = has_insert_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_void_erased_notifier_for_%s = has_void_erased_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier2_for_%s = has_erased_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_erased_notifier3_for_%s = has_erased_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_void_element_updated_notifier_for_%s = has_element_updated_void_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_element_updated_notifier_for_%s = has_element_updated_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_full_element_updated_notifier_for_%s = has_full_element_updated_notifier_call_for_%s<T, %sT&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 		}
 	}
 	fprintf( header, "\n" );
@@ -1279,7 +1279,67 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t\t\tcase ActionOnVector::update_at:\n"
 					"\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\timpl::publishableParseLeafeValueBegin( parser );\n"
 				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n"
+					"\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type oldValue;\n",
+					member.name.c_str(), member.name.c_str(), member.name.c_str()
+				);
+
+				switch ( member.type.vectorElemKind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf( header, "\t\t\t\t\t\t\t\t\toldValue = value;\n" );
+						break;
+					case MessageParameterType::KIND::STRUCT:
+						fprintf( header, "\t\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
+						break;
+				}
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n"
+					"\t\t\t\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", 
+					member.name.c_str(), member.name.c_str(), member.name.c_str(), 
+					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
+					member.name.c_str()
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldVal );\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
+					member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n"
+					"\t\t\t\t\t\t\t\t\t}\n", 
+					member.name.c_str(),
+					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
+					member.name.c_str()
+				);
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t}\n",
+					member.name.c_str(),
+					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
+					member.name.c_str()
+				);
+
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\tbreak;\n"
 					"\t\t\t\t\t\t\t\t}\n"

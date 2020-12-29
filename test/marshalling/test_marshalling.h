@@ -1580,29 +1580,29 @@ class publishable_sample_Wrapper
 	static constexpr bool has_void_update_notifier_for_vector_of_int = has_void_update_notifier_call_for_vector_of_int<T>;
 	static constexpr bool has_update_notifier_for_vector_of_int = has_update_notifier_call_for_vector_of_int<T, decltype(T::vector_of_int)>;
 	static constexpr bool has_any_notifier_for_vector_of_int = has_void_update_notifier_for_vector_of_int || has_update_notifier_for_vector_of_int;
-	static constexpr bool has_element_updated_void_notifier_for_vector_of_int = has_element_updated_void_notifier_call_for_vector_of_int<T>;
-	static constexpr bool has_element_updated_notifier_for_vector_of_int = has_element_updated_notifier_call_for_vector_of_int<T>;
 	using vector_of_intT = decltype(T::vector_of_int);
-	static constexpr bool has_full_element_updated_notifier_for_vector_of_int = has_full_element_updated_notifier_call_for_vector_of_int<T, vector_of_intT&>;
 	static constexpr bool has_void_insert_notifier_for_vector_of_int = has_void_insert_notifier_call_for_vector_of_int<T>;
 	static constexpr bool has_insert_notifier2_for_vector_of_int = has_insert_notifier_call2_for_vector_of_int<T>;
 	static constexpr bool has_insert_notifier3_for_vector_of_int = has_insert_notifier_call3_for_vector_of_int<T, GMQ_COLL vector<vector_of_intT>&>;
 	static constexpr bool has_void_erased_notifier_for_vector_of_int = has_void_erased_notifier_call_for_vector_of_int<T>;
 	static constexpr bool has_erased_notifier2_for_vector_of_int = has_erased_notifier_call2_for_vector_of_int<T>;
 	static constexpr bool has_erased_notifier3_for_vector_of_int = has_erased_notifier_call3_for_vector_of_int<T, GMQ_COLL vector<vector_of_intT>&>;
+	static constexpr bool has_void_element_updated_notifier_for_vector_of_int = has_element_updated_void_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_element_updated_notifier_for_vector_of_int = has_element_updated_notifier_call_for_vector_of_int<T>;
+	static constexpr bool has_full_element_updated_notifier_for_vector_of_int = has_full_element_updated_notifier_call_for_vector_of_int<T, vector_of_intT&>;
 	static constexpr bool has_void_update_notifier_for_vector_struct_point3dreal = has_void_update_notifier_call_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_update_notifier_for_vector_struct_point3dreal = has_update_notifier_call_for_vector_struct_point3dreal<T, decltype(T::vector_struct_point3dreal)>;
 	static constexpr bool has_any_notifier_for_vector_struct_point3dreal = has_void_update_notifier_for_vector_struct_point3dreal || has_update_notifier_for_vector_struct_point3dreal;
-	static constexpr bool has_element_updated_void_notifier_for_vector_struct_point3dreal = has_element_updated_void_notifier_call_for_vector_struct_point3dreal<T>;
-	static constexpr bool has_element_updated_notifier_for_vector_struct_point3dreal = has_element_updated_notifier_call_for_vector_struct_point3dreal<T>;
 	using vector_struct_point3drealT = decltype(T::vector_struct_point3dreal);
-	static constexpr bool has_full_element_updated_notifier_for_vector_struct_point3dreal = has_full_element_updated_notifier_call_for_vector_struct_point3dreal<T, vector_struct_point3drealT&>;
 	static constexpr bool has_void_insert_notifier_for_vector_struct_point3dreal = has_void_insert_notifier_call_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_insert_notifier2_for_vector_struct_point3dreal = has_insert_notifier_call2_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_insert_notifier3_for_vector_struct_point3dreal = has_insert_notifier_call3_for_vector_struct_point3dreal<T, GMQ_COLL vector<vector_struct_point3drealT>&>;
 	static constexpr bool has_void_erased_notifier_for_vector_struct_point3dreal = has_void_erased_notifier_call_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_erased_notifier2_for_vector_struct_point3dreal = has_erased_notifier_call2_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_erased_notifier3_for_vector_struct_point3dreal = has_erased_notifier_call3_for_vector_struct_point3dreal<T, GMQ_COLL vector<vector_struct_point3drealT>&>;
+	static constexpr bool has_void_element_updated_notifier_for_vector_struct_point3dreal = has_element_updated_void_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_element_updated_notifier_for_vector_struct_point3dreal = has_element_updated_notifier_call_for_vector_struct_point3dreal<T>;
+	static constexpr bool has_full_element_updated_notifier_for_vector_struct_point3dreal = has_full_element_updated_notifier_call_for_vector_struct_point3dreal<T, vector_struct_point3drealT&>;
 
 
 public:
@@ -1789,6 +1789,27 @@ public:
 								}
 								case ActionOnVector::update_at:
 								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_of_int)::value_type& value = t.vector_of_int[pos];
+									typename decltype(T::vector_of_int)::value_type oldValue;
+									oldValue = value;
+									if constexpr ( has_full_element_updated_notifier_for_vector_of_int )
+									{
+										decltype(T::vector_of_int) oldVal;
+										impl::copyVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( t.vector_of_int, oldVal );
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
+										t.notifyElementUpdated_vector_of_int( pos, oldVal );
+									}
+									if constexpr ( has_element_updated_notifier_for_vector_of_int )
+									{
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
+										t.notifyElementUpdated_vector_of_int( pos );
+									}
+									if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
+									{
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
+										t.notifyElementUpdated_vector_of_int();
+									}
 									break;
 								}
 								case ActionOnVector::insert_single_before:
@@ -1879,6 +1900,27 @@ public:
 								}
 								case ActionOnVector::update_at:
 								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
+									typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
+									publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
+									if constexpr ( has_full_element_updated_notifier_for_vector_struct_point3dreal )
+									{
+										decltype(T::vector_struct_point3dreal) oldVal;
+										impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
+										t.notifyElementUpdated_vector_struct_point3dreal( pos, oldVal );
+									}
+									if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
+									{
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
+										t.notifyElementUpdated_vector_struct_point3dreal( pos );
+									}
+									if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+									{
+										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
+										t.notifyElementUpdated_vector_struct_point3dreal();
+									}
 									break;
 								}
 								case ActionOnVector::insert_single_before:
