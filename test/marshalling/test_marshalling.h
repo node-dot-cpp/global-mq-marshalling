@@ -1750,6 +1750,17 @@ public:
 				case 3:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+							}
+						}
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, ::m::impl::SignedIntegralType>( parser, t.vector_of_int, addr, 1 );
 					}
@@ -1780,6 +1791,17 @@ public:
 				case 4:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+							}
+						}
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						VectorOfSimpleTypeBody::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
 					}

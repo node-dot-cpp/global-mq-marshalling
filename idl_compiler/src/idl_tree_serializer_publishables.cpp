@@ -1216,6 +1216,25 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 					"\t\t\t\t\tif ( addr.size() > 1 ) // one of actions over elements of the vector\n"
 					"\t\t\t\t\t{\n"
 				);
+				fprintf( header, 
+					"\t\t\t\t\t\tif ( addr.size() > 2 ) // update for a member of a particular vector element\n"
+					"\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\telse // update of one or more elelments as a whole\n"
+					"\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\tsize_t action;\n"
+					"\t\t\t\t\t\t\timpl::parseActionInPublishable( parser, action );\n"
+					"\t\t\t\t\t\t\tswitch ( action )\n"
+					"\t\t\t\t\t\t\t{\n"
+				);
+				fprintf( header, 
+					"\t\t\t\t\t\t\t}\n"
+					"\t\t\t\t\t\t}\n"
+				);
 fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, 
@@ -1225,6 +1244,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
 					member.name.c_str()
 				);
+
 				fprintf( header, 
 					"\t\t\t\t\t}\n"
 					"\t\t\t\t\telse // replacement of the whole vector\n"
