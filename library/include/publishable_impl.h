@@ -140,30 +140,30 @@ public:
 	auto get4set_at( size_t idx ) { return RefWrapper4SetT(VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::b[idx], VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::root, VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::address, idx); }
 };
 
-class VectorOfSimpleTypeBody
+class PublishableVectorProcessor
 {
-	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
+public:
+	template<class ParserT, class VectorT, class ProcType>
 	static
 	void parseSingleValue( ParserT& parser, typename VectorT::value_type& value ) { 
-		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+		if constexpr ( std::is_same<ProcType, impl::SignedIntegralType>::value )
 			impl::IntegerProcessor::parse<ParserT, typename VectorT::value_type>( parser, &value );
-		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+		else if constexpr ( std::is_same<ProcType, impl::UnsignedIntegralType>::value )
 			impl::UnsignedIntegerProcessor::parse( parser, &value );
-		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+		else if constexpr ( std::is_same<ProcType, impl::RealType>::value )
 			impl::RealProcessor::parse( parser, &value );
-		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+		else if constexpr ( std::is_same<ProcType, impl::StringType>::value )
 			impl::StringProcessor::parse( parser, &value );
-		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+		else if constexpr ( std::is_base_of<impl::StructType, ProcType>::value )
 		{
 			impl::parseStructBegin( parser );
 			ProcType::parse( parser, value );
 			impl::parseStructEnd( parser );
 		}
 		else
-			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+			static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 	}
 
-public:
 	template<class ComposerT, class VectorT, class ElemTypeT/*, class RootT*/>
 	static
 	void compose( ComposerT& composer, VectorT& what ) { 
@@ -322,8 +322,8 @@ public:
 					assert( pos < dest.size() );
 					typename VectorT::value_type& value = dest[pos];
 					impl::publishableParseLeafeValueBegin( parser );
-					parseSingleValue<ParserT, VectorT, ElemTypeT, ProcType/*, class RootT*/>( parser, value );
 					impl::parseStateUpdateBlockEnd( parser );
+					parseSingleValue<ParserT, VectorT, ProcType>( parser, value );
 					break;
 				}
 				case ActionOnVector::insert_single_before:
@@ -333,8 +333,8 @@ public:
 					assert( pos <= dest.size() );
 					typename VectorT::value_type value;
 					impl::publishableParseLeafeValueBegin( parser );
-					parseSingleValue<ParserT, VectorT, ElemTypeT, ProcType/*, class RootT*/>( parser, value );
 					impl::parseStateUpdateBlockEnd( parser );
+					parseSingleValue<ParserT, VectorT, ProcType>( parser, value );
 					dest.insert( dest.begin() + pos, value );
 					break;
 				}
