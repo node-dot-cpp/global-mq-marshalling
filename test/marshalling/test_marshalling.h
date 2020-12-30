@@ -1881,7 +1881,8 @@ public:
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), ::m::impl::StructType, publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal, addr, 1 );
+							typename decltype(T::vector_struct_point3dreal)::value_type& val = t.vector_struct_point3dreal[pos];
+							publishable_STRUCT_POINT3DREAL::parse( parser, val, addr, 2 );
 						}
 						else // update of one or more elelments as a whole
 						{

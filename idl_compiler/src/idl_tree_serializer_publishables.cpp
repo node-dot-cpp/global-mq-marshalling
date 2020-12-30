@@ -1229,11 +1229,11 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 					fprintf( header, 
-						"\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
-						member.name.c_str(),
-						libType, 
-						member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ? impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() : libType,
-						member.name.c_str()
+//						"\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
+						"\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& val = t.%s[pos];\n"
+						"\t\t\t\t\t\t\t%s::parse( parser, val, addr, 2 );\n", 
+						member.name.c_str(), member.name.c_str(),
+						impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str()
 					);
 				else
 					fprintf( header, 
