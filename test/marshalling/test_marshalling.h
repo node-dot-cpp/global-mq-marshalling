@@ -1793,30 +1793,35 @@ public:
 								{
 									impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_of_int)::value_type& value = t.vector_of_int[pos];
-									typename decltype(T::vector_of_int)::value_type oldValue;
-									oldValue = value;
 									if constexpr ( has_full_element_updated_notifier_for_vector_of_int )
 									{
-										decltype(T::vector_of_int) oldVal;
-										impl::copyVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( t.vector_of_int, oldVal );
-										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
-										t.notifyElementUpdated_vector_of_int( pos, oldVal );
-										if constexpr ( has_element_updated_notifier_for_vector_of_int )
-											t.notifyElementUpdated_vector_of_int();
-										if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
-											t.notifyElementUpdated_vector_of_int();
+										typename decltype(T::vector_of_int)::value_type oldValue;
+										oldValue = value;
+										bool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged );
+										{
+											t.notifyElementUpdated_vector_of_int( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_vector_of_int )
+												t.notifyElementUpdated_vector_of_int();
+											if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
+												t.notifyElementUpdated_vector_of_int();
+										}
 									}
 									else if constexpr ( has_element_updated_notifier_for_vector_of_int )
 									{
-										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
-										t.notifyElementUpdated_vector_of_int( pos );
-										if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
-											t.notifyElementUpdated_vector_of_int();
+										bool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged );
+										{
+											t.notifyElementUpdated_vector_of_int( pos );
+											if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
+												t.notifyElementUpdated_vector_of_int();
+										}
 									}
 									else if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
 									{
-										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, value );
-										t.notifyElementUpdated_vector_of_int();
+										bool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged );
+											t.notifyElementUpdated_vector_of_int();
 									}
 									else
 									{
@@ -1915,30 +1920,35 @@ public:
 								{
 									impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
-									typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
-									publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
 									if constexpr ( has_full_element_updated_notifier_for_vector_struct_point3dreal )
 									{
-										decltype(T::vector_struct_point3dreal) oldVal;
-										impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
-										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
-										t.notifyElementUpdated_vector_struct_point3dreal( pos, oldVal );
-										if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
-											t.notifyElementUpdated_vector_struct_point3dreal();
-										if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
-											t.notifyElementUpdated_vector_struct_point3dreal();
+										typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
+										publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
+										bool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+										if ( currentChanged );
+										{
+											t.notifyElementUpdated_vector_struct_point3dreal( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
+												t.notifyElementUpdated_vector_struct_point3dreal();
+											if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+												t.notifyElementUpdated_vector_struct_point3dreal();
+										}
 									}
 									else if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
 									{
-										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
-										t.notifyElementUpdated_vector_struct_point3dreal( pos );
-										if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
-											t.notifyElementUpdated_vector_struct_point3dreal();
+										bool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+										if ( currentChanged );
+										{
+											t.notifyElementUpdated_vector_struct_point3dreal( pos );
+											if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+												t.notifyElementUpdated_vector_struct_point3dreal();
+										}
 									}
 									else if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
 									{
-										PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
-										t.notifyElementUpdated_vector_struct_point3dreal();
+										bool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+										if ( currentChanged );
+											t.notifyElementUpdated_vector_struct_point3dreal();
 									}
 									else
 									{

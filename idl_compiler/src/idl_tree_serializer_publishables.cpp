@@ -1298,40 +1298,40 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				);
 
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n"
-					"\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type oldValue;\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
+					"\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n",
+					member.name.c_str(), member.name.c_str()
 				);
 
+
+				fprintf( header, 
+					"\t\t\t\t\t\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type oldValue;\n",
+					member.name.c_str(), member.name.c_str()
+				);
 				switch ( member.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
 					case MessageParameterType::KIND::UINTEGER:
 					case MessageParameterType::KIND::REAL:
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\t\t\t\t\t\t\t\t\toldValue = value;\n" );
+						fprintf( header, "\t\t\t\t\t\t\t\t\t\toldValue = value;\n" );
 						break;
 					case MessageParameterType::KIND::STRUCT:
-						fprintf( header, "\t\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
+						fprintf( header, "\t\t\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", 
+							impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
 						break;
 				}
-
 				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n"
-					"\t\t\t\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", 
-					member.name.c_str(), member.name.c_str(), member.name.c_str(), 
-					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
-					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldVal );\n"
-					"\t\t\t\t\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
-					"\t\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\tbool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s, bool>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t\tif ( currentChanged );\n"
+					"\t\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n"
+					"\t\t\t\t\t\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t\t\t\t}\n",
 					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
 					member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
@@ -1340,10 +1340,13 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
-					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n"
-					"\t\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\tbool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s, bool>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t\tif ( currentChanged );\n"
+					"\t\t\t\t\t\t\t\t\t\t{\n"
+					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n"
+					"\t\t\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+					"\t\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\t}\n"
 					"\t\t\t\t\t\t\t\t\t}\n", 
 					member.name.c_str(),
 					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
@@ -1353,8 +1356,9 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				fprintf( header, 
 					"\t\t\t\t\t\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n"
 					"\t\t\t\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n"
-					"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+					"\t\t\t\t\t\t\t\t\t\tbool currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s, bool>( parser, value );\n"
+					"\t\t\t\t\t\t\t\t\t\tif ( currentChanged );\n"
+					"\t\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
 					"\t\t\t\t\t\t\t\t\t}\n",
 					member.name.c_str(),
 					member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
