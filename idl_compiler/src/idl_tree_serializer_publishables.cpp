@@ -1228,13 +1228,92 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				);
 fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 				if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
+				{
 					fprintf( header, 
-//						"\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
-						"\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& val = t.%s[pos];\n"
-						"\t\t\t\t\t\t\t%s::parse( parser, val, addr, 2 );\n", 
-						member.name.c_str(), member.name.c_str(),
-						impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str()
+						"\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n",
+						member.name.c_str(), member.name.c_str()
 					);
+
+					fprintf( header, 
+						"\t\t\t\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n"
+						"\t\t\t\t\t\t\t{\n"
+						"\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type oldValue;\n",
+						member.name.c_str(), member.name.c_str()
+					);
+					switch ( member.type.vectorElemKind )
+					{
+						case MessageParameterType::KIND::INTEGER:
+						case MessageParameterType::KIND::UINTEGER:
+						case MessageParameterType::KIND::REAL:
+						case MessageParameterType::KIND::CHARACTER_STRING:
+							fprintf( header, "\t\t\t\t\t\t\t\toldValue = value;\n" );
+							break;
+						case MessageParameterType::KIND::STRUCT:
+							fprintf( header, "\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", 
+								impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
+							break;
+					}
+					fprintf( header, 
+						"\t\t\t\t\t\t\t\tbool currentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", 
+						impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str()
+					);
+					fprintf( header, 
+						"\t\t\t\t\t\t\t\tif ( currentChanged );\n"
+						"\t\t\t\t\t\t\t\t{\n"
+						"\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n"
+						"\t\t\t\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n"
+						"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+						"\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+						"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+						"\t\t\t\t\t\t\t\t}\n"
+						"\t\t\t\t\t\t\t}\n",
+						member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
+					);
+
+					fprintf( header, 
+						"\t\t\t\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n"
+						"\t\t\t\t\t\t\t{\n",
+						member.name.c_str()
+					);
+					fprintf( header, 
+						"\t\t\t\t\t\t\t\tbool currentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", 
+						impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str()
+					);
+					fprintf( header, 
+						"\t\t\t\t\t\t\t\tif ( currentChanged );\n"
+						"\t\t\t\t\t\t\t\t{\n"
+						"\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n"
+						"\t\t\t\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n"
+						"\t\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+						"\t\t\t\t\t\t\t\t}\n"
+						"\t\t\t\t\t\t\t}\n", 
+						member.name.c_str(), member.name.c_str(), member.name.c_str()
+					);
+
+					fprintf( header, 
+						"\t\t\t\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n"
+						"\t\t\t\t\t\t\t{\n",
+						member.name.c_str()
+					);
+					fprintf( header, 
+						"\t\t\t\t\t\t\t\tbool currentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", 
+						impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str()
+					);
+					fprintf( header, 
+						"\t\t\t\t\t\t\t\tif ( currentChanged );\n"
+						"\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n"
+						"\t\t\t\t\t\t\t}\n",
+						member.name.c_str()
+					);
+
+					fprintf( header, 
+						"\t\t\t\t\t\t\telse\n"
+						"\t\t\t\t\t\t\t{\n"
+						"\t\t\t\t\t\t\t\t%s::parse<ParserT, typename decltype(T::%s)::value_type>( parser, value, addr, 2 );\n"
+						"\t\t\t\t\t\t\t}\n",
+						impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str()
+					);
+				}
 				else
 					fprintf( header, 
 						"\t\t\t\t\t\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n",
