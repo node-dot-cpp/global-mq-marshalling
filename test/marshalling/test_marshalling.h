@@ -286,12 +286,13 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		switch ( addr[offset] )
 		{
 			case 0:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_X|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
-						decltype(T::X) newVal;
-						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
-						bool currentChanged = newVal != t.X;
+						decltype(T::X) oldVal = t.X;
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+						bool currentChanged = oldVal != t.X;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -299,20 +300,20 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_X )
 								t.notifyUpdated_X();
 							if constexpr ( has_update_notifier_for_X )
-								t.notifyUpdated_X( t.X );
-							t.X = newVal;
+								t.notifyUpdated_X( oldVal );
 						}
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_Y|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_Y || reportChanges )
 					{
-						decltype(T::Y) newVal;
-						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
-						bool currentChanged = newVal != t.Y;
+						decltype(T::Y) oldVal = t.Y;
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+						bool currentChanged = oldVal != t.Y;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -320,20 +321,20 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_Y )
 								t.notifyUpdated_Y();
 							if constexpr ( has_update_notifier_for_Y )
-								t.notifyUpdated_Y( t.Y );
-							t.Y = newVal;
+								t.notifyUpdated_Y( oldVal );
 						}
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_Z|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_Z || reportChanges )
 					{
-						decltype(T::Z) newVal;
-						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
-						bool currentChanged = newVal != t.Z;
+						decltype(T::Z) oldVal = t.Z;
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+						bool currentChanged = oldVal != t.Z;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -341,8 +342,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_Z )
 								t.notifyUpdated_Z();
 							if constexpr ( has_update_notifier_for_Z )
-								t.notifyUpdated_Z( t.Z );
-							t.Z = newVal;
+								t.notifyUpdated_Z( oldVal );
 						}
 					}
 					else
@@ -484,12 +484,13 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		switch ( addr[offset] )
 		{
 			case 0:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_X|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
-						decltype(T::X) newVal;
-						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &newVal );
-						bool currentChanged = newVal != t.X;
+						decltype(T::X) oldVal = t.X;
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+						bool currentChanged = oldVal != t.X;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -497,20 +498,20 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_X )
 								t.notifyUpdated_X();
 							if constexpr ( has_update_notifier_for_X )
-								t.notifyUpdated_X( t.X );
-							t.X = newVal;
+								t.notifyUpdated_X( oldVal );
 						}
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_Y|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_Y || reportChanges )
 					{
-						decltype(T::Y) newVal;
-						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &newVal );
-						bool currentChanged = newVal != t.Y;
+						decltype(T::Y) oldVal = t.Y;
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+						bool currentChanged = oldVal != t.Y;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -518,20 +519,20 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_Y )
 								t.notifyUpdated_Y();
 							if constexpr ( has_update_notifier_for_Y )
-								t.notifyUpdated_Y( t.Y );
-							t.Y = newVal;
+								t.notifyUpdated_Y( oldVal );
 						}
 					}
 					else
 						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_Z|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_Z || reportChanges )
 					{
-						decltype(T::Z) newVal;
-						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &newVal );
-						bool currentChanged = newVal != t.Z;
+						decltype(T::Z) oldVal = t.Z;
+						m::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+						bool currentChanged = oldVal != t.Z;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -539,8 +540,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_Z )
 								t.notifyUpdated_Z();
 							if constexpr ( has_update_notifier_for_Z )
-								t.notifyUpdated_Z( t.Z );
-							t.Z = newVal;
+								t.notifyUpdated_Z( oldVal );
 						}
 					}
 					else
@@ -669,12 +669,13 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		switch ( addr[offset] )
 		{
 			case 0:
-				assert( addr.size() == offset + 1 );
-					if constexpr( has_any_notifier_for_ID|| reportChanges )
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
-						decltype(T::ID) newVal;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &newVal );
-						bool currentChanged = newVal != t.ID;
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						bool currentChanged = oldVal != t.ID;
 						if ( currentChanged )
 						{
 							if constexpr ( reportChanges )
@@ -682,8 +683,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 							if constexpr ( has_void_update_notifier_for_ID )
 								t.notifyUpdated_ID();
 							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( t.ID );
-							t.ID = newVal;
+								t.notifyUpdated_ID( oldVal );
 						}
 					}
 					else
@@ -1635,11 +1635,12 @@ public:
 					{
 						decltype(T::ID) oldVal = t.ID;
 						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
-						if ( oldVal != t.ID )
+						bool currentChanged = oldVal != t.ID;
+						if ( currentChanged )
 						{
-							if constexpr ( has_void_update_notifier_call_for_ID )
+							if constexpr ( has_void_update_notifier_for_ID )
 								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_call_for_ID )
+							if constexpr ( has_update_notifier_for_ID )
 								t.notifyUpdated_ID( oldVal );
 						}
 					}
@@ -1874,11 +1875,11 @@ public:
 					}
 					else // replacement of the whole vector
 					{
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						m::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( alwaysCollectChanges )
 						{
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
 							currentChanged = !impl::isSameVector<decltype(T::publishable_sample), ::m::impl::SignedIntegralType>( oldVectorVal, t.vector_of_int );
 						}
@@ -2052,11 +2053,11 @@ public:
 					}
 					else // replacement of the whole vector
 					{
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 						m::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( alwaysCollectChanges )
 						{
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 							currentChanged = !impl::isSameVector<decltype(T::publishable_sample), publishable_STRUCT_POINT3DREAL>( oldVectorVal, t.vector_struct_point3dreal );
 						}
