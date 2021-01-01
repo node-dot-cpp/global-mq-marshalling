@@ -202,62 +202,59 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 
-		if constexpr( has_any_notifier_for_X || reportChanges )
-		{
-			decltype(T::X) newVal;
-			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
-			bool currentChanged = newVal != t.X;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_X )
-					t.notifyUpdated_X();
-				if constexpr ( has_update_notifier_for_X )
-					t.notifyUpdated_X( t.X );
-				t.X = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+					if constexpr( has_any_notifier_for_X || reportChanges )
+					{
+						decltype(T::X) oldVal = t.X;
+						m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+						bool currentChanged = oldVal != t.X;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_X )
+								t.notifyUpdated_X();
+							if constexpr ( has_update_notifier_for_X )
+								t.notifyUpdated_X( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-		if constexpr( has_any_notifier_for_Y || reportChanges )
-		{
-			decltype(T::Y) newVal;
-			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
-			bool currentChanged = newVal != t.Y;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_Y )
-					t.notifyUpdated_Y();
-				if constexpr ( has_update_notifier_for_Y )
-					t.notifyUpdated_Y( t.Y );
-				t.Y = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+					if constexpr( has_any_notifier_for_Y || reportChanges )
+					{
+						decltype(T::Y) oldVal = t.Y;
+						m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+						bool currentChanged = oldVal != t.Y;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_Y )
+								t.notifyUpdated_Y();
+							if constexpr ( has_update_notifier_for_Y )
+								t.notifyUpdated_Y( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-		if constexpr( has_any_notifier_for_Z || reportChanges )
-		{
-			decltype(T::Z) newVal;
-			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
-			bool currentChanged = newVal != t.Z;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_Z )
-					t.notifyUpdated_Z();
-				if constexpr ( has_update_notifier_for_Z )
-					t.notifyUpdated_Z( t.Z );
-				t.Z = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+					if constexpr( has_any_notifier_for_Z || reportChanges )
+					{
+						decltype(T::Z) oldVal = t.Z;
+						m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+						bool currentChanged = oldVal != t.Z;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_Z )
+								t.notifyUpdated_Z();
+							if constexpr ( has_update_notifier_for_Z )
+								t.notifyUpdated_Z( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 
 		if constexpr ( reportChanges )
@@ -400,62 +397,59 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 
-		if constexpr( has_any_notifier_for_X || reportChanges )
-		{
-			decltype(T::X) newVal;
-			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &newVal, "X" );
-			bool currentChanged = newVal != t.X;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_X )
-					t.notifyUpdated_X();
-				if constexpr ( has_update_notifier_for_X )
-					t.notifyUpdated_X( t.X );
-				t.X = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+					if constexpr( has_any_notifier_for_X || reportChanges )
+					{
+						decltype(T::X) oldVal = t.X;
+						m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+						bool currentChanged = oldVal != t.X;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_X )
+								t.notifyUpdated_X();
+							if constexpr ( has_update_notifier_for_X )
+								t.notifyUpdated_X( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-		if constexpr( has_any_notifier_for_Y || reportChanges )
-		{
-			decltype(T::Y) newVal;
-			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &newVal, "Y" );
-			bool currentChanged = newVal != t.Y;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_Y )
-					t.notifyUpdated_Y();
-				if constexpr ( has_update_notifier_for_Y )
-					t.notifyUpdated_Y( t.Y );
-				t.Y = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+					if constexpr( has_any_notifier_for_Y || reportChanges )
+					{
+						decltype(T::Y) oldVal = t.Y;
+						m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+						bool currentChanged = oldVal != t.Y;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_Y )
+								t.notifyUpdated_Y();
+							if constexpr ( has_update_notifier_for_Y )
+								t.notifyUpdated_Y( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-		if constexpr( has_any_notifier_for_Z || reportChanges )
-		{
-			decltype(T::Z) newVal;
-			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &newVal, "Z" );
-			bool currentChanged = newVal != t.Z;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_Z )
-					t.notifyUpdated_Z();
-				if constexpr ( has_update_notifier_for_Z )
-					t.notifyUpdated_Z( t.Z );
-				t.Z = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+					if constexpr( has_any_notifier_for_Z || reportChanges )
+					{
+						decltype(T::Z) oldVal = t.Z;
+						m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+						bool currentChanged = oldVal != t.Z;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_Z )
+								t.notifyUpdated_Z();
+							if constexpr ( has_update_notifier_for_Z )
+								t.notifyUpdated_Z( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 
 		if constexpr ( reportChanges )
@@ -596,54 +590,53 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		static constexpr bool has_update_notifier_for_Size = has_update_notifier_call_for_Size<T, decltype(T::Size)>;
 		static constexpr bool has_any_notifier_for_Size = has_void_update_notifier_for_Size || has_update_notifier_for_Size;
 
-		if constexpr( has_any_notifier_for_ID || reportChanges )
-		{
-			decltype(T::ID) newVal;
-			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &newVal, "ID" );
-			bool currentChanged = newVal != t.ID;
-			if ( currentChanged )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr ( has_void_update_notifier_for_ID )
-					t.notifyUpdated_ID();
-				if constexpr ( has_update_notifier_for_ID )
-					t.notifyUpdated_ID( t.ID );
-				t.ID = newVal;
-			}
-		}
-		else
-			m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+					if constexpr( has_any_notifier_for_ID || reportChanges )
+					{
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						bool currentChanged = oldVal != t.ID;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_for_ID )
+								t.notifyUpdated_ID( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
 		m::impl::parsePublishableStructBegin( parser, "Size" );
-		if constexpr( has_update_notifier_for_Size )
-		{
-			decltype(T::Size) temp_Size;
-			publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
-			bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-			if ( changedCurrent )
-			{
-				if constexpr( has_void_update_notifier_for_Size )
-					t.notifyUpdated_Size();
-				if constexpr( has_update_notifier_for_Size )
-					t.notifyUpdated_Size( temp_Size );
-				if constexpr ( reportChanges )
-					changed = true;
-			}
-		}
-		else if constexpr( has_void_update_notifier_for_Size || reportChanges )
-		{
-			bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-			if ( changedCurrent )
-			{
-				if constexpr( has_void_update_notifier_for_Size )
-					t.notifyUpdated_Size();
-				if constexpr ( reportChanges )
-					changed = true;
-			}
-		}
-		else
-			publishable_STRUCT_SIZE::parse( parser, t.Size );
+						if constexpr( has_update_notifier_for_Size )
+						{
+							decltype(T::Size) temp_Size;
+							publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+							if ( changedCurrent )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								if constexpr( has_void_update_notifier_for_Size )
+									t.notifyUpdated_Size();
+								t.notifyUpdated_Size( temp_Size );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_Size )
+						{
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+							if ( changedCurrent )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								t.notifyUpdated_Size();
+							}
+						}
+						else if constexpr ( reportChanges )
+							changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+						else
+							publishable_STRUCT_SIZE::parse( parser, t.Size );
 		m::impl::parsePublishableStructEnd( parser );
 
 		if constexpr ( reportChanges )
@@ -745,7 +738,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						}
 						else if constexpr( has_void_update_notifier_for_Size )
 						{
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
 							if ( changedCurrent )
 							{
 								if constexpr ( reportChanges )
@@ -1893,7 +1886,7 @@ public:
 						{
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
-							currentChanged = !impl::isSameVector<decltype(T::publishable_sample), ::m::impl::SignedIntegralType>( oldVectorVal, t.vector_of_int );
+							currentChanged = !impl::isSameVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( oldVectorVal, t.vector_of_int );
 						}
 						else
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
@@ -2071,7 +2064,7 @@ public:
 						{
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
-							currentChanged = !impl::isSameVector<decltype(T::publishable_sample), publishable_STRUCT_POINT3DREAL>( oldVectorVal, t.vector_struct_point3dreal );
+							currentChanged = !impl::isSameVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( oldVectorVal, t.vector_struct_point3dreal );
 						}
 						else
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );

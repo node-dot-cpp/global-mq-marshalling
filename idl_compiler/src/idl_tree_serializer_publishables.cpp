@@ -349,6 +349,9 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 
 void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, bool forwardAddress )
 {
+	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+
 	fprintf( header, "\t\t\t\t\tdecltype(T::%s) oldVectorVal;\n",  member.name.c_str() );
 	fprintf( header, "\t\t\t\t\tbool currentChanged = false;\n" );
 	fprintf( header, "\t\t\t\t\tconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
@@ -359,13 +362,13 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 	assert( member.type.messageIdx < root.structs.size() );
-	fprintf( header, "\t\t\t\t\tif ( addr.size() > 1 ) // one of actions over elements of the vector\n"
-		"\t\t\t\t\t{\n"
-		"\t\t\t\t\t\tsize_t pos = addr[1];\n"
-		"\t\t\t\t\t\tif ( pos >= t.%s.size() )\n"
-		"\t\t\t\t\t\t\tthrow std::exception();\n", member.name.c_str() );
+	fprintf( header, "\t\t\t\t\tif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offsetPlusStr );
+	fprintf( header, "\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\tsize_t pos = addr[%s1];\n", offsetPlusStr );
+	fprintf( header, "\t\t\t\t\t\tif ( pos >= t.%s.size() )\n", member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tthrow std::exception();\n" );
 
-	fprintf( header, "\t\t\t\t\t\tif ( addr.size() > 2 ) // update for a member of a particular vector element\n" );
+	fprintf( header, "\t\t\t\t\t\tif ( addr.size() > %s2 ) // update for a member of a particular vector element\n", offsetPlusStr );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 
 	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
@@ -387,7 +390,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				fprintf( header, "\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
 				break;
 		}
-		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
 		fprintf( header, "\t\t\t\t\t\t\t\tif ( currentChanged )\n" );
 		fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
 		fprintf( header, "\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
@@ -400,7 +403,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 		fprintf( header, "\t\t\t\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
 		fprintf( header, "\t\t\t\t\t\t\t{\n" );
-		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
 		fprintf( header, "\t\t\t\t\t\t\t\tif ( currentChanged )\n" );
 		fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
 		fprintf( header, "\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
@@ -411,7 +414,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 		fprintf( header, "\t\t\t\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
 		fprintf( header, "\t\t\t\t\t\t\t{\n" );
-		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
 		fprintf( header, "\t\t\t\t\t\t\t\tif ( currentChanged )\n" );
 		fprintf( header, "\t\t\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
 		fprintf( header, "\t\t\t\t\t\t\t}\n" );
@@ -419,9 +422,9 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		fprintf( header, "\t\t\t\t\t\t\telse\n" );
 		fprintf( header, "\t\t\t\t\t\t\t{\n" );
 		fprintf( header, "\t\t\t\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-		fprintf( header, "\t\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, 2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
 		fprintf( header, "\t\t\t\t\t\t\t\telse\n" );
-		fprintf( header, "\t\t\t\t\t\t\t\t\t%s::parse<ParserT, typename decltype(T::%s)::value_type>( parser, value, addr, 2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\t\t%s::parse<ParserT, typename decltype(T::%s)::value_type>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
 		fprintf( header, "\t\t\t\t\t\t\t}\n" );
 	}
 	else
