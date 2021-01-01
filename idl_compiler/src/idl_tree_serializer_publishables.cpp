@@ -511,68 +511,6 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				fprintf( header, "\t\t\t\t{\n" );
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructBegin( parser );\n" );
 
-				/*fprintf( header,
-					"\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
-					"\t\t\t\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n"
-					"\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", 
-					member.name.c_str(), member.name.c_str(), impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() 
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tif ( changedCurrent )\n"
-					"\t\t\t\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\t\t\t\tchanged = true;\n"
-					"\t\t\t\t\t\t}\n"
-					"\t\t\t\t\t}\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s || reportChanges )\n"
-					"\t\t\t\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, "\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tif ( changedCurrent )\n"
-					"\t\t\t\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\t\t\t\tchanged = true;\n"
-					"\t\t\t\t\t\t}\n"
-					"\t\t\t\t\t}\n"
-					"\t\t\t\t\telse\n"
-					"\t\t\t\t\t{\n" 
-					"\t\t\t\t\t\t%s::parse( parser, t.%s );\n"
-					"\t\t\t\t\t}\n",
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);*/
 				impl_generateApplyUpdateForStructItself( header, member, true );
 
 				fprintf( header, "\t\t\t\t\tm::impl::publishableParseLeafeStructEnd( parser );\n" );
@@ -580,71 +518,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 				fprintf( header, "\t\t\t\telse // let child continue parsing\n" );
 				fprintf( header, "\t\t\t\t{\n" );
 
-
-				/*fprintf( header,
-					"\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
-					"\t\t\t\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n"
-					"\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", 
-					member.name.c_str(), member.name.c_str(), impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, offset + 1 );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() 
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tif ( changedCurrent )\n"
-					"\t\t\t\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\t\t\t\tchanged = true;\n"
-					"\t\t\t\t\t\t}\n"
-					"\t\t\t\t\t}\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s || reportChanges )\n"
-					"\t\t\t\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, "\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s, addr, offset + 1 );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tif ( changedCurrent )\n"
-					"\t\t\t\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\t\t\t\tchanged = true;\n"
-					"\t\t\t\t\t\t}\n"
-					"\t\t\t\t\t}\n"
-					"\t\t\t\t\telse\n"
-					"\t\t\t\t\t{\n" 
-					"\t\t\t\t\t\t%s::parse( parser, t.%s, addr, offset + 1 );\n"
-					"\t\t\t\t\t}\n",
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);*/
-				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, true, true );
-
+				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, true, true, true );
 
 				fprintf( header, 
 					"\t\t\t\t}\n" 
@@ -724,48 +598,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				fprintf( header, 
-					"\t\tif constexpr( has_any_notifier_for_%s || reportChanges )\n"
-					"\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\tdecltype(T::%s) newVal;\n"
-					"\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &newVal, \"%s\" );\n",
-					member.name.c_str(), 
-					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\tbool currentChanged = newVal != t.%s;\n"
-					"\t\t\tif ( currentChanged )\n"
-					"\t\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\tchanged = true;\n"
-					"\t\t\t\tif constexpr ( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr ( has_update_notifier_for_%s )\n"
-					"\t\t\t\t\tt.notifyUpdated_%s( t.%s );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\tt.%s = newVal;\n",
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t}\n"
-					"\t\t}\n"
-					"\t\telse\n"
-				);
-				fprintf( header, 
-					"\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n",
-					paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
+				impl_generateApplyUpdateForSimpleType( header, member, true, false );
 				fprintf( header, "\n" );
 				break;
 			}
@@ -773,65 +606,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			{
 				fprintf( header, "\t\tm::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 
-				fprintf( header, 
-					"\t\tif constexpr( has_update_notifier_for_%s )\n"
-					"\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\tdecltype(T::%s) temp_%s;\n"
-					"\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", 
-					member.name.c_str(), member.name.c_str(), impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, "\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\tif ( changedCurrent )\n"
-					"\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr( has_update_notifier_for_%s )\n"
-					"\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n",
-					member.name.c_str(), member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\tchanged = true;\n"
-					"\t\t\t}\n"
-					"\t\t}\n"
-				);
-				fprintf( header, 
-					"\t\telse if constexpr( has_void_update_notifier_for_%s || reportChanges )\n"
-					"\t\t{\n",
-					member.name.c_str()
-				);
-				fprintf( header, "\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\tif ( changedCurrent )\n"
-					"\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n"
-					"\t\t\t\t\tt.notifyUpdated_%s();\n",
-					member.name.c_str(), member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\tif constexpr ( reportChanges )\n"
-					"\t\t\t\t\tchanged = true;\n"
-					"\t\t\t}\n"
-					"\t\t}\n"
-					"\t\telse\n"
-					"\t\t\t%s::parse( parser, t.%s );\n", 
-					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
-				);
+				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false );
 
 				fprintf( header, "\t\tm::impl::parsePublishableStructEnd( parser );\n" );
 				break;

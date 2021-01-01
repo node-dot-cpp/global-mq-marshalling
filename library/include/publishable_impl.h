@@ -287,62 +287,6 @@ public:
 			}
 		}
 	}
-
-	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
-	static
-	void parse( ParserT& parser, VectorT& dest, GMQ_COLL vector<size_t>& addr, size_t offset ) { 
-		if ( addr.size() > offset + 1 )
-		{
-			size_t pos = addr[offset];
-			assert( pos < dest.size() );
-			if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
-				ProcType::parse( parser, dest[pos], addr, offset + 1 );
-			else
-				throw std::exception(); // impossible for simple types
-		}
-		else
-		{
-			size_t action;
-			impl::parseActionInPublishable( parser, action );
-			switch ( action )
-			{
-				case ActionOnVector::remove_at:
-				{
-					impl::parseStateUpdateBlockEnd( parser );
-					assert( addr.size() == offset + 1 );
-					size_t pos = addr[offset];
-					assert( pos < dest.size() );
-					dest.erase( dest.begin() + pos );
-					break;
-				}
-				case ActionOnVector::update_at:
-				{
-					assert( addr.size() == offset + 1 );
-					size_t pos = addr[offset];
-					assert( pos < dest.size() );
-					typename VectorT::value_type& value = dest[pos];
-					impl::publishableParseLeafeValueBegin( parser );
-					impl::parseStateUpdateBlockEnd( parser );
-					parseSingleValue<ParserT, VectorT, ProcType>( parser, value );
-					break;
-				}
-				case ActionOnVector::insert_single_before:
-				{
-					assert( addr.size() == offset + 1 );
-					size_t pos = addr[offset];
-					assert( pos <= dest.size() );
-					typename VectorT::value_type value;
-					impl::publishableParseLeafeValueBegin( parser );
-					impl::parseStateUpdateBlockEnd( parser );
-					parseSingleValue<ParserT, VectorT, ProcType>( parser, value );
-					dest.insert( dest.begin() + pos, value );
-					break;
-				}
-				default:
-					throw std::exception();
-			}
-		}
-	}
 };
 
 namespace impl {
