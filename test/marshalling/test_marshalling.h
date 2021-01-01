@@ -693,70 +693,70 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 				{
 					m::impl::publishableParseLeafeStructBegin( parser );
-					if constexpr( has_update_notifier_for_Size )
-					{
-						decltype(T::Size) temp_Size;
-						publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
-						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-						if ( changedCurrent )
+						if constexpr( has_update_notifier_for_Size )
 						{
-							if constexpr( has_void_update_notifier_for_Size )
-								t.notifyUpdated_Size();
-							if constexpr( has_update_notifier_for_Size )
+							decltype(T::Size) temp_Size;
+							publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+							if ( changedCurrent )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								if constexpr( has_void_update_notifier_for_Size )
+									t.notifyUpdated_Size();
 								t.notifyUpdated_Size( temp_Size );
-							if constexpr ( reportChanges )
-								changed = true;
+							}
 						}
-					}
-					else if constexpr( has_void_update_notifier_for_Size || reportChanges )
-					{
-						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-						if ( changedCurrent )
+						else if constexpr( has_void_update_notifier_for_Size )
 						{
-							if constexpr( has_void_update_notifier_for_Size )
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+							if ( changedCurrent )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
 								t.notifyUpdated_Size();
-							if constexpr ( reportChanges )
-								changed = true;
+							}
 						}
-					}
-					else
-					{
-						publishable_STRUCT_SIZE::parse( parser, t.Size );
-					}
+
+						else
+						{
+								if constexpr ( reportChanges )
+									changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+								else
+									publishable_STRUCT_SIZE::parse( parser, t.Size );
+						}
 					m::impl::publishableParseLeafeStructEnd( parser );
 				}
 				else // let child continue parsing
 				{
-					if constexpr( has_update_notifier_for_Size )
-					{
-						decltype(T::Size) temp_Size;
-						publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
-						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
-						if ( changedCurrent )
+						if constexpr( has_update_notifier_for_Size )
 						{
-							if constexpr( has_void_update_notifier_for_Size )
-								t.notifyUpdated_Size();
-							if constexpr( has_update_notifier_for_Size )
+							decltype(T::Size) temp_Size;
+							publishable_STRUCT_SIZE::copy<decltype(T::Size), decltype(T::Size)>( t.Size, temp_Size );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+							if ( changedCurrent )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								if constexpr( has_void_update_notifier_for_Size )
+									t.notifyUpdated_Size();
 								t.notifyUpdated_Size( temp_Size );
-							if constexpr ( reportChanges )
-								changed = true;
+							}
 						}
-					}
-					else if constexpr( has_void_update_notifier_for_Size || reportChanges )
-					{
-						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
-						if ( changedCurrent )
+						else if constexpr( has_void_update_notifier_for_Size )
 						{
-							if constexpr( has_void_update_notifier_for_Size )
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
 								t.notifyUpdated_Size();
-							if constexpr ( reportChanges )
-								changed = true;
+							}
 						}
-					}
-					else
-					{
-						publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
-					}
+						else if constexpr ( reportChanges )
+							changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+						else
+							publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
 				}
 				break;
 			default:
@@ -1670,11 +1670,15 @@ public:
 						{
 							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::size), bool>( parser, t.size );
 							if ( changedCurrent )
+							{
 								t.notifyUpdated_size();
+							}
 						}
 
 						else
+						{
 							publishable_STRUCT_SIZE::parse( parser, t.size );
+						}
 
 						m::impl::publishableParseLeafeStructEnd( parser );
 					}
@@ -1696,7 +1700,9 @@ public:
 						{
 							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.size, addr, 1 );
 							if ( changedCurrent )
+							{
 								t.notifyUpdated_size();
+							}
 						}
 						else
 							publishable_STRUCT_SIZE::parse( parser, t.size, addr, 1 );
@@ -1725,11 +1731,15 @@ public:
 						{
 							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
 							if ( changedCurrent )
+							{
 								t.notifyUpdated_chp();
+							}
 						}
 
 						else
+						{
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+						}
 
 						m::impl::publishableParseLeafeStructEnd( parser );
 					}
@@ -1751,7 +1761,9 @@ public:
 						{
 							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::Size), bool>( parser, t.chp, addr, 1 );
 							if ( changedCurrent )
+							{
 								t.notifyUpdated_chp();
+							}
 						}
 						else
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );

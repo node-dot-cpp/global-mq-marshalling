@@ -205,10 +205,8 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 
 void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges )
 {
-	if ( addOffsetInAddr )
-		fprintf( header, "\t\t\t\t\tif ( addr.size() > offset + 1 )\n" );
-	else
-		fprintf( header, "\t\t\t\t\tif ( addr.size() > 1 )\n" );
+	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+	fprintf( header, "\t\t\t\t\tif ( addr.size() > %s1 )\n", offsetPlusStr );
 	fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
 	if ( addReportChanges )
 		fprintf( header, "\t\t\t\t\tif constexpr( has_any_notifier_for_%s || reportChanges )\n", member.name.c_str() );
@@ -284,13 +282,19 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 
 void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges )
 {
+	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 	fprintf( header, "\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n", member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
+	if ( addReportChanges )
+	{
+		fprintf( header, "\t\t\t\t\t\t\t\tif constexpr ( reportChanges )\n" );
+		fprintf( header, "\t\t\t\t\t\t\t\t\tchanged = true;\n" );
+	}
 	fprintf( header, "\t\t\t\t\t\t\t\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\tt.notifyUpdated_%s( temp_%s );\n", member.name.c_str(), member.name.c_str() );
@@ -300,10 +304,27 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s, addr, 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
+	fprintf( header, "\t\t\t\t\t\t\t{\n" );
+	if ( addReportChanges )
+	{
+		fprintf( header, "\t\t\t\t\t\t\t\tif constexpr ( reportChanges )\n" );
+		fprintf( header, "\t\t\t\t\t\t\t\t\tchanged = true;\n" );
+	}
 	fprintf( header, "\t\t\t\t\t\t\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
-	fprintf( header, "\t\t\t\t\t\telse\n" );
-	fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, 1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+	if ( addReportChanges )
+	{
+		fprintf( header, "\t\t\t\t\t\telse if constexpr ( reportChanges )\n" );
+		fprintf( header, "\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
+		fprintf( header, "\t\t\t\t\t\telse\n" );
+		fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+	}
+	else
+	{
+		fprintf( header, "\t\t\t\t\t\telse\n" );
+		fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+	}
 }
 
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
@@ -600,6 +621,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t}\n",
 					impl_generatePublishableStructName( member ).c_str(), member.name.c_str()
 				);*/
+				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, true, true );
 
 
 				fprintf( header, 
