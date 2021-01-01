@@ -347,9 +347,9 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	}
 }
 
-void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, bool forwardAddress )
+void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges/*, bool forwardAddress*/ )
 {
-	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+//	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
 	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
 	fprintf( header, "\t\t\t\t\tdecltype(T::%s) oldVectorVal;\n",  member.name.c_str() );
@@ -591,6 +591,12 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tt.notifyUpdated_%s( oldVectorVal );\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t}\n" );
+
+	if ( addReportChanges )
+	{
+		fprintf( header, "\n" );
+		fprintf( header, "\t\t\t\t\treturn currentChanged;\n" );
+	}
 }
 
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
@@ -773,7 +779,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
+				/*const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 				fprintf( header, 
 					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"
 					"\t\t\t\t\t\t{\n"
@@ -799,7 +805,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"
 					"\t\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
 					"\t\t\t\t\t\t// TODO: forward to child\n"
-				);
+				);*/
+				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
 				break;
 			}
 			default:
@@ -860,7 +867,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			case MessageParameterType::KIND::VECTOR:
 			{
 				assert( member.type.messageIdx < root.structs.size() );
-				fprintf( header, 
+				/*fprintf( header, 
 					"\t\t\t\t\tif ( addr.size() > 1 )\n"
 				);
 				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
@@ -885,7 +892,8 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				);
 				fprintf( header, 
 					"\t\t\t\t\t}\n"
-				);
+				);*/
+				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, true, false );
 				break;
 			}
 			default:
@@ -1218,7 +1226,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false, true );
+				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
 				fprintf( header, "\n" ); 
 
 				break;
