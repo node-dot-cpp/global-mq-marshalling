@@ -203,18 +203,19 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 	fprintf( header, "\n" );
 }
 
-void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges )
+void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& member, bool addReportChanges, bool isLeafe )
 {
-	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
-	fprintf( header, "\t\t\t\t\tif ( addr.size() > %s1 )\n", offsetPlusStr );
-	fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
+	string parseProcessorType = isLeafe ? paramTypeToLeafeParser( member.type.kind ) : paramTypeToParser( member.type.kind );
 	if ( addReportChanges )
 		fprintf( header, "\t\t\t\t\tif constexpr( has_any_notifier_for_%s || reportChanges )\n", member.name.c_str() );
 	else
 		fprintf( header, "\t\t\t\t\tif constexpr( has_any_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\tdecltype(T::%s) oldVal = t.%s;\n", member.name.c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+	if ( isLeafe )
+		fprintf( header, "\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+	else
+		fprintf( header, "\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\tbool currentChanged = oldVal != t.%s;\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\tif ( currentChanged )\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
@@ -230,7 +231,10 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse\n" );
-	fprintf( header, "\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+	if ( isLeafe )
+		fprintf( header, "\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+	else
+		fprintf( header, "\t\t\t\t\t\tm::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 }
 
 void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& member, bool addReportChanges )
@@ -480,6 +484,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
+				fprintf( header, "\t\t\t\t\tif ( addr.size() > offset + 1 )\n" );
+				fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
 				impl_generateApplyUpdateForSimpleType( header, member, true, true );
 				break;
 			}
@@ -1147,7 +1153,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				impl_generateApplyUpdateForSimpleType( header, member, false, false );
+				fprintf( header, "\t\t\t\t\tif ( addr.size() > 1 )\n" );
+				fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
+				impl_generateApplyUpdateForSimpleType( header, member, false, true );
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
