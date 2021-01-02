@@ -920,7 +920,7 @@ public:
 	{
 		static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 		if constexpr ( ParserT::proto == Proto::GMQ )
-			parseSignedInteger( p, arg );
+			p.parseSignedInteger( arg );
 		else
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -952,7 +952,7 @@ public:
 	{
 		static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 		if constexpr ( ParserT::proto == Proto::GMQ )
-			parseUnsignedInteger( p, arg );
+			p.parseUnsignedInteger( arg );
 		else
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -984,7 +984,7 @@ public:
 	{
 		static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_pointer<ArgT>::type>::value );
 		if constexpr ( ParserT::proto == Proto::GMQ )
-			parseReal( p, arg );
+			p.parseReal( arg );
 		else
 		{
 			p.readRealFromJson( arg );
@@ -1014,7 +1014,7 @@ public:
 	void parse(ParserT& p, ArgT* arg)
 	{
 		if constexpr ( ParserT::proto == Proto::GMQ )
-			parseString( p, arg );
+			p.parseString( arg );
 		else
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1044,7 +1044,7 @@ void publishableParseInteger(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseSignedInteger( p, arg );
+		p.parseSignedInteger( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1078,7 +1078,7 @@ void publishableParseUnsignedInteger(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseUnsignedInteger( p, arg );
+		p.parseUnsignedInteger( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1112,7 +1112,7 @@ void publishableParseReal(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseReal( p, arg );
+		p.parseReal( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1443,7 +1443,7 @@ void publishableParseLeafeInteger(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseSignedInteger( p, arg );
+		p.parseSignedInteger( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1477,7 +1477,7 @@ void publishableParseLeafeUnsignedInteger(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_integral<ArgT>::value || std::is_integral<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseUnsignedInteger( p, arg );
+		p.parseUnsignedInteger( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1511,7 +1511,7 @@ void publishableParseLeafeReal(ParserT& p, ArgT* arg)
 {
 	static_assert( std::is_arithmetic<ArgT>::value || std::is_arithmetic<typename std::remove_pointer<ArgT>::type>::value );
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseReal( p, arg );
+		p.parseReal( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1543,7 +1543,7 @@ template<typename ParserT, typename ArgT>
 void publishableParseLeafeString(ParserT& p, ArgT* arg)
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseString( p, arg );
+		p.parseString( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
@@ -1732,13 +1732,13 @@ bool parseAddressInPublishable(ParserT& p, GMQ_COLL vector<size_t>& addr)
 	if constexpr ( ParserT::proto == Proto::GMQ )
 	{
 		size_t cnt;
-		parseUnsignedInteger( p, &cnt );
+		p.parseUnsignedInteger( &cnt );
 		if ( cnt == 0 )
 			return false;
 		size_t tmp;
 		for ( size_t i=0; i<cnt; ++i )
 		{
-			parseUnsignedInteger( p, &tmp );
+			p.parseUnsignedInteger( &tmp );
 			addr.push_back( tmp );
 		}
 		return true;
@@ -1824,7 +1824,7 @@ void parseActionInPublishable(ParserT& p, size_t& action)
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
 	{
-		parseUnsignedInteger( p, &action );
+		p.parseUnsignedInteger( &action );
 	}
 	else
 	{

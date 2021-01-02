@@ -170,7 +170,7 @@ public:
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
-			composeUnsignedInteger( composer, collSz );
+			impl::composeUnsignedInteger( composer, collSz );
 			for ( size_t i=0; i<collSz; ++i )
 			{
 				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
@@ -226,7 +226,7 @@ public:
 		if constexpr ( ParserT::proto == Proto::GMQ )
 		{
 			size_t collSz;
-			parseUnsignedInteger( parser, &collSz );
+			parser.parseUnsignedInteger( &collSz );
 			dest.reserve( collSz );
 			for ( size_t i=0; i<collSz; ++i )
 			{
