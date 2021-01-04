@@ -621,20 +621,20 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 
 void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, const char* rootName, MessageParameter& param, size_t idx )
 {
+	string rootType;
+	string addr;
+	if ( rootName == nullptr )
+	{
+		rootType = "RootT";
+		addr = "address";
+	}
+	else
+	{
+		rootType = fmt::format( "{}_Wrapper", rootName );
+		addr = "GMQ_COLL vector<size_t>()";
+	}
 	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
 	{
-		string rootType;
-		string addr;
-		if ( rootName == nullptr )
-		{
-			rootType = "RootT";
-			addr = "address";
-		}
-		else
-		{
-			rootType = fmt::format( "{}_Wrapper", rootName );
-			addr = "GMQ_COLL vector<size_t>()";
-		}
 		assert( param.type.messageIdx < root.structs.size() );
 		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<decltype(T::%s), %s>(t.%s, *this, %s, %zd); }\n", 
 			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), param.name.c_str(), rootType.c_str(), param.name.c_str(), addr.c_str(), idx );
@@ -651,21 +651,22 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::CHARACTER_STRING:
 //					fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
 //						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
-				fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-					param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
+				fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), %s, %s>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+					param.name.c_str(), param.name.c_str(), libType, rootType.c_str(), param.name.c_str(), idx );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				assert( param.type.messageIdx < root.structs.size() );
+//				assert( rootName != nullptr );
 				fprintf( header, 
-					"\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s_Wrapper, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s_Wrapper>>"
-					"(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
+					"\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s>>"
+					"(t.%s, *this, %s, %zd); }\n", 
 					param.name.c_str(), param.name.c_str(),
 					impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), 
-					rootName, 
+					rootType.c_str(), 
 					root.structs[param.type.messageIdx]->name.c_str(), 
 					param.name.c_str(),
-					rootName, 
-					param.name.c_str(), idx );
+					rootType.c_str(), 
+					param.name.c_str(), addr.c_str(), idx );
 				break;
 			default:
 				assert( false ); // not (yet) implemented
