@@ -20,6 +20,8 @@ PUBLISHABLE publishable_sample {
 	STRUCT CharacterParam chp;
 	VECTOR<INTEGER> vector_of_int;
 	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
+	STRUCT StructWithVectorOfInt structWithVectorOfInt;
+	STRUCT StructWithVectorOfSize structWithVectorOfSize;
 };
 
 SCOPE scope_one PROTO = JSON;
@@ -35,6 +37,16 @@ MESSAGE scope_one:point_alias=2 = STRUCT point;
 MESSAGE level_trace:LevelTraceData=1{
 	STRUCT CharacterParam CharacterParam;
 	VECTOR<STRUCT POINT3DREAL> Points;
+};
+
+STRUCT StructWithVectorOfInt{
+	INTEGER ID;
+	VECTOR<INTEGER> signedInts;
+};
+
+STRUCT StructWithVectorOfSize{
+	VECTOR<STRUCT SIZE> sises;
+	INTEGER NN;
 };
 
 STRUCT CharacterParam{
