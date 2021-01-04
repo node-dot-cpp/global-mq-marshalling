@@ -184,6 +184,16 @@ struct POINT3DREAL{
 	void notifyAfter_Z() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_Z()\n" ); }
 };
 
+struct StructWithVectorOfInt{
+	int ID;
+	std::vector<uint64_t> signedInts;
+};
+
+struct StructWithVectorOfSize{
+	std::vector<SIZE> sizes;
+	int NN;
+};
+
 struct CharacterParam{
 	uint64_t ID = 600;
 	SIZE Size = {11., 12., 13};
@@ -201,6 +211,8 @@ struct PublishableSample {
 	CharacterParam chp;
 	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
 	std::vector<int> vector_of_int = {111, 112, 113};
+	StructWithVectorOfInt structWithVectorOfInt;
+	StructWithVectorOfSize structWithVectorOfSize;
 
 	PublishableSample( SampleNode* node_ ) { node = node_; }
 
