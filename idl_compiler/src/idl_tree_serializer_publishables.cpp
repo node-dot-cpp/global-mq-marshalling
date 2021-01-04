@@ -807,7 +807,9 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 					"\t\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
 					"\t\t\t\t\t\t// TODO: forward to child\n"
 				);*/
+				fprintf( header, "\t\t\t\t{\n" );
 				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
+				fprintf( header, "\t\t\t\t}\n" );
 				break;
 			}
 			default:
@@ -1074,6 +1076,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 {
 	assert( (forRoot && rootName != nullptr) || (forRoot == false && rootName == nullptr) );
 	const char* composer = forRoot ? "*composer" : "root.getComposer()";
+	const char* composerType = forRoot ? "ComposerT" : "decltype(root.getComposer())";
 	const char* addrVector = forRoot ? "GMQ_COLL vector<size_t>()" : "address";
 	if ( !forRoot )
 		rootName = "RootT";
@@ -1108,16 +1111,16 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			switch ( param.type.vectorElemKind )
 			{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::RealType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::RealType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::StringType>( %s, t.%s );\n", param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::StringType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert( false ); // unexpected
@@ -1229,7 +1232,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
+				fprintf( header, "\t\t\t\t{\n" );
 				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
+				fprintf( header, "\t\t\t\t}\n" );
 				fprintf( header, "\n" ); 
 
 				break;
