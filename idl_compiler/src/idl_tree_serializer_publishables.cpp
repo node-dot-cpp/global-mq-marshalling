@@ -970,6 +970,7 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 				fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
+				break;
 			}
 			default:
 				assert( false ); // TODO: revise or add cases
@@ -1031,9 +1032,10 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 					default:
 						assert( false ); // TODO: revise or add cases
 				}*/
-					fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
+				fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
+				break;
 			}
 			default:
 				assert( false ); // TODO: revise or add cases
