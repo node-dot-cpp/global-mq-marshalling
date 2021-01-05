@@ -124,7 +124,7 @@ struct VectorOfNonextMessageTypesBase : public VectorType {static constexpr bool
 //template<class value_type_>
 //struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {static constexpr bool dummy = false; using value_type = value_type_;};
 struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {static constexpr bool dummy = false;};
-
+struct StructType {static constexpr bool dummy = false;};
 struct MessageType {static constexpr bool dummy = false;};
 struct NonextMessageType : public MessageType {static constexpr bool dummy = false;};
 
@@ -262,7 +262,7 @@ void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str.c_str(), str.size() );
+	composer.buff.append( str, strlen( str ) );
 	composer.buff.appendUint8( '\"' );
 }
 

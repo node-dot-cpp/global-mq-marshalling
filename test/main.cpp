@@ -10,5 +10,5 @@ int main()
 	testParsingJsonFile();
 	testMessageAliases();
 	testScopedMessageComposingAndParsing();
-//	testSubscriptionTest();
+	publishableTestOne();
 }

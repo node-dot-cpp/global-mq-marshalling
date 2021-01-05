@@ -24,6 +24,9 @@ add_executable(idl_compiler
     ${BISON_OUTPUT}
     src/global_mq_parser_helper.cpp
     src/idl_tree_serializer.cpp
+    src/idl_tree_serializer_messages.cpp
+    src/idl_tree_serializer_publishables.cpp
+    src/idl_tree_serializer_print_tree.cpp
     src/main.cpp
 )
 

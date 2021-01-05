@@ -58,8 +58,12 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, MESSAGE, PUBLISHABLE, STRUCT };
+	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, STRUCT };
+	static bool isNumericType( KIND kind ) { return kind == KIND::INTEGER || kind == KIND::UINTEGER || kind == KIND::REAL; }
+	static bool isNamedType( KIND kind ) { return kind == KIND::ENUM || kind == KIND::STRUCT; }
 	KIND kind = UNDEFINED;
+	bool isNumericType() { return isNumericType( kind ); }
+	bool isNamedType() { return isNamedType( kind ); }
 	string name;
 	bool hasDefault = false; // INTEGER, UINTEGER, CHARACTER_STRING
 	bool hasLowLimit = false; // INTEGER, UINTEGER
@@ -129,19 +133,20 @@ public:
 public:
 	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
 	Type type = Type::undefined;
-	const char* type2string()
+	static const char* type2string( Type type_ )
 	{
-		switch ( type )
+		switch ( type_ )
 		{
 			case Type::undefined: return "UNDEFINED";
 			case Type::message: return "MESSAGE";
-			case Type::publishable: return "UNDEFINED";
+			case Type::publishable: return "PUBLISHABLE";
 			case Type::structure: return "STRUCT";
 			default:
 				assert( false );
 				return "";
 		}
 	}
+	const char* type2string() { return type2string( type ); }
 
 public:
 	vector<unique_ptr<MessageParameter>> members;
@@ -151,9 +156,13 @@ public:
 	bool isNonExtendable = false;
 	bool isAlias = false;
 	string aliasOf;
-
+	
+	// preprocessing for code generation
+	bool processingOK = true;
+	bool isStruct4Messaging = false; // used for STRUCT only
+	bool isStruct4Publishing = false; // used for STRUCT only, filled at time of preprocessing for code generation
 	set<Proto> protoList; // populated at time of tree checking and code generation
-	bool processingOK = true; // used by checker
+	int dependsOnCnt = 0;
 };
 
 struct Scope : public ObjectBase // used in post-processing
