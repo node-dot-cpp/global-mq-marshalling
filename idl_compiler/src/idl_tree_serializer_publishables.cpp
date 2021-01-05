@@ -552,6 +552,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 			
+fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse // replacement of the whole vector\n" );
 	fprintf( header, "\t\t\t\t\t{\n" );
@@ -559,27 +560,11 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\t\tif constexpr( alwaysCollectChanges )\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
-
-fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
-	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
-		member.name.c_str(),
-		vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-		member.name.c_str()
-	);
-	fprintf( header, "\t\t\t\t\t\t\tcurrentChanged = !impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n",
-//			s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str()
-			member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str()
-	);
-
-				
+	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tcurrentChanged = !impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\telse\n" );
-	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", 
-		member.name.c_str(),
-		vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-		member.name.c_str()
-	);
-
+	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\t\tm::impl::publishableParseLeafeVectorEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
@@ -650,14 +635,11 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-//					fprintf( header, "\tauto get4set_%s() { return m::VectorOfSimpleTypeRefWrapper4Set<decltype(T::%s), impl::%s, %s_Wrapper>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-//						param.name.c_str(), param.name.c_str(), libType, rootName, param.name.c_str(), idx );
 				fprintf( header, "\tauto get4set_%s() { return m::VectorRefWrapper4Set<decltype(T::%s), %s, %s>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
 					param.name.c_str(), param.name.c_str(), libType, rootType.c_str(), param.name.c_str(), idx );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				assert( param.type.messageIdx < root.structs.size() );
-//				assert( rootName != nullptr );
 				fprintf( header, 
 					"\tauto get4set_%s() { return m::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s>>"
 					"(t.%s, *this, %s, %zd); }\n", 
@@ -808,33 +790,6 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-				/*const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-				fprintf( header, 
-					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"
-					"\t\t\t\t\t\t{\n"
-					"\t\t\t\t\t\t\tm::impl::publishableParseLeafeValueBegin( parser );\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ComposerT, decltype(T::%s), impl::%s>( parser, t.%s );\n", 
-					member.name.c_str(), 
-					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t\tm::impl::parseStateUpdateBlockEnd( parser );\n"
-					"\t\t\t\t\t\t}\n"
-					"\t\t\t\t\t\telse\n"
-					"\t\t\t\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\t}\n"
-				);
-				fprintf( header, "\t\t\t\tassert( addr.size() > offset + 1 );\n" );
-				fprintf( header, 
-					"\t\t\t\t\t\tif ( addr.size() == 1 )\n"
-					"\t\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n"
-					"\t\t\t\t\t\t// TODO: forward to child\n"
-				);*/
 				fprintf( header, "\t\t\t\t{\n" );
 				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
 				fprintf( header, "\t\t\t\t}\n" );
@@ -863,7 +818,6 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		"\tstatic\n"
 		"\tRetT parse( ParserT& parser, T& t )\n"
 		"\t{\n"
-		"\t\t//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************\n" 
 		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
 		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
 		"\t\tbool changed = false;\n"
@@ -898,32 +852,6 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			case MessageParameterType::KIND::VECTOR:
 			{
 				assert( member.type.messageIdx < root.structs.size() );
-				/*fprintf( header, 
-					"\t\t\t\t\tif ( addr.size() > 1 )\n"
-				);
-				const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-				fprintf( header, 
-					"\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, %s>( parser, t.%s, addr, 1 );\n", 
-					member.name.c_str(),
-					libType, 
-					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\telse\n"
-					"\t\t\t\t\t{\n"
-				);
-				fprintf( header, 
-					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorBegin( parser );\n"
-					"\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n" 
-					"\t\t\t\t\t\tm::impl::publishableParseLeafeVectorEnd( parser );\n",
-					member.name.c_str(),
-					vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(),
-					member.name.c_str()
-				);
-				fprintf( header, 
-					"\t\t\t\t\t}\n"
-				);*/
 				
 				fprintf( header, "\t\tm::impl::publishableParseLeafeVectorBegin( parser );\n" );
 				fprintf( header, "\n" );
@@ -994,26 +922,6 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				/*assert( member.type.messageIdx < root.structs.size() );
-				switch ( member.type.vectorElemKind )
-				{
-					case MessageParameterType::KIND::INTEGER:
-					case MessageParameterType::KIND::UINTEGER:
-					case MessageParameterType::KIND::REAL:
-					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), impl::%s>( src.%s, dst.%s );\n",
-							s.name.c_str(), paramTypeToLibType( member.type.vectorElemKind ), member.name.c_str(), member.name.c_str()
-						);
-						break;
-					case MessageParameterType::KIND::STRUCT:
-						fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), Publishable_%s_Copier>( src.%s, dst.%s );\n",
-							member.name.c_str(), s.name.c_str(), member.name.c_str(), member.name.c_str()
-						);
-						break;
-					default:
-						assert( false ); // TODO: revise or add cases
-					
-				}*/
 				fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
@@ -1060,25 +968,6 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				/*assert( member.type.messageIdx < root.structs.size() );
-				switch ( member.type.vectorElemKind )
-				{
-					case MessageParameterType::KIND::INTEGER:
-					case MessageParameterType::KIND::UINTEGER:
-					case MessageParameterType::KIND::REAL:
-					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), impl::%s>( s1.%s, s2.%s ) ) return false;\n",
-							s.name.c_str(), paramTypeToLibType( member.type.vectorElemKind ), member.name.c_str(), member.name.c_str()
-						);
-						break;
-					case MessageParameterType::KIND::STRUCT:
-						fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), Publishable_%s_Copier>( s1.%s, s2.%s ) ) return false;\n",
-							member.name.c_str(), s.name.c_str(), member.name.c_str(), member.name.c_str()
-						);
-						break;
-					default:
-						assert( false ); // TODO: revise or add cases
-				}*/
 				fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
@@ -1129,13 +1018,12 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 		"\t\tt.%s = val; \n",
 		param.name.c_str(), param.name.c_str(), param.name.c_str()
 	);
-//	if ( forRoot )
+
 	fprintf( header, 
 		"\t\tm::impl::composeAddressInPublishable( %s, %s, %zd );\n",
 		composer, addrVector, idx
 	);
-//	else
-//	fprintf( header, "\treturn;\n", composer );
+
 	switch ( param.type.kind )
 	{
 		case MessageParameterType::KIND::INTEGER:
@@ -1151,6 +1039,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
+		{
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeValueBegin( %s );\n", composer );
 			switch ( param.type.vectorElemKind )
 			{
@@ -1172,25 +1061,22 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 				case MessageParameterType::KIND::STRUCT:
 					assert( param.type.messageIdx < root.structs.size() );
 					fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-		//			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, param.name.c_str() );
 					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, param.name.c_str() );
-		//			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
 					fprintf( header, "\t\tm::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 					break;
 				default:
 					assert( false ); // not implemented (yet)
 			}
-
-//			fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, param.name.c_str() );
 			fprintf( header, "\t\tm::impl::composeStateUpdateBlockEnd( %s );\n", composer );
 			break;
+		}
 		case MessageParameterType::KIND::STRUCT:
+		{
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-//			fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, param.name.c_str() );
 			fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, param.name.c_str() );
-//			fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, "false" );
 			fprintf( header, "\t\tm::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 			break;
+		}
 		default:
 			assert( false ); // not implemented (yet)
 	}

@@ -193,13 +193,13 @@ template<typename T> concept has_void_erased_notifier_call_for_vector_struct_poi
 template<typename StateT> concept has_erased_notifier_call2_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
 template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
 
-struct publishable_STRUCT_StructWithVectorOfInt;
-template<class T> class StructWithVectorOfInt_RefWrapper;
-template<class T, class RootT> class StructWithVectorOfInt_RefWrapper4Set;
-
 struct publishable_STRUCT_StructWithVectorOfSize;
 template<class T> class StructWithVectorOfSize_RefWrapper;
 template<class T, class RootT> class StructWithVectorOfSize_RefWrapper4Set;
+
+struct publishable_STRUCT_StructWithVectorOfInt;
+template<class T> class StructWithVectorOfInt_RefWrapper;
+template<class T, class RootT> class StructWithVectorOfInt_RefWrapper4Set;
 
 struct publishable_STRUCT_CharacterParam;
 template<class T> class CharacterParam_RefWrapper;
@@ -229,7 +229,6 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
-		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -424,7 +423,6 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
-		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -620,7 +618,6 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
-		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -814,13 +811,295 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	}
 };
 
+struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::signedInts), impl::SignedIntegralType>( composer, t.signedInts, "signedInts", false );
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+		static constexpr bool has_void_update_notifier_for_signedInts = has_void_update_notifier_call_for_signedInts<T>;
+		static constexpr bool has_update_notifier_for_signedInts = has_update_notifier_call_for_signedInts<T, decltype(T::signedInts)>;
+		static constexpr bool has_any_notifier_for_signedInts = has_void_update_notifier_for_signedInts || has_update_notifier_for_signedInts;
+		using signedIntsT = decltype(T::signedInts);
+		static constexpr bool has_void_insert_notifier_for_signedInts = has_void_insert_notifier_call_for_signedInts<T>;
+		static constexpr bool has_insert_notifier2_for_signedInts = has_insert_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_insert_notifier3_for_signedInts = has_insert_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_erased_notifier_for_signedInts = has_void_erased_notifier_call_for_signedInts<T>;
+		static constexpr bool has_erased_notifier2_for_signedInts = has_erased_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_erased_notifier3_for_signedInts = has_erased_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
+		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
+		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
+
+					if constexpr( has_any_notifier_for_ID || reportChanges )
+					{
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						bool currentChanged = oldVal != t.ID;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_for_ID )
+								t.notifyUpdated_ID( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		m::impl::publishableParseLeafeVectorBegin( parser );
+
+		if constexpr( reportChanges )
+		{
+			decltype(T::signedInts) oldVectorVal;
+			impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+			bool currentChanged = !impl::isSameVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
+			changed = changed || currentChanged;
+		}
+		else
+			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+
+		m::impl::publishableParseLeafeVectorEnd( parser );
+
+
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		//****  ContinueParsing  **************************************************************************************************************************************************************
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+		static constexpr bool has_void_update_notifier_for_signedInts = has_void_update_notifier_call_for_signedInts<T>;
+		static constexpr bool has_update_notifier_for_signedInts = has_update_notifier_call_for_signedInts<T, decltype(T::signedInts)>;
+		static constexpr bool has_any_notifier_for_signedInts = has_void_update_notifier_for_signedInts || has_update_notifier_for_signedInts;
+		using signedIntsT = decltype(T::signedInts);
+		static constexpr bool has_void_insert_notifier_for_signedInts = has_void_insert_notifier_call_for_signedInts<T>;
+		static constexpr bool has_insert_notifier2_for_signedInts = has_insert_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_insert_notifier3_for_signedInts = has_insert_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_erased_notifier_for_signedInts = has_void_erased_notifier_call_for_signedInts<T>;
+		static constexpr bool has_erased_notifier2_for_signedInts = has_erased_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_erased_notifier3_for_signedInts = has_erased_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
+		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
+		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
+
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_ID || reportChanges )
+					{
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						bool currentChanged = oldVal != t.ID;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_for_ID )
+								t.notifyUpdated_ID( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+				break;
+			case 1:
+				{
+					decltype(T::signedInts) oldVectorVal;
+					bool currentChanged = false;
+					constexpr bool alwaysCollectChanges = has_any_notifier_for_signedInts;
+					if constexpr( alwaysCollectChanges )
+						impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					{
+						size_t pos = addr[1];
+						if ( pos >= t.signedInts.size() )
+							throw std::exception();
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.signedInts elements is INTEGER)
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnVector::remove_at:
+								{
+									if constexpr ( has_erased_notifier3_for_signedInts )
+									{
+										decltype(T::signedInts) oldVal;
+										impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVal );
+										t.signedInts.erase( t.signedInts.begin() + pos );
+										t.notifyErased_signedInts( pos, oldVal );
+									}
+									if constexpr ( has_erased_notifier2_for_signedInts )
+									{
+										t.signedInts.erase( t.signedInts.begin() + pos );
+										t.notifyErased_signedInts( pos );
+									}
+									if constexpr ( has_void_erased_notifier_for_signedInts )
+									{
+										t.signedInts.erase( t.signedInts.begin() + pos );
+										t.notifyErased_signedInts();
+									}
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::signedInts)::value_type& value = t.signedInts[pos];
+									if constexpr ( has_full_element_updated_notifier_for_signedInts )
+									{
+										typename decltype(T::signedInts)::value_type oldValue;
+										oldValue = value;
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_signedInts( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_signedInts )
+												t.notifyElementUpdated_signedInts();
+											if constexpr ( has_void_element_updated_notifier_for_signedInts )
+												t.notifyElementUpdated_signedInts();
+										}
+									}
+									else if constexpr ( has_element_updated_notifier_for_signedInts )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_signedInts( pos );
+											if constexpr ( has_void_element_updated_notifier_for_signedInts )
+												t.notifyElementUpdated_signedInts();
+										}
+									}
+									else if constexpr ( has_void_element_updated_notifier_for_signedInts )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged )
+											t.notifyElementUpdated_signedInts();
+									}
+									else
+									{
+										if constexpr ( alwaysCollectChanges )
+											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										else
+											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, value );
+									}
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::signedInts)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, value );
+									if constexpr ( has_insert_notifier3_for_signedInts )
+									{
+										decltype(T::signedInts) oldVal;
+										impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVal );
+										t.notifyInserted_signedInts( pos, oldVal );
+									}
+									if constexpr ( has_insert_notifier2_for_signedInts )
+										t.notifyInserted_signedInts( pos );
+									if constexpr ( has_void_insert_notifier_for_signedInts )
+										t.notifyInserted_signedInts();
+									t.signedInts.insert( t.signedInts.begin() + pos, value );
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								default:
+									throw std::exception();
+							}
+							impl::parseStateUpdateBlockEnd( parser );
+						}
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					}
+					else // replacement of the whole vector
+					{
+						m::impl::publishableParseLeafeVectorBegin( parser );
+
+						if constexpr( alwaysCollectChanges )
+						{
+							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+							currentChanged = !impl::isSameVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
+						}
+						else
+							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+
+						m::impl::publishableParseLeafeVectorEnd( parser );
+					}
+
+					if ( currentChanged )
+					{
+						if constexpr( has_void_update_notifier_for_signedInts )
+							t.notifyUpdated_signedInts();
+						if constexpr( has_update_notifier_for_signedInts )
+							t.notifyUpdated_signedInts( oldVectorVal );
+					}
+				}
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.ID = src.ID;
+		impl::copyVector<declval(UserT::StructWithVectorOfInt), ::m::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.ID != s2.ID ) return false;
+		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfInt), ::m::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
+		return true;
+	}
+};
+
 struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 {
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		//assert( false ); // NOT IMPLEMENTED (YET);
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::sizes), publishable_STRUCT_SIZE>( composer, t.sizes, "sizes", true );
 		m::impl::publishableStructComposeInteger( composer, t.NN, "NN", false );
 	}
 
@@ -828,7 +1107,6 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 	static
 	RetT parse( ParserT& parser, T& t )
 	{
-		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
@@ -1130,289 +1408,6 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 	static bool isSame(const UserT& s1, const UserT& s2) {
 		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
 		if ( s1.NN != s2.NN ) return false;
-		return true;
-	}
-};
-
-struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
-{
-	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
-	{
-		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
-		//assert( false ); // NOT IMPLEMENTED (YET);
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
-	{
-		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
-		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
-		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
-		bool changed = false;
-		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
-		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
-		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
-		static constexpr bool has_void_update_notifier_for_signedInts = has_void_update_notifier_call_for_signedInts<T>;
-		static constexpr bool has_update_notifier_for_signedInts = has_update_notifier_call_for_signedInts<T, decltype(T::signedInts)>;
-		static constexpr bool has_any_notifier_for_signedInts = has_void_update_notifier_for_signedInts || has_update_notifier_for_signedInts;
-		using signedIntsT = decltype(T::signedInts);
-		static constexpr bool has_void_insert_notifier_for_signedInts = has_void_insert_notifier_call_for_signedInts<T>;
-		static constexpr bool has_insert_notifier2_for_signedInts = has_insert_notifier_call2_for_signedInts<T>;
-		static constexpr bool has_insert_notifier3_for_signedInts = has_insert_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
-		static constexpr bool has_void_erased_notifier_for_signedInts = has_void_erased_notifier_call_for_signedInts<T>;
-		static constexpr bool has_erased_notifier2_for_signedInts = has_erased_notifier_call2_for_signedInts<T>;
-		static constexpr bool has_erased_notifier3_for_signedInts = has_erased_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
-		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
-		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
-		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
-
-					if constexpr( has_any_notifier_for_ID || reportChanges )
-					{
-						decltype(T::ID) oldVal = t.ID;
-						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-						bool currentChanged = oldVal != t.ID;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_ID )
-								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( oldVal );
-						}
-					}
-					else
-						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-
-		m::impl::publishableParseLeafeVectorBegin( parser );
-
-		if constexpr( reportChanges )
-		{
-			decltype(T::signedInts) oldVectorVal;
-			impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
-			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
-			bool currentChanged = !impl::isSameVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
-			changed = changed || currentChanged;
-		}
-		else
-			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
-
-		m::impl::publishableParseLeafeVectorEnd( parser );
-
-
-		if constexpr ( reportChanges )
-			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
-	{
-		//****  ContinueParsing  **************************************************************************************************************************************************************
-		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
-		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
-		bool changed = false;
-		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
-		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
-		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
-		static constexpr bool has_void_update_notifier_for_signedInts = has_void_update_notifier_call_for_signedInts<T>;
-		static constexpr bool has_update_notifier_for_signedInts = has_update_notifier_call_for_signedInts<T, decltype(T::signedInts)>;
-		static constexpr bool has_any_notifier_for_signedInts = has_void_update_notifier_for_signedInts || has_update_notifier_for_signedInts;
-		using signedIntsT = decltype(T::signedInts);
-		static constexpr bool has_void_insert_notifier_for_signedInts = has_void_insert_notifier_call_for_signedInts<T>;
-		static constexpr bool has_insert_notifier2_for_signedInts = has_insert_notifier_call2_for_signedInts<T>;
-		static constexpr bool has_insert_notifier3_for_signedInts = has_insert_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
-		static constexpr bool has_void_erased_notifier_for_signedInts = has_void_erased_notifier_call_for_signedInts<T>;
-		static constexpr bool has_erased_notifier2_for_signedInts = has_erased_notifier_call2_for_signedInts<T>;
-		static constexpr bool has_erased_notifier3_for_signedInts = has_erased_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
-		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
-		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
-		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
-
-		GMQ_ASSERT( addr.size() );
-		switch ( addr[offset] )
-		{
-			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_ID || reportChanges )
-					{
-						decltype(T::ID) oldVal = t.ID;
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
-						bool currentChanged = oldVal != t.ID;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_ID )
-								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( oldVal );
-						}
-					}
-					else
-						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
-				break;
-			case 1:
-				{
-					decltype(T::signedInts) oldVectorVal;
-					bool currentChanged = false;
-					constexpr bool alwaysCollectChanges = has_any_notifier_for_signedInts;
-					if constexpr( alwaysCollectChanges )
-						impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-					if ( addr.size() > 1 ) // one of actions over elements of the vector
-					{
-						size_t pos = addr[1];
-						if ( pos >= t.signedInts.size() )
-							throw std::exception();
-						if ( addr.size() > 2 ) // update for a member of a particular vector element
-						{
-							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.signedInts elements is INTEGER)
-						}
-						else // update of one or more elelments as a whole
-						{
-							size_t action;
-							impl::parseActionInPublishable( parser, action );
-							switch ( action )
-							{
-								case ActionOnVector::remove_at:
-								{
-									if constexpr ( has_erased_notifier3_for_signedInts )
-									{
-										decltype(T::signedInts) oldVal;
-										impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVal );
-										t.signedInts.erase( t.signedInts.begin() + pos );
-										t.notifyErased_signedInts( pos, oldVal );
-									}
-									if constexpr ( has_erased_notifier2_for_signedInts )
-									{
-										t.signedInts.erase( t.signedInts.begin() + pos );
-										t.notifyErased_signedInts( pos );
-									}
-									if constexpr ( has_void_erased_notifier_for_signedInts )
-									{
-										t.signedInts.erase( t.signedInts.begin() + pos );
-										t.notifyErased_signedInts();
-									}
-									if constexpr ( alwaysCollectChanges )
-										currentChanged = true;
-									break;
-								}
-								case ActionOnVector::update_at:
-								{
-									impl::publishableParseLeafeValueBegin( parser );
-									typename decltype(T::signedInts)::value_type& value = t.signedInts[pos];
-									if constexpr ( has_full_element_updated_notifier_for_signedInts )
-									{
-										typename decltype(T::signedInts)::value_type oldValue;
-										oldValue = value;
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
-										if ( currentChanged )
-										{
-											t.notifyElementUpdated_signedInts( pos, oldValue );
-											if constexpr ( has_element_updated_notifier_for_signedInts )
-												t.notifyElementUpdated_signedInts();
-											if constexpr ( has_void_element_updated_notifier_for_signedInts )
-												t.notifyElementUpdated_signedInts();
-										}
-									}
-									else if constexpr ( has_element_updated_notifier_for_signedInts )
-									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
-										if ( currentChanged )
-										{
-											t.notifyElementUpdated_signedInts( pos );
-											if constexpr ( has_void_element_updated_notifier_for_signedInts )
-												t.notifyElementUpdated_signedInts();
-										}
-									}
-									else if constexpr ( has_void_element_updated_notifier_for_signedInts )
-									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
-										if ( currentChanged )
-											t.notifyElementUpdated_signedInts();
-									}
-									else
-									{
-										if constexpr ( alwaysCollectChanges )
-											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
-										else
-											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, value );
-									}
-									break;
-								}
-								case ActionOnVector::insert_single_before:
-								{
-									impl::publishableParseLeafeValueBegin( parser );
-									typename decltype(T::signedInts)::value_type value;
-									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, value );
-									if constexpr ( has_insert_notifier3_for_signedInts )
-									{
-										decltype(T::signedInts) oldVal;
-										impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVal );
-										t.notifyInserted_signedInts( pos, oldVal );
-									}
-									if constexpr ( has_insert_notifier2_for_signedInts )
-										t.notifyInserted_signedInts( pos );
-									if constexpr ( has_void_insert_notifier_for_signedInts )
-										t.notifyInserted_signedInts();
-									t.signedInts.insert( t.signedInts.begin() + pos, value );
-									if constexpr ( alwaysCollectChanges )
-										currentChanged = true;
-									break;
-								}
-								default:
-									throw std::exception();
-							}
-							impl::parseStateUpdateBlockEnd( parser );
-						}
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-					}
-					else // replacement of the whole vector
-					{
-						m::impl::publishableParseLeafeVectorBegin( parser );
-
-						if constexpr( alwaysCollectChanges )
-						{
-							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
-							currentChanged = !impl::isSameVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
-						}
-						else
-							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
-
-						m::impl::publishableParseLeafeVectorEnd( parser );
-					}
-
-					if ( currentChanged )
-					{
-						if constexpr( has_void_update_notifier_for_signedInts )
-							t.notifyUpdated_signedInts();
-						if constexpr( has_update_notifier_for_signedInts )
-							t.notifyUpdated_signedInts( oldVectorVal );
-					}
-				}
-				break;
-			default:
-				throw std::exception(); // unexpected
-		}
-		if constexpr ( reportChanges )
-			return changed;
-	}
-
-	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
-		dst.ID = src.ID;
-		impl::copyVector<declval(UserT::StructWithVectorOfInt), ::m::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
-	}
-
-	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
-		if ( s1.ID != s2.ID ) return false;
-		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfInt), ::m::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
 		return true;
 	}
 };
@@ -3101,6 +3096,56 @@ public:
 };
 
 template<class T>
+class StructWithVectorOfInt_RefWrapper
+{
+	T& t;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_signedInts = has_signedInts_member<T>;
+	static_assert( has_signedInts, "type T must have member T::signedInts of a type corresponding to IDL type VECTOR<INTEGER>" );
+
+
+public:
+	StructWithVectorOfInt_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_ID() { return t.ID; }
+	auto get_signedInts() { return m::VectorOfSimpleTypeRefWrapper(t.signedInts); }
+};
+
+template<class T, class RootT>
+class StructWithVectorOfInt_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_signedInts = has_signedInts_member<T>;
+	static_assert( has_signedInts, "type T must have member T::signedInts of a type corresponding to IDL type VECTOR<INTEGER>" );
+
+
+public:
+	StructWithVectorOfInt_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_ID() { return t.ID; }
+	void set_ID( decltype(T::ID) val) { 
+		t.ID = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
+	}
+	auto get_signedInts() { return m::VectorOfSimpleTypeRefWrapper(t.signedInts); }
+	void set_signedInts( decltype(T::signedInts) val) { 
+		t.signedInts = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		m::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::signedInts), impl::SignedIntegralType>( root.getComposer(), t.signedInts );
+		m::impl::composeStateUpdateBlockEnd( root.getComposer() );
+	}
+	auto get4set_signedInts() { return m::VectorRefWrapper4Set<decltype(T::signedInts), ::m::impl::SignedIntegralType, RootT>(t.signedInts, *this, GMQ_COLL vector<size_t>(), 1); }
+};
+
+template<class T>
 class StructWithVectorOfSize_RefWrapper
 {
 	T& t;
@@ -3150,56 +3195,6 @@ public:
 		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.NN );
 	}
-};
-
-template<class T>
-class StructWithVectorOfInt_RefWrapper
-{
-	T& t;
-	static constexpr bool has_ID = has_ID_member<T>;
-	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_signedInts = has_signedInts_member<T>;
-	static_assert( has_signedInts, "type T must have member T::signedInts of a type corresponding to IDL type VECTOR<INTEGER>" );
-
-
-public:
-	StructWithVectorOfInt_RefWrapper( T& actual ) : t( actual ) {}
-	auto get_ID() { return t.ID; }
-	auto get_signedInts() { return m::VectorOfSimpleTypeRefWrapper(t.signedInts); }
-};
-
-template<class T, class RootT>
-class StructWithVectorOfInt_RefWrapper4Set
-{
-	T& t;
-	RootT& root;
-	GMQ_COLL vector<size_t> address;
-	static constexpr bool has_ID = has_ID_member<T>;
-	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_signedInts = has_signedInts_member<T>;
-	static_assert( has_signedInts, "type T must have member T::signedInts of a type corresponding to IDL type VECTOR<INTEGER>" );
-
-
-public:
-	StructWithVectorOfInt_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
-	}
-	auto get_ID() { return t.ID; }
-	void set_ID( decltype(T::ID) val) { 
-		t.ID = val; 
-		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
-	}
-	auto get_signedInts() { return m::VectorOfSimpleTypeRefWrapper(t.signedInts); }
-	void set_signedInts( decltype(T::signedInts) val) { 
-		t.signedInts = val; 
-		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		m::impl::publishableComposeLeafeValueBegin( root.getComposer() );
-		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::signedInts), impl::SignedIntegralType>( root.getComposer(), t.signedInts );
-		m::impl::composeStateUpdateBlockEnd( root.getComposer() );
-	}
-	auto get4set_signedInts() { return m::VectorRefWrapper4Set<decltype(T::signedInts), ::m::impl::SignedIntegralType, RootT>(t.signedInts, *this, GMQ_COLL vector<size_t>(), 1); }
 };
 
 //**********************************************************************
