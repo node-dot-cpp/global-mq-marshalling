@@ -14,9 +14,19 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
+PUBLISHABLE publishable_sample {
+	INTEGER ID;
+	STRUCT SIZE size;
+	STRUCT CharacterParam chp;
+	VECTOR<INTEGER> vector_of_int;
+	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
+	STRUCT StructWithVectorOfInt structWithVectorOfInt;
+	STRUCT StructWithVectorOfSize structWithVectorOfSize;
+};
+
 SCOPE scope_one PROTO = JSON;
 SCOPE level_trace PROTO = JSON;
-SCOPE infrastructural PROTO = JSON;
+SCOPE infrastructural PROTO = GMQ;
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 
@@ -29,12 +39,22 @@ MESSAGE level_trace:LevelTraceData=1{
 	VECTOR<STRUCT POINT3DREAL> Points;
 };
 
-STRUCT CharacterParam{
+STRUCT StructWithVectorOfInt{
 	INTEGER ID;
-	STRUCT Size Size;
+	VECTOR<INTEGER> signedInts;
 };
 
-STRUCT Size{
+STRUCT StructWithVectorOfSize{
+	VECTOR<STRUCT SIZE> sizes;
+	INTEGER NN;
+};
+
+STRUCT CharacterParam{
+	INTEGER ID;
+	STRUCT SIZE Size;
+};
+
+STRUCT SIZE{
   REAL X;
   REAL Y;
   REAL Z;

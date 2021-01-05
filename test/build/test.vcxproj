@@ -21,21 +21,20 @@
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\fmt\src\format.cc" />
     <ClCompile Include="..\..\library\src\marshalling.cpp" />
-    <ClCompile Include="..\..\library\src\subscription_state.cpp" />
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\test_marshalling.cpp" />
     <ClCompile Include="..\test_subscription.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\library\include\global_mq_common.h" />
     <ClInclude Include="..\..\library\include\marshalling_impl.h" />
     <ClInclude Include="..\..\library\include\marshalling.h" />
-    <ClInclude Include="..\..\library\include\subscription_state.h" />
+    <ClInclude Include="..\..\library\include\publishable_impl.h" />
     <ClInclude Include="..\marshalling\test_marshalling.h" />
     <ClInclude Include="..\tests.h" />
   </ItemGroup>
