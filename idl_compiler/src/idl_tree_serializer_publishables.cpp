@@ -691,7 +691,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 	{
 		auto& it = obj.members[i];
 		assert( it != nullptr );
-		auto member = *it;
+		auto& member = *it;
 		const char* addSepar = i + 1 < obj.members.size() ? "true": "false";
 		switch ( member.type.kind )
 		{
