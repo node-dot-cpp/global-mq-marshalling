@@ -896,7 +896,23 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				fprintf( header, 
 					"\t\t\t\t\t}\n"
 				);*/
-				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, true, false );
+				
+				fprintf( header, "\t\tm::impl::publishableParseLeafeVectorBegin( parser );\n" );
+				fprintf( header, "\n" );
+				fprintf( header, "\t\tif constexpr( reportChanges )\n" );
+				fprintf( header, "\t\t{\n" );
+				fprintf( header, "\t\t\tdecltype(T::%s) oldVectorVal;\n", member.name.c_str() );
+				fprintf( header, "\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tbool currentChanged = !impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tchanged = changed || currentChanged;\n" );
+				fprintf( header, "\t\t}\n" );
+				fprintf( header, "\t\telse\n" );
+				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\n" );
+				fprintf( header, "\t\tm::impl::publishableParseLeafeVectorEnd( parser );\n" );
+				fprintf( header, "\n" );
+
 				break;
 			}
 			default:
