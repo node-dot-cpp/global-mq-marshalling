@@ -164,7 +164,7 @@ public:
 			static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 	}
 
-	template<class ComposerT, class VectorT, class ElemTypeT/*, class RootT*/>
+	template<class ComposerT, class VectorT, class ElemTypeT>
 	static
 	void compose( ComposerT& composer, VectorT& what ) { 
 		size_t collSz = what.size();
@@ -220,7 +220,21 @@ public:
 		}
 	}
 
-	template<class ParserT, class VectorT, class ElemTypeT/*, class RootT*/>
+	template<class ComposerT, class VectorT, class ElemTypeT, typename NameT>
+	static
+	void compose( ComposerT& composer, VectorT& what, NameT name, bool addListSeparator ) { 
+		if constexpr ( ComposerT::proto == Proto::GMQ )
+			compose<ComposerT, VectorT, ElemTypeT>( composer, what );
+		else
+		{
+			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			compose<ComposerT, VectorT, ElemTypeT>( composer, what );
+			if ( addListSeparator )
+				composer.buff.append( ",", 1 );
+		}
+	}
+
+	template<class ParserT, class VectorT, class ElemTypeT>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
 		if constexpr ( ParserT::proto == Proto::GMQ )
