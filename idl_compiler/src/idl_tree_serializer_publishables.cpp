@@ -707,14 +707,41 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\t\tm::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				break;
-			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "\t\t//assert( false ); // NOT IMPLEMENTED (YET);\n", composer, member.name.c_str() );
-				break;
 			case MessageParameterType::KIND::STRUCT:
+			{
 				fprintf( header, "\t\tm::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, member.name.c_str() );
 				fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), composer, member.name.c_str() );
 				fprintf( header, "\t\tm::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
 				break;
+			}
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch ( member.type.vectorElemKind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						break;
+					case MessageParameterType::KIND::UINTEGER:
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						break;
+					case MessageParameterType::KIND::REAL:
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::RealType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						break;
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::StringType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						break;
+					case MessageParameterType::KIND::VECTOR:
+						assert( false ); // unexpected
+						break;
+					case MessageParameterType::KIND::STRUCT:
+						assert( member.type.messageIdx < root.structs.size() );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), %s>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						break;
+					default:
+						assert( false ); // not implemented (yet)
+				}
+				break;
+			}
 			default:
 				assert( false ); // not implemented (yet)
 		}
