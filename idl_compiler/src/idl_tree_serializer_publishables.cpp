@@ -595,7 +595,8 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	if ( addReportChanges )
 	{
 		fprintf( header, "\n" );
-		fprintf( header, "\t\t\t\t\treturn currentChanged;\n" );
+		fprintf( header, "\t\t\t\t\tif constexpr( alwaysCollectChanges )\n" );
+		fprintf( header, "\t\t\t\t\t\treturn currentChanged;\n" );
 	}
 }
 

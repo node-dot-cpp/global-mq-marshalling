@@ -45,7 +45,7 @@ STRUCT StructWithVectorOfInt{
 };
 
 STRUCT StructWithVectorOfSize{
-	VECTOR<STRUCT SIZE> sises;
+	VECTOR<STRUCT SIZE> sizes;
 	INTEGER NN;
 };
 

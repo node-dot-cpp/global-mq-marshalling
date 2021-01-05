@@ -111,12 +111,17 @@ constexpr z_Type::TypeConverter z;
 
 // member name presence checkers
 template<typename T> concept has_ID_member = requires { { T::ID }; };
+template<typename T> concept has_NN_member = requires { { T::NN }; };
 template<typename T> concept has_Size_member = requires { { T::Size }; };
 template<typename T> concept has_X_member = requires { { T::X }; };
 template<typename T> concept has_Y_member = requires { { T::Y }; };
 template<typename T> concept has_Z_member = requires { { T::Z }; };
 template<typename T> concept has_chp_member = requires { { T::chp }; };
+template<typename T> concept has_signedInts_member = requires { { T::signedInts }; };
 template<typename T> concept has_size_member = requires { { T::size }; };
+template<typename T> concept has_sizes_member = requires { { T::sizes }; };
+template<typename T> concept has_structWithVectorOfInt_member = requires { { T::structWithVectorOfInt }; };
+template<typename T> concept has_structWithVectorOfSize_member = requires { { T::structWithVectorOfSize }; };
 template<typename T> concept has_vector_of_int_member = requires { { T::vector_of_int }; };
 template<typename T> concept has_vector_struct_point3dreal_member = requires { { T::vector_struct_point3dreal }; };
 
@@ -125,6 +130,8 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 using index_type_for_array_notifiers = size_t&;
 template<typename T> concept has_void_update_notifier_call_for_ID = requires(T t) { { t.notifyUpdated_ID() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_ID = requires { { std::declval<StateT>().notifyUpdated_ID(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_NN = requires(T t) { { t.notifyUpdated_NN() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_NN = requires { { std::declval<StateT>().notifyUpdated_NN(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_Size = requires(T t) { { t.notifyUpdated_Size() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_Size = requires { { std::declval<StateT>().notifyUpdated_Size(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_X = requires(T t) { { t.notifyUpdated_X() }; };
@@ -135,8 +142,34 @@ template<typename T> concept has_void_update_notifier_call_for_Z = requires(T t)
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_Z = requires { { std::declval<StateT>().notifyUpdated_Z(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_chp = requires(T t) { { t.notifyUpdated_chp() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_chp = requires { { std::declval<StateT>().notifyUpdated_chp(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_signedInts = requires(T t) { { t.notifyUpdated_signedInts() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_signedInts = requires { { std::declval<StateT>().notifyUpdated_signedInts(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_signedInts = requires(T t) { { t.notifyElementUpdated_signedInts() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_signedInts = requires { { std::declval<StateT>().notifyElementUpdated_signedInts(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_signedInts = requires { { std::declval<StateT>().notifyElementUpdated_signedInts(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_signedInts = requires(T t) { { t.notifyInserted_signedInts() }; };
+template<typename StateT> concept has_insert_notifier_call2_for_signedInts = requires { { std::declval<StateT>().notifyInserted_signedInts(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_insert_notifier_call3_for_signedInts = requires { { std::declval<StateT>().notifyInserted_signedInts(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()), std::declval<MemberT>() }; };
+template<typename T> concept has_void_erased_notifier_call_for_signedInts = requires(T t) { { t.notifyErased_signedInts() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_signedInts = requires { { std::declval<StateT>().notifyErased_signedInts(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_signedInts = requires { { std::declval<StateT>().notifyErased_signedInts(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_size = requires(T t) { { t.notifyUpdated_size() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_size = requires { { std::declval<StateT>().notifyUpdated_size(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_sizes = requires(T t) { { t.notifyUpdated_sizes() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_sizes = requires { { std::declval<StateT>().notifyUpdated_sizes(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_sizes = requires(T t) { { t.notifyElementUpdated_sizes() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_sizes = requires { { std::declval<StateT>().notifyElementUpdated_sizes(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_sizes = requires { { std::declval<StateT>().notifyElementUpdated_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_sizes = requires(T t) { { t.notifyInserted_sizes() }; };
+template<typename StateT> concept has_insert_notifier_call2_for_sizes = requires { { std::declval<StateT>().notifyInserted_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_insert_notifier_call3_for_sizes = requires { { std::declval<StateT>().notifyInserted_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()), std::declval<MemberT>() }; };
+template<typename T> concept has_void_erased_notifier_call_for_sizes = requires(T t) { { t.notifyErased_sizes() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_sizes = requires { { std::declval<StateT>().notifyErased_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_sizes = requires { { std::declval<StateT>().notifyErased_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_structWithVectorOfInt = requires(T t) { { t.notifyUpdated_structWithVectorOfInt() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_structWithVectorOfInt = requires { { std::declval<StateT>().notifyUpdated_structWithVectorOfInt(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_structWithVectorOfSize = requires(T t) { { t.notifyUpdated_structWithVectorOfSize() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_structWithVectorOfSize = requires { { std::declval<StateT>().notifyUpdated_structWithVectorOfSize(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_vector_of_int = requires(T t) { { t.notifyUpdated_vector_of_int() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_vector_of_int = requires { { std::declval<StateT>().notifyUpdated_vector_of_int(std::declval<MemberT>()) }; };
 template<typename T> concept has_element_updated_void_notifier_call_for_vector_of_int = requires(T t) { { t.notifyElementUpdated_vector_of_int() }; };
@@ -159,6 +192,14 @@ template<typename StateT, typename MemberT> concept has_insert_notifier_call3_fo
 template<typename T> concept has_void_erased_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyErased_vector_struct_point3dreal() }; };
 template<typename StateT> concept has_erased_notifier_call2_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
 template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+
+struct publishable_STRUCT_StructWithVectorOfInt;
+template<class T> class StructWithVectorOfInt_RefWrapper;
+template<class T, class RootT> class StructWithVectorOfInt_RefWrapper4Set;
+
+struct publishable_STRUCT_StructWithVectorOfSize;
+template<class T> class StructWithVectorOfSize_RefWrapper;
+template<class T, class RootT> class StructWithVectorOfSize_RefWrapper4Set;
 
 struct publishable_STRUCT_CharacterParam;
 template<class T> class CharacterParam_RefWrapper;
@@ -769,6 +810,609 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static bool isSame(const UserT& s1, const UserT& s2) {
 		if ( s1.ID != s2.ID ) return false;
 		if( ! publishable_STRUCT_SIZE::isSame( s1.Size, s2.Size ) ) return false;
+		return true;
+	}
+};
+
+struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		//assert( false ); // NOT IMPLEMENTED (YET);
+		m::impl::publishableStructComposeInteger( composer, t.NN, "NN", false );
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t )
+	{
+		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_sizes = has_void_update_notifier_call_for_sizes<T>;
+		static constexpr bool has_update_notifier_for_sizes = has_update_notifier_call_for_sizes<T, decltype(T::sizes)>;
+		static constexpr bool has_any_notifier_for_sizes = has_void_update_notifier_for_sizes || has_update_notifier_for_sizes;
+		using sizesT = decltype(T::sizes);
+		static constexpr bool has_void_insert_notifier_for_sizes = has_void_insert_notifier_call_for_sizes<T>;
+		static constexpr bool has_insert_notifier2_for_sizes = has_insert_notifier_call2_for_sizes<T>;
+		static constexpr bool has_insert_notifier3_for_sizes = has_insert_notifier_call3_for_sizes<T, GMQ_COLL vector<sizesT>&>;
+		static constexpr bool has_void_erased_notifier_for_sizes = has_void_erased_notifier_call_for_sizes<T>;
+		static constexpr bool has_erased_notifier2_for_sizes = has_erased_notifier_call2_for_sizes<T>;
+		static constexpr bool has_erased_notifier3_for_sizes = has_erased_notifier_call3_for_sizes<T, GMQ_COLL vector<sizesT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_sizes = has_element_updated_void_notifier_call_for_sizes<T>;
+		static constexpr bool has_element_updated_notifier_for_sizes = has_element_updated_notifier_call_for_sizes<T>;
+		static constexpr bool has_full_element_updated_notifier_for_sizes = has_full_element_updated_notifier_call_for_sizes<T, sizesT&>;
+		static constexpr bool has_void_update_notifier_for_NN = has_void_update_notifier_call_for_NN<T>;
+		static constexpr bool has_update_notifier_for_NN = has_update_notifier_call_for_NN<T, decltype(T::NN)>;
+		static constexpr bool has_any_notifier_for_NN = has_void_update_notifier_for_NN || has_update_notifier_for_NN;
+
+		m::impl::publishableParseLeafeVectorBegin( parser );
+
+		if constexpr( reportChanges )
+		{
+			decltype(T::sizes) oldVectorVal;
+			impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
+			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
+			bool currentChanged = !impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
+			changed = changed || currentChanged;
+		}
+		else
+			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
+
+		m::impl::publishableParseLeafeVectorEnd( parser );
+
+					if constexpr( has_any_notifier_for_NN || reportChanges )
+					{
+						decltype(T::NN) oldVal = t.NN;
+						m::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+						bool currentChanged = oldVal != t.NN;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_NN )
+								t.notifyUpdated_NN();
+							if constexpr ( has_update_notifier_for_NN )
+								t.notifyUpdated_NN( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+
+
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		//****  ContinueParsing  **************************************************************************************************************************************************************
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_sizes = has_void_update_notifier_call_for_sizes<T>;
+		static constexpr bool has_update_notifier_for_sizes = has_update_notifier_call_for_sizes<T, decltype(T::sizes)>;
+		static constexpr bool has_any_notifier_for_sizes = has_void_update_notifier_for_sizes || has_update_notifier_for_sizes;
+		using sizesT = decltype(T::sizes);
+		static constexpr bool has_void_insert_notifier_for_sizes = has_void_insert_notifier_call_for_sizes<T>;
+		static constexpr bool has_insert_notifier2_for_sizes = has_insert_notifier_call2_for_sizes<T>;
+		static constexpr bool has_insert_notifier3_for_sizes = has_insert_notifier_call3_for_sizes<T, GMQ_COLL vector<sizesT>&>;
+		static constexpr bool has_void_erased_notifier_for_sizes = has_void_erased_notifier_call_for_sizes<T>;
+		static constexpr bool has_erased_notifier2_for_sizes = has_erased_notifier_call2_for_sizes<T>;
+		static constexpr bool has_erased_notifier3_for_sizes = has_erased_notifier_call3_for_sizes<T, GMQ_COLL vector<sizesT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_sizes = has_element_updated_void_notifier_call_for_sizes<T>;
+		static constexpr bool has_element_updated_notifier_for_sizes = has_element_updated_notifier_call_for_sizes<T>;
+		static constexpr bool has_full_element_updated_notifier_for_sizes = has_full_element_updated_notifier_call_for_sizes<T, sizesT&>;
+		static constexpr bool has_void_update_notifier_for_NN = has_void_update_notifier_call_for_NN<T>;
+		static constexpr bool has_update_notifier_for_NN = has_update_notifier_call_for_NN<T, decltype(T::NN)>;
+		static constexpr bool has_any_notifier_for_NN = has_void_update_notifier_for_NN || has_update_notifier_for_NN;
+
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+				{
+					decltype(T::sizes) oldVectorVal;
+					bool currentChanged = false;
+					constexpr bool alwaysCollectChanges = has_any_notifier_for_sizes;
+					if constexpr( alwaysCollectChanges )
+						impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					{
+						size_t pos = addr[1];
+						if ( pos >= t.sizes.size() )
+							throw std::exception();
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+							typename decltype(T::sizes)::value_type& value = t.sizes[pos];
+							if constexpr ( has_full_element_updated_notifier_for_sizes )
+							{
+								typename decltype(T::sizes)::value_type oldValue;
+								publishable_STRUCT_SIZE::copy( value, oldValue );
+								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								if ( currentChanged )
+								{
+									t.notifyElementUpdated_sizes( pos, oldValue );
+									if constexpr ( has_element_updated_notifier_for_sizes )
+										t.notifyElementUpdated_sizes();
+									if constexpr ( has_void_element_updated_notifier_for_sizes )
+										t.notifyElementUpdated_sizes();
+								}
+							}
+							else if constexpr ( has_element_updated_notifier_for_sizes )
+							{
+								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								if ( currentChanged )
+								{
+									t.notifyElementUpdated_sizes( pos );
+									if constexpr ( has_void_element_updated_notifier_for_sizes )
+										t.notifyElementUpdated_sizes();
+								}
+							}
+							else if constexpr ( has_void_element_updated_notifier_for_sizes )
+							{
+								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								if ( currentChanged )
+									t.notifyElementUpdated_sizes();
+							}
+							else
+							{
+								if constexpr ( alwaysCollectChanges )
+									currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								else
+									publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type>( parser, value, addr, 2 );
+							}
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnVector::remove_at:
+								{
+									if constexpr ( has_erased_notifier3_for_sizes )
+									{
+										decltype(T::sizes) oldVal;
+										impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
+										t.sizes.erase( t.sizes.begin() + pos );
+										t.notifyErased_sizes( pos, oldVal );
+									}
+									if constexpr ( has_erased_notifier2_for_sizes )
+									{
+										t.sizes.erase( t.sizes.begin() + pos );
+										t.notifyErased_sizes( pos );
+									}
+									if constexpr ( has_void_erased_notifier_for_sizes )
+									{
+										t.sizes.erase( t.sizes.begin() + pos );
+										t.notifyErased_sizes();
+									}
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::sizes)::value_type& value = t.sizes[pos];
+									if constexpr ( has_full_element_updated_notifier_for_sizes )
+									{
+										typename decltype(T::sizes)::value_type oldValue;
+										publishable_STRUCT_SIZE::copy( value, oldValue );
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_sizes( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_sizes )
+												t.notifyElementUpdated_sizes();
+											if constexpr ( has_void_element_updated_notifier_for_sizes )
+												t.notifyElementUpdated_sizes();
+										}
+									}
+									else if constexpr ( has_element_updated_notifier_for_sizes )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_sizes( pos );
+											if constexpr ( has_void_element_updated_notifier_for_sizes )
+												t.notifyElementUpdated_sizes();
+										}
+									}
+									else if constexpr ( has_void_element_updated_notifier_for_sizes )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										if ( currentChanged )
+											t.notifyElementUpdated_sizes();
+									}
+									else
+									{
+										if constexpr ( alwaysCollectChanges )
+											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										else
+											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value );
+									}
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::sizes)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value );
+									if constexpr ( has_insert_notifier3_for_sizes )
+									{
+										decltype(T::sizes) oldVal;
+										impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
+										t.notifyInserted_sizes( pos, oldVal );
+									}
+									if constexpr ( has_insert_notifier2_for_sizes )
+										t.notifyInserted_sizes( pos );
+									if constexpr ( has_void_insert_notifier_for_sizes )
+										t.notifyInserted_sizes();
+									t.sizes.insert( t.sizes.begin() + pos, value );
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								default:
+									throw std::exception();
+							}
+							impl::parseStateUpdateBlockEnd( parser );
+						}
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					}
+					else // replacement of the whole vector
+					{
+						m::impl::publishableParseLeafeVectorBegin( parser );
+
+						if constexpr( alwaysCollectChanges )
+						{
+							PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
+							currentChanged = !impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
+						}
+						else
+							PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
+
+						m::impl::publishableParseLeafeVectorEnd( parser );
+					}
+
+					if ( currentChanged )
+					{
+						if constexpr( has_void_update_notifier_for_sizes )
+							t.notifyUpdated_sizes();
+						if constexpr( has_update_notifier_for_sizes )
+							t.notifyUpdated_sizes( oldVectorVal );
+					}
+				}
+				break;
+			case 1:
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_NN || reportChanges )
+					{
+						decltype(T::NN) oldVal = t.NN;
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
+						bool currentChanged = oldVal != t.NN;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_NN )
+								t.notifyUpdated_NN();
+							if constexpr ( has_update_notifier_for_NN )
+								t.notifyUpdated_NN( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		impl::copyVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( src.sizes, dst.sizes );
+		dst.NN = src.NN;
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
+		if ( s1.NN != s2.NN ) return false;
+		return true;
+	}
+};
+
+struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		m::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		//assert( false ); // NOT IMPLEMENTED (YET);
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t )
+	{
+		//****  ParseFunctionForPublishableStruct  **************************************************************************************************************************************************************
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+		static constexpr bool has_void_update_notifier_for_signedInts = has_void_update_notifier_call_for_signedInts<T>;
+		static constexpr bool has_update_notifier_for_signedInts = has_update_notifier_call_for_signedInts<T, decltype(T::signedInts)>;
+		static constexpr bool has_any_notifier_for_signedInts = has_void_update_notifier_for_signedInts || has_update_notifier_for_signedInts;
+		using signedIntsT = decltype(T::signedInts);
+		static constexpr bool has_void_insert_notifier_for_signedInts = has_void_insert_notifier_call_for_signedInts<T>;
+		static constexpr bool has_insert_notifier2_for_signedInts = has_insert_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_insert_notifier3_for_signedInts = has_insert_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_erased_notifier_for_signedInts = has_void_erased_notifier_call_for_signedInts<T>;
+		static constexpr bool has_erased_notifier2_for_signedInts = has_erased_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_erased_notifier3_for_signedInts = has_erased_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
+		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
+		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
+
+					if constexpr( has_any_notifier_for_ID || reportChanges )
+					{
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						bool currentChanged = oldVal != t.ID;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_for_ID )
+								t.notifyUpdated_ID( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		m::impl::publishableParseLeafeVectorBegin( parser );
+
+		if constexpr( reportChanges )
+		{
+			decltype(T::signedInts) oldVectorVal;
+			impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+			bool currentChanged = !impl::isSameVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
+			changed = changed || currentChanged;
+		}
+		else
+			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+
+		m::impl::publishableParseLeafeVectorEnd( parser );
+
+
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		//****  ContinueParsing  **************************************************************************************************************************************************************
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
+		static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
+		static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+		static constexpr bool has_void_update_notifier_for_signedInts = has_void_update_notifier_call_for_signedInts<T>;
+		static constexpr bool has_update_notifier_for_signedInts = has_update_notifier_call_for_signedInts<T, decltype(T::signedInts)>;
+		static constexpr bool has_any_notifier_for_signedInts = has_void_update_notifier_for_signedInts || has_update_notifier_for_signedInts;
+		using signedIntsT = decltype(T::signedInts);
+		static constexpr bool has_void_insert_notifier_for_signedInts = has_void_insert_notifier_call_for_signedInts<T>;
+		static constexpr bool has_insert_notifier2_for_signedInts = has_insert_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_insert_notifier3_for_signedInts = has_insert_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_erased_notifier_for_signedInts = has_void_erased_notifier_call_for_signedInts<T>;
+		static constexpr bool has_erased_notifier2_for_signedInts = has_erased_notifier_call2_for_signedInts<T>;
+		static constexpr bool has_erased_notifier3_for_signedInts = has_erased_notifier_call3_for_signedInts<T, GMQ_COLL vector<signedIntsT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
+		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
+		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
+
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+					if ( addr.size() > offset + 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_ID || reportChanges )
+					{
+						decltype(T::ID) oldVal = t.ID;
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						bool currentChanged = oldVal != t.ID;
+						if ( currentChanged )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr ( has_void_update_notifier_for_ID )
+								t.notifyUpdated_ID();
+							if constexpr ( has_update_notifier_for_ID )
+								t.notifyUpdated_ID( oldVal );
+						}
+					}
+					else
+						m::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+				break;
+			case 1:
+				{
+					decltype(T::signedInts) oldVectorVal;
+					bool currentChanged = false;
+					constexpr bool alwaysCollectChanges = has_any_notifier_for_signedInts;
+					if constexpr( alwaysCollectChanges )
+						impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					{
+						size_t pos = addr[1];
+						if ( pos >= t.signedInts.size() )
+							throw std::exception();
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.signedInts elements is INTEGER)
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnVector::remove_at:
+								{
+									if constexpr ( has_erased_notifier3_for_signedInts )
+									{
+										decltype(T::signedInts) oldVal;
+										impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVal );
+										t.signedInts.erase( t.signedInts.begin() + pos );
+										t.notifyErased_signedInts( pos, oldVal );
+									}
+									if constexpr ( has_erased_notifier2_for_signedInts )
+									{
+										t.signedInts.erase( t.signedInts.begin() + pos );
+										t.notifyErased_signedInts( pos );
+									}
+									if constexpr ( has_void_erased_notifier_for_signedInts )
+									{
+										t.signedInts.erase( t.signedInts.begin() + pos );
+										t.notifyErased_signedInts();
+									}
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::signedInts)::value_type& value = t.signedInts[pos];
+									if constexpr ( has_full_element_updated_notifier_for_signedInts )
+									{
+										typename decltype(T::signedInts)::value_type oldValue;
+										oldValue = value;
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_signedInts( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_signedInts )
+												t.notifyElementUpdated_signedInts();
+											if constexpr ( has_void_element_updated_notifier_for_signedInts )
+												t.notifyElementUpdated_signedInts();
+										}
+									}
+									else if constexpr ( has_element_updated_notifier_for_signedInts )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_signedInts( pos );
+											if constexpr ( has_void_element_updated_notifier_for_signedInts )
+												t.notifyElementUpdated_signedInts();
+										}
+									}
+									else if constexpr ( has_void_element_updated_notifier_for_signedInts )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										if ( currentChanged )
+											t.notifyElementUpdated_signedInts();
+									}
+									else
+									{
+										if constexpr ( alwaysCollectChanges )
+											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType, bool>( parser, value );
+										else
+											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, value );
+									}
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::signedInts)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, value );
+									if constexpr ( has_insert_notifier3_for_signedInts )
+									{
+										decltype(T::signedInts) oldVal;
+										impl::copyVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( t.signedInts, oldVal );
+										t.notifyInserted_signedInts( pos, oldVal );
+									}
+									if constexpr ( has_insert_notifier2_for_signedInts )
+										t.notifyInserted_signedInts( pos );
+									if constexpr ( has_void_insert_notifier_for_signedInts )
+										t.notifyInserted_signedInts();
+									t.signedInts.insert( t.signedInts.begin() + pos, value );
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								default:
+									throw std::exception();
+							}
+							impl::parseStateUpdateBlockEnd( parser );
+						}
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					}
+					else // replacement of the whole vector
+					{
+						m::impl::publishableParseLeafeVectorBegin( parser );
+
+						if constexpr( alwaysCollectChanges )
+						{
+							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+							currentChanged = !impl::isSameVector<decltype(T::signedInts), ::m::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
+						}
+						else
+							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::m::impl::SignedIntegralType>( parser, t.signedInts );
+
+						m::impl::publishableParseLeafeVectorEnd( parser );
+					}
+
+					if ( currentChanged )
+					{
+						if constexpr( has_void_update_notifier_for_signedInts )
+							t.notifyUpdated_signedInts();
+						if constexpr( has_update_notifier_for_signedInts )
+							t.notifyUpdated_signedInts( oldVectorVal );
+					}
+				}
+				break;
+			default:
+				throw std::exception(); // unexpected
+		}
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.ID = src.ID;
+		impl::copyVector<declval(UserT::StructWithVectorOfInt), ::m::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.ID != s2.ID ) return false;
+		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfInt), ::m::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
 		return true;
 	}
 };
@@ -1537,12 +2181,14 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 } // namespace test_json 
 
 //**********************************************************************
-// PUBLISHABLE publishable_sample (5 parameters)
+// PUBLISHABLE publishable_sample (7 parameters)
 // 1. INTEGER ID
 // 2. STRUCT SIZE size
 // 3. STRUCT CharacterParam chp
 // 4. VECTOR<INTEGER> vector_of_int
 // 5. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
+// 6. STRUCT StructWithVectorOfInt structWithVectorOfInt
+// 7. STRUCT StructWithVectorOfSize structWithVectorOfSize
 //**********************************************************************
 
 template<class T, class ComposerT>
@@ -1560,6 +2206,10 @@ class publishable_sample_Wrapper
 	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
 	static_assert( has_vector_struct_point3dreal, "type T must have member T::vector_struct_point3dreal of a type corresponding to IDL type VECTOR<STRUCT POINT3DREAL>" );
+	static constexpr bool has_structWithVectorOfInt = has_structWithVectorOfInt_member<T>;
+	static_assert( has_structWithVectorOfInt, "type T must have member T::structWithVectorOfInt of a type corresponding to IDL type STRUCT StructWithVectorOfInt" );
+	static constexpr bool has_structWithVectorOfSize = has_structWithVectorOfSize_member<T>;
+	static_assert( has_structWithVectorOfSize, "type T must have member T::structWithVectorOfSize of a type corresponding to IDL type STRUCT StructWithVectorOfSize" );
 
 	static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
 	static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
@@ -1596,6 +2246,12 @@ class publishable_sample_Wrapper
 	static constexpr bool has_void_element_updated_notifier_for_vector_struct_point3dreal = has_element_updated_void_notifier_call_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_element_updated_notifier_for_vector_struct_point3dreal = has_element_updated_notifier_call_for_vector_struct_point3dreal<T>;
 	static constexpr bool has_full_element_updated_notifier_for_vector_struct_point3dreal = has_full_element_updated_notifier_call_for_vector_struct_point3dreal<T, vector_struct_point3drealT&>;
+	static constexpr bool has_void_update_notifier_for_structWithVectorOfInt = has_void_update_notifier_call_for_structWithVectorOfInt<T>;
+	static constexpr bool has_update_notifier_for_structWithVectorOfInt = has_update_notifier_call_for_structWithVectorOfInt<T, decltype(T::structWithVectorOfInt)>;
+	static constexpr bool has_any_notifier_for_structWithVectorOfInt = has_void_update_notifier_for_structWithVectorOfInt || has_update_notifier_for_structWithVectorOfInt;
+	static constexpr bool has_void_update_notifier_for_structWithVectorOfSize = has_void_update_notifier_call_for_structWithVectorOfSize<T>;
+	static constexpr bool has_update_notifier_for_structWithVectorOfSize = has_update_notifier_call_for_structWithVectorOfSize<T, decltype(T::structWithVectorOfSize)>;
+	static constexpr bool has_any_notifier_for_structWithVectorOfSize = has_void_update_notifier_for_structWithVectorOfSize || has_update_notifier_for_structWithVectorOfSize;
 
 
 public:
@@ -1765,6 +2421,7 @@ public:
 				}
 				case 3:
 				{
+				{
 					decltype(T::vector_of_int) oldVectorVal;
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_vector_of_int;
@@ -1877,6 +2534,7 @@ public:
 							}
 							impl::parseStateUpdateBlockEnd( parser );
 						}
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					}
 					else // replacement of the whole vector
 					{
@@ -1884,7 +2542,6 @@ public:
 
 						if constexpr( alwaysCollectChanges )
 						{
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( parser, t.vector_of_int );
 							currentChanged = !impl::isSameVector<decltype(T::vector_of_int), ::m::impl::SignedIntegralType>( oldVectorVal, t.vector_of_int );
 						}
@@ -1901,10 +2558,12 @@ public:
 						if constexpr( has_update_notifier_for_vector_of_int )
 							t.notifyUpdated_vector_of_int( oldVectorVal );
 					}
+				}
 
 					break;
 				}
 				case 4:
+				{
 				{
 					decltype(T::vector_struct_point3dreal) oldVectorVal;
 					bool currentChanged = false;
@@ -2055,6 +2714,7 @@ public:
 							}
 							impl::parseStateUpdateBlockEnd( parser );
 						}
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					}
 					else // replacement of the whole vector
 					{
@@ -2062,7 +2722,6 @@ public:
 
 						if constexpr( alwaysCollectChanges )
 						{
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 							currentChanged = !impl::isSameVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( oldVectorVal, t.vector_struct_point3dreal );
 						}
@@ -2079,7 +2738,130 @@ public:
 						if constexpr( has_update_notifier_for_vector_struct_point3dreal )
 							t.notifyUpdated_vector_struct_point3dreal( oldVectorVal );
 					}
+				}
 
+					break;
+				}
+				case 5:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						m::impl::publishableParseLeafeStructBegin( parser );
+
+						if constexpr( has_update_notifier_for_structWithVectorOfInt )
+						{
+							decltype(T::structWithVectorOfInt) temp_structWithVectorOfInt;
+							publishable_STRUCT_StructWithVectorOfInt::copy<decltype(T::structWithVectorOfInt), decltype(T::structWithVectorOfInt)>( t.structWithVectorOfInt, temp_structWithVectorOfInt );
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfInt::parse<ParserT, decltype(T::structWithVectorOfInt), bool>( parser, t.structWithVectorOfInt );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_structWithVectorOfInt )
+									t.notifyUpdated_structWithVectorOfInt();
+								t.notifyUpdated_structWithVectorOfInt( temp_structWithVectorOfInt );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_structWithVectorOfInt )
+						{
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfInt::parse<ParserT, decltype(T::structWithVectorOfInt), bool>( parser, t.structWithVectorOfInt );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_structWithVectorOfInt();
+							}
+						}
+
+						else
+						{
+							publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
+						}
+
+						m::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						if constexpr( has_update_notifier_for_structWithVectorOfInt )
+						{
+							decltype(T::structWithVectorOfInt) temp_structWithVectorOfInt;
+							publishable_STRUCT_StructWithVectorOfInt::copy<decltype(T::structWithVectorOfInt), decltype(T::structWithVectorOfInt)>( t.structWithVectorOfInt, temp_structWithVectorOfInt );
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfInt::parse<ParserT, decltype(T::structWithVectorOfInt), bool>( parser, t.structWithVectorOfInt, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_structWithVectorOfInt )
+									t.notifyUpdated_structWithVectorOfInt();
+								t.notifyUpdated_structWithVectorOfInt( temp_structWithVectorOfInt );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_structWithVectorOfInt )
+						{
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfInt::parse<ParserT, decltype(T::Size), bool>( parser, t.structWithVectorOfInt, addr, 1 );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_structWithVectorOfInt();
+							}
+						}
+						else
+							publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt, addr, 1 );
+					}
+					break;
+				}
+				case 6:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						m::impl::publishableParseLeafeStructBegin( parser );
+
+						if constexpr( has_update_notifier_for_structWithVectorOfSize )
+						{
+							decltype(T::structWithVectorOfSize) temp_structWithVectorOfSize;
+							publishable_STRUCT_StructWithVectorOfSize::copy<decltype(T::structWithVectorOfSize), decltype(T::structWithVectorOfSize)>( t.structWithVectorOfSize, temp_structWithVectorOfSize );
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfSize::parse<ParserT, decltype(T::structWithVectorOfSize), bool>( parser, t.structWithVectorOfSize );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_structWithVectorOfSize )
+									t.notifyUpdated_structWithVectorOfSize();
+								t.notifyUpdated_structWithVectorOfSize( temp_structWithVectorOfSize );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_structWithVectorOfSize )
+						{
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfSize::parse<ParserT, decltype(T::structWithVectorOfSize), bool>( parser, t.structWithVectorOfSize );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_structWithVectorOfSize();
+							}
+						}
+
+						else
+						{
+							publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize );
+						}
+
+						m::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						if constexpr( has_update_notifier_for_structWithVectorOfSize )
+						{
+							decltype(T::structWithVectorOfSize) temp_structWithVectorOfSize;
+							publishable_STRUCT_StructWithVectorOfSize::copy<decltype(T::structWithVectorOfSize), decltype(T::structWithVectorOfSize)>( t.structWithVectorOfSize, temp_structWithVectorOfSize );
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfSize::parse<ParserT, decltype(T::structWithVectorOfSize), bool>( parser, t.structWithVectorOfSize, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_structWithVectorOfSize )
+									t.notifyUpdated_structWithVectorOfSize();
+								t.notifyUpdated_structWithVectorOfSize( temp_structWithVectorOfSize );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_structWithVectorOfSize )
+						{
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfSize::parse<ParserT, decltype(T::Size), bool>( parser, t.structWithVectorOfSize, addr, 1 );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_structWithVectorOfSize();
+							}
+						}
+						else
+							publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize, addr, 1 );
+					}
 					break;
 				}
 				default:
@@ -2132,6 +2914,24 @@ public:
 		m::impl::composeStateUpdateBlockEnd( *composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return m::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_Wrapper, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
+	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
+	void set_structWithVectorOfInt( decltype(T::structWithVectorOfInt) val) { 
+		t.structWithVectorOfInt = val; 
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 5 );
+		m::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_StructWithVectorOfInt::compose( *composer, t.structWithVectorOfInt );
+		m::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_Wrapper>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 5); }
+	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
+	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
+		t.structWithVectorOfSize = val; 
+		m::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 6 );
+		m::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_StructWithVectorOfSize::compose( *composer, t.structWithVectorOfSize );
+		m::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_Wrapper>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
 };
 
 template<class T>
@@ -2298,6 +3098,108 @@ public:
 		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
 	auto get4set_Size() { return SIZE_RefWrapper4Set<decltype(T::Size), RootT>(t.Size, *this, address, 1); }
+};
+
+template<class T>
+class StructWithVectorOfSize_RefWrapper
+{
+	T& t;
+	static constexpr bool has_sizes = has_sizes_member<T>;
+	static_assert( has_sizes, "type T must have member T::sizes of a type corresponding to IDL type VECTOR<STRUCT SIZE>" );
+	static constexpr bool has_NN = has_NN_member<T>;
+	static_assert( has_NN, "type T must have member T::NN of a type corresponding to IDL type INTEGER" );
+
+
+public:
+	StructWithVectorOfSize_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_sizes() { return m::VectorOfStructRefWrapper<SIZE_RefWrapper<typename decltype(T::sizes)::value_type>, decltype(T::sizes)>(t.sizes); }
+	auto get_NN() { return t.NN; }
+};
+
+template<class T, class RootT>
+class StructWithVectorOfSize_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_sizes = has_sizes_member<T>;
+	static_assert( has_sizes, "type T must have member T::sizes of a type corresponding to IDL type VECTOR<STRUCT SIZE>" );
+	static constexpr bool has_NN = has_NN_member<T>;
+	static_assert( has_NN, "type T must have member T::NN of a type corresponding to IDL type INTEGER" );
+
+
+public:
+	StructWithVectorOfSize_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_sizes() { return m::VectorOfStructRefWrapper<SIZE_RefWrapper<typename decltype(T::sizes)::value_type>, decltype(T::sizes)>(t.sizes); }
+	void set_sizes( decltype(T::sizes) val) { 
+		t.sizes = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		m::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		m::impl::publishableComposeLeafeStructBegin( root.getComposer() );
+		publishable_STRUCT_SIZE::compose( root.getComposer(), t.sizes );
+		m::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		m::impl::composeStateUpdateBlockEnd( root.getComposer() );
+	}
+	auto get4set_sizes() { return m::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, *this, address, 0); }
+	auto get_NN() { return t.NN; }
+	void set_NN( decltype(T::NN) val) { 
+		t.NN = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.NN );
+	}
+};
+
+template<class T>
+class StructWithVectorOfInt_RefWrapper
+{
+	T& t;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_signedInts = has_signedInts_member<T>;
+	static_assert( has_signedInts, "type T must have member T::signedInts of a type corresponding to IDL type VECTOR<INTEGER>" );
+
+
+public:
+	StructWithVectorOfInt_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_ID() { return t.ID; }
+	auto get_signedInts() { return m::VectorOfSimpleTypeRefWrapper(t.signedInts); }
+};
+
+template<class T, class RootT>
+class StructWithVectorOfInt_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_signedInts = has_signedInts_member<T>;
+	static_assert( has_signedInts, "type T must have member T::signedInts of a type corresponding to IDL type VECTOR<INTEGER>" );
+
+
+public:
+	StructWithVectorOfInt_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_ID() { return t.ID; }
+	void set_ID( decltype(T::ID) val) { 
+		t.ID = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		m::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
+	}
+	auto get_signedInts() { return m::VectorOfSimpleTypeRefWrapper(t.signedInts); }
+	void set_signedInts( decltype(T::signedInts) val) { 
+		t.signedInts = val; 
+		m::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		m::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::signedInts), impl::SignedIntegralType>( root.getComposer(), t.signedInts );
+		m::impl::composeStateUpdateBlockEnd( root.getComposer() );
+	}
+	auto get4set_signedInts() { return m::VectorRefWrapper4Set<decltype(T::signedInts), ::m::impl::SignedIntegralType, RootT>(t.signedInts, *this, GMQ_COLL vector<size_t>(), 1); }
 };
 
 //**********************************************************************
