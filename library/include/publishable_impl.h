@@ -32,7 +32,7 @@
 #include "marshalling.h"
 
 
-namespace m {
+namespace mimpl {
 
 enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
 
@@ -480,6 +480,6 @@ public:
 #endif // 0
 
 
-} // namespace m
+} // namespace mimpl
 
 #endif // PUBLISHABLE_IMPL_H

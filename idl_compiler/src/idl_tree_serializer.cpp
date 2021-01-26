@@ -440,7 +440,7 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 	assert( out.size() == structs.size() );
 }
 
-void generateRoot( const char* fileName, FILE* header, Root& s )
+void generateRoot( const char* fileName, FILE* header, const char* metascope, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
 	ok = impl_processScopes(s) && ok;
@@ -459,9 +459,13 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 		"\n"
 		"#include <marshalling.h>\n"
 		"#include <publishable_impl.h>\n"
-		"\n"
-		"namespace m {\n\n",
-		fileName, fileName );
+		"using namespace mimpl;\n"
+		"namespace %s {\n\n"
+		"#ifdef METASCOPE_%s_ALREADY_DEFINED\n"
+		"#error metascope must reside in a single idl file\n"
+		"#endif\n"
+		"#define METASCOPE_%s_ALREADY_DEFINED\n\n",
+		fileName, fileName, metascope, metascope, metascope );
 
 	impl_insertScopeList( header, s );
 
@@ -552,9 +556,10 @@ void generateRoot( const char* fileName, FILE* header, Root& s )
 	}
 
 	fprintf( header, "\n"
-		"} // namespace m\n"
+		"} // namespace %s\n"
 		"\n"
 		"#endif // %s_guard\n",
+		metascope,
 		fileName );
 }
 

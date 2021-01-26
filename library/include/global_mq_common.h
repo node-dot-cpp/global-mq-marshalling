@@ -48,7 +48,7 @@
 /////////////////////////////////////////
 
 
-namespace m {
+namespace mimpl {
 
 	static constexpr size_t MIN_BUFFER = 1024;
 
@@ -185,7 +185,7 @@ namespace m {
 		FileReadBuffer(size_t res) { Buffer::reserve(res); }
 	};
 	
-} // namespace m
+} // namespace mimpl
 
 
 #endif // GLOBAL_MQ_COMMON_H

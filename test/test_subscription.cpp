@@ -226,9 +226,11 @@ void publishableTestOne()
 	testCallerValue();
 //	return;
 	SampleNode node;
-	m::Buffer b;
-	m::JsonComposer composer( b );
-	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
+	mimpl::Buffer b;
+//	mimpl::JsonComposer composer( b );
+	mimpl::GmqComposer composer( b );
+//	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
+	mtest::publishable_sample_Wrapper<PublishableSample, mimpl::GmqComposer<mimpl::Buffer>> publishableSampleWrapper( &node );
 	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
@@ -287,8 +289,10 @@ void publishableTestOne()
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	m::JsonParser parser( b );
-	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapperSlave( &node );
+//	mimpl::JsonParser parser( b );
+	mimpl::GmqParser parser( b );
+//	mtest::publishable_sample_Wrapper<PublishableSample, mimpl::JsonComposer<mimpl::Buffer>> publishableSampleWrapperSlave( &node );
+	mtest::publishable_sample_Wrapper<PublishableSample, mimpl::GmqComposer<mimpl::Buffer>> publishableSampleWrapperSlave( &node );
 	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );

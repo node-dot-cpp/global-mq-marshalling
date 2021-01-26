@@ -33,12 +33,40 @@ int main( int argc, char *argv[] )
 	if ( argc < 3 )
 	{
 		fmt::print( "Usage:\n" );
-		fmt::print( "generator path/to/idl path/to/header\n" );
+		fmt::print( "generator path/to/idl path/to/header[ -m=metascopename]\n" );
+		fmt::print( "  -m : defines metascope name (default=m)\n" );
 		return 0;
 	}
 
 	std::string idlPath = argv[1];
 	std::string targetPath = argv[2];
+	std::string metascope = "m";
+	for ( int i=3; i<argc; ++i )
+	{
+		std::string entry = argv[i];
+		size_t separPos = entry.find_first_of( "=" );
+		if ( separPos == std::string::npos )
+		{
+			fmt::print( "unexpected parameter {}\n", entry );
+			return 0;
+		}
+		string key = entry.substr( 0, separPos );
+		if ( key == "-m" )
+		{
+			metascope = entry.substr( separPos + 1 );
+			if ( metascope == "" )
+			{
+				fmt::print( "metascope (-m) option, if specified, must not be empty {}\n", key );
+				return 0;
+			}
+		}
+		else
+		{
+			fmt::print( "unexpected parameter {}\n", key );
+			return 0;
+		}
+	}
+
 	size_t lastSlash = targetPath.find_last_of( "\\/" );
 	if ( lastSlash == std::string::npos )
 		lastSlash = 0;
@@ -61,7 +89,7 @@ int main( int argc, char *argv[] )
 		printRoot( *root );
 
 		FILE* header = fopen( targetPath.c_str(), "wb" );
-		generateRoot( fileName.c_str(), header, *root );
+		generateRoot( fileName.c_str(), header, metascope.c_str(), *root );
 	}
 	catch ( std::exception& x )
 	{

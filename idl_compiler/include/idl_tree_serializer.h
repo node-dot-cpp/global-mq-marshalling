@@ -96,7 +96,7 @@ void printLimit( Limit& s );
 void printVariant( Variant& s );
 
 // code generation
-void generateRoot( const char* fileName, FILE* header, Root& s );
+void generateRoot( const char* fileName, FILE* header, const char* metascope, Root& s );
 void generateMessage( FILE* header, CompositeType& s );
 void generatePublishable( FILE* header, Root& root, CompositeType& s );
 void generateMessageAlias( FILE* header, CompositeType& s );

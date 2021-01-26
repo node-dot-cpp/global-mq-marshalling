@@ -178,13 +178,13 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 	{
 		case Proto::gmq: 
 			fprintf( header, 
-				"\tm::GmqComposer composer( buffer );\n"
+				"\tmimpl::GmqComposer composer( buffer );\n"
 				"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
 			);
 			break;
 		case Proto::json: 
 			fprintf( header, 
-				"\tm::JsonComposer composer( buffer );\n"
+				"\tmimpl::JsonComposer composer( buffer );\n"
 				"\tcomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n"
 				"\timpl::json::composeNamedSignedInteger( composer, \"msgid\", msgID::id);\n"
 				"\tcomposer.buff.append( \",\\n  \", sizeof(\",\\n  \") - 1 );\n"

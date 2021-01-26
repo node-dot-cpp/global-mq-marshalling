@@ -33,7 +33,7 @@
 #include <cstddef>
 
 
-namespace m {
+namespace mimpl {
 
 struct FloatingParts
 {
@@ -99,11 +99,11 @@ public:
 	GmqComposer( BufferT& buff_ ) : buff( buff_ ) {}
 };
 
-} // namespace m
+} // namespace mimpl
 
 
 
-namespace m::impl {
+namespace mimpl::impl {
 
 static constexpr size_t integer_max_size = 8;
 
@@ -329,11 +329,11 @@ void composeNamedString(ComposerT& composer, GMQ_COLL string name, const StringL
 
 } // namespace json
 
-} // namespace m::impl
+} // namespace mimpl::impl
 
 // parsing
 
-namespace m {
+namespace mimpl {
 
 class ParserBase {};
 
@@ -828,6 +828,6 @@ public:
 
 };
 
-} // namespace m
+} // namespace mimpl
 
 #endif // COMPOSE_AND_PARSE_IMPL_H

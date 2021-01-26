@@ -30,7 +30,7 @@
 
 #include "marshalling_impl.h"
 
-namespace m {
+namespace mimpl {
 
 template <typename T, typename NameTag>
 class NamedParameterWithType;
@@ -1842,6 +1842,6 @@ void parseActionInPublishable(ParserT& p, size_t& action)
 
 } // namespace impl
 
-} // namespace m
+} // namespace mimpl
 
 #endif // NAMED_PARAMS_CORE_H
