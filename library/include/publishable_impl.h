@@ -32,7 +32,7 @@
 #include "marshalling.h"
 
 
-namespace m {
+namespace globalmq::marshalling {
 
 enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
 
@@ -333,15 +333,30 @@ namespace impl {
 		for ( size_t i=0; i<v1.size(); ++i )
 		{
 			if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-				if ( v1[i] != v2[i] ) return false;
+			{
+				if ( v1[i] != v2[i] ) 
+					return false;
+			}
 			else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-				if ( v1[i] != v2[i] ) return false;
+			{
+				if ( v1[i] != v2[i] ) 
+					return false;
+			}
 			else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-				if ( v1[i] != v2[i] ) return false;
+			{
+				if ( v1[i] != v2[i] ) 
+					return false;
+			}
 			else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-				if ( v1[i] != v2[i] ) return false;
+			{
+				if ( v1[i] != v2[i] ) 
+					return false;
+			}
 			else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
-				if ( !ElemTypeT::isSame( v1[i], v2[i] ) ) return false;
+			{
+				if ( !ElemTypeT::isSame( v1[i], v2[i] ) ) 
+					return false;
+			}
 			else
 				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 		}
@@ -480,6 +495,6 @@ public:
 #endif // 0
 
 
-} // namespace m
+} // namespace globalmq::marshalling
 
 #endif // PUBLISHABLE_IMPL_H
