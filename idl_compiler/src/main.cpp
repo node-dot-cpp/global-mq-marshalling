@@ -85,11 +85,12 @@ int main( int argc, char *argv[] )
 
 	try
 	{
+		uint32_t chksm = idlFileChecksum( idlPath );
 		Root* root = parseSourceFile(idlPath, false);
 		printRoot( *root );
 
 		FILE* header = fopen( targetPath.c_str(), "wb" );
-		generateRoot( fileName.c_str(), header, metascope.c_str(), *root );
+		generateRoot( fileName.c_str(), chksm, header, metascope.c_str(), *root );
 	}
 	catch ( std::exception& x )
 	{

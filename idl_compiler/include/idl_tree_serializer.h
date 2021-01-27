@@ -96,7 +96,7 @@ void printLimit( Limit& s );
 void printVariant( Variant& s );
 
 // code generation
-void generateRoot( const char* fileName, FILE* header, const char* metascope, Root& s );
+void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, Root& s );
 void generateMessage( FILE* header, CompositeType& s );
 void generatePublishable( FILE* header, Root& root, CompositeType& s );
 void generateMessageAlias( FILE* header, CompositeType& s );
@@ -111,5 +111,7 @@ void generate__unique_ptr_MessageParameter( FILE* header, unique_ptr<MessagePara
 void generateDataType( FILE* header, MessageParameterType& s );
 void generateLimit( FILE* header, Limit& s );
 void generateVariant( FILE* header, Variant& s );
+
+uint32_t idlFileChecksum( std::string path );
 
 #endif // IDL_TREE_SERIALIZER_H
