@@ -33,7 +33,7 @@
 #include <cstddef>
 
 
-namespace mimpl {
+namespace globalmq::marshalling {
 
 struct FloatingParts
 {
@@ -99,11 +99,11 @@ public:
 	GmqComposer( BufferT& buff_ ) : buff( buff_ ) {}
 };
 
-} // namespace mimpl
+} // namespace globalmq::marshalling
 
 
 
-namespace mimpl::impl {
+namespace globalmq::marshalling::impl {
 
 static constexpr size_t integer_max_size = 8;
 
@@ -329,11 +329,11 @@ void composeNamedString(ComposerT& composer, GMQ_COLL string name, const StringL
 
 } // namespace json
 
-} // namespace mimpl::impl
+} // namespace globalmq::marshalling::impl
 
 // parsing
 
-namespace mimpl {
+namespace globalmq::marshalling {
 
 class ParserBase {};
 
@@ -346,7 +346,11 @@ public:
 
 public:
 	GmqParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
-	GmqParser( const GmqParser& other, size_t size ) { riter = other.riter; }
+	GmqParser( const GmqParser& other ) { riter = other.riter; }
+	GmqParser& operator = ( const GmqParser& other ) { riter = other.riter; return *this; }
+	GmqParser( GmqParser&& other ) { riter = std::move( other.riter ); }
+	GmqParser& operator = ( GmqParser&& other ) { riter = std::move( other.riter ); return *this; }
+	~GmqParser() {}
 
 	template <typename T>
 	void parseSignedInteger( T* num )
@@ -611,7 +615,11 @@ public:
 
 public:
 	JsonParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
-	JsonParser( const JsonParser& other, size_t size ) { riter = other.riter; }
+	JsonParser( const JsonParser& other ) { riter = other.riter; }
+	JsonParser& operator = ( const JsonParser& other ) { riter = other.riter; return *this; }
+	JsonParser( JsonParser&& other ) { riter = std::move( other.riter ); }
+	JsonParser& operator = ( JsonParser&& other ) { riter = std::move( other.riter ); return *this; }
+	~JsonParser() {}
 
 	void skipSpacesEtc()
 	{
@@ -828,6 +836,6 @@ public:
 
 };
 
-} // namespace mimpl
+} // namespace globalmq::marshalling
 
 #endif // COMPOSE_AND_PARSE_IMPL_H

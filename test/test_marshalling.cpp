@@ -26,19 +26,19 @@ void runGmqSample()
 	std::vector<Point3D> vectorOfPoints3D = { {0, 1, 2}, {3, 4, 5} };
 	Point pt = {175, 186};
 	Point3D pt3D = {123, 456, 789};
-	mimpl::Buffer b;
-	mimpl::GmqComposer composer( b );
+	mtest::Buffer b;
+	mtest::GmqComposer composer( b );
 	mtest::test_gmq::MESSAGE_message_one_compose( composer, 
-		mtest::thirdParam = mimpl::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point3D_compose( c, mtest::x = vectorOfPoints3D[ordinal].x, mtest::y = vectorOfPoints3D[ordinal].y, mtest::z = vectorOfPoints3D[ordinal].z );} ), 
+		mtest::thirdParam = mtest::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point3D_compose( c, mtest::x = vectorOfPoints3D[ordinal].x, mtest::y = vectorOfPoints3D[ordinal].y, mtest::z = vectorOfPoints3D[ordinal].z );} ), 
 		mtest::firstParam = 1, mtest::fifthParam = "def", mtest::forthParam = 3, mtest::seventhParam = 3.1416, 
-		mtest::eighthParam = mimpl::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point_compose( c, mtest::x = pt.x, mtest::y = pt.y );} ),
-		mtest::ninethParam = mimpl::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point3D_compose( c, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z );} ),
-		mtest::secondParam = mimpl::SimpleTypeCollectionWrapper( vectorOfNumbers ),
-		mtest::tenthParam = mimpl::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
-		mtest::sixthParam = mimpl::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point_compose( c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y );} )
+		mtest::eighthParam = mtest::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point_compose( c, mtest::x = pt.x, mtest::y = pt.y );} ),
+		mtest::ninethParam = mtest::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point3D_compose( c, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z );} ),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper( vectorOfNumbers ),
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
+		mtest::sixthParam = mtest::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point_compose( c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y );} )
 	);
 
-	mimpl::GmqParser parser( b );
+	mtest::GmqParser parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string fifthParam;
@@ -51,12 +51,12 @@ void runGmqSample()
 	double seventhParam = 0;
 	mtest::test_gmq::MESSAGE_message_one_parse( parser, 
 		mtest::firstParam = &firstParam, mtest::forthParam = &forthParam, 
-		mtest::secondParam = mimpl::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
-		mtest::tenthParam = mimpl::SimpleTypeCollectionWrapper( vectorOfRealNumbersBack ), 
-		mtest::thirdParam = mimpl::CollactionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; mtest::STRUCT_point3D_parse( p, mtest::x = &(pt.x), mtest::y = &(pt.y), mtest::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
-		mtest::sixthParam = mimpl::CollactionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; mtest::STRUCT_point_parse( p,  mtest::x = &(pt.x), mtest::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
-		mtest::eighthParam = mimpl::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );} ),
-		mtest::ninethParam = mimpl::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point3D_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );} ),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper( vectorOfRealNumbersBack ), 
+		mtest::thirdParam = mtest::CollectionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; mtest::STRUCT_point3D_parse( p, mtest::x = &(pt.x), mtest::y = &(pt.y), mtest::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
+		mtest::sixthParam = mtest::CollectionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; mtest::STRUCT_point_parse( p,  mtest::x = &(pt.x), mtest::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
+		mtest::eighthParam = mtest::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );} ),
+		mtest::ninethParam = mtest::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point3D_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );} ),
 		mtest::fifthParam = &fifthParam, mtest::seventhParam = &seventhParam );
 
 	assert( firstParam == 1 );
@@ -97,22 +97,22 @@ void runJsonSample()
 	std::vector<Point3D> vectorOfPoints3D = { {0, 1, 2}, {3, 4, 5} };
 	Point pt = {175, 186};
 	Point3D pt3D = {123, 456, 789};
-	mimpl::Buffer b;
-	mimpl::JsonComposer composer( b );
+	mtest::Buffer b;
+	mtest::JsonComposer composer( b );
 	mtest::test_json::MESSAGE_message_one_compose( composer, 
-		mtest::thirdParam = mimpl::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point3D_compose( c, mtest::x = vectorOfPoints3D[ordinal].x, mtest::y = vectorOfPoints3D[ordinal].y, mtest::z = vectorOfPoints3D[ordinal].z );} ), 
+		mtest::thirdParam = mtest::CollectionWrapperForComposing( [&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point3D_compose( c, mtest::x = vectorOfPoints3D[ordinal].x, mtest::y = vectorOfPoints3D[ordinal].y, mtest::z = vectorOfPoints3D[ordinal].z );} ), 
 		mtest::firstParam = 1, mtest::fifthParam = "def", mtest::forthParam = 3, mtest::seventhParam = 3.1416, 
-		mtest::eighthParam = mimpl::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point_compose( c, mtest::x = pt.x, mtest::y = pt.y );} ),
-		mtest::ninethParam = mimpl::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point3D_compose( c, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z );} ),
-		mtest::secondParam = mimpl::SimpleTypeCollectionWrapper( vectorOfNumbers ),
-		mtest::tenthParam = mimpl::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
-		mtest::sixthParam = mimpl::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point_compose( c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y );} )
+		mtest::eighthParam = mtest::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point_compose( c, mtest::x = pt.x, mtest::y = pt.y );} ),
+		mtest::ninethParam = mtest::MessageWrapperForComposing( [&](auto& c){ mtest::STRUCT_point3D_compose( c, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z );} ),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper( vectorOfNumbers ),
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper( vectorOfRealNumbers ),
+		mtest::sixthParam = mtest::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point_compose( c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y );} )
 	);
 
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	mimpl::JsonParser parser( b );
+	mtest::JsonParser parser( b );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string fifthParam;
@@ -125,12 +125,12 @@ void runJsonSample()
 	double seventhParam = 0;
 	mtest::test_json::MESSAGE_message_one_parse( parser, 
 		mtest::firstParam = &firstParam, mtest::forthParam = &forthParam, 
-		mtest::secondParam = mimpl::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
-		mtest::tenthParam = mimpl::SimpleTypeCollectionWrapper( vectorOfRealNumbersBack ),
-		mtest::thirdParam = mimpl::CollactionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; mtest::STRUCT_point3D_parse( p, mtest::x = &(pt.x), mtest::y = &(pt.y), mtest::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
-		mtest::sixthParam = mimpl::CollactionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; mtest::STRUCT_point_parse( p,  mtest::x = &(pt.x), mtest::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
-		mtest::eighthParam = mimpl::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );} ),
-		mtest::ninethParam = mimpl::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point3D_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );} ),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper( vectorOfNumbersBack ), 
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper( vectorOfRealNumbersBack ),
+		mtest::thirdParam = mtest::CollectionWrapperForParsing( nullptr, [&](auto& p, size_t ordinal){ Point3D pt; mtest::STRUCT_point3D_parse( p, mtest::x = &(pt.x), mtest::y = &(pt.y), mtest::z = &(pt.z) ); vectorOfPoints3DBack.push_back( pt );} ), 
+		mtest::sixthParam = mtest::CollectionWrapperForParsing( [&](size_t sz){vectorOfPointsBack.reserve( sz );}, [&](auto& p, size_t ordinal){ Point pt; mtest::STRUCT_point_parse( p,  mtest::x = &(pt.x), mtest::y = &(pt.y) ); vectorOfPointsBack.push_back( pt );} ), 
+		mtest::eighthParam = mtest::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );} ),
+		mtest::ninethParam = mtest::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_point3D_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );} ),
 		mtest::fifthParam = &fifthParam, mtest::seventhParam = &seventhParam );
 
 	assert( firstParam == 1 );
@@ -216,7 +216,7 @@ void testParsingJsonFile()
 	}
 	fseek( f, 0, SEEK_SET );
 
-	mimpl::FileReadBuffer b( fsz + 1 );
+	mtest::FileReadBuffer b( fsz + 1 );
 
 	size_t rres = fread( b.begin(), 1, fsz, f );
 	fclose( f );
@@ -229,19 +229,19 @@ void testParsingJsonFile()
 	b.appendUint8( 0 );
 
 	LevelTraceData data;
-	mimpl::JsonParser parser( b );
+	mtest::JsonParser parser( b );
 	mtest::level_trace::MESSAGE_LevelTraceData_parse( 
 		parser, 
-		mtest::CharacterParam = mimpl::MessageWrapperForParsing( [&](auto& parser)
+		mtest::CharacterParam = mtest::MessageWrapperForParsing( [&](auto& parser)
 			{ 
 				mtest::STRUCT_CharacterParam_parse( 
 					parser, 
 					mtest::ID = &(data.charParams.id), 
-					mtest::Size = mimpl::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_SIZE_parse( parser, mtest::X = &(data.charParams.size.x), mtest::Y = &(data.charParams.size.y), mtest::Z = &(data.charParams.size.z) );} ) 
+					mtest::Size = mtest::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_SIZE_parse( parser, mtest::X = &(data.charParams.size.x), mtest::Y = &(data.charParams.size.y), mtest::Z = &(data.charParams.size.z) );} ) 
 				);
 			} 
 		), 
-		mtest::Points = mimpl::CollactionWrapperForParsing( [&](size_t sz){data.points.reserve( sz );}, [&](auto& p, size_t ordinal){ Point3DReal pt; mtest::STRUCT_POINT3DREAL_parse( p,  mtest::X = &(pt.x), mtest::Y = &(pt.y), mtest::Z = &(pt.z) ); data.points.push_back( pt );} )
+		mtest::Points = mtest::CollectionWrapperForParsing( [&](size_t sz){data.points.reserve( sz );}, [&](auto& p, size_t ordinal){ Point3DReal pt; mtest::STRUCT_POINT3DREAL_parse( p,  mtest::X = &(pt.x), mtest::Y = &(pt.y), mtest::Z = &(pt.z) ); data.points.push_back( pt );} )
 	);
 		
 	fmt::print( "Character ID = {}\n", data.charParams.id );
@@ -257,14 +257,14 @@ void testParsingJsonFile()
 void testMessageAliases()
 {
 	Point3D pt3D = {123, 456, 789};
-	mimpl::Buffer b;
-	mimpl::JsonComposer composer( b );
+	mtest::Buffer b;
+	mtest::JsonComposer composer( b );
 	mtest::scope_one::MESSAGE_point3D_alias_compose( composer, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z);
 
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	mimpl::JsonParser parser( b );
+	mtest::JsonParser parser( b );
 	Point3D pt3DBack = {0, 0, 0};
 	double seventhParam = 0;
 	mtest::scope_one::MESSAGE_point3D_alias_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );
@@ -277,15 +277,15 @@ void testScopedMessageComposingAndParsing()
 {
 	Point pt = {444, 555};
 	Point3D pt3D = {123, 456, 789};
-	mimpl::Buffer b;
+	mtest::Buffer b;
 	mtest::scope_one::composeMessage<mtest::scope_one::point3D_alias>( b, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z );
 
 	Point ptBack = {0, 0};
 	Point3D pt3DBack = {0, 0, 0};
 	mtest::scope_one::handleMessage( b, 
-		mimpl::makeMessageHandler<mtest::scope_one::point3D_alias>([&](auto& parser){ mtest::STRUCT_point3D_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );}),
-		mimpl::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );}),
-		mimpl::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
+		mtest::makeMessageHandler<mtest::scope_one::point3D_alias>([&](auto& parser){ mtest::STRUCT_point3D_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );}),
+		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );}),
+		mtest::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
 	);
 
 	assert( pt3D.x == pt3DBack.x );
@@ -293,8 +293,8 @@ void testScopedMessageComposingAndParsing()
 	assert( pt3D.z == pt3DBack.z );
 
 	mtest::scope_one::handleMessage( b, 
-		mimpl::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );}),
-		mimpl::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
+		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );}),
+		mtest::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
 	);
 
 }

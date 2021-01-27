@@ -48,7 +48,7 @@
 /////////////////////////////////////////
 
 
-namespace mimpl {
+namespace globalmq::marshalling {
 
 	static constexpr size_t MIN_BUFFER = 1024;
 
@@ -185,7 +185,7 @@ namespace mimpl {
 		FileReadBuffer(size_t res) { Buffer::reserve(res); }
 	};
 	
-} // namespace mimpl
+} // namespace globalmq::marshalling
 
 
 #endif // GLOBAL_MQ_COMMON_H

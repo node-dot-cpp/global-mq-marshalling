@@ -30,7 +30,7 @@
 
 #include "marshalling_impl.h"
 
-namespace mimpl {
+namespace globalmq::marshalling {
 
 template <typename T, typename NameTag>
 class NamedParameterWithType;
@@ -117,11 +117,11 @@ public:
 };
 
 template<class LambdaSize, class LambdaNext>
-class CollactionWrapperForParsing : public CollectionWrapperBase {
+class CollectionWrapperForParsing : public CollectionWrapperBase {
     LambdaSize lsize_;
 	LambdaNext lnext_;
 public:
-	CollactionWrapperForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) : lsize_(std::forward<LambdaSize>(lsizeHint)), lnext_(std::forward<LambdaNext>(lnext)) {
+	CollectionWrapperForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) : lsize_(std::forward<LambdaSize>(lsizeHint)), lnext_(std::forward<LambdaNext>(lnext)) {
 //		static_assert( std::is_same<std::nullptr_t, LambdaSize>::value || std::is_invocable<LambdaSize>::value, "lambda-expression is expected" );
 //		static_assert( std::is_invocable<LambdaNext>::value || std::is_invocable<std::remove_reference<LambdaNext>::type>::value, "lambda-expression is expected" );
 	}
@@ -408,7 +408,7 @@ void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected
 				{
 					size_t itemSz = 0;
 					p.parseUnsignedInteger( &itemSz );
-					ParserT itemParser( p, itemSz );
+					ParserT itemParser( p );
 					coll.parse_next( itemParser, i );
 					p.adjustParsingPos( itemSz );
 				}
@@ -1842,6 +1842,6 @@ void parseActionInPublishable(ParserT& p, size_t& action)
 
 } // namespace impl
 
-} // namespace mimpl
+} // namespace globalmq::marshalling
 
 #endif // NAMED_PARAMS_CORE_H

@@ -441,6 +441,37 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 	assert( out.size() == structs.size() );
 }
 
+void addLibAliasingBlock( FILE* header )
+{
+	fprintf( header, "// Useful aliases:\n" );
+	fprintf( header, "//     (note: since clang apparently too often requires providing template arguments for aliased type ctors we use wrappers instead of type aliasing)\n" );
+	fprintf( header, "using Buffer = globalmq::marshalling::Buffer;\n" );
+	fprintf( header, "using FileReadBuffer = globalmq::marshalling::FileReadBuffer;\n" );
+	fprintf( header, "template<class BufferT>\n" );
+	fprintf( header, "class GmqComposer : public globalmq::marshalling::GmqComposer<BufferT> { public: GmqComposer( BufferT& buff_ ) : globalmq::marshalling::GmqComposer<BufferT>( buff_ ) {} };\n" );
+	fprintf( header, "template<class BufferT>\n" );
+	fprintf( header, "class GmqParser : public globalmq::marshalling::GmqParser<BufferT> { public: GmqParser( BufferT& buff_ ) : globalmq::marshalling::GmqParser<BufferT>( buff_ ) {} GmqParser( const GmqParser<BufferT>& other ) : globalmq::marshalling::GmqParser<BufferT>( other ) {} GmqParser& operator = ( const GmqParser<BufferT>& other ) { globalmq::marshalling::GmqParser<BufferT>::operator = ( other ); return *this; }};\n" );
+	fprintf( header, "template<class BufferT>\n" );
+	fprintf( header, "class JsonComposer : public globalmq::marshalling::JsonComposer<BufferT> { public: JsonComposer( BufferT& buff_ ) : globalmq::marshalling::JsonComposer<BufferT>( buff_ ) {} };\n" );
+	fprintf( header, "template<class BufferT>\n" );
+	fprintf( header, "class JsonParser : public globalmq::marshalling::JsonParser<BufferT> { public: JsonParser( BufferT& buff_ ) : globalmq::marshalling::JsonParser<BufferT>( buff_ ) {} JsonParser( const JsonParser<BufferT>& other ) : globalmq::marshalling::JsonParser<BufferT>( other ) {} JsonParser& operator = ( const JsonParser<BufferT>& other ) { globalmq::marshalling::JsonParser<BufferT>::operator = ( other ); return *this; } };\n" );
+	fprintf( header, "template<class T>\n" );
+	fprintf( header, "class SimpleTypeCollectionWrapper : public globalmq::marshalling::SimpleTypeCollectionWrapper<T> { public: SimpleTypeCollectionWrapper( T& coll ) : globalmq::marshalling::SimpleTypeCollectionWrapper<T>( coll ) {} };\n" );
+	fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );
+	fprintf( header, "class CollectionWrapperForComposing : public globalmq::marshalling::CollectionWrapperForComposing<LambdaSize, LambdaNext> { public: CollectionWrapperForComposing(LambdaSize &&lsize, LambdaNext &&lnext) : globalmq::marshalling::CollectionWrapperForComposing<LambdaSize, LambdaNext>(std::forward<LambdaSize>(lsize), std::forward<LambdaNext>(lnext)) {} };\n" );
+	fprintf( header, "template<class LambdaCompose>\n" );
+	fprintf( header, "class MessageWrapperForComposing : public globalmq::marshalling::MessageWrapperForComposing<LambdaCompose> { public: MessageWrapperForComposing(LambdaCompose &&lcompose) : globalmq::marshalling::MessageWrapperForComposing<LambdaCompose>( std::forward<LambdaCompose>(lcompose) ) {} };\n" );
+	fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );
+	fprintf( header, "class CollectionWrapperForParsing : public globalmq::marshalling::CollectionWrapperForParsing<LambdaSize, LambdaNext> { public: CollectionWrapperForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) : globalmq::marshalling::CollectionWrapperForParsing<LambdaSize, LambdaNext>(std::forward<LambdaSize>(lsizeHint), std::forward<LambdaNext>(lnext)) {} };\n" );
+	fprintf( header, "template<class LambdaParse>\n" );
+	fprintf( header, "class MessageWrapperForParsing : public globalmq::marshalling::MessageWrapperForParsing<LambdaParse> { public: MessageWrapperForParsing(LambdaParse &&lparse) : globalmq::marshalling::MessageWrapperForParsing<LambdaParse>(std::forward<LambdaParse>(lparse)) {} };\n" );
+	fprintf( header, "template<typename msgID_, class LambdaHandler>\n" );
+	fprintf( header, "MessageHandler<msgID_, LambdaHandler> makeMessageHandler( LambdaHandler &&lhandler ) { return globalmq::marshalling::makeMessageHandler<msgID_, LambdaHandler>(std::forward<LambdaHandler>(lhandler)); }\n" );
+	fprintf( header, "template<class LambdaHandler>\n" );
+	fprintf( header, "DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&lhandler ) { return globalmq::marshalling::makeDefaultMessageHandler<LambdaHandler>(std::forward<LambdaHandler>(lhandler)); }\n" );
+	fprintf( header, "\n" );
+}
+
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
@@ -460,13 +491,15 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		"\n"
 		"#include <marshalling.h>\n"
 		"#include <publishable_impl.h>\n"
-		"using namespace mimpl;\n"
+		"using namespace globalmq::marshalling;\n"
 		"namespace %s {\n\n"
 		"#ifdef METASCOPE_%s_ALREADY_DEFINED\n"
 		"#error metascope must reside in a single idl file\n"
 		"#endif\n"
 		"#define METASCOPE_%s_ALREADY_DEFINED\n\n",
 		fileName, fileChecksum, fileName, fileChecksum, metascope, metascope, metascope );
+
+	addLibAliasingBlock( header );
 
 	impl_insertScopeList( header, s );
 

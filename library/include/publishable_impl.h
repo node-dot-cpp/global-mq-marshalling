@@ -32,7 +32,7 @@
 #include "marshalling.h"
 
 
-namespace mimpl {
+namespace globalmq::marshalling {
 
 enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
 
@@ -495,6 +495,6 @@ public:
 #endif // 0
 
 
-} // namespace mimpl
+} // namespace globalmq::marshalling
 
 #endif // PUBLISHABLE_IMPL_H
