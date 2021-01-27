@@ -616,7 +616,7 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	}
 	else
 	{
-		rootType = fmt::format( "{}_Wrapper", rootName );
+		rootType = fmt::format( "{}_WrapperForPublisher", rootName );
 		addr = "GMQ_COLL vector<size_t>()";
 	}
 	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
@@ -1005,14 +1005,14 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	fprintf( header, "};\n\n" );
 }
 
-void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot, const char* rootName, MessageParameter& param, size_t idx )
+void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot/*, const char* rootName*/, MessageParameter& param, size_t idx )
 {
-	assert( (forRoot && rootName != nullptr) || (forRoot == false && rootName == nullptr) );
+//	assert( (forRoot && rootName != nullptr) || (forRoot == false && rootName == nullptr) );
 	const char* composer = forRoot ? "*composer" : "root.getComposer()";
 	const char* composerType = forRoot ? "ComposerT" : "decltype(root.getComposer())";
 	const char* addrVector = forRoot ? "GMQ_COLL vector<size_t>()" : "address";
-	if ( !forRoot )
-		rootName = "RootT";
+//	if ( !forRoot )
+//		rootName = "RootT";
 	fprintf( header, 
 		"\tvoid set_%s( decltype(T::%s) val) { \n"
 		"\t\tt.%s = val; \n",
@@ -1097,7 +1097,7 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
 		if ( allowSeters )
 		{
-			impl_GeneratePublishableStateMemberSetter( header, root, forRoot, rootName, *it, i );
+			impl_GeneratePublishableStateMemberSetter( header, root, forRoot/*, rootName*/, *it, i );
 			impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
 		}
 	}
@@ -1185,13 +1185,53 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 	fprintf( header, "\t}\n" );
 }
 
-void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable );
 
 	fprintf( header, 
 		"template<class T, class ComposerT>\n"
-		"class %s_Wrapper\n"
+		"class %s_WrapperForPublisher\n"
+		"{\n"
+		"\tT t;\n"
+		"\tComposerT* composer;\n",
+		s.name.c_str()
+	);
+
+	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+//	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
+
+	fprintf( header, 
+		"\npublic:\n" 
+		"\ttemplate<class ... ArgsT>\n"
+		"\t%s_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n"
+		"\tconst T& getState() { return t; }\n",
+		s.name.c_str()
+	);
+	fprintf( header, 
+		"\tComposerT& getComposer() { return *composer; }\n"
+		"\tvoid resetComposer( ComposerT* composer_ ) {\n"
+		"\t\tcomposer = composer_; \n"
+		"\t\tmimpl::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );\n"
+		"\t}\n"
+		"\tvoid finalizeComposing() {\n"
+		"\t\tmimpl::impl::composeStateUpdateMessageEnd( *composer );\n"
+		"\t}\n"
+	);
+//	impl_GenerateApplyUpdateMessageMemberFn( header, root, s );
+
+	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
+
+	fprintf( header, "};\n\n" );
+}
+
+void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable );
+
+	fprintf( header, 
+		"template<class T, class ComposerT>\n"
+		"class %s_WrapperForSubscriber\n"
 		"{\n"
 		"\tT t;\n"
 		"\tComposerT* composer;\n",
@@ -1204,8 +1244,9 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 	fprintf( header, 
 		"\npublic:\n" 
 		"\ttemplate<class ... ArgsT>\n"
-		"\tpublishable_sample_Wrapper( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n"
-		"\tconst T& getState() { return t; }\n"
+		"\t%s_WrapperForSubscriber( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n"
+		"\tconst T& getState() { return t; }\n",
+		s.name.c_str()
 	);
 	fprintf( header, 
 		"\tComposerT& getComposer() { return *composer; }\n"
@@ -1220,7 +1261,7 @@ void impl_GeneratePublishableStateWrapper( FILE* header, Root& root, CompositeTy
 
 	impl_GenerateApplyUpdateMessageMemberFn( header, root, s );
 
-	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
+	impl_GeneratePublishableStateMemberAccessors( header, root, s, false );
 
 	fprintf( header, "};\n\n" );
 }
@@ -1445,7 +1486,8 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s )
 		throw std::exception();
 
 	impl_generatePublishableCommentBlock( header, s );
-	impl_GeneratePublishableStateWrapper( header, root, s );
+	impl_GeneratePublishableStateWrapperForPublisher( header, root, s );
+	impl_GeneratePublishableStateWrapperForSubscriber( header, root, s );
 }
 
 

@@ -2192,7 +2192,104 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 //**********************************************************************
 
 template<class T, class ComposerT>
-class publishable_sample_Wrapper
+class publishable_sample_WrapperForPublisher
+{
+	T t;
+	ComposerT* composer;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_size = has_size_member<T>;
+	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
+	static constexpr bool has_chp = has_chp_member<T>;
+	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParam" );
+	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
+	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
+	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
+	static_assert( has_vector_struct_point3dreal, "type T must have member T::vector_struct_point3dreal of a type corresponding to IDL type VECTOR<STRUCT POINT3DREAL>" );
+	static constexpr bool has_structWithVectorOfInt = has_structWithVectorOfInt_member<T>;
+	static_assert( has_structWithVectorOfInt, "type T must have member T::structWithVectorOfInt of a type corresponding to IDL type STRUCT StructWithVectorOfInt" );
+	static constexpr bool has_structWithVectorOfSize = has_structWithVectorOfSize_member<T>;
+	static_assert( has_structWithVectorOfSize, "type T must have member T::structWithVectorOfSize of a type corresponding to IDL type STRUCT StructWithVectorOfSize" );
+
+
+public:
+	template<class ... ArgsT>
+	publishable_sample_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	const T& getState() { return t; }
+	ComposerT& getComposer() { return *composer; }
+	void resetComposer( ComposerT* composer_ ) {
+		composer = composer_; 
+		mimpl::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );
+	}
+	void finalizeComposing() {
+		mimpl::impl::composeStateUpdateMessageEnd( *composer );
+	}
+	auto get_ID() { return t.ID; }
+	void set_ID( decltype(T::ID) val) { 
+		t.ID = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
+		mimpl::impl::publishableComposeLeafeInteger( *composer, t.ID );
+	}
+	const auto& get_size() { return t.size; }
+	void set_size( decltype(T::size) val) { 
+		t.size = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
+		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_SIZE::compose( *composer, t.size );
+		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 1); }
+	const auto& get_chp() { return t.chp; }
+	void set_chp( decltype(T::chp) val) { 
+		t.chp = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
+		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_CharacterParam::compose( *composer, t.chp );
+		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get_vector_of_int() { return mimpl::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
+	void set_vector_of_int( decltype(T::vector_of_int) val) { 
+		t.vector_of_int = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
+		mimpl::impl::publishableComposeLeafeValueBegin( *composer );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
+		mimpl::impl::composeStateUpdateBlockEnd( *composer );
+	}
+	auto get4set_vector_of_int() { return mimpl::VectorRefWrapper4Set<decltype(T::vector_of_int), ::mimpl::impl::SignedIntegralType, publishable_sample_WrapperForPublisher>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get_vector_struct_point3dreal() { return mimpl::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
+	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
+		t.vector_struct_point3dreal = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 4 );
+		mimpl::impl::publishableComposeLeafeValueBegin( *composer );
+		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_POINT3DREAL::compose( *composer, t.vector_struct_point3dreal );
+		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
+		mimpl::impl::composeStateUpdateBlockEnd( *composer );
+	}
+	auto get4set_vector_struct_point3dreal() { return mimpl::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_WrapperForPublisher, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_WrapperForPublisher>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
+	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
+	void set_structWithVectorOfInt( decltype(T::structWithVectorOfInt) val) { 
+		t.structWithVectorOfInt = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 5 );
+		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_StructWithVectorOfInt::compose( *composer, t.structWithVectorOfInt );
+		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 5); }
+	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
+	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
+		t.structWithVectorOfSize = val; 
+		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 6 );
+		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
+		publishable_STRUCT_StructWithVectorOfSize::compose( *composer, t.structWithVectorOfSize );
+		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
+	}
+	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
+};
+
+template<class T, class ComposerT>
+class publishable_sample_WrapperForSubscriber
 {
 	T t;
 	ComposerT* composer;
@@ -2256,7 +2353,7 @@ class publishable_sample_Wrapper
 
 public:
 	template<class ... ArgsT>
-	publishable_sample_Wrapper( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	publishable_sample_WrapperForSubscriber( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
 	ComposerT& getComposer() { return *composer; }
 	void resetComposer( ComposerT* composer_ ) {
@@ -2871,67 +2968,12 @@ public:
 		}
 	}
 	auto get_ID() { return t.ID; }
-	void set_ID( decltype(T::ID) val) { 
-		t.ID = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
-		mimpl::impl::publishableComposeLeafeInteger( *composer, t.ID );
-	}
 	const auto& get_size() { return t.size; }
-	void set_size( decltype(T::size) val) { 
-		t.size = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
-		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_SIZE::compose( *composer, t.size );
-		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
-	}
-	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_Wrapper>(t.size, *this, GMQ_COLL vector<size_t>(), 1); }
 	const auto& get_chp() { return t.chp; }
-	void set_chp( decltype(T::chp) val) { 
-		t.chp = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
-		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_CharacterParam::compose( *composer, t.chp );
-		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
-	}
-	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_Wrapper>(t.chp, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_vector_of_int() { return mimpl::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
-	void set_vector_of_int( decltype(T::vector_of_int) val) { 
-		t.vector_of_int = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
-		mimpl::impl::publishableComposeLeafeValueBegin( *composer );
-		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
-		mimpl::impl::composeStateUpdateBlockEnd( *composer );
-	}
-	auto get4set_vector_of_int() { return mimpl::VectorRefWrapper4Set<decltype(T::vector_of_int), ::mimpl::impl::SignedIntegralType, publishable_sample_Wrapper>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_struct_point3dreal() { return mimpl::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
-	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
-		t.vector_struct_point3dreal = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 4 );
-		mimpl::impl::publishableComposeLeafeValueBegin( *composer );
-		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_POINT3DREAL::compose( *composer, t.vector_struct_point3dreal );
-		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
-		mimpl::impl::composeStateUpdateBlockEnd( *composer );
-	}
-	auto get4set_vector_struct_point3dreal() { return mimpl::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_Wrapper, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_Wrapper>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
 	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
-	void set_structWithVectorOfInt( decltype(T::structWithVectorOfInt) val) { 
-		t.structWithVectorOfInt = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 5 );
-		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_StructWithVectorOfInt::compose( *composer, t.structWithVectorOfInt );
-		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
-	}
-	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_Wrapper>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 5); }
 	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
-	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
-		t.structWithVectorOfSize = val; 
-		mimpl::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 6 );
-		mimpl::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_StructWithVectorOfSize::compose( *composer, t.structWithVectorOfSize );
-		mimpl::impl::publishableComposeLeafeStructEnd( *composer );
-	}
-	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_Wrapper>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
 };
 
 template<class T>

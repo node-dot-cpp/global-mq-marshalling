@@ -230,7 +230,7 @@ void publishableTestOne()
 //	mimpl::JsonComposer composer( b );
 	mimpl::GmqComposer composer( b );
 //	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
-	mtest::publishable_sample_Wrapper<PublishableSample, mimpl::GmqComposer<mimpl::Buffer>> publishableSampleWrapper( &node );
+	mtest::publishable_sample_WrapperForPublisher<PublishableSample, mimpl::GmqComposer<mimpl::Buffer>> publishableSampleWrapper( &node );
 	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
@@ -292,7 +292,7 @@ void publishableTestOne()
 //	mimpl::JsonParser parser( b );
 	mimpl::GmqParser parser( b );
 //	mtest::publishable_sample_Wrapper<PublishableSample, mimpl::JsonComposer<mimpl::Buffer>> publishableSampleWrapperSlave( &node );
-	mtest::publishable_sample_Wrapper<PublishableSample, mimpl::GmqComposer<mimpl::Buffer>> publishableSampleWrapperSlave( &node );
+	mtest::publishable_sample_WrapperForSubscriber<PublishableSample, mimpl::GmqComposer<mimpl::Buffer>> publishableSampleWrapperSlave( &node );
 	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
