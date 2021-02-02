@@ -82,6 +82,7 @@ class JsonComposer : public ComposerBase
 {
 public: // just temporary TODO: rework!
 	static constexpr Proto proto = Proto::JSON;
+	using BufferType = BufferT;
 	BufferT& buff;
 
 public:
@@ -93,6 +94,7 @@ class GmqComposer : public ComposerBase
 {
 public: // just temporary TODO: rework!
 	static constexpr Proto proto = Proto::GMQ;
+	using BufferType = BufferT;
 	BufferT& buff;
 
 public:
