@@ -472,7 +472,7 @@ void addLibAliasingBlock( FILE* header )
 	fprintf( header, "\n" );
 }
 
-void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, Root& s )
+void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
 	ok = impl_processScopes(s) && ok;
@@ -565,7 +565,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( obj_1 != nullptr );
 		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
 		assert( obj_1->type == CompositeType::Type::publishable );
-		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), platformPrefix, classNotifierName );
 	}
 
 	for ( auto& it : structsOrderedByDependency )

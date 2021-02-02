@@ -494,6 +494,15 @@ public:
 };
 #endif // 0
 
+template<class BufferT>
+class SubscriberBase
+{
+public:
+	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
+	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
+	virtual ~SubscriberBase() {}
+};
+
 
 } // namespace globalmq::marshalling
 
