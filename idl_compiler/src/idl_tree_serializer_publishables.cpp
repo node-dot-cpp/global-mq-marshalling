@@ -1191,7 +1191,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 
 	fprintf( header, 
 		"template<class T, class ComposerT>\n"
-		"class %s_WrapperForPublisher : public globalmq::marshalling::PublisherBase\n"
+		"class %s_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>\n"
 		"{\n"
 		"\tT t;\n"
 		"\tComposerT* composer;\n",
@@ -1220,6 +1220,34 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	);
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
+
+	fprintf( header, "};\n\n" );
+}
+
+void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
+{
+	assert( s.type == CompositeType::Type::publishable );
+
+	fprintf( header, "template<class T>\n" );
+	fprintf( header, "class %s_%sWrapperForPublisher : public %s_WrapperForPublisher<T, typename %s::ComposerT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "{\n" );
+	fprintf( header, "\tusing ComposerT = typename PublisherSubscriberRegistrar::ComposerT;\n" );
+	fprintf( header, "public:\n" );
+	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
+	fprintf( header, "\t%s_%sWrapperForPublisher( ArgsT ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t{ \n" );
+	fprintf( header, "\t\t%s::registerPublisher( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+	fprintf( header, "\tvirtual ~%s_%sWrapperForPublisher()\n", s.name.c_str(), platformPrefix.c_str() );
+	fprintf( header, "\t{ \n" );
+	fprintf( header, "\t\t%s::unregisterPublisher( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+
+	fprintf( header, "\tvirtual ComposerT& getComposer() { return %s_WrapperForPublisher<T, ComposerT>::getComposer(); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual void resetComposer( ComposerT* composer_ ) { %s_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual void finalizeComposing() { %s_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }\n", s.name.c_str() );
 
 	fprintf( header, "};\n\n" );
 }
@@ -1280,7 +1308,6 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
 	fprintf( header, "};\n\n" );
 }
 
@@ -1505,6 +1532,7 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 
 	impl_generatePublishableCommentBlock( header, s );
 	impl_GeneratePublishableStateWrapperForPublisher( header, root, s );
+	impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, platformPrefix, classNotifierName );
 	impl_GeneratePublishableStateWrapperForSubscriber( header, root, s );
 	impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, platformPrefix, classNotifierName );
 }

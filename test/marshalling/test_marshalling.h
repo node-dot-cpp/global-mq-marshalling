@@ -2219,7 +2219,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 //**********************************************************************
 
 template<class T, class ComposerT>
-class publishable_sample_WrapperForPublisher : public globalmq::marshalling::PublisherBase
+class publishable_sample_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>
 {
 	T t;
 	ComposerT* composer;
@@ -2313,6 +2313,27 @@ public:
 		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( *composer );
 	}
 	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
+};
+
+template<class T>
+class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>
+{
+	using ComposerT = typename PublisherSubscriberRegistrar::ComposerT;
+public:
+	template<class ... ArgsT>
+	publishable_sample_NodecppWrapperForPublisher( ArgsT ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>( std::forward<ArgsT>( args )... )
+	{ 
+		PublisherSubscriberRegistrar::registerPublisher( this );
+	}
+
+	virtual ~publishable_sample_NodecppWrapperForPublisher()
+	{ 
+		PublisherSubscriberRegistrar::unregisterPublisher( this );
+	}
+
+	virtual ComposerT& getComposer() { return publishable_sample_WrapperForPublisher<T, ComposerT>::getComposer(); }
+	virtual void resetComposer( ComposerT* composer_ ) { publishable_sample_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }
+	virtual void finalizeComposing() { publishable_sample_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }
 };
 
 template<class T, class RegistrarT>
@@ -3022,7 +3043,6 @@ public:
 	{
 		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::applyMessageWithUpdates(parser);
 	}
-
 };
 
 template<class T>
