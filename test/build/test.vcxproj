@@ -36,6 +36,7 @@
     <ClInclude Include="..\..\library\include\marshalling.h" />
     <ClInclude Include="..\..\library\include\publishable_impl.h" />
     <ClInclude Include="..\marshalling\test_marshalling.h" />
+    <ClInclude Include="..\nodecpp_publish_subscribe_support.h" />
     <ClInclude Include="..\tests.h" />
   </ItemGroup>
   <ItemGroup>

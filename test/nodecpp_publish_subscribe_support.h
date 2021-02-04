@@ -4,18 +4,19 @@
 #include <vector>
 #include <marshalling.h>
 #include <publishable_impl.h>
-extern thread_local std::vector<globalmq::marshalling::PublisherBase*> publishers;
+extern thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
 extern thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
 
 class PublisherSubscriberRegistrar
 {
 public:
 	using BufferT = globalmq::marshalling::Buffer;
-	static void registerPublisher( globalmq::marshalling::PublisherBase* publisher )
+	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+	static void registerPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
 	{
 		publishers.push_back( publisher );
 	}
-	static void unregisterPublisher( globalmq::marshalling::PublisherBase* publisher )
+	static void unregisterPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
 	{
 		for ( size_t i=0; i<publishers.size(); ++i )
 			if ( publishers[i] == publisher )

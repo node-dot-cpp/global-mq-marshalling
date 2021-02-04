@@ -9,6 +9,8 @@
 #include <typeindex>
 #include <unordered_map>
 
+thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
+thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
 
 
 struct implCallerValue
@@ -232,8 +234,12 @@ void publishableTestOne()
 //	mtest::JsonComposer composer( b );
 	mtest::GmqComposer composer( b );
 //	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
-	mtest::publishable_sample_WrapperForPublisher<PublishableSample, mtest::GmqComposer<mtest::Buffer>> publishableSampleWrapper( &node );
-	publishableSampleWrapper.resetComposer( &composer );
+//	mtest::publishable_sample_WrapperForPublisher<PublishableSample, mtest::GmqComposer<mtest::Buffer>> publishableSampleWrapper( &node );
+	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
+
+//	publishableSampleWrapper.resetComposer( &composer );
+	assert( publishers.size() == 1 );
+	publishers[0]->resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -287,7 +293,8 @@ void publishableTestOne()
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
 	assert( point3dreal_Y_back == 555 );
 
-	publishableSampleWrapper.finalizeComposing();
+//	publishableSampleWrapper.finalizeComposing();
+	publishers[0]->finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
