@@ -494,6 +494,33 @@ public:
 };
 #endif // 0
 
+enum SubscriberStatus { waitingForSubscriptionIni };
+
+struct SubscriberAddress
+{
+	std::string nodeAddr;
+	std::string subscriberinNodeAddr;
+};
+
+struct SubscriberData
+{
+	SubscriberAddress address;
+	SubscriberStatus status;
+};
+
+template<class ComposerT>
+class PublisherBase
+{
+protected:
+	GMQ_COLL vector<SubscriberAddress> subscribers;
+
+public:
+	virtual ~PublisherBase() {}
+	virtual ComposerT& getComposer() = 0;
+	virtual void resetComposer( ComposerT* composer_ ) = 0;
+	virtual void finalizeComposing() = 0;
+};
+
 template<class BufferT>
 class SubscriberBase
 {
