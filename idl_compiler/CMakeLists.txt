@@ -2,8 +2,8 @@
 # Copyright (c) 2020, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 
-find_package(FLEX REQUIRED)
-find_package(BISON REQUIRED)
+find_package(FLEX)
+find_package(BISON)
 
 set(FLEX_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/idl/lex.yy.cpp)
 set(BISON_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/idl/global_mq_IDL.tab.cpp)
@@ -26,7 +26,7 @@ add_executable(idl_compiler
     src/idl_tree_serializer.cpp
     src/idl_tree_serializer_messages.cpp
     src/idl_tree_serializer_publishables.cpp
-    src/idl_tree_serializer_print_tree.cpp
+    src/idl_tree_serializer_publishables_print_tree.cpp
     src/main.cpp
 )
 
