@@ -9,8 +9,11 @@
 #include <typeindex>
 #include <unordered_map>
 
-thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
-thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
+//thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
+//thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
+
+thread_local globalmq::marshalling::PublisherPool<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>> publishers;
+thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
 
 
 struct implCallerValue
@@ -238,8 +241,8 @@ void publishableTestOne()
 	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
 
 //	publishableSampleWrapper.resetComposer( &composer );
-	assert( publishers.size() == 1 );
-	publishers[0]->resetComposer( &composer );
+	assert( publishers.publishers.size() == 1 );
+	publishers.publishers[0]->resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -294,7 +297,7 @@ void publishableTestOne()
 	assert( point3dreal_Y_back == 555 );
 
 //	publishableSampleWrapper.finalizeComposing();
-	publishers[0]->finalizeComposing();
+	publishers.publishers[0]->finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
@@ -305,8 +308,8 @@ void publishableTestOne()
 //	mtest::publishable_sample_WrapperForSubscriber<PublishableSample, mtest::Buffer> publishableSampleWrapperSlave( &node );
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
 //	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
-	assert( subscribers.size() == 1 );
-	subscribers[0]->applyGmqMessageWithUpdates( parser );
+	assert( subscribers.subscribers.size() == 1 );
+	subscribers.subscribers[0]->applyGmqMessageWithUpdates( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();

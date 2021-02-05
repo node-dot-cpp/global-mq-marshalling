@@ -4,8 +4,10 @@
 #include <vector>
 #include <marshalling.h>
 #include <publishable_impl.h>
-extern thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
-extern thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
+//extern thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
+//extern thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
+extern thread_local globalmq::marshalling::PublisherPool<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>> publishers;
+extern thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
 
 class PublisherSubscriberRegistrar
 {
@@ -14,31 +16,19 @@ public:
 	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
 	static void registerPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
 	{
-		publishers.push_back( publisher );
+		publishers.registerPublisher( publisher );
 	}
 	static void unregisterPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
 	{
-		for ( size_t i=0; i<publishers.size(); ++i )
-			if ( publishers[i] == publisher )
-			{
-				publishers.erase( publishers.begin() + i );
-				return;
-			}
-		assert( false ); // not found
+		publishers.unregisterPublisher( publisher );
 	}
 	static void registerSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
 	{
-		subscribers.push_back( subscriber );
+		subscribers.registerSubscriber( subscriber );
 	}
 	static void unregisterSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
 	{
-		for ( size_t i=0; i<subscribers.size(); ++i )
-			if ( subscribers[i] == subscriber )
-			{
-				subscribers.erase( subscribers.begin() + i );
-				return;
-			}
-		assert( false ); // not found
+		subscribers.unregisterSubscriber( subscriber );
 	}
 };
 

@@ -521,6 +521,28 @@ public:
 	virtual void finalizeComposing() = 0;
 };
 
+template<class ComposerT>
+class PublisherPool
+{
+public: // TODO: just a tmp approach to continue immediate dev
+	std::vector<globalmq::marshalling::PublisherBase<ComposerT>*> publishers;
+public:
+	void registerPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
+	{
+		publishers.push_back( publisher );
+	}
+	void unregisterPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
+	{
+		for ( size_t i=0; i<publishers.size(); ++i )
+			if ( publishers[i] == publisher )
+			{
+				publishers.erase( publishers.begin() + i );
+				return;
+			}
+		assert( false ); // not found
+	}
+};
+
 template<class BufferT>
 class SubscriberBase
 {
@@ -528,6 +550,28 @@ public:
 	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
 	virtual ~SubscriberBase() {}
+};
+
+template<class BufferT>
+class SubscriberPool
+{
+public: // TODO: just a tmp approach to continue immediate dev
+	std::vector<globalmq::marshalling::SubscriberBase<BufferT>*> subscribers;
+public:
+	void registerSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
+	{
+		subscribers.push_back( subscriber );
+	}
+	void unregisterSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
+	{
+		for ( size_t i=0; i<subscribers.size(); ++i )
+			if ( subscribers[i] == subscriber )
+			{
+				subscribers.erase( subscribers.begin() + i );
+				return;
+			}
+		assert( false ); // not found
+	}
 };
 
 
