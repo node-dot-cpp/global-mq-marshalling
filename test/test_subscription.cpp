@@ -9,7 +9,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-thread_local globalmq::marshalling::PublisherPool<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>> publishers;
+thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
 thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
 
 

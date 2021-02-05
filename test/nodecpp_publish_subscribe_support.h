@@ -5,13 +5,15 @@
 #include <marshalling.h>
 #include <publishable_impl.h>
 
-extern thread_local globalmq::marshalling::PublisherPool<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>> publishers;
+class PublisherSubscriberRegistrar;
+extern thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
 extern thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
 
 class PublisherSubscriberRegistrar
 {
 public:
 	using BufferT = globalmq::marshalling::Buffer;
+	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
 	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
 	static void registerPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
 	{

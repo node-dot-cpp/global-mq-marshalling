@@ -521,17 +521,18 @@ public:
 	virtual void finalizeComposing() = 0;
 };
 
-template<class ComposerT>
+template<class PlatformSupportT>
 class PublisherPool
 {
 public: // TODO: just a tmp approach to continue immediate dev
-	std::vector<globalmq::marshalling::PublisherBase<ComposerT>*> publishers;
+	std::vector<globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>*> publishers;
+
 public:
-	void registerPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
+	void registerPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
 	{
 		publishers.push_back( publisher );
 	}
-	void unregisterPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
+	void unregisterPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
 	{
 		for ( size_t i=0; i<publishers.size(); ++i )
 			if ( publishers[i] == publisher )
