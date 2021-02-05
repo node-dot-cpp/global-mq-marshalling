@@ -9,9 +9,6 @@
 #include <typeindex>
 #include <unordered_map>
 
-//thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
-//thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
-
 thread_local globalmq::marshalling::PublisherPool<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>> publishers;
 thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
 
@@ -236,8 +233,6 @@ void publishableTestOne()
 	mtest::Buffer b;
 //	mtest::JsonComposer composer( b );
 	mtest::GmqComposer composer( b );
-//	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
-//	mtest::publishable_sample_WrapperForPublisher<PublishableSample, mtest::GmqComposer<mtest::Buffer>> publishableSampleWrapper( &node );
 	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
 
 //	publishableSampleWrapper.resetComposer( &composer );
@@ -303,13 +298,8 @@ void publishableTestOne()
 
 //	mtest::JsonParser parser( b );
 	mtest::GmqParser parser( b );
-//	mtest::publishable_sample_Wrapper<PublishableSample, mtest::JsonComposer<mtest::Buffer>> publishableSampleWrapperSlave( &node );
-//	mtest::publishable_sample_WrapperForSubscriber<PublishableSample, mtest::GmqComposer<mtest::Buffer>> publishableSampleWrapperSlave( &node );
-//	mtest::publishable_sample_WrapperForSubscriber<PublishableSample, mtest::Buffer> publishableSampleWrapperSlave( &node );
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
-//	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
-	assert( subscribers.subscribers.size() == 1 );
-	subscribers.subscribers[0]->applyGmqMessageWithUpdates( parser );
+	subscribers.applyGmqMessageWithUpdates( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();

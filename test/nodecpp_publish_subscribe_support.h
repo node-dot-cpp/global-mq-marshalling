@@ -4,8 +4,7 @@
 #include <vector>
 #include <marshalling.h>
 #include <publishable_impl.h>
-//extern thread_local std::vector<globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>*> publishers;
-//extern thread_local std::vector<globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>*> subscribers;
+
 extern thread_local globalmq::marshalling::PublisherPool<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>> publishers;
 extern thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
 
