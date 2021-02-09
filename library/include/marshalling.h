@@ -1031,6 +1031,21 @@ public:
 };
 
 
+template<typename ParserT, typename NameT>
+void parseKey(ParserT& p, NameT expectedName )
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+	}
+}
+
 template<typename ComposerT, typename ArgT, typename NameT>
 void publishableStructComposeInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)
 {

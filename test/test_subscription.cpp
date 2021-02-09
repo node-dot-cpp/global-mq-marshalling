@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
-thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
+thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
 
 
 struct implCallerValue
@@ -231,12 +231,11 @@ void publishableTestOne()
 //	return;
 	SampleNode node;
 	mtest::Buffer b;
-//	mtest::JsonComposer composer( b );
-	mtest::GmqComposer composer( b );
+	typename PublisherSubscriberRegistrar::ComposerT composer( b );
 	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
 
-//	publishableSampleWrapper.resetComposer( &composer );
 	assert( publishers.publishers.size() == 1 );
+	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
 	publishers.publishers[0]->resetComposer( &composer );
 
 	// quick test for getting right after ctoring
@@ -296,10 +295,9 @@ void publishableTestOne()
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-//	mtest::JsonParser parser( b );
-	mtest::GmqParser parser( b );
+	typename PublisherSubscriberRegistrar::ParserT parser( b );
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
-	subscribers.applyGmqMessageWithUpdates( parser );
+	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();

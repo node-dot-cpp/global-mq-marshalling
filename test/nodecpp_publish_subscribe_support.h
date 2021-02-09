@@ -7,27 +7,30 @@
 
 class PublisherSubscriberRegistrar;
 extern thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
-extern thread_local globalmq::marshalling::SubscriberPool<globalmq::marshalling::Buffer> subscribers;
+extern thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
 
 class PublisherSubscriberRegistrar
 {
 public:
 	using BufferT = globalmq::marshalling::Buffer;
-	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
-	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
-	static void registerPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
+
+	// protocol is practically defined below
+	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
+	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
+
+	static void registerPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
 		publishers.registerPublisher( publisher );
 	}
-	static void unregisterPublisher( globalmq::marshalling::PublisherBase<globalmq::marshalling::GmqComposer<globalmq::marshalling::Buffer>>* publisher )
+	static void unregisterPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
 		publishers.unregisterPublisher( publisher );
 	}
-	static void registerSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
+	static void registerSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
 	{
 		subscribers.registerSubscriber( subscriber );
 	}
-	static void unregisterSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
+	static void unregisterSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
 	{
 		subscribers.unregisterSubscriber( subscriber );
 	}

@@ -495,6 +495,7 @@ public:
 #endif // 0
 
 enum SubscriberStatus { waitingForSubscriptionIni };
+enum PublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
 
 struct SubscriberAddress
 {
@@ -553,17 +554,20 @@ public:
 	virtual ~SubscriberBase() {}
 };
 
-template<class BufferT>
+template<class PlatformSupportT>
 class SubscriberPool
 {
-public: // TODO: just a tmp approach to continue immediate dev
-	std::vector<globalmq::marshalling::SubscriberBase<BufferT>*> subscribers;
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ParserT = typename PlatformSupportT::ParserT;
+
+	GMQ_COLL vector<globalmq::marshalling::SubscriberBase<BufferT>*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+
 public:
-	void registerSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
+	void registerSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
 	{
 		subscribers.push_back( subscriber );
 	}
-	void unregisterSubscriber( globalmq::marshalling::SubscriberBase<globalmq::marshalling::Buffer>* subscriber )
+	void unregisterSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
 			if ( subscribers[i] == subscriber )
@@ -572,6 +576,33 @@ public:
 				return;
 			}
 		assert( false ); // not found
+	}
+	void onMessage( ParserT& parser ) 
+	{
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		switch ( msgType )
+		{
+			case PublisherSubscriberMessageType::stateUpdate:
+			{
+				size_t subscriberID;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
+				if ( subscriberID >= subscribers.size() )
+					throw std::exception(); // TODO: ... (invalid ID)
+				globalmq::marshalling::impl::parseKey( parser, "update" );
+				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+					subscribers[subscriberID]->applyJsonMessageWithUpdates( parser );
+				else 
+				{
+					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+					subscribers[subscriberID]->applyGmqMessageWithUpdates( parser );
+				}
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+
 	}
 };
 
