@@ -2219,7 +2219,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 //**********************************************************************
 
 template<class T, class ComposerT>
-class publishable_sample_WrapperForPublisher
+class publishable_sample_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>
 {
 	T t;
 	ComposerT* composer;
@@ -2315,11 +2315,31 @@ public:
 	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
 };
 
-template<class T, class ComposerT>
-class publishable_sample_WrapperForSubscriber
+template<class T>
+class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>
+{
+	using ComposerT = typename PublisherSubscriberRegistrar::ComposerT;
+public:
+	template<class ... ArgsT>
+	publishable_sample_NodecppWrapperForPublisher( ArgsT ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>( std::forward<ArgsT>( args )... )
+	{ 
+		PublisherSubscriberRegistrar::registerPublisher( this );
+	}
+
+	virtual ~publishable_sample_NodecppWrapperForPublisher()
+	{ 
+		PublisherSubscriberRegistrar::unregisterPublisher( this );
+	}
+
+	virtual ComposerT& getComposer() { return publishable_sample_WrapperForPublisher<T, ComposerT>::getComposer(); }
+	virtual void resetComposer( ComposerT* composer_ ) { publishable_sample_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }
+	virtual void finalizeComposing() { publishable_sample_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }
+};
+
+template<class T, class RegistrarT>
+class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::SubscriberBase<typename RegistrarT::BufferT>
 {
 	T t;
-	ComposerT* composer;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_size = has_size_member<T>;
@@ -2382,17 +2402,12 @@ public:
 	template<class ... ArgsT>
 	publishable_sample_WrapperForSubscriber( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
-	ComposerT& getComposer() { return *composer; }
-	void resetComposer( ComposerT* composer_ ) {
-		composer = composer_; 
-		globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );
-	}
-	void finalizeComposing() {
-		globalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );
-	}
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }
+
 	template<typename ParserT>
-	void applyMessageWithUpdates(ParserT& parser) {
-		//****  ApplyUpdateMessageMemberFn  **************************************************************************************************************************************************************
+	void applyMessageWithUpdates(ParserT& parser)
+	{
 		globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
 		GMQ_COLL vector<size_t> addr;
 		while( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
@@ -2994,6 +3009,7 @@ public:
 			addr.clear();
 		}
 	}
+
 	auto get_ID() { return t.ID; }
 	const auto& get_size() { return t.size; }
 	const auto& get_chp() { return t.chp; }
@@ -3001,6 +3017,32 @@ public:
 	auto get_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
 	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
+};
+
+template<class T>
+class publishable_sample_NodecppWrapperForSubscriber : public publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>
+{
+public:
+	template<class ... ArgsT>
+	publishable_sample_NodecppWrapperForSubscriber( ArgsT ... args ) : publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>( std::forward<ArgsT>( args )... )
+	{ 
+		PublisherSubscriberRegistrar::registerSubscriber( this );
+	}
+
+	virtual ~publishable_sample_NodecppWrapperForSubscriber()
+	{ 
+		PublisherSubscriberRegistrar::unregisterSubscriber( this );
+	}
+
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename PublisherSubscriberRegistrar::BufferT>& parser ) 
+	{
+		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::applyMessageWithUpdates(parser);
+	}
+
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename PublisherSubscriberRegistrar::BufferT>& parser )
+	{
+		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::applyMessageWithUpdates(parser);
+	}
 };
 
 template<class T>

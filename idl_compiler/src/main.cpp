@@ -41,6 +41,8 @@ int main( int argc, char *argv[] )
 	std::string idlPath = argv[1];
 	std::string targetPath = argv[2];
 	std::string metascope = "m";
+	std::string platformPrefix;
+	std::string classNotifierName;
 	for ( int i=3; i<argc; ++i )
 	{
 		std::string entry = argv[i];
@@ -60,11 +62,35 @@ int main( int argc, char *argv[] )
 				return 0;
 			}
 		}
+		else if ( key == "-p" )
+		{
+			platformPrefix = entry.substr( separPos + 1 );
+			if ( platformPrefix == "" )
+			{
+				fmt::print( "platformprefix (-p) option, if specified, must not be empty {}\n", key );
+				return 0;
+			}
+		}
+		else if ( key == "-c" )
+		{
+			classNotifierName = entry.substr( separPos + 1 );
+			if ( classNotifierName == "" )
+			{
+				fmt::print( "notifier class name (-c) option, if specified, must not be empty {}\n", key );
+				return 0;
+			}
+		}
 		else
 		{
 			fmt::print( "unexpected parameter {}\n", key );
 			return 0;
 		}
+	}
+
+	if ( ( classNotifierName.size() == 0 && platformPrefix.size() != 0 ) || ( classNotifierName.size() != 0 && platformPrefix.size() == 0 ) )
+	{
+		fmt::print( "platformprefix (-p)  and notifier class name (-c) options must either be both specified or not\n" );
+		return 0;
 	}
 
 	size_t lastSlash = targetPath.find_last_of( "\\/" );
@@ -90,7 +116,7 @@ int main( int argc, char *argv[] )
 		printRoot( *root );
 
 		FILE* header = fopen( targetPath.c_str(), "wb" );
-		generateRoot( fileName.c_str(), chksm, header, metascope.c_str(), *root );
+		generateRoot( fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root );
 	}
 	catch ( std::exception& x )
 	{

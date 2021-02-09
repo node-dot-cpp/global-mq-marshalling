@@ -494,6 +494,118 @@ public:
 };
 #endif // 0
 
+enum SubscriberStatus { waitingForSubscriptionIni };
+enum PublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
+
+struct SubscriberAddress
+{
+	std::string nodeAddr;
+	std::string subscriberinNodeAddr;
+};
+
+struct SubscriberData
+{
+	SubscriberAddress address;
+	SubscriberStatus status;
+};
+
+template<class ComposerT>
+class PublisherBase
+{
+protected:
+	GMQ_COLL vector<SubscriberAddress> subscribers;
+
+public:
+	virtual ~PublisherBase() {}
+	virtual ComposerT& getComposer() = 0;
+	virtual void resetComposer( ComposerT* composer_ ) = 0;
+	virtual void finalizeComposing() = 0;
+};
+
+template<class PlatformSupportT>
+class PublisherPool
+{
+public: // TODO: just a tmp approach to continue immediate dev
+	std::vector<globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>*> publishers;
+
+public:
+	void registerPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
+	{
+		publishers.push_back( publisher );
+	}
+	void unregisterPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
+	{
+		for ( size_t i=0; i<publishers.size(); ++i )
+			if ( publishers[i] == publisher )
+			{
+				publishers.erase( publishers.begin() + i );
+				return;
+			}
+		assert( false ); // not found
+	}
+};
+
+template<class BufferT>
+class SubscriberBase
+{
+public:
+	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
+	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
+	virtual ~SubscriberBase() {}
+};
+
+template<class PlatformSupportT>
+class SubscriberPool
+{
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ParserT = typename PlatformSupportT::ParserT;
+
+	GMQ_COLL vector<globalmq::marshalling::SubscriberBase<BufferT>*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+
+public:
+	void registerSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	{
+		subscribers.push_back( subscriber );
+	}
+	void unregisterSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	{
+		for ( size_t i=0; i<subscribers.size(); ++i )
+			if ( subscribers[i] == subscriber )
+			{
+				subscribers.erase( subscribers.begin() + i );
+				return;
+			}
+		assert( false ); // not found
+	}
+	void onMessage( ParserT& parser ) 
+	{
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		switch ( msgType )
+		{
+			case PublisherSubscriberMessageType::stateUpdate:
+			{
+				size_t subscriberID;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
+				if ( subscriberID >= subscribers.size() )
+					throw std::exception(); // TODO: ... (invalid ID)
+				globalmq::marshalling::impl::parseKey( parser, "update" );
+				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+					subscribers[subscriberID]->applyJsonMessageWithUpdates( parser );
+				else 
+				{
+					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+					subscribers[subscriberID]->applyGmqMessageWithUpdates( parser );
+				}
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+
+	}
+};
+
 
 } // namespace globalmq::marshalling
 

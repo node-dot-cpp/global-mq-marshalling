@@ -477,6 +477,11 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
 }
 
+namespace checkers {
+template<typename T>
+concept has_set_size = requires { { std::declval<T>().set_size(std::declval<size_t>()) }; };
+} // namespace impl::checkers
+
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
 void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
@@ -511,13 +516,15 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 			}
 			else if constexpr ( std::is_base_of<VectorOfMessageType, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
 			{
+				static_assert( checkers::has_set_size<typename ComposerT::BufferType>, "not properly implemented for certain kind of underlying buffers" );
+				// TODO: ...
 				auto& coll = arg0.get();
 				size_t collSz = coll.size();
 				composeUnsignedInteger( composer, collSz );
 				if ( collSz )
 				{
 					size_t pos = composer.buff.size();
-					composer.buff.set_size( composer.buff.size() + integer_max_size ); // TODO: revise toward lowest estimation of 1 with move is longer
+					composer.buff.set_size( composer.buff.size() + integer_max_size ); // TODO: revise toward lowest estimation of 1 with move if longer
 					for ( size_t i=0; i<collSz; ++i )
 					{
 						coll.compose_next(composer, i);
@@ -525,7 +532,7 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 						memcpy( composer.buff.begin() + pos, &written, integer_max_size );
 						pos = composer.buff.size();
 						if ( i != collSz - 1 )
-							composer.buff.set_size( composer.buff.size() + integer_max_size ); // TODO: revise toward lowest estimation of 1 with move is longer
+							composer.buff.set_size( composer.buff.size() + integer_max_size ); // TODO: revise toward lowest estimation of 1 with move if longer
 					}
 				}
 			}
@@ -1023,6 +1030,21 @@ public:
 	}
 };
 
+
+template<typename ParserT, typename NameT>
+void parseKey(ParserT& p, NameT expectedName )
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != expectedName )
+			throw std::exception(); // bad format
+	}
+}
 
 template<typename ComposerT, typename ArgT, typename NameT>
 void publishableStructComposeInteger(ComposerT& composer, ArgT arg, NameT name, bool addListSeparator)

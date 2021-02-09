@@ -1,5 +1,7 @@
 
 #include <stdio.h>
+
+#include "nodecpp_publish_subscribe_support.h"
 #include <publishable_impl.h>
 #include "marshalling/test_marshalling.h"
 
@@ -7,6 +9,8 @@
 #include <typeindex>
 #include <unordered_map>
 
+thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
+thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
 
 
 struct implCallerValue
@@ -227,11 +231,12 @@ void publishableTestOne()
 //	return;
 	SampleNode node;
 	mtest::Buffer b;
-//	mtest::JsonComposer composer( b );
-	mtest::GmqComposer composer( b );
-//	m::publishable_sample_Wrapper<PublishableSample, m::JsonComposer<m::Buffer>> publishableSampleWrapper( &node );
-	mtest::publishable_sample_WrapperForPublisher<PublishableSample, mtest::GmqComposer<mtest::Buffer>> publishableSampleWrapper( &node );
-	publishableSampleWrapper.resetComposer( &composer );
+	typename PublisherSubscriberRegistrar::ComposerT composer( b );
+	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
+
+	assert( publishers.publishers.size() == 1 );
+	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
+	publishers.publishers[0]->resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -285,15 +290,14 @@ void publishableTestOne()
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
 	assert( point3dreal_Y_back == 555 );
 
-	publishableSampleWrapper.finalizeComposing();
+//	publishableSampleWrapper.finalizeComposing();
+	publishers.publishers[0]->finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-//	mtest::JsonParser parser( b );
-	mtest::GmqParser parser( b );
-//	mtest::publishable_sample_Wrapper<PublishableSample, mtest::JsonComposer<mtest::Buffer>> publishableSampleWrapperSlave( &node );
-	mtest::publishable_sample_WrapperForSubscriber<PublishableSample, mtest::GmqComposer<mtest::Buffer>> publishableSampleWrapperSlave( &node );
-	publishableSampleWrapperSlave.applyMessageWithUpdates( parser );
+	typename PublisherSubscriberRegistrar::ParserT parser( b );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
+	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();

@@ -2,6 +2,7 @@
 //
 
 #include <stdio.h>
+#include "nodecpp_publish_subscribe_support.h"
 #include <marshalling.h>
 #include "./marshalling/test_marshalling.h"
 
