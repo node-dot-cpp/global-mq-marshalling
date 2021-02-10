@@ -2,14 +2,11 @@
 # Copyright (c) 2020, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 
-find_package(FLEX)
-find_package(BISON)
-
 set(IDL_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/marshalling/test_marshalling.h)
 
 add_custom_command(
     OUTPUT ${IDL_OUTPUT}
-    COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/test_marshalling.idl ${IDL_OUTPUT} -m=mtest
+    COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/test_marshalling.idl ${IDL_OUTPUT} -m=mtest -p=Nodecpp -c=PublisherSubscriberRegistrar
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test_marshalling.idl
 )
 
