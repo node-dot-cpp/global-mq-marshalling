@@ -358,7 +358,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\tif constexpr( alwaysCollectChanges )\n" );
 	fprintf( header, "\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 
-fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+//fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 
 	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 	assert( member.type.messageIdx < root.structs.size() );
@@ -552,7 +552,7 @@ fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 			
-fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+//fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse // replacement of the whole vector\n" );
 	fprintf( header, "\t\t\t\t\t{\n" );
@@ -660,12 +660,21 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 
 void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
-	fprintf( header, 
-		"\ttemplate<class ComposerT, class T>\n"
-		"\tstatic\n"
-		"\tvoid compose( ComposerT& composer, const T& t )\n"
-		"\t{\n"
-	);
+	if ( obj.type == CompositeType::Type::structure )
+		fprintf( header, 
+			"\ttemplate<class ComposerT, class T>\n"
+			"\tstatic\n"
+			"\tvoid compose( ComposerT& composer, const T& t )\n"
+			"\t{\n"
+		);
+	else if ( obj.type == CompositeType::Type::publishable )
+		fprintf( header, 
+			"\ttemplate<class ComposerT>\n"
+			"\tvoid compose( ComposerT& composer )\n"
+			"\t{\n"
+		);
+	else
+		assert( false );
 
 	const char* composer = "composer";
 
@@ -739,7 +748,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		"\tstatic\n"
 		"\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
 		"\t{\n"
-		"\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" 
+//		"\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" 
 		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
 		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
 		"\t\tbool changed = false;\n"
@@ -813,15 +822,27 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 
 void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
-	fprintf( header, 
-		"\ttemplate<class ParserT, class T, class RetT = void>\n"
-		"\tstatic\n"
-		"\tRetT parse( ParserT& parser, T& t )\n"
-		"\t{\n"
-		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
-		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
-		"\t\tbool changed = false;\n"
-	);
+	if ( obj.type == CompositeType::Type::structure )
+		fprintf( header, 
+			"\ttemplate<class ParserT, class T, class RetT = void>\n"
+			"\tstatic\n"
+			"\tRetT parse( ParserT& parser, T& t )\n"
+			"\t{\n"
+			"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
+			"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
+			"\t\tbool changed = false;\n"
+		);
+	else if ( obj.type == CompositeType::Type::publishable )
+		fprintf( header, 
+			"\ttemplate<class ParserT, class RetT = void>\n"
+			"\tRetT parse( ParserT& parser )\n"
+			"\t{\n"
+			"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
+			"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
+			"\t\tbool changed = false;\n"
+		);
+	else
+		assert( false );
 
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 
@@ -1220,6 +1241,8 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	);
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
+	fprintf( header, "\n" );
+	impl_generateComposeFunctionForPublishableStruct( header, root, s );
 
 	fprintf( header, "};\n\n" );
 }
@@ -1274,6 +1297,8 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 
 	impl_GenerateApplyUpdateMessageMemberFn( header, root, s );
 	fprintf( header, "\n" );
+	fprintf( header, "\n" );
+	impl_generateParseFunctionForPublishableStruct( header, root, s );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, false );
 

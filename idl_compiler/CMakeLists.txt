@@ -2,7 +2,6 @@
 # Copyright (c) 2020-2021, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 
-
 add_executable(idl_compiler
     generated/lex.yy.cpp
     generated/global_mq_IDL.tab.cpp
@@ -10,7 +9,7 @@ add_executable(idl_compiler
     src/idl_tree_serializer.cpp
     src/idl_tree_serializer_messages.cpp
     src/idl_tree_serializer_publishables.cpp
-    src/idl_tree_serializer_print_tree.cpp
+    src/idl_tree_serializer_publishables_print_tree.cpp
     src/main.cpp
 )
 
