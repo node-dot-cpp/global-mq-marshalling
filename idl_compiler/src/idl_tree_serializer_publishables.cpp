@@ -822,27 +822,16 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 
 void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
-	if ( obj.type == CompositeType::Type::structure )
-		fprintf( header, 
-			"\ttemplate<class ParserT, class T, class RetT = void>\n"
-			"\tstatic\n"
-			"\tRetT parse( ParserT& parser, T& t )\n"
-			"\t{\n"
-			"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
-			"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
-			"\t\tbool changed = false;\n"
-		);
-	else if ( obj.type == CompositeType::Type::publishable )
-		fprintf( header, 
-			"\ttemplate<class ParserT, class RetT = void>\n"
-			"\tRetT parse( ParserT& parser )\n"
-			"\t{\n"
-			"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
-			"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
-			"\t\tbool changed = false;\n"
-		);
-	else
-		assert( false );
+	assert( obj.type == CompositeType::Type::structure );
+	fprintf( header, 
+		"\ttemplate<class ParserT, class T, class RetT = void>\n"
+		"\tstatic\n"
+		"\tRetT parse( ParserT& parser, T& t )\n"
+		"\t{\n"
+		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
+		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
+		"\t\tbool changed = false;\n"
+	);
 
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 
@@ -903,6 +892,60 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		"\t\t\treturn changed;\n"
 		"\t}\n"
 	);
+}
+
+void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::publishable );
+	fprintf( header, "\ttemplate<class ParserT>\n" );
+	fprintf( header, "\tRetT parse( ParserT& parser )\n" );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\tglobalmq::marshalling::impl::parseStructBegin( parser );\n" );
+	fprintf( header, "\n" );
+
+	for ( size_t i=0; i<obj.members.size(); ++i )
+	{
+		assert( obj.members[i] != nullptr );
+		auto& member = *(obj.members[i]);
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+//				impl_generateApplyUpdateForSimpleType( header, member, true, false );
+				fprintf( header, "\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+				fprintf( header, "\n" );
+				break;
+			}
+			case  MessageParameterType::KIND::STRUCT:
+			{
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+//				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false );
+				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+				fprintf( header, "\n" );
+				break;
+			}
+			case MessageParameterType::KIND::VECTOR:
+			{
+				assert( member.type.messageIdx < root.structs.size() );
+				
+				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
+				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
+				fprintf( header, "\n" );
+
+				break;
+			}
+			default:
+				assert( false );
+		}
+	}
+
+	fprintf( header, "\t\tglobalmq::marshalling::impl::parseStructEnd( parser );\n" );
+	fprintf( header, "\t}\n" );
 }
 
 void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj )
@@ -1298,7 +1341,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	impl_GenerateApplyUpdateMessageMemberFn( header, root, s );
 	fprintf( header, "\n" );
 	fprintf( header, "\n" );
-	impl_generateParseFunctionForPublishableStruct( header, root, s );
+	impl_generateParseFunctionForPublishableState( header, root, s );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, false );
 
