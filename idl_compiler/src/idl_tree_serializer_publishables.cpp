@@ -672,6 +672,8 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 			"\ttemplate<class ComposerT>\n"
 			"\tvoid compose( ComposerT& composer )\n"
 			"\t{\n"
+			"\t\tglobalmq::marshalling::impl::composeStructBegin( composer );\n"
+			"\n"
 		);
 	else
 		assert( false );
@@ -688,21 +690,26 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		{
 			case MessageParameterType::KIND::INTEGER:
 				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::REAL:
 				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			{
 				fprintf( header, "\t\tglobalmq::marshalling::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, member.name.c_str() );
 				fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), composer, member.name.c_str() );
 				fprintf( header, "\t\tglobalmq::marshalling::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
+				fprintf( header, "\n" );
 				break;
 			}
 			case MessageParameterType::KIND::VECTOR:
@@ -731,12 +738,18 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 					default:
 						assert( false ); // not implemented (yet)
 				}
+				fprintf( header, "\n" );
 				break;
 			}
 			default:
 				assert( false ); // not implemented (yet)
 		}
 	}
+
+	if ( obj.type == CompositeType::Type::publishable )
+		fprintf( header, 
+			"\n"
+			"\t\tglobalmq::marshalling::impl::composeStructEnd( composer );\n" );
 
 	fprintf( header, "\t}\n" );
 }

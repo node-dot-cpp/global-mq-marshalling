@@ -253,8 +253,11 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	void compose( ComposerT& composer, const T& t )
 	{
 		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
+
 		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+
 		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
+
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -446,8 +449,11 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	void compose( ComposerT& composer, const T& t )
 	{
 		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
+
 		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+
 		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
+
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -639,9 +645,11 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	void compose( ComposerT& composer, const T& t )
 	{
 		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "Size" );
 		publishable_STRUCT_SIZE::compose( composer, t.Size );
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -847,7 +855,9 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 	void compose( ComposerT& composer, const T& t )
 	{
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::sizes), publishable_STRUCT_SIZE>( composer, t.sizes, "sizes", true );
+
 		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.NN, "NN", false );
+
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -1163,7 +1173,9 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 	void compose( ComposerT& composer, const T& t )
 	{
 		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::signedInts), impl::SignedIntegralType>( composer, t.signedInts, "signedInts", false );
+
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -2308,21 +2320,32 @@ public:
 	template<class ComposerT>
 	void compose( ComposerT& composer )
 	{
+		globalmq::marshalling::impl::composeStructBegin( composer );
+
 		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "size" );
 		publishable_STRUCT_SIZE::compose( composer, t.size );
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "chp" );
 		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( composer, t.vector_of_int, "vector_of_int", true );
+
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( composer, t.vector_struct_point3dreal, "vector_struct_point3dreal", true );
+
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfInt" );
 		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfSize" );
 		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+
+
+		globalmq::marshalling::impl::composeStructEnd( composer );
 	}
 };
 
