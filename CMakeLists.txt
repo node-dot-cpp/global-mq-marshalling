@@ -13,4 +13,18 @@ endif()
 
 add_subdirectory(idl_compiler)
 add_subdirectory(library)
-add_subdirectory(test)
+
+
+#-------------------------------------------------------------------------------------------
+# Tests and samples
+#-------------------------------------------------------------------------------------------
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(GLOBAL_MQ_TEST ON CACHE BOOL "Enable global-mq tests")
+else()
+  set(GLOBAL_MQ_TEST OFF CACHE BOOL "Enable global-mq tests")
+endif()
+
+if(GLOBAL_MQ_TEST)
+  # only when not a subproject
+  add_subdirectory(test)
+endif()
