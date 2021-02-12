@@ -884,8 +884,6 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 		static constexpr bool has_update_notifier_for_NN = has_update_notifier_call_for_NN<T, decltype(T::NN)>;
 		static constexpr bool has_any_notifier_for_NN = has_void_update_notifier_for_NN || has_update_notifier_for_NN;
 
-		globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
-
 		if constexpr( reportChanges )
 		{
 			decltype(T::sizes) oldVectorVal;
@@ -898,10 +896,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 		{
 			globalmq::marshalling::impl::parseKey( parser, "sizes" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
-			globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
 		}
-
-		globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 
 					if constexpr( has_any_notifier_for_NN || reportChanges )
 					{
@@ -1224,8 +1219,6 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 					else
 						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
-		globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
-
 		if constexpr( reportChanges )
 		{
 			decltype(T::signedInts) oldVectorVal;
@@ -1238,10 +1231,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 		{
 			globalmq::marshalling::impl::parseKey( parser, "signedInts" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
-			globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
 		}
-
-		globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 
 
 		if constexpr ( reportChanges )
@@ -3067,11 +3057,9 @@ public:
 
 		globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
-		globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
 
 		globalmq::marshalling::impl::parseKey( parser, "vector_struct_point3dreal" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
-		globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
 
 		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfInt" );
 		publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
