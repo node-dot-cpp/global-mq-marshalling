@@ -272,6 +272,8 @@ public:
 			if ( parser.isDelimiter( ']' ) )
 			{
 				parser.skipDelimiter( ']' );
+				if ( parser.isDelimiter( ',' ) )
+					parser.skipDelimiter( ',' );
 				return;
 			}
 			for( ;; )
@@ -305,6 +307,8 @@ public:
 					break;
 				}
 			}
+			if ( parser.isDelimiter( ',' ) )
+				parser.skipDelimiter( ',' );
 		}
 	}
 };

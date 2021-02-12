@@ -307,7 +307,7 @@ void publishableTestOne()
 
 	// test incremental updating
 	typename PublisherSubscriberRegistrar::ParserT parser( b );
-	/*subscribers.onMessage( parser );
+	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
@@ -316,13 +316,12 @@ void publishableTestOne()
 	assert( size1Slave.Z == 903.0 );
 
 	auto& chpSlave = publishableSampleWrapper.get_chp();
-	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );*/
+	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
 
 	// test whole state initializing
 	mtest::Buffer b2;
 	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
 	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
-//	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper2( &node );
 	publishers.publishers[0]->generateStateSyncMessage(composer2);
 	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
 	fmt::print( "\n\n{}\n", sview2 );
@@ -331,11 +330,11 @@ void publishableTestOne()
 	subscribers.onMessage( parser2 );
 
 	assert( publishableSampleWrapperSlave2.get_ID() == 38 );
-	auto& size1Slave = publishableSampleWrapperSlave2.get_size();
-	assert( size1Slave.X == 901.0 );
-	assert( size1Slave.Y == 902.0 );
-	assert( size1Slave.Z == 903.0 );
+	auto& size1Slave2 = publishableSampleWrapperSlave2.get_size();
+	assert( size1Slave2.X == 901.0 );
+	assert( size1Slave2.Y == 902.0 );
+	assert( size1Slave2.Z == 903.0 );
 
-	auto& chpSlave = publishableSampleWrapper.get_chp();
-	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
+	auto& chpSlave2 = publishableSampleWrapper.get_chp();
+	assert( memcmp( &chp, &chpSlave2, sizeof(chp ) ) == 0 );
 }
