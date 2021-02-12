@@ -295,9 +295,19 @@ void publishableTestOne()
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	typename PublisherSubscriberRegistrar::ParserT parser( b );
+	auto voint = publishableSampleWrapper.get_vector_of_int();
+	assert( voint.size() == 4 );
+	assert( voint.get_at( 0 ) == 17 );
+	assert( voint.get_at( 1 ) == 44 );
+	assert( voint.get_at( 2 ) == 45 );
+	assert( voint.get_at( 3 ) == 46 );
+
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
-	subscribers.onMessage( parser );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave2( &node );
+
+	// test incremental updating
+	typename PublisherSubscriberRegistrar::ParserT parser( b );
+	/*subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
@@ -306,12 +316,24 @@ void publishableTestOne()
 	assert( size1Slave.Z == 903.0 );
 
 	auto& chpSlave = publishableSampleWrapper.get_chp();
-	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
+	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );*/
 
-	auto voint = publishableSampleWrapper.get_vector_of_int();
-	assert( voint.size() == 4 );
-	assert( voint.get_at( 0 ) == 17 );
-	assert( voint.get_at( 1 ) == 44 );
-	assert( voint.get_at( 2 ) == 45 );
-	assert( voint.get_at( 3 ) == 46 );
+	// test whole state initializing
+	mtest::Buffer b2;
+	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
+	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
+//	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper2( &node );
+	publishers.publishers[0]->generateStateSyncMessage(composer2);
+
+	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
+	subscribers.onMessage( parser2 );
+
+	assert( publishableSampleWrapperSlave2.get_ID() == 38 );
+	auto& size1Slave = publishableSampleWrapperSlave2.get_size();
+	assert( size1Slave.X == 901.0 );
+	assert( size1Slave.Y == 902.0 );
+	assert( size1Slave.Z == 903.0 );
+
+	auto& chpSlave = publishableSampleWrapper.get_chp();
+	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
 }

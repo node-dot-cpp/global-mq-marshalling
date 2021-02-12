@@ -166,7 +166,7 @@ public:
 
 	template<class ComposerT, class VectorT, class ElemTypeT>
 	static
-	void compose( ComposerT& composer, VectorT& what ) { 
+	void compose( ComposerT& composer, const VectorT& what ) { 
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
@@ -184,7 +184,7 @@ public:
 				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 				{
 					impl::composeStructBegin( composer );
-					ElemTypeT::compose( composer, what );
+					ElemTypeT::compose( composer, what[i] );
 					impl::composeStructEnd( composer );
 				}
 				else
@@ -208,7 +208,7 @@ public:
 				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 				{
 					impl::composeStructBegin( composer );
-					ElemTypeT::compose( composer, what );
+					ElemTypeT::compose( composer, what[i] );
 					impl::composeStructEnd( composer );
 				}
 				else
@@ -222,7 +222,7 @@ public:
 
 	template<class ComposerT, class VectorT, class ElemTypeT, typename NameT>
 	static
-	void compose( ComposerT& composer, VectorT& what, NameT name, bool addListSeparator ) { 
+	void compose( ComposerT& composer, const VectorT& what, NameT name, bool addListSeparator ) { 
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 			compose<ComposerT, VectorT, ElemTypeT>( composer, what );
 		else
@@ -520,6 +520,7 @@ public:
 	virtual ComposerT& getComposer() = 0;
 	virtual void resetComposer( ComposerT* composer_ ) = 0;
 	virtual void finalizeComposing() = 0;
+	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 };
 
 template<class PlatformSupportT>
@@ -551,6 +552,8 @@ class SubscriberBase
 public:
 	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
+	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
+	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
 	virtual ~SubscriberBase() {}
 };
 
@@ -583,6 +586,22 @@ public:
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
 		switch ( msgType )
 		{
+			case PublisherSubscriberMessageType::subscriptionResponse:
+			{
+				size_t subscriberID;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
+				if ( subscriberID >= subscribers.size() )
+					throw std::exception(); // TODO: ... (invalid ID)
+				globalmq::marshalling::impl::parseKey( parser, "state" );
+				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+					subscribers[subscriberID]->applyJsonStateSyncMessage( parser );
+				else 
+				{
+					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+					subscribers[subscriberID]->applyGmqStateSyncMessage( parser );
+				}
+				break;
+			}
 			case PublisherSubscriberMessageType::stateUpdate:
 			{
 				size_t subscriberID;

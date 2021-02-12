@@ -911,7 +911,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 {
 	assert( obj.type == CompositeType::Type::publishable );
 	fprintf( header, "\ttemplate<class ParserT>\n" );
-	fprintf( header, "\tRetT parse( ParserT& parser )\n" );
+	fprintf( header, "\tvoid parse( ParserT& parser )\n" );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\tglobalmq::marshalling::impl::parseStructBegin( parser );\n" );
 	fprintf( header, "\n" );
@@ -1327,6 +1327,7 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "\tvirtual ComposerT& getComposer() { return %s_WrapperForPublisher<T, ComposerT>::getComposer(); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void resetComposer( ComposerT* composer_ ) { %s_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void finalizeComposing() { %s_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
 
 	fprintf( header, "};\n\n" );
 }
@@ -1388,6 +1389,16 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) \n", classNotifierName.c_str() );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "};\n\n" );
 }
