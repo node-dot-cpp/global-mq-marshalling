@@ -714,6 +714,8 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
+//				if ( obj.type == CompositeType::Type::publishable )
+//					fprintf( header, "\t\tglobalmq::marshalling::impl::composeKey( %s, \"%s\" );\n", composer, member.name.c_str() );
 				switch ( member.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
@@ -738,6 +740,8 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 					default:
 						assert( false ); // not implemented (yet)
 				}
+//				if ( obj.type == CompositeType::Type::publishable )
+//					fprintf( header, "\t\tglobalmq::marshalling::impl::composePublishableVectorEnd( %s, %s );\n", composer, addSepar );
 				fprintf( header, "\n" );
 				break;
 			}
@@ -887,7 +891,11 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				fprintf( header, "\t\t\tchanged = changed || currentChanged;\n" );
 				fprintf( header, "\t\t}\n" );
 				fprintf( header, "\t\telse\n" );
+				fprintf( header, "\t\t{\n" );
+				fprintf( header, "\t\t\tglobalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tglobalmq::marshalling::impl::parsePublishableVectorEnd( parser );\n" );
+				fprintf( header, "\t\t}\n" );
 				fprintf( header, "\n" );
 				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
 				fprintf( header, "\n" );
@@ -945,9 +953,9 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			{
 				assert( member.type.messageIdx < root.structs.size() );
 				
-				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableVectorEnd( parser );\n" );
 				fprintf( header, "\n" );
 
 				break;
@@ -1310,7 +1318,7 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "template<class T>\n" );
 	fprintf( header, "class %s_%sWrapperForPublisher : public %s_WrapperForPublisher<T, typename %s::ComposerT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "{\n" );
-	fprintf( header, "\tusing ComposerT = typename PublisherSubscriberRegistrar::ComposerT;\n" );
+	fprintf( header, "\tusing ComposerT = typename %s::ComposerT;\n", classNotifierName.c_str() );
 	fprintf( header, "public:\n" );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_%sWrapperForPublisher( ArgsT ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );

@@ -324,6 +324,8 @@ void publishableTestOne()
 	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
 //	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper2( &node );
 	publishers.publishers[0]->generateStateSyncMessage(composer2);
+	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
+	fmt::print( "\n\n{}\n", sview2 );
 
 	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
 	subscribers.onMessage( parser2 );

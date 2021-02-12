@@ -895,7 +895,11 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 			changed = changed || currentChanged;
 		}
 		else
+		{
+			globalmq::marshalling::impl::parseKey( parser, "sizes" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
+			globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
+		}
 
 		globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 
@@ -1231,7 +1235,11 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 			changed = changed || currentChanged;
 		}
 		else
+		{
+			globalmq::marshalling::impl::parseKey( parser, "signedInts" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
+			globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
+		}
 
 		globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 
@@ -2368,6 +2376,7 @@ public:
 	virtual ComposerT& getComposer() { return publishable_sample_WrapperForPublisher<T, ComposerT>::getComposer(); }
 	virtual void resetComposer( ComposerT* composer_ ) { publishable_sample_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }
 	virtual void finalizeComposing() { publishable_sample_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }
+	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_sample_WrapperForPublisher<T, ComposerT>::compose(composer); }
 };
 
 template<class T, class RegistrarT>
@@ -3042,7 +3051,7 @@ public:
 
 
 	template<class ParserT>
-	RetT parse( ParserT& parser )
+	void parse( ParserT& parser )
 	{
 		globalmq::marshalling::impl::parseStructBegin( parser );
 
@@ -3056,13 +3065,13 @@ public:
 		publishable_STRUCT_CharacterParam::parse( parser, t.chp );
 		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-		globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+		globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
-		globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+		globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
 
-		globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+		globalmq::marshalling::impl::parseKey( parser, "vector_struct_point3dreal" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
-		globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+		globalmq::marshalling::impl::parsePublishableVectorEnd( parser );
 
 		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfInt" );
 		publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
@@ -3106,6 +3115,16 @@ public:
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename PublisherSubscriberRegistrar::BufferT>& parser )
 	{
 		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::applyMessageWithUpdates(parser);
+	}
+
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename PublisherSubscriberRegistrar::BufferT>& parser ) 
+	{
+		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::parse(parser);
+	}
+
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename PublisherSubscriberRegistrar::BufferT>& parser )
+	{
+		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::parse(parser);
 	}
 };
 

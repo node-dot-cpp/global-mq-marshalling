@@ -228,6 +228,7 @@ public:
 		else
 		{
 			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			impl::json::addNamePart( composer, name );
 			compose<ComposerT, VectorT, ElemTypeT>( composer, what );
 			if ( addListSeparator )
 				composer.buff.append( ",", 1 );
@@ -268,6 +269,11 @@ public:
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
 			parser.skipDelimiter( '[' );
+			if ( parser.isDelimiter( ']' ) )
+			{
+				parser.skipDelimiter( ']' );
+				return;
+			}
 			for( ;; )
 			{
 				typename VectorT::value_type what;
@@ -415,6 +421,11 @@ public:
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
 			parser.skipDelimiter( '[' );
+			if ( parser.isDelimiter( ']' ) )
+			{
+				parser.skipDelimiter( ']' );
+				return;
+			}
 			for( ;; )
 			{
 				typename VectorT::value_type what;

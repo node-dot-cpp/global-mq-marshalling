@@ -1047,6 +1047,18 @@ public:
 };
 
 
+template<typename ComposerT, typename NameT>
+void composeKey(ComposerT& composer, NameT name)
+{
+	if constexpr ( ComposerT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+		json::addNamePart( composer, name );
+	}
+}
+
 template<typename ParserT, typename NameT>
 void parseKey(ParserT& p, NameT expectedName )
 {
