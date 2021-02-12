@@ -374,13 +374,15 @@ namespace impl {
 	}
 } // namespace impl
 
-enum SubscriberStatus { waitingForSubscriptionIni };
+enum SubscriberStatus { waitingForSubscriptionIni, subscribed };
 enum PublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
+
+using SubscriberNodeAddressT = GMQ_COLL string;
 
 struct SubscriberAddress
 {
-	std::string nodeAddr;
-	std::string subscriberinNodeAddr;
+	SubscriberNodeAddressT nodeAddr;
+	uint64_t subscriberAddrInNode;
 };
 
 struct SubscriberData
@@ -393,36 +395,71 @@ template<class ComposerT>
 class PublisherBase
 {
 protected:
-	GMQ_COLL vector<SubscriberAddress> subscribers;
+	GMQ_COLL vector<SubscriberData> subscribers;
 
 public:
 	virtual ~PublisherBase() {}
+	// interaction with state wrapper
 	virtual ComposerT& getComposer() = 0;
 	virtual void resetComposer( ComposerT* composer_ ) = 0;
 	virtual void finalizeComposing() = 0;
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
+	virtual const char* name() = 0;
+
+	// processing requests (by now they seem to be independent on state wrappers)
+	void onSubscriptionRequest( SubscriberAddress address )
+	{
+		// TODO: who will check uniqueness?
+		subscribers.push_back( SubscriberData({address, SubscriberStatus::waitingForSubscriptionIni}) );
+	}
 };
 
 template<class PlatformSupportT>
 class PublisherPool
 {
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+
 public: // TODO: just a tmp approach to continue immediate dev
-	std::vector<globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>*> publishers;
+	GMQ_COLL unordered_map<GMQ_COLL string, globalmq::marshalling::PublisherBase<ComposerT>*> publishers;
 
 public:
-	void registerPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
+	void registerPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
-		publishers.push_back( publisher );
+		auto ins = publishers.insert( std::make_pair(publisher->name(), publisher) );
+		assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 	}
-	void unregisterPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
+	void unregisterPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
-		for ( size_t i=0; i<publishers.size(); ++i )
-			if ( publishers[i] == publisher )
+		size_t ret = publishers.erase( publisher->name() );
+		assert( ret == 1 );
+	}
+
+	void onMessage( ParserT& parser, SubscriberNodeAddressT nodeAddr )
+	{
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		switch ( msgType )
+		{
+			case PublisherSubscriberMessageType::subscriptionRequest:
 			{
-				publishers.erase( publishers.begin() + i );
-				return;
+				GMQ_COLL string publisherName;
+				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &publisherName, "publisher_name" );
+				auto findres = publishers.find( publisherName );
+				if ( findres == publishers.end() )
+					throw std::exception(); // not found / misdirected
+				uint64_t subscriberID;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
+				findres->onSubscriptionRequest( SubscriberAddress({nodeAddr, subscriberID}) );
+				break;
 			}
-		assert( false ); // not found
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+	}
+
+	void onTimeTick()
+	{
 	}
 };
 
@@ -501,7 +538,6 @@ public:
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
-
 	}
 };
 

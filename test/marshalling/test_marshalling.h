@@ -2252,6 +2252,9 @@ public:
 	void finalizeComposing() {
 		globalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );
 	}
+	const char* name() {
+		return "publishable_sample";
+	}
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
@@ -2367,6 +2370,7 @@ public:
 	virtual void resetComposer( ComposerT* composer_ ) { publishable_sample_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }
 	virtual void finalizeComposing() { publishable_sample_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }
 	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_sample_WrapperForPublisher<T, ComposerT>::compose(composer); }
+	virtual const char* name() { return publishable_sample_WrapperForPublisher<T, ComposerT>::name(); }
 };
 
 template<class T, class RegistrarT>

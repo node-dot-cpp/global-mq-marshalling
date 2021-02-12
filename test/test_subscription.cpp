@@ -236,7 +236,7 @@ void publishableTestOne()
 
 	assert( publishers.publishers.size() == 1 );
 	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
-	publishers.publishers[0]->resetComposer( &composer );
+	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -291,7 +291,7 @@ void publishableTestOne()
 	assert( point3dreal_Y_back == 555 );
 
 //	publishableSampleWrapper.finalizeComposing();
-	publishers.publishers[0]->finalizeComposing();
+	publishableSampleWrapper.finalizeComposing();
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
@@ -322,7 +322,7 @@ void publishableTestOne()
 	mtest::Buffer b2;
 	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
 	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
-	publishers.publishers[0]->generateStateSyncMessage(composer2);
+	publishableSampleWrapper.generateStateSyncMessage(composer2);
 	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
 	fmt::print( "\n\n{}\n", sview2 );
 

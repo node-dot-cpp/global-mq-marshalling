@@ -1260,35 +1260,30 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 {
 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, 
-		"template<class T, class ComposerT>\n"
-		"class %s_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>\n"
-		"{\n"
-		"\tT t;\n"
-		"\tComposerT* composer;\n",
-		s.name.c_str()
-	);
+	fprintf( header, "template<class T, class ComposerT>\n" );
+	fprintf( header, "class %s_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>\n", s.name.c_str() );
+	fprintf( header, "{\n" );
+	fprintf( header, "\tT t;\n" );
+	fprintf( header, "\tComposerT* composer;\n" );
 
 	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
 //	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
-	fprintf( header, 
-		"\npublic:\n" 
-		"\ttemplate<class ... ArgsT>\n"
-		"\t%s_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n"
-		"\tconst T& getState() { return t; }\n",
-		s.name.c_str()
-	);
-	fprintf( header, 
-		"\tComposerT& getComposer() { return *composer; }\n"
-		"\tvoid resetComposer( ComposerT* composer_ ) {\n"
-		"\t\tcomposer = composer_; \n"
-		"\t\tglobalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );\n"
-		"\t}\n"
-		"\tvoid finalizeComposing() {\n"
-		"\t\tglobalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );\n"
-		"\t}\n"
-	);
+	fprintf( header, "\npublic:\n" );
+	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
+	fprintf( header, "\t%s_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
+	fprintf( header, "\tconst T& getState() { return t; }\n" );
+	fprintf( header, "\tComposerT& getComposer() { return *composer; }\n" );
+	fprintf( header, "\tvoid resetComposer( ComposerT* composer_ ) {\n" );
+	fprintf( header, "\t\tcomposer = composer_; \n" );
+	fprintf( header, "\t\tglobalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );\n" );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\tvoid finalizeComposing() {\n" );
+	fprintf( header, "\t\tglobalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );\n" );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\tconst char* name() {\n" );
+	fprintf( header, "\t\treturn \"%s\";\n", s.name.c_str() );
+	fprintf( header, "\t}\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
 	fprintf( header, "\n" );
@@ -1322,6 +1317,7 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "\tvirtual void resetComposer( ComposerT* composer_ ) { %s_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void finalizeComposing() { %s_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* name() { return %s_WrapperForPublisher<T, ComposerT>::name(); }\n", s.name.c_str() );
 
 	fprintf( header, "};\n\n" );
 }
