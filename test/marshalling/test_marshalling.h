@@ -2441,6 +2441,7 @@ public:
 	const T& getState() { return t; }
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual const char* name() { return "publishable_sample"; }
 
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser)
@@ -3117,6 +3118,10 @@ public:
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename PublisherSubscriberRegistrar::BufferT>& parser )
 	{
 		publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::parse(parser);
+	}
+	virtual const char* name()
+	{
+		return publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::name();
 	}
 };
 

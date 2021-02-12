@@ -374,6 +374,8 @@ namespace impl {
 	}
 } // namespace impl
 
+
+
 enum SubscriberStatus { waitingForSubscriptionIni, subscribed };
 enum PublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
 
@@ -394,7 +396,10 @@ struct SubscriberData
 template<class ComposerT>
 class PublisherBase
 {
-protected:
+	template<class PlatformSupportT>
+	friend class PublisherPool;
+	
+private:
 	GMQ_COLL vector<SubscriberData> subscribers;
 
 public:
@@ -471,6 +476,7 @@ public:
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
 	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
+	virtual const char* name() = 0;
 	virtual ~SubscriberBase() {}
 };
 
@@ -479,20 +485,38 @@ class SubscriberPool
 {
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+	using SubscriberT = globalmq::marshalling::SubscriberBase<BufferT>;
 
-	GMQ_COLL vector<globalmq::marshalling::SubscriberBase<BufferT>*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	GMQ_COLL vector<SubscriberT*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
 public:
-	void registerSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	void registerSubscriber( SubscriberT* subscriber )
 	{
 		subscribers.push_back( subscriber );
 	}
-	void unregisterSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	void unregisterSubscriber( SubscriberT* subscriber )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
 			if ( subscribers[i] == subscriber )
 			{
 				subscribers.erase( subscribers.begin() + i );
+				return;
+			}
+		assert( false ); // not found
+	}
+	void subscribe( SubscriberT* subscriber )
+	{
+		for ( size_t i=0; i<subscribers.size(); ++i )
+			if ( subscribers[i] == subscriber )
+			{
+				BufferT buff;
+				ComposerT composer( buff );
+				globalmq::marshalling::impl::composeStructBegin( composer );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::subscriptionRequest), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, i, "subscriber_id", true );
+				globalmq::marshalling::impl::composeStructEnd( composer );
 				return;
 			}
 		assert( false ); // not found

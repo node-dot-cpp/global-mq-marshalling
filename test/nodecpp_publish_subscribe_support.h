@@ -18,21 +18,29 @@ public:
 	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
 	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
 
-	static void registerPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
+	// publishers and subscribers
+	using SubscriberT = globalmq::marshalling::SubscriberBase<BufferT>;
+	using PublisherT = globalmq::marshalling::PublisherBase<ComposerT>;
+
+	static void registerPublisher( PublisherT* publisher )
 	{
 		publishers.registerPublisher( publisher );
 	}
-	static void unregisterPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
+	static void unregisterPublisher( PublisherT* publisher )
 	{
 		publishers.unregisterPublisher( publisher );
 	}
-	static void registerSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	static void registerSubscriber( SubscriberT* subscriber )
 	{
 		subscribers.registerSubscriber( subscriber );
 	}
-	static void unregisterSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	static void unregisterSubscriber( SubscriberT* subscriber )
 	{
 		subscribers.unregisterSubscriber( subscriber );
+	}
+	static void subscribe( SubscriberT* subscriber )
+	{
+		subscribers.subscribe( subscriber );
 	}
 };
 

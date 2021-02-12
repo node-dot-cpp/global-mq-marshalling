@@ -1340,6 +1340,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
+	fprintf( header, "\tvirtual const char* name() { return \"%s\"; }\n", s.name.c_str() );
 	fprintf( header, "\n" );
 
 	impl_GenerateApplyUpdateMessageMemberFn( header, root, s );
@@ -1389,6 +1390,10 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\tvirtual const char* name()\n", classNotifierName.c_str() );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, %s>::name();\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "};\n\n" );
 }
