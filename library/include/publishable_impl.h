@@ -468,7 +468,13 @@ public:
 				findres->onSubscriptionRequest( SubscriberAddress({nodeAddr, subscriberID}) );
 				BufferT buff;
 				ComposerT composer( buff );
+				globalmq::marshalling::impl::composeStructBegin( composer );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::subscriptionResponse), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, subscriberID, "subscriber_id", true );
+				globalmq::marshalling::impl::composeKey( composer, "state" );
 				findres->generateStateSyncMessage( composer );
+				globalmq::marshalling::impl::composeStructEnd( composer );
+				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, nodeAddr );
 				break;
 			}
 			default:
@@ -527,7 +533,7 @@ public:
 				ComposerT composer( buff );
 				globalmq::marshalling::impl::composeStructBegin( composer );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::subscriptionRequest), "msg_type", true );
-				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "publisher_name", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, i, "subscriber_id", true );
 				globalmq::marshalling::impl::composeStructEnd( composer );
 				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
