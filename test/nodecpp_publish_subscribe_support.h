@@ -22,6 +22,11 @@ public:
 	using SubscriberT = globalmq::marshalling::SubscriberBase<BufferT>;
 	using PublisherT = globalmq::marshalling::PublisherBase<ComposerT>;
 
+	// addressing (what is kept at publisher's size
+	using PublisherAddressT = GMQ_COLL string;
+	using SubscriberNodeAddressT = GMQ_COLL string;
+
+	// used by generated code
 	static void registerPublisher( PublisherT* publisher )
 	{
 		publishers.registerPublisher( publisher );
@@ -38,9 +43,21 @@ public:
 	{
 		subscribers.unregisterSubscriber( subscriber );
 	}
+
+	// used by State owner
 	static void subscribe( SubscriberT* subscriber )
 	{
 		subscribers.subscribe( subscriber );
+	}
+
+	// used by pools
+	static void sendSubscriptionRequest( BufferT& buff, GMQ_COLL string publisherName )
+	{
+		// TODO: ...
+	}
+	static void sendMsgFromPublisherToSubscriber( BufferT& buff, GMQ_COLL string publisherName )
+	{
+		// TODO: ...
 	}
 };
 

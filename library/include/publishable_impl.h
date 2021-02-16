@@ -379,17 +379,18 @@ namespace impl {
 enum SubscriberStatus { waitingForSubscriptionIni, subscribed };
 enum PublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
 
-using SubscriberNodeAddressT = GMQ_COLL string;
-
+template<class PlatformSupportT>
 struct SubscriberAddress
 {
+	using SubscriberNodeAddressT = typename PlatformSupportT::SubscriberNodeAddressT;
 	SubscriberNodeAddressT nodeAddr;
 	uint64_t subscriberAddrInNode;
 };
 
+template<class PlatformSupportT>
 struct SubscriberData
 {
-	SubscriberAddress address;
+	SubscriberAddress<PlatformSupportT> address;
 	SubscriberStatus status;
 };
 
@@ -398,9 +399,6 @@ class PublisherBase
 {
 	template<class PlatformSupportT>
 	friend class PublisherPool;
-	
-private:
-	GMQ_COLL vector<SubscriberData> subscribers;
 
 public:
 	virtual ~PublisherBase() {}
@@ -410,28 +408,40 @@ public:
 	virtual void finalizeComposing() = 0;
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 	virtual const char* name() = 0;
+};
 
+template<class PlatformSupportT>
+class PublisherData
+{
+	using ComposerT = typename PlatformSupportT::ComposerT;
+	globalmq::marshalling::PublisherBase<ComposerT>* publisher = nullptr;
+	GMQ_COLL vector<SubscriberData<PlatformSupportT>> subscribers;
+public:
+	PublisherData( globalmq::marshalling::PublisherBase<ComposerT>* publisher_ ) : publisher( publisher_ ) {}
 	// processing requests (by now they seem to be independent on state wrappers)
-	void onSubscriptionRequest( SubscriberAddress address )
+	void onSubscriptionRequest( SubscriberAddress<PlatformSupportT> address )
 	{
 		// TODO: who will check uniqueness?
-		subscribers.push_back( SubscriberData({address, SubscriberStatus::waitingForSubscriptionIni}) );
+		subscribers.push_back( SubscriberData<PlatformSupportT>({address, SubscriberStatus::waitingForSubscriptionIni}) );
 	}
+	void generateStateSyncMessage( ComposerT& composer ) { assert( publisher != nullptr ); publisher->generateStateSyncMessage( composer ); }
 };
 
 template<class PlatformSupportT>
 class PublisherPool
 {
+	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
+	using SubscriberNodeAddressT = typename PlatformSupportT::SubscriberNodeAddressT;
 
 public: // TODO: just a tmp approach to continue immediate dev
-	GMQ_COLL unordered_map<GMQ_COLL string, globalmq::marshalling::PublisherBase<ComposerT>*> publishers;
+	GMQ_COLL unordered_map<GMQ_COLL string, PublisherData<PlatformSupportT>> publishers;
 
 public:
 	void registerPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
-		auto ins = publishers.insert( std::make_pair(publisher->name(), publisher) );
+		auto ins = publishers.insert( std::make_pair(publisher->name(), PublisherData<PlatformSupportT>(publisher) ) );
 		assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 	}
 	void unregisterPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
@@ -456,6 +466,9 @@ public:
 				uint64_t subscriberID;
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
 				findres->onSubscriptionRequest( SubscriberAddress({nodeAddr, subscriberID}) );
+				BufferT buff;
+				ComposerT composer( buff );
+				findres->generateStateSyncMessage( composer );
 				break;
 			}
 			default:
@@ -517,6 +530,7 @@ public:
 				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "msg_type", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, i, "subscriber_id", true );
 				globalmq::marshalling::impl::composeStructEnd( composer );
+				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
 				return;
 			}
 		assert( false ); // not found
