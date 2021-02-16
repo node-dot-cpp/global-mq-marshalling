@@ -87,6 +87,7 @@ public: // just temporary TODO: rework!
 
 public:
 	JsonComposer( BufferT& buff_ ) : buff( buff_ ) {}
+	void reset() { buff.clear(); }
 };
 
 template<class BufferT>
@@ -99,6 +100,7 @@ public: // just temporary TODO: rework!
 
 public:
 	GmqComposer( BufferT& buff_ ) : buff( buff_ ) {}
+	void reset() { buff.clear(); }
 };
 
 } // namespace globalmq::marshalling

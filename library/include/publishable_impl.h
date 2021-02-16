@@ -413,11 +413,19 @@ public:
 template<class PlatformSupportT>
 class PublisherData
 {
+	using BufferT = typename PlatformSupportT::BufferT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
+
 	globalmq::marshalling::PublisherBase<ComposerT>* publisher = nullptr;
 	GMQ_COLL vector<SubscriberData<PlatformSupportT>> subscribers;
+	BufferT stateUpdateBuffer;
+	ComposerT stateUpdateComposer;
+
 public:
-	PublisherData( globalmq::marshalling::PublisherBase<ComposerT>* publisher_ ) : publisher( publisher_ ) {}
+	PublisherData( globalmq::marshalling::PublisherBase<ComposerT>* publisher_ ) : publisher( publisher_ ), stateUpdateComposer( stateUpdateBuffer ) {
+		assert( publisher != nullptr );
+		publisher->resetComposer( &stateUpdateComposer );
+	}
 	// processing requests (by now they seem to be independent on state wrappers)
 	void onSubscriptionRequest( SubscriberAddress<PlatformSupportT> address )
 	{
@@ -425,12 +433,15 @@ public:
 		subscribers.push_back( SubscriberData<PlatformSupportT>({address, SubscriberStatus::waitingForSubscriptionIni}) );
 	}
 	void generateStateSyncMessage( ComposerT& composer ) { assert( publisher != nullptr ); publisher->generateStateSyncMessage( composer ); }
+	void resetComposer() { stateUpdateComposer.reset(); }
+	BufferT& getStateUpdateBuff() { return stateUpdateBuffer; }
 };
 
 template<class PlatformSupportT>
 class PublisherPool
 {
 	using BufferT = typename PlatformSupportT::BufferT;
+	using InternalBufferT = typename PlatformSupportT::InternalBufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using SubscriberNodeAddressT = typename PlatformSupportT::SubscriberNodeAddressT;
@@ -484,6 +495,35 @@ public:
 
 	void onTimeTick()
 	{
+		for ( auto p : publishers )
+		{
+			auto& publisher = p->second;
+			BufferT& stateUpdateBuff = publisher.getStateUpdateBuff();
+			for ( auto& s : p->subscribers )
+			{
+				BufferT buff;
+				ComposerT composer( buff );
+				globalmq::marshalling::impl::composeStructBegin( composer );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::stateUpdate), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, s.address.subscriberAddrInNode, "subscriber_id", true );
+				globalmq::marshalling::impl::composeKey( composer, "update" );
+
+				// TODO: consider other ways to insert collected data
+				auto riter = stateUpdateBuff.getReadIter();
+				size_t availsz = riter.directlyAvailableSize();
+				while (availsz)
+				{
+					const uint8_t* b = riter.directRead( availsz );
+					buff.append( b, availsz );					
+					availsz = riter.directlyAvailableSize();
+				}
+				// end of copying
+
+				globalmq::marshalling::impl::composeStructEnd( composer );
+				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, s.address.nodeAddr );
+			}
+			publisher.resetComposer();
+		}
 	}
 };
 
