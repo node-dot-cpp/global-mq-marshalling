@@ -3,8 +3,8 @@
 #-------------------------------------------------------------------------------------------
 
 add_executable(idl_compiler
-    generated/lex.yy.cpp
-    generated/global_mq_IDL.tab.cpp
+    grammar/generated/lex.yy.cpp
+    grammar/generated/global_mq_IDL.tab.cpp
     src/global_mq_parser_helper.cpp
     src/idl_tree_serializer.cpp
     src/idl_tree_serializer_messages.cpp

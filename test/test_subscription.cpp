@@ -12,6 +12,35 @@
 thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
 thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
 
+// transporting level simulation (for this test, single-threaded)
+GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
+void deliverMessages()
+{
+	using ParserT = typename PublisherSubscriberRegistrar::ParserT;
+
+	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
+	{
+		fmt::print( "To publisher pool:\n" );
+		std::string_view sview( reinterpret_cast<const char*>(likeQueues[publisherPoolAddress][i].begin()), likeQueues[publisherPoolAddress][i].size() );
+		fmt::print( "{}\n\n", sview );
+
+		ParserT parser( likeQueues[publisherPoolAddress][i] );
+		publishers.onMessage( parser, subscriberPoolAddress );
+	}
+	likeQueues[publisherPoolAddress].clear();
+
+	for ( size_t i=0; i<likeQueues[subscriberPoolAddress].size(); ++i )
+	{
+		fmt::print( "To subscriber pool:\n" );
+		std::string_view sview( reinterpret_cast<const char*>(likeQueues[subscriberPoolAddress][i].begin()), likeQueues[subscriberPoolAddress][i].size() );
+		fmt::print( "{}\n\n", sview );
+
+		ParserT parser( likeQueues[subscriberPoolAddress][i] );
+		subscribers.onMessage( parser );
+	}
+	likeQueues[subscriberPoolAddress].clear();
+}
+
 
 struct implCallerValue
 {
@@ -236,7 +265,7 @@ void publishableTestOne()
 
 	assert( publishers.publishers.size() == 1 );
 	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
-	publishers.publishers[0]->resetComposer( &composer );
+	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -291,13 +320,23 @@ void publishableTestOne()
 	assert( point3dreal_Y_back == 555 );
 
 //	publishableSampleWrapper.finalizeComposing();
-	publishers.publishers[0]->finalizeComposing();
-	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
-	fmt::print( "{}\n", sview );
+//	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
+//	fmt::print( "{}\n", sview );
 
-	typename PublisherSubscriberRegistrar::ParserT parser( b );
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
-	subscribers.onMessage( parser );
+	auto voint = publishableSampleWrapper.get_vector_of_int();
+	assert( voint.size() == 4 );
+	assert( voint.get_at( 0 ) == 17 );
+	assert( voint.get_at( 1 ) == 44 );
+	assert( voint.get_at( 2 ) == 45 );
+	assert( voint.get_at( 3 ) == 46 );
+
+	deliverMessages(); // simulate transport layer
+	publishers.onTimeTick(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
+
+// test incremental updating
+//	typename PublisherSubscriberRegistrar::ParserT parser( b );
+//	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
@@ -308,10 +347,23 @@ void publishableTestOne()
 	auto& chpSlave = publishableSampleWrapper.get_chp();
 	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
 
-	auto voint = publishableSampleWrapper.get_vector_of_int();
-	assert( voint.size() == 4 );
-	assert( voint.get_at( 0 ) == 17 );
-	assert( voint.get_at( 1 ) == 44 );
-	assert( voint.get_at( 2 ) == 45 );
-	assert( voint.get_at( 3 ) == 46 );
+	// test whole state initializing
+	/*mtest::Buffer b2;
+	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
+	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
+	publishableSampleWrapper.generateStateSyncMessage(composer2);
+	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
+	fmt::print( "\n\n{}\n", sview2 );*/
+
+//	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
+//	subscribers.onMessage( parser2 );
+
+	assert( publishableSampleWrapperSlave2.get_ID() == 38 );
+	auto& size1Slave2 = publishableSampleWrapperSlave2.get_size();
+	assert( size1Slave2.X == 901.0 );
+	assert( size1Slave2.Y == 902.0 );
+	assert( size1Slave2.Z == 903.0 );
+
+	auto& chpSlave2 = publishableSampleWrapper.get_chp();
+	assert( memcmp( &chp, &chpSlave2, sizeof(chp ) ) == 0 );
 }

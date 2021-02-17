@@ -65,6 +65,8 @@ namespace globalmq::marshalling {
 				end = buff.begin() + buff.size();
 			}
 			bool isData() { return end > begin; }
+			size_t directlyAvailableSize() { return begin != nullptr ? end - begin : 0; }
+			const uint8_t* directRead( size_t sz ) { if ( begin != nullptr ) { assert( sz <= end - begin ); auto ret = begin; begin += sz; return ret; } }
 			uint8_t operator * ()
 			{
 				GMQ_ASSERT( begin != end ); 

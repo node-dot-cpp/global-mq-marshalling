@@ -166,7 +166,7 @@ public:
 
 	template<class ComposerT, class VectorT, class ElemTypeT>
 	static
-	void compose( ComposerT& composer, VectorT& what ) { 
+	void compose( ComposerT& composer, const VectorT& what ) { 
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
@@ -184,7 +184,7 @@ public:
 				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 				{
 					impl::composeStructBegin( composer );
-					ElemTypeT::compose( composer, what );
+					ElemTypeT::compose( composer, what[i] );
 					impl::composeStructEnd( composer );
 				}
 				else
@@ -208,7 +208,7 @@ public:
 				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 				{
 					impl::composeStructBegin( composer );
-					ElemTypeT::compose( composer, what );
+					ElemTypeT::compose( composer, what[i] );
 					impl::composeStructEnd( composer );
 				}
 				else
@@ -222,12 +222,13 @@ public:
 
 	template<class ComposerT, class VectorT, class ElemTypeT, typename NameT>
 	static
-	void compose( ComposerT& composer, VectorT& what, NameT name, bool addListSeparator ) { 
+	void compose( ComposerT& composer, const VectorT& what, NameT name, bool addListSeparator ) { 
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 			compose<ComposerT, VectorT, ElemTypeT>( composer, what );
 		else
 		{
 			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			impl::json::addNamePart( composer, name );
 			compose<ComposerT, VectorT, ElemTypeT>( composer, what );
 			if ( addListSeparator )
 				composer.buff.append( ",", 1 );
@@ -268,6 +269,13 @@ public:
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
 			parser.skipDelimiter( '[' );
+			if ( parser.isDelimiter( ']' ) )
+			{
+				parser.skipDelimiter( ']' );
+				if ( parser.isDelimiter( ',' ) )
+					parser.skipDelimiter( ',' );
+				return;
+			}
 			for( ;; )
 			{
 				typename VectorT::value_type what;
@@ -299,6 +307,8 @@ public:
 					break;
 				}
 			}
+			if ( parser.isDelimiter( ',' ) )
+				parser.skipDelimiter( ',' );
 		}
 	}
 };
@@ -364,184 +374,188 @@ namespace impl {
 	}
 } // namespace impl
 
-#if 0
-class VectorOfStructBody
-{
-public:
-	template<class ComposerT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
-	static
-	void compose( ComposerT& composer, VectorT& what ) { 
-		size_t collSz = what.size();
-		if constexpr ( ComposerT::proto == Proto::GMQ )
-		{
-			composeUnsignedInteger( composer, collSz );
-			for ( size_t i=0; i<collSz; ++i )
-			{
-				m::impl::composePublishableStructBegin( composer, "Size" );
-				ProcType::compose( composer, what[i] );
-				m::impl::composePublishableStructEnd( composer, false );
-			}
-		}
-		else
-		{
-			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-			composer.buff.append( "[", 1 );
-			for ( size_t i=0; i<collSz; ++i )
-			{
-				m::impl::composePublishableStructBegin( composer, "Size" );
-				ProcType::compose( composer, what[i] );
-				m::impl::composePublishableStructEnd( composer, false );
-			}
-			composer.buff.append( "]", 1 );
-		}
-	}
 
-	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
-	static
-	void parse( ParserT& parser, VectorT& dest ) { 
-		if constexpr ( ParserT::proto == Proto::GMQ )
-		{
-			size_t collSz;
-			parseUnsignedInteger( parser, &collSz );
-			dest.reserve( collSz );
-			for ( size_t i=0; i<collSz; ++i )
-			{
-				typename VectorT::value_type what;
-				ProcType::parse( parser, what );
-				dest.push_back( what );
-			}
-		}
-		else
-		{
-			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-			parser.skipDelimiter( '[' );
-			for( ;; )
-			{
-				typename VectorT::value_type what;
-				parser.skipDelimiter( '{' );
-				ProcType::parse( parser, what );
-				parser.skipDelimiter( '}' );
-				dest.push_back( what );
-				if ( parser.isDelimiter( ',' ) )
-				{
-					parser.skipDelimiter( ',' );
-					continue;
-				}
-				if ( parser.isDelimiter( ']' ) )
-				{
-					parser.skipDelimiter( ']' );
-					break;
-				}
-			}
-		}
-	}
 
-	template<class ParserT, class VectorT, class ElemTypeT, class ProcType/*, class RootT*/>
-	static
-	void parse( ParserT& parser, VectorT& dest, GMQ_COLL vector<size_t>& addr, size_t offset, size_t action ) { 
-		switch ( action )
-		{
-			case ActionOnVector::remove_at:
-				parseStateUpdateBlockEnd( parser );
-				assert( addr.size() == offset + 1 );
-				size_t pos = addr[size];
-				assert( pos < dest.size() );
-				dest.erase( dest.begin() + pos );
-				break;
-			case ActionOnVector::update_at:
-				assert( addr.size() == offset + 1 );
-				size_t pos = addr[size];
-				assert( pos < dest.size() );
-				dest.erase( dest.begin() + pos );
-				break;
-		}
-		if constexpr ( ParserT::proto == Proto::GMQ )
-		{
-			size_t collSz;
-			parseUnsignedInteger( parser, &collSz );
-			dest.reserve( collSz );
-			for ( size_t i=0; i<collSz; ++i )
-			{
-				typename VectorT::value_type what;
-				ProcType::parse( parser, what );
-				dest.push_back( what );
-			}
-		}
-		else
-		{
-			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-			parser.skipDelimiter( '[' );
-			for( ;; )
-			{
-				typename VectorT::value_type what;
-				parser.skipDelimiter( '{' );
-				ProcType::parse( parser, what );
-				parser.skipDelimiter( '}' );
-				dest.push_back( what );
-				if ( parser.isDelimiter( ',' ) )
-				{
-					parser.skipDelimiter( ',' );
-					continue;
-				}
-				if ( parser.isDelimiter( ']' ) )
-				{
-					parser.skipDelimiter( ']' );
-					break;
-				}
-			}
-		}
-	}
-};
-#endif // 0
-
-enum SubscriberStatus { waitingForSubscriptionIni };
+enum SubscriberStatus { waitingForSubscriptionIni, subscribed };
 enum PublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
 
+template<class PlatformSupportT>
 struct SubscriberAddress
 {
-	std::string nodeAddr;
-	std::string subscriberinNodeAddr;
+	using SubscriberNodeAddressT = typename PlatformSupportT::SubscriberNodeAddressT;
+	SubscriberNodeAddressT nodeAddr;
+	uint64_t subscriberAddrInNode;
 };
 
+template<class PlatformSupportT>
 struct SubscriberData
 {
-	SubscriberAddress address;
+	SubscriberAddress<PlatformSupportT> address;
 	SubscriberStatus status;
 };
 
 template<class ComposerT>
 class PublisherBase
 {
-protected:
-	GMQ_COLL vector<SubscriberAddress> subscribers;
+	template<class PlatformSupportT>
+	friend class PublisherPool;
+	using BufferT = typename ComposerT::BufferType;
 
 public:
 	virtual ~PublisherBase() {}
-	virtual ComposerT& getComposer() = 0;
-	virtual void resetComposer( ComposerT* composer_ ) = 0;
-	virtual void finalizeComposing() = 0;
+	// interaction with state wrapper
+//	virtual ComposerT& getComposer() = 0;
+//	virtual void resetComposer( ComposerT* composer_ ) = 0;
+//	virtual void finalizeComposing() = 0;
+	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
+	virtual void startTick( BufferT&& buff ) = 0;
+	virtual BufferT&& endTick() = 0;
+	virtual const char* name() = 0;
+};
+
+template<class PlatformSupportT>
+class PublisherData
+{
+	template<class PlatformSupportT>
+	friend class PublisherPool;
+
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+
+	globalmq::marshalling::PublisherBase<ComposerT>* publisher = nullptr;
+	GMQ_COLL vector<SubscriberData<PlatformSupportT>> subscribers;
+//	BufferT stateUpdateBuffer;
+//	ComposerT stateUpdateComposer;
+
+public:
+	PublisherData( globalmq::marshalling::PublisherBase<ComposerT>* publisher_ ) : publisher( publisher_ )/*, stateUpdateComposer( stateUpdateBuffer )*/ {
+		assert( publisher != nullptr );
+		BufferT buff; // just empty
+		publisher->startTick( std::move( buff ) );
+	}
+	/*PublisherData( PublisherData&& other ) : subscribers( std::move( other.subscribers ) ), stateUpdateBuffer( std::move( other.stateUpdateBuffer ) ), stateUpdateComposer( std::move( other.stateUpdateComposer ) )
+	{
+		publisher = other.publisher;
+		other.publisher = nullptr;
+		assert( publisher != nullptr );
+		publisher->resetComposer( &stateUpdateComposer );
+	}
+	PublisherData& operator = ( PublisherData&& other )
+	{
+		subscribers = std::move( other.subscribers );
+		stateUpdateBuffer = std::move( other.stateUpdateBuffer );
+		stateUpdateComposer = std::move( other.stateUpdateComposer );
+		publisher = other.publisher;
+		other.publisher = nullptr;
+		assert( publisher != nullptr );
+		publisher->resetComposer( &stateUpdateComposer );
+		return *this;
+	}*/
+	// processing requests (by now they seem to be independent on state wrappers)
+	void onSubscriptionRequest( SubscriberAddress<PlatformSupportT> address )
+	{
+		// TODO: who will check uniqueness?
+		subscribers.push_back( SubscriberData<PlatformSupportT>({address, SubscriberStatus::waitingForSubscriptionIni}) );
+	}
+	void generateStateSyncMessage( ComposerT& composer ) { assert( publisher != nullptr ); publisher->generateStateSyncMessage( composer ); }
+//	void resetComposer() { stateUpdateComposer.reset(); }
+//	BufferT& getStateUpdateBuff() { return stateUpdateBuffer; }
+	BufferT&& getStateUpdateBuff() { return publisher->endTick(); }
+	void startTick( BufferT&& buff ) { assert( publisher != nullptr ); publisher->startTick( std::move( buff ) ); }
+	BufferT&& endTick() { assert( publisher != nullptr ); return std::move( publisher->endTick() ); }
 };
 
 template<class PlatformSupportT>
 class PublisherPool
 {
+	using BufferT = typename PlatformSupportT::BufferT;
+	using InternalBufferT = typename PlatformSupportT::InternalBufferT;
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+	using SubscriberNodeAddressT = typename PlatformSupportT::SubscriberNodeAddressT;
+
 public: // TODO: just a tmp approach to continue immediate dev
-	std::vector<globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>*> publishers;
+	GMQ_COLL unordered_map<GMQ_COLL string, PublisherData<PlatformSupportT>> publishers;
 
 public:
-	void registerPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
+	void registerPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
-		publishers.push_back( publisher );
+		auto ins = publishers.insert( std::move( std::make_pair(publisher->name(), std::move( PublisherData<PlatformSupportT>(publisher) ) ) ) );
+		assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 	}
-	void unregisterPublisher( globalmq::marshalling::PublisherBase<typename PlatformSupportT::ComposerT>* publisher )
+	void unregisterPublisher( globalmq::marshalling::PublisherBase<ComposerT>* publisher )
 	{
-		for ( size_t i=0; i<publishers.size(); ++i )
-			if ( publishers[i] == publisher )
+		size_t ret = publishers.erase( publisher->name() );
+		assert( ret == 1 );
+	}
+
+	void onMessage( ParserT& parser, SubscriberNodeAddressT nodeAddr )
+	{
+		globalmq::marshalling::impl::parseStructBegin( parser );
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		switch ( msgType )
+		{
+			case PublisherSubscriberMessageType::subscriptionRequest:
 			{
-				publishers.erase( publishers.begin() + i );
-				return;
+				GMQ_COLL string publisherName;
+				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &publisherName, "publisher_name" );
+				auto findres = publishers.find( publisherName );
+				if ( findres == publishers.end() )
+					throw std::exception(); // not found / misdirected
+				uint64_t subscriberID;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
+				findres->second.onSubscriptionRequest( SubscriberAddress<PlatformSupportT>({nodeAddr, subscriberID}) );
+				BufferT buff;
+				ComposerT composer( buff );
+				globalmq::marshalling::impl::composeStructBegin( composer );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::subscriptionResponse), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, subscriberID, "subscriber_id", true );
+				globalmq::marshalling::impl::composeKey( composer, "state" );
+				findres->second.generateStateSyncMessage( composer );
+				globalmq::marshalling::impl::composeStructEnd( composer );
+				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, nodeAddr );
+				break;
 			}
-		assert( false ); // not found
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		globalmq::marshalling::impl::parseStructEnd( parser );
+	}
+
+	void onTimeTick()
+	{
+		for ( auto p : publishers )
+		{
+			auto& publisher = p.second;
+			BufferT stateUpdateBuff = publisher.getStateUpdateBuff();
+			for ( auto& s : publisher.subscribers )
+			{
+				BufferT buff;
+				ComposerT composer( buff );
+				globalmq::marshalling::impl::composeStructBegin( composer );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::stateUpdate), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, s.address.subscriberAddrInNode, "subscriber_id", true );
+				globalmq::marshalling::impl::composeKey( composer, "update" );
+
+				// TODO: consider other ways to insert collected data
+				auto riter = stateUpdateBuff.getReadIter();
+				size_t availsz = riter.directlyAvailableSize();
+				while (availsz)
+				{
+					const uint8_t* b = riter.directRead( availsz );
+					buff.append( b, availsz );					
+					availsz = riter.directlyAvailableSize();
+				}
+				// end of copying
+
+				globalmq::marshalling::impl::composeStructEnd( composer );
+				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, s.address.nodeAddr );
+			}
+//			publisher.resetComposer();
+			BufferT newBuff; // just empty
+			publisher.startTick( std::move( newBuff ) );
+		}
 	}
 };
 
@@ -551,6 +565,9 @@ class SubscriberBase
 public:
 	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
+	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
+	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
+	virtual const char* name() = 0;
 	virtual ~SubscriberBase() {}
 };
 
@@ -559,15 +576,17 @@ class SubscriberPool
 {
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+	using SubscriberT = globalmq::marshalling::SubscriberBase<BufferT>;
 
-	GMQ_COLL vector<globalmq::marshalling::SubscriberBase<BufferT>*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	GMQ_COLL vector<SubscriberT*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
 public:
-	void registerSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	void registerSubscriber( SubscriberT* subscriber )
 	{
 		subscribers.push_back( subscriber );
 	}
-	void unregisterSubscriber( globalmq::marshalling::SubscriberBase<BufferT>* subscriber )
+	void unregisterSubscriber( SubscriberT* subscriber )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
 			if ( subscribers[i] == subscriber )
@@ -577,12 +596,46 @@ public:
 			}
 		assert( false ); // not found
 	}
+	void subscribe( SubscriberT* subscriber )
+	{
+		for ( size_t i=0; i<subscribers.size(); ++i )
+			if ( subscribers[i] == subscriber )
+			{
+				BufferT buff;
+				ComposerT composer( buff );
+				globalmq::marshalling::impl::composeStructBegin( composer );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::subscriptionRequest), "msg_type", true );
+				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "publisher_name", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, i, "subscriber_id", false );
+				globalmq::marshalling::impl::composeStructEnd( composer );
+				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
+				return;
+			}
+		assert( false ); // not found
+	}
 	void onMessage( ParserT& parser ) 
 	{
+		globalmq::marshalling::impl::parseStructBegin( parser );
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
 		switch ( msgType )
 		{
+			case PublisherSubscriberMessageType::subscriptionResponse:
+			{
+				size_t subscriberID;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
+				if ( subscriberID >= subscribers.size() )
+					throw std::exception(); // TODO: ... (invalid ID)
+				globalmq::marshalling::impl::parseKey( parser, "state" );
+				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+					subscribers[subscriberID]->applyJsonStateSyncMessage( parser );
+				else 
+				{
+					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+					subscribers[subscriberID]->applyGmqStateSyncMessage( parser );
+				}
+				break;
+			}
 			case PublisherSubscriberMessageType::stateUpdate:
 			{
 				size_t subscriberID;
@@ -602,7 +655,7 @@ public:
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
-
+		globalmq::marshalling::impl::parseStructEnd( parser );
 	}
 };
 
