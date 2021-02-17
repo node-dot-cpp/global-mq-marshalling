@@ -476,14 +476,14 @@ public:
 					throw std::exception(); // not found / misdirected
 				uint64_t subscriberID;
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
-				findres->onSubscriptionRequest( SubscriberAddress({nodeAddr, subscriberID}) );
+				findres->second.onSubscriptionRequest( SubscriberAddress<PlatformSupportT>({nodeAddr, subscriberID}) );
 				BufferT buff;
 				ComposerT composer( buff );
 				globalmq::marshalling::impl::composeStructBegin( composer );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(PublisherSubscriberMessageType::subscriptionResponse), "msg_type", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, subscriberID, "subscriber_id", true );
 				globalmq::marshalling::impl::composeKey( composer, "state" );
-				findres->generateStateSyncMessage( composer );
+				findres->second.generateStateSyncMessage( composer );
 				globalmq::marshalling::impl::composeStructEnd( composer );
 				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, nodeAddr );
 				break;

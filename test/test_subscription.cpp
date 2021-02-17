@@ -12,6 +12,27 @@
 thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
 thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
 
+// transporting level simulation (for this test, single-threaded)
+GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
+void deliverMessages()
+{
+	using ParserT = typename PublisherSubscriberRegistrar::ParserT;
+
+	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
+	{
+		ParserT parser( likeQueues[publisherPoolAddress][i] );
+		publishers.onMessage( parser, subscriberPoolAddress );
+	}
+	likeQueues[publisherPoolAddress].clear();
+
+	for ( size_t i=0; i<likeQueues[subscriberPoolAddress].size(); ++i )
+	{
+		ParserT parser( likeQueues[subscriberPoolAddress][i] );
+		subscribers.onMessage( parser );
+	}
+	likeQueues[subscriberPoolAddress].clear();
+}
+
 
 struct implCallerValue
 {
