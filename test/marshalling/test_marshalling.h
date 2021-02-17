@@ -160,6 +160,7 @@ template<typename T> concept has_vector_struct_point3dreal_member = requires { {
 
 // member update notifier presence checks
 using index_type_for_array_notifiers = size_t&;
+template<typename T> concept has_full_update_notifier_call = requires(T t) { { t.notifyFullyUpdated() }; };
 template<typename T> concept has_void_update_notifier_call_for_ID = requires(T t) { { t.notifyUpdated_ID() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_ID = requires { { std::declval<StateT>().notifyUpdated_ID(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_NN = requires(T t) { { t.notifyUpdated_NN() }; };
@@ -276,7 +277,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
 						decltype(T::X) oldVal = t.X;
@@ -352,7 +353,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
@@ -472,7 +473,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
 						decltype(T::X) oldVal = t.X;
@@ -548,7 +549,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_Z = has_void_update_notifier_call_for_Z<T>;
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
@@ -665,7 +666,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_Size = has_void_update_notifier_call_for_Size<T>;
 		static constexpr bool has_update_notifier_for_Size = has_update_notifier_call_for_Size<T, decltype(T::Size)>;
 		static constexpr bool has_any_notifier_for_Size = has_void_update_notifier_for_Size || has_update_notifier_for_Size;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) oldVal = t.ID;
@@ -732,7 +733,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_Size = has_void_update_notifier_call_for_Size<T>;
 		static constexpr bool has_update_notifier_for_Size = has_update_notifier_call_for_Size<T, decltype(T::Size)>;
 		static constexpr bool has_any_notifier_for_Size = has_void_update_notifier_for_Size || has_update_notifier_for_Size;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
@@ -883,7 +884,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_NN = has_void_update_notifier_call_for_NN<T>;
 		static constexpr bool has_update_notifier_for_NN = has_update_notifier_call_for_NN<T, decltype(T::NN)>;
 		static constexpr bool has_any_notifier_for_NN = has_void_update_notifier_for_NN || has_update_notifier_for_NN;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		if constexpr( reportChanges )
 		{
 			decltype(T::sizes) oldVectorVal;
@@ -944,7 +945,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 		static constexpr bool has_void_update_notifier_for_NN = has_void_update_notifier_call_for_NN<T>;
 		static constexpr bool has_update_notifier_for_NN = has_update_notifier_call_for_NN<T, decltype(T::NN)>;
 		static constexpr bool has_any_notifier_for_NN = has_void_update_notifier_for_NN || has_update_notifier_for_NN;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
@@ -1200,7 +1201,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
 		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
 		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) oldVal = t.ID;
@@ -1261,7 +1262,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 		static constexpr bool has_void_element_updated_notifier_for_signedInts = has_element_updated_void_notifier_call_for_signedInts<T>;
 		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
 		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
-
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
@@ -2433,7 +2434,7 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::Su
 	static constexpr bool has_void_update_notifier_for_structWithVectorOfSize = has_void_update_notifier_call_for_structWithVectorOfSize<T>;
 	static constexpr bool has_update_notifier_for_structWithVectorOfSize = has_update_notifier_call_for_structWithVectorOfSize<T, decltype(T::structWithVectorOfSize)>;
 	static constexpr bool has_any_notifier_for_structWithVectorOfSize = has_void_update_notifier_for_structWithVectorOfSize || has_update_notifier_for_structWithVectorOfSize;
-
+	static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 
 public:
 	template<class ... ArgsT>
@@ -3075,6 +3076,9 @@ public:
 		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		globalmq::marshalling::impl::parseStructEnd( parser );
+
+		if constexpr ( has_full_update_notifier )
+			t.notifyFullyUpdated();
 	}
 	auto get_ID() { return t.ID; }
 	const auto& get_size() { return t.size; }

@@ -200,6 +200,7 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 			fprintf( header, "%sstatic constexpr bool has_full_element_updated_notifier_for_%s = has_full_element_updated_notifier_call_for_%s<T, %sT&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 		}
 	}
+	fprintf( header, "%sstatic constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;", offset );
 	fprintf( header, "\n" );
 }
 
@@ -956,6 +957,9 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 	}
 
 	fprintf( header, "\t\tglobalmq::marshalling::impl::parseStructEnd( parser );\n" );
+	fprintf( header, "\n" );
+	fprintf( header, "\t\tif constexpr ( has_full_update_notifier )\n" );
+	fprintf( header, "\t\t\tt.notifyFullyUpdated();\n" );
 	fprintf( header, "\t}\n" );
 }
 
@@ -1554,6 +1558,7 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 
 	fprintf( header, "// member update notifier presence checks\n" );
 	fprintf( header, "using index_type_for_array_notifiers = size_t&;\n" );
+	fprintf( header, "template<typename T> concept has_full_update_notifier_call = requires(T t) { { t.notifyFullyUpdated() }; };\n" );
 	for ( auto& name : names )
 	{
 		fprintf( header, 
