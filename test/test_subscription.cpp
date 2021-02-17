@@ -20,6 +20,10 @@ void deliverMessages()
 
 	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
 	{
+		fmt::print( "To publisher pool:\n" );
+		std::string_view sview( reinterpret_cast<const char*>(likeQueues[publisherPoolAddress][i].begin()), likeQueues[publisherPoolAddress][i].size() );
+		fmt::print( "{}\n\n", sview );
+
 		ParserT parser( likeQueues[publisherPoolAddress][i] );
 		publishers.onMessage( parser, subscriberPoolAddress );
 	}
@@ -27,6 +31,10 @@ void deliverMessages()
 
 	for ( size_t i=0; i<likeQueues[subscriberPoolAddress].size(); ++i )
 	{
+		fmt::print( "To subscriber pool:\n" );
+		std::string_view sview( reinterpret_cast<const char*>(likeQueues[subscriberPoolAddress][i].begin()), likeQueues[subscriberPoolAddress][i].size() );
+		fmt::print( "{}\n\n", sview );
+
 		ParserT parser( likeQueues[subscriberPoolAddress][i] );
 		subscribers.onMessage( parser );
 	}
@@ -312,9 +320,8 @@ void publishableTestOne()
 	assert( point3dreal_Y_back == 555 );
 
 //	publishableSampleWrapper.finalizeComposing();
-	publishableSampleWrapper.finalizeComposing();
-	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
-	fmt::print( "{}\n", sview );
+//	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
+//	fmt::print( "{}\n", sview );
 
 	auto voint = publishableSampleWrapper.get_vector_of_int();
 	assert( voint.size() == 4 );
@@ -323,12 +330,13 @@ void publishableTestOne()
 	assert( voint.get_at( 2 ) == 45 );
 	assert( voint.get_at( 3 ) == 46 );
 
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave( &node );
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample> publishableSampleWrapperSlave2( &node );
+	deliverMessages(); // simulate transport layer
+	publishers.onTimeTick(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
 
-	// test incremental updating
-	typename PublisherSubscriberRegistrar::ParserT parser( b );
-	subscribers.onMessage( parser );
+// test incremental updating
+//	typename PublisherSubscriberRegistrar::ParserT parser( b );
+//	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
 	auto& size1Slave = publishableSampleWrapperSlave.get_size();
@@ -340,15 +348,15 @@ void publishableTestOne()
 	assert( memcmp( &chp, &chpSlave, sizeof(chp ) ) == 0 );
 
 	// test whole state initializing
-	mtest::Buffer b2;
+	/*mtest::Buffer b2;
 	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
 	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
 	publishableSampleWrapper.generateStateSyncMessage(composer2);
 	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
-	fmt::print( "\n\n{}\n", sview2 );
+	fmt::print( "\n\n{}\n", sview2 );*/
 
-	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
-	subscribers.onMessage( parser2 );
+//	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
+//	subscribers.onMessage( parser2 );
 
 	assert( publishableSampleWrapperSlave2.get_ID() == 38 );
 	auto& size1Slave2 = publishableSampleWrapperSlave2.get_size();

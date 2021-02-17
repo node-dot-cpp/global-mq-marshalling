@@ -2224,7 +2224,9 @@ template<class T, class ComposerT>
 class publishable_sample_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>
 {
 	T t;
-	ComposerT* composer;
+	using BufferT = typename ComposerT::BufferType;
+	BufferT buffer;
+	ComposerT composer;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_size = has_size_member<T>;
@@ -2243,79 +2245,74 @@ class publishable_sample_WrapperForPublisher : public globalmq::marshalling::Pub
 
 public:
 	template<class ... ArgsT>
-	publishable_sample_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	publishable_sample_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
 	const T& getState() { return t; }
-	ComposerT& getComposer() { return *composer; }
-	void resetComposer( ComposerT* composer_ ) {
-		composer = composer_; 
-		globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );
-	}
-	void finalizeComposing() {
-		globalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );
-	}
+	ComposerT& getComposer() { return composer; }
+	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
+	BufferT&& endTick() { globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() {
 		return "publishable_sample";
 	}
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeInteger( *composer, t.ID );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
+		globalmq::marshalling::impl::publishableComposeLeafeInteger( composer, t.ID );
 	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_SIZE::compose( *composer, t.size );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( *composer );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
+		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_SIZE::compose( composer, t.size );
+		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 1); }
 	const auto& get_chp() { return t.chp; }
 	void set_chp( decltype(T::chp) val) { 
 		t.chp = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 2 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_CharacterParam::compose( *composer, t.chp );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( *composer );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 2 );
+		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
+		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_vector_of_int() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 3 );
-		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( *composer );
-		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( *composer, t.vector_of_int );
-		globalmq::marshalling::impl::composeStateUpdateBlockEnd( *composer );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 3 );
+		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( composer, t.vector_of_int );
+		globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
 	auto get4set_vector_of_int() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, publishable_sample_WrapperForPublisher>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 4 );
-		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( *composer );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_POINT3DREAL::compose( *composer, t.vector_struct_point3dreal );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( *composer );
-		globalmq::marshalling::impl::composeStateUpdateBlockEnd( *composer );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 4 );
+		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
+		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_POINT3DREAL::compose( composer, t.vector_struct_point3dreal );
+		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_WrapperForPublisher, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_WrapperForPublisher>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
 	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
 	void set_structWithVectorOfInt( decltype(T::structWithVectorOfInt) val) { 
 		t.structWithVectorOfInt = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 5 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_StructWithVectorOfInt::compose( *composer, t.structWithVectorOfInt );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( *composer );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 5 );
+		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
+		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 5); }
 	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
 	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
 		t.structWithVectorOfSize = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( *composer, GMQ_COLL vector<size_t>(), 6 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( *composer );
-		publishable_STRUCT_StructWithVectorOfSize::compose( *composer, t.structWithVectorOfSize );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( *composer );
+		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 6 );
+		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
+		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
 
@@ -2356,6 +2353,7 @@ class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_
 {
 	using ComposerT = typename PublisherSubscriberRegistrar::ComposerT;
 public:
+	using BufferT = typename PublisherSubscriberRegistrar::ComposerT::BufferType;
 	template<class ... ArgsT>
 	publishable_sample_NodecppWrapperForPublisher( ArgsT ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>( std::forward<ArgsT>( args )... )
 	{ 
@@ -2367,9 +2365,8 @@ public:
 		PublisherSubscriberRegistrar::unregisterPublisher( this );
 	}
 
-	virtual ComposerT& getComposer() { return publishable_sample_WrapperForPublisher<T, ComposerT>::getComposer(); }
-	virtual void resetComposer( ComposerT* composer_ ) { publishable_sample_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }
-	virtual void finalizeComposing() { publishable_sample_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }
+	virtual void startTick( BufferT&& buff ) { publishable_sample_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
+	virtual BufferT&& endTick() { return  publishable_sample_WrapperForPublisher<T, ComposerT>::endTick(); }
 	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_sample_WrapperForPublisher<T, ComposerT>::compose(composer); }
 	virtual const char* name() { return publishable_sample_WrapperForPublisher<T, ComposerT>::name(); }
 };
@@ -3126,6 +3123,10 @@ public:
 	virtual const char* name()
 	{
 		return publishable_sample_WrapperForSubscriber<T, PublisherSubscriberRegistrar>::name();
+	}
+	void subscribe()
+	{
+		PublisherSubscriberRegistrar::subscribe( this );
 	}
 };
 
