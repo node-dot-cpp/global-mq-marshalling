@@ -20,8 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\fmt\src\format.cc" />
-    <ClCompile Include="..\generated\global_mq_IDL.tab.cpp" />
-    <ClCompile Include="..\generated\lex.yy.cpp" />
+    <ClCompile Include="..\grammar\generated\global_mq_IDL.tab.cpp" />
+    <ClCompile Include="..\grammar\generated\lex.yy.cpp" />
     <ClCompile Include="..\src\global_mq_parser_helper.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer_messages.cpp" />
@@ -30,7 +30,7 @@
     <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\generated\global_mq_IDL.tab.h" />
+    <ClInclude Include="..\grammar\generated\global_mq_IDL.tab.h" />
     <ClInclude Include="..\include\global_mq_parser_helper.h" />
     <ClInclude Include="..\include\idl_tree.h" />
     <ClInclude Include="..\include\idl_tree_serializer.h" />
