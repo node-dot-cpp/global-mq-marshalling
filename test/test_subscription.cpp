@@ -9,15 +9,15 @@
 #include <typeindex>
 #include <unordered_map>
 
-//thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
-//thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
-globalmq::marshalling::MetaPool<PublisherSubscriberRegistrar> mp;
+//thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberPoolInfo> publishers;
+//thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberPoolInfo> subscribers;
+globalmq::marshalling::MetaPool<PublisherSubscriberPoolInfo> mp;
 
 // transporting level simulation (for this test, single-threaded)
 GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
 void deliverMessages()
 {
-	using ParserT = typename PublisherSubscriberRegistrar::ParserT;
+	using ParserT = typename PublisherSubscriberPoolInfo::ParserT;
 
 	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
 	{
@@ -263,7 +263,7 @@ void publishableTestOne()
 //	return;
 	SampleNode node;
 //	mtest::Buffer b;
-//	typename PublisherSubscriberRegistrar::ComposerT composer( b );
+//	typename PublisherSubscriberPoolInfo::ComposerT composer( b );
 	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp, &node );
 
 	fmt::print( "OK so far...\n" );
@@ -349,7 +349,7 @@ void publishableTestOne()
 	deliverMessages(); // simulate transport layer
 
 // test incremental updating
-//	typename PublisherSubscriberRegistrar::ParserT parser( b );
+//	typename PublisherSubscriberPoolInfo::ParserT parser( b );
 //	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
@@ -364,12 +364,12 @@ void publishableTestOne()
 	// test whole state initializing
 	/*mtest::Buffer b2;
 	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
-	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
+	typename PublisherSubscriberPoolInfo::ComposerT composer2( b2 );
 	publishableSampleWrapper.generateStateSyncMessage(composer2);
 	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
 	fmt::print( "\n\n{}\n", sview2 );*/
 
-//	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
+//	typename PublisherSubscriberPoolInfo::ParserT parser2( b2 );
 //	subscribers.onMessage( parser2 );
 
 	assert( publishableSampleWrapperSlave2.get_ID() == 38 );

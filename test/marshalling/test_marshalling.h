@@ -2349,14 +2349,14 @@ public:
 };
 
 template<class T, class RegistrarT>
-class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>
+class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberInfo::ComposerT>
 {
-	using ComposerT = typename PublisherSubscriberRegistrar::ComposerT;
+	using ComposerT = typename PublisherSubscriberInfo::ComposerT;
 	RegistrarT& registrar;
 public:
-	using BufferT = typename PublisherSubscriberRegistrar::ComposerT::BufferType;
+	using BufferT = typename PublisherSubscriberInfo::ComposerT::BufferType;
 	template<class ... ArgsT>
-	publishable_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberRegistrar::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -3088,12 +3088,12 @@ public:
 };
 
 template<class T, class RegistrarT>
-class publishable_sample_NodecppWrapperForSubscriber : public publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>
+class publishable_sample_NodecppWrapperForSubscriber : public publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>
 {
 	RegistrarT& registrar;
 public:
 	template<class ... ArgsT>
-	publishable_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT ... args ) : publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT ... args ) : publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -3103,32 +3103,32 @@ public:
 		registrar.remove( this );
 	}
 
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename PublisherSubscriberRegistrar::BufferT>& parser ) 
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename PublisherSubscriberInfo::BufferT>& parser ) 
 	{
-		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>::applyMessageWithUpdates(parser);
+		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename PublisherSubscriberRegistrar::BufferT>& parser )
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename PublisherSubscriberInfo::BufferT>& parser )
 	{
-		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>::applyMessageWithUpdates(parser);
+		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename PublisherSubscriberRegistrar::BufferT>& parser ) 
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename PublisherSubscriberInfo::BufferT>& parser ) 
 	{
-		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>::parse(parser);
+		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>::parse(parser);
 	}
 
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename PublisherSubscriberRegistrar::BufferT>& parser )
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename PublisherSubscriberInfo::BufferT>& parser )
 	{
-		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>::parse(parser);
+		publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>::parse(parser);
 	}
 	virtual const char* name()
 	{
-		return publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberRegistrar::BufferT>::name();
+		return publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>::name();
 	}
 	void subscribe()
 	{
-		PublisherSubscriberRegistrar::subscribe( this );
+		registrar.subscribe( this );
 	}
 };
 

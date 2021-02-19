@@ -1414,7 +1414,8 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvoid subscribe()\n" );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s::subscribe( this );\n", classNotifierName.c_str() );
+//	fprintf( header, "\t\t%s::subscribe( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t\tregistrar.subscribe( this );\n", classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "};\n\n" );
 }
