@@ -6,8 +6,10 @@
 #include <publishable_impl.h>
 
 class PublisherSubscriberRegistrar;
-extern thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
-extern thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
+//extern thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
+//extern thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
+using MetaPoolT = globalmq::marshalling::MetaPool<PublisherSubscriberRegistrar>;
+extern MetaPoolT mp;
 
 // transporting level simulation (for this test, single-threaded)
 constexpr uint32_t publisherPoolAddress = 1;
@@ -18,7 +20,7 @@ class PublisherSubscriberRegistrar
 {
 public:
 	using BufferT = globalmq::marshalling::Buffer;
-	using InternalBufferT = globalmq::marshalling::Buffer;
+//	using InternalBufferT = globalmq::marshalling::Buffer;
 
 	// protocol is practically defined below
 	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
@@ -32,30 +34,31 @@ public:
 //	using PublisherAddressT = GMQ_COLL string;
 //	using SubscriberNodeAddressT = GMQ_COLL string;
 	using PublisherAddressT = uint32_t;
-	using SubscriberNodeAddressT = uint32_t;
+	using NodeAddressT = uint32_t;
 
 	// used by generated code
-	static void registerPublisher( PublisherT* publisher )
+	/*static void registerPublisher( PublisherT* publisher )
 	{
-		publishers.registerPublisher( publisher );
+//		publishers.registerPublisher( publisher );
 	}
 	static void unregisterPublisher( PublisherT* publisher )
 	{
-		publishers.unregisterPublisher( publisher );
+//		publishers.unregisterPublisher( publisher );
 	}
 	static void registerSubscriber( SubscriberT* subscriber )
 	{
-		subscribers.registerSubscriber( subscriber );
+//		subscribers.registerSubscriber( subscriber );
 	}
 	static void unregisterSubscriber( SubscriberT* subscriber )
 	{
-		subscribers.unregisterSubscriber( subscriber );
-	}
+//		subscribers.unregisterSubscriber( subscriber );
+	}*/
 
 	// used by State owner
 	static void subscribe( SubscriberT* subscriber )
 	{
-		subscribers.subscribe( subscriber );
+//		subscribers.subscribe( subscriber );
+		mp.subscribe( subscriber );
 	}
 
 	// used by pools
@@ -64,7 +67,7 @@ public:
 		// Note: we assume that here or around there is a kind of routing table converting publisherName to some deliverable address
 		//       here we just emulate it manually
 		PublisherAddressT publAddr = (PublisherAddressT)(-1);
-		SubscriberNodeAddressT subscrAddr = 0;
+		NodeAddressT subscrAddr = 0;
 
 		if ( publisherName == "publishable_sample" )
 			publAddr = publisherPoolAddress;
@@ -72,7 +75,7 @@ public:
 			assert( false );
 		likeQueues[publAddr].push_back( std::move( buff ) );
 	}
-	static void sendMsgFromPublisherToSubscriber( BufferT& buff, SubscriberNodeAddressT subscrAddr )
+	static void sendMsgFromPublisherToSubscriber( BufferT& buff, NodeAddressT subscrAddr )
 	{
 		// Note: we assume that subscrAddr can either be used directly (like in this sample code), or here or around there is a kind of routing table converting subscrAddr to some deliverable address
 		//       here we just emulate it manually

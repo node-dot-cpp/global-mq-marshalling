@@ -1304,21 +1304,24 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 {
 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T>\n" );
+	fprintf( header, "template<class T, class RegistrarT>\n" );
 	fprintf( header, "class %s_%sWrapperForPublisher : public %s_WrapperForPublisher<T, typename %s::ComposerT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tusing ComposerT = typename %s::ComposerT;\n", classNotifierName.c_str() );
+	fprintf( header, "\tRegistrarT& registrar;\n" );
 	fprintf( header, "public:\n" );
 	fprintf( header, "\tusing BufferT = typename %s::ComposerT::BufferType;\n", classNotifierName.c_str() );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_%sWrapperForPublisher( ArgsT ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t%s_%sWrapperForPublisher( RegistrarT& registrar_, ArgsT ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\t%s::registerPublisher( this );\n", classNotifierName.c_str() );
+//	fprintf( header, "\t\t%s::registerPublisher( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t\tregistrar.add( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual ~%s_%sWrapperForPublisher()\n", s.name.c_str(), platformPrefix.c_str() );
 	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\t%s::unregisterPublisher( this );\n", classNotifierName.c_str() );
+//	fprintf( header, "\t\t%s::unregisterPublisher( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t\tregistrar.remove( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 
@@ -1337,8 +1340,8 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 {
 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T, class RegistrarT>\n" );
-	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::SubscriberBase<typename RegistrarT::BufferT>\n", s.name.c_str() );
+	fprintf( header, "template<class T, class BufferT>\n" );
+	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::SubscriberBase<BufferT>\n", s.name.c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 
@@ -1349,8 +1352,8 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_WrapperForSubscriber( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
-	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
-	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename RegistrarT::BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
+	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
+	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual const char* name() { return \"%s\"; }\n", s.name.c_str() );
 	fprintf( header, "\n" );
 
@@ -1368,43 +1371,46 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 {
 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T>\n" );
-	fprintf( header, "class %s_%sWrapperForSubscriber : public %s_WrapperForSubscriber<T, %s>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "template<class T, class RegistrarT>\n" );
+	fprintf( header, "class %s_%sWrapperForSubscriber : public %s_WrapperForSubscriber<T, typename %s::BufferT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "{\n" );
+	fprintf( header, "\tRegistrarT& registrar;\n" );
 	fprintf( header, "public:\n" );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_%sWrapperForSubscriber( ArgsT ... args ) : %s_WrapperForSubscriber<T, %s>( std::forward<ArgsT>( args )... )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t%s_%sWrapperForSubscriber( RegistrarT& registrar_, ArgsT ... args ) : %s_WrapperForSubscriber<T, typename %s::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\t%s::registerSubscriber( this );\n", classNotifierName.c_str() );
+//	fprintf( header, "\t\t%s::registerSubscriber( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t\tregistrar.add( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual ~%s_%sWrapperForSubscriber()\n", s.name.c_str(), platformPrefix.c_str() );
 	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\t%s::unregisterSubscriber( this );\n", classNotifierName.c_str() );
+//	fprintf( header, "\t\t%s::unregisterSubscriber( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t\tregistrar.remove( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) \n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) \n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, %s>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvirtual const char* name()\n" );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, %s>::name();\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::name();\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvoid subscribe()\n" );
 	fprintf( header, "\t{\n" );

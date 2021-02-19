@@ -9,8 +9,9 @@
 #include <typeindex>
 #include <unordered_map>
 
-thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
-thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
+//thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
+//thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
+globalmq::marshalling::MetaPool<PublisherSubscriberRegistrar> mp;
 
 // transporting level simulation (for this test, single-threaded)
 GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
@@ -25,7 +26,8 @@ void deliverMessages()
 		fmt::print( "{}\n\n", sview );
 
 		ParserT parser( likeQueues[publisherPoolAddress][i] );
-		publishers.onMessage( parser, subscriberPoolAddress );
+//		publishers.onMessage( parser, subscriberPoolAddress );
+		mp.onMessage( parser, subscriberPoolAddress );
 	}
 	likeQueues[publisherPoolAddress].clear();
 
@@ -36,7 +38,8 @@ void deliverMessages()
 		fmt::print( "{}\n\n", sview );
 
 		ParserT parser( likeQueues[subscriberPoolAddress][i] );
-		subscribers.onMessage( parser );
+//		subscribers.onMessage( parser );
+		mp.onMessage( parser, subscriberPoolAddress );
 	}
 	likeQueues[subscriberPoolAddress].clear();
 }
@@ -259,13 +262,23 @@ void publishableTestOne()
 	testCallerValue();
 //	return;
 	SampleNode node;
-	mtest::Buffer b;
-	typename PublisherSubscriberRegistrar::ComposerT composer( b );
-	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
+//	mtest::Buffer b;
+//	typename PublisherSubscriberRegistrar::ComposerT composer( b );
+	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp, &node );
 
-	assert( publishers.publishers.size() == 1 );
-	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
-	publishableSampleWrapper.resetComposer( &composer );
+	fmt::print( "OK so far...\n" );
+
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp, &node );
+	publishableSampleWrapperSlave.subscribe();
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave2( mp, &node );
+	publishableSampleWrapperSlave2.subscribe();
+
+	deliverMessages(); // simulate transport layer
+	deliverMessages(); // simulate transport layer
+
+//	assert( publishers.publishers.size() == 1 );
+//	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
+//	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -331,7 +344,8 @@ void publishableTestOne()
 	assert( voint.get_at( 3 ) == 46 );
 
 	deliverMessages(); // simulate transport layer
-	publishers.onTimeTick(); // simulate infrastructural call
+//	publishers.postAllUpdates(); // simulate infrastructural call
+	mp.postAllUpdates(); // simulate infrastructural call
 	deliverMessages(); // simulate transport layer
 
 // test incremental updating
