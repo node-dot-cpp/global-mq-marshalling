@@ -9,14 +9,15 @@
 #include <typeindex>
 #include <unordered_map>
 
-thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberRegistrar> publishers;
-thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberRegistrar> subscribers;
+//thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberPoolInfo> publishers;
+//thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberPoolInfo> subscribers;
+globalmq::marshalling::MetaPool<PublisherSubscriberPoolInfo> mp;
 
 // transporting level simulation (for this test, single-threaded)
 GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
 void deliverMessages()
 {
-	using ParserT = typename PublisherSubscriberRegistrar::ParserT;
+	using ParserT = typename PublisherSubscriberPoolInfo::ParserT;
 
 	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
 	{
@@ -25,7 +26,8 @@ void deliverMessages()
 		fmt::print( "{}\n\n", sview );
 
 		ParserT parser( likeQueues[publisherPoolAddress][i] );
-		publishers.onMessage( parser, subscriberPoolAddress );
+//		publishers.onMessage( parser, subscriberPoolAddress );
+		mp.onMessage( parser, subscriberPoolAddress );
 	}
 	likeQueues[publisherPoolAddress].clear();
 
@@ -36,7 +38,8 @@ void deliverMessages()
 		fmt::print( "{}\n\n", sview );
 
 		ParserT parser( likeQueues[subscriberPoolAddress][i] );
-		subscribers.onMessage( parser );
+//		subscribers.onMessage( parser );
+		mp.onMessage( parser, subscriberPoolAddress );
 	}
 	likeQueues[subscriberPoolAddress].clear();
 }
@@ -259,13 +262,23 @@ void publishableTestOne()
 	testCallerValue();
 //	return;
 	SampleNode node;
-	mtest::Buffer b;
-	typename PublisherSubscriberRegistrar::ComposerT composer( b );
-	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample> publishableSampleWrapper( &node );
+//	mtest::Buffer b;
+//	typename PublisherSubscriberPoolInfo::ComposerT composer( b );
+	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp, &node );
 
-	assert( publishers.publishers.size() == 1 );
-	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
-	publishableSampleWrapper.resetComposer( &composer );
+	fmt::print( "OK so far...\n" );
+
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp, &node );
+	publishableSampleWrapperSlave.subscribe();
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave2( mp, &node );
+	publishableSampleWrapperSlave2.subscribe();
+
+	deliverMessages(); // simulate transport layer
+	deliverMessages(); // simulate transport layer
+
+//	assert( publishers.publishers.size() == 1 );
+//	b.append( "\"msg_type\":3, \"subscriber_id\":0, \"update\":", 42 );
+//	publishableSampleWrapper.resetComposer( &composer );
 
 	// quick test for getting right after ctoring
 	/**/int id = publishableSampleWrapper.get_ID();
@@ -331,11 +344,12 @@ void publishableTestOne()
 	assert( voint.get_at( 3 ) == 46 );
 
 	deliverMessages(); // simulate transport layer
-	publishers.onTimeTick(); // simulate infrastructural call
+//	publishers.postAllUpdates(); // simulate infrastructural call
+	mp.postAllUpdates(); // simulate infrastructural call
 	deliverMessages(); // simulate transport layer
 
 // test incremental updating
-//	typename PublisherSubscriberRegistrar::ParserT parser( b );
+//	typename PublisherSubscriberPoolInfo::ParserT parser( b );
 //	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
@@ -350,12 +364,12 @@ void publishableTestOne()
 	// test whole state initializing
 	/*mtest::Buffer b2;
 	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
-	typename PublisherSubscriberRegistrar::ComposerT composer2( b2 );
+	typename PublisherSubscriberPoolInfo::ComposerT composer2( b2 );
 	publishableSampleWrapper.generateStateSyncMessage(composer2);
 	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
 	fmt::print( "\n\n{}\n", sview2 );*/
 
-//	typename PublisherSubscriberRegistrar::ParserT parser2( b2 );
+//	typename PublisherSubscriberPoolInfo::ParserT parser2( b2 );
 //	subscribers.onMessage( parser2 );
 
 	assert( publishableSampleWrapperSlave2.get_ID() == 38 );
