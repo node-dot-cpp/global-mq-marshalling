@@ -243,7 +243,8 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 	fprintf( header, "\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n", member.name.c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+//	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
@@ -292,7 +293,8 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	fprintf( header, "\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n", member.name.c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+//	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	if ( forwardAddress )
 		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
 	else

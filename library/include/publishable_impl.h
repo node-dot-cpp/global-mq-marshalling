@@ -693,6 +693,12 @@ public:
 //		globalmq::marshalling::impl::parseStructEnd( parser );
 	}
 
+	void onMessage( BufferT buffer, NodeAddressT nodeAddr )
+	{
+		ParserT parser( buffer );
+		onMessage( parser, nodeAddr );
+	}
+
 	void postAllUpdates()
 	{
 		PublisherPool<PlatformSupportT>::postAllUpdates();
