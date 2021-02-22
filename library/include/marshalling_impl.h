@@ -619,7 +619,7 @@ public:
 
 public:
 	JsonParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
-	JsonParser( const JsonParser& other ) { riter = other.riter; }
+	JsonParser( const JsonParser& other ) : riter( other.riter ) {}
 	JsonParser& operator = ( const JsonParser& other ) { riter = other.riter; return *this; }
 	JsonParser( JsonParser&& other ) { riter = std::move( other.riter ); }
 	JsonParser& operator = ( JsonParser&& other ) { riter = std::move( other.riter ); return *this; }
