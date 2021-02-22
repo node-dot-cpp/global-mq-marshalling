@@ -235,7 +235,7 @@ public:
 		}
 	}
 
-	template<class ParserT, class VectorT, class ElemTypeT>
+	template<class ParserT, class VectorT, class ElemTypeT, bool suppressNotifications = false>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
 		if constexpr ( ParserT::proto == Proto::GMQ )
@@ -257,7 +257,10 @@ public:
 				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 				{
 					impl::parseStructBegin( parser );
-					ElemTypeT::parse( parser, what );
+					if constexpr( suppressNotifications )
+						ElemTypeT::parseForStateSync( parser, what );
+					else
+						ElemTypeT::parse( parser, what );
 					impl::parseStructEnd( parser );
 				}
 				else
@@ -290,7 +293,10 @@ public:
 				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
 				{
 					impl::parseStructBegin( parser );
-					ElemTypeT::parse( parser, what );
+					if constexpr( suppressNotifications )
+						ElemTypeT::parseForStateSync( parser, what );
+					else
+						ElemTypeT::parse( parser, what );
 					impl::parseStructEnd( parser );
 				}
 				else
@@ -693,7 +699,7 @@ public:
 //		globalmq::marshalling::impl::parseStructEnd( parser );
 	}
 
-	void onMessage( BufferT buffer, NodeAddressT nodeAddr )
+	void onMessage( BufferT& buffer, NodeAddressT nodeAddr )
 	{
 		ParserT parser( buffer );
 		onMessage( parser, nodeAddr );

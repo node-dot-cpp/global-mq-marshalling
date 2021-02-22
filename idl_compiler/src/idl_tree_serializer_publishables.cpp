@@ -909,6 +909,45 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 	);
 }
 
+void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root& root, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure );
+	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
+	fprintf( header, "\tstatic\n" );
+	fprintf( header, "\tRetT parseForStateSync( ParserT& parser, T& t )\n" );
+	fprintf( header, "\t{\n" );
+
+	for ( size_t i=0; i<obj.members.size(); ++i )
+	{
+		assert( obj.members[i] != nullptr );
+		auto& member = *(obj.members[i]);
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+				break;
+			case  MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t%s::parseForStateSync( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+				break;
+			case MessageParameterType::KIND::VECTOR:
+				assert( member.type.messageIdx < root.structs.size() );				
+				fprintf( header, "\t\tglobalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, true>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				break;
+			default:
+				assert( false );
+		}
+		fprintf( header, "\n" );
+	}
+
+	fprintf( header, "\t}\n" );
+}
+
 void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, CompositeType& obj )
 {
 	assert( obj.type == CompositeType::Type::publishable );
@@ -1073,6 +1112,8 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	impl_generateComposeFunctionForPublishableStruct( header, root, obj );
 	fprintf( header, "\n" );
 	impl_generateParseFunctionForPublishableStruct( header, root, obj );
+	fprintf( header, "\n" );
+	impl_generateParseFunctionForPublishableStructStateSync( header, root, obj );
 	fprintf( header, "\n" );
 	impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
 	fprintf( header, "\n" );
@@ -1417,7 +1458,7 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\tvoid subscribe()\n" );
 	fprintf( header, "\t{\n" );
 //	fprintf( header, "\t\t%s::subscribe( this );\n", classNotifierName.c_str() );
-	fprintf( header, "\t\tregistrar.subscribe( this );\n", classNotifierName.c_str() );
+	fprintf( header, "\t\tregistrar.subscribe( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "};\n\n" );
 }
