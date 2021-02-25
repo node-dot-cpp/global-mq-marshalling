@@ -247,17 +247,17 @@ template<class T> class POINT3DREAL_RefWrapper;
 template<class T, class RootT> class POINT3DREAL_RefWrapper4Set;
 
 
-struct publishable_STRUCT_SIZE : public impl::StructType
+struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
 
-		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
 
-		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
 
 	}
 
@@ -281,7 +281,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
 						decltype(T::X) oldVal = t.X;
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 						bool currentChanged = oldVal != t.X;
 						if ( currentChanged )
 						{
@@ -294,12 +294,12 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
 					if constexpr( has_any_notifier_for_Y || reportChanges )
 					{
 						decltype(T::Y) oldVal = t.Y;
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 						bool currentChanged = oldVal != t.Y;
 						if ( currentChanged )
 						{
@@ -312,12 +312,12 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
 					if constexpr( has_any_notifier_for_Z || reportChanges )
 					{
 						decltype(T::Z) oldVal = t.Z;
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 						bool currentChanged = oldVal != t.Z;
 						if ( currentChanged )
 						{
@@ -330,7 +330,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 
 		if constexpr ( reportChanges )
@@ -341,11 +341,11 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	static
 	RetT parseForStateSync( ParserT& parser, T& t )
 	{
-		globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-		globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-		globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 	}
 
@@ -375,7 +375,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
 						decltype(T::X) oldVal = t.X;
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 						bool currentChanged = oldVal != t.X;
 						if ( currentChanged )
 						{
@@ -388,7 +388,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
 					if ( addr.size() > offset + 1 )
@@ -396,7 +396,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_any_notifier_for_Y || reportChanges )
 					{
 						decltype(T::Y) oldVal = t.Y;
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 						bool currentChanged = oldVal != t.Y;
 						if ( currentChanged )
 						{
@@ -409,7 +409,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
 					if ( addr.size() > offset + 1 )
@@ -417,7 +417,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 					if constexpr( has_any_notifier_for_Z || reportChanges )
 					{
 						decltype(T::Z) oldVal = t.Z;
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 						bool currentChanged = oldVal != t.Z;
 						if ( currentChanged )
 						{
@@ -430,7 +430,7 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 				break;
 			default:
 				throw std::exception(); // unexpected
@@ -455,17 +455,17 @@ struct publishable_STRUCT_SIZE : public impl::StructType
 	}
 };
 
-struct publishable_STRUCT_POINT3DREAL : public impl::StructType
+struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
 
-		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Y, "Y", true );
 
-		globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.Z, "Z", false );
 
 	}
 
@@ -489,7 +489,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
 						decltype(T::X) oldVal = t.X;
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 						bool currentChanged = oldVal != t.X;
 						if ( currentChanged )
 						{
@@ -502,12 +502,12 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
 					if constexpr( has_any_notifier_for_Y || reportChanges )
 					{
 						decltype(T::Y) oldVal = t.Y;
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 						bool currentChanged = oldVal != t.Y;
 						if ( currentChanged )
 						{
@@ -520,12 +520,12 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
 					if constexpr( has_any_notifier_for_Z || reportChanges )
 					{
 						decltype(T::Z) oldVal = t.Z;
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 						bool currentChanged = oldVal != t.Z;
 						if ( currentChanged )
 						{
@@ -538,7 +538,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 
 		if constexpr ( reportChanges )
@@ -549,11 +549,11 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	static
 	RetT parseForStateSync( ParserT& parser, T& t )
 	{
-		globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-		globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-		globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 	}
 
@@ -583,7 +583,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_any_notifier_for_X || reportChanges )
 					{
 						decltype(T::X) oldVal = t.X;
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 						bool currentChanged = oldVal != t.X;
 						if ( currentChanged )
 						{
@@ -596,7 +596,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
 			case 1:
 					if ( addr.size() > offset + 1 )
@@ -604,7 +604,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_any_notifier_for_Y || reportChanges )
 					{
 						decltype(T::Y) oldVal = t.Y;
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 						bool currentChanged = oldVal != t.Y;
 						if ( currentChanged )
 						{
@@ -617,7 +617,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
 			case 2:
 					if ( addr.size() > offset + 1 )
@@ -625,7 +625,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 					if constexpr( has_any_notifier_for_Z || reportChanges )
 					{
 						decltype(T::Z) oldVal = t.Z;
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 						bool currentChanged = oldVal != t.Z;
 						if ( currentChanged )
 						{
@@ -638,7 +638,7 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 				break;
 			default:
 				throw std::exception(); // unexpected
@@ -663,17 +663,17 @@ struct publishable_STRUCT_POINT3DREAL : public impl::StructType
 	}
 };
 
-struct publishable_STRUCT_CharacterParam : public impl::StructType
+struct publishable_STRUCT_CharacterParam : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
 
-		globalmq::marshalling::impl::composePublishableStructBegin( composer, "Size" );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "Size" );
 		publishable_STRUCT_SIZE::compose( composer, t.Size );
-		globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
 
 	}
 
@@ -694,7 +694,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) oldVal = t.ID;
-						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 						bool currentChanged = oldVal != t.ID;
 						if ( currentChanged )
 						{
@@ -707,9 +707,9 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
-		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
 						if constexpr( has_update_notifier_for_Size )
 						{
 							decltype(T::Size) temp_Size;
@@ -738,7 +738,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 							changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
 						else
 							publishable_STRUCT_SIZE::parse( parser, t.Size );
-		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		if constexpr ( reportChanges )
 			return changed;
@@ -748,11 +748,11 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	static
 	RetT parseForStateSync( ParserT& parser, T& t )
 	{
-		globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
-		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
 		publishable_STRUCT_SIZE::parseForStateSync( parser, t.Size );
-		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 	}
 
@@ -779,7 +779,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) oldVal = t.ID;
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 						bool currentChanged = oldVal != t.ID;
 						if ( currentChanged )
 						{
@@ -792,12 +792,12 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
 			case 1:
 				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 				{
-					globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+					::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 						if constexpr( has_update_notifier_for_Size )
 						{
 							decltype(T::Size) temp_Size;
@@ -830,7 +830,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 								else
 									publishable_STRUCT_SIZE::parse( parser, t.Size );
 						}
-					globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 				}
 				else // let child continue parsing
 				{
@@ -885,7 +885,7 @@ struct publishable_STRUCT_CharacterParam : public impl::StructType
 	}
 };
 
-struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
+struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ComposerT, class T>
 	static
@@ -893,7 +893,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 	{
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::sizes), publishable_STRUCT_SIZE>( composer, t.sizes, "sizes", true );
 
-		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.NN, "NN", false );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.NN, "NN", false );
 
 	}
 
@@ -924,21 +924,21 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 		if constexpr( reportChanges )
 		{
 			decltype(T::sizes) oldVectorVal;
-			impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
+			::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
-			bool currentChanged = !impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
+			bool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
 			changed = changed || currentChanged;
 		}
 		else
 		{
-			globalmq::marshalling::impl::parseKey( parser, "sizes" );
+			::globalmq::marshalling::impl::parseKey( parser, "sizes" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
 		}
 
 					if constexpr( has_any_notifier_for_NN || reportChanges )
 					{
 						decltype(T::NN) oldVal = t.NN;
-						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
 						bool currentChanged = oldVal != t.NN;
 						if ( currentChanged )
 						{
@@ -951,7 +951,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
 
 
 		if constexpr ( reportChanges )
@@ -962,10 +962,10 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 	static
 	RetT parseForStateSync( ParserT& parser, T& t )
 	{
-		globalmq::marshalling::impl::parseKey( parser, "sizes" );
+		::globalmq::marshalling::impl::parseKey( parser, "sizes" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, true>( parser, t.sizes );
 
-		globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
 
 	}
 
@@ -1002,7 +1002,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_sizes;
 					if constexpr( alwaysCollectChanges )
-						impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
+						::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
@@ -1052,7 +1052,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 						else // update of one or more elelments as a whole
 						{
 							size_t action;
-							impl::parseActionInPublishable( parser, action );
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
 							switch ( action )
 							{
 								case ActionOnVector::remove_at:
@@ -1060,7 +1060,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 									if constexpr ( has_erased_notifier3_for_sizes )
 									{
 										decltype(T::sizes) oldVal;
-										impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
 										t.sizes.erase( t.sizes.begin() + pos );
 										t.notifyErased_sizes( pos, oldVal );
 									}
@@ -1080,7 +1080,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 								}
 								case ActionOnVector::update_at:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::sizes)::value_type& value = t.sizes[pos];
 									if constexpr ( has_full_element_updated_notifier_for_sizes )
 									{
@@ -1123,13 +1123,13 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 								}
 								case ActionOnVector::insert_single_before:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::sizes)::value_type value;
 									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value );
 									if constexpr ( has_insert_notifier3_for_sizes )
 									{
 										decltype(T::sizes) oldVal;
-										impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
 										t.notifyInserted_sizes( pos, oldVal );
 									}
 									if constexpr ( has_insert_notifier2_for_sizes )
@@ -1144,22 +1144,22 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 								default:
 									throw std::exception();
 							}
-							impl::parseStateUpdateBlockEnd( parser );
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
 						}
 					}
 					else // replacement of the whole vector
 					{
-						globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( alwaysCollectChanges )
 						{
 							PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
-							currentChanged = !impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
+							currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
 						}
 						else
 							PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
 
-						globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 					}
 
 					if ( currentChanged )
@@ -1177,7 +1177,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 					if constexpr( has_any_notifier_for_NN || reportChanges )
 					{
 						decltype(T::NN) oldVal = t.NN;
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
 						bool currentChanged = oldVal != t.NN;
 						if ( currentChanged )
 						{
@@ -1190,7 +1190,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
 				break;
 			default:
 				throw std::exception(); // unexpected
@@ -1201,27 +1201,27 @@ struct publishable_STRUCT_StructWithVectorOfSize : public impl::StructType
 
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
-		impl::copyVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( src.sizes, dst.sizes );
+		::globalmq::marshalling::impl::copyVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( src.sizes, dst.sizes );
 		dst.NN = src.NN;
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
-		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
+		if ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
 		if ( s1.NN != s2.NN ) return false;
 		return true;
 	}
 };
 
-struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
+struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
 
-		PublishableVectorProcessor::compose<ComposerT, decltype(T::signedInts), impl::SignedIntegralType>( composer, t.signedInts, "signedInts", false );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.signedInts, "signedInts", false );
 
 	}
 
@@ -1252,7 +1252,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) oldVal = t.ID;
-						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 						bool currentChanged = oldVal != t.ID;
 						if ( currentChanged )
 						{
@@ -1265,19 +1265,19 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
 		if constexpr( reportChanges )
 		{
 			decltype(T::signedInts) oldVectorVal;
-			impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+			::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
-			bool currentChanged = !impl::isSameVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
+			bool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
 			changed = changed || currentChanged;
 		}
 		else
 		{
-			globalmq::marshalling::impl::parseKey( parser, "signedInts" );
+			::globalmq::marshalling::impl::parseKey( parser, "signedInts" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
 		}
 
@@ -1290,9 +1290,9 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 	static
 	RetT parseForStateSync( ParserT& parser, T& t )
 	{
-		globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
-		globalmq::marshalling::impl::parseKey( parser, "signedInts" );
+		::globalmq::marshalling::impl::parseKey( parser, "signedInts" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, true>( parser, t.signedInts );
 
 	}
@@ -1330,7 +1330,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 					if constexpr( has_any_notifier_for_ID || reportChanges )
 					{
 						decltype(T::ID) oldVal = t.ID;
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 						bool currentChanged = oldVal != t.ID;
 						if ( currentChanged )
 						{
@@ -1343,7 +1343,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
 			case 1:
 				{
@@ -1351,7 +1351,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_signedInts;
 					if constexpr( alwaysCollectChanges )
-						impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+						::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
@@ -1364,7 +1364,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 						else // update of one or more elelments as a whole
 						{
 							size_t action;
-							impl::parseActionInPublishable( parser, action );
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
 							switch ( action )
 							{
 								case ActionOnVector::remove_at:
@@ -1372,7 +1372,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 									if constexpr ( has_erased_notifier3_for_signedInts )
 									{
 										decltype(T::signedInts) oldVal;
-										impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVal );
 										t.signedInts.erase( t.signedInts.begin() + pos );
 										t.notifyErased_signedInts( pos, oldVal );
 									}
@@ -1392,7 +1392,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 								}
 								case ActionOnVector::update_at:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::signedInts)::value_type& value = t.signedInts[pos];
 									if constexpr ( has_full_element_updated_notifier_for_signedInts )
 									{
@@ -1435,13 +1435,13 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 								}
 								case ActionOnVector::insert_single_before:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::signedInts)::value_type value;
 									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value );
 									if constexpr ( has_insert_notifier3_for_signedInts )
 									{
 										decltype(T::signedInts) oldVal;
-										impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVal );
 										t.notifyInserted_signedInts( pos, oldVal );
 									}
 									if constexpr ( has_insert_notifier2_for_signedInts )
@@ -1456,22 +1456,22 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 								default:
 									throw std::exception();
 							}
-							impl::parseStateUpdateBlockEnd( parser );
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
 						}
 					}
 					else // replacement of the whole vector
 					{
-						globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( alwaysCollectChanges )
 						{
 							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
-							currentChanged = !impl::isSameVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
+							currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
 						}
 						else
 							PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
 
-						globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 					}
 
 					if ( currentChanged )
@@ -1493,13 +1493,13 @@ struct publishable_STRUCT_StructWithVectorOfInt : public impl::StructType
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
 		dst.ID = src.ID;
-		impl::copyVector<declval(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
+		::globalmq::marshalling::impl::copyVector<declval(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
 		if ( s1.ID != s2.ID ) return false;
-		if ( !impl::isSameVector<declval(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
+		if ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
 		return true;
 	}
 };
@@ -2306,103 +2306,103 @@ public:
 	publishable_sample_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
 	const T& getState() { return t; }
 	ComposerT& getComposer() { return composer; }
-	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
-	BufferT&& endTick() { globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
+	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() {
 		return "publishable_sample";
 	}
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeInteger( composer, t.ID );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( composer, t.ID );
 	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_SIZE::compose( composer, t.size );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 1); }
 	const auto& get_chp() { return t.chp; }
 	void set_chp( decltype(T::chp) val) { 
 		t.chp = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 2 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 2 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 2); }
 	auto get_vector_of_int() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 3 );
-		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
-		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( composer, t.vector_of_int );
-		globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 3 );
+		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.vector_of_int );
+		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
 	auto get4set_vector_of_int() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, publishable_sample_WrapperForPublisher>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 4 );
-		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 4 );
+		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_POINT3DREAL::compose( composer, t.vector_struct_point3dreal );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
-		globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_WrapperForPublisher, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_WrapperForPublisher>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
 	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
 	void set_structWithVectorOfInt( decltype(T::structWithVectorOfInt) val) { 
 		t.structWithVectorOfInt = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 5 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 5 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 5); }
 	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
 	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
 		t.structWithVectorOfSize = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 6 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 6 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
 	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
 
 	template<class ComposerT>
 	void compose( ComposerT& composer )
 	{
-		globalmq::marshalling::impl::composeStructBegin( composer );
+		::globalmq::marshalling::impl::composeStructBegin( composer );
 
-		globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
 
-		globalmq::marshalling::impl::composePublishableStructBegin( composer, "size" );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "size" );
 		publishable_STRUCT_SIZE::compose( composer, t.size );
-		globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
-		globalmq::marshalling::impl::composePublishableStructBegin( composer, "chp" );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "chp" );
 		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
-		globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
-		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), impl::SignedIntegralType>( composer, t.vector_of_int, "vector_of_int", true );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.vector_of_int, "vector_of_int", true );
 
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( composer, t.vector_struct_point3dreal, "vector_struct_point3dreal", true );
 
-		globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfInt" );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfInt" );
 		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
-		globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
-		globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfSize" );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfSize" );
 		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
-		globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
 
 
-		globalmq::marshalling::impl::composeStructEnd( composer );
+		::globalmq::marshalling::impl::composeStructEnd( composer );
 	}
 };
 
@@ -2503,9 +2503,9 @@ public:
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser)
 	{
-		globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
 		GMQ_COLL vector<size_t> addr;
-		while( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
 		{
 			GMQ_ASSERT( addr.size() );
 			switch ( addr[0] )
@@ -2517,7 +2517,7 @@ public:
 					if constexpr( has_any_notifier_for_ID )
 					{
 						decltype(T::ID) oldVal = t.ID;
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 						bool currentChanged = oldVal != t.ID;
 						if ( currentChanged )
 						{
@@ -2528,14 +2528,14 @@ public:
 						}
 					}
 					else
-						globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 					break;
 				}
 				case 1:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
-						globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
 						if constexpr( has_update_notifier_for_size )
 						{
@@ -2563,7 +2563,7 @@ public:
 							publishable_STRUCT_SIZE::parse( parser, t.size );
 						}
 
-						globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
@@ -2596,7 +2596,7 @@ public:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
-						globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
 						if constexpr( has_update_notifier_for_chp )
 						{
@@ -2624,7 +2624,7 @@ public:
 							publishable_STRUCT_CharacterParam::parse( parser, t.chp );
 						}
 
-						globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
@@ -2660,7 +2660,7 @@ public:
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_vector_of_int;
 					if constexpr( alwaysCollectChanges )
-						impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVectorVal );
+						::globalmq::marshalling::impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVectorVal );
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
@@ -2673,7 +2673,7 @@ public:
 						else // update of one or more elelments as a whole
 						{
 							size_t action;
-							impl::parseActionInPublishable( parser, action );
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
 							switch ( action )
 							{
 								case ActionOnVector::remove_at:
@@ -2681,7 +2681,7 @@ public:
 									if constexpr ( has_erased_notifier3_for_vector_of_int )
 									{
 										decltype(T::vector_of_int) oldVal;
-										impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVal );
 										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
 										t.notifyErased_vector_of_int( pos, oldVal );
 									}
@@ -2701,7 +2701,7 @@ public:
 								}
 								case ActionOnVector::update_at:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_of_int)::value_type& value = t.vector_of_int[pos];
 									if constexpr ( has_full_element_updated_notifier_for_vector_of_int )
 									{
@@ -2744,13 +2744,13 @@ public:
 								}
 								case ActionOnVector::insert_single_before:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_of_int)::value_type value;
 									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value );
 									if constexpr ( has_insert_notifier3_for_vector_of_int )
 									{
 										decltype(T::vector_of_int) oldVal;
-										impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVal );
 										t.notifyInserted_vector_of_int( pos, oldVal );
 									}
 									if constexpr ( has_insert_notifier2_for_vector_of_int )
@@ -2765,22 +2765,22 @@ public:
 								default:
 									throw std::exception();
 							}
-							impl::parseStateUpdateBlockEnd( parser );
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
 						}
 					}
 					else // replacement of the whole vector
 					{
-						globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( alwaysCollectChanges )
 						{
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
-							currentChanged = !impl::isSameVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.vector_of_int );
+							currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.vector_of_int );
 						}
 						else
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
 
-						globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 					}
 
 					if ( currentChanged )
@@ -2801,7 +2801,7 @@ public:
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_vector_struct_point3dreal;
 					if constexpr( alwaysCollectChanges )
-						impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVectorVal );
+						::globalmq::marshalling::impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVectorVal );
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
@@ -2851,7 +2851,7 @@ public:
 						else // update of one or more elelments as a whole
 						{
 							size_t action;
-							impl::parseActionInPublishable( parser, action );
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
 							switch ( action )
 							{
 								case ActionOnVector::remove_at:
@@ -2859,7 +2859,7 @@ public:
 									if constexpr ( has_erased_notifier3_for_vector_struct_point3dreal )
 									{
 										decltype(T::vector_struct_point3dreal) oldVal;
-										impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
 										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
 										t.notifyErased_vector_struct_point3dreal( pos, oldVal );
 									}
@@ -2879,7 +2879,7 @@ public:
 								}
 								case ActionOnVector::update_at:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
 									if constexpr ( has_full_element_updated_notifier_for_vector_struct_point3dreal )
 									{
@@ -2922,13 +2922,13 @@ public:
 								}
 								case ActionOnVector::insert_single_before:
 								{
-									impl::publishableParseLeafeValueBegin( parser );
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_struct_point3dreal)::value_type value;
 									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
 									if constexpr ( has_insert_notifier3_for_vector_struct_point3dreal )
 									{
 										decltype(T::vector_struct_point3dreal) oldVal;
-										impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
+										::globalmq::marshalling::impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
 										t.notifyInserted_vector_struct_point3dreal( pos, oldVal );
 									}
 									if constexpr ( has_insert_notifier2_for_vector_struct_point3dreal )
@@ -2943,22 +2943,22 @@ public:
 								default:
 									throw std::exception();
 							}
-							impl::parseStateUpdateBlockEnd( parser );
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
 						}
 					}
 					else // replacement of the whole vector
 					{
-						globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
 
 						if constexpr( alwaysCollectChanges )
 						{
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
-							currentChanged = !impl::isSameVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( oldVectorVal, t.vector_struct_point3dreal );
+							currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( oldVectorVal, t.vector_struct_point3dreal );
 						}
 						else
 							PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 
-						globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 					}
 
 					if ( currentChanged )
@@ -2976,7 +2976,7 @@ public:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
-						globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
 						if constexpr( has_update_notifier_for_structWithVectorOfInt )
 						{
@@ -3004,7 +3004,7 @@ public:
 							publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
 						}
 
-						globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
@@ -3037,7 +3037,7 @@ public:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
-						globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
 						if constexpr( has_update_notifier_for_structWithVectorOfSize )
 						{
@@ -3065,7 +3065,7 @@ public:
 							publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize );
 						}
 
-						globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
@@ -3105,33 +3105,33 @@ public:
 	template<class ParserT>
 	void parse( ParserT& parser )
 	{
-		globalmq::marshalling::impl::parseStructBegin( parser );
+		::globalmq::marshalling::impl::parseStructBegin( parser );
 
-		globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
-		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "size" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "size" );
 		publishable_STRUCT_SIZE::parse( parser, t.size );
-		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "chp" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "chp" );
 		publishable_STRUCT_CharacterParam::parse( parser, t.chp );
-		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-		globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
+		::globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
 
-		globalmq::marshalling::impl::parseKey( parser, "vector_struct_point3dreal" );
+		::globalmq::marshalling::impl::parseKey( parser, "vector_struct_point3dreal" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
 
-		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfInt" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfInt" );
 		publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
-		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfSize" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfSize" );
 		publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize );
-		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-		globalmq::marshalling::impl::parseStructEnd( parser );
+		::globalmq::marshalling::impl::parseStructEnd( parser );
 
 		if constexpr ( has_full_update_notifier )
 			t.notifyFullyUpdated();
@@ -3231,20 +3231,20 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
-		globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
 };
 
@@ -3289,20 +3289,20 @@ public:
 	auto get_X() { return t.X; }
 	void set_X( decltype(T::X) val) { 
 		t.X = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.X );
 	}
 	auto get_Y() { return t.Y; }
 	void set_Y( decltype(T::Y) val) { 
 		t.Y = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Y );
 	}
 	auto get_Z() { return t.Z; }
 	void set_Z( decltype(T::Z) val) { 
 		t.Z = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
-		globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
 	}
 };
 
@@ -3342,16 +3342,16 @@ public:
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
 	}
 	const auto& get_Size() { return t.Size; }
 	void set_Size( decltype(T::Size) val) { 
 		t.Size = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
 		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
 	auto get4set_Size() { return SIZE_RefWrapper4Set<decltype(T::Size), RootT>(t.Size, *this, address, 1); }
 };
@@ -3392,19 +3392,19 @@ public:
 	auto get_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper<SIZE_RefWrapper<typename decltype(T::sizes)::value_type>, decltype(T::sizes)>(t.sizes); }
 	void set_sizes( decltype(T::sizes) val) { 
 		t.sizes = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
-		globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
 		publishable_STRUCT_SIZE::compose( root.getComposer(), t.sizes );
-		globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
-		globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
 	auto get4set_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, *this, address, 0); }
 	auto get_NN() { return t.NN; }
 	void set_NN( decltype(T::NN) val) { 
 		t.NN = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.NN );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.NN );
 	}
 };
 
@@ -3444,16 +3444,16 @@ public:
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.ID );
 	}
 	auto get_signedInts() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.signedInts); }
 	void set_signedInts( decltype(T::signedInts) val) { 
 		t.signedInts = val; 
-		globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
-		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::signedInts), impl::SignedIntegralType>( root.getComposer(), t.signedInts );
-		globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( root.getComposer(), t.signedInts );
+		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
 	auto get4set_signedInts() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, RootT>(t.signedInts, *this, GMQ_COLL vector<size_t>(), 1); }
 };
