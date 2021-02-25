@@ -214,9 +214,9 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	fprintf( header, "\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\tdecltype(T::%s) oldVal = t.%s;\n", member.name.c_str(), member.name.c_str() );
 	if ( isLeafe )
-		fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
 	else
-		fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\tbool currentChanged = oldVal != t.%s;\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\tif ( currentChanged )\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
@@ -233,9 +233,9 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse\n" );
 	if ( isLeafe )
-		fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
 	else
-		fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 }
 
 void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& member, bool addReportChanges )
@@ -359,7 +359,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\tbool currentChanged = false;\n" );
 	fprintf( header, "\t\t\t\t\tconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\tif constexpr( alwaysCollectChanges )\n" );
-	fprintf( header, "\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 
 //fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 
@@ -437,7 +437,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\t\telse // update of one or more elelments as a whole\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\tsize_t action;\n" );
-	fprintf( header, "\t\t\t\t\t\t\timpl::parseActionInPublishable( parser, action );\n" );
+	fprintf( header, "\t\t\t\t\t\t\t::globalmq::marshalling::impl::parseActionInPublishable( parser, action );\n" );
 	fprintf( header, "\t\t\t\t\t\t\tswitch ( action )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::remove_at:\n" );
@@ -445,7 +445,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
@@ -465,7 +465,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::update_at:\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\t\t\timpl::publishableParseLeafeValueBegin( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n", member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
@@ -525,14 +525,14 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::insert_single_before:\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\t\t\timpl::publishableParseLeafeValueBegin( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type value;\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.notifyInserted_%s( pos, oldVal );\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
@@ -552,24 +552,24 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\t\t\t\tdefault:\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tthrow std::exception();\n" );
 	fprintf( header, "\t\t\t\t\t\t\t}\n" );
-	fprintf( header, "\t\t\t\t\t\t\timpl::parseStateUpdateBlockEnd( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 			
 //fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse // replacement of the whole vector\n" );
 	fprintf( header, "\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\t\tif constexpr( alwaysCollectChanges )\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\tcurrentChanged = !impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tcurrentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\telse\n" );
 	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 	fprintf( header, "\n" );
-	fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\tif ( currentChanged )\n" );
@@ -675,7 +675,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 			"\ttemplate<class ComposerT>\n"
 			"\tvoid compose( ComposerT& composer )\n"
 			"\t{\n"
-			"\t\tglobalmq::marshalling::impl::composeStructBegin( composer );\n"
+			"\t\t::globalmq::marshalling::impl::composeStructBegin( composer );\n"
 			"\n"
 		);
 	else
@@ -692,26 +692,26 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\t\tglobalmq::marshalling::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			{
-				fprintf( header, "\t\tglobalmq::marshalling::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, member.name.c_str() );
 				fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), composer, member.name.c_str() );
-				fprintf( header, "\t\tglobalmq::marshalling::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
 				fprintf( header, "\n" );
 				break;
 			}
@@ -720,16 +720,16 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 				switch ( member.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), ::globalmq::marshalling::impl::SignedIntegralType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), ::globalmq::marshalling::impl::UnsignedIntegralType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::RealType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), ::globalmq::marshalling::impl::RealType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), impl::StringType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, decltype(T::%s), ::globalmq::marshalling::impl::StringType>( %s, t.%s, \"%s\", %s );\n", member.name.c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::VECTOR:
 						assert( false ); // unexpected
@@ -752,7 +752,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 	if ( obj.type == CompositeType::Type::publishable )
 		fprintf( header, 
 			"\n"
-			"\t\tglobalmq::marshalling::impl::composeStructEnd( composer );\n" );
+			"\t\t::globalmq::marshalling::impl::composeStructEnd( composer );\n" );
 
 	fprintf( header, "\t}\n" );
 }
@@ -797,11 +797,11 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			{
 				fprintf( header, "\t\t\t\tif ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child\n" );
 				fprintf( header, "\t\t\t\t{\n" );
-				fprintf( header, "\t\t\t\t\tglobalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );\n" );
+				fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );\n" );
 
 				impl_generateApplyUpdateForStructItself( header, member, true );
 
-				fprintf( header, "\t\t\t\t\tglobalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );\n" );
+				fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t}\n" );
 				fprintf( header, "\t\t\t\telse // let child continue parsing\n" );
 				fprintf( header, "\t\t\t\t{\n" );
@@ -868,11 +868,11 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 			}
 			case  MessageParameterType::KIND::STRUCT:
 			{
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 
 				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false );
 
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 				break;
 			}
 			case MessageParameterType::KIND::VECTOR:
@@ -882,14 +882,14 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				fprintf( header, "\t\tif constexpr( reportChanges )\n" );
 				fprintf( header, "\t\t{\n" );
 				fprintf( header, "\t\t\tdecltype(T::%s) oldVectorVal;\n", member.name.c_str() );
-				fprintf( header, "\t\t\timpl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\tbool currentChanged = !impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tbool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\tchanged = changed || currentChanged;\n" );
 				fprintf( header, "\t\t}\n" );
 				fprintf( header, "\t\telse\n" );
 				fprintf( header, "\t\t{\n" );
-				fprintf( header, "\t\t\tglobalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t}\n" );
 				fprintf( header, "\n" );
@@ -927,16 +927,16 @@ void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 				break;
 			case  MessageParameterType::KIND::STRUCT:
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t%s::parseForStateSync( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				assert( member.type.messageIdx < root.structs.size() );				
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, true>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				break;
 			default:
@@ -954,7 +954,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 	fprintf( header, "\ttemplate<class ParserT>\n" );
 	fprintf( header, "\tvoid parse( ParserT& parser )\n" );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\tglobalmq::marshalling::impl::parseStructBegin( parser );\n" );
+	fprintf( header, "\t\t::globalmq::marshalling::impl::parseStructBegin( parser );\n" );
 	fprintf( header, "\n" );
 
 	for ( size_t i=0; i<obj.members.size(); ++i )
@@ -969,16 +969,16 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
 //				impl_generateApplyUpdateForSimpleType( header, member, true, false );
-				fprintf( header, "\t\tglobalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 				fprintf( header, "\n" );
 				break;
 			}
 			case  MessageParameterType::KIND::STRUCT:
 			{
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
 //				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false );
 				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\n" );
 				break;
 			}
@@ -986,7 +986,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			{
 				assert( member.type.messageIdx < root.structs.size() );
 				
-				fprintf( header, "\t\tglobalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\n" );
 
@@ -997,7 +997,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 		}
 	}
 
-	fprintf( header, "\t\tglobalmq::marshalling::impl::parseStructEnd( parser );\n" );
+	fprintf( header, "\t\t::globalmq::marshalling::impl::parseStructEnd( parser );\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\t\tif constexpr ( has_full_update_notifier )\n" );
 	fprintf( header, "\t\t\tt.notifyFullyUpdated();\n" );
@@ -1041,7 +1041,7 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\timpl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
+				fprintf( header, "\t\t::globalmq::marshalling::impl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1085,7 +1085,7 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\tif ( !impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
+				fprintf( header, "\t\tif ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1104,7 +1104,7 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
 	fprintf( header, 
-		"struct %s : public impl::StructType\n"
+		"struct %s : public ::globalmq::marshalling::impl::StructType\n"
 		"{\n",
 		impl_generatePublishableStructName( obj ).c_str()
 	);
@@ -1138,61 +1138,61 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 	);
 
 	fprintf( header, 
-		"\t\tglobalmq::marshalling::impl::composeAddressInPublishable( %s, %s, %zd );\n",
+		"\t\t::globalmq::marshalling::impl::composeAddressInPublishable( %s, %s, %zd );\n",
 		composer, addrVector, idx
 	);
 
 	switch ( param.type.kind )
 	{
 		case MessageParameterType::KIND::INTEGER:
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeInteger( %s, t.%s );\n", composer, param.name.c_str() );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeInteger( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::UINTEGER:
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( %s, t.%s );\n", composer, param.name.c_str() );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::REAL:
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeReal( %s, t.%s );\n", composer, param.name.c_str() );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeReal( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::CHARACTER_STRING:
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, param.name.c_str() );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeString( %s, t.%s );\n", composer, param.name.c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
 		{
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeValueBegin( %s );\n", composer );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( %s );\n", composer );
 			switch ( param.type.vectorElemKind )
 			{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::SignedIntegralType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), ::globalmq::marshalling::impl::SignedIntegralType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::UnsignedIntegralType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), ::globalmq::marshalling::impl::UnsignedIntegralType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::RealType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), ::globalmq::marshalling::impl::RealType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), impl::StringType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), ::globalmq::marshalling::impl::StringType>( %s, t.%s );\n", composerType, param.name.c_str(), composer, param.name.c_str() );
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert( false ); // unexpected
 					break;
 				case MessageParameterType::KIND::STRUCT:
 					assert( param.type.messageIdx < root.structs.size() );
-					fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
+					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
 					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, param.name.c_str() );
-					fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
+					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 					break;
 				default:
 					assert( false ); // not implemented (yet)
 			}
-			fprintf( header, "\t\tglobalmq::marshalling::impl::composeStateUpdateBlockEnd( %s );\n", composer );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::composeStateUpdateBlockEnd( %s );\n", composer );
 			break;
 		}
 		case MessageParameterType::KIND::STRUCT:
 		{
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
 			fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, param.name.c_str() );
-			fprintf( header, "\t\tglobalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 			break;
 		}
 		default:
@@ -1227,9 +1227,9 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 		"\ttemplate<typename ParserT>\n"
 		"\tvoid applyMessageWithUpdates(ParserT& parser)\n"
 		"\t{\n"
-		"\t\tglobalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );\n"
+		"\t\t::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );\n"
 		"\t\tGMQ_COLL vector<size_t> addr;\n"
-		"\t\twhile( impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )\n"
+		"\t\twhile( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )\n"
 		"\t\t{\n"
 		"\t\t\tGMQ_ASSERT( addr.size() );\n"
 		"\t\t\tswitch ( addr[0] )\n"
@@ -1261,13 +1261,13 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			{
 				fprintf( header, "\t\t\t\t\tif ( addr.size() == 1 ) // we have to parse and apply changes of this child\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
-				fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );\n" );
+				fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );\n" );
 				fprintf( header, "\n" );
 
 				impl_generateApplyUpdateForStructItself( header, member, false );
 
 				fprintf( header, "\n" );
-				fprintf( header, "\t\t\t\t\t\tglobalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );\n" );
+				fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );\n" );
 				fprintf( header, "\t\t\t\t\t}\n" );
 				fprintf( header, "\t\t\t\t\telse // let child continue parsing\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
@@ -1323,14 +1323,14 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\t%s_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
-	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
-	fprintf( header, "\tBufferT&& endTick() { globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
+	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
+	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
 //	fprintf( header, "\tvoid resetComposer( ComposerT* composer_ ) {\n" );
 //	fprintf( header, "\t\tcomposer = composer_; \n" );
-//	fprintf( header, "\t\tglobalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );\n" );
+//	fprintf( header, "\t\t::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );\n" );
 //	fprintf( header, "\t}\n" );
 //	fprintf( header, "\tvoid finalizeComposing() {\n" );
-//	fprintf( header, "\t\tglobalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );\n" );
+//	fprintf( header, "\t\t::globalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );\n" );
 //	fprintf( header, "\t}\n" );
 	fprintf( header, "\tconst char* name() {\n" );
 	fprintf( header, "\t\treturn \"%s\";\n", s.name.c_str() );
