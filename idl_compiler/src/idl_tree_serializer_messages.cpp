@@ -137,7 +137,7 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		"\t{\n"
 	);
 	for ( auto msg : scope.objectList )
-		fprintf( header, "\t\tcase %s::id: impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
+		fprintf( header, "\t\tcase %s::id: ::globalmq::marshalling::impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
 	fprintf( header, "\t}\n\n" );
 	switch ( scope.proto )
 	{
@@ -172,23 +172,23 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 		"template<typename msgID, class BufferT, typename ... Args>\n"
 		"void composeMessage( BufferT& buffer, Args&& ... args )\n"
 		"{\n"
-		"\tstatic_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );\n" 
+		"\tstatic_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );\n" 
 	);
 	switch ( scope.proto )
 	{
 		case Proto::gmq: 
 			fprintf( header, 
 				"\tglobalmq::marshalling::GmqComposer composer( buffer );\n"
-				"\timpl::composeUnsignedInteger( composer, msgID::id );\n"
+				"\t::globalmq::marshalling::impl::composeUnsignedInteger( composer, msgID::id );\n"
 			);
 			break;
 		case Proto::json: 
 			fprintf( header, 
 				"\tglobalmq::marshalling::JsonComposer composer( buffer );\n"
 				"\tcomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n"
-				"\timpl::json::composeNamedSignedInteger( composer, \"msgid\", msgID::id);\n"
+				"\t::globalmq::marshalling::impl::json::composeNamedSignedInteger( composer, \"msgid\", msgID::id);\n"
 				"\tcomposer.buff.append( \",\\n  \", sizeof(\",\\n  \") - 1 );\n"
-				"\timpl::json::addNamePart( composer, \"msgbody\" );\n"
+				"\t::globalmq::marshalling::impl::json::addNamePart( composer, \"msgbody\" );\n"
 			);
 			break;
 		default:
@@ -204,7 +204,7 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 	}
 	fprintf( header, 
 		"\telse\n"
-		"\t\tstatic_assert( std::is_same<impl::MessageNameBase, msgID>::value, \"unexpected value of msgID\" ); // note: should be just static_assert(false,\"...\"); but it seems that in this case clang asserts yet before looking at constexpr conditions\n" );
+		"\t\tstatic_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, \"unexpected value of msgID\" ); // note: should be just static_assert(false,\"...\"); but it seems that in this case clang asserts yet before looking at constexpr conditions\n" );
 	switch ( scope.proto )
 	{
 		case Proto::gmq: break;
@@ -286,7 +286,7 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 					break; // TODO: revise
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
-					fprintf( header, "static constexpr impl::StringLiteralForComposing default_%d = { \"%s\", sizeof( \"%s\" ) - 1};\n", count, param.type.stringDefault.c_str(), param.type.stringDefault.c_str() );
+					fprintf( header, "static constexpr ::globalmq::marshalling::impl::StringLiteralForComposing default_%d = { \"%s\", sizeof( \"%s\" ) - 1};\n", count, param.type.stringDefault.c_str(), param.type.stringDefault.c_str() );
 					break;
 				}
 				case MessageParameterType::KIND::ENUM:
@@ -325,55 +325,55 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::SignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::UnsignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::RealType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::StringType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::ByteArrayType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::ByteArrayType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::BLOB:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::BlobType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::BlobType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::ENUM:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::EnumType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::EnumType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				switch ( param.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::StringType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::StringType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::BYTE_ARRAY:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::ByteArrayType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::ByteArrayType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::BLOB:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::BlobType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::BlobType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::ENUM:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::STRUCT:
 						if ( param.type.isNonExtendable )
-							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						else
-							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 						break;
 					default:
 						assert( false ); // unexpected
@@ -382,9 +382,9 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				if ( param.type.isNonExtendable )
-					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				else
-					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
 			default:
 			{
@@ -412,22 +412,22 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
-				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
 				else
-					fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -436,12 +436,12 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "%simpl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break; // TODO: treatment
 			default:
 			{
@@ -467,16 +467,16 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -485,12 +485,12 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "%simpl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break; // TODO: ...
 			default:
 			{
@@ -610,23 +610,23 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
-//				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
-				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
+//				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, false, nodecpp::string, const impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+					fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				else
-					fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.name.c_str(), count );
+					fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -635,12 +635,12 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "%simpl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
 				break; // TODO: ...
 			default:
 			{
@@ -675,7 +675,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, 
 		++count;
 
 		fprintf( header, "%s\t%s( key == \"%s\" )\n", offset, count == 1 ? "if " : "else if ", param.name.c_str() );
-		fprintf( header, "%s\t\timpl::json::parseJsonParam<ParserT, arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
+		fprintf( header, "%s\t\t::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
 	}
 
 	fprintf( header, "%s\tp.skipSpacesEtc();\n", offset );
