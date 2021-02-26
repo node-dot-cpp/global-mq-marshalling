@@ -384,7 +384,7 @@ void impl_generateScopeEnum( FILE* header, Scope& scope )
 {
 	for ( auto msg : scope.objectList )
 	{
-		fprintf( header, "using %s = impl::MessageName<%lld>;\n", msg->name.c_str(), msg->numID );
+		fprintf( header, "using %s = ::globalmq::marshalling::impl::MessageName<%lld>;\n", msg->name.c_str(), msg->numID );
 	}
 	fprintf( header, "\n" );
 }

@@ -1506,8 +1506,8 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 
 namespace scope_one {
 
-using point3D_alias = impl::MessageName<1>;
-using point_alias = impl::MessageName<2>;
+using point3D_alias = ::globalmq::marshalling::impl::MessageName<1>;
+using point_alias = ::globalmq::marshalling::impl::MessageName<2>;
 
 template<class BufferT, class ... HandlersT >
 void handleMessage( BufferT& buffer, HandlersT ... handlers )
@@ -1532,8 +1532,8 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 
 	switch ( msgID )
 	{
-		case point3D_alias::id: impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
-		case point_alias::id: impl::implHandleMessage<point_alias>( parser, handlers... ); break;
+		case point3D_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
+		case point_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point_alias>( parser, handlers... ); break;
 	}
 
 	p.skipMessageFromJson();
@@ -1584,18 +1584,18 @@ void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args )
 {
-	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	static_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );
 	globalmq::marshalling::JsonComposer composer( buffer );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	::globalmq::marshalling::impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
 	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
-	impl::json::addNamePart( composer, "msgbody" );
+	::globalmq::marshalling::impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == point3D_alias::id )
 		MESSAGE_point3D_alias_compose( composer, std::forward<Args>( args )... );
 	else if constexpr ( msgID::id == point_alias::id )
 		MESSAGE_point_alias_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+		static_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -1603,7 +1603,7 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 
 namespace level_trace {
 
-using LevelTraceData = impl::MessageName<1>;
+using LevelTraceData = ::globalmq::marshalling::impl::MessageName<1>;
 
 template<class BufferT, class ... HandlersT >
 void handleMessage( BufferT& buffer, HandlersT ... handlers )
@@ -1628,7 +1628,7 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 
 	switch ( msgID )
 	{
-		case LevelTraceData::id: impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
+		case LevelTraceData::id: ::globalmq::marshalling::impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
 	}
 
 	p.skipMessageFromJson();
@@ -1654,8 +1654,8 @@ void MESSAGE_LevelTraceData_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::MessageType, CharacterParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfMessageType, Points_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, CharacterParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, Points_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -1666,9 +1666,9 @@ void MESSAGE_LevelTraceData_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::JSON, "this MESSAGE assumes only JSON protocol" );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "CharacterParam", arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "CharacterParam", arg_1_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "Points", arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "Points", arg_2_type::nameAndTypeID, args...);
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -1677,8 +1677,8 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::MessageType, CharacterParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfMessageType, Points_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, CharacterParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, Points_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -1694,9 +1694,9 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 		std::string key;
 		p.readKey( &key );
 		if ( key == "CharacterParam" )
-			impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 		else if ( key == "Points" )
-			impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 		p.skipSpacesEtc();
 		if ( p.isDelimiter( ',' ) )
 		{
@@ -1715,16 +1715,16 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args )
 {
-	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	static_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );
 	globalmq::marshalling::JsonComposer composer( buffer );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	::globalmq::marshalling::impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
 	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
-	impl::json::addNamePart( composer, "msgbody" );
+	::globalmq::marshalling::impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == LevelTraceData::id )
 		MESSAGE_LevelTraceData_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+		static_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -1732,9 +1732,9 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 
 namespace infrastructural {
 
-using PolygonSt = impl::MessageName<2>;
-using point = impl::MessageName<4>;
-using point3D = impl::MessageName<5>;
+using PolygonSt = ::globalmq::marshalling::impl::MessageName<2>;
+using point = ::globalmq::marshalling::impl::MessageName<4>;
+using point3D = ::globalmq::marshalling::impl::MessageName<5>;
 
 template<class BufferT, class ... HandlersT >
 void handleMessage( BufferT& buffer, HandlersT ... handlers )
@@ -1745,9 +1745,9 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 	parser.parseUnsignedInteger( &msgID );
 	switch ( msgID )
 	{
-		case PolygonSt::id: impl::implHandleMessage<PolygonSt>( parser, handlers... ); break;
-		case point::id: impl::implHandleMessage<point>( parser, handlers... ); break;
-		case point3D::id: impl::implHandleMessage<point3D>( parser, handlers... ); break;
+		case PolygonSt::id: ::globalmq::marshalling::impl::implHandleMessage<PolygonSt>( parser, handlers... ); break;
+		case point::id: ::globalmq::marshalling::impl::implHandleMessage<point>( parser, handlers... ); break;
+		case point3D::id: ::globalmq::marshalling::impl::implHandleMessage<point3D>( parser, handlers... ); break;
 	}
 
 }
@@ -1771,12 +1771,12 @@ void MESSAGE_PolygonSt_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfMessageType, polygonMap_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfMessageType, concaveMap_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, obstacleMap_Type::Name>;
-	using arg_4_type = NamedParameterWithType<impl::VectorOfMessageType, portalMap_Type::Name>;
-	using arg_5_type = NamedParameterWithType<impl::VectorOfMessageType, jumpMap_Type::Name>;
-	using arg_6_type = NamedParameterWithType<impl::RealType, polygonSpeed_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, polygonMap_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, concaveMap_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, obstacleMap_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, portalMap_Type::Name>;
+	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, jumpMap_Type::Name>;
+	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, polygonSpeed_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -1790,12 +1790,12 @@ void MESSAGE_PolygonSt_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_5_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_6_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_5_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_6_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -1803,12 +1803,12 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfMessageType, polygonMap_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfMessageType, concaveMap_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, obstacleMap_Type::Name>;
-	using arg_4_type = NamedParameterWithType<impl::VectorOfMessageType, portalMap_Type::Name>;
-	using arg_5_type = NamedParameterWithType<impl::VectorOfMessageType, jumpMap_Type::Name>;
-	using arg_6_type = NamedParameterWithType<impl::RealType, polygonSpeed_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, polygonMap_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, concaveMap_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, obstacleMap_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, portalMap_Type::Name>;
+	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, jumpMap_Type::Name>;
+	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, polygonSpeed_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -1822,12 +1822,12 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -1841,7 +1841,7 @@ void MESSAGE_point_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::MessageType, point_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, point_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -1850,7 +1850,7 @@ void MESSAGE_point_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -1858,7 +1858,7 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::MessageType, point_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, point_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -1867,7 +1867,7 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -1881,7 +1881,7 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::MessageType, pt_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -1890,7 +1890,7 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -1898,7 +1898,7 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::MessageType, pt_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -1907,15 +1907,15 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args )
 {
-	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	static_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );
 	globalmq::marshalling::GmqComposer composer( buffer );
-	impl::composeUnsignedInteger( composer, msgID::id );
+	::globalmq::marshalling::impl::composeUnsignedInteger( composer, msgID::id );
 	if constexpr ( msgID::id == PolygonSt::id )
 		MESSAGE_PolygonSt_compose( composer, std::forward<Args>( args )... );
 	else if constexpr ( msgID::id == point::id )
@@ -1923,14 +1923,14 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 	else if constexpr ( msgID::id == point3D::id )
 		MESSAGE_point3D_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+		static_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 }
 
 } // namespace infrastructural 
 
 namespace test_gmq {
 
-using message_one = impl::MessageName<3>;
+using message_one = ::globalmq::marshalling::impl::MessageName<3>;
 
 template<class BufferT, class ... HandlersT >
 void handleMessage( BufferT& buffer, HandlersT ... handlers )
@@ -1941,7 +1941,7 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 	parser.parseUnsignedInteger( &msgID );
 	switch ( msgID )
 	{
-		case message_one::id: impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
 	}
 
 }
@@ -1969,16 +1969,16 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, firstParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, secondParam_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, thirdParam_Type::Name>;
-	using arg_4_type = NamedParameterWithType<impl::UnsignedIntegralType, forthParam_Type::Name>;
-	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
-	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
-	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
-	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
-	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
-	using arg_10_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, tenthParam_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, firstParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, secondParam_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, thirdParam_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, forthParam_Type::Name>;
+	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, fifthParam_Type::Name>;
+	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_7_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, seventhParam_Type::Name>;
+	using arg_8_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, eighthParam_Type::Name>;
+	using arg_9_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, ninethParam_Type::Name>;
+	using arg_10_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, tenthParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -1996,16 +1996,16 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_5_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_6_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_7_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_8_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_8_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_9_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_9_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_10_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_10_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_5_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_6_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_7_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_8_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_8_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_9_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_9_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_10_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_10_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -2013,16 +2013,16 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, firstParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, secondParam_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, thirdParam_Type::Name>;
-	using arg_4_type = NamedParameterWithType<impl::UnsignedIntegralType, forthParam_Type::Name>;
-	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
-	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
-	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
-	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
-	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
-	using arg_10_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, tenthParam_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, firstParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, secondParam_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, thirdParam_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, forthParam_Type::Name>;
+	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, fifthParam_Type::Name>;
+	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_7_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, seventhParam_Type::Name>;
+	using arg_8_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, eighthParam_Type::Name>;
+	using arg_9_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, ninethParam_Type::Name>;
+	using arg_10_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, tenthParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -2040,35 +2040,35 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_7_type, false>(p, arg_7_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_8_type, false>(p, arg_8_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_9_type, false>(p, arg_9_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_10_type, false>(p, arg_10_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_7_type, false>(p, arg_7_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_8_type, false>(p, arg_8_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_9_type, false>(p, arg_9_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_10_type, false>(p, arg_10_type::nameAndTypeID, args...);
 }
 
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args )
 {
-	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	static_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );
 	globalmq::marshalling::GmqComposer composer( buffer );
-	impl::composeUnsignedInteger( composer, msgID::id );
+	::globalmq::marshalling::impl::composeUnsignedInteger( composer, msgID::id );
 	if constexpr ( msgID::id == message_one::id )
 		MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+		static_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 }
 
 } // namespace test_gmq 
 
 namespace test_json {
 
-using message_one = impl::MessageName<3>;
+using message_one = ::globalmq::marshalling::impl::MessageName<3>;
 
 template<class BufferT, class ... HandlersT >
 void handleMessage( BufferT& buffer, HandlersT ... handlers )
@@ -2093,7 +2093,7 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 
 	switch ( msgID )
 	{
-		case message_one::id: impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
 	}
 
 	p.skipMessageFromJson();
@@ -2127,16 +2127,16 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, firstParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, secondParam_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, thirdParam_Type::Name>;
-	using arg_4_type = NamedParameterWithType<impl::UnsignedIntegralType, forthParam_Type::Name>;
-	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
-	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
-	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
-	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
-	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
-	using arg_10_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, tenthParam_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, firstParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, secondParam_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, thirdParam_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, forthParam_Type::Name>;
+	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, fifthParam_Type::Name>;
+	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_7_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, seventhParam_Type::Name>;
+	using arg_8_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, eighthParam_Type::Name>;
+	using arg_9_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, ninethParam_Type::Name>;
+	using arg_10_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, tenthParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -2155,25 +2155,25 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::JSON, "this MESSAGE assumes only JSON protocol" );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "firstParam", arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "firstParam", arg_1_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "secondParam", arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "secondParam", arg_2_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "thirdParam", arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "thirdParam", arg_3_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, "forthParam", arg_4_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, "forthParam", arg_4_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, "fifthParam", arg_5_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_5_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, "fifthParam", arg_5_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_6_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "sixthParam", arg_6_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_6_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "sixthParam", arg_6_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "seventhParam", arg_7_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_7_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "seventhParam", arg_7_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_8_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "eighthParam", arg_8_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_8_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "eighthParam", arg_8_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_9_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ninethParam", arg_9_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_9_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ninethParam", arg_9_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_10_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "tenthParam", arg_10_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_10_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "tenthParam", arg_10_type::nameAndTypeID, args...);
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -2182,16 +2182,16 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, firstParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::SignedIntegralType>, secondParam_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::VectorOfMessageType, thirdParam_Type::Name>;
-	using arg_4_type = NamedParameterWithType<impl::UnsignedIntegralType, forthParam_Type::Name>;
-	using arg_5_type = NamedParameterWithType<impl::StringType, fifthParam_Type::Name>;
-	using arg_6_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
-	using arg_7_type = NamedParameterWithType<impl::RealType, seventhParam_Type::Name>;
-	using arg_8_type = NamedParameterWithType<impl::NonextMessageType, eighthParam_Type::Name>;
-	using arg_9_type = NamedParameterWithType<impl::MessageType, ninethParam_Type::Name>;
-	using arg_10_type = NamedParameterWithType<impl::VectorOfSympleTypes<impl::RealType>, tenthParam_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, firstParam_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, secondParam_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, thirdParam_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, forthParam_Type::Name>;
+	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, fifthParam_Type::Name>;
+	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
+	using arg_7_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, seventhParam_Type::Name>;
+	using arg_8_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, eighthParam_Type::Name>;
+	using arg_9_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, ninethParam_Type::Name>;
+	using arg_10_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, tenthParam_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -2215,25 +2215,25 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 		std::string key;
 		p.readKey( &key );
 		if ( key == "firstParam" )
-			impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 		else if ( key == "secondParam" )
-			impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 		else if ( key == "thirdParam" )
-			impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
 		else if ( key == "forthParam" )
-			impl::json::parseJsonParam<ParserT, arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
 		else if ( key == "fifthParam" )
-			impl::json::parseJsonParam<ParserT, arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
 		else if ( key == "sixthParam" )
-			impl::json::parseJsonParam<ParserT, arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
 		else if ( key == "seventhParam" )
-			impl::json::parseJsonParam<ParserT, arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
 		else if ( key == "eighthParam" )
-			impl::json::parseJsonParam<ParserT, arg_8_type, false>(arg_8_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_8_type, false>(arg_8_type::nameAndTypeID, p, args...);
 		else if ( key == "ninethParam" )
-			impl::json::parseJsonParam<ParserT, arg_9_type, false>(arg_9_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_9_type, false>(arg_9_type::nameAndTypeID, p, args...);
 		else if ( key == "tenthParam" )
-			impl::json::parseJsonParam<ParserT, arg_10_type, false>(arg_10_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_10_type, false>(arg_10_type::nameAndTypeID, p, args...);
 		p.skipSpacesEtc();
 		if ( p.isDelimiter( ',' ) )
 		{
@@ -2252,16 +2252,16 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args )
 {
-	static_assert( std::is_base_of<impl::MessageNameBase, msgID>::value );
+	static_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );
 	globalmq::marshalling::JsonComposer composer( buffer );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
+	::globalmq::marshalling::impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
 	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
-	impl::json::addNamePart( composer, "msgbody" );
+	::globalmq::marshalling::impl::json::addNamePart( composer, "msgbody" );
 	if constexpr ( msgID::id == message_one::id )
 		MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
 	else
-		static_assert( std::is_same<impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
+		static_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -3470,8 +3470,8 @@ void STRUCT_CharacterParam_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, ID_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::MessageType, Size_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, ID_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, Size_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -3482,9 +3482,9 @@ void STRUCT_CharacterParam_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ID", arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "ID", arg_1_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "Size", arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "Size", arg_2_type::nameAndTypeID, args...);
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -3493,8 +3493,8 @@ void STRUCT_CharacterParam_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, ID_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::MessageType, Size_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, ID_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, Size_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -3510,9 +3510,9 @@ void STRUCT_CharacterParam_parse(ParserT& p, Args&& ... args)
 		std::string key;
 		p.readKey( &key );
 		if ( key == "ID" )
-			impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 		else if ( key == "Size" )
-			impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 		p.skipSpacesEtc();
 		if ( p.isDelimiter( ',' ) )
 		{
@@ -3541,9 +3541,9 @@ void STRUCT_SIZE_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::RealType, X_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::RealType, Y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::RealType, Z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, X_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -3555,11 +3555,11 @@ void STRUCT_SIZE_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeParamToJson<ComposerT, arg_1_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "X", arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "X", arg_1_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_2_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Y", arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Y", arg_2_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Z", arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Z", arg_3_type::nameAndTypeID, args...);
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -3568,9 +3568,9 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::RealType, X_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::RealType, Y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::RealType, Z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, X_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -3587,11 +3587,11 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 		std::string key;
 		p.readKey( &key );
 		if ( key == "X" )
-			impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 		else if ( key == "Y" )
-			impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 		else if ( key == "Z" )
-			impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
 		p.skipSpacesEtc();
 		if ( p.isDelimiter( ',' ) )
 		{
@@ -3620,9 +3620,9 @@ void STRUCT_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::RealType, X_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::RealType, Y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::RealType, Z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, X_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -3634,11 +3634,11 @@ void STRUCT_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
 	composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-	impl::json::composeParamToJson<ComposerT, arg_1_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "X", arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "X", arg_1_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_2_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Y", arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Y", arg_2_type::nameAndTypeID, args...);
 	composer.buff.append( ",\n  ", 4 );
-	impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Z", arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Z", arg_3_type::nameAndTypeID, args...);
 	composer.buff.append( "\n}", 2 );
 }
 
@@ -3647,9 +3647,9 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::RealType, X_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::RealType, Y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::RealType, Z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, X_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -3666,11 +3666,11 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 		std::string key;
 		p.readKey( &key );
 		if ( key == "X" )
-			impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 		else if ( key == "Y" )
-			impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 		else if ( key == "Z" )
-			impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
 		p.skipSpacesEtc();
 		if ( p.isDelimiter( ',' ) )
 		{
@@ -3697,7 +3697,7 @@ void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfMessageType, LineMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, LineMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -3706,7 +3706,7 @@ void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -3714,7 +3714,7 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfMessageType, LineMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, LineMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -3723,7 +3723,7 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -3738,8 +3738,8 @@ void STRUCT_Line_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, a_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, b_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, a_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, b_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -3749,8 +3749,8 @@ void STRUCT_Line_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -3758,8 +3758,8 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, a_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, b_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, a_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, b_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -3769,8 +3769,8 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -3784,7 +3784,7 @@ void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfMessageType, ObstacleMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, ObstacleMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -3793,7 +3793,7 @@ void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -3801,7 +3801,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfMessageType, ObstacleMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, ObstacleMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -3810,7 +3810,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -3824,7 +3824,7 @@ void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -3833,7 +3833,7 @@ void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -3841,7 +3841,7 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -3850,7 +3850,7 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -3866,9 +3866,9 @@ void STRUCT_Vertex_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::SignedIntegralType, z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -3879,9 +3879,9 @@ void STRUCT_Vertex_compose(ComposerT& composer, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
-	impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -3889,9 +3889,9 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::SignedIntegralType, z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -3902,9 +3902,9 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -3919,8 +3919,8 @@ void STRUCT_point_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -3931,16 +3931,16 @@ void STRUCT_point_compose(ComposerT& composer, Args&& ... args)
 
 	if constexpr( ComposerT::proto == Proto::GMQ )
 	{
-		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-		impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 	}
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON );
 		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
-		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
 		composer.buff.append( "\n}", 2 );
 
 	}
@@ -3951,8 +3951,8 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
@@ -3963,8 +3963,8 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 
 	if constexpr( ParserT::proto == Proto::GMQ )
 	{
-		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-		impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 	}
 	else
 	{
@@ -3975,9 +3975,9 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 			std::string key;
 			p.readKey( &key );
 			if ( key == "x" )
-				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 			else if ( key == "y" )
-				impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 			p.skipSpacesEtc();
 			if ( p.isDelimiter( ',' ) )
 			{
@@ -4007,9 +4007,9 @@ void STRUCT_point3D_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::SignedIntegralType, z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -4021,19 +4021,19 @@ void STRUCT_point3D_compose(ComposerT& composer, Args&& ... args)
 
 	if constexpr( ComposerT::proto == Proto::GMQ )
 	{
-		impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-		impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
-		impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
 	}
 	else
 	{
 		static_assert( ComposerT::proto == Proto::JSON );
 		composer.buff.append( "{\n  ", sizeof("{\n  ") - 1 );
-		impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "x", arg_1_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
-		impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
 		composer.buff.append( ",\n  ", 4 );
-		impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "z", arg_3_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "z", arg_3_type::nameAndTypeID, args...);
 		composer.buff.append( "\n}", 2 );
 
 	}
@@ -4044,9 +4044,9 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<impl::SignedIntegralType, y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<impl::SignedIntegralType, z_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, z_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
 		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
@@ -4058,9 +4058,9 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 	if constexpr( ParserT::proto == Proto::GMQ )
 	{
-		impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-		impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-		impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
 	}
 	else
 	{
@@ -4071,11 +4071,11 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 			std::string key;
 			p.readKey( &key );
 			if ( key == "x" )
-				impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
 			else if ( key == "y" )
-				impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
 			else if ( key == "z" )
-				impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
 			p.skipSpacesEtc();
 			if ( p.isDelimiter( ',' ) )
 			{
