@@ -192,6 +192,8 @@ public:
 	size_t preCtr = 0;
 	size_t postCtr = 0;
 	SampleNode() {}
+	SampleNode(const SampleNode&) = delete;
+	SampleNode& operator = (const SampleNode&) = delete;
 	void addPreAccess() {++preCtr;}
 	void addPostAccess() {++postCtr;}
 };
@@ -241,7 +243,8 @@ struct CharacterParam{
 };
 
 struct PublishableSample {
-	SampleNode* node = nullptr;
+//	SampleNode* node = nullptr;
+	SampleNode& node;
 	int ID = 333;
 	SIZE size;
 	CharacterParam chp;
@@ -250,7 +253,8 @@ struct PublishableSample {
 	StructWithVectorOfInt structWithVectorOfInt;
 	StructWithVectorOfSize structWithVectorOfSize;
 
-	PublishableSample( SampleNode* node_ ) { node = node_; }
+//	PublishableSample( SampleNode* node_ ) { node = node_; }
+	PublishableSample( SampleNode& node_ ) : node( node_ ) {}
 
 	void notifyBefore_ID() { /*node_->addPreAccess();*/ printf( "PublishableSample::notifyBefore_ID()\n" ); }
 	void notifyAfter_ID() { /*node_->addPreAccess();*/ printf( "PublishableSample::notifyAfter_ID()\n" ); }
@@ -264,13 +268,13 @@ void publishableTestOne()
 	SampleNode node;
 //	mtest::Buffer b;
 //	typename PublisherSubscriberPoolInfo::ComposerT composer( b );
-	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp, &node );
+	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp, node );
 
 	fmt::print( "OK so far...\n" );
 
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp, &node );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp, node );
 	publishableSampleWrapperSlave.subscribe();
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave2( mp, &node );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave2( mp, node );
 	publishableSampleWrapperSlave2.subscribe();
 
 	deliverMessages(); // simulate transport layer
