@@ -1666,11 +1666,16 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 	if ( !checked )
 		throw std::exception();
 
+	assert( ( platformPrefix.size() == 0 && classNotifierName.size() == 0 ) || ( platformPrefix.size() != 0 && classNotifierName.size() != 0 ) );
+	bool generatePlatformSpec = platformPrefix.size() != 0 && classNotifierName.size() != 0;
+
 	impl_generatePublishableCommentBlock( header, s );
 	impl_GeneratePublishableStateWrapperForPublisher( header, root, s );
-	impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, platformPrefix, classNotifierName );
+	if ( generatePlatformSpec )
+		impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, platformPrefix, classNotifierName );
 	impl_GeneratePublishableStateWrapperForSubscriber( header, root, s );
-	impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, platformPrefix, classNotifierName );
+	if ( generatePlatformSpec )
+		impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, platformPrefix, classNotifierName );
 }
 
 
