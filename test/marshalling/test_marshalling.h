@@ -2303,7 +2303,7 @@ class publishable_sample_WrapperForPublisher : public globalmq::marshalling::Pub
 
 public:
 	template<class ... ArgsT>
-	publishable_sample_WrapperForPublisher( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
+	publishable_sample_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
 	const T& getState() { return t; }
 	ComposerT& getComposer() { return composer; }
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
@@ -2414,7 +2414,7 @@ class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_
 public:
 	using BufferT = typename PublisherSubscriberInfo::ComposerT::BufferType;
 	template<class ... ArgsT>
-	publishable_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_sample_WrapperForPublisher<T, typename PublisherSubscriberInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -2494,7 +2494,7 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::Su
 
 public:
 	template<class ... ArgsT>
-	publishable_sample_WrapperForSubscriber( ArgsT ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	publishable_sample_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
@@ -3151,7 +3151,7 @@ class publishable_sample_NodecppWrapperForSubscriber : public publishable_sample
 	RegistrarT& registrar;
 public:
 	template<class ... ArgsT>
-	publishable_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT ... args ) : publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_sample_WrapperForSubscriber<T, typename PublisherSubscriberInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
