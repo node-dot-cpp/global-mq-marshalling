@@ -350,7 +350,7 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	}
 }
 
-void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges/*, bool forwardAddress*/ )
+void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges )
 {
 //	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
 	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
@@ -968,7 +968,6 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-//				impl_generateApplyUpdateForSimpleType( header, member, true, false );
 				fprintf( header, "\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 				fprintf( header, "\n" );
 				break;
@@ -976,7 +975,6 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			case  MessageParameterType::KIND::STRUCT:
 			{
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-//				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false );
 				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\n" );
@@ -1124,7 +1122,7 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	fprintf( header, "};\n\n" );
 }
 
-void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot/*, const char* rootName*/, MessageParameter& param, size_t idx )
+void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot, MessageParameter& param, size_t idx )
 {
 //	assert( (forRoot && rootName != nullptr) || (forRoot == false && rootName == nullptr) );
 	const char* composer = forRoot ? "composer" : "root.getComposer()";
@@ -1215,7 +1213,7 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
 		if ( allowSeters )
 		{
-			impl_GeneratePublishableStateMemberSetter( header, root, forRoot/*, rootName*/, *it, i );
+			impl_GeneratePublishableStateMemberSetter( header, root, forRoot, *it, i );
 			impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
 		}
 	}
@@ -1325,13 +1323,6 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
 	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
 	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
-//	fprintf( header, "\tvoid resetComposer( ComposerT* composer_ ) {\n" );
-//	fprintf( header, "\t\tcomposer = composer_; \n" );
-//	fprintf( header, "\t\t::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( *composer );\n" );
-//	fprintf( header, "\t}\n" );
-//	fprintf( header, "\tvoid finalizeComposing() {\n" );
-//	fprintf( header, "\t\t::globalmq::marshalling::impl::composeStateUpdateMessageEnd( *composer );\n" );
-//	fprintf( header, "\t}\n" );
 	fprintf( header, "\tconst char* name() {\n" );
 	fprintf( header, "\t\treturn \"%s\";\n", s.name.c_str() );
 	fprintf( header, "\t}\n" );
@@ -1357,20 +1348,15 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_%sWrapperForPublisher( RegistrarT& registrar_, ArgsT ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t{ \n" );
-//	fprintf( header, "\t\t%s::registerPublisher( this );\n", classNotifierName.c_str() );
 	fprintf( header, "\t\tregistrar.add( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual ~%s_%sWrapperForPublisher()\n", s.name.c_str(), platformPrefix.c_str() );
 	fprintf( header, "\t{ \n" );
-//	fprintf( header, "\t\t%s::unregisterPublisher( this );\n", classNotifierName.c_str() );
 	fprintf( header, "\t\tregistrar.remove( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 
-//	fprintf( header, "\tvirtual ComposerT& getComposer() { return %s_WrapperForPublisher<T, ComposerT>::getComposer(); }\n", s.name.c_str() );
-//	fprintf( header, "\tvirtual void resetComposer( ComposerT* composer_ ) { %s_WrapperForPublisher<T, ComposerT>::resetComposer( composer_ ); }\n", s.name.c_str() );
-//	fprintf( header, "\tvirtual void finalizeComposing() { %s_WrapperForPublisher<T, ComposerT>::finalizeComposing(); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) { %s_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual BufferT&& endTick() { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
@@ -1422,13 +1408,11 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_%sWrapperForSubscriber( RegistrarT& registrar_, ArgsT ... args ) : %s_WrapperForSubscriber<T, typename %s::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t{ \n" );
-//	fprintf( header, "\t\t%s::registerSubscriber( this );\n", classNotifierName.c_str() );
 	fprintf( header, "\t\tregistrar.add( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual ~%s_%sWrapperForSubscriber()\n", s.name.c_str(), platformPrefix.c_str() );
 	fprintf( header, "\t{ \n" );
-//	fprintf( header, "\t\t%s::unregisterSubscriber( this );\n", classNotifierName.c_str() );
 	fprintf( header, "\t\tregistrar.remove( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
@@ -1457,7 +1441,6 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvoid subscribe()\n" );
 	fprintf( header, "\t{\n" );
-//	fprintf( header, "\t\t%s::subscribe( this );\n", classNotifierName.c_str() );
 	fprintf( header, "\t\tregistrar.subscribe( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "};\n\n" );
