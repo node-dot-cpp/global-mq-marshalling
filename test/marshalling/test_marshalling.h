@@ -1003,19 +1003,19 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_sizes;
 					if constexpr( alwaysCollectChanges )
 						::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
-					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 					{
-						size_t pos = addr[1];
+						size_t pos = addr[offset + 1];
 						if ( pos >= t.sizes.size() )
 							throw std::exception();
-						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 						{
 							typename decltype(T::sizes)::value_type& value = t.sizes[pos];
 							if constexpr ( has_full_element_updated_notifier_for_sizes )
 							{
 								typename decltype(T::sizes)::value_type oldValue;
 								publishable_STRUCT_SIZE::copy( value, oldValue );
-								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, offset + 2 );
 								if ( currentChanged )
 								{
 									t.notifyElementUpdated_sizes( pos, oldValue );
@@ -1027,7 +1027,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 							}
 							else if constexpr ( has_element_updated_notifier_for_sizes )
 							{
-								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, offset + 2 );
 								if ( currentChanged )
 								{
 									t.notifyElementUpdated_sizes( pos );
@@ -1037,16 +1037,16 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 							}
 							else if constexpr ( has_void_element_updated_notifier_for_sizes )
 							{
-								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+								currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, offset + 2 );
 								if ( currentChanged )
 									t.notifyElementUpdated_sizes();
 							}
 							else
 							{
 								if constexpr ( alwaysCollectChanges )
-									currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, 2 );
+									currentChanged = publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type, bool>( parser, value, addr, offset + 2 );
 								else
-									publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type>( parser, value, addr, 2 );
+									publishable_STRUCT_SIZE::parse<ParserT, typename decltype(T::sizes)::value_type>( parser, value, addr, offset + 2 );
 							}
 						}
 						else // update of one or more elelments as a whole
@@ -1352,12 +1352,12 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_signedInts;
 					if constexpr( alwaysCollectChanges )
 						::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
-					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 					{
-						size_t pos = addr[1];
+						size_t pos = addr[offset + 1];
 						if ( pos >= t.signedInts.size() )
 							throw std::exception();
-						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 						{
 							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.signedInts elements is INTEGER)
 						}
@@ -2349,9 +2349,7 @@ public:
 		t.vector_struct_point3dreal = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 4 );
 		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
-		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
-		publishable_STRUCT_POINT3DREAL::compose( composer, t.vector_struct_point3dreal );
-		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( composer, t.vector_struct_point3dreal );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
 	auto get4set_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_WrapperForPublisher, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_WrapperForPublisher>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
@@ -3394,9 +3392,7 @@ public:
 		t.sizes = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
-		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		publishable_STRUCT_SIZE::compose( root.getComposer(), t.sizes );
-		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::sizes), publishable_STRUCT_SIZE>( root.getComposer(), t.sizes );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
 	auto get4set_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, *this, address, 0); }

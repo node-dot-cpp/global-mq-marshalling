@@ -164,9 +164,10 @@ public:
 			static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 	}
 
-	template<class ComposerT, class VectorT, class ElemTypeT>
+	template<class ComposerTT, class VectorT, class ElemTypeT>
 	static
-	void compose( ComposerT& composer, const VectorT& what ) { 
+	void compose( ComposerTT& composer, const VectorT& what ) { 
+		using ComposerT = typename std::remove_reference<ComposerTT>::type;
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
