@@ -336,6 +336,9 @@ void publishableTestOne()
 	auto point3dreal_Y_back = publishableSampleWrapper.get_vector_struct_point3dreal().get_at( 1 ).get_Y();
 	assert( point3dreal_Y_back == 555 );
 
+	std::vector<SIZE> sizes({{4,5,6},{7,8,9}});
+	publishableSampleWrapper.get4set_structWithVectorOfSize().set_sizes( sizes );
+
 //	publishableSampleWrapper.finalizeComposing();
 //	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 //	fmt::print( "{}\n", sview );
@@ -384,4 +387,10 @@ void publishableTestOne()
 
 	auto& chpSlave2 = publishableSampleWrapper.get_chp();
 	assert( memcmp( &chp, &chpSlave2, sizeof(chp ) ) == 0 );
+
+	const auto& refSizes = publishableSampleWrapperSlave2.get_structWithVectorOfSize();
+	assert( refSizes.sizes.size() == 2 );
+	assert( refSizes.sizes[1].X == 7 );
+	assert( refSizes.sizes[1].Y == 8 );
+	assert( refSizes.sizes[1].Z == 9 );
 }

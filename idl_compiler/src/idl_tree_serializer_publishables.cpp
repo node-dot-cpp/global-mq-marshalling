@@ -816,7 +816,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 			case MessageParameterType::KIND::VECTOR:
 			{
 				fprintf( header, "\t\t\t\t{\n" );
-				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
+//				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
+				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, true, false );
 				fprintf( header, "\t\t\t\t}\n" );
 				break;
 			}
@@ -1176,9 +1177,10 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 					break;
 				case MessageParameterType::KIND::STRUCT:
 					assert( param.type.messageIdx < root.structs.size() );
-					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, param.name.c_str() );
-					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
+//					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
+//					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, param.name.c_str() );
+//					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
+					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, decltype(T::%s), %s>( %s, t.%s );\n", composerType, param.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( param.type, root ).c_str(), composer, param.name.c_str() );
 					break;
 				default:
 					assert( false ); // not implemented (yet)
