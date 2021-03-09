@@ -265,6 +265,7 @@ struct StructWithVectorOfInt_UPD{
 struct StructWithVectorOfSize_UPD{
 	std::vector<SIZE_UPD> sizes;
 	int NN;
+	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "StructWithVectorOfInt::notifyUpdated_sizes()\n" ); }
 };
 
 struct CharacterParam_UPD{

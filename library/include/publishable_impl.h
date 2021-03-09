@@ -362,7 +362,7 @@ namespace impl {
 			else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
 				dst[i] = src[i];
 			else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
-				ElemTypeT::copy( src, dst );
+				ElemTypeT::copy( src[i], dst[i] );
 			else
 				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 		}
