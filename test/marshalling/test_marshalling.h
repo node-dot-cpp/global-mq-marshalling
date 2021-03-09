@@ -1082,11 +1082,11 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 								{
 									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::sizes)::value_type& value = t.sizes[pos];
+									typename decltype(T::sizes)::value_type oldValue;
+									publishable_STRUCT_SIZE::copy( value, oldValue );
 									if constexpr ( has_full_element_updated_notifier_for_sizes )
 									{
-										typename decltype(T::sizes)::value_type oldValue;
-										publishable_STRUCT_SIZE::copy( value, oldValue );
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_sizes( pos, oldValue );
@@ -1098,7 +1098,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 									}
 									else if constexpr ( has_element_updated_notifier_for_sizes )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_sizes( pos );
@@ -1108,14 +1108,14 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 									}
 									else if constexpr ( has_void_element_updated_notifier_for_sizes )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value, oldValue );
 										if ( currentChanged )
 											t.notifyElementUpdated_sizes();
 									}
 									else
 									{
 										if constexpr ( alwaysCollectChanges )
-											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, bool>( parser, value );
+											currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value, oldValue );
 										else
 											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, value );
 									}
@@ -1394,11 +1394,11 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 								{
 									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::signedInts)::value_type& value = t.signedInts[pos];
+									typename decltype(T::signedInts)::value_type oldValue;
+									oldValue = value;
 									if constexpr ( has_full_element_updated_notifier_for_signedInts )
 									{
-										typename decltype(T::signedInts)::value_type oldValue;
-										oldValue = value;
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_signedInts( pos, oldValue );
@@ -1410,7 +1410,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 									}
 									else if constexpr ( has_element_updated_notifier_for_signedInts )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_signedInts( pos );
@@ -1420,14 +1420,14 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 									}
 									else if constexpr ( has_void_element_updated_notifier_for_signedInts )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										if ( currentChanged )
 											t.notifyElementUpdated_signedInts();
 									}
 									else
 									{
 										if constexpr ( alwaysCollectChanges )
-											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+											currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										else
 											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value );
 									}
@@ -2701,11 +2701,11 @@ public:
 								{
 									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_of_int)::value_type& value = t.vector_of_int[pos];
+									typename decltype(T::vector_of_int)::value_type oldValue;
+									oldValue = value;
 									if constexpr ( has_full_element_updated_notifier_for_vector_of_int )
 									{
-										typename decltype(T::vector_of_int)::value_type oldValue;
-										oldValue = value;
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_vector_of_int( pos, oldValue );
@@ -2717,7 +2717,7 @@ public:
 									}
 									else if constexpr ( has_element_updated_notifier_for_vector_of_int )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_vector_of_int( pos );
@@ -2727,14 +2727,14 @@ public:
 									}
 									else if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										if ( currentChanged )
 											t.notifyElementUpdated_vector_of_int();
 									}
 									else
 									{
 										if constexpr ( alwaysCollectChanges )
-											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, bool>( parser, value );
+											currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value, oldValue );
 										else
 											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value );
 									}
@@ -2879,11 +2879,11 @@ public:
 								{
 									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
 									typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
+									typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
+									publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
 									if constexpr ( has_full_element_updated_notifier_for_vector_struct_point3dreal )
 									{
-										typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
-										publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_vector_struct_point3dreal( pos, oldValue );
@@ -2895,7 +2895,7 @@ public:
 									}
 									else if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value, oldValue );
 										if ( currentChanged )
 										{
 											t.notifyElementUpdated_vector_struct_point3dreal( pos );
@@ -2905,14 +2905,14 @@ public:
 									}
 									else if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value, oldValue );
 										if ( currentChanged )
 											t.notifyElementUpdated_vector_struct_point3dreal();
 									}
 									else
 									{
 										if constexpr ( alwaysCollectChanges )
-											currentChanged = PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, bool>( parser, value );
+											currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value, oldValue );
 										else
 											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
 									}

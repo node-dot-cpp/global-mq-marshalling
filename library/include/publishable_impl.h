@@ -164,6 +164,32 @@ public:
 			static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 	}
 
+	template<class ParserT, class VectorT, class ProcType>
+	static
+	bool parseSingleValueAndCompare( ParserT& parser, typename VectorT::value_type& value, const typename VectorT::value_type& oldValue ) { 
+		if constexpr ( std::is_base_of<impl::StructType, ProcType>::value )
+		{
+			impl::parseStructBegin( parser );
+			ProcType::parse( parser, value );
+			impl::parseStructEnd( parser );
+			return !ProcType::isSame( value, oldValue );
+		}
+		else 
+		{
+			if constexpr ( std::is_same<ProcType, impl::SignedIntegralType>::value )
+				impl::IntegerProcessor::parse<ParserT, typename VectorT::value_type>( parser, &value );
+			else if constexpr ( std::is_same<ProcType, impl::UnsignedIntegralType>::value )
+				impl::UnsignedIntegerProcessor::parse( parser, &value );
+			else if constexpr ( std::is_same<ProcType, impl::RealType>::value )
+				impl::RealProcessor::parse( parser, &value );
+			else if constexpr ( std::is_same<ProcType, impl::StringType>::value )
+				impl::StringProcessor::parse( parser, &value );
+			else
+				static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
+			return value != oldValue;
+		}
+	}
+
 	template<class ComposerTT, class VectorT, class ElemTypeT>
 	static
 	void compose( ComposerTT& composer, const VectorT& what ) { 

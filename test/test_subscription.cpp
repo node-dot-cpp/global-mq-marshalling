@@ -185,41 +185,16 @@ void testCallerValue()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-class SampleNode
-{
-public:
-	size_t preCtr = 0;
-	size_t postCtr = 0;
-	SampleNode() {}
-	SampleNode(const SampleNode&) = delete;
-	SampleNode& operator = (const SampleNode&) = delete;
-	void addPreAccess() {++preCtr;}
-	void addPostAccess() {++postCtr;}
-};
-
 struct SIZE{
 	double X = 1.0;
 	double Y = 2.0;
 	double Z = 3.0;
-	void prenotifyBefore_X( SampleNode* node_ ) { node_->addPreAccess(); printf( "SIZE::notifyBefore_X()\n" ); }
-	void notifyAfter_X() { /*node_->addPreAccess();*/ printf( "SIZE::notifyAfter_X()\n" ); }
-	void prenotifyBefore_Y( SampleNode* node_ ) { node_->addPreAccess(); printf( "SIZE::notifyBefore_Y()\n" ); }
-	void notifyAfter_Y() { /*node_->addPreAccess();*/ printf( "SIZE::notifyAfter_Y()\n" ); }
-	void prenotifyBefore_Z( SampleNode* node_ ) { node_->addPreAccess(); printf( "SIZE::notifyBefore_Z()\n" ); }
-	void notifyAfter_Z() { /*node_->addPreAccess();*/ printf( "SIZE::notifyAfter_Z()\n" ); }
 };
 
 struct POINT3DREAL{
   double X = 4.0;
   double Y = 5.0;
   double Z = 6.0;
-	void prenotifyBefore_X( SampleNode* node_ ) { node_->addPreAccess(); printf( "POINT3DREAL::notifyBefore_X()\n" ); }
-	void notifyAfter_X() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_X()\n" ); }
-	void prenotifyBefore_Y( SampleNode* node_ ) { node_->addPreAccess(); printf( "POINT3DREAL::notifyBefore_Y()\n" ); }
-	void notifyAfter_Y() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_Y()\n" ); }
-	void prenotifyBefore_Z( SampleNode* node_ ) { node_->addPreAccess(); printf( "POINT3DREAL::notifyBefore_Z()\n" ); }
-	void notifyAfter_Z() { /*node_->addPreAccess();*/ printf( "POINT3DREAL::notifyAfter_Z()\n" ); }
 };
 
 struct StructWithVectorOfInt{
@@ -235,16 +210,9 @@ struct StructWithVectorOfSize{
 struct CharacterParam{
 	uint64_t ID = 600;
 	SIZE Size = {11., 12., 13};
-
-	void prenotifyBefore_ID( SampleNode* node_ ) { node_->addPreAccess(); printf( "CharacterParam::notifyBefore_ID()\n" ); }
-	void notifyAfter_ID() { /*node_->addPreAccess();*/ printf( "CharacterParam::notifyAfter_ID()\n" ); }
-	void prenotifyBefore_Size( SampleNode* node_ ) { node_->addPreAccess(); printf( "CharacterParam::notifyBeforer_ID()\n" ); }
-	void notifyAfter_Size() { /*node_->addPreAccess();*/ printf( "CharacterParam::notifyAfter_Size()\n" ); }
 };
 
 struct PublishableSample {
-//	SampleNode* node = nullptr;
-	SampleNode& node;
 	int ID = 333;
 	SIZE size;
 	CharacterParam chp;
@@ -252,12 +220,75 @@ struct PublishableSample {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt structWithVectorOfInt;
 	StructWithVectorOfSize structWithVectorOfSize;
+};
 
-//	PublishableSample( SampleNode* node_ ) { node = node_; }
-	PublishableSample( SampleNode& node_ ) : node( node_ ) {}
 
-	void notifyBefore_ID() { /*node_->addPreAccess();*/ printf( "PublishableSample::notifyBefore_ID()\n" ); }
-	void notifyAfter_ID() { /*node_->addPreAccess();*/ printf( "PublishableSample::notifyAfter_ID()\n" ); }
+class SampleNode
+{
+public:
+	size_t preCtr = 0;
+	size_t postCtr = 0;
+	SampleNode() {}
+	SampleNode(const SampleNode&) = delete;
+	SampleNode& operator = (const SampleNode&) = delete;
+	void addPreAccess() {++preCtr;}
+	void addPostAccess() {++postCtr;}
+};
+thread_local SampleNode* currentNode = nullptr;
+SampleNode* setCurrentNode( SampleNode* node ) { auto ret = currentNode; currentNode = node; return ret; }
+SampleNode* getCurrentNode() { return currentNode; }
+
+struct SIZE_UPD{
+	double X = 1.0;
+	double Y = 2.0;
+	double Z = 3.0;
+	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "SIZE::notifyUpdated_X()\n" ); }
+	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "SIZE::notifyUpdated_Y()\n" ); }
+	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "SIZE::notifyUpdated_Z()\n" ); }
+};
+
+struct POINT3DREAL_UPD{
+  double X = 4.0;
+  double Y = 5.0;
+  double Z = 6.0;
+	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "POINT3DREAL::notifyUpdated_X()\n" ); }
+	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "POINT3DREAL::notifyUpdated_Y()\n" ); }
+	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "POINT3DREAL::notifyUpdated_Z()\n" ); }
+};
+
+struct StructWithVectorOfInt_UPD{
+	int ID;
+	std::vector<uint64_t> signedInts;
+	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "StructWithVectorOfInt::notifyUpdated_signedInts()\n" ); }
+};
+
+struct StructWithVectorOfSize_UPD{
+	std::vector<SIZE_UPD> sizes;
+	int NN;
+};
+
+struct CharacterParam_UPD{
+	uint64_t ID = 600;
+	SIZE_UPD Size = {11., 12., 13};
+
+	void notifyUpdated_ID( uint64_t id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "CharacterParam::notifyUpdated_ID()\n" ); }
+	void notifyUpdated_Size( const SIZE& size ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "CharacterParam::notifyUpdatedr_ID()\n" ); }
+};
+
+struct PublishableSample_UPD {
+//	SampleNode* node = nullptr;
+	SampleNode& node;
+	int ID = 333;
+	SIZE_UPD size;
+	CharacterParam_UPD chp;
+	std::vector<POINT3DREAL_UPD> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
+	std::vector<int> vector_of_int = {111, 112, 113};
+	StructWithVectorOfInt_UPD structWithVectorOfInt;
+	StructWithVectorOfSize_UPD structWithVectorOfSize;
+
+	PublishableSample_UPD( SampleNode& node_ ) : node( node_ ) {}
+
+	void notifyUpdated_ID( int id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "PublishableSample::notifyUpdated_ID()\n" ); }
 };
 
 void publishableTestOne()
@@ -266,15 +297,16 @@ void publishableTestOne()
 	testCallerValue();
 //	return;
 	SampleNode node;
+	setCurrentNode( &node );
 //	mtest::Buffer b;
 //	typename PublisherSubscriberPoolInfo::ComposerT composer( b );
-	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp, node );
+	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp );
 
 	fmt::print( "OK so far...\n" );
 
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp, node );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD, MetaPoolT> publishableSampleWrapperSlave( mp, node );
 	publishableSampleWrapperSlave.subscribe();
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave2( mp, node );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD, MetaPoolT> publishableSampleWrapperSlave2( mp, node );
 	publishableSampleWrapperSlave2.subscribe();
 
 	deliverMessages(); // simulate transport layer
@@ -392,5 +424,7 @@ void publishableTestOne()
 	assert( refSizes.sizes.size() == 2 );
 	assert( refSizes.sizes[1].X == 7 );
 	assert( refSizes.sizes[1].Y == 8 );
-	assert( refSizes.sizes[1].Z == 9 );
+	assert( refSizes.sizes[1].Z == 9 );	
+	
+	setCurrentNode( nullptr );
 }
