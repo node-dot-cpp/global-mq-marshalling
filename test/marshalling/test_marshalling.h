@@ -3363,7 +3363,7 @@ public:
 		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::sizes), publishable_STRUCT_SIZE>( root.getComposer(), t.sizes );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
-	auto get4set_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, *this, address, 0); }
+	auto get4set_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, root, address, 0); }
 	auto get_NN() { return t.NN; }
 	void set_NN( decltype(T::NN) val) { 
 		t.NN = val; 
