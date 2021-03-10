@@ -265,6 +265,7 @@ public:
 	template<class ParserT, class VectorT, class ElemTypeT, bool suppressNotifications = false>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
+		dest.clear();
 		if constexpr ( ParserT::proto == Proto::GMQ )
 		{
 			size_t collSz;
