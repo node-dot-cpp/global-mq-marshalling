@@ -372,10 +372,6 @@ void publishableTestOne()
 	std::vector<SIZE> sizes({{4,5,6},{7,8,9}});
 	publishableSampleWrapper.get4set_structWithVectorOfSize().set_sizes( sizes );
 
-//	publishableSampleWrapper.finalizeComposing();
-//	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
-//	fmt::print( "{}\n", sview );
-
 	auto voint = publishableSampleWrapper.get_vector_of_int();
 	assert( voint.size() == 4 );
 	assert( voint.get_at( 0 ) == 17 );
@@ -384,7 +380,6 @@ void publishableTestOne()
 	assert( voint.get_at( 3 ) == 46 );
 
 	deliverMessages(); // simulate transport layer
-//	publishers.postAllUpdates(); // simulate infrastructural call
 	mp.postAllUpdates(); // simulate infrastructural call
 	deliverMessages(); // simulate transport layer
 
@@ -426,6 +421,42 @@ void publishableTestOne()
 	assert( refSizes.sizes[1].X == 7 );
 	assert( refSizes.sizes[1].Y == 8 );
 	assert( refSizes.sizes[1].Z == 9 );	
+
+	// Part 2
+	std::vector<SIZE> sizes2({{10,11,12},{13,14,15}});
+	publishableSampleWrapper.get4set_structWithVectorOfSize().set_sizes( sizes2 );
+
+	deliverMessages(); // simulate transport layer
+	mp.postAllUpdates(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
+
+	assert( refSizes.sizes.size() == 2 );
+	assert( refSizes.sizes[1].X == 13 );
+	assert( refSizes.sizes[1].Y == 14 );
+	assert( refSizes.sizes[1].Z == 15 );	
+
+	// Part 3
+	std::vector<SIZE> sizes3;
+	publishableSampleWrapper.get4set_structWithVectorOfSize().get4set_sizes().remove(0);
+
+	deliverMessages(); // simulate transport layer
+	mp.postAllUpdates(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
+
+	assert( refSizes.sizes.size() == 1 );
+	assert( refSizes.sizes[0].X == 13 );
+	assert( refSizes.sizes[0].Y == 14 );
+	assert( refSizes.sizes[0].Z == 15 );	
+
+	// Part 4
+	std::vector<SIZE> sizes4;
+	publishableSampleWrapper.get4set_structWithVectorOfSize().set_sizes( sizes4 );
+
+	deliverMessages(); // simulate transport layer
+	mp.postAllUpdates(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
+
+	assert( refSizes.sizes.size() == 0 );
 	
 	setCurrentNode( nullptr );
 }
