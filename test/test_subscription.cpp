@@ -9,8 +9,6 @@
 #include <typeindex>
 #include <unordered_map>
 
-//thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberPoolInfo> publishers;
-//thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberPoolInfo> subscribers;
 globalmq::marshalling::MetaPool<PublisherSubscriberPoolInfo> mp;
 
 // transporting level simulation (for this test, single-threaded)
@@ -26,7 +24,6 @@ void deliverMessages()
 		fmt::print( "{}\n\n", sview );
 
 		ParserT parser( likeQueues[publisherPoolAddress][i] );
-//		publishers.onMessage( parser, subscriberPoolAddress );
 		mp.onMessage( parser, subscriberPoolAddress );
 	}
 	likeQueues[publisherPoolAddress].clear();
@@ -38,7 +35,6 @@ void deliverMessages()
 		fmt::print( "{}\n\n", sview );
 
 		ParserT parser( likeQueues[subscriberPoolAddress][i] );
-//		subscribers.onMessage( parser );
 		mp.onMessage( parser, subscriberPoolAddress );
 	}
 	likeQueues[subscriberPoolAddress].clear();
@@ -238,42 +234,44 @@ thread_local SampleNode* currentNode = nullptr;
 SampleNode* setCurrentNode( SampleNode* node ) { auto ret = currentNode; currentNode = node; return ret; }
 SampleNode* getCurrentNode() { return currentNode; }
 
+// simple notifiers
+
 struct SIZE_UPD{
 	double X = 1.0;
 	double Y = 2.0;
 	double Z = 3.0;
-	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "SIZE::notifyUpdated_X()\n" ); }
-	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "SIZE::notifyUpdated_Y()\n" ); }
-	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "SIZE::notifyUpdated_Z()\n" ); }
+	void notifyUpdated_X() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_X()\n" ); }
+	void notifyUpdated_Y() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Y()\n" ); }
+	void notifyUpdated_Z() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Z()\n" ); }
 };
 
 struct POINT3DREAL_UPD{
   double X = 4.0;
   double Y = 5.0;
   double Z = 6.0;
-	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "POINT3DREAL::notifyUpdated_X()\n" ); }
-	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "POINT3DREAL::notifyUpdated_Y()\n" ); }
-	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "POINT3DREAL::notifyUpdated_Z()\n" ); }
+	void notifyUpdated_X() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_X()\n" ); }
+	void notifyUpdated_Y() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Y()\n" ); }
+	void notifyUpdated_Z() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Z()\n" ); }
 };
 
 struct StructWithVectorOfInt_UPD{
 	int ID;
 	std::vector<uint64_t> signedInts;
-	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "StructWithVectorOfInt::notifyUpdated_signedInts()\n" ); }
+	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_signedInts()\n" ); }
 };
 
 struct StructWithVectorOfSize_UPD{
 	std::vector<SIZE_UPD> sizes;
 	int NN;
-	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "StructWithVectorOfInt::notifyUpdated_sizes()\n" ); }
+	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_sizes()\n" ); }
 };
 
 struct CharacterParam_UPD{
 	uint64_t ID = 600;
 	SIZE_UPD Size = {11., 12., 13};
 
-	void notifyUpdated_ID( uint64_t id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "CharacterParam::notifyUpdated_ID()\n" ); }
-	void notifyUpdated_Size( const SIZE& size ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "CharacterParam::notifyUpdatedr_ID()\n" ); }
+	void notifyUpdated_ID() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdated_ID()\n" ); }
+	void notifyUpdated_Size( const SIZE& size ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdatedr_ID()\n" ); }
 };
 
 struct PublishableSample_UPD {
@@ -289,8 +287,65 @@ struct PublishableSample_UPD {
 
 	PublishableSample_UPD( SampleNode& node_ ) : node( node_ ) {}
 
-	void notifyUpdated_ID( int id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); printf( "PublishableSample::notifyUpdated_ID()\n" ); }
+	void notifyUpdated_ID() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample::notifyUpdated_ID()\n" ); }
 };
+
+// notifiers with data
+
+struct SIZE_UPD_D{
+	double X = 1.0;
+	double Y = 2.0;
+	double Z = 3.0;
+	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_X({})\n", x ); }
+	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Y({})\n", y ); }
+	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Z({})\n", z ); }
+};
+
+struct POINT3DREAL_UPD_D{
+  double X = 4.0;
+  double Y = 5.0;
+  double Z = 6.0;
+	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_X({})\n", x ); }
+	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Y({})\n", y ); }
+	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Z({})\n", z ); }
+};
+
+struct StructWithVectorOfInt_UPD_D{
+	int ID;
+	std::vector<uint64_t> signedInts;
+	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_signedInts()\n" ); }
+};
+
+struct StructWithVectorOfSize_UPD_D{
+	std::vector<SIZE_UPD_D> sizes;
+	int NN;
+	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_sizes(...)\n" ); }
+};
+
+struct CharacterParam_UPD_D{
+	uint64_t ID = 600;
+	SIZE_UPD_D Size = {11., 12., 13};
+
+	void notifyUpdated_ID( uint64_t id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdated_ID({})\n", id ); }
+	void notifyUpdated_Size( const SIZE& size ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdatedr_ID(...)\n" ); }
+};
+
+struct PublishableSample_UPD_D {
+//	SampleNode* node = nullptr;
+	SampleNode& node;
+	int ID = 333;
+	SIZE_UPD_D size;
+	CharacterParam_UPD_D chp;
+	std::vector<POINT3DREAL_UPD_D> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
+	std::vector<int> vector_of_int = {111, 112, 113};
+	StructWithVectorOfInt_UPD_D structWithVectorOfInt;
+	StructWithVectorOfSize_UPD_D structWithVectorOfSize;
+
+	PublishableSample_UPD_D( SampleNode& node_ ) : node( node_ ) {}
+
+	void notifyUpdated_ID( int id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample::notifyUpdated_ID({})\n", id ); }
+};
+
 
 void publishableTestOne()
 {
@@ -305,10 +360,12 @@ void publishableTestOne()
 
 	fmt::print( "OK so far...\n" );
 
-	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD, MetaPoolT> publishableSampleWrapperSlave( mp, node );
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp );
 	publishableSampleWrapperSlave.subscribe();
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD, MetaPoolT> publishableSampleWrapperSlave2( mp, node );
 	publishableSampleWrapperSlave2.subscribe();
+//	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD_D, MetaPoolT> publishableSampleWrapperSlave3( mp, node );
+//	publishableSampleWrapperSlave2.subscribe();
 
 	deliverMessages(); // simulate transport layer
 	deliverMessages(); // simulate transport layer
