@@ -1057,23 +1057,15 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 							{
 								case ActionOnVector::remove_at:
 								{
+									decltype(T::sizes) oldVal;
+									::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
+									t.sizes.erase( t.sizes.begin() + pos );
 									if constexpr ( has_erased_notifier3_for_sizes )
-									{
-										decltype(T::sizes) oldVal;
-										::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVal );
-										t.sizes.erase( t.sizes.begin() + pos );
 										t.notifyErased_sizes( pos, oldVal );
-									}
 									if constexpr ( has_erased_notifier2_for_sizes )
-									{
-										t.sizes.erase( t.sizes.begin() + pos );
 										t.notifyErased_sizes( pos );
-									}
 									if constexpr ( has_void_erased_notifier_for_sizes )
-									{
-										t.sizes.erase( t.sizes.begin() + pos );
 										t.notifyErased_sizes();
-									}
 									if constexpr ( alwaysCollectChanges )
 										currentChanged = true;
 									break;
@@ -1369,23 +1361,15 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 							{
 								case ActionOnVector::remove_at:
 								{
+									decltype(T::signedInts) oldVal;
+									::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVal );
+									t.signedInts.erase( t.signedInts.begin() + pos );
 									if constexpr ( has_erased_notifier3_for_signedInts )
-									{
-										decltype(T::signedInts) oldVal;
-										::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVal );
-										t.signedInts.erase( t.signedInts.begin() + pos );
 										t.notifyErased_signedInts( pos, oldVal );
-									}
 									if constexpr ( has_erased_notifier2_for_signedInts )
-									{
-										t.signedInts.erase( t.signedInts.begin() + pos );
 										t.notifyErased_signedInts( pos );
-									}
 									if constexpr ( has_void_erased_notifier_for_signedInts )
-									{
-										t.signedInts.erase( t.signedInts.begin() + pos );
 										t.notifyErased_signedInts();
-									}
 									if constexpr ( alwaysCollectChanges )
 										currentChanged = true;
 									break;
@@ -2676,23 +2660,15 @@ public:
 							{
 								case ActionOnVector::remove_at:
 								{
+									decltype(T::vector_of_int) oldVal;
+									::globalmq::marshalling::impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVal );
+									t.vector_of_int.erase( t.vector_of_int.begin() + pos );
 									if constexpr ( has_erased_notifier3_for_vector_of_int )
-									{
-										decltype(T::vector_of_int) oldVal;
-										::globalmq::marshalling::impl::copyVector<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( t.vector_of_int, oldVal );
-										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
 										t.notifyErased_vector_of_int( pos, oldVal );
-									}
 									if constexpr ( has_erased_notifier2_for_vector_of_int )
-									{
-										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
 										t.notifyErased_vector_of_int( pos );
-									}
 									if constexpr ( has_void_erased_notifier_for_vector_of_int )
-									{
-										t.vector_of_int.erase( t.vector_of_int.begin() + pos );
 										t.notifyErased_vector_of_int();
-									}
 									if constexpr ( alwaysCollectChanges )
 										currentChanged = true;
 									break;
@@ -2854,23 +2830,15 @@ public:
 							{
 								case ActionOnVector::remove_at:
 								{
+									decltype(T::vector_struct_point3dreal) oldVal;
+									::globalmq::marshalling::impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
+									t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
 									if constexpr ( has_erased_notifier3_for_vector_struct_point3dreal )
-									{
-										decltype(T::vector_struct_point3dreal) oldVal;
-										::globalmq::marshalling::impl::copyVector<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( t.vector_struct_point3dreal, oldVal );
-										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
 										t.notifyErased_vector_struct_point3dreal( pos, oldVal );
-									}
 									if constexpr ( has_erased_notifier2_for_vector_struct_point3dreal )
-									{
-										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
 										t.notifyErased_vector_struct_point3dreal( pos );
-									}
 									if constexpr ( has_void_erased_notifier_for_vector_struct_point3dreal )
-									{
-										t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
 										t.notifyErased_vector_struct_point3dreal();
-									}
 									if constexpr ( alwaysCollectChanges )
 										currentChanged = true;
 									break;
@@ -3395,7 +3363,7 @@ public:
 		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::sizes), publishable_STRUCT_SIZE>( root.getComposer(), t.sizes );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
-	auto get4set_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, *this, address, 0); }
+	auto get4set_sizes() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::sizes), publishable_STRUCT_SIZE, RootT, SIZE_RefWrapper4Set<typename decltype(T::sizes)::value_type, RootT>>(t.sizes, root, address, 0); }
 	auto get_NN() { return t.NN; }
 	void set_NN( decltype(T::NN) val) { 
 		t.NN = val; 

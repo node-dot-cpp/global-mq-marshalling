@@ -442,23 +442,23 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::remove_at:\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n", member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\tdecltype(T::%s) oldVal;\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( has_erased_notifier2_for_%s )\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s( pos );\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( has_void_erased_notifier_for_%s )\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t{\n" );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tt.notifyErased_%s();\n", member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
+//	fprintf( header, "\t\t\t\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\t\tcurrentChanged = true;\n" );
 	fprintf( header, "\t\t\t\t\t\t\t\t\tbreak;\n" );
@@ -609,19 +609,22 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 		fprintf( header, "\tconst auto& get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
 }
 
-void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, const char* rootName, MessageParameter& param, size_t idx )
+void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, const char* rootTypeNameBase, MessageParameter& param, size_t idx )
 {
 	string rootType;
 	string addr;
-	if ( rootName == nullptr )
+	string rootObjName;
+	if ( rootTypeNameBase == nullptr )
 	{
 		rootType = "RootT";
 		addr = "address";
+		rootObjName = "root";
 	}
 	else
 	{
-		rootType = fmt::format( "{}_WrapperForPublisher", rootName );
+		rootType = fmt::format( "{}_WrapperForPublisher", rootTypeNameBase );
 		addr = "GMQ_COLL vector<size_t>()";
+		rootObjName = "*this";
 	}
 	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
 	{
@@ -646,14 +649,16 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 				assert( param.type.messageIdx < root.structs.size() );
 				fprintf( header, 
 					"\tauto get4set_%s() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::%s), %s, %s, %s_RefWrapper4Set<typename decltype(T::%s)::value_type, %s>>"
-					"(t.%s, *this, %s, %zd); }\n", 
+					"(t.%s, %s, %s, %zd); }\n", 
 					param.name.c_str(), param.name.c_str(),
 					impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), 
 					rootType.c_str(), 
 					root.structs[param.type.messageIdx]->name.c_str(), 
 					param.name.c_str(),
 					rootType.c_str(), 
-					param.name.c_str(), addr.c_str(), idx );
+					param.name.c_str(), 
+					rootObjName.c_str(),
+					addr.c_str(), idx );
 				break;
 			default:
 				assert( false ); // not (yet) implemented
