@@ -240,38 +240,38 @@ struct SIZE_UPD{
 	double X = 1.0;
 	double Y = 2.0;
 	double Z = 3.0;
-	void notifyUpdated_X() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_X()\n" ); }
-	void notifyUpdated_Y() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Y()\n" ); }
-	void notifyUpdated_Z() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Z()\n" ); }
+	void notifyUpdated_X() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE_UPD::notifyUpdated_X()\n" ); }
+	void notifyUpdated_Y() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE_UPD::notifyUpdated_Y()\n" ); }
+	void notifyUpdated_Z() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE_UPD::notifyUpdated_Z()\n" ); }
 };
 
 struct POINT3DREAL_UPD{
   double X = 4.0;
   double Y = 5.0;
   double Z = 6.0;
-	void notifyUpdated_X() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_X()\n" ); }
-	void notifyUpdated_Y() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Y()\n" ); }
-	void notifyUpdated_Z() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Z()\n" ); }
+	void notifyUpdated_X() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL_UPD::notifyUpdated_X()\n" ); }
+	void notifyUpdated_Y() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL_UPD::notifyUpdated_Y()\n" ); }
+	void notifyUpdated_Z() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL_UPD::notifyUpdated_Z()\n" ); }
 };
 
 struct StructWithVectorOfInt_UPD{
 	int ID;
 	std::vector<uint64_t> signedInts;
-	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_signedInts()\n" ); }
+	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt_UPD::notifyUpdated_signedInts()\n" ); }
 };
 
 struct StructWithVectorOfSize_UPD{
 	std::vector<SIZE_UPD> sizes;
 	int NN;
-	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_sizes()\n" ); }
+	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfSize_UPD::notifyUpdated_sizes()\n" ); }
 };
 
 struct CharacterParam_UPD{
 	uint64_t ID = 600;
 	SIZE_UPD Size = {11., 12., 13};
 
-	void notifyUpdated_ID() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdated_ID()\n" ); }
-	void notifyUpdated_Size( const SIZE& size ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdatedr_ID()\n" ); }
+	void notifyUpdated_ID() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam_UPD::notifyUpdated_ID()\n" ); }
+	void notifyUpdated_Size() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam_UPD::notifyUpdated_Size()\n" ); }
 };
 
 struct PublishableSample_UPD {
@@ -287,7 +287,7 @@ struct PublishableSample_UPD {
 
 	PublishableSample_UPD( SampleNode& node_ ) : node( node_ ) {}
 
-	void notifyUpdated_ID() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample::notifyUpdated_ID()\n" ); }
+	void notifyUpdated_ID() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample_UPD::notifyUpdated_ID()\n" ); }
 };
 
 // notifiers with data
@@ -296,38 +296,43 @@ struct SIZE_UPD_D{
 	double X = 1.0;
 	double Y = 2.0;
 	double Z = 3.0;
-	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_X({})\n", x ); }
-	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Y({})\n", y ); }
-	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE::notifyUpdated_Z({})\n", z ); }
+	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE_UPD_D::notifyUpdated_X({})\n", x ); }
+	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE_UPD_D::notifyUpdated_Y({})\n", y ); }
+	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "SIZE_UPD_D::notifyUpdated_Z({})\n", z ); }
 };
 
 struct POINT3DREAL_UPD_D{
   double X = 4.0;
   double Y = 5.0;
   double Z = 6.0;
-	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_X({})\n", x ); }
-	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Y({})\n", y ); }
-	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL::notifyUpdated_Z({})\n", z ); }
+	void notifyUpdated_X( double x ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL_UPD_D::notifyUpdated_X({})\n", x ); }
+	void notifyUpdated_Y( double y ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL_UPD_D::notifyUpdated_Y({})\n", y ); }
+	void notifyUpdated_Z( double z ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "POINT3DREAL_UPD_D::notifyUpdated_Z({})\n", z ); }
 };
 
 struct StructWithVectorOfInt_UPD_D{
 	int ID;
 	std::vector<uint64_t> signedInts;
-	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_signedInts()\n" ); }
+	void notifyUpdated_signedInts() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt_UPD_D::notifyUpdated_signedInts()\n" ); }
 };
 
 struct StructWithVectorOfSize_UPD_D{
 	std::vector<SIZE_UPD_D> sizes;
 	int NN;
-	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfInt::notifyUpdated_sizes(...)\n" ); }
+	void notifyUpdated_sizes() const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "StructWithVectorOfSize_UPD_D::notifyUpdated_sizes(...)\n" ); }
 };
 
 struct CharacterParam_UPD_D{
 	uint64_t ID = 600;
 	SIZE_UPD_D Size = {11., 12., 13};
 
-	void notifyUpdated_ID( uint64_t id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdated_ID({})\n", id ); }
-	void notifyUpdated_Size( const SIZE& size ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam::notifyUpdatedr_ID(...)\n" ); }
+	void notifyUpdated_ID( uint64_t id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "CharacterParam_UPD_D::notifyUpdated_ID({})\n", id ); }
+	void notifyUpdated_Size( const SIZE_UPD_D& size ) const { 
+//	void notifyUpdated_Size( SIZE_UPD_D size ) const { 
+		assert( getCurrentNode() != nullptr ); 
+		getCurrentNode()->addPreAccess(); 
+		fmt::print( "CharacterParam_UPD_D::notifyUpdatedr_Size({},{},{})\n", size.X, size.Y, size.Z );
+	}
 };
 
 struct PublishableSample_UPD_D {
@@ -343,7 +348,7 @@ struct PublishableSample_UPD_D {
 
 	PublishableSample_UPD_D( SampleNode& node_ ) : node( node_ ) {}
 
-	void notifyUpdated_ID( int id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample::notifyUpdated_ID({})\n", id ); }
+	void notifyUpdated_ID( int id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample_UPD_D::notifyUpdated_ID({})\n", id ); }
 };
 
 
@@ -514,6 +519,30 @@ void publishableTestOne()
 	deliverMessages(); // simulate transport layer
 
 	assert( refSizes.sizes.size() == 0 );
+
+	fmt::print( "=== Part 5 =======================\n" );
+
+	// Part 5
+	publishableSampleWrapper.get4set_chp().set_Size({1155., 1156., 1157.});
+
+	deliverMessages(); // simulate transport layer
+	mp.postAllUpdates(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
+
+	auto& sizeSlave = publishableSampleWrapperSlave.get_chp().Size;
+	assert( sizeSlave.X == 1155 );
+	assert( sizeSlave.Y == 1156 );
+	assert( sizeSlave.Z == 1157 );
+
+	auto& sizeSlave2 = publishableSampleWrapperSlave2.get_chp().Size;
+	assert( sizeSlave2.X == 1155 );
+	assert( sizeSlave2.Y == 1156 );
+	assert( sizeSlave2.Z == 1157 );
+
+	auto& sizeSlave3 = publishableSampleWrapperSlave3.get_chp().Size;
+	assert( sizeSlave3.X == 1155 );
+	assert( sizeSlave3.Y == 1156 );
+	assert( sizeSlave3.Z == 1157 );
 	
 	setCurrentNode( nullptr );
 }
