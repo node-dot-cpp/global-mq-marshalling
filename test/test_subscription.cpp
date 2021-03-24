@@ -9,13 +9,13 @@
 #include <typeindex>
 #include <unordered_map>
 
-globalmq::marshalling::MetaPool<PublisherSubscriberPoolInfo> mp;
+globalmq::marshalling::MetaPool<StatePublisherSubscriberPoolInfo> mp;
 
 // transporting level simulation (for this test, single-threaded)
 GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
 void deliverMessages()
 {
-	using ParserT = typename PublisherSubscriberPoolInfo::ParserT;
+	using ParserT = typename StatePublisherSubscriberPoolInfo::ParserT;
 
 	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
 	{
@@ -355,7 +355,7 @@ void publishableTestOne()
 	SampleNode node;
 	setCurrentNode( &node );
 //	mtest::Buffer b;
-//	typename PublisherSubscriberPoolInfo::ComposerT composer( b );
+//	typename StatePublisherSubscriberPoolInfo::ComposerT composer( b );
 	mtest::publishable_sample_NodecppWrapperForPublisher<PublishableSample, MetaPoolT> publishableSampleWrapper( mp );
 
 	fmt::print( "OK so far...\n" );
@@ -364,8 +364,8 @@ void publishableTestOne()
 	publishableSampleWrapperSlave.subscribe();
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD, MetaPoolT> publishableSampleWrapperSlave2( mp, node );
 	publishableSampleWrapperSlave2.subscribe();
-//	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD_D, MetaPoolT> publishableSampleWrapperSlave3( mp, node );
-//	publishableSampleWrapperSlave2.subscribe();
+	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD_D, MetaPoolT> publishableSampleWrapperSlave3( mp, node );
+	publishableSampleWrapperSlave3.subscribe();
 
 	deliverMessages(); // simulate transport layer
 	deliverMessages(); // simulate transport layer
@@ -441,7 +441,7 @@ void publishableTestOne()
 	deliverMessages(); // simulate transport layer
 
 // test incremental updating
-//	typename PublisherSubscriberPoolInfo::ParserT parser( b );
+//	typename StatePublisherSubscriberPoolInfo::ParserT parser( b );
 //	subscribers.onMessage( parser );
 
 	assert( publishableSampleWrapperSlave.get_ID() == 38 );
@@ -456,12 +456,12 @@ void publishableTestOne()
 	// test whole state initializing
 	/*mtest::Buffer b2;
 	b2.append( "\"msg_type\":2, \"subscriber_id\":1, \"state\":", 41 );
-	typename PublisherSubscriberPoolInfo::ComposerT composer2( b2 );
+	typename StatePublisherSubscriberPoolInfo::ComposerT composer2( b2 );
 	publishableSampleWrapper.generateStateSyncMessage(composer2);
 	std::string_view sview2( reinterpret_cast<const char*>(b2.begin()), b2.size() );
 	fmt::print( "\n\n{}\n", sview2 );*/
 
-//	typename PublisherSubscriberPoolInfo::ParserT parser2( b2 );
+//	typename StatePublisherSubscriberPoolInfo::ParserT parser2( b2 );
 //	subscribers.onMessage( parser2 );
 
 	assert( publishableSampleWrapperSlave2.get_ID() == 38 );

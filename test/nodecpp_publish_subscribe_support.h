@@ -5,26 +5,26 @@
 #include <marshalling.h>
 #include <publishable_impl.h>
 
-class PublisherSubscriberPoolInfo;
-//extern thread_local globalmq::marshalling::PublisherPool<PublisherSubscriberPoolInfo> publishers;
-//extern thread_local globalmq::marshalling::SubscriberPool<PublisherSubscriberPoolInfo> subscribers;
+class StatePublisherSubscriberPoolInfo;
+//extern thread_local globalmq::marshalling::StatePublisherPool<StatePublisherSubscriberPoolInfo> publishers;
+//extern thread_local globalmq::marshalling::StateSubscriberPool<StatePublisherSubscriberPoolInfo> subscribers;
 
 // transporting level simulation (for this test, single-threaded)
 constexpr uint32_t publisherPoolAddress = 1;
 constexpr uint32_t subscriberPoolAddress = 0;
 extern GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
 
-class PublisherSubscriberInfo
+class StatePublisherSubscriberInfo
 {
 public:
 	using BufferT = globalmq::marshalling::Buffer;
 	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
 	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
-	using SubscriberT = globalmq::marshalling::SubscriberBase<BufferT>;
-	using PublisherT = globalmq::marshalling::PublisherBase<ComposerT>;
+	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
+	using StatePublisherT = globalmq::marshalling::StatePublisherBase<ComposerT>;
 };
 
-class PublisherSubscriberPoolInfo : public PublisherSubscriberInfo
+class StatePublisherSubscriberPoolInfo : public StatePublisherSubscriberInfo
 {
 public:
 	// publishers and subscribers
@@ -56,7 +56,7 @@ public:
 	}
 };
 
-using MetaPoolT = globalmq::marshalling::MetaPool<PublisherSubscriberPoolInfo>;
-extern globalmq::marshalling::MetaPool<PublisherSubscriberPoolInfo> mp;
+using MetaPoolT = globalmq::marshalling::MetaPool<StatePublisherSubscriberPoolInfo>;
+extern globalmq::marshalling::MetaPool<StatePublisherSubscriberPoolInfo> mp;
 
 #endif // NODECPP_PUBLISH_SUBSCRIBE_SUPPORT_H

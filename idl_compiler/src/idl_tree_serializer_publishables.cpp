@@ -1314,7 +1314,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	assert( s.type == CompositeType::Type::publishable );
 
 	fprintf( header, "template<class T, class ComposerT>\n" );
-	fprintf( header, "class %s_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>\n", s.name.c_str() );
+	fprintf( header, "class %s_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>\n", s.name.c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 	fprintf( header, "\tusing BufferT = typename ComposerT::BufferType;\n" );
@@ -1378,7 +1378,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	assert( s.type == CompositeType::Type::publishable );
 
 	fprintf( header, "template<class T, class BufferT>\n" );
-	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::SubscriberBase<BufferT>\n", s.name.c_str() );
+	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>\n", s.name.c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 
