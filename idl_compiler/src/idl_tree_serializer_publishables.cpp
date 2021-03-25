@@ -1046,7 +1046,7 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\t::globalmq::marshalling::impl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
+				fprintf( header, "\t\t::globalmq::marshalling::impl::copyVector<decltype(UserT::%s), %s>( src.%s, dst.%s );\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1090,7 +1090,7 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\tif ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
+				fprintf( header, "\t\tif ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1314,7 +1314,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	assert( s.type == CompositeType::Type::publishable );
 
 	fprintf( header, "template<class T, class ComposerT>\n" );
-	fprintf( header, "class %s_WrapperForPublisher : public globalmq::marshalling::PublisherBase<ComposerT>\n", s.name.c_str() );
+	fprintf( header, "class %s_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>\n", s.name.c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 	fprintf( header, "\tusing BufferT = typename ComposerT::BufferType;\n" );
@@ -1378,7 +1378,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	assert( s.type == CompositeType::Type::publishable );
 
 	fprintf( header, "template<class T, class BufferT>\n" );
-	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::SubscriberBase<BufferT>\n", s.name.c_str() );
+	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>\n", s.name.c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 
