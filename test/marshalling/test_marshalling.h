@@ -1193,13 +1193,13 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
-		::globalmq::marshalling::impl::copyVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( src.sizes, dst.sizes );
+		::globalmq::marshalling::impl::copyVector<decltype(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( src.sizes, dst.sizes );
 		dst.NN = src.NN;
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
-		if ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
+		if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::StructWithVectorOfSize), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
 		if ( s1.NN != s2.NN ) return false;
 		return true;
 	}
@@ -1477,13 +1477,13 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
 		dst.ID = src.ID;
-		::globalmq::marshalling::impl::copyVector<declval(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
+		::globalmq::marshalling::impl::copyVector<decltype(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
 		if ( s1.ID != s2.ID ) return false;
-		if ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
+		if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::StructWithVectorOfInt), ::globalmq::marshalling::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
 		return true;
 	}
 };

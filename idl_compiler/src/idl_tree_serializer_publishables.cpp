@@ -1046,7 +1046,7 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\t::globalmq::marshalling::impl::copyVector<declval(UserT::%s), %s>( src.%s, dst.%s );\n",
+				fprintf( header, "\t\t::globalmq::marshalling::impl::copyVector<decltype(UserT::%s), %s>( src.%s, dst.%s );\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
@@ -1090,7 +1090,7 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\tif ( !::globalmq::marshalling::impl::isSameVector<declval(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
+				fprintf( header, "\t\tif ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n",
 					s.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str(), member.name.c_str()
 				);
 				break;
