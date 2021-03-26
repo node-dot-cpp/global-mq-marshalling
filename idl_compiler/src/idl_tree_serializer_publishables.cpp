@@ -314,9 +314,9 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	fprintf( header, "\t\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	if ( forwardAddress )
-		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
 	else
-		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::Size), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	if ( addReportChanges )
@@ -890,6 +890,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 				fprintf( header, "\t\t{\n" );
 				fprintf( header, "\t\t\tdecltype(T::%s) oldVectorVal;\n", member.name.c_str() );
 				fprintf( header, "\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\tbool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\tchanged = changed || currentChanged;\n" );

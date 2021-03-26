@@ -925,6 +925,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 		{
 			decltype(T::sizes) oldVectorVal;
 			::globalmq::marshalling::impl::copyVector<decltype(T::sizes), publishable_STRUCT_SIZE>( t.sizes, oldVectorVal );
+			::globalmq::marshalling::impl::parseKey( parser, "sizes" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
 			bool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::sizes), publishable_STRUCT_SIZE>( oldVectorVal, t.sizes );
 			changed = changed || currentChanged;
@@ -1263,6 +1264,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 		{
 			decltype(T::signedInts) oldVectorVal;
 			::globalmq::marshalling::impl::copyVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( t.signedInts, oldVectorVal );
+			::globalmq::marshalling::impl::parseKey( parser, "signedInts" );
 			PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.signedInts );
 			bool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( oldVectorVal, t.signedInts );
 			changed = changed || currentChanged;
@@ -2563,7 +2565,7 @@ public:
 						}
 						else if constexpr( has_void_update_notifier_for_size )
 						{
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.size, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::size), bool>( parser, t.size, addr, 1 );
 							if ( changedCurrent )
 							{
 								t.notifyUpdated_size();
@@ -2624,7 +2626,7 @@ public:
 						}
 						else if constexpr( has_void_update_notifier_for_chp )
 						{
-							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::Size), bool>( parser, t.chp, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp, addr, 1 );
 							if ( changedCurrent )
 							{
 								t.notifyUpdated_chp();
@@ -2988,7 +2990,7 @@ public:
 						}
 						else if constexpr( has_void_update_notifier_for_structWithVectorOfInt )
 						{
-							bool changedCurrent = publishable_STRUCT_StructWithVectorOfInt::parse<ParserT, decltype(T::Size), bool>( parser, t.structWithVectorOfInt, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfInt::parse<ParserT, decltype(T::structWithVectorOfInt), bool>( parser, t.structWithVectorOfInt, addr, 1 );
 							if ( changedCurrent )
 							{
 								t.notifyUpdated_structWithVectorOfInt();
@@ -3049,7 +3051,7 @@ public:
 						}
 						else if constexpr( has_void_update_notifier_for_structWithVectorOfSize )
 						{
-							bool changedCurrent = publishable_STRUCT_StructWithVectorOfSize::parse<ParserT, decltype(T::Size), bool>( parser, t.structWithVectorOfSize, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_StructWithVectorOfSize::parse<ParserT, decltype(T::structWithVectorOfSize), bool>( parser, t.structWithVectorOfSize, addr, 1 );
 							if ( changedCurrent )
 							{
 								t.notifyUpdated_structWithVectorOfSize();
