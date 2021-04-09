@@ -34,10 +34,14 @@
 
 namespace globalmq::marshalling {
 
-struct GMQPublicAddress
+struct GMQBaseAddress
 {
 	std::string machine;
 	std::string node;
+};
+
+struct GMQFullAddress : public GMQBaseAddress
+{
 	std::string object;
 };
 
@@ -65,7 +69,7 @@ struct SlotIdx
 
 class AddressableLocations // one per process
 {
-	std::vector<AddressableObject> slots; // mx-protected!
+	std::vector<AddressableLocation> slots; // mx-protected!
 public:
 	SlotIdx add( InProcessMessagePostmanBase* postman )
 	{ 
@@ -75,6 +79,10 @@ public:
 	{ 
 		// TODO: find by idx.idx, check reincarnaion, set postman to null
 	}
+	InProcessMessagePostmanBase* getPostman( SlotIdx )
+	{
+		// TODO: access, verify, return
+	}
 };
 
 extern AddressableLocations addressableLocations;
@@ -82,13 +90,29 @@ extern AddressableLocations& getAddressableLocations() { return addressableLocat
 
 class GMQueue
 {
-	std::unordered_map<GMQPublicAddress, AddressableLocation> recipients; // mx-protected
+	std::unordered_map<GMQBaseAddress, AddressableLocation> recipients; // mx-protected
 
 public:
 	GMQueue() {}
 
-	void add( GMQPublicAddress addr, SlotIdx idx ) {}
-	void remove( GMQPublicAddress addr, SlotIdx idx ) {}
+	void add( GMQBaseAddress addr, SlotIdx idx ) {}
+	void addLocal( GMQ_COLL string_literal name, SlotIdx idx ) {
+		if ( name != "" )
+		{
+			GMQBaseAddress addr;
+			addr.node = name;
+			add( addr, idx );
+		}
+	}
+	void remove( GMQBaseAddress addr, SlotIdx idx ) {}
+	void removeLocal( GMQ_COLL string_literal name, SlotIdx idx ) {
+		if ( name != "" )
+		{
+			GMQBaseAddress addr;
+			addr.node = name;
+			remove( addr, idx );
+		}
+	}
 };
 
 class GMQTransportBase
@@ -101,13 +125,11 @@ protected:
 public:
 	GMQTransportBase( GMQueue& queue, GMQ_COLL string_literal name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
 		idx = getAddressableLocations().add( postman );
-		GMQPublicAddress addr;
-		addr.node = name;
-		queue.add( addr, idx );
+		queue.add( name, idx );
 	};
 	virtual ~GMQTransportBase() {
 		getAddressableLocations().remove( idx );
-		queue.remove( addr, idx );
+		queue.remove( name, idx );
 	}
 
 	virtual void postMessage( InterThreadMsg&& ) = 0;

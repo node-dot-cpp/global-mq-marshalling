@@ -32,8 +32,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\library\include\global_mq_common.h" />
+    <ClInclude Include="..\..\library\include\gmqueue.h" />
     <ClInclude Include="..\..\library\include\marshalling_impl.h" />
     <ClInclude Include="..\..\library\include\marshalling.h" />
+    <ClInclude Include="..\..\library\include\platforms\hwnd_queue.h" />
+    <ClInclude Include="..\..\library\include\platforms\inproc_queue.h" />
+    <ClInclude Include="..\..\library\include\platforms\qt_queue.h" />
     <ClInclude Include="..\..\library\include\publishable_impl.h" />
     <ClInclude Include="..\marshalling\test_marshalling.h" />
     <ClInclude Include="..\nodecpp_publish_subscribe_support.h" />

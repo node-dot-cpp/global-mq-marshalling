@@ -66,6 +66,8 @@ public:
 class GMQQtTransport : public GMQTransportBase
 {
 	QtPostman postman;
+
+public:
 	GMQQtTransport( GMQueue& gmq, GMQ_COLL string_literal name, HWND hwnd, uint32_t msgType ) : GMQTransportBase( gmq, &postman ), postman( hwnd, msgType ) {}
 };
 
