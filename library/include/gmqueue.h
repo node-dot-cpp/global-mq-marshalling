@@ -30,6 +30,9 @@
 
 #include "global_mq_common.h"
 #include "marshalling.h"
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 
 namespace globalmq::marshalling {
@@ -69,19 +72,38 @@ struct SlotIdx
 
 class AddressableLocations // one per process
 {
+	std::mutex mx;
 	std::vector<AddressableLocation> slots; // mx-protected!
 public:
 	SlotIdx add( InProcessMessagePostmanBase* postman )
 	{ 
+		std::unique_lock<std::mutex> lock(mx);
 		// TODO: essentially add to slots and return its idx
+		for ( size_t i = 0; i<slots.size(); ++i )
+			if ( slots[i].postman == nullptr )
+			{
+				slots[i].postman = postman;
+				++(slots[i].reincarnation);
+				return SlotIdx({i,slots[i].reincarnation});
+			}
+		slots.push_back({postman, 0});
+		return SlotIdx({slots.size() - 1, 0});
 	}
 	void remove( SlotIdx idx )
 	{ 
-		// TODO: find by idx.idx, check reincarnaion, set postman to null
+		std::unique_lock<std::mutex> lock(mx);
+		// find by idx.idx, check reincarnaion, set postman to null
+		assert ( idx.idx < slots.size() ); 
+		assert ( idx.reincarnation == slots[idx.idx].reincarnation ); 
+		slots[idx.idx].postman = nullptr;
 	}
-	InProcessMessagePostmanBase* getPostman( SlotIdx )
+	InProcessMessagePostmanBase* getPostman( SlotIdx idx )
 	{
-		// TODO: access, verify, return
+		std::unique_lock<std::mutex> lock(mx);
+		// access, verify, return
+		assert ( idx.idx < slots.size() ); 
+		assert ( idx.reincarnation == slots[idx.idx].reincarnation ); 
+		return slots[idx.idx].postman;
 	}
 };
 
@@ -133,23 +155,6 @@ public:
 	}
 
 	virtual void postMessage( InterThreadMsg&& ) = 0;
-};
-
-/*class GMQHwndTransport : public GMQTransportBase
-{
-//	GMQHwndTransport( GMQueue& gmq, HWND hwnd ) {}
-};
-
-class GMQQTTransport : public GMQTransportBase
-{
-};*/
-
-class GMQInProcessQueueTransport : public GMQTransportBase
-{
-	GMQInProcessQueueTransport( GMQueue& queue ) : GMQTransportBase( queue ) {
-	}
-	GMQInProcessQueueTransport( GMQueue& queue, string_literal name ) : GMQTransportBase( queue ) {
-	}
 };
 
 

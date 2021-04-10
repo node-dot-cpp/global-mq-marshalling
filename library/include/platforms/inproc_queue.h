@@ -222,7 +222,7 @@ class GMQThreadQueueTransport : public GMQTransportBase
 	ThreadQueuePostman<InterThreadMsgT> postman;
 
 public:
-	GMQThreadQueueTransport( GMQueue& gmq, GMQ_COLL string_literal name, typename ThreadQueuePostman<InterThreadMsgT>::MsgQueue& queue ) : GMQTransportBase( gmq, &postman ), postman( queue ) {}
+	GMQThreadQueueTransport( GMQueue& gmq, GMQ_COLL string_literal name, typename ThreadQueuePostman<InterThreadMsgT>::MsgQueue& queue ) : GMQTransportBase( gmq, name, &postman ), postman( queue ) {}
 };
 
 } // namespace globalmq::marshalling
