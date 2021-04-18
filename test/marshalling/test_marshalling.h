@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_d07d6c67_guard
-#define _test_marshalling_h_d07d6c67_guard
+#ifndef _test_marshalling_h_fad36cd5_guard
+#define _test_marshalling_h_fad36cd5_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -2294,6 +2294,8 @@ class publishable_sample_WrapperForPublisher : public globalmq::marshalling::Sta
 
 
 public:
+	static constexpr uint64_t numTypeID = 1;
+
 	template<class ... ArgsT>
 	publishable_sample_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
 	const T& getState() { return t; }
@@ -2496,6 +2498,8 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::St
 	static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 
 public:
+	static constexpr uint64_t numTypeID = 1;
+
 	template<class ... ArgsT>
 	publishable_sample_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
@@ -4104,4 +4108,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_d07d6c67_guard
+#endif // _test_marshalling_h_fad36cd5_guard

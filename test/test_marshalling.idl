@@ -14,7 +14,7 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
-PUBLISHABLE publishable_sample {
+PUBLISHABLE publishable_sample=1 {
 	INTEGER ID;
 	CHARACTER-STRING name;
 	STRUCT SIZE size;
