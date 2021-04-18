@@ -1257,7 +1257,7 @@ template<typename ParserT, typename ArgT, typename NameT>
 void publishableParseString(ParserT& p, ArgT* arg, NameT expectedName)
 {
 	if constexpr ( ParserT::proto == Proto::GMQ )
-		parseString( p, arg );
+		p.parseString( arg );
 	else
 	{
 		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );

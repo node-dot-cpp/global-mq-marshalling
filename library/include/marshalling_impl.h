@@ -554,6 +554,7 @@ public:
 
 	void parseString( GMQ_COLL string* str )
 	{
+		str->clear();
 		while( riter.isData() && *riter != 0 )
 		{
 			*str += *riter;

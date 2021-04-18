@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_047365ba_guard
-#define _test_marshalling_h_047365ba_guard
+#ifndef _test_marshalling_h_d07d6c67_guard
+#define _test_marshalling_h_d07d6c67_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -149,6 +149,7 @@ template<typename T> concept has_X_member = requires { { T::X }; };
 template<typename T> concept has_Y_member = requires { { T::Y }; };
 template<typename T> concept has_Z_member = requires { { T::Z }; };
 template<typename T> concept has_chp_member = requires { { T::chp }; };
+template<typename T> concept has_name_member = requires { { T::name }; };
 template<typename T> concept has_signedInts_member = requires { { T::signedInts }; };
 template<typename T> concept has_size_member = requires { { T::size }; };
 template<typename T> concept has_sizes_member = requires { { T::sizes }; };
@@ -175,6 +176,8 @@ template<typename T> concept has_void_update_notifier_call_for_Z = requires(T t)
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_Z = requires { { std::declval<StateT>().notifyUpdated_Z(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_chp = requires(T t) { { t.notifyUpdated_chp() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_chp = requires { { std::declval<StateT>().notifyUpdated_chp(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_name = requires(T t) { { t.notifyUpdated_name() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_name = requires { { std::declval<StateT>().notifyUpdated_name(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_signedInts = requires(T t) { { t.notifyUpdated_signedInts() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_signedInts = requires { { std::declval<StateT>().notifyUpdated_signedInts(std::declval<MemberT>()) }; };
 template<typename T> concept has_element_updated_void_notifier_call_for_signedInts = requires(T t) { { t.notifyElementUpdated_signedInts() }; };
@@ -2254,14 +2257,15 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 } // namespace test_json 
 
 //**********************************************************************
-// PUBLISHABLE publishable_sample (7 parameters)
+// PUBLISHABLE publishable_sample (8 parameters)
 // 1. INTEGER ID
-// 2. STRUCT SIZE size
-// 3. STRUCT CharacterParam chp
-// 4. VECTOR<INTEGER> vector_of_int
-// 5. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
-// 6. STRUCT StructWithVectorOfInt structWithVectorOfInt
-// 7. STRUCT StructWithVectorOfSize structWithVectorOfSize
+// 2. CHARACTER_STRING name
+// 3. STRUCT SIZE size
+// 4. STRUCT CharacterParam chp
+// 5. VECTOR<INTEGER> vector_of_int
+// 6. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
+// 7. STRUCT StructWithVectorOfInt structWithVectorOfInt
+// 8. STRUCT StructWithVectorOfSize structWithVectorOfSize
 //**********************************************************************
 
 template<class T, class ComposerT>
@@ -2273,6 +2277,8 @@ class publishable_sample_WrapperForPublisher : public globalmq::marshalling::Sta
 	ComposerT composer;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
 	static constexpr bool has_size = has_size_member<T>;
 	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
 	static constexpr bool has_chp = has_chp_member<T>;
@@ -2303,60 +2309,66 @@ public:
 		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeInteger( composer, t.ID );
 	}
+	const auto& get_name() { return t.name; }
+	void set_name( decltype(T::name) val) { 
+		t.name = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( composer, t.name );
+	}
 	const auto& get_size() { return t.size; }
 	void set_size( decltype(T::size) val) { 
 		t.size = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 2 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_SIZE::compose( composer, t.size );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 1); }
+	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 2); }
 	const auto& get_chp() { return t.chp; }
 	void set_chp( decltype(T::chp) val) { 
 		t.chp = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 2 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 3 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_of_int() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 3 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 4 );
 		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.vector_of_int );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
-	auto get4set_vector_of_int() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, publishable_sample_WrapperForPublisher>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_vector_of_int() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType, publishable_sample_WrapperForPublisher>(t.vector_of_int, *this, GMQ_COLL vector<size_t>(), 4); }
 	auto get_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper<POINT3DREAL_RefWrapper<typename decltype(T::vector_struct_point3dreal)::value_type>, decltype(T::vector_struct_point3dreal)>(t.vector_struct_point3dreal); }
 	void set_vector_struct_point3dreal( decltype(T::vector_struct_point3dreal) val) { 
 		t.vector_struct_point3dreal = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 4 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 5 );
 		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( composer );
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( composer, t.vector_struct_point3dreal );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( composer );
 	}
-	auto get4set_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_WrapperForPublisher, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_WrapperForPublisher>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 4); }
+	auto get4set_vector_struct_point3dreal() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL, publishable_sample_WrapperForPublisher, POINT3DREAL_RefWrapper4Set<typename decltype(T::vector_struct_point3dreal)::value_type, publishable_sample_WrapperForPublisher>>(t.vector_struct_point3dreal, *this, GMQ_COLL vector<size_t>(), 5); }
 	const auto& get_structWithVectorOfInt() { return t.structWithVectorOfInt; }
 	void set_structWithVectorOfInt( decltype(T::structWithVectorOfInt) val) { 
 		t.structWithVectorOfInt = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 5 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 6 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 5); }
+	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 6); }
 	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
 	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
 		t.structWithVectorOfSize = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 6 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 7 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
 		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 6); }
+	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 7); }
 
 	template<class ComposerT>
 	void compose( ComposerT& composer )
@@ -2364,6 +2376,8 @@ public:
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
 		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
 
 		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "size" );
 		publishable_STRUCT_SIZE::compose( composer, t.size );
@@ -2420,6 +2434,8 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::St
 	T t;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
 	static constexpr bool has_size = has_size_member<T>;
 	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
 	static constexpr bool has_chp = has_chp_member<T>;
@@ -2436,6 +2452,9 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::St
 	static constexpr bool has_void_update_notifier_for_ID = has_void_update_notifier_call_for_ID<T>;
 	static constexpr bool has_update_notifier_for_ID = has_update_notifier_call_for_ID<T, decltype(T::ID)>;
 	static constexpr bool has_any_notifier_for_ID = has_void_update_notifier_for_ID || has_update_notifier_for_ID;
+	static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+	static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+	static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
 	static constexpr bool has_void_update_notifier_for_size = has_void_update_notifier_call_for_size<T>;
 	static constexpr bool has_update_notifier_for_size = has_update_notifier_call_for_size<T, decltype(T::size)>;
 	static constexpr bool has_any_notifier_for_size = has_void_update_notifier_for_size || has_update_notifier_for_size;
@@ -2517,6 +2536,27 @@ public:
 				}
 				case 1:
 				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_name )
+					{
+						decltype(T::name) oldVal = t.name;
+						::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+						bool currentChanged = oldVal != t.name;
+						if ( currentChanged )
+						{
+							if constexpr ( has_void_update_notifier_for_name )
+								t.notifyUpdated_name();
+							if constexpr ( has_update_notifier_for_name )
+								t.notifyUpdated_name( oldVal );
+						}
+					}
+					else
+						::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				case 2:
+				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
@@ -2576,7 +2616,7 @@ public:
 					}
 					break;
 				}
-				case 2:
+				case 3:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
@@ -2637,7 +2677,7 @@ public:
 					}
 					break;
 				}
-				case 3:
+				case 4:
 				{
 				{
 					decltype(T::vector_of_int) oldVectorVal;
@@ -2770,7 +2810,7 @@ public:
 
 					break;
 				}
-				case 4:
+				case 5:
 				{
 				{
 					decltype(T::vector_struct_point3dreal) oldVectorVal;
@@ -2940,7 +2980,7 @@ public:
 
 					break;
 				}
-				case 5:
+				case 6:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
@@ -3001,7 +3041,7 @@ public:
 					}
 					break;
 				}
-				case 6:
+				case 7:
 				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
@@ -3077,6 +3117,8 @@ public:
 
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "size" );
 		publishable_STRUCT_SIZE::parse( parser, t.size );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
@@ -3105,6 +3147,7 @@ public:
 			t.notifyFullyUpdated();
 	}
 	auto get_ID() { return t.ID; }
+	const auto& get_name() { return t.name; }
 	const auto& get_size() { return t.size; }
 	const auto& get_chp() { return t.chp; }
 	auto get_vector_of_int() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
@@ -4061,4 +4104,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_047365ba_guard
+#endif // _test_marshalling_h_d07d6c67_guard

@@ -19,9 +19,12 @@ void deliverMessages()
 
 	for ( size_t i=0; i<likeQueues[publisherPoolAddress].size(); ++i )
 	{
-		fmt::print( "To publisher pool:\n" );
-		std::string_view sview( reinterpret_cast<const char*>(likeQueues[publisherPoolAddress][i].begin()), likeQueues[publisherPoolAddress][i].size() );
-		fmt::print( "{}\n\n", sview );
+		if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+		{
+			fmt::print( "To publisher pool:\n" );
+			std::string_view sview( reinterpret_cast<const char*>(likeQueues[publisherPoolAddress][i].begin()), likeQueues[publisherPoolAddress][i].size() );
+			fmt::print( "{}\n\n", sview );
+		}
 
 		ParserT parser( likeQueues[publisherPoolAddress][i] );
 		mp.onMessage( parser, subscriberPoolAddress );
@@ -30,9 +33,12 @@ void deliverMessages()
 
 	for ( size_t i=0; i<likeQueues[subscriberPoolAddress].size(); ++i )
 	{
-		fmt::print( "To subscriber pool:\n" );
-		std::string_view sview( reinterpret_cast<const char*>(likeQueues[subscriberPoolAddress][i].begin()), likeQueues[subscriberPoolAddress][i].size() );
-		fmt::print( "{}\n\n", sview );
+		if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+		{
+			fmt::print( "To subscriber pool:\n" );
+			std::string_view sview( reinterpret_cast<const char*>(likeQueues[subscriberPoolAddress][i].begin()), likeQueues[subscriberPoolAddress][i].size() );
+			fmt::print( "{}\n\n", sview );
+		}
 
 		ParserT parser( likeQueues[subscriberPoolAddress][i] );
 		mp.onMessage( parser, subscriberPoolAddress );
@@ -210,6 +216,7 @@ struct CharacterParam{
 
 struct PublishableSample {
 	int ID = 333;
+	GMQ_COLL string name = "abc";
 	SIZE size;
 	CharacterParam chp;
 	std::vector<POINT3DREAL> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
@@ -278,6 +285,7 @@ struct PublishableSample_UPD {
 //	SampleNode* node = nullptr;
 	SampleNode& node;
 	int ID = 333;
+	GMQ_COLL string name = "abc";
 	SIZE_UPD size;
 	CharacterParam_UPD chp;
 	std::vector<POINT3DREAL_UPD> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
@@ -339,6 +347,7 @@ struct PublishableSample_UPD_D {
 //	SampleNode* node = nullptr;
 	SampleNode& node;
 	int ID = 333;
+	GMQ_COLL string name = "abc";
 	SIZE_UPD_D size;
 	CharacterParam_UPD_D chp;
 	std::vector<POINT3DREAL_UPD_D> vector_struct_point3dreal = {{310, 311, 312}, {320, 321, 322}};
@@ -543,6 +552,20 @@ void publishableTestOne()
 	assert( sizeSlave3.X == 1155 );
 	assert( sizeSlave3.Y == 1156 );
 	assert( sizeSlave3.Z == 1157 );
+
+	// Part 6
+	publishableSampleWrapper.set_name( "def" );
+
+	deliverMessages(); // simulate transport layer
+	mp.postAllUpdates(); // simulate infrastructural call
+	deliverMessages(); // simulate transport layer
+
+	auto& nameSlave = publishableSampleWrapperSlave.get_name();
+	assert( nameSlave == "def" );
+	auto& nameSlave2 = publishableSampleWrapperSlave2.get_name();
+	assert( nameSlave2 == "def" );
+	auto& nameSlave3 = publishableSampleWrapperSlave3.get_name();
+	assert( nameSlave3 == "def" );
 	
 	setCurrentNode( nullptr );
 }
