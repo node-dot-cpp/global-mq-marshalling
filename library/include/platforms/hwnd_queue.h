@@ -55,6 +55,7 @@ class GMQHwndTransport : public GMQTransportBase
 
 public:
 	GMQHwndTransport( GMQueue& gmq, GMQ_COLL string_literal name, HWND hwnd, uint32_t msgType ) : GMQTransportBase( gmq, name, &postman ), postman( hwnd, msgType ) {}
+	virtual ~GMQHwndTransport() {}
 };
 
 } // namespace globalmq::marshalling

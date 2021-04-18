@@ -70,7 +70,7 @@ struct SlotIdx
 	uint64_t reincarnation = invalid_reincarnation;
 };
 
-class AddressableLocations // one per process
+class AddressableLocations // one per process; provides process-unique Slot with Postman and returns its SlotIdx
 {
 	std::mutex mx;
 	std::vector<AddressableLocation> slots; // mx-protected!
