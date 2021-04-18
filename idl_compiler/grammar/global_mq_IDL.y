@@ -100,8 +100,8 @@ message
 ;
 
 publishable_begin
-	: KW_PUBLISHABLE IDENTIFIER '{' { $$ = createPublishable($1, false, $2); releaseYys($3); }
-	| KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createPublishable($1, true, $3); releaseYys2($2, $4); }
+	: KW_PUBLISHABLE IDENTIFIER '=' INTEGER_LITERAL '{' { $$ = createPublishable($1, false, $2, $4); releaseYys2($3, $5); }
+	| KW_PUBLISHABLE KW_NONEXTENDABLE IDENTIFIER '=' INTEGER_LITERAL '{' { $$ = createPublishable($1, true, $3, $5); releaseYys3($2, $4, $6); }
 	| publishable_begin data_type IDENTIFIER ';' { $$ = addToPublishable($1, createAttribute($2, $3)); releaseYys($4); }
 	| publishable_begin KW_EXTENSION ':' { $$ = insertExtensionMarkerToPublishable($1); releaseYys2($2, $3); }
 ;

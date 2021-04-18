@@ -86,7 +86,7 @@ YYSTYPE insertExtensionMarkerToStruct(YYSTYPE decl);
 YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoID);
 
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
-YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
 YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId);

@@ -1326,6 +1326,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 //	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
 	fprintf( header, "\npublic:\n" );
+	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n\n", s.numID );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
@@ -1387,6 +1388,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
 	fprintf( header, "\npublic:\n" );
+	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n\n", s.numID );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );

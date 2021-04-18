@@ -112,7 +112,7 @@ void printPublishable( CompositeType& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sPublishabe: name = \"%s\"", offsetch, s.name.c_str() );
+	printf( "%sPublishabe: name = \"%s\"(%lld)", offsetch, s.name.c_str(), s.numID );
 	printf( "(%zd members) {\n", s.members.size() );
 	printPublishableMembers( s, offset + 4 );
 	printf( "%s}\n", offsetch );

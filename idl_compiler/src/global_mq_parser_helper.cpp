@@ -590,7 +590,7 @@ YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoID)
 	return new YyPtr<Scope>(yy);
 }
 
-YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id)
+YYSTYPE impl_createStructOrMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id)
 {
 	unique_ptr<YyBase> d0(token);
 	unique_ptr<YyBase> d1(id);
@@ -605,10 +605,9 @@ YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type,
 	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID)
+YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
-	unique_ptr<YyBase> d0(scopeName);
-	unique_ptr<YyBase> d1(numID);
+	unique_ptr<YyBase> d0(numID);
 
 	uint64_t nID = CompositeType::invalid_num_id;
 	double numID_ = (yystype_cast<YyIntegerLiteral*>(numID))->value;
@@ -617,11 +616,22 @@ YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeNam
 	else
 		nID = numID_;
 
-	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, id);
+	auto ret = impl_createStructOrMessageOrPublishable(token, type, isNonExtendable, id);
+	CompositeType* smp = getPointedFromYyPtr<CompositeType>(ret);
+
+	smp->numID = nID;
+
+	return ret;
+}
+
+YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID)
+{
+	unique_ptr<YyBase> d0(scopeName);
+
+	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, id, numID);
 
 	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
 	msg->scopeName = nameFromYyIdentifier( scopeName );
-	msg->numID = nID;
 
 	return ret;
 }
@@ -631,14 +641,14 @@ YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YY
 	return impl_createMessage(token, isNonExtendable, scopeName, id, numID);
 }
 
-YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
+YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
-	return impl_createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, id);
+	return impl_createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, id, numID);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
-	return impl_createMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, id);
+	return impl_createStructOrMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, id);
 }
 
 YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId)
