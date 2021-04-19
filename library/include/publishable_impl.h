@@ -743,19 +743,19 @@ public:
 template<class InputBufferT, class ComposerT>
 class StateConcentratorBase
 {
-	template<class PlatformSupportT>
-	using BufferT = typename ComposerT::BufferType;
+	using OutputBufferT = typename ComposerT::BufferType;
 
 public:
 	virtual ~StateConcentratorBase() {}
+	// as subscriber
 	virtual void applyGmqMessageWithUpdates( GmqParser<InputBufferT>& parser ) = 0;
 	virtual void applyJsonMessageWithUpdates( JsonParser<InputBufferT>& parser ) = 0;
 	virtual void applyGmqStateSyncMessage( GmqParser<InputBufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<InputBufferT>& parser ) = 0;
-
+	// as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
-	virtual void startTick( BufferT&& buff ) = 0;
-	virtual BufferT&& endTick() = 0;
+	virtual void startTick( OutputBufferT&& buff ) = 0;
+	virtual OutputBufferT&& endTick() = 0;
 
 	virtual const char* name() = 0;
 };

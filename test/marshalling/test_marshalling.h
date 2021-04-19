@@ -2488,6 +2488,89 @@ public:
 	}
 };
 
+template<class T, class InputBufferT, class ComposerT>
+class publishable_short_sample_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
+{
+	T t;
+	using BufferT = typename ComposerT::BufferType;
+	BufferT buffer;
+	ComposerT composer;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+
+
+public:
+	static constexpr uint64_t numTypeID = 1;
+
+	publishable_short_sample_WrapperForConcentrator() : composer( buffer ) {}
+	const char* name() {return "publishable_short_sample";}
+	
+	// Acting as publisher
+	ComposerT& getComposer() { return composer; }
+	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
+	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	template<class ComposerT>
+	void compose( ComposerT& composer )
+	{
+		::globalmq::marshalling::impl::composeStructBegin( composer );
+
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", false );
+
+
+		::globalmq::marshalling::impl::composeStructEnd( composer );
+	}
+	// Acting as subscriber
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser)
+	{
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					break;
+				}
+				case 1:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
+
+	template<class ParserT>
+	void parse( ParserT& parser )
+	{
+		::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::parseStructEnd( parser );
+	}
+};
+
 //**********************************************************************
 // PUBLISHABLE publishable_sample (8 parameters)
 // 1. INTEGER ID
@@ -3434,6 +3517,356 @@ public:
 	void subscribe()
 	{
 		registrar.subscribe( this );
+	}
+};
+
+template<class T, class InputBufferT, class ComposerT>
+class publishable_sample_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
+{
+	T t;
+	using BufferT = typename ComposerT::BufferType;
+	BufferT buffer;
+	ComposerT composer;
+	static constexpr bool has_ID = has_ID_member<T>;
+	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_size = has_size_member<T>;
+	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
+	static constexpr bool has_chp = has_chp_member<T>;
+	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParam" );
+	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
+	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
+	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
+	static_assert( has_vector_struct_point3dreal, "type T must have member T::vector_struct_point3dreal of a type corresponding to IDL type VECTOR<STRUCT POINT3DREAL>" );
+	static constexpr bool has_structWithVectorOfInt = has_structWithVectorOfInt_member<T>;
+	static_assert( has_structWithVectorOfInt, "type T must have member T::structWithVectorOfInt of a type corresponding to IDL type STRUCT StructWithVectorOfInt" );
+	static constexpr bool has_structWithVectorOfSize = has_structWithVectorOfSize_member<T>;
+	static_assert( has_structWithVectorOfSize, "type T must have member T::structWithVectorOfSize of a type corresponding to IDL type STRUCT StructWithVectorOfSize" );
+
+
+public:
+	static constexpr uint64_t numTypeID = 2;
+
+	publishable_sample_WrapperForConcentrator() : composer( buffer ) {}
+	const char* name() {return "publishable_sample";}
+	
+	// Acting as publisher
+	ComposerT& getComposer() { return composer; }
+	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
+	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	template<class ComposerT>
+	void compose( ComposerT& composer )
+	{
+		::globalmq::marshalling::impl::composeStructBegin( composer );
+
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "size" );
+		publishable_STRUCT_SIZE::compose( composer, t.size );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "chp" );
+		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.vector_of_int, "vector_of_int", true );
+
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( composer, t.vector_struct_point3dreal, "vector_struct_point3dreal", true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfInt" );
+		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "structWithVectorOfSize" );
+		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+
+
+		::globalmq::marshalling::impl::composeStructEnd( composer );
+	}
+	// Acting as subscriber
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser)
+	{
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					break;
+				}
+				case 1:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				case 2:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						publishable_STRUCT_SIZE::parse( parser, t.size );
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						publishable_STRUCT_SIZE::parse( parser, t.size, addr, 1 );
+					}
+					break;
+				}
+				case 3:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );
+					}
+					break;
+				}
+				case 4:
+				{
+				{
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					{
+						size_t pos = addr[1];
+						if ( pos >= t.vector_of_int.size() )
+							throw std::exception();
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.vector_of_int elements is INTEGER)
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnVector::remove_at:
+								{
+									t.vector_of_int.erase( t.vector_of_int.begin() + pos );
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_of_int)::value_type& value = t.vector_of_int[pos];
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value );
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_of_int)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, value );
+									t.vector_of_int.insert( t.vector_of_int.begin() + pos, value );
+									break;
+								}
+								default:
+									throw std::exception();
+							}
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
+						}
+					}
+					else // replacement of the whole vector
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
+
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+					}
+
+				}
+
+					break;
+				}
+				case 5:
+				{
+				{
+					if ( addr.size() > 1 ) // one of actions over elements of the vector
+					{
+						size_t pos = addr[1];
+						if ( pos >= t.vector_struct_point3dreal.size() )
+							throw std::exception();
+						if ( addr.size() > 2 ) // update for a member of a particular vector element
+						{
+							typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
+							if constexpr ( has_full_element_updated_notifier_for_vector_struct_point3dreal )
+							{
+								typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
+								publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
+								currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
+								if ( currentChanged )
+								{
+									t.notifyElementUpdated_vector_struct_point3dreal( pos, oldValue );
+									if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
+										t.notifyElementUpdated_vector_struct_point3dreal();
+									if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+										t.notifyElementUpdated_vector_struct_point3dreal();
+								}
+							}
+							else if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
+							{
+								currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
+								if ( currentChanged )
+								{
+									t.notifyElementUpdated_vector_struct_point3dreal( pos );
+									if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+										t.notifyElementUpdated_vector_struct_point3dreal();
+								}
+							}
+							else if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
+							{
+								currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
+								if ( currentChanged )
+									t.notifyElementUpdated_vector_struct_point3dreal();
+							}
+							else
+							{
+								if constexpr ( alwaysCollectChanges )
+									currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
+								else
+									publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type>( parser, value, addr, 2 );
+							}
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnVector::remove_at:
+								{
+									t.vector_struct_point3dreal.erase( t.vector_struct_point3dreal.begin() + pos );
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::vector_struct_point3dreal)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, value );
+									t.vector_struct_point3dreal.insert( t.vector_struct_point3dreal.begin() + pos, value );
+									break;
+								}
+								default:
+									throw std::exception();
+							}
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
+						}
+					}
+					else // replacement of the whole vector
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+					}
+
+				}
+
+					break;
+				}
+				case 6:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt, addr, 1 );
+					}
+					break;
+				}
+				case 7:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize );
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize, addr, 1 );
+					}
+					break;
+				}
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
+
+	template<class ParserT>
+	void parse( ParserT& parser )
+	{
+		::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "size" );
+		publishable_STRUCT_SIZE::parse( parser, t.size );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "chp" );
+		publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
+
+		::globalmq::marshalling::impl::parseKey( parser, "vector_struct_point3dreal" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfInt" );
+		publishable_STRUCT_StructWithVectorOfInt::parse( parser, t.structWithVectorOfInt );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "structWithVectorOfSize" );
+		publishable_STRUCT_StructWithVectorOfSize::parse( parser, t.structWithVectorOfSize );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseStructEnd( parser );
 	}
 };
 

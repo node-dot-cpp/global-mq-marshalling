@@ -238,6 +238,14 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 }
 
+void impl_generateApplyUpdateForSimpleTypeNoNotifiers( FILE* header, MessageParameter& member, bool isLeafe )
+{
+	if ( isLeafe )
+		fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+	else
+		fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+}
+
 void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& member, bool addReportChanges )
 {
 	fprintf( header, "\t\t\t\t\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
@@ -284,6 +292,11 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 	else
 		fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
+}
+
+void impl_generateApplyUpdateForStructItselfNoNotifiers( FILE* header, MessageParameter& member )
+{
+	fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 }
 
 void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, bool forwardAddress )
@@ -348,6 +361,17 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 		else
 			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 	}
+}
+
+void impl_generateApplyUpdateForFurtherProcessingInStructNoNotifiers( FILE* header, MessageParameter& member, bool addOffsetInAddr, bool forwardAddress )
+{
+	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+
+	if ( forwardAddress )
+		fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+	else
+		fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
 }
 
 void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges )
@@ -956,7 +980,7 @@ void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root
 	fprintf( header, "\t}\n" );
 }
 
-void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, CompositeType& obj )
+void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, CompositeType& obj, bool addFullUpdateNotifierBlock )
 {
 	assert( obj.type == CompositeType::Type::publishable );
 	fprintf( header, "\ttemplate<class ParserT>\n" );
@@ -1004,9 +1028,12 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 	}
 
 	fprintf( header, "\t\t::globalmq::marshalling::impl::parseStructEnd( parser );\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\t\tif constexpr ( has_full_update_notifier )\n" );
-	fprintf( header, "\t\t\tt.notifyFullyUpdated();\n" );
+	if ( addFullUpdateNotifierBlock )
+	{
+		fprintf( header, "\n" );
+		fprintf( header, "\t\tif constexpr ( has_full_update_notifier )\n" );
+		fprintf( header, "\t\t\tt.notifyFullyUpdated();\n" );
+	}
 	fprintf( header, "\t}\n" );
 }
 
@@ -1228,7 +1255,7 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 	}
 }
 
-void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, CompositeType& s )
+void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, CompositeType& s, bool addNotifications )
 {
 	fprintf( header, 
 		"\ttemplate<typename ParserT>\n"
@@ -1261,7 +1288,10 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			{
 				fprintf( header, "\t\t\t\t\tif ( addr.size() > 1 )\n" );
 				fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
-				impl_generateApplyUpdateForSimpleType( header, member, false, true );
+				if ( addNotifications )
+					impl_generateApplyUpdateForSimpleType( header, member, false, true );
+				else
+					impl_generateApplyUpdateForSimpleTypeNoNotifiers( header, member, true );
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
@@ -1271,7 +1301,10 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );\n" );
 				fprintf( header, "\n" );
 
-				impl_generateApplyUpdateForStructItself( header, member, false );
+				if ( addNotifications )
+					impl_generateApplyUpdateForStructItself( header, member, false );
+				else
+					impl_generateApplyUpdateForStructItselfNoNotifiers( header, member );
 
 				fprintf( header, "\n" );
 				fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );\n" );
@@ -1279,7 +1312,10 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, "\t\t\t\t\telse // let child continue parsing\n" );
 				fprintf( header, "\t\t\t\t\t{\n" );
 
-				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, false, true );
+				if ( addNotifications )
+					impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, false, true );
+				else
+					impl_generateApplyUpdateForFurtherProcessingInStructNoNotifiers( header, member, false, true );
 
 				fprintf( header, "\t\t\t\t\t}\n" );
 
@@ -1397,10 +1433,10 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\tvirtual const char* name() { return \"%s\"; }\n", s.name.c_str() );
 	fprintf( header, "\n" );
 
-	impl_GenerateApplyUpdateMessageMemberFn( header, root, s );
+	impl_GenerateApplyUpdateMessageMemberFn( header, root, s, true );
 	fprintf( header, "\n" );
 	fprintf( header, "\n" );
-	impl_generateParseFunctionForPublishableState( header, root, s );
+	impl_generateParseFunctionForPublishableState( header, root, s, true );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, false );
 
@@ -1454,6 +1490,46 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\tregistrar.subscribe( this );\n" );
 	fprintf( header, "\t}\n" );
+	fprintf( header, "};\n\n" );
+}
+
+void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable );
+
+	fprintf( header, "template<class T, class InputBufferT, class ComposerT>\n" );
+	fprintf( header, "class %s_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>\n", s.name.c_str() );
+	fprintf( header, "{\n" );
+	fprintf( header, "\tT t;\n" );
+	fprintf( header, "\tusing BufferT = typename ComposerT::BufferType;\n" );
+	fprintf( header, "\tBufferT buffer;\n" );
+	fprintf( header, "\tComposerT composer;\n" );
+
+	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+
+	fprintf( header, "\npublic:\n" );
+	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
+	fprintf( header, "\n" );
+	fprintf( header, "\t%s_WrapperForConcentrator() : composer( buffer ) {}\n", s.name.c_str() );
+	fprintf( header, "\tconst char* name() {return \"%s\";}\n", s.name.c_str() );
+	fprintf( header, "\t\n" );
+
+	fprintf( header, "\t// Acting as publisher\n" );
+	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
+	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
+	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
+
+	impl_generateComposeFunctionForPublishableStruct( header, root, s );
+
+	fprintf( header, "\t// Acting as subscriber\n" );
+	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
+	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
+	fprintf( header, "\n" );
+
+	impl_GenerateApplyUpdateMessageMemberFn( header, root, s, false );
+	fprintf( header, "\n" );
+	impl_generateParseFunctionForPublishableState( header, root, s, false );
+
 	fprintf( header, "};\n\n" );
 }
 
@@ -1681,12 +1757,18 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 	bool generatePlatformSpec = platformPrefix.size() != 0 && classNotifierName.size() != 0;
 
 	impl_generatePublishableCommentBlock( header, s );
+
 	impl_GeneratePublishableStateWrapperForPublisher( header, root, s );
 	if ( generatePlatformSpec )
 		impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, platformPrefix, classNotifierName );
+
 	impl_GeneratePublishableStateWrapperForSubscriber( header, root, s );
 	if ( generatePlatformSpec )
 		impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, platformPrefix, classNotifierName );
+
+	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s );
+	if ( generatePlatformSpec )
+		impl_GeneratePublishableStatePlatformWrapperForConcentrator( header, root, s, platformPrefix, classNotifierName );
 }
 
 
