@@ -7,6 +7,7 @@ void testParsingJsonFile();
 void testMessageAliases();
 void testScopedMessageComposingAndParsing();
 
+void quickTestForGmqParts();
 void publishableTestOne();
 
 #endif // TESTS_H

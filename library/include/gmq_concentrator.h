@@ -37,16 +37,49 @@
 
 namespace globalmq::marshalling {
 
-template<class ... ExpectedTypes>
+template<class ExpectedType, class ... ExpectedTypes>
 class Concentrator
 {
+	// TODO:
+	// 1. new/delete usage
+	// 2. unexpected type
+
 	void* data = nullptr;
 	size_t type;
+
+	template<class Type>
+	bool init( uint64_t type_, Type** data_ )
+	{
+		if ( Type::numTypeID == type_ )
+		{
+			*data_ = new Type;
+			type = type_;
+			return true;
+		}
+		return false;
+	}
+
+	template<class Type, class NextT, class ... Types>
+	bool init( uint64_t type_, Type** data_ )
+	{
+		if ( Type::numTypeID == type_ )
+		{
+			*data_ = new Type;
+			type = type_;
+			return true;
+		}
+		else
+			return init<NextT, Types...>( type_, (NextT**)(data_) );
+	}
+
 	void deleteData() {
 //		if ( data != nullptr )
 	}
 public:
-	Concentrator() {}
+	Concentrator( uint64_t type_ ) { 
+		bool ok = init<ExpectedType, ExpectedTypes...>( type_, (ExpectedType**)(&data) ); 
+		assert( ok );
+	}
 	~Concentrator() { deleteData(); }
 };
 

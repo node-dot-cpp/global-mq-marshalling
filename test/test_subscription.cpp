@@ -360,6 +360,27 @@ struct PublishableSample_UPD_D {
 	void notifyUpdated_ID( int id ) const { assert( getCurrentNode() != nullptr ); getCurrentNode()->addPreAccess(); fmt::print( "PublishableSample_UPD_D::notifyUpdated_ID({})\n", id ); }
 };
 
+struct PublishableShortSample {
+	int ID = 777;
+	GMQ_COLL string name = "xyz";
+
+	PublishableShortSample() {}
+};
+
+#include <gmq_concentrator.h>
+struct S1 { static constexpr uint64_t numTypeID = 1; int n = 11; };
+struct S2 { static constexpr uint64_t numTypeID = 2; int n = 22; };
+void quickTestForGmqParts()
+{
+	using BufferT = globalmq::marshalling::Buffer;
+	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+//	using ConcentratorT = globalmq::marshalling::Concentrator<mtest::publishable_sample_WrapperForPublisher<PublishableSample, ComposerT>, mtest::publishable_short_sample_WrapperForPublisher<PublishableShortSample, ComposerT>>;
+	using ConcentratorT = globalmq::marshalling::Concentrator<S1, S2>;
+	ConcentratorT concentrator1( 1 );
+	ConcentratorT concentrator2( 2 );
+}
+
+
 
 void publishableTestOne()
 {

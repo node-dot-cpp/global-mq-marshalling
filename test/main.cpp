@@ -11,4 +11,5 @@ int main()
 	testMessageAliases();
 	testScopedMessageComposingAndParsing();
 	publishableTestOne();
+	quickTestForGmqParts();
 }
