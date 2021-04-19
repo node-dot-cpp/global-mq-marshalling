@@ -613,6 +613,79 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	}
 }
 
+void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr )
+{
+//	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+
+	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
+	assert( member.type.messageIdx < root.structs.size() );
+	fprintf( header, "\t\t\t\t\tif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offsetPlusStr );
+	fprintf( header, "\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\tsize_t pos = addr[%s1];\n", offsetPlusStr );
+	fprintf( header, "\t\t\t\t\t\tif ( pos >= t.%s.size() )\n", member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tthrow std::exception();\n" );
+
+	fprintf( header, "\t\t\t\t\t\tif ( addr.size() > %s2 ) // update for a member of a particular vector element\n", offsetPlusStr );
+	fprintf( header, "\t\t\t\t\t\t{\n" );
+
+	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
+	{
+		fprintf( header, "\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n", member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t%s::parse<ParserT, typename decltype(T::%s)::value_type>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
+	}
+	else
+		fprintf( header, "\t\t\t\t\t\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
+				
+	fprintf( header, "\t\t\t\t\t\t}\n" );
+	fprintf( header, "\t\t\t\t\t\telse // update of one or more elelments as a whole\n" );
+	fprintf( header, "\t\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\t\tsize_t action;\n" );
+	fprintf( header, "\t\t\t\t\t\t\t::globalmq::marshalling::impl::parseActionInPublishable( parser, action );\n" );
+	fprintf( header, "\t\t\t\t\t\t\tswitch ( action )\n" );
+	fprintf( header, "\t\t\t\t\t\t\t{\n" );
+
+	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::remove_at:\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tbreak;\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t}\n" );
+
+	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::update_at:\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type& value = t.%s[pos];\n", member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tbreak;\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t}\n" );
+
+	fprintf( header, "\t\t\t\t\t\t\t\tcase ActionOnVector::insert_single_before:\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\ttypename decltype(T::%s)::value_type value;\n", member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::%s), %s>( parser, value );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+				
+	fprintf( header, "\t\t\t\t\t\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n", member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tbreak;\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t}\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\tdefault:\n" );
+	fprintf( header, "\t\t\t\t\t\t\t\t\tthrow std::exception();\n" );
+	fprintf( header, "\t\t\t\t\t\t\t}\n" );
+	fprintf( header, "\t\t\t\t\t\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\t}\n" );
+			
+//fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+	fprintf( header, "\t\t\t\t\t}\n" );
+	fprintf( header, "\t\t\t\t\telse // replacement of the whole vector\n" );
+	fprintf( header, "\t\t\t\t\t{\n" );
+	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
+	fprintf( header, "\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\n" );
+	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
+	fprintf( header, "\t\t\t\t\t}\n" );
+	fprintf( header, "\n" );
+}
+
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
 {
 	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
@@ -1324,7 +1397,10 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			case MessageParameterType::KIND::VECTOR:
 			{
 				fprintf( header, "\t\t\t\t{\n" );
-				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
+				if ( addNotifications )
+					impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
+				else
+					impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( header, root, member, false );
 				fprintf( header, "\t\t\t\t}\n" );
 				fprintf( header, "\n" ); 
 

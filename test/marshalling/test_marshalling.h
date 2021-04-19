@@ -3714,43 +3714,7 @@ public:
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
 							typename decltype(T::vector_struct_point3dreal)::value_type& value = t.vector_struct_point3dreal[pos];
-							if constexpr ( has_full_element_updated_notifier_for_vector_struct_point3dreal )
-							{
-								typename decltype(T::vector_struct_point3dreal)::value_type oldValue;
-								publishable_STRUCT_POINT3DREAL::copy( value, oldValue );
-								currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
-								if ( currentChanged )
-								{
-									t.notifyElementUpdated_vector_struct_point3dreal( pos, oldValue );
-									if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
-										t.notifyElementUpdated_vector_struct_point3dreal();
-									if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
-										t.notifyElementUpdated_vector_struct_point3dreal();
-								}
-							}
-							else if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
-							{
-								currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
-								if ( currentChanged )
-								{
-									t.notifyElementUpdated_vector_struct_point3dreal( pos );
-									if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
-										t.notifyElementUpdated_vector_struct_point3dreal();
-								}
-							}
-							else if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
-							{
-								currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
-								if ( currentChanged )
-									t.notifyElementUpdated_vector_struct_point3dreal();
-							}
-							else
-							{
-								if constexpr ( alwaysCollectChanges )
-									currentChanged = publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type, bool>( parser, value, addr, 2 );
-								else
-									publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type>( parser, value, addr, 2 );
-							}
+							publishable_STRUCT_POINT3DREAL::parse<ParserT, typename decltype(T::vector_struct_point3dreal)::value_type>( parser, value, addr, 2 );
 						}
 						else // update of one or more elelments as a whole
 						{
