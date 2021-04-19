@@ -14,7 +14,12 @@ STRUCT cyclic_2 {
 };
 ///////////////////////////////////*/
 
-PUBLISHABLE publishable_sample=1 {
+PUBLISHABLE publishable_short_sample=1 {
+	INTEGER ID;
+	CHARACTER-STRING name;
+};
+
+PUBLISHABLE publishable_sample=2 {
 	INTEGER ID;
 	CHARACTER-STRING name;
 	STRUCT SIZE size;
