@@ -472,6 +472,29 @@ void addLibAliasingBlock( FILE* header )
 	fprintf( header, "\n" );
 }
 
+void generateStateConcentratorFactory( FILE* header, Root& root )
+{
+	fprintf( header, "template<class InputBufferT, class ComposerT>\n" );
+	fprintf( header, "StateConcentratorBase<InputBufferT, ComposerT> createConcentrator( uint64_t typeID )\n" );
+	fprintf( header, "{\n" );
+	fprintf( header, "\tswitch( typeID )\n" );
+	fprintf( header, "\t{\n" );
+
+	for ( auto& it : root.publishables )
+	{
+		auto& obj_1 = it;
+		assert( obj_1 != nullptr );
+		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+		assert( obj_1->type == CompositeType::Type::publishable );
+		fprintf( header, "\t\tcase %lld:\n", obj_1->numID );
+		fprintf( header, "\t\t\treturn new %s_WrapperForConcentrator<%s, InputBufferT, ComposerT>;\n", obj_1->name.c_str(), obj_1->name.c_str() );
+	}
+	fprintf( header, "\t\tdefault:\n" );
+	fprintf( header, "\t\t\treturn nullptr;\n" );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "}\n\n" );
+}
+
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
@@ -588,6 +611,10 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( obj_1->type == CompositeType::Type::publishable );
 		generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
+	fprintf( header, "\n//===============================================================================\n\n" );
+
+	generateStateConcentratorFactory( header, s );
+
 	fprintf( header, "\n//===============================================================================\n\n" );
 
 	for ( auto& it : structsOrderedByDependency )

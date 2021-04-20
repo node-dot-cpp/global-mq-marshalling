@@ -3875,6 +3875,23 @@ struct publishable_sample
 
 //===============================================================================
 
+template<class InputBufferT, class ComposerT>
+StateConcentratorBase<InputBufferT, ComposerT> createConcentrator( uint64_t typeID )
+{
+	switch( typeID )
+	{
+		case 1:
+			return new publishable_short_sample_WrapperForConcentrator<publishable_short_sample, InputBufferT, ComposerT>;
+		case 2:
+			return new publishable_sample_WrapperForConcentrator<publishable_sample, InputBufferT, ComposerT>;
+		default:
+			return nullptr;
+	}
+}
+
+
+//===============================================================================
+
 template<class T>
 class SIZE_RefWrapper
 {
