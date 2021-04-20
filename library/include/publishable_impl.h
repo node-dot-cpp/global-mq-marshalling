@@ -754,8 +754,6 @@ public:
 	virtual void applyJsonStateSyncMessage( JsonParser<InputBufferT>& parser ) = 0;
 	// as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
-	virtual void startTick( OutputBufferT&& buff ) = 0;
-	virtual OutputBufferT&& endTick() = 0;
 
 	virtual const char* name() = 0;
 };

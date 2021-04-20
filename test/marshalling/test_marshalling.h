@@ -2493,8 +2493,6 @@ class publishable_short_sample_WrapperForConcentrator : public globalmq::marshal
 {
 	T t;
 	using BufferT = typename ComposerT::BufferType;
-	BufferT buffer;
-	ComposerT composer;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_name = has_name_member<T>;
@@ -2504,13 +2502,11 @@ class publishable_short_sample_WrapperForConcentrator : public globalmq::marshal
 public:
 	static constexpr uint64_t numTypeID = 1;
 
-	publishable_short_sample_WrapperForConcentrator() : composer( buffer ) {}
+	publishable_short_sample_WrapperForConcentrator() {}
 	const char* name() {return "publishable_short_sample";}
 	
 	// Acting as publisher
-	ComposerT& getComposer() { return composer; }
-	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
-	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
 	template<class ComposerT>
 	void compose( ComposerT& composer )
 	{
@@ -2523,9 +2519,12 @@ public:
 
 		::globalmq::marshalling::impl::composeStructEnd( composer );
 	}
+
 	// Acting as subscriber
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
 
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser)
@@ -3519,8 +3518,6 @@ class publishable_sample_WrapperForConcentrator : public globalmq::marshalling::
 {
 	T t;
 	using BufferT = typename ComposerT::BufferType;
-	BufferT buffer;
-	ComposerT composer;
 	static constexpr bool has_ID = has_ID_member<T>;
 	static_assert( has_ID, "type T must have member T::ID of a type corresponding to IDL type INTEGER" );
 	static constexpr bool has_name = has_name_member<T>;
@@ -3542,13 +3539,11 @@ class publishable_sample_WrapperForConcentrator : public globalmq::marshalling::
 public:
 	static constexpr uint64_t numTypeID = 2;
 
-	publishable_sample_WrapperForConcentrator() : composer( buffer ) {}
+	publishable_sample_WrapperForConcentrator() {}
 	const char* name() {return "publishable_sample";}
 	
 	// Acting as publisher
-	ComposerT& getComposer() { return composer; }
-	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
-	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
 	template<class ComposerT>
 	void compose( ComposerT& composer )
 	{
@@ -3581,9 +3576,12 @@ public:
 
 		::globalmq::marshalling::impl::composeStructEnd( composer );
 	}
+
 	// Acting as subscriber
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
 
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser)

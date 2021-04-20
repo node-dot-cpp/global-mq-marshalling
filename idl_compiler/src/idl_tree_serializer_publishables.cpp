@@ -1576,28 +1576,27 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 	fprintf( header, "\tusing BufferT = typename ComposerT::BufferType;\n" );
-	fprintf( header, "\tBufferT buffer;\n" );
-	fprintf( header, "\tComposerT composer;\n" );
 
 	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
 
 	fprintf( header, "\npublic:\n" );
 	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
 	fprintf( header, "\n" );
-	fprintf( header, "\t%s_WrapperForConcentrator() : composer( buffer ) {}\n", s.name.c_str() );
+	fprintf( header, "\t%s_WrapperForConcentrator() {}\n", s.name.c_str() );
 	fprintf( header, "\tconst char* name() {return \"%s\";}\n", s.name.c_str() );
 	fprintf( header, "\t\n" );
 
 	fprintf( header, "\t// Acting as publisher\n" );
-	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
-	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
-	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
+	fprintf( header, "\tvirtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }\n" );
 
 	impl_generateComposeFunctionForPublishableStruct( header, root, s );
+	fprintf( header, "\n" );
 
 	fprintf( header, "\t// Acting as subscriber\n" );
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
+	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) { parseStateSyncMessage(parser); }\n" );
+	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) { parseStateSyncMessage(parser); }\n" );
 	fprintf( header, "\n" );
 
 	impl_GenerateApplyUpdateMessageMemberFn( header, root, s, false );
@@ -1841,8 +1840,6 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 		impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, platformPrefix, classNotifierName );
 
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s );
-	if ( generatePlatformSpec )
-		impl_GeneratePublishableStatePlatformWrapperForConcentrator( header, root, s, platformPrefix, classNotifierName );
 }
 
 void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s )
