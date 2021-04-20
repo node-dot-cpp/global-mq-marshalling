@@ -23,7 +23,7 @@ PUBLISHABLE publishable_sample=2 {
 	INTEGER ID;
 	CHARACTER-STRING name;
 	STRUCT SIZE size;
-	STRUCT CharacterParam chp;
+	STRUCT CharacterParamStruct chp;
 	VECTOR<INTEGER> vector_of_int;
 	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
 	STRUCT StructWithVectorOfInt structWithVectorOfInt;
@@ -41,7 +41,7 @@ MESSAGE scope_one:point_alias=2 = STRUCT point;
 
 
 MESSAGE level_trace:LevelTraceData=1{
-	STRUCT CharacterParam CharacterParam;
+	STRUCT CharacterParamStruct CharacterParam;
 	VECTOR<STRUCT POINT3DREAL> Points;
 };
 
@@ -55,7 +55,7 @@ STRUCT StructWithVectorOfSize{
 	INTEGER NN;
 };
 
-STRUCT CharacterParam{
+STRUCT CharacterParamStruct{
 	INTEGER ID;
 	STRUCT SIZE Size;
 };

@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_91c385e5_guard
-#define _test_marshalling_h_91c385e5_guard
+#ifndef _test_marshalling_h_b5cd8d74_guard
+#define _test_marshalling_h_b5cd8d74_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -237,9 +237,9 @@ struct publishable_STRUCT_StructWithVectorOfSize;
 template<class T> class StructWithVectorOfSize_RefWrapper;
 template<class T, class RootT> class StructWithVectorOfSize_RefWrapper4Set;
 
-struct publishable_STRUCT_CharacterParam;
-template<class T> class CharacterParam_RefWrapper;
-template<class T, class RootT> class CharacterParam_RefWrapper4Set;
+struct publishable_STRUCT_CharacterParamStruct;
+template<class T> class CharacterParamStruct_RefWrapper;
+template<class T, class RootT> class CharacterParamStruct_RefWrapper4Set;
 
 struct publishable_STRUCT_SIZE;
 template<class T> class SIZE_RefWrapper;
@@ -666,7 +666,7 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 	}
 };
 
-struct publishable_STRUCT_CharacterParam : public ::globalmq::marshalling::impl::StructType
+struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ComposerT, class T>
 	static
@@ -1633,7 +1633,7 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
-// 1. STRUCT CharacterParam CharacterParam (REQUIRED)
+// 1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
 // 2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
 
 //**********************************************************************
@@ -2576,7 +2576,7 @@ public:
 // 1. INTEGER ID
 // 2. CHARACTER_STRING name
 // 3. STRUCT SIZE size
-// 4. STRUCT CharacterParam chp
+// 4. STRUCT CharacterParamStruct chp
 // 5. VECTOR<INTEGER> vector_of_int
 // 6. VECTOR< STRUCT POINT3DREAL> vector_struct_point3dreal
 // 7. STRUCT StructWithVectorOfInt structWithVectorOfInt
@@ -2597,7 +2597,7 @@ class publishable_sample_WrapperForPublisher : public globalmq::marshalling::Sta
 	static constexpr bool has_size = has_size_member<T>;
 	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
 	static constexpr bool has_chp = has_chp_member<T>;
-	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParam" );
+	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParamStruct" );
 	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
 	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
@@ -2646,10 +2646,10 @@ public:
 		t.chp = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 3 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
-		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
+		publishable_STRUCT_CharacterParamStruct::compose( composer, t.chp );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_chp() { return CharacterParam_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_chp() { return CharacterParamStruct_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_of_int() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
@@ -2701,7 +2701,7 @@ public:
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
 		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "chp" );
-		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
+		publishable_STRUCT_CharacterParamStruct::compose( composer, t.chp );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.vector_of_int, "vector_of_int", true );
@@ -2756,7 +2756,7 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::St
 	static constexpr bool has_size = has_size_member<T>;
 	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
 	static constexpr bool has_chp = has_chp_member<T>;
-	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParam" );
+	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParamStruct" );
 	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
 	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
@@ -2944,8 +2944,8 @@ public:
 						if constexpr( has_update_notifier_for_chp )
 						{
 							decltype(T::chp) temp_chp;
-							publishable_STRUCT_CharacterParam::copy<decltype(T::chp)>( t.chp, temp_chp );
-							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
+							publishable_STRUCT_CharacterParamStruct::copy<decltype(T::chp)>( t.chp, temp_chp );
+							bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
 							if ( changedCurrent )
 							{
 								if constexpr( has_void_update_notifier_for_chp )
@@ -2955,7 +2955,7 @@ public:
 						}
 						else if constexpr( has_void_update_notifier_for_chp )
 						{
-							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
+							bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse<ParserT, decltype(T::chp), bool>( parser, t.chp );
 							if ( changedCurrent )
 							{
 								t.notifyUpdated_chp();
@@ -2964,7 +2964,7 @@ public:
 
 						else
 						{
-							publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+							publishable_STRUCT_CharacterParamStruct::parse( parser, t.chp );
 						}
 
 						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
@@ -2974,8 +2974,8 @@ public:
 						if constexpr( has_update_notifier_for_chp )
 						{
 							decltype(T::chp) temp_chp;
-							publishable_STRUCT_CharacterParam::copy<decltype(T::chp)>( t.chp, temp_chp );
-							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp, addr, 1 );
+							publishable_STRUCT_CharacterParamStruct::copy<decltype(T::chp)>( t.chp, temp_chp );
+							bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse<ParserT, decltype(T::chp), bool>( parser, t.chp, addr, 1 );
 							if ( changedCurrent )
 							{
 								if constexpr( has_void_update_notifier_for_chp )
@@ -2985,14 +2985,14 @@ public:
 						}
 						else if constexpr( has_void_update_notifier_for_chp )
 						{
-							bool changedCurrent = publishable_STRUCT_CharacterParam::parse<ParserT, decltype(T::chp), bool>( parser, t.chp, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse<ParserT, decltype(T::chp), bool>( parser, t.chp, addr, 1 );
 							if ( changedCurrent )
 							{
 								t.notifyUpdated_chp();
 							}
 						}
 						else
-							publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );
+							publishable_STRUCT_CharacterParamStruct::parse( parser, t.chp, addr, 1 );
 					}
 					break;
 				}
@@ -3437,7 +3437,7 @@ public:
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "chp" );
-		publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+		publishable_STRUCT_CharacterParamStruct::parse( parser, t.chp );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
@@ -3528,7 +3528,7 @@ class publishable_sample_WrapperForConcentrator : public globalmq::marshalling::
 	static constexpr bool has_size = has_size_member<T>;
 	static_assert( has_size, "type T must have member T::size of a type corresponding to IDL type STRUCT SIZE" );
 	static constexpr bool has_chp = has_chp_member<T>;
-	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParam" );
+	static_assert( has_chp, "type T must have member T::chp of a type corresponding to IDL type STRUCT CharacterParamStruct" );
 	static constexpr bool has_vector_of_int = has_vector_of_int_member<T>;
 	static_assert( has_vector_of_int, "type T must have member T::vector_of_int of a type corresponding to IDL type VECTOR<INTEGER>" );
 	static constexpr bool has_vector_struct_point3dreal = has_vector_struct_point3dreal_member<T>;
@@ -3563,7 +3563,7 @@ public:
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
 		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "chp" );
-		publishable_STRUCT_CharacterParam::compose( composer, t.chp );
+		publishable_STRUCT_CharacterParamStruct::compose( composer, t.chp );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( composer, t.vector_of_int, "vector_of_int", true );
@@ -3631,13 +3631,13 @@ public:
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
-						publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+						publishable_STRUCT_CharacterParamStruct::parse( parser, t.chp );
 
 						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
-						publishable_STRUCT_CharacterParam::parse( parser, t.chp, addr, 1 );
+						publishable_STRUCT_CharacterParamStruct::parse( parser, t.chp, addr, 1 );
 					}
 					break;
 				}
@@ -3799,7 +3799,7 @@ public:
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "chp" );
-		publishable_STRUCT_CharacterParam::parse( parser, t.chp );
+		publishable_STRUCT_CharacterParamStruct::parse( parser, t.chp );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parseKey( parser, "vector_of_int" );
@@ -3838,7 +3838,7 @@ struct POINT3DREAL
 	double Z;
 };
 
-struct CharacterParam
+struct CharacterParamStruct
 {
 	int64_t ID;
 	SIZE Size;
@@ -3867,7 +3867,7 @@ struct publishable_sample
 	int64_t ID;
 	GMQ_COLL string name;
 	SIZE size;
-//	CharacterParam chp;
+	CharacterParamStruct chp;
 	GMQ_COLL vector<int64_t> vector_of_int;
 	GMQ_COLL vector<POINT3DREAL> vector_struct_point3dreal;
 	StructWithVectorOfInt structWithVectorOfInt;
@@ -3994,7 +3994,7 @@ public:
 };
 
 template<class T>
-class CharacterParam_RefWrapper
+class CharacterParamStruct_RefWrapper
 {
 	T& t;
 	static constexpr bool has_ID = has_ID_member<T>;
@@ -4004,13 +4004,13 @@ class CharacterParam_RefWrapper
 
 
 public:
-	CharacterParam_RefWrapper( T& actual ) : t( actual ) {}
+	CharacterParamStruct_RefWrapper( T& actual ) : t( actual ) {}
 	auto get_ID() { return t.ID; }
 	const auto& get_Size() { return t.Size; }
 };
 
 template<class T, class RootT>
-class CharacterParam_RefWrapper4Set
+class CharacterParamStruct_RefWrapper4Set
 {
 	T& t;
 	RootT& root;
@@ -4022,7 +4022,7 @@ class CharacterParam_RefWrapper4Set
 
 
 public:
-	CharacterParam_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+	CharacterParamStruct_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
 		address = address_;
 		address.push_back (idx );
 	}
@@ -4144,14 +4144,14 @@ public:
 };
 
 //**********************************************************************
-// STRUCT "CharacterParam" Targets: JSON (2 parameters)
+// STRUCT "CharacterParamStruct" Targets: JSON (2 parameters)
 // 1. INTEGER ID (REQUIRED)
 // 2. STRUCT SIZE Size (REQUIRED)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void STRUCT_CharacterParam_compose(ComposerT& composer, Args&& ... args)
+void STRUCT_CharacterParamStruct_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -4174,7 +4174,7 @@ void STRUCT_CharacterParam_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT, typename ... Args>
-void STRUCT_CharacterParam_parse(ParserT& p, Args&& ... args)
+void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4780,4 +4780,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_91c385e5_guard
+#endif // _test_marshalling_h_b5cd8d74_guard

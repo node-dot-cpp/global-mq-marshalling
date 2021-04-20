@@ -235,7 +235,7 @@ void testParsingJsonFile()
 		parser, 
 		mtest::CharacterParam = mtest::MessageWrapperForParsing( [&](auto& parser)
 			{ 
-				mtest::STRUCT_CharacterParam_parse( 
+				mtest::STRUCT_CharacterParamStruct_parse( 
 					parser, 
 					mtest::ID = &(data.charParams.id), 
 					mtest::Size = mtest::MessageWrapperForParsing( [&](auto& parser){ mtest::STRUCT_SIZE_parse( parser, mtest::X = &(data.charParams.size.x), mtest::Y = &(data.charParams.size.y), mtest::Z = &(data.charParams.size.z) );} ) 
