@@ -2998,7 +2998,6 @@ public:
 				}
 				case 4:
 				{
-				{
 					decltype(T::vector_of_int) oldVectorVal;
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_vector_of_int;
@@ -3125,12 +3124,9 @@ public:
 						if constexpr( has_update_notifier_for_vector_of_int )
 							t.notifyUpdated_vector_of_int( oldVectorVal );
 					}
-				}
-
 					break;
 				}
 				case 5:
-				{
 				{
 					decltype(T::vector_struct_point3dreal) oldVectorVal;
 					bool currentChanged = false;
@@ -3295,8 +3291,6 @@ public:
 						if constexpr( has_update_notifier_for_vector_struct_point3dreal )
 							t.notifyUpdated_vector_struct_point3dreal( oldVectorVal );
 					}
-				}
-
 					break;
 				}
 				case 6:
@@ -3649,7 +3643,6 @@ public:
 				}
 				case 4:
 				{
-				{
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
@@ -3695,16 +3688,12 @@ public:
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
 						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_of_int), ::globalmq::marshalling::impl::SignedIntegralType>( parser, t.vector_of_int );
-
 						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 					}
-
-				}
 
 					break;
 				}
 				case 5:
-				{
 				{
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
@@ -3752,11 +3741,8 @@ public:
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
 						PublishableVectorProcessor::parse<ParserT, decltype(T::vector_struct_point3dreal), publishable_STRUCT_POINT3DREAL>( parser, t.vector_struct_point3dreal );
-
 						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
 					}
-
-				}
 
 					break;
 				}
@@ -3833,6 +3819,63 @@ public:
 		::globalmq::marshalling::impl::parseStructEnd( parser );
 	}
 };
+
+//===============================================================================
+// Publishable c-structures
+// Use them as-is or copy and edit member types as necessary
+
+struct SIZE
+{
+	double X;
+	double Y;
+	double Z;
+};
+
+struct POINT3DREAL
+{
+	double X;
+	double Y;
+	double Z;
+};
+
+struct CharacterParam
+{
+	int64_t ID;
+	SIZE Size;
+};
+
+struct StructWithVectorOfSize
+{
+	GMQ_COLL vector<SIZE> sizes;
+	int64_t NN;
+};
+
+struct StructWithVectorOfInt
+{
+	int64_t ID;
+	GMQ_COLL vector<int64_t> signedInts;
+};
+
+struct publishable_short_sample
+{
+	int64_t ID;
+	GMQ_COLL string name;
+};
+
+struct publishable_sample
+{
+	int64_t ID;
+	GMQ_COLL string name;
+	SIZE size;
+//	CharacterParam chp;
+	GMQ_COLL vector<int64_t> vector_of_int;
+	GMQ_COLL vector<POINT3DREAL> vector_struct_point3dreal;
+	StructWithVectorOfInt structWithVectorOfInt;
+	StructWithVectorOfSize structWithVectorOfSize;
+};
+
+
+//===============================================================================
 
 template<class T>
 class SIZE_RefWrapper

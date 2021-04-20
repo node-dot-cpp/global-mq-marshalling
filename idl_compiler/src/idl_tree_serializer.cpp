@@ -568,6 +568,28 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), platformPrefix, classNotifierName );
 	}
 
+	fprintf( header, "//===============================================================================\n" );
+	fprintf( header, "// Publishable c-structures\n" );
+	fprintf( header, "// Use them as-is or copy and edit member types as necessary\n\n" );
+	for ( auto it : structsOrderedByDependency )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure );
+		if ( it->isStruct4Publishing )
+			generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+
+	for ( auto& it : s.publishables )
+	{
+		auto& obj_1 = it;
+		assert( obj_1 != nullptr );
+		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+		assert( obj_1->type == CompositeType::Type::publishable );
+		generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+	fprintf( header, "\n//===============================================================================\n\n" );
+
 	for ( auto& it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );

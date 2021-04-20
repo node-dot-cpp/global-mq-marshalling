@@ -674,13 +674,11 @@ void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* head
 	fprintf( header, "\t\t\t\t\t\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 			
-//fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse // replacement of the whole vector\n" );
 	fprintf( header, "\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
 	fprintf( header, "\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\n" );
@@ -1396,13 +1394,13 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "\t\t\t\t{\n" );
+//				fprintf( header, "\t\t\t\t{\n" );
 				if ( addNotifications )
 					impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
 				else
 					impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( header, root, member, false );
-				fprintf( header, "\t\t\t\t}\n" );
-				fprintf( header, "\n" ); 
+//				fprintf( header, "\t\t\t\t}\n" );
+//				fprintf( header, "\n" ); 
 
 				break;
 			}
@@ -1845,6 +1843,75 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s );
 	if ( generatePlatformSpec )
 		impl_GeneratePublishableStatePlatformWrapperForConcentrator( header, root, s, platformPrefix, classNotifierName );
+}
+
+void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure );
+
+	bool checked = impl_checkParamNameUniqueness(s);
+	if ( !checked )
+		throw std::exception();
+
+	fprintf( header, "struct %s\n", s.name.c_str() );
+	fprintf( header, "{\n" );
+
+	for ( size_t i=0; i<s.members.size(); ++i )
+	{
+		auto& it = s.members[i];
+		assert( it != nullptr );
+		auto& member = *it;
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+				fprintf( header, "\tint64_t %s;\n", member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::UINTEGER:
+				fprintf( header, "\tuint64_t %s;\n", member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::REAL:
+				fprintf( header, "\tdouble %s;\n", member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf( header, "\tGMQ_COLL string %s;\n", member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::STRUCT:
+				fprintf( header, "\t%s %s;\n", member.type.name.c_str(), member.name.c_str() );
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch ( member.type.vectorElemKind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+						fprintf( header, "\tGMQ_COLL vector<int64_t> %s;\n", member.name.c_str() );
+						break;
+					case MessageParameterType::KIND::UINTEGER:
+						fprintf( header, "\tGMQ_COLL vector<uint64_t> %s;\n", member.name.c_str() );
+						break;
+					case MessageParameterType::KIND::REAL:
+						fprintf( header, "\tGMQ_COLL vector<double> %s;\n", member.name.c_str() );
+						break;
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf( header, "\tGMQ_COLL vector<GMQ_COLL string> %s;\n", member.name.c_str() );
+						break;
+					case MessageParameterType::KIND::VECTOR:
+						assert( false ); // unexpected
+						break;
+					case MessageParameterType::KIND::STRUCT:
+						assert( member.type.messageIdx < root.structs.size() );
+						fprintf( header, "\tGMQ_COLL vector<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str() );
+						break;
+					default:
+						assert( false ); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert( false ); // not implemented (yet)
+		}
+	}
+
+	fprintf( header, "};\n\n" );
 }
 
 
