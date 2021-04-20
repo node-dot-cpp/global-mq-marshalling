@@ -2426,7 +2426,7 @@ public:
 
 
 	template<class ParserT>
-	void parse( ParserT& parser )
+	void parseStateSyncMessage( ParserT& parser )
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
@@ -2471,12 +2471,12 @@ public:
 
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename StatePublisherSubscriberInfo::BufferT>& parser ) 
 	{
-		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parse(parser);
+		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename StatePublisherSubscriberInfo::BufferT>& parser )
 	{
-		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parse(parser);
+		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 	virtual const char* name()
 	{
@@ -2559,7 +2559,7 @@ public:
 	}
 
 	template<class ParserT>
-	void parse( ParserT& parser )
+	void parseStateSyncMessage( ParserT& parser )
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
@@ -3424,7 +3424,7 @@ public:
 
 
 	template<class ParserT>
-	void parse( ParserT& parser )
+	void parseStateSyncMessage( ParserT& parser )
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
@@ -3497,12 +3497,12 @@ public:
 
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename StatePublisherSubscriberInfo::BufferT>& parser ) 
 	{
-		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parse(parser);
+		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename StatePublisherSubscriberInfo::BufferT>& parser )
 	{
-		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parse(parser);
+		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 	virtual const char* name()
 	{
@@ -3786,7 +3786,7 @@ public:
 	}
 
 	template<class ParserT>
-	void parse( ParserT& parser )
+	void parseStateSyncMessage( ParserT& parser )
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 

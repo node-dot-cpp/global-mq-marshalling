@@ -1055,7 +1055,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 {
 	assert( obj.type == CompositeType::Type::publishable );
 	fprintf( header, "\ttemplate<class ParserT>\n" );
-	fprintf( header, "\tvoid parse( ParserT& parser )\n" );
+	fprintf( header, "\tvoid parseStateSyncMessage( ParserT& parser )\n" );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t::globalmq::marshalling::impl::parseStructBegin( parser );\n" );
 	fprintf( header, "\n" );
@@ -1549,12 +1549,12 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) \n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parse(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvirtual const char* name()\n" );
 	fprintf( header, "\t{\n" );
