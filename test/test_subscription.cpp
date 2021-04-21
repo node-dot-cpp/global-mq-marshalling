@@ -3,6 +3,7 @@
 
 #include "nodecpp_publish_subscribe_support.h"
 #include <publishable_impl.h>
+#include <gmqueue.h>
 #include "marshalling/test_marshalling.h"
 
 #include <typeinfo>
@@ -386,6 +387,8 @@ void quickTestForGmqParts()
 	assert( p1 != nullptr );
 	assert( p2 != nullptr );
 	assert( p3 == nullptr );
+
+	globalmq::marshalling::GMQueue<StatePublisherSubscriberPoolInfo> gmq;
 }
 
 

@@ -33,6 +33,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include "publishable_impl.h"
 
 
 namespace globalmq::marshalling {
@@ -48,6 +49,8 @@ struct GMQFullAddress : public GMQBaseAddress
 	std::string object;
 };
 
+class InterThreadMsg;
+
 class InProcessMessagePostmanBase
 {
 public:
@@ -56,7 +59,7 @@ public:
 	virtual ~InProcessMessagePostmanBase() {}
 };
 
-class AddressableLocation
+struct AddressableLocation
 {
 	InProcessMessagePostmanBase* postman = nullptr;
 	uint64_t reincarnation = 0;
@@ -107,51 +110,65 @@ public:
 	}
 };
 
-extern AddressableLocations addressableLocations;
-extern AddressableLocations& getAddressableLocations() { return addressableLocations; }
+extern AddressableLocations& getAddressableLocations();
 
+template<class PlatformSupportT>
 class GMQueue
 {
-	std::unordered_map<GMQBaseAddress, AddressableLocation> recipients; // mx-protected
+	using InputBufferT = typename PlatformSupportT::BufferT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+
+	class ConcentratorWrapper
+	{
+		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
+	public:
+		ConcentratorWrapper( StateConcentratorBase<InputBufferT, ComposerT>* ptr_ ) : ptr( ptr_ ) {}
+		ConcentratorWrapper( const ConcentratorWrapper& ) = delete;
+		ConcentratorWrapper& operator = ( const ConcentratorWrapper& ) = delete;
+		ConcentratorWrapper( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; }
+		ConcentratorWrapper& operator = ( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; return *this; }
+		~ConcentratorWrapper() { if ( ptr ) delete ptr; }
+		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
+	};
+
+	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> concentrators; // address to concentrator, mx-protected
+	std::unordered_map<GMQ_COLL string, AddressableLocation> recipients; // node name to location, mx-protected
 
 public:
 	GMQueue() {}
 
-	void add( GMQBaseAddress addr, SlotIdx idx ) {}
-	void addLocal( GMQ_COLL string_literal name, SlotIdx idx ) {
+	/*void add( GMQBaseAddress addr, SlotIdx idx ) {}
+	void addLocal( GMQ_COLL string name, SlotIdx idx ) {
 		if ( name != "" )
 		{
-			GMQBaseAddress addr;
-			addr.node = name;
-			add( addr, idx );
+			add( name, idx );
 		}
 	}
 	void remove( GMQBaseAddress addr, SlotIdx idx ) {}
-	void removeLocal( GMQ_COLL string_literal name, SlotIdx idx ) {
+	void removeLocal( GMQ_COLL string name, SlotIdx idx ) {
 		if ( name != "" )
 		{
-			GMQBaseAddress addr;
-			addr.node = name;
-			remove( addr, idx );
+			remove( name, idx );
 		}
-	}
+	}*/
 };
 
+template<class PlatformSupportT>
 class GMQTransportBase
 {
 protected:
-	GMQueue& gmq;
+	GMQueue<PlatformSupportT>& gmq;
 	SlotIdx idx;
-	GMQ_COLL string_literal name;
+	GMQ_COLL string name;
 
 public:
-	GMQTransportBase( GMQueue& queue, GMQ_COLL string_literal name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
+	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
 		idx = getAddressableLocations().add( postman );
-		queue.add( name, idx );
+		gmq.add( name, idx );
 	};
 	virtual ~GMQTransportBase() {
 		getAddressableLocations().remove( idx );
-		queue.remove( name, idx );
+		gmq.remove( name, idx );
 	}
 
 	virtual void postMessage( InterThreadMsg&& ) = 0;
