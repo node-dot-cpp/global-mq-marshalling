@@ -389,6 +389,17 @@ void quickTestForGmqParts()
 	assert( p3 == nullptr );
 
 	globalmq::marshalling::GMQueue<StatePublisherSubscriberPoolInfo> gmq;
+
+	globalmq::marshalling::GmqPathHelper::PathComponents pc1, pc2;
+	pc1.authority = "abc.com";
+	pc1.nodeName = "myNode";
+	pc1.statePublisherName = "state";
+	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
+	bool ok = globalmq::marshalling::GmqPathHelper::parse( path, pc2 );
+	assert( ok );
+	assert( pc2.authority == "abc.com" );
+	assert( pc2.nodeName == "myNode" );
+	assert( pc2.statePublisherName == "state" );
 }
 
 

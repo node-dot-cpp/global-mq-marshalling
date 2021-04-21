@@ -38,6 +38,145 @@
 
 namespace globalmq::marshalling {
 
+struct GmqPathHelper
+{
+	struct PathComponents
+	{
+		GMQ_COLL string authority;
+		bool furtherResolution = false;
+		bool hasPort = false;
+		uint16_t port = 0xFFFF;
+		GMQ_COLL string nodeName;
+		GMQ_COLL string statePublisherName;
+	};
+
+	static GMQ_COLL string compose( GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
+	{
+		// TODO: check components
+		GMQ_COLL string ret = "globalmq:";
+		if ( !authority.empty() )
+		{
+			ret += "//";
+			ret += authority;
+		}
+		assert( !nodeName.empty() );
+		ret += '/';
+		ret += nodeName;
+		assert( !statePublisherName.empty() );
+		ret += "?sp=";
+		ret += statePublisherName;
+		return ret;
+	}
+
+	static GMQ_COLL string compose( const PathComponents& components )
+	{
+		// TODO: check components
+		GMQ_COLL string ret = "globalmq:";
+		if ( !components.authority.empty() )
+		{
+			ret += "//";
+			ret += components.authority;
+		}
+		if ( components.furtherResolution )
+			ret += "!gmq";
+		if ( components.hasPort )
+		{
+			ret += ':';
+			char buff[32];
+			sprintf( buff, "%d", components.port );
+			ret += buff;
+		}
+		assert( !components.nodeName.empty() );
+		ret += '/';
+		ret += components.nodeName;
+		assert( !components.statePublisherName.empty() );
+		ret += "?sp=";
+		ret += components.statePublisherName;
+		return ret;
+	}
+
+	static bool parse( GMQ_COLL string path, PathComponents& components )
+	{
+		size_t pos = path.find( "globalmq:" );
+		if ( pos != 0 )
+			return false;
+		pos += sizeof( "globalmq:" ) - 1;
+		if ( path.size() <= pos )
+			return false;
+		if ( path[pos++] != '/' )
+			return false;
+		if ( path[pos++] == '/' ) // double-slash, authority component is present
+		{
+			size_t pos1 = path.find( "/", pos );
+			if ( pos1 == GMQ_COLL string::npos )
+				return false;
+			components.authority = path.substr( pos, pos1 );
+			pos = pos1 + 1;
+			pos1 = components.authority.find_last_of( ':' );
+			if ( pos1 != GMQ_COLL string::npos )
+			{
+				char* end = nullptr;
+				size_t port = strtol( components.authority.c_str() + pos1 + 1, &end, 10 );
+				if ( components.authority.c_str() + pos1 + 1 == end )
+					return false;
+				if ( end - components.authority.c_str() < components.authority.size() ) // there are remaining chars
+					return false;
+				if ( port >= UINT16_MAX )
+					return false;
+				components.hasPort = true;
+				components.port = (uint16_t)port;
+				components.authority.erase( pos1 );
+			}
+			else
+			{
+				components.hasPort = false;
+				components.port = 0xFFFF;
+			}
+
+			size_t pos2 = components.authority.find_last_of( '!' );
+			if ( pos2 != GMQ_COLL string::npos )
+			{
+				if ( components.authority.size() - pos2 < sizeof( "gmq" ) - 1 )
+					return false;
+				if ( components.authority.substr( pos2 ) != "gmq" )
+					return false;
+				components.furtherResolution = true;
+				components.authority.erase( pos2 );
+			}
+			else
+			{
+				components.furtherResolution = false;
+			}
+		}
+		else
+		{
+			components.authority = "";
+			components.hasPort = false;
+			components.furtherResolution = false;
+			components.port = 0xFFFF;
+		}
+
+		// node name
+		size_t pos1 = path.find( '?', pos );
+		if ( pos1 == GMQ_COLL string::npos )
+			return false;
+		components.nodeName = path.substr( pos, pos1 - pos );
+		pos = pos1;
+
+		// statePublisherName
+		pos = path.find( "sp=", pos );
+		if ( pos == GMQ_COLL string::npos )
+			return false;
+		pos += sizeof( "sp=" ) - 1;
+		pos1 = path.find( '&', pos );
+		if ( pos1 == GMQ_COLL string::npos )
+			components.nodeName = path.substr( pos );
+		else
+			components.nodeName = path.substr( pos, pos1 - pos );
+		return true;
+	}
+};
+
 struct GMQBaseAddress
 {
 	std::string machine;
