@@ -177,17 +177,6 @@ struct GmqPathHelper
 	}
 };
 
-struct GMQBaseAddress
-{
-	std::string machine;
-	std::string node;
-};
-
-struct GMQFullAddress : public GMQBaseAddress
-{
-	std::string object;
-};
-
 class InterThreadMsg;
 
 class InProcessMessagePostmanBase
