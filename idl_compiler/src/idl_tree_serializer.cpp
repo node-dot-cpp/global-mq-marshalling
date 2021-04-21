@@ -475,10 +475,13 @@ void addLibAliasingBlock( FILE* header )
 void generateStateConcentratorFactory( FILE* header, Root& root )
 {
 	fprintf( header, "template<class InputBufferT, class ComposerT>\n" );
-	fprintf( header, "StateConcentratorBase<InputBufferT, ComposerT> createConcentrator( uint64_t typeID )\n" );
+	fprintf( header, "class StateConcentratorFactory : ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>\n" );
 	fprintf( header, "{\n" );
-	fprintf( header, "\tswitch( typeID )\n" );
+	fprintf( header, "public:\n" );
+	fprintf( header, "\tvirtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID )\n" );
 	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\tswitch( typeID )\n" );
+	fprintf( header, "\t\t{\n" );
 
 	for ( auto& it : root.publishables )
 	{
@@ -486,13 +489,14 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 		assert( obj_1 != nullptr );
 		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
 		assert( obj_1->type == CompositeType::Type::publishable );
-		fprintf( header, "\t\tcase %lld:\n", obj_1->numID );
-		fprintf( header, "\t\t\treturn new %s_WrapperForConcentrator<%s, InputBufferT, ComposerT>;\n", obj_1->name.c_str(), obj_1->name.c_str() );
+		fprintf( header, "\t\t\tcase %lld:\n", obj_1->numID );
+		fprintf( header, "\t\t\t\treturn new %s_WrapperForConcentrator<%s, InputBufferT, ComposerT>;\n", obj_1->name.c_str(), obj_1->name.c_str() );
 	}
-	fprintf( header, "\t\tdefault:\n" );
-	fprintf( header, "\t\t\treturn nullptr;\n" );
+	fprintf( header, "\t\t\tdefault:\n" );
+	fprintf( header, "\t\t\t\treturn nullptr;\n" );
+	fprintf( header, "\t\t}\n" );
 	fprintf( header, "\t}\n" );
-	fprintf( header, "}\n\n" );
+	fprintf( header, "};\n" );
 }
 
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )

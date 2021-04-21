@@ -378,6 +378,14 @@ void quickTestForGmqParts()
 	using ConcentratorT = globalmq::marshalling::Concentrator<S1, S2>;
 	ConcentratorT concentrator1( 1 );
 	ConcentratorT concentrator2( 2 );
+
+	mtest::StateConcentratorFactory<BufferT, ComposerT> cf;
+	auto p1 = cf.createConcentrator( 1 );
+	auto p2 = cf.createConcentrator( 2 );
+	auto p3 = cf.createConcentrator( 3 );
+	assert( p1 != nullptr );
+	assert( p2 != nullptr );
+	assert( p3 == nullptr );
 }
 
 

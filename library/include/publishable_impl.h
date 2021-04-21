@@ -758,7 +758,14 @@ public:
 	virtual const char* name() = 0;
 };
 
+template<class InputBufferT, class ComposerT>
+class StateConcentratorFactoryBase
+{
+public:
+	virtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID ) = 0;
+};
 
 } // namespace globalmq::marshalling
 
 #endif // PUBLISHABLE_IMPL_H
+
