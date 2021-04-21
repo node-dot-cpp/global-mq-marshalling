@@ -391,6 +391,7 @@ void quickTestForGmqParts()
 	globalmq::marshalling::GMQueue<StatePublisherSubscriberPoolInfo> gmq;
 
 	globalmq::marshalling::GmqPathHelper::PathComponents pc1, pc2;
+
 	pc1.authority = "abc.com";
 	pc1.nodeName = "myNode";
 	pc1.statePublisherName = "state";
@@ -400,6 +401,20 @@ void quickTestForGmqParts()
 	assert( pc2.authority == "abc.com" );
 	assert( pc2.nodeName == "myNode" );
 	assert( pc2.statePublisherName == "state" );
+	assert( !pc2.furtherResolution );
+	assert( !pc2.hasPort );
+	
+	pc1.furtherResolution = true;
+	pc1.hasPort = true;
+	pc1.port = 12345;
+	path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
+	ok = globalmq::marshalling::GmqPathHelper::parse( path, pc2 );
+	assert( ok );
+	assert( pc2.authority == "abc.com" );
+	assert( pc2.nodeName == "myNode" );
+	assert( pc2.statePublisherName == "state" );
+	assert( pc2.furtherResolution );
+	assert( pc2.hasPort );
 }
 
 

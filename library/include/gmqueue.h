@@ -110,7 +110,7 @@ struct GmqPathHelper
 			size_t pos1 = path.find( "/", pos );
 			if ( pos1 == GMQ_COLL string::npos )
 				return false;
-			components.authority = path.substr( pos, pos1 );
+			components.authority = path.substr( pos, pos1 - pos );
 			pos = pos1 + 1;
 			pos1 = components.authority.find_last_of( ':' );
 			if ( pos1 != GMQ_COLL string::npos )
@@ -138,7 +138,7 @@ struct GmqPathHelper
 			{
 				if ( components.authority.size() - pos2 < sizeof( "gmq" ) - 1 )
 					return false;
-				if ( components.authority.substr( pos2 ) != "gmq" )
+				if ( components.authority.substr( pos2 + 1 ) != "gmq" )
 					return false;
 				components.furtherResolution = true;
 				components.authority.erase( pos2 );
@@ -170,9 +170,9 @@ struct GmqPathHelper
 		pos += sizeof( "sp=" ) - 1;
 		pos1 = path.find( '&', pos );
 		if ( pos1 == GMQ_COLL string::npos )
-			components.nodeName = path.substr( pos );
+			components.statePublisherName = path.substr( pos );
 		else
-			components.nodeName = path.substr( pos, pos1 - pos );
+			components.statePublisherName = path.substr( pos, pos1 - pos );
 		return true;
 	}
 };
