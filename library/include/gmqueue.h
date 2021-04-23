@@ -81,10 +81,12 @@ struct GmqPathHelper
 			ret += "!gmq";
 		if ( components.hasPort )
 		{
-			ret += ':';
+			auto str = fmt::format( ":{}", components.port );
+			/*ret += ':';
 			char buff[32];
 			sprintf( buff, "%d", components.port );
-			ret += buff;
+			ret += buff;*/
+			ret += str;
 		}
 		assert( !components.nodeName.empty() );
 		ret += '/';
@@ -259,9 +261,20 @@ class GMQueue
 		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
 	};
 
+	struct ReplyProcessingInstructions
+	{
+		enum Type { undefined, local, localConcentrator };
+		Type type = undefined;
+		SlotIdx idx; // local
+		uint64_t concentratorID; // localConcentrator
+		// TODO: for externally outgoing: generalized socket; etc
+	};
+
 	std::mutex mx;
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> concentrators; // address to concentrator, mx-protected
-	std::unordered_map<GMQ_COLL string, AddressableLocation> recipients; // node name to location, mx-protected
+	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
+	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
+	uint64_t senderIDBase = 0;
 
 public:
 	GMQueue() {}
@@ -269,40 +282,74 @@ public:
 	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
 		assert( !name.empty() );
 		std::unique_lock<std::mutex> lock(mx);
-		auto ins = recipients.insert( std::make_pair( name, idx ) );
+		auto ins = namedRecipients.insert( std::make_pair( name, idx ) );
 		assert( ins.second );
 	}
 	void removeNamedLocation( GMQ_COLL string name ) {
 		assert( !name.empty() );
 		std::unique_lock<std::mutex> lock(mx);
-		recipients.erase( name );
+		namedRecipients.erase( name );
 	}
 	SlotIdx locationNameToSlotIdx( GMQ_COLL string name ) {
 		assert( !name.empty() );
 		std::unique_lock<std::mutex> lock(mx);
-		auto f = recipients.find( name );
-		if ( f != recipients.end() )
+		auto f = namedRecipients.find( name );
+		if ( f != namedRecipients.end() )
 			return f->second;
 		else
 			return SlotIdx();
 	}
 
-	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address ){
+	uint64_t addSender( SlotIdx idx ) {
+		std::unique_lock<std::mutex> lock(mx);
+		uint64_t id = ++senderIDBase;
+		auto ins = senders.insert( std::make_pair( id, idx ) );
+		assert( ins.second );
+		return id;
+	}
+	void removeSender( uint64_t id, SlotIdx idx ) {
+		std::unique_lock<std::mutex> lock(mx);
+		auto f = senders.find( id );
+		assert( f != senders.end() );
+		assert( f->second.idx == idx.idx );
+		assert( f->second.reincarnation == idx.reincarnation );
+		senders.erase( id );
+	}
+	SlotIdx senderIDToSlotIdx( uint64_t id ) {
+		std::unique_lock<std::mutex> lock(mx);
+		auto f = senders.find( id );
+		if ( f != senders.end() )
+			return f->second;
+		else
+			return SlotIdx();
+	}
+
+	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address, uint64_t senderID, SlotIdx senderSlotdx ){
+		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
+		assert( senderIdx.idx == senderSlotdx.idx );
+		assert( senderIdx.reincarnation == senderSlotdx.reincarnation );
 		GmqPathHelper::PathComponents pc;
 		bool pathOK = GmqPathHelper::parse( address, pc );
 		assert( pathOK );
 		if ( pc.authority.empty() )
 		{
 			assert( !pc.nodeName.empty() );
-			SlotIdx idx = locationNameToSlotIdx( pc.nodeName );
-			assert( idx.idx != SlotIdx::invalid_idx );
-			InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( idx );
+			SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
+			assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
+			InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
+			// TODO: add senderID to message
 			postman->postMessage( std::move( msg ) );
 		}
 		else
 		{
 			assert( false ); // not yet implemented
 		}
+	}
+
+	void postMessage( InterThreadMsg&& msg, uint64_t recipientID, uint64_t senderID, SlotIdx senderSlotdx ){
+		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
+		assert( senderIdx.idx == senderSlotdx.idx );
+		assert( senderIdx.reincarnation == senderSlotdx.reincarnation );
 	}
 };
 
@@ -313,9 +360,15 @@ protected:
 	GMQueue<PlatformSupportT>& gmq;
 	SlotIdx idx;
 	GMQ_COLL string name;
+	uint64_t id;
 
 public:
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
+		assert( !name_.empty() );
+		idx = getAddressableLocations().add( postman );
+		gmq.add( name, idx );
+	};
+	GMQTransportBase( GMQueue<PlatformSupportT>& queue, InProcessMessagePostmanBase* postman ) : gmq( queue ) {
 		idx = getAddressableLocations().add( postman );
 		gmq.add( name, idx );
 	};
