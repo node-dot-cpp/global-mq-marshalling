@@ -34,7 +34,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\library\include\global_mq_common.h" />
     <ClInclude Include="..\..\library\include\gmqueue.h" />
-    <ClInclude Include="..\..\library\include\gmq_concentrator.h" />
     <ClInclude Include="..\..\library\include\marshalling_impl.h" />
     <ClInclude Include="..\..\library\include\marshalling.h" />
     <ClInclude Include="..\..\library\include\platforms\hwnd_queue.h" />

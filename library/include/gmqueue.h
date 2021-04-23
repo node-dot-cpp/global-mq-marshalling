@@ -82,10 +82,6 @@ struct GmqPathHelper
 		if ( components.hasPort )
 		{
 			auto str = fmt::format( ":{}", components.port );
-			/*ret += ':';
-			char buff[32];
-			sprintf( buff, "%d", components.port );
-			ret += buff;*/
 			ret += str;
 		}
 		assert( !components.nodeName.empty() );
@@ -211,7 +207,7 @@ public:
 	SlotIdx add( InProcessMessagePostmanBase* postman )
 	{ 
 		std::unique_lock<std::mutex> lock(mx);
-		// TODO: essentially add to slots and return its idx
+		// essentially add to slots and return its idx
 		for ( size_t i = 0; i<slots.size(); ++i )
 			if ( slots[i].postman == nullptr )
 			{
