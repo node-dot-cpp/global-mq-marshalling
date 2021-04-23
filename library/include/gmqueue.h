@@ -259,26 +259,51 @@ class GMQueue
 		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
 	};
 
+	std::mutex mx;
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> concentrators; // address to concentrator, mx-protected
 	std::unordered_map<GMQ_COLL string, AddressableLocation> recipients; // node name to location, mx-protected
 
 public:
 	GMQueue() {}
 
-	/*void add( GMQBaseAddress addr, SlotIdx idx ) {}
-	void addLocal( GMQ_COLL string name, SlotIdx idx ) {
-		if ( name != "" )
+	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
+		assert( !name.empty() );
+		std::unique_lock<std::mutex> lock(mx);
+		auto ins = recipients.insert( std::make_pair( name, idx ) );
+		assert( ins.second );
+	}
+	void removeNamedLocation( GMQ_COLL string name ) {
+		assert( !name.empty() );
+		std::unique_lock<std::mutex> lock(mx);
+		recipients.erase( name );
+	}
+	SlotIdx locationNameToSlotIdx( GMQ_COLL string name ) {
+		assert( !name.empty() );
+		std::unique_lock<std::mutex> lock(mx);
+		auto f = recipients.find( name );
+		if ( f != recipients.end() )
+			return f->second;
+		else
+			return SlotIdx();
+	}
+
+	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address ){
+		GmqPathHelper::PathComponents pc;
+		bool pathOK = GmqPathHelper::parse( address, pc );
+		assert( pathOK );
+		if ( pc.authority.empty() )
 		{
-			add( name, idx );
+			assert( !pc.nodeName.empty() );
+			SlotIdx idx = locationNameToSlotIdx( pc.nodeName );
+			assert( idx.idx != SlotIdx::invalid_idx );
+			InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( idx );
+			postman->postMessage( std::move( msg ) );
+		}
+		else
+		{
+			assert( false ); // not yet implemented
 		}
 	}
-	void remove( GMQBaseAddress addr, SlotIdx idx ) {}
-	void removeLocal( GMQ_COLL string name, SlotIdx idx ) {
-		if ( name != "" )
-		{
-			remove( name, idx );
-		}
-	}*/
 };
 
 template<class PlatformSupportT>
@@ -299,7 +324,9 @@ public:
 		gmq.remove( name, idx );
 	}
 
-	virtual void postMessage( InterThreadMsg&& ) = 0;
+	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address ){
+		gmq.postMessage( std::move( msg ), address );
+	}
 };
 
 
