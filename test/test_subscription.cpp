@@ -371,7 +371,10 @@ struct PublishableShortSample {
 void quickTestForGmqParts()
 {
 	using BufferT = globalmq::marshalling::Buffer;
-	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+//	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+//	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
+	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
+	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
 
 	mtest::StateConcentratorFactory<BufferT, ComposerT> cf;
 	auto p1 = cf.createConcentrator( 1 );
@@ -408,9 +411,103 @@ void quickTestForGmqParts()
 	assert( pc2.statePublisherName == "state" );
 	assert( pc2.furtherResolution );
 	assert( pc2.hasPort );
+
+	// testing message header
+	globalmq::marshalling::MessageHeader mh1;
+	mh1.type = globalmq::marshalling::MessageHeader::subscriptionRequest;
+	mh1.path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
+	mh1.reply_back_id = 111;
+	mh1.ref_id_at_subscriber = 112;
+	mh1.ref_id_at_publisher = 113;
+
+	BufferT buff;
+	ComposerT composer( buff );
+	mh1.compose( composer );
+	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
+	{
+		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
+		fmt::print( "{}\n\n", sview );
+	}
+	ParserT parser( buff );
+	globalmq::marshalling::MessageHeader mh2;
+	mh2.parse( parser );
+	assert( mh1.type == mh2.type );
+	assert( mh1.path == mh2.path );
+	assert( mh1.reply_back_id == mh2.reply_back_id );
+	assert( mh1.ref_id_at_subscriber == mh2.ref_id_at_subscriber );
+
+	buff.set_size(0);
+	ComposerT composer1( buff );
+	mh1.type = globalmq::marshalling::MessageHeader::subscriptionResponse;
+	mh1.compose( composer1 );
+	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
+	{
+		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
+		fmt::print( "{}\n\n", sview );
+	}
+	ParserT parser1( buff );
+	globalmq::marshalling::MessageHeader mh3;
+	mh3.parse( parser1 );
+	assert( mh1.type == mh3.type );
+	assert( mh1.reply_back_id == mh3.reply_back_id );
+	assert( mh1.ref_id_at_subscriber == mh3.ref_id_at_subscriber );
+	assert( mh1.ref_id_at_publisher == mh3.ref_id_at_publisher );
+
+	buff.set_size(0);
+	ComposerT composer2( buff );
+	mh1.type = globalmq::marshalling::MessageHeader::MsgType::stateUpdate;
+	mh1.compose( composer2 );
+	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
+	{
+		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
+		fmt::print( "{}\n\n", sview );
+	}
+	ParserT parser2( buff );
+	globalmq::marshalling::MessageHeader mh4;
+	mh4.parse( parser2 );
+	assert( mh1.type == mh4.type );
+	assert( mh1.reply_back_id == mh4.reply_back_id );
+	assert( mh1.ref_id_at_subscriber == mh4.ref_id_at_subscriber );
+	assert( mh1.ref_id_at_publisher == mh4.ref_id_at_publisher );
 }
 
 
+template<typename StateT, typename NodeT>
+concept has_count_call_member4 = requires { { std::declval<StateT>().count(std::declval<NodeT>()) }; };
+
+using index_t = size_t&; 
+template<typename StateT>
+concept has_count_call_member5 = requires { { std::declval<StateT>().count2(std::declval<index_t>()) }; };
+
+void testSubscriptionTest()
+{
+    struct bar
+    {
+		int * intptr;
+		bool x;
+        int count(int*) const { return 6; }
+        int count2(int&) const { return 6; }
+    };
+    struct bar1
+    {
+		bool value;
+        int count_() const { return 6; }
+//        static int count() { return 6; }
+        static void count(int*) { return; }
+        void count2(size_t&) { return; }
+    };
+
+	constexpr bool has_4count = has_count_call_member4<bar, int*>;
+	constexpr bool has_4count1 = has_count_call_member4<bar1, int*>;
+	printf( "%s, %s\n", has_4count ? "Y" : "N", has_4count1 ? "Y" : "N" );
+
+	constexpr bool has_5count = has_count_call_member5<bar>;
+	constexpr bool has_5count1 = has_count_call_member5<bar1>;
+	printf( "%s, %s\n", has_5count ? "Y" : "N", has_5count1 ? "Y" : "N" );
+
+
+ //   printf( "foo(bar{}): : %d\n", foo(bar{}) );
+}
 
 void publishableTestOne()
 {
