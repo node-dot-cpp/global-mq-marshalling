@@ -332,7 +332,7 @@ class GMQueue
 		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
 	};
 
-	struct ReplyProcessingInstructions
+	struct ReplyProcessingInfo
 	{
 		enum Type { undefined, local, localConcentrator };
 		Type type = undefined;
@@ -345,6 +345,7 @@ class GMQueue
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> concentrators; // address to concentrator, mx-protected
 	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
+	std::unordered_map<uint64_t, ReplyProcessingInfo> replyProcessingInstructions; // id to instruction, mx-protected
 	uint64_t senderIDBase = 0;
 
 public:
@@ -395,10 +396,10 @@ public:
 			return SlotIdx();
 	}
 
-	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address, uint64_t senderID, SlotIdx senderSlotdx ){
+	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address, uint64_t senderID, SlotIdx senderSlotIdx ){
 		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
-		assert( senderIdx.idx == senderSlotdx.idx );
-		assert( senderIdx.reincarnation == senderSlotdx.reincarnation );
+		assert( senderIdx.idx == senderSlotIdx.idx );
+		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
 		GmqPathHelper::PathComponents pc;
 		bool pathOK = GmqPathHelper::parse( address, pc );
 		assert( pathOK );
@@ -417,10 +418,10 @@ public:
 		}
 	}
 
-	void postMessage( InterThreadMsg&& msg, uint64_t recipientID, uint64_t senderID, SlotIdx senderSlotdx ){
+	void postMessage( InterThreadMsg&& msg, uint64_t recipientID, uint64_t senderID, SlotIdx senderSlotIdx ){
 		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
-		assert( senderIdx.idx == senderSlotdx.idx );
-		assert( senderIdx.reincarnation == senderSlotdx.reincarnation );
+		assert( senderIdx.idx == senderSlotIdx.idx );
+		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
 	}
 };
 
