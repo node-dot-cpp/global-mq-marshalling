@@ -46,6 +46,7 @@ struct GmqPathHelper
 		bool furtherResolution = false;
 		bool hasPort = false;
 		uint16_t port = 0xFFFF;
+		GMQ_COLL string localPart; // TODO: revise
 		GMQ_COLL string nodeName;
 		GMQ_COLL string statePublisherName;
 	};
@@ -60,11 +61,9 @@ struct GmqPathHelper
 			ret += authority;
 		}
 		assert( !nodeName.empty() );
-		ret += '/';
-		ret += nodeName;
 		assert( !statePublisherName.empty() );
-		ret += "?sp=";
-		ret += statePublisherName;
+		ret += '/';
+		ret += localPart( nodeName, statePublisherName );
 		return ret;
 	}
 
@@ -85,12 +84,15 @@ struct GmqPathHelper
 			ret += str;
 		}
 		assert( !components.nodeName.empty() );
-		ret += '/';
-		ret += components.nodeName;
 		assert( !components.statePublisherName.empty() );
-		ret += "?sp=";
-		ret += components.statePublisherName;
+		ret += '/';
+		ret += localPart( components.nodeName, components.statePublisherName );
 		return ret;
+	}
+
+	static GMQ_COLL string localPart( GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
+	{
+		return fmt::format( "{}?sp={}", nodeName, statePublisherName );
 	}
 
 	static bool parse( GMQ_COLL string path, PathComponents& components )
@@ -337,6 +339,10 @@ class GMQueue
 		ConcentratorWrapper& operator = ( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; return *this; }
 		~ConcentratorWrapper() { if ( ptr ) delete ptr; }
 		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
+
+		// Gmqueue part
+		GMQ_COLL string address;
+		uint64_t id;
 	};
 
 	struct ReplyProcessingInfo
@@ -373,6 +379,8 @@ class GMQueue
 		ConcentratorWrapper* c = addStateConcentrator( path, std::move( concentrator ) );
 		uint64_t concentratorID = ++concentratorIDBase;
 		addIdToStateConcentratorsMapping( concentratorID, c );
+		c->address = path;
+		c->id = concentratorID;
 		return std::make_pair<c, concentratorID>;
 	}
 
@@ -438,11 +446,12 @@ class GMQueue
 		std::unique_lock<std::mutex> lock(mx);
 		auto f = namedRecipients.find( name );
 		if ( f != namedRecipients.end() )
-			return f->second;
+			return *(f->second);
 		else
 			return SlotIdx();
 	}
 
+	// reply instructions ( replyProcessingInstructions )
 	uint64_t addReplyProcessingInstructions( const ReplyProcessingInfo& info ) {
 		assert( info.type != ReplyProcessingInfo::Type::undefined );
 		std::unique_lock<std::mutex> lock(mx);
@@ -459,7 +468,7 @@ class GMQueue
 		std::unique_lock<std::mutex> lock(mx);
 		auto f = replyProcessingInstructions.find( idx );
 		if ( f != replyProcessingInstructions.end() )
-			return f->second;
+			return *(f->second);
 		else
 		{
 			throw std::exception();
@@ -486,7 +495,7 @@ class GMQueue
 		std::unique_lock<std::mutex> lock(mx);
 		auto f = senders.find( id );
 		if ( f != senders.end() )
-			return f->second;
+			return *(f->second);
 		else
 			return SlotIdx();
 	}
@@ -516,12 +525,11 @@ public:
 				GmqPathHelper::PathComponents pc;
 				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				assert( pathOK );
-				if ( pc.authority.empty() )
+				if ( pc.authority.empty() ) // local
 				{
 					assert( !pc.nodeName.empty() );
 					SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 					assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
-					InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
 					ReplyProcessingInfo rpi;
 					rpi.type = ReplyProcessingInfo::Type::local;
 					rpi.idx = senderSlotIdx;
@@ -530,6 +538,7 @@ public:
 					rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
 					uint64_t idx = addReplyProcessingInstructions( rpi );
 					// TODO: update reply_back_id of the message
+					InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
 					postman->postMessage( std::move( msg ) );
 				}
 				else
