@@ -475,7 +475,7 @@ void addLibAliasingBlock( FILE* header )
 void generateStateConcentratorFactory( FILE* header, Root& root )
 {
 	fprintf( header, "template<class InputBufferT, class ComposerT>\n" );
-	fprintf( header, "class StateConcentratorFactory : ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>\n" );
+	fprintf( header, "class StateConcentratorFactory : public ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>\n" );
 	fprintf( header, "{\n" );
 	fprintf( header, "public:\n" );
 	fprintf( header, "\tvirtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID )\n" );

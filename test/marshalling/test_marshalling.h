@@ -3876,7 +3876,7 @@ struct publishable_sample
 //===============================================================================
 
 template<class InputBufferT, class ComposerT>
-class StateConcentratorFactory : ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>
+class StateConcentratorFactory : public ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>
 {
 public:
 	virtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID )
