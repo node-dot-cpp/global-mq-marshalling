@@ -250,7 +250,7 @@ struct MessageHeader
 	}
 };
 
-class InterThreadMsg;
+using InterThreadMsg = Buffer;
 
 class InProcessMessagePostmanBase
 {
@@ -318,6 +318,7 @@ class GMQueue
 {
 	using InputBufferT = typename PlatformSupportT::BufferT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
+	using ParserT = typename PlatformSupportT::ParserT;
 
 	class ConcentratorWrapper
 	{
@@ -336,6 +337,9 @@ class GMQueue
 	{
 		enum Type { undefined, local, localConcentrator };
 		Type type = undefined;
+		uint64_t reply_back_id;
+		uint64_t ref_id_at_subscriber;
+		uint64_t ref_id_at_publisher;
 		SlotIdx idx; // local
 		uint64_t concentratorID; // localConcentrator
 		// TODO: for externally outgoing: generalized socket; etc
@@ -347,6 +351,7 @@ class GMQueue
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	std::unordered_map<uint64_t, ReplyProcessingInfo> replyProcessingInstructions; // id to instruction, mx-protected
 	uint64_t senderIDBase = 0;
+	uint64_t replyProcessingInstructionIDBase = 0;
 
 public:
 	GMQueue() {}
@@ -370,6 +375,30 @@ public:
 			return f->second;
 		else
 			return SlotIdx();
+	}
+
+	uint64_t addReplyProcessingInstructions( const ReplyProcessingInfo& info ) {
+		assert( info.type != ReplyProcessingInfo::Type::undefined );
+		std::unique_lock<std::mutex> lock(mx);
+		uint64_t idx = ++replyProcessingInstructionIDBase;
+		auto ins = replyProcessingInstructions.insert( std::make_pair( idx, info ) );
+		assert( ins.second );
+		return idx;
+	}
+	void removeReplyProcessingInstructions( uint64_t idx ) {
+		std::unique_lock<std::mutex> lock(mx);
+		replyProcessingInstructions.erase( idx );
+	}
+	ReplyProcessingInfo idxToReplyProcessingInstructions( uint64_t idx ) {
+		std::unique_lock<std::mutex> lock(mx);
+		auto f = replyProcessingInstructions.find( idx );
+		if ( f != replyProcessingInstructions.end() )
+			return f->second;
+		else
+		{
+			throw std::exception();
+			return ReplyProcessingInfo();
+		}
 	}
 
 	uint64_t addSender( SlotIdx idx ) {
@@ -396,25 +425,54 @@ public:
 			return SlotIdx();
 	}
 
-	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address, uint64_t senderID, SlotIdx senderSlotIdx ){
+	void postMessage( InterThreadMsg&& msg, uint64_t senderID, SlotIdx senderSlotIdx ){
 		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
 		assert( senderIdx.idx == senderSlotIdx.idx );
 		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
-		GmqPathHelper::PathComponents pc;
-		bool pathOK = GmqPathHelper::parse( address, pc );
-		assert( pathOK );
-		if ( pc.authority.empty() )
+		MessageHeader mh;
+		ParserT parser( msg );
+		mh.parse( parser );
+		switch ( mh.type )
 		{
-			assert( !pc.nodeName.empty() );
-			SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
-			assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
-			InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
-			// TODO: add senderID to message
-			postman->postMessage( std::move( msg ) );
-		}
-		else
-		{
-			assert( false ); // not yet implemented
+			case MessageHeader::Type::subscriptionRequest:
+			{
+				GmqPathHelper::PathComponents pc;
+				bool pathOK = GmqPathHelper::parse( mh.path, pc );
+				assert( pathOK );
+				if ( pc.authority.empty() )
+				{
+					assert( !pc.nodeName.empty() );
+					SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
+					assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
+					InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
+					ReplyProcessingInfo rpi;
+					rpi.type = ReplyProcessingInfo::Type::local;
+					rpi.reply_back_id = mh.reply_back_id;
+					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
+					rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
+					uint64_t idx = addReplyProcessingInstructions( rpi );
+					// TODO: update reply_back_id of the message
+					postman->postMessage( std::move( msg ) );
+				}
+				else
+				{
+					assert( false ); // not yet implemented
+					// TODO: find concentrator by path; 
+					//          - if found, pass request there, get state-sync msg, post back
+					//          - if not found, create new concentrator, pass request there, make it generate (or generate on behalf of it) a subscriptionRequest with the same path, send it to a next hop
+				}
+				break;
+			}
+			case MessageHeader::Type::subscriptionResponse:
+			{
+				break;
+			}
+			case MessageHeader::Type::stateUpdate:
+			{
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 	}
 
