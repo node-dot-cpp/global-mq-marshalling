@@ -477,6 +477,10 @@ void quickTestForGmqParts()
 	assert( mh1.reply_back_id == mh4.reply_back_id );
 	assert( mh1.ref_id_at_subscriber == mh4.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh4.ref_id_at_publisher );
+
+	// gmqueue
+	GMQueue<StatePublisherSubscriberInfo> gmqueue;
+	gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 }
 
 

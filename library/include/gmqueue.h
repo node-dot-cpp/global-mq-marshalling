@@ -331,6 +331,13 @@ class GMQueue
 	class ConcentratorWrapper
 	{
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
+
+		struct SubscriberData
+		{
+			uint64_t postingInstructionID; // TODO: consider having postingInstruction itself here to avoid extra searches
+		};
+		GMQ_COLL vector<SubscriberData> subscribers;
+
 	public:
 		ConcentratorWrapper( StateConcentratorBase<InputBufferT, ComposerT>* ptr_ ) : ptr( ptr_ ) {}
 		ConcentratorWrapper( const ConcentratorWrapper& ) = delete;
@@ -340,9 +347,23 @@ class GMQueue
 		~ConcentratorWrapper() { if ( ptr ) delete ptr; }
 		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
 
-		// Gmqueue part
+		// Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
 		GMQ_COLL string address;
 		uint64_t id;
+
+		void addSubscriber( uint64_t postingInstructionID )
+		{
+			SubscriberData sd;
+			sd.postingInstructionID = postingInstructionID;
+			subscribers.push_back( sd );
+		}
+
+		InterThreadMsg&& generateSubscriptionResponseMessage()
+		{
+			InterThreadMsg msg;
+			// TODO: generate message
+			return msg;
+		}
 	};
 
 	struct ReplyProcessingInfo
@@ -397,7 +418,7 @@ class GMQueue
 		std::unique_lock<std::mutex> lock(mx);
 		addressesToStateConcentrators.erase( path );
 	}
-	ConcentratorWrapper* pathToStateConcentrator( GMQ_COLL string path ) {
+	ConcentratorWrapper* findStateConcentrator( GMQ_COLL string path ) {
 		assert( !path.empty() );
 		std::unique_lock<std::mutex> lock(mx);
 		auto f = addressesToStateConcentrators.find( path );
@@ -419,7 +440,7 @@ class GMQueue
 		std::unique_lock<std::mutex> lock(mx);
 		idToStateConcentrators.erase( id );
 	}
-	ConcentratorWrapper* IdToStateConcentrator( uint64_t id ) {
+	ConcentratorWrapper* findStateConcentrator( uint64_t id ) {
 		assert( id != 0 );
 		std::unique_lock<std::mutex> lock(mx);
 		auto f = idToStateConcentrators.find( id );
@@ -525,21 +546,34 @@ public:
 				GmqPathHelper::PathComponents pc;
 				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				assert( pathOK );
-				if ( pc.authority.empty() ) // local
+				GMQ_COLL string addr = GmqPathHelper::localPart( mh );
+				if ( pc.authority.empty() ) // local; TODO: add case when authority is present but points to local machine, too
 				{
 					assert( !pc.nodeName.empty() );
-					SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
-					assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
 					ReplyProcessingInfo rpi;
 					rpi.type = ReplyProcessingInfo::Type::local;
 					rpi.idx = senderSlotIdx;
 					rpi.reply_back_id = mh.reply_back_id;
 					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 					rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
-					uint64_t idx = addReplyProcessingInstructions( rpi );
+					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
+					ConcentratorWrapper* concentrator = findStateConcentrator( addr );
+					if ( concentrator != nullptr )
+					{
+						concentrator->addSubscriber( rpiIdx );
+						// TODO: consider adding message header first yet here, and adding message body at concentrator
+						concentrator->generateSubscriptionResponseMessage();
+						// add subscriber, get its subscriptionResponse message, post it back to caller
+						//InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
+						//postman->postMessage( std::move( msg ) );
+					}
+					else
+					{
+						auto cci = createConcentrator( addr, mh.state_type_id );
+						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
+						assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
+					}
 					// TODO: update reply_back_id of the message
-					InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
-					postman->postMessage( std::move( msg ) );
 				}
 				else
 				{
@@ -584,10 +618,24 @@ public:
 		}
 	}
 
-	void postMessage( InterThreadMsg&& msg, uint64_t recipientID, uint64_t senderID, SlotIdx senderSlotIdx ){
-		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
-		assert( senderIdx.idx == senderSlotIdx.idx );
-		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
+	void onMessage( InterThreadMsg&& msg ){ // externally coming
+		MessageHeader mh;
+		ParserT parser( msg );
+		mh.parse( parser );
+		switch ( mh.type )
+		{
+			case MessageHeader::Type::subscriptionRequest:
+			{
+				break;
+			}
+			case MessageHeader::Type::subscriptionResponse:
+			case MessageHeader::Type::stateUpdate: // so far we have the same processing
+			{
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
 	}
 };
 
