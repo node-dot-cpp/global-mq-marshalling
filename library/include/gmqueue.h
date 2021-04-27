@@ -180,6 +180,7 @@ struct MessageHeader
 	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
 	MsgType type;
 	uint64_t state_type_id; // Note: may be removed in future versions
+	uint64_t priority;
 	GMQ_COLL string path;  // subscriptionRequest only
 	uint64_t reply_back_id;
 	uint64_t ref_id_at_subscriber;
@@ -192,6 +193,7 @@ struct MessageHeader
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id, "state_type_id" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &priority, "priority" );
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
@@ -231,6 +233,7 @@ struct MessageHeader
 		globalmq::marshalling::impl::composeStructBegin( composer );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(type), "msg_type", true );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, state_type_id, "state_type_id", true );
+		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, priority, "priority", true );
 		switch ( type )
 		{
 			case MsgType::subscriptionRequest:
