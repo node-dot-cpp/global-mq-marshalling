@@ -352,17 +352,76 @@ class GMQueue
 	};
 
 	std::mutex mx;
-	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> address2concentrators; // address to concentrator, mx-protected
-	std::unordered_map<uint64_t, ConcentratorWrapper> id2concentrators; // address to concentrator, mx-protected
+	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
+	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	std::unordered_map<uint64_t, ReplyProcessingInfo> replyProcessingInstructions; // id to instruction, mx-protected
 	uint64_t senderIDBase = 0;
+	uint64_t concentratorIDBase = 0;
 	uint64_t replyProcessingInstructionIDBase = 0;
 
-public:
-	GMQueue() {}
+	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
 
+	auto createConcentrator( GMQ_COLL string path, uint64_t stateTypeID )
+	{
+		assert( !path.empty() );
+		assert( stateConcentratorFactory != nullptr );
+		auto concentrator = stateConcentratorFactory->createConcentrator( stateTypeID );
+		assert( concentrator != nullptr );
+		ConcentratorWrapper cwrapper( concentrator );
+		ConcentratorWrapper* c = addStateConcentrator( path, std::move( concentrator ) );
+		uint64_t concentratorID = ++concentratorIDBase;
+		addIdToStateConcentratorsMapping( concentratorID, c );
+		return std::make_pair<c, concentratorID>;
+	}
+
+	// concentrators (address2concentrators)
+	ConcentratorWrapper* addStateConcentrator( GMQ_COLL string path, ConcentratorWrapper&& concentrator ) {
+		assert( !path.empty() );
+		std::unique_lock<std::mutex> lock(mx);
+		auto ins = addressesToStateConcentrators.insert( std::make_pair( path, std::move( concentrator ) ) );
+		assert( ins.second );
+		return &(ins.first->second);
+	}
+	void removeStateConcentrator( GMQ_COLL string path ) {
+		assert( !path.empty() );
+		std::unique_lock<std::mutex> lock(mx);
+		addressesToStateConcentrators.erase( path );
+	}
+	ConcentratorWrapper* pathToStateConcentrator( GMQ_COLL string path ) {
+		assert( !path.empty() );
+		std::unique_lock<std::mutex> lock(mx);
+		auto f = addressesToStateConcentrators.find( path );
+		if ( f != addressesToStateConcentrators.end() )
+			return &(*(f->second));
+		else
+			return nullptr;
+	}
+
+	// id toconcentrators mapping (idToStateConcentrators)
+	void addIdToStateConcentratorsMapping( uint64_t id, ConcentratorWrapper&& concentrator ) {
+		assert( id != 0 );
+		std::unique_lock<std::mutex> lock(mx);
+		auto ins = idToStateConcentrators.insert( std::make_pair( id, std::move( concentrator ) ) );
+		assert( ins.second );
+	}
+	void removeIdToStateConcentratorsMapping( uint64_t id ) {
+		assert( id != 0 );
+		std::unique_lock<std::mutex> lock(mx);
+		idToStateConcentrators.erase( id );
+	}
+	ConcentratorWrapper* IdToStateConcentrator( uint64_t id ) {
+		assert( id != 0 );
+		std::unique_lock<std::mutex> lock(mx);
+		auto f = idToStateConcentrators.find( id );
+		if ( f != idToStateConcentrators.end() )
+			return &(*(f->second));
+		else
+			return nullptr;
+	}
+
+	// named local objects (namedRecipients)
 	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
 		assert( !name.empty() );
 		std::unique_lock<std::mutex> lock(mx);
@@ -430,6 +489,17 @@ public:
 			return f->second;
 		else
 			return SlotIdx();
+	}
+
+public:
+	GMQueue() {}
+	~GMQueue() { if ( stateConcentratorFactory != nullptr ) delete stateConcentratorFactory; }
+
+	template<class StateFactoryT>
+	void initStateConcentratorFactory() // Note: potentially, temporary solution
+	{
+		assert( stateConcentratorFactory == nullptr ); // must be called just once
+		stateConcentratorFactory = new StateFactoryT;
 	}
 
 	void postMessage( InterThreadMsg&& msg, uint64_t senderID, SlotIdx senderSlotIdx ){ // called by local objects
