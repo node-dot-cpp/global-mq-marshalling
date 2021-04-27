@@ -368,12 +368,11 @@ class GMQueue
 
 	struct ReplyProcessingInfo
 	{
-		enum Type { undefined, local, localConcentrator, external };
+		enum Type { undefined, local, external };
 		Type type = undefined;
 		uint64_t reply_back_id;
 		uint64_t ref_id_at_subscriber;
 		uint64_t ref_id_at_publisher;
-		SlotIdx idx; // local
 		uint64_t concentratorID; // localConcentrator
 		// TODO: for externally outgoing: generalized socket; etc
 	};
@@ -550,30 +549,35 @@ public:
 				if ( pc.authority.empty() ) // local; TODO: add case when authority is present but points to local machine, too
 				{
 					assert( !pc.nodeName.empty() );
+
 					ReplyProcessingInfo rpi;
 					rpi.type = ReplyProcessingInfo::Type::local;
 					rpi.idx = senderSlotIdx;
 					rpi.reply_back_id = mh.reply_back_id;
 					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
-					rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
+					//rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
 					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
+
 					ConcentratorWrapper* concentrator = findStateConcentrator( addr );
 					if ( concentrator != nullptr )
 					{
 						concentrator->addSubscriber( rpiIdx );
 						// TODO: consider adding message header first yet here, and adding message body at concentrator
-						concentrator->generateSubscriptionResponseMessage();
+						auto msgBack = concentrator->generateSubscriptionResponseMessage();
 						// add subscriber, get its subscriptionResponse message, post it back to caller
-						//InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( targetIdx );
-						//postman->postMessage( std::move( msg ) );
+						InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( senderSlotIdx );
+						postman->postMessage( std::move( msgBack ) );
 					}
 					else
 					{
 						auto cci = createConcentrator( addr, mh.state_type_id );
+						concentrator->addSubscriber( rpiIdx );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 						assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
+						// TODO: update message fields
+						InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( targetIdx );
+						postman->postMessage( std::move( msg ) );
 					}
-					// TODO: update reply_back_id of the message
 				}
 				else
 				{
@@ -590,17 +594,12 @@ public:
 				ReplyProcessingInfo info = idxToReplyProcessingInstructions( mh.ref_id_at_publisher );
 				switch ( info.type )
 				{
-					case ReplyProcessingInfo::Type::local:
+					case ReplyProcessingInfo::Type::localConcentrator:
 					{
 						// TODO: update reply_back_id of the message (use info.reply_back_id)
 						SlotIdx idx = senderIDToSlotIdx( info.idx );
 						InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( idx );
 						postman->postMessage( std::move( msg ) );
-						break;
-					}
-					case ReplyProcessingInfo::Type::localConcentrator:
-					{
-						assert( false ); // unexpected
 						break;
 					}
 					case ReplyProcessingInfo::Type::external:
