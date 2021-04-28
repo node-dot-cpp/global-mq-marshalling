@@ -328,13 +328,24 @@ class GMQueue
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ParserT = typename PlatformSupportT::ParserT;
 
+	struct ReplyProcessingInfo
+	{
+		enum Type { undefined, local, external };
+		Type type = undefined;
+		uint64_t reply_back_id;
+		uint64_t ref_id_at_subscriber;
+		uint64_t ref_id_at_publisher;
+		uint64_t concentratorID; // localConcentrator
+		// TODO: for externally outgoing: generalized socket; etc
+	};
+
 	class ConcentratorWrapper
 	{
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
 
 		struct SubscriberData
 		{
-			uint64_t postingInstructionID; // TODO: consider having postingInstruction itself here to avoid extra searches
+			ReplyProcessingInfo info; // TODO: consider having postingInstruction itself here to avoid extra searches
 		};
 		GMQ_COLL vector<SubscriberData> subscribers;
 
@@ -351,10 +362,10 @@ class GMQueue
 		GMQ_COLL string address;
 		uint64_t id;
 
-		void addSubscriber( uint64_t postingInstructionID )
+		void addSubscriber( ReplyProcessingInfo info )
 		{
 			SubscriberData sd;
-			sd.postingInstructionID = postingInstructionID;
+			sd.info = info;
 			subscribers.push_back( sd );
 		}
 
@@ -366,23 +377,11 @@ class GMQueue
 		}
 	};
 
-	struct ReplyProcessingInfo
-	{
-		enum Type { undefined, local, external };
-		Type type = undefined;
-		uint64_t reply_back_id;
-		uint64_t ref_id_at_subscriber;
-		uint64_t ref_id_at_publisher;
-		uint64_t concentratorID; // localConcentrator
-		// TODO: for externally outgoing: generalized socket; etc
-	};
-
 	std::mutex mx;
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
 	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
-	std::unordered_map<uint64_t, ReplyProcessingInfo> replyProcessingInstructions; // id to instruction, mx-protected
 	uint64_t senderIDBase = 0;
 	uint64_t concentratorIDBase = 0;
 	uint64_t replyProcessingInstructionIDBase = 0;
@@ -471,31 +470,6 @@ class GMQueue
 			return SlotIdx();
 	}
 
-	// reply instructions ( replyProcessingInstructions )
-	uint64_t addReplyProcessingInstructions( const ReplyProcessingInfo& info ) {
-		assert( info.type != ReplyProcessingInfo::Type::undefined );
-		std::unique_lock<std::mutex> lock(mx);
-		uint64_t idx = ++replyProcessingInstructionIDBase;
-		auto ins = replyProcessingInstructions.insert( std::make_pair( idx, info ) );
-		assert( ins.second );
-		return idx;
-	}
-	void removeReplyProcessingInstructions( uint64_t idx ) {
-		std::unique_lock<std::mutex> lock(mx);
-		replyProcessingInstructions.erase( idx );
-	}
-	ReplyProcessingInfo idxToReplyProcessingInstructions( uint64_t idx ) {
-		std::unique_lock<std::mutex> lock(mx);
-		auto f = replyProcessingInstructions.find( idx );
-		if ( f != replyProcessingInstructions.end() )
-			return *(f->second);
-		else
-		{
-			throw std::exception();
-			return ReplyProcessingInfo();
-		}
-	}
-
 	uint64_t addSender( SlotIdx idx ) {
 		std::unique_lock<std::mutex> lock(mx);
 		uint64_t id = ++senderIDBase;
@@ -556,12 +530,12 @@ public:
 					rpi.reply_back_id = mh.reply_back_id;
 					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 					//rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
-					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
+//					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
 
 					ConcentratorWrapper* concentrator = findStateConcentrator( addr );
 					if ( concentrator != nullptr )
 					{
-						concentrator->addSubscriber( rpiIdx );
+						concentrator->addSubscriber( rpi );
 						// TODO: consider adding message header first yet here, and adding message body at concentrator
 						auto msgBack = concentrator->generateSubscriptionResponseMessage();
 						// add subscriber, get its subscriptionResponse message, post it back to caller
@@ -571,7 +545,7 @@ public:
 					else
 					{
 						auto cci = createConcentrator( addr, mh.state_type_id );
-						concentrator->addSubscriber( rpiIdx );
+						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 						assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
 						// TODO: update message fields
@@ -589,27 +563,15 @@ public:
 				break;
 			}
 			case MessageHeader::Type::subscriptionResponse:
+			{
+				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
+				// TODO: apply to concentrator, send to all currently present subscribers
+				break;
+			}
 			case MessageHeader::Type::stateUpdate: // so far we have the same processing
 			{
-				ReplyProcessingInfo info = idxToReplyProcessingInstructions( mh.ref_id_at_publisher );
-				switch ( info.type )
-				{
-					case ReplyProcessingInfo::Type::localConcentrator:
-					{
-						// TODO: update reply_back_id of the message (use info.reply_back_id)
-						SlotIdx idx = senderIDToSlotIdx( info.idx );
-						InProcessMessagePostmanBase* postman = getAddressableLocations(). getPostman( idx );
-						postman->postMessage( std::move( msg ) );
-						break;
-					}
-					case ReplyProcessingInfo::Type::external:
-					{
-						assert( false ); // not yet implemented
-						break;
-					}
-					default:
-						throw std::exception(); // TODO: ... (unknown msg type)
-				}
+				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
+				// TODO: apply to concentrator, send to all currently present subscribers
 				break;
 			}
 			default:
