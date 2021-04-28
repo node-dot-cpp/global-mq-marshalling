@@ -377,14 +377,19 @@ class GMQueue
 		}
 	};
 
-	std::mutex mx;
+	std::mutex mxAddressesToStateConcentrators;
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
+	uint64_t concentratorIDBase = 0;
+
+	std::mutex mxIdToStateConcentrators;
 	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
+
+	std::mutex mxNamedRecipients;
 	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
+
+	std::mutex mxSenders;
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
-	uint64_t concentratorIDBase = 0;
-	uint64_t replyProcessingInstructionIDBase = 0;
 
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
 
@@ -406,19 +411,19 @@ class GMQueue
 	// concentrators (address2concentrators)
 	ConcentratorWrapper* addStateConcentrator( GMQ_COLL string path, ConcentratorWrapper&& concentrator ) {
 		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
 		auto ins = addressesToStateConcentrators.insert( std::make_pair( path, std::move( concentrator ) ) );
 		assert( ins.second );
 		return &(ins.first->second);
 	}
 	void removeStateConcentrator( GMQ_COLL string path ) {
 		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
 		addressesToStateConcentrators.erase( path );
 	}
 	ConcentratorWrapper* findStateConcentrator( GMQ_COLL string path ) {
 		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
 		auto f = addressesToStateConcentrators.find( path );
 		if ( f != addressesToStateConcentrators.end() )
 			return &(*(f->second));
@@ -429,18 +434,18 @@ class GMQueue
 	// id toconcentrators mapping (idToStateConcentrators)
 	void addIdToStateConcentratorsMapping( uint64_t id, ConcentratorWrapper&& concentrator ) {
 		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxIdToStateConcentrators);
 		auto ins = idToStateConcentrators.insert( std::make_pair( id, std::move( concentrator ) ) );
 		assert( ins.second );
 	}
 	void removeIdToStateConcentratorsMapping( uint64_t id ) {
 		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxIdToStateConcentrators);
 		idToStateConcentrators.erase( id );
 	}
 	ConcentratorWrapper* findStateConcentrator( uint64_t id ) {
 		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxIdToStateConcentrators);
 		auto f = idToStateConcentrators.find( id );
 		if ( f != idToStateConcentrators.end() )
 			return &(*(f->second));
@@ -451,18 +456,18 @@ class GMQueue
 	// named local objects (namedRecipients)
 	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
 		assert( !name.empty() );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxNamedRecipients);
 		auto ins = namedRecipients.insert( std::make_pair( name, idx ) );
 		assert( ins.second );
 	}
 	void removeNamedLocation( GMQ_COLL string name ) {
 		assert( !name.empty() );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxNamedRecipients);
 		namedRecipients.erase( name );
 	}
 	SlotIdx locationNameToSlotIdx( GMQ_COLL string name ) {
 		assert( !name.empty() );
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxNamedRecipients);
 		auto f = namedRecipients.find( name );
 		if ( f != namedRecipients.end() )
 			return *(f->second);
@@ -471,14 +476,14 @@ class GMQueue
 	}
 
 	uint64_t addSender( SlotIdx idx ) {
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxSenders);
 		uint64_t id = ++senderIDBase;
 		auto ins = senders.insert( std::make_pair( id, idx ) );
 		assert( ins.second );
 		return id;
 	}
 	void removeSender( uint64_t id, SlotIdx idx ) {
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxSenders);
 		auto f = senders.find( id );
 		assert( f != senders.end() );
 		assert( f->second.idx == idx.idx );
@@ -486,7 +491,7 @@ class GMQueue
 		senders.erase( id );
 	}
 	SlotIdx senderIDToSlotIdx( uint64_t id ) {
-		std::unique_lock<std::mutex> lock(mx);
+		std::unique_lock<std::mutex> lock(mxSenders);
 		auto f = senders.find( id );
 		if ( f != senders.end() )
 			return *(f->second);
