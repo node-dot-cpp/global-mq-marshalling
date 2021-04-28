@@ -480,13 +480,14 @@ void quickTestForGmqParts()
 	ud.update_ref_id_at_subscriber = true;
 	ud.update_ref_id_at_publisher = true;
 	ParserT parser3( buff );
-	globalmq::marshalling::MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser3, buff, ud );
+	BufferT buff2;
+	globalmq::marshalling::MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser3, buff2, ud );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
-		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
+		std::string_view sview( reinterpret_cast<const char*>(buff2.begin()), buff2.size() );
 		fmt::print( "{}\n\n", sview );
 	}
-	ParserT parser4( buff );
+	ParserT parser4( buff2 );
 	globalmq::marshalling::MessageHeader mh5;
 	mh5.parse( parser4 );
 	assert( mh1.type == mh5.type );
