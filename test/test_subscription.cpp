@@ -474,6 +474,28 @@ void quickTestForGmqParts()
 	assert( mh1.ref_id_at_subscriber == mh4.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh4.ref_id_at_publisher );
 
+	globalmq::marshalling::MessageHeader::UpdatedData ud;
+	ud.ref_id_at_subscriber = 6661;
+	ud.ref_id_at_publisher = 6662;
+	ud.update_ref_id_at_subscriber = true;
+	ud.update_ref_id_at_publisher = true;
+	ParserT parser3( buff );
+	globalmq::marshalling::MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser3, buff, ud );
+	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
+	{
+		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
+		fmt::print( "{}\n\n", sview );
+	}
+	ParserT parser4( buff );
+	globalmq::marshalling::MessageHeader mh5;
+	mh5.parse( parser4 );
+	assert( mh1.type == mh5.type );
+	assert( mh1.state_type_id == mh5.state_type_id );
+	assert( mh1.priority == mh5.priority );
+	assert( ud.ref_id_at_subscriber == mh5.ref_id_at_subscriber );
+	assert( ud.ref_id_at_publisher == mh5.ref_id_at_publisher );
+
+
 	// gmqueue
 	GMQueue<StatePublisherSubscriberInfo> gmqueue;
 	gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();

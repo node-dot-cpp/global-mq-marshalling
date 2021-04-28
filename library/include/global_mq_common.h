@@ -208,8 +208,10 @@ namespace globalmq::marshalling {
 		while( copiedCount < count && ii.isData() )
 		{
 			oi.appendUint8( *ii );
+			++ii;
 			++copiedCount;
 		}
+		return oi;
 	}
 	
 } // namespace globalmq::marshalling

@@ -209,14 +209,12 @@ struct MessageHeader
 			{
 				type = MsgType::subscriptionRequest;
 				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &path, "path" );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &reply_back_id, "reply_back_id" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
 				break;
 			}
 			case MsgType::subscriptionResponse:
 			{
 				type = MsgType::subscriptionResponse;
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &reply_back_id, "reply_back_id" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
 				break;
@@ -224,7 +222,6 @@ struct MessageHeader
 			case MsgType::stateUpdate:
 			{
 				type = MsgType::stateUpdate;
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &reply_back_id, "reply_back_id" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
 				break;
@@ -233,6 +230,44 @@ struct MessageHeader
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 		globalmq::marshalling::impl::parseStructEnd( parser );
+	}
+
+	template<class ParserT, class ComposerT>
+	static void parseAndUpdate( ParserT& parser, typename ComposerT::BufferType& buff, const UpdatedData& udata )
+	{
+		ComposerT composer( buff );
+		ParserT parser2 = parser;
+		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "hdr" );
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		if ( msgType == MsgType::subscriptionRequest )
+			throw std::exception(); // inapplicable
+		uint64_t dummy;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
+		size_t offset = parser.getCurrentOffset();
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( parser2.getIterator(), buff, offset );
+		switch ( msgType )
+		{
+			case MsgType::subscriptionResponse:
+			case MsgType::stateUpdate:
+			{
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
+				if ( udata.update_ref_id_at_subscriber )
+					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
+				else
+					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_publisher" );
+				if ( udata.update_ref_id_at_publisher )
+					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", true );
+				else
+					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, dummy, "ref_id_at_publisher", true );
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( parser.getIterator(), buff );
 	}
 
 	template<class ComposerT>
@@ -248,14 +283,12 @@ struct MessageHeader
 			case MsgType::subscriptionRequest:
 			{
 				globalmq::marshalling::impl::publishableStructComposeString( composer, path, "path", true );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, reply_back_id, "reply_back_id", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
 				break;
 			}
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
 			{
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, reply_back_id, "reply_back_id", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", true );
 				break;
@@ -346,7 +379,6 @@ class GMQueue
 	{
 		enum Type { undefined, local, external };
 		Type type = undefined;
-		uint64_t reply_back_id;
 		uint64_t ref_id_at_subscriber;
 		uint64_t ref_id_at_publisher;
 		uint64_t concentratorID; // localConcentrator
@@ -552,7 +584,6 @@ public:
 					ReplyProcessingInfo rpi;
 					rpi.type = ReplyProcessingInfo::Type::local;
 					rpi.idx = senderSlotIdx;
-					rpi.reply_back_id = mh.reply_back_id;
 					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 					//rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
 //					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
