@@ -328,6 +328,13 @@ class GMQueue
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ParserT = typename PlatformSupportT::ParserT;
 
+	GMQ_COLL string myAuthority;
+	bool isMyAuthority( GMQ_COLL string authority )
+	{
+		// TODO: regexp comparison (note: myAuthority could be '*', etc );
+		return authority == myAuthority || authority.empty();
+	}
+
 	struct ReplyProcessingInfo
 	{
 		enum Type { undefined, local, external };
@@ -509,6 +516,11 @@ public:
 		assert( stateConcentratorFactory == nullptr ); // must be called just once
 		stateConcentratorFactory = new StateFactoryT;
 	}
+	void setAuthority( GMQ_COLL string authority )
+	{ 
+		assert( myAuthority.empty ); // set just once
+		myAuthority = authority;
+	}
 
 	void postMessage( InterThreadMsg&& msg, uint64_t senderID, SlotIdx senderSlotIdx ){ // called by local objects
 		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
@@ -523,8 +535,9 @@ public:
 			{
 				GmqPathHelper::PathComponents pc;
 				bool pathOK = GmqPathHelper::parse( mh.path, pc );
-				assert( pathOK );
-				GMQ_COLL string addr = GmqPathHelper::localPart( mh );
+				if ( !pathOK )
+					throw std::exception(); // TODO: ... (bad path)
+				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
 				if ( pc.authority.empty() ) // local; TODO: add case when authority is present but points to local machine, too
 				{
 					assert( !pc.nodeName.empty() );
@@ -592,11 +605,56 @@ public:
 		{
 			case MessageHeader::Type::subscriptionRequest:
 			{
+				GmqPathHelper::PathComponents pc;
+				bool pathOK = GmqPathHelper::parse( mh.path, pc );
+				if ( !pathOK )
+					throw std::exception(); // TODO: ... (bad path)
+				if ( isMyAuthority( pc.authority ) )
+				{
+					ConcentratorWrapper* concentrator = findStateConcentrator( GmqPathHelper::localPart( pc ) );
+					if ( concentrator )
+					{
+						// TODO: 
+						//    - add subscriber
+						//    - make Concentrator generate subscriptionResponse
+						//    - post it back to Subscriber
+					}
+					else
+					{
+						// TODO: 
+						//    - check that node exists, if not - post permanent error to Subscriber
+						//    - create concentrator
+						//    - update msg fields, forward msg to node
+					}
+				}
+				else
+				{
+					ConcentratorWrapper* concentrator = findStateConcentrator( mh.path );
+					if ( concentrator )
+					{
+						// TODO: 
+						//    - add subscriber
+						//    - add Subscriber
+						//    - make Concentrator generate subscriptionResponse
+						//    - post it back to Subscriber
+					}
+					else
+					{
+						// TODO: 
+						//    - create concentrator
+						//    - add Subscriber
+						//    - update msg fields, forward msg to node
+					}
+				}
 				break;
 			}
-			case MessageHeader::Type::subscriptionResponse:
 			case MessageHeader::Type::stateUpdate: // so far we have the same processing
+			case MessageHeader::Type::subscriptionResponse:
 			{
+				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_subscriber );
+				if ( concentrator == nullptr )
+					throw std::exception(); // TODO: ... (unknown recipient)
+				// TODO: apply message to concentrator; forward it to all concentrator's subscribers
 				break;
 			}
 			default:
