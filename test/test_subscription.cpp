@@ -418,7 +418,6 @@ void quickTestForGmqParts()
 	mh1.state_type_id = 333;
 	mh1.priority = 444;
 	mh1.path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
-	mh1.reply_back_id = 111;
 	mh1.ref_id_at_subscriber = 112;
 	mh1.ref_id_at_publisher = 113;
 
@@ -437,7 +436,6 @@ void quickTestForGmqParts()
 	assert( mh1.state_type_id == mh2.state_type_id );
 	assert( mh1.priority == mh2.priority );
 	assert( mh1.path == mh2.path );
-	assert( mh1.reply_back_id == mh2.reply_back_id );
 	assert( mh1.ref_id_at_subscriber == mh2.ref_id_at_subscriber );
 
 	buff.set_size(0);
@@ -455,7 +453,6 @@ void quickTestForGmqParts()
 	assert( mh1.type == mh3.type );
 	assert( mh1.state_type_id == mh3.state_type_id );
 	assert( mh1.priority == mh3.priority );
-	assert( mh1.reply_back_id == mh3.reply_back_id );
 	assert( mh1.ref_id_at_subscriber == mh3.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh3.ref_id_at_publisher );
 
@@ -474,7 +471,6 @@ void quickTestForGmqParts()
 	assert( mh1.type == mh4.type );
 	assert( mh1.state_type_id == mh4.state_type_id );
 	assert( mh1.priority == mh4.priority );
-	assert( mh1.reply_back_id == mh4.reply_back_id );
 	assert( mh1.ref_id_at_subscriber == mh4.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh4.ref_id_at_publisher );
 

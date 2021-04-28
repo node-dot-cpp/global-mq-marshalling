@@ -184,9 +184,16 @@ struct MessageHeader
 	uint64_t state_type_id; // Note: may be removed in future versions
 	uint64_t priority;
 	GMQ_COLL string path;  // subscriptionRequest only
-	uint64_t reply_back_id;
-	uint64_t ref_id_at_subscriber;
-	uint64_t ref_id_at_publisher; // subscriptionResponse and stateUpdate only
+	uint64_t ref_id_at_subscriber; // updatable
+	uint64_t ref_id_at_publisher; // updatable
+
+	struct UpdatedData
+	{
+		uint64_t ref_id_at_subscriber;
+		uint64_t ref_id_at_publisher;
+		bool update_ref_id_at_subscriber = false;
+		bool update_ref_id_at_publisher = false;
+	};
 
 	template<class ParserT>
 	void parse( ParserT& parser )

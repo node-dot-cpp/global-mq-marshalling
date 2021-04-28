@@ -58,6 +58,7 @@ namespace globalmq::marshalling {
 		{
 			const uint8_t* begin = nullptr;
 			const uint8_t* end = nullptr;
+			size_t currentOffset = 0;
 		public:
 			ReadIter() {}
 			ReadIter( const Buffer& buff ) {
@@ -71,6 +72,7 @@ namespace globalmq::marshalling {
 					assert( sz <= end - begin ); 
 					auto ret = begin; 
 					begin += sz; 
+					currentOffset += sz;
 					return ret; 
 				}
 				else
@@ -84,6 +86,7 @@ namespace globalmq::marshalling {
 			void operator ++ () 
 			{
 				begin++;
+				++currentOffset;
 			}
 			size_t read( void* buff, size_t size )
 			{
@@ -103,11 +106,13 @@ namespace globalmq::marshalling {
 				{
 					size = size <= (end - begin ) ? size : end - begin;
 					begin += size;
+					currentOffset += size;
 				}
 				else
 					size = 0;
 				return size;
 			}
+			size_t offset() { return currentOffset; }
 		};
 
 		using ReadIteratorT = ReadIter;
@@ -195,6 +200,17 @@ namespace globalmq::marshalling {
 	public:
 		FileReadBuffer(size_t res) { Buffer::reserve(res); }
 	};
+
+	template<class InputIterT, class OutputIterT>
+	OutputIterT& copy( InputIterT& ii, OutputIterT& oi, size_t count = SIZE_MAX )
+	{
+		size_t copiedCount = 0;
+		while( copiedCount < count && ii.isData() )
+		{
+			oi.appendUint8( *ii );
+			++copiedCount;
+		}
+	}
 	
 } // namespace globalmq::marshalling
 

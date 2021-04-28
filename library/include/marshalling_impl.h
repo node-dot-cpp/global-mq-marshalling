@@ -344,7 +344,9 @@ class ParserBase {};
 template<class MessageT>
 class GmqParser : public ParserBase
 {
-	typename MessageT::ReadIteratorT riter;
+	using RiterT = typename MessageT::ReadIteratorT;
+	RiterT riter;
+
 public:
 	static constexpr Proto proto = Proto::GMQ;
 
@@ -355,6 +357,8 @@ public:
 	GmqParser( GmqParser&& other ) { riter = std::move( other.riter ); }
 	GmqParser& operator = ( GmqParser&& other ) { riter = std::move( other.riter ); return *this; }
 	~GmqParser() {}
+
+	size_t getCurrentOffset() { return riter.offset(); }
 
 	template <typename T>
 	void parseSignedInteger( T* num )
@@ -590,9 +594,13 @@ public:
 template<class MessageT>
 class JsonParser : public ParserBase
 {
-	typename MessageT::ReadIteratorT riter;
+	using RiterT = typename MessageT::ReadIteratorT;
+	RiterT riter;
+
 public:
 	static constexpr Proto proto = Proto::JSON;
+
+	size_t getCurrentOffset() { return riter.offset(); }
 
 	void impl_skipBlockFromJson( char left, char right )
 	{
