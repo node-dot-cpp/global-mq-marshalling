@@ -387,7 +387,11 @@ class GMQueue
 
 	class ConcentratorWrapper
 	{
+		template<class PlatformSupportT>
+		friend class GMQueue;
+
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
+		bool subscriptionResponseReceived = false;
 
 		struct SubscriberData
 		{
@@ -402,12 +406,12 @@ class GMQueue
 		ConcentratorWrapper( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; }
 		ConcentratorWrapper& operator = ( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; return *this; }
 		~ConcentratorWrapper() { if ( ptr ) delete ptr; }
-		StateConcentratorBase<InputBufferT, ComposerT>* operator -> () { return ptr; }
 
 		// Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
 		GMQ_COLL string address;
 		uint64_t id;
 
+	public:
 		void addSubscriber( ReplyProcessingInfo info )
 		{
 			SubscriberData sd;
@@ -415,11 +419,42 @@ class GMQueue
 			subscribers.push_back( sd );
 		}
 
-		InterThreadMsg&& generateSubscriptionResponseMessage()
+		bool isSsubscriptionResponseReceived() { return subscriptionResponseReceived; }
+
+		void generateStateSyncMessage( ComposerT& composer )
 		{
-			InterThreadMsg msg;
-			// TODO: generate message
-			return msg;
+			assert( ptr != nullptr );
+			assert( subscriptionResponseReceived );
+			ptr->generateStateSyncMessage( composer );
+		}
+
+		void onSubscriptionResponseMessage( ParserT& parser ) 
+		{
+			assert( ptr != nullptr );
+			if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+				ptr->applyJsonStateSyncMessage( parser );
+			else 
+			{
+				static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+				ptr->applyGmqStateSyncMessage( parser );
+			}
+			subscriptionResponseReceived = true;
+			// post to all subscribers
+			for ( auto& subscriber : subscribers )
+			{
+			}
+		}
+
+		void onStateUpdateMessage( ParserT& parser ) 
+		{
+			assert( ptr != nullptr );
+			if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+				ptr->applyJsonMessageWithUpdates( parser );
+			else 
+			{
+				static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+				ptr->applyGmqMessageWithUpdates( parser );
+			}
 		}
 	};
 
