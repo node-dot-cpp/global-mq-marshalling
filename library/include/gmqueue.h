@@ -249,6 +249,16 @@ struct MessageHeader
 		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( parser2.getIterator(), buff, offset );
 		switch ( msgType )
 		{
+			case MsgType::subscriptionRequest:
+			{
+				assert( !udata.update_ref_id_at_publisher );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
+				if ( udata.update_ref_id_at_subscriber )
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
+				else
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
+				break;
+			}
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
 			{
