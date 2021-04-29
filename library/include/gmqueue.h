@@ -254,14 +254,14 @@ struct MessageHeader
 			{
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
-					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
 				else
-					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_publisher" );
 				if ( udata.update_ref_id_at_publisher )
-					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", true );
 				else
-					globalmq::marshalling::impl::publishableStructComposeUpdatableUnsignedInteger( composer, dummy, "ref_id_at_publisher", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_publisher", true );
 				break;
 			}
 			default:
@@ -423,12 +423,11 @@ class GMQueue
 		}
 	};
 
-	std::mutex mxAddressesToStateConcentrators;
+	std::mutex mxConcentrators;
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
+	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	uint64_t concentratorIDBase = 0;
 
-	std::mutex mxIdToStateConcentrators;
-	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 
 	std::mutex mxNamedRecipients;
 	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
@@ -439,65 +438,46 @@ class GMQueue
 
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
 
-	auto createConcentrator( GMQ_COLL string path, uint64_t stateTypeID )
-	{
-		assert( !path.empty() );
-		assert( stateConcentratorFactory != nullptr );
-		auto concentrator = stateConcentratorFactory->createConcentrator( stateTypeID );
-		assert( concentrator != nullptr );
-		ConcentratorWrapper cwrapper( concentrator );
-		ConcentratorWrapper* c = addStateConcentrator( path, std::move( concentrator ) );
-		uint64_t concentratorID = ++concentratorIDBase;
-		addIdToStateConcentratorsMapping( concentratorID, c );
-		c->address = path;
-		c->id = concentratorID;
-		return std::make_pair<c, concentratorID>;
-	}
-
 	// concentrators (address2concentrators)
-	ConcentratorWrapper* addStateConcentrator( GMQ_COLL string path, ConcentratorWrapper&& concentrator ) {
+	std::pair<ConcentratorWrapper*, bool> findOrAddStateConcentrator( GMQ_COLL string path, uint64_t stateTypeID ) {
 		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
-		auto ins = addressesToStateConcentrators.insert( std::make_pair( path, std::move( concentrator ) ) );
-		assert( ins.second );
-		return &(ins.first->second);
-	}
-	void removeStateConcentrator( GMQ_COLL string path ) {
-		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
-		addressesToStateConcentrators.erase( path );
-	}
-	ConcentratorWrapper* findStateConcentrator( GMQ_COLL string path ) {
-		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
+		std::unique_lock<std::mutex> lock(mxConcentrators);
 		auto f = addressesToStateConcentrators.find( path );
 		if ( f != addressesToStateConcentrators.end() )
-			return &(*(f->second));
+			return std::make_pair(&(*(f->second)), true);
 		else
-			return nullptr;
-	}
-
-	// id toconcentrators mapping (idToStateConcentrators)
-	void addIdToStateConcentratorsMapping( uint64_t id, ConcentratorWrapper&& concentrator ) {
-		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mxIdToStateConcentrators);
-		auto ins = idToStateConcentrators.insert( std::make_pair( id, std::move( concentrator ) ) );
-		assert( ins.second );
-	}
-	void removeIdToStateConcentratorsMapping( uint64_t id ) {
-		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mxIdToStateConcentrators);
-		idToStateConcentrators.erase( id );
+		{
+			assert( !path.empty() );
+			assert( stateConcentratorFactory != nullptr );
+			auto concentrator = stateConcentratorFactory->createConcentrator( stateTypeID );
+			assert( concentrator != nullptr );
+			ConcentratorWrapper cwrapper( concentrator );
+			auto ins = addressesToStateConcentrators.insert( std::make_pair( path, std::move( concentrator ) ) );
+			assert( ins.second );
+			ConcentratorWrapper* c = &(ins.first->second);
+			uint64_t concentratorID = ++concentratorIDBase;
+			auto ins = idToStateConcentrators.insert( std::make_pair( concentratorID, std::move( concentrator ) ) );
+			assert( ins.second );
+			c->address = path;
+			c->id = concentratorID;
+			return std::make_pair<c, concentratorID>;
+		}
 	}
 	ConcentratorWrapper* findStateConcentrator( uint64_t id ) {
 		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mxIdToStateConcentrators);
+		std::unique_lock<std::mutex> lock(mxConcentrators);
 		auto f = idToStateConcentrators.find( id );
 		if ( f != idToStateConcentrators.end() )
 			return &(*(f->second));
 		else
 			return nullptr;
 	}
+	/*void removeStateConcentrator( GMQ_COLL string path ) { // TODO: rework
+		assert( !path.empty() );
+		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
+		addressesToStateConcentrators.erase( path );
+		idToStateConcentrators.erase( id );
+	}*/
 
 	// named local objects (namedRecipients)
 	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
@@ -576,6 +556,7 @@ public:
 				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
+
 				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
 				if ( pc.authority.empty() ) // local; TODO: add case when authority is present but points to local machine, too
 				{
@@ -588,8 +569,11 @@ public:
 					//rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
 //					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
 
-					ConcentratorWrapper* concentrator = findStateConcentrator( addr );
-					if ( concentrator != nullptr )
+//					ConcentratorWrapper* concentrator = findStateConcentrator( addr );
+					auto findCr = findOrAddStateConcentrator( addr, mh.state_type_id );
+					ConcentratorWrapper* concentrator = findCr.first;
+					assert( concentrator != nullptr );
+					if ( findCr.second )
 					{
 						concentrator->addSubscriber( rpi );
 						// TODO: consider adding message header first yet here, and adding message body at concentrator
@@ -600,7 +584,6 @@ public:
 					}
 					else
 					{
-						auto cci = createConcentrator( addr, mh.state_type_id );
 						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 						assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
