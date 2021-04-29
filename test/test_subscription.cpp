@@ -423,7 +423,7 @@ void quickTestForGmqParts()
 
 	BufferT buff;
 	ComposerT composer( buff );
-	mh1.compose( composer );
+	mh1.compose( composer, false );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
@@ -441,7 +441,7 @@ void quickTestForGmqParts()
 	buff.set_size(0);
 	ComposerT composer1( buff );
 	mh1.type = globalmq::marshalling::MessageHeader::subscriptionResponse;
-	mh1.compose( composer1 );
+	mh1.compose( composer1, false );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
@@ -459,7 +459,7 @@ void quickTestForGmqParts()
 	buff.set_size(0);
 	ComposerT composer2( buff );
 	mh1.type = globalmq::marshalling::MessageHeader::MsgType::stateUpdate;
-	mh1.compose( composer2 );
+	mh1.compose( composer2, false );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );

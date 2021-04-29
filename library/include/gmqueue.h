@@ -271,10 +271,9 @@ struct MessageHeader
 	}
 
 	template<class ComposerT>
-	void compose(ComposerT& composer)
+	void compose(ComposerT& composer, bool addSeparator)
 	{
-		globalmq::marshalling::impl::composeKey( composer, "hdr" );
-		globalmq::marshalling::impl::composeStructBegin( composer );
+		globalmq::marshalling::impl::composePublishableStructBegin( composer, "hdr" );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(type), "msg_type", true );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, state_type_id, "state_type_id", true );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, priority, "priority", true );
@@ -294,7 +293,7 @@ struct MessageHeader
 				break;
 			}
 		}
-		globalmq::marshalling::impl::composeStructEnd( composer );
+		globalmq::marshalling::impl::composePublishableStructEnd( composer, addSeparator );
 	}
 };
 
@@ -601,16 +600,32 @@ public:
 					rpi.type = ReplyProcessingInfo::Type::local;
 					rpi.idx = senderSlotIdx;
 					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
-					//rpi.ref_id_at_publisher = mh.ref_id_at_publisher;
-//					uint64_t rpiIdx = addReplyProcessingInstructions( rpi );
 
-//					ConcentratorWrapper* concentrator = findStateConcentrator( addr );
 					auto findCr = findOrAddStateConcentrator( addr, mh.state_type_id );
 					ConcentratorWrapper* concentrator = findCr.first;
 					assert( concentrator != nullptr );
 					if ( findCr.second )
 					{
 						concentrator->addSubscriber( rpi );
+						if ( concentrator->isSsubscriptionResponseReceived() )
+						{
+							MessageHeader hdrBack;
+							hdrBack.type = MessageHeader::MsgType::subscriptionResponse;
+							hdrBack.priority = mh.priority;
+							hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
+							hdrBack.ref_id_at_publisher = concentrator->id;
+
+							typename ComposerT::BufferType buffBack;
+							ComposerT composer( buffBack );
+							globalmq::marshalling::impl::composeStructBegin( composer );
+							hdrBack.compose( composer, true );
+							globalmq::marshalling::impl::composeKey( composer, "data" );
+							concentrator->generateStateSyncMessage( composer );
+							globalmq::marshalling::impl::composeStructEnd( composer );
+
+							InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( senderSlotIdx );
+							postman->postMessage( std::move( buffBack ) );
+						}
 						// TODO: consider adding message header first yet here, and adding message body at concentrator
 						auto msgBack = concentrator->generateSubscriptionResponseMessage();
 						// add subscriber, get its subscriptionResponse message, post it back to caller
