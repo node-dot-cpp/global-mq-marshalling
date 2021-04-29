@@ -401,6 +401,7 @@ class GMQueue
 
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
 		bool subscriptionResponseReceived = false;
+		uint64_t idAtPublisher;
 
 		struct SubscriberData
 		{
@@ -437,9 +438,10 @@ class GMQueue
 			ptr->generateStateSyncMessage( composer );
 		}
 
-		void onSubscriptionResponseMessage( ParserT& parser ) 
+		void onSubscriptionResponseMessage( ParserT& parser, uint64_t idAtPublisher_ ) 
 		{
 			assert( ptr != nullptr );
+			assert( subscribers.size() != 0 ); // current implementation does not practically assume removing subscribers 
 			if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 				ptr->applyJsonStateSyncMessage( parser );
 			else 
@@ -448,10 +450,7 @@ class GMQueue
 				ptr->applyGmqStateSyncMessage( parser );
 			}
 			subscriptionResponseReceived = true;
-			// post to all subscribers
-			for ( auto& subscriber : subscribers )
-			{
-			}
+			idAtPublisher = idAtPublisher_;
 		}
 
 		void onStateUpdateMessage( ParserT& parser ) 
@@ -625,8 +624,8 @@ public:
 							hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 							hdrBack.ref_id_at_publisher = concentrator->id;
 
-							typename ComposerT::BufferType buffBack;
-							ComposerT composer( buffBack );
+							typename ComposerT::BufferType msgBack;
+							ComposerT composer( msgBack );
 							globalmq::marshalling::impl::composeStructBegin( composer );
 							hdrBack.compose( composer, true );
 							globalmq::marshalling::impl::composeKey( composer, "data" );
@@ -634,42 +633,63 @@ public:
 							globalmq::marshalling::impl::composeStructEnd( composer );
 
 							InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( senderSlotIdx );
-							postman->postMessage( std::move( buffBack ) );
+							postman->postMessage( std::move( msgBack ) );
 						}
-						// TODO: consider adding message header first yet here, and adding message body at concentrator
-						auto msgBack = concentrator->generateSubscriptionResponseMessage();
-						// add subscriber, get its subscriptionResponse message, post it back to caller
-						InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( senderSlotIdx );
-						postman->postMessage( std::move( msgBack ) );
 					}
 					else
 					{
 						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
-						assert( targetIdx.idx != SlotIdx::invalid_idx ); // TODO: post permanent error message to sender instead
-						// TODO: update message fields
+						if ( targetIdx.idx != SlotIdx::invalid_idx )
+							throw std::exception(); // TODO: post permanent error message to sender instead or in addition
+
+						globalmq::marshalling::MessageHeader::UpdatedData ud;
+						ud.ref_id_at_subscriber = concentrator->id;
+						ud.update_ref_id_at_subscriber = true;
+
+						typename ComposerT::BufferType msgForward;
+						ComposerT composer( msgForward );
+						ParserT parser( msg );
+						MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
+
 						InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( targetIdx );
-						postman->postMessage( std::move( msg ) );
+						postman->postMessage( std::move( msgForward ) );
 					}
 				}
 				else
 				{
-					assert( false ); // not yet implemented
-					// TODO: find concentrator by path; 
-					//          - if found, pass request there, get state-sync msg, post back
-					//          - if not found, create new concentrator, pass request there, make it generate (or generate on behalf of it) a subscriptionRequest with the same path, send it to a next hop
+					assert( false ); // not yet implemented (but up to Postman should go along the same lines)
 				}
 				break;
 			}
 			case MessageHeader::Type::subscriptionResponse:
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
-				// TODO: apply to concentrator, send to all currently present subscribers
+				concentrator->onSubscriptionResponseMessage( parser );
+
+				// forward message to all concentrator's subscribers
+				globalmq::marshalling::MessageHeader::UpdatedData ud;
+				ud.ref_id_at_publishber = concentrator->id; // TODO!!! revise, this is insufficient!
+				ud.update_ref_id_at_publisher = true;
+				ud.update_ref_id_at_subscriber = true;
+				for ( auto& subscriber : concentrator->subscribers )
+				{
+					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
+					typename ComposerT::BufferType msgForward;
+					ComposerT composer( msgForward );
+					ParserT parser( msg );
+					MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
+
+					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
+					postman->postMessage( std::move( msgBack ) );
+				}
+
 				break;
 			}
 			case MessageHeader::Type::stateUpdate: // so far we have the same processing
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
+				concentrator->generateStateSyncMessage( composer );
 				// TODO: apply to concentrator, send to all currently present subscribers
 				break;
 			}
