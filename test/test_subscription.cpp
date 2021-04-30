@@ -4,6 +4,7 @@
 #include "nodecpp_publish_subscribe_support.h"
 #include <publishable_impl.h>
 #include <gmqueue.h>
+#include <platforms/inproc_queue.h>
 #include "marshalling/test_marshalling.h"
 
 #include <typeinfo>
@@ -500,6 +501,10 @@ void quickTestForGmqParts()
 	// gmqueue
 	GMQueue<StatePublisherSubscriberInfo> gmqueue;
 	gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
+	gmqueue.setAuthority( "" );
+
+	using PostmanT = globalmq::marshalling::ThreadQueuePostman<StatePublisherSubscriberInfo::BufferT>;
+	typename PostmanT::MsgQueue queue;
 }
 
 

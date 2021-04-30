@@ -567,7 +567,7 @@ public:
 	}
 	void setAuthority( GMQ_COLL string authority )
 	{ 
-		assert( myAuthority.empty ); // set just once
+		assert( myAuthority.empty() ); // set just once
 		myAuthority = authority;
 	}
 

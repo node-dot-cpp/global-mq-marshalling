@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef GMQUEUE_H
-#define GMQUEUE_H
+#ifndef INPROC_QUEUE_H
+#define INPROC_QUEUE_H
 
 #include "global_mq_common.h"
 #include "marshalling.h"
@@ -71,13 +71,15 @@ public:
 	bool is_full() { return size() == maxsz; }
 
 	void push_back(T&& t) {
-		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, size() < maxsz);
+//		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, size() < maxsz);
+		GMQ_ASSERT( size() < maxsz);
 		new(tbuffer(head)) T(std::move(t));
 		head = (head + 1) & mask;
 	}
 
 	T pop_front() {
-		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, size() > 0);
+//		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, size() > 0);
+		GMQ_ASSERT( size() > 0);
 		T* ttail = tbuffer(tail);
 		T ret = std::move(*ttail);
 		ttail->~T();
@@ -125,7 +127,8 @@ public:
 
 			if (killflag)
 				return;
-			NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, !coll.is_full());
+//			NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, !coll.is_full());
+			GMQ_ASSERT( !coll.is_full());
 			coll.push_back(std::move(it));
 			size_t sz = coll.size();
 			hwmsize = std::max(hwmsize, sz);
@@ -142,7 +145,8 @@ public:
 		if (killflag)
 			return std::pair<bool, T>(false, T());
 
-		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, coll.size() > 0);
+//		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, coll.size() > 0);
+		GMQ_ASSERT( coll.size() > 0);
 //		T ret = std::move(coll.front());
 //		coll.pop_front();
 		T ret = std::move(coll.pop_front());
@@ -160,7 +164,8 @@ public:
 		if (killflag)
 			return 0;
 
-		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, coll.size() > 0);
+//		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, coll.size() > 0);
+		GMQ_ASSERT( coll.size() > 0);
 		size_t sz2move = count <= coll.size() ? count : coll.size();
 		for ( size_t i=0; i<sz2move; ++i )
 			messages[i] = std::move(coll.pop_front());
@@ -179,7 +184,6 @@ public:
 		if (killflag)
 			return 0;
 
-//		NODECPP_ASSERT( nodecpp::module_id, ::nodecpp::assert::AssertLevel::critical, coll.size() > 0);
 		size_t sz2move = count <= coll.size() ? count : coll.size();
 		for ( size_t i=0; i<sz2move; ++i )
 			messages[i] = std::move(coll.pop_front());
@@ -204,7 +208,10 @@ public:
 template<class InterThreadMsgT>
 class ThreadQueuePostman : public InProcessMessagePostmanBase
 {
+public:
 	using MsgQueue = MWSRFixedSizeQueueWithFlowControl<CircularBuffer<InterThreadMsgT, 4>>; // TODO: revise the second param value
+
+private:
 	MsgQueue& msgQueue;
 
 public:
@@ -216,16 +223,17 @@ public:
 	}
 };
 
-template<class InterThreadMsgT>
-class GMQThreadQueueTransport : public GMQTransportBase
+template<class PlatformSupportT>
+class GMQThreadQueueTransport : public GMQTransportBase<PlatformSupportT>
 {
-	ThreadQueuePostman<InterThreadMsgT> postman;
+	using BufferT = typename PlatformSupportT::BufferT;
+	ThreadQueuePostman<BufferT> postman;
 
 public:
-	GMQThreadQueueTransport( GMQueue& gmq, GMQ_COLL string_literal name, typename ThreadQueuePostman<InterThreadMsgT>::MsgQueue& queue ) : GMQTransportBase( gmq, name, &postman ), postman( queue ) {}
+	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue ) : GMQTransportBase( gmq, name, &postman ), postman( queue ) {}
 	virtual ~GMQThreadQueueTransport() {}
 };
 
 } // namespace globalmq::marshalling
 
-#endif // GMQUEUE_H
+#endif // INPROC_QUEUE_H
