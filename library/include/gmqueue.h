@@ -486,11 +486,9 @@ public:
 
 							typename ComposerT::BufferType msgBack;
 							ComposerT composer( msgBack );
-							globalmq::marshalling::impl::composeStructBegin( composer );
-							hdrBack.compose( composer, true );
-							globalmq::marshalling::impl::composeKey( composer, "data" );
+							helperComposePublishableStateMessageBegin( composer, hdrBack );
 							concentrator->generateStateSyncMessage( composer );
-							globalmq::marshalling::impl::composeStructEnd( composer );
+							helperComposePublishableStateMessageEnd( composer );
 
 							InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( senderSlotIdx );
 							postman->postMessage( std::move( msgBack ) );
@@ -508,9 +506,7 @@ public:
 						ud.update_ref_id_at_subscriber = true;
 
 						typename ComposerT::BufferType msgForward;
-						ComposerT composer( msgForward );
-						ParserT parser( msg );
-						PublishableStateMessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
+						helperParseAndUpdatePublishableStateMessageBegin<ParserT, ComposerT>( msg, msgForward, ud );
 
 						InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( targetIdx );
 						postman->postMessage( std::move( msgForward ) );
