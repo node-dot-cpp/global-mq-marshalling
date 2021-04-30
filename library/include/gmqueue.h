@@ -386,11 +386,8 @@ class GMQueue
 
 	struct ReplyProcessingInfo
 	{
-		enum Type { undefined, local, external };
-		Type type = undefined;
 		uint64_t ref_id_at_subscriber;
 		uint64_t ref_id_at_publisher;
-		uint64_t concentratorID; // localConcentrator
 		// TODO: for externally outgoing: generalized socket; etc
 	};
 
@@ -665,11 +662,11 @@ public:
 			case MessageHeader::Type::subscriptionResponse:
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
-				concentrator->onSubscriptionResponseMessage( parser );
+				concentrator->onSubscriptionResponseMessage( parser, mh.ref_id_at_publisher );
 
 				// forward message to all concentrator's subscribers
-				globalmq::marshalling::MessageHeader::UpdatedData ud;
-				ud.ref_id_at_publishber = concentrator->id; // TODO!!! revise, this is insufficient!
+				MessageHeader::UpdatedData ud;
+				ud.ref_id_at_publisher = concentrator->id; // TODO!!! revise, this is insufficient!
 				ud.update_ref_id_at_publisher = true;
 				ud.update_ref_id_at_subscriber = true;
 				for ( auto& subscriber : concentrator->subscribers )
@@ -681,7 +678,7 @@ public:
 					MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
 
 					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
-					postman->postMessage( std::move( msgBack ) );
+					postman->postMessage( std::move( msgForward ) );
 				}
 
 				break;
@@ -689,8 +686,25 @@ public:
 			case MessageHeader::Type::stateUpdate: // so far we have the same processing
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
-				concentrator->generateStateSyncMessage( composer );
-				// TODO: apply to concentrator, send to all currently present subscribers
+				concentrator->onStateUpdateMessage( parser );
+
+				// forward message to all concentrator's subscribers
+				MessageHeader::UpdatedData ud;
+				ud.ref_id_at_publisher = concentrator->id; // TODO!!! revise, this is insufficient!
+				ud.update_ref_id_at_publisher = true;
+				ud.update_ref_id_at_subscriber = true;
+				for ( auto& subscriber : concentrator->subscribers )
+				{
+					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
+					typename ComposerT::BufferType msgForward;
+					ComposerT composer( msgForward );
+					ParserT parser( msg );
+					MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
+
+					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
+					postman->postMessage( std::move( msgForward ) );
+				}
+
 				break;
 			}
 			default:
