@@ -345,6 +345,7 @@ template<class MessageT>
 class GmqParser : public ParserBase
 {
 public:
+	using BufferType = MessageT;
 	using RiterT = typename MessageT::ReadIteratorT;
 	static constexpr Proto proto = Proto::GMQ;
 
@@ -598,6 +599,7 @@ class JsonParser : public ParserBase
 {
 public:
 	static constexpr Proto proto = Proto::JSON;
+	using BufferType = MessageT;
 	using RiterT = typename MessageT::ReadIteratorT;
 
 private:

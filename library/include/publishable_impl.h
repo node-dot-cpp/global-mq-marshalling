@@ -462,14 +462,14 @@ struct PublishableStateMessageHeader
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
-		globalmq::marshalling::impl::parseStructEnd( parser );
+		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 	}
 
 	template<class ParserT, class ComposerT>
-	static void parseAndUpdate( ParserT& parser, typename ComposerT::BufferType& buff, const UpdatedData& udata )
+	static void parseAndUpdate( ParserT& msgStartParser, ParserT& parser, typename ComposerT::BufferType& buff, const UpdatedData& udata )
 	{
 		ComposerT composer( buff );
-		ParserT parser2 = parser;
+//		ParserT parser2 = parser;
 		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "hdr" );
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
@@ -479,7 +479,7 @@ struct PublishableStateMessageHeader
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
 		size_t offset = parser.getCurrentOffset();
-		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( parser2.getIterator(), buff, offset );
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
@@ -514,7 +514,7 @@ struct PublishableStateMessageHeader
 	}
 
 	template<class ComposerT>
-	void compose(ComposerT& composer, bool addSeparator)
+	void compose(ComposerT& composer, bool addSeparator) const
 	{
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "hdr" );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(type), "msg_type", true );
@@ -539,6 +539,54 @@ struct PublishableStateMessageHeader
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, addSeparator );
 	}
 };
+
+template<class ComposerT>
+void helperComposePublishableStateMessageBegin(ComposerT& composer, const PublishableStateMessageHeader& header)
+{
+	globalmq::marshalling::impl::composeStructBegin( composer );
+	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate )
+	{
+		header.compose( composer, true );
+		globalmq::marshalling::impl::composeKey( composer, "data" );
+		// next call would be generateXXXMessage()
+	}
+	else
+		header.compose( composer, false );
+}
+
+template<class ComposerT>
+void helperComposePublishableStateMessageEnd(ComposerT& composer)
+{
+	globalmq::marshalling::impl::composeStructEnd( composer );
+}
+
+template<class ParserT>
+void helperParsePublishableStateMessageBegin( ParserT& parser, PublishableStateMessageHeader& header ) // leaves parser pos at the beginning of message data part (if any)
+{
+	globalmq::marshalling::impl::parseStructBegin( parser );
+	header.parse( parser );
+	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate )
+		globalmq::marshalling::impl::parseKey( parser, "data" );
+}
+
+template<class ParserT>
+void helperParsePublishableStateMessageEnd(ParserT& parser)
+{
+	globalmq::marshalling::impl::parseStructEnd( parser );
+}
+
+template<class ParserT, class ComposerT>
+void helperParseAndUpdatePublishableStateMessageBegin( typename ParserT::BufferType& buffFrom, typename ComposerT::BufferType& buffTo, const PublishableStateMessageHeader::UpdatedData& udata )
+{
+	ParserT parser( buffFrom );
+	ParserT parserCurrent( buffFrom );
+	PublishableStateMessageHeader header;
+	globalmq::marshalling::impl::parseStructBegin( parserCurrent );
+	header.parseAndUpdate<ParserT, ComposerT>( parser, parserCurrent, buffTo, udata );
+}
+
+
+
 
 enum StateSubscriberStatus { waitingForSubscriptionIni, subscribed };
 enum StatePublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };

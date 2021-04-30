@@ -450,7 +450,7 @@ public:
 		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
 		PublishableStateMessageHeader mh;
 		ParserT parser( msg );
-		mh.parse( parser );
+		helperParsePublishableStateMessageBegin( parser, mh );
 		switch ( mh.type )
 		{
 			case PublishableStateMessageHeader::Type::subscriptionRequest:

@@ -424,7 +424,9 @@ void quickTestForGmqParts()
 
 	BufferT buff;
 	ComposerT composer( buff );
-	mh1.compose( composer, false );
+	globalmq::marshalling::helperComposePublishableStateMessageBegin( composer, mh1 );
+	globalmq::marshalling::impl::composeString( composer, "fake" );
+	globalmq::marshalling::helperComposePublishableStateMessageEnd( composer );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
@@ -432,7 +434,7 @@ void quickTestForGmqParts()
 	}
 	ParserT parser( buff );
 	globalmq::marshalling::PublishableStateMessageHeader mh2;
-	mh2.parse( parser );
+	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser, mh2 );
 	assert( mh1.type == mh2.type );
 	assert( mh1.state_type_id == mh2.state_type_id );
 	assert( mh1.priority == mh2.priority );
@@ -442,7 +444,9 @@ void quickTestForGmqParts()
 	buff.set_size(0);
 	ComposerT composer1( buff );
 	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionResponse;
-	mh1.compose( composer1, false );
+	globalmq::marshalling::helperComposePublishableStateMessageBegin( composer1, mh1 );
+	globalmq::marshalling::impl::composeString( composer, "fake" );
+	globalmq::marshalling::helperComposePublishableStateMessageEnd( composer1 );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
@@ -450,7 +454,7 @@ void quickTestForGmqParts()
 	}
 	ParserT parser1( buff );
 	globalmq::marshalling::PublishableStateMessageHeader mh3;
-	mh3.parse( parser1 );
+	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser1, mh3 );
 	assert( mh1.type == mh3.type );
 	assert( mh1.state_type_id == mh3.state_type_id );
 	assert( mh1.priority == mh3.priority );
@@ -460,7 +464,9 @@ void quickTestForGmqParts()
 	buff.set_size(0);
 	ComposerT composer2( buff );
 	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::MsgType::stateUpdate;
-	mh1.compose( composer2, false );
+	globalmq::marshalling::helperComposePublishableStateMessageBegin( composer2, mh1 );
+	globalmq::marshalling::impl::composeString( composer, "fake" );
+	globalmq::marshalling::helperComposePublishableStateMessageEnd( composer2 );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
@@ -468,7 +474,7 @@ void quickTestForGmqParts()
 	}
 	ParserT parser2( buff );
 	globalmq::marshalling::PublishableStateMessageHeader mh4;
-	mh4.parse( parser2 );
+	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser2, mh4 );
 	assert( mh1.type == mh4.type );
 	assert( mh1.state_type_id == mh4.state_type_id );
 	assert( mh1.priority == mh4.priority );
@@ -480,9 +486,9 @@ void quickTestForGmqParts()
 	ud.ref_id_at_publisher = 6662;
 	ud.update_ref_id_at_subscriber = true;
 	ud.update_ref_id_at_publisher = true;
-	ParserT parser3( buff );
+//	ParserT parser3( buff );
 	BufferT buff2;
-	globalmq::marshalling::PublishableStateMessageHeader::parseAndUpdate<ParserT, ComposerT>( parser3, buff2, ud );
+	globalmq::marshalling::helperParseAndUpdatePublishableStateMessageBegin<ParserT, ComposerT>( buff, buff2, ud );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff2.begin()), buff2.size() );
@@ -490,7 +496,7 @@ void quickTestForGmqParts()
 	}
 	ParserT parser4( buff2 );
 	globalmq::marshalling::PublishableStateMessageHeader mh5;
-	mh5.parse( parser4 );
+	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser4, mh5 );
 	assert( mh1.type == mh5.type );
 	assert( mh1.state_type_id == mh5.state_type_id );
 	assert( mh1.priority == mh5.priority );
