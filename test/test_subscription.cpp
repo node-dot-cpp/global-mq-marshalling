@@ -414,8 +414,8 @@ void quickTestForGmqParts()
 	assert( pc2.hasPort );
 
 	// testing message header
-	globalmq::marshalling::MessageHeader mh1;
-	mh1.type = globalmq::marshalling::MessageHeader::subscriptionRequest;
+	globalmq::marshalling::PublishableStateMessageHeader mh1;
+	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionRequest;
 	mh1.state_type_id = 333;
 	mh1.priority = 444;
 	mh1.path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
@@ -431,7 +431,7 @@ void quickTestForGmqParts()
 		fmt::print( "{}\n\n", sview );
 	}
 	ParserT parser( buff );
-	globalmq::marshalling::MessageHeader mh2;
+	globalmq::marshalling::PublishableStateMessageHeader mh2;
 	mh2.parse( parser );
 	assert( mh1.type == mh2.type );
 	assert( mh1.state_type_id == mh2.state_type_id );
@@ -441,7 +441,7 @@ void quickTestForGmqParts()
 
 	buff.set_size(0);
 	ComposerT composer1( buff );
-	mh1.type = globalmq::marshalling::MessageHeader::subscriptionResponse;
+	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionResponse;
 	mh1.compose( composer1, false );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
@@ -449,7 +449,7 @@ void quickTestForGmqParts()
 		fmt::print( "{}\n\n", sview );
 	}
 	ParserT parser1( buff );
-	globalmq::marshalling::MessageHeader mh3;
+	globalmq::marshalling::PublishableStateMessageHeader mh3;
 	mh3.parse( parser1 );
 	assert( mh1.type == mh3.type );
 	assert( mh1.state_type_id == mh3.state_type_id );
@@ -459,7 +459,7 @@ void quickTestForGmqParts()
 
 	buff.set_size(0);
 	ComposerT composer2( buff );
-	mh1.type = globalmq::marshalling::MessageHeader::MsgType::stateUpdate;
+	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::MsgType::stateUpdate;
 	mh1.compose( composer2, false );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
@@ -467,7 +467,7 @@ void quickTestForGmqParts()
 		fmt::print( "{}\n\n", sview );
 	}
 	ParserT parser2( buff );
-	globalmq::marshalling::MessageHeader mh4;
+	globalmq::marshalling::PublishableStateMessageHeader mh4;
 	mh4.parse( parser2 );
 	assert( mh1.type == mh4.type );
 	assert( mh1.state_type_id == mh4.state_type_id );
@@ -475,21 +475,21 @@ void quickTestForGmqParts()
 	assert( mh1.ref_id_at_subscriber == mh4.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh4.ref_id_at_publisher );
 
-	globalmq::marshalling::MessageHeader::UpdatedData ud;
+	globalmq::marshalling::PublishableStateMessageHeader::UpdatedData ud;
 	ud.ref_id_at_subscriber = 6661;
 	ud.ref_id_at_publisher = 6662;
 	ud.update_ref_id_at_subscriber = true;
 	ud.update_ref_id_at_publisher = true;
 	ParserT parser3( buff );
 	BufferT buff2;
-	globalmq::marshalling::MessageHeader::parseAndUpdate<ParserT, ComposerT>( parser3, buff2, ud );
+	globalmq::marshalling::PublishableStateMessageHeader::parseAndUpdate<ParserT, ComposerT>( parser3, buff2, ud );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff2.begin()), buff2.size() );
 		fmt::print( "{}\n\n", sview );
 	}
 	ParserT parser4( buff2 );
-	globalmq::marshalling::MessageHeader mh5;
+	globalmq::marshalling::PublishableStateMessageHeader mh5;
 	mh5.parse( parser4 );
 	assert( mh1.type == mh5.type );
 	assert( mh1.state_type_id == mh5.state_type_id );
