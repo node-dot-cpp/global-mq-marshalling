@@ -463,16 +463,14 @@ class GMQueue
 		}
 	};
 
-	std::mutex mxConcentrators;
+	std::mutex mx;
+
 	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
 	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	uint64_t concentratorIDBase = 0;
 
-
-	std::mutex mxNamedRecipients;
 	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
 
-	std::mutex mxSenders;
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
 
@@ -481,7 +479,6 @@ class GMQueue
 	// concentrators (address2concentrators)
 	std::pair<ConcentratorWrapper*, bool> findOrAddStateConcentrator( GMQ_COLL string path, uint64_t stateTypeID ) {
 		assert( !path.empty() );
-		std::unique_lock<std::mutex> lock(mxConcentrators);
 		auto f = addressesToStateConcentrators.find( path );
 		if ( f != addressesToStateConcentrators.end() )
 			return std::make_pair(&(*(f->second)), true);
@@ -505,7 +502,6 @@ class GMQueue
 	}
 	ConcentratorWrapper* findStateConcentrator( uint64_t id ) {
 		assert( id != 0 );
-		std::unique_lock<std::mutex> lock(mxConcentrators);
 		auto f = idToStateConcentrators.find( id );
 		if ( f != idToStateConcentrators.end() )
 			return &(*(f->second));
@@ -522,18 +518,15 @@ class GMQueue
 	// named local objects (namedRecipients)
 	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
 		assert( !name.empty() );
-		std::unique_lock<std::mutex> lock(mxNamedRecipients);
 		auto ins = namedRecipients.insert( std::make_pair( name, idx ) );
 		assert( ins.second );
 	}
 	void removeNamedLocation( GMQ_COLL string name ) {
 		assert( !name.empty() );
-		std::unique_lock<std::mutex> lock(mxNamedRecipients);
 		namedRecipients.erase( name );
 	}
 	SlotIdx locationNameToSlotIdx( GMQ_COLL string name ) {
 		assert( !name.empty() );
-		std::unique_lock<std::mutex> lock(mxNamedRecipients);
 		auto f = namedRecipients.find( name );
 		if ( f != namedRecipients.end() )
 			return *(f->second);
@@ -542,14 +535,12 @@ class GMQueue
 	}
 
 	uint64_t addSender( SlotIdx idx ) {
-		std::unique_lock<std::mutex> lock(mxSenders);
 		uint64_t id = ++senderIDBase;
 		auto ins = senders.insert( std::make_pair( id, idx ) );
 		assert( ins.second );
 		return id;
 	}
 	void removeSender( uint64_t id, SlotIdx idx ) {
-		std::unique_lock<std::mutex> lock(mxSenders);
 		auto f = senders.find( id );
 		assert( f != senders.end() );
 		assert( f->second.idx == idx.idx );
@@ -557,7 +548,6 @@ class GMQueue
 		senders.erase( id );
 	}
 	SlotIdx senderIDToSlotIdx( uint64_t id ) {
-		std::unique_lock<std::mutex> lock(mxSenders);
 		auto f = senders.find( id );
 		if ( f != senders.end() )
 			return *(f->second);
@@ -581,7 +571,10 @@ public:
 		myAuthority = authority;
 	}
 
-	void postMessage( InterThreadMsg&& msg, uint64_t senderID, SlotIdx senderSlotIdx ){ // called by local objects
+	void postMessage( InterThreadMsg&& msg, uint64_t senderID, SlotIdx senderSlotIdx )
+	{
+		std::unique_lock<std::mutex> lock(mx);
+
 		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
 		assert( senderIdx.idx == senderSlotIdx.idx );
 		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
@@ -598,7 +591,7 @@ public:
 					throw std::exception(); // TODO: ... (bad path)
 
 				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
-				if ( pc.authority.empty() ) // local; TODO: add case when authority is present but points to local machine, too
+				if ( isMyAuthority( pc.authority ) ) // local
 				{
 					assert( !pc.nodeName.empty() );
 
@@ -711,71 +704,6 @@ public:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 	}
-
-	void onMessage( InterThreadMsg&& msg ){ // externally coming
-		MessageHeader mh;
-		ParserT parser( msg );
-		mh.parse( parser );
-		switch ( mh.type )
-		{
-			case MessageHeader::Type::subscriptionRequest:
-			{
-				GmqPathHelper::PathComponents pc;
-				bool pathOK = GmqPathHelper::parse( mh.path, pc );
-				if ( !pathOK )
-					throw std::exception(); // TODO: ... (bad path)
-				if ( isMyAuthority( pc.authority ) )
-				{
-					ConcentratorWrapper* concentrator = findStateConcentrator( GmqPathHelper::localPart( pc ) );
-					if ( concentrator )
-					{
-						// TODO: 
-						//    - add subscriber
-						//    - make Concentrator generate subscriptionResponse
-						//    - post it back to Subscriber
-					}
-					else
-					{
-						// TODO: 
-						//    - check that node exists, if not - post permanent error to Subscriber
-						//    - create concentrator
-						//    - update msg fields, forward msg to node
-					}
-				}
-				else
-				{
-					ConcentratorWrapper* concentrator = findStateConcentrator( mh.path );
-					if ( concentrator )
-					{
-						// TODO: 
-						//    - add subscriber
-						//    - add Subscriber
-						//    - make Concentrator generate subscriptionResponse
-						//    - post it back to Subscriber
-					}
-					else
-					{
-						// TODO: 
-						//    - create concentrator
-						//    - add Subscriber
-						//    - update msg fields, forward msg to node
-					}
-				}
-				break;
-			}
-			case MessageHeader::Type::stateUpdate: // so far we have the same processing
-			case MessageHeader::Type::subscriptionResponse:
-			{
-				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_subscriber );
-				if ( concentrator == nullptr )
-					throw std::exception(); // TODO: ... (unknown recipient)
-				// TODO: apply message to concentrator; forward it to all concentrator's subscribers
-				break;
-			}
-			default:
-				throw std::exception(); // TODO: ... (unknown msg type)
-		}
-	}
 };
 
 template<class PlatformSupportT>
@@ -802,8 +730,8 @@ public:
 		gmq.remove( name, idx );
 	}
 
-	void postMessage( InterThreadMsg&& msg, GMQ_COLL string address ){
-		gmq.postMessage( std::move( msg ), address );
+	void postMessage( InterThreadMsg&& msg ){
+		gmq.postMessage( std::move( msg ), id, idx );
 	}
 };
 
