@@ -947,15 +947,21 @@ public:
 			mhBase.ref_id_at_subscriber = 0; // later
 			mhBase.ref_id_at_publisher = 0; // later
 
+			BufferT stateUpdateBuff = publisher.getStateUpdateBuff();
+
 			BufferT msgBase;
 			ComposerT composer( msgBase );
 			helperComposePublishableStateMessageBegin( composer, mhBase );
-			publisher.generateStateUpdateMessage( composer );
+//			publisher.generateStateSyncMessage( composer );
+			ParserT stateUpdateBuffParser( stateUpdateBuff );
+//			globalmq::marshalling::impl::composeKey( composer, "update" );
+//			globalmq::marshalling::impl::composeStructBegin( composer );
+			copy<typename ParserT::RiterT, typename ComposerT::BufferType>( stateUpdateBuffParser.getIterator(), msgBase );
+//			globalmq::marshalling::impl::composeStructEnd( composer );
 			helperComposePublishableStateMessageEnd( composer );
 
 			for ( auto& subscriber : publisher.subscribers )
 			{
-
 				PublishableStateMessageHeader::UpdatedData ud;
 				ud.ref_id_at_publisher = subscriber.externalID; // TODO!!! revise, this is insufficient!
 				ud.update_ref_id_at_publisher = true;
@@ -967,6 +973,8 @@ public:
 
 				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgForward, subscriber.address.nodeAddr );
 			}
+			BufferT newBuff; // just empty
+			publisher.startTick( std::move( newBuff ) );
 /*			BufferT stateUpdateBuff = publisher.getStateUpdateBuff();
 			for ( auto& s : publisher.subscribers )
 			{
