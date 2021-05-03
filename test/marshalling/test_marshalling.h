@@ -2364,6 +2364,7 @@ public:
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual const char* name() { return "publishable_short_sample"; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser)
@@ -2820,6 +2821,7 @@ public:
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual const char* name() { return "publishable_sample"; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
 	void applyMessageWithUpdates(ParserT& parser)

@@ -1505,6 +1505,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual const char* name() { return \"%s\"; }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
 	fprintf( header, "\n" );
 
 	impl_GenerateApplyUpdateMessageMemberFn( header, root, s, true );
