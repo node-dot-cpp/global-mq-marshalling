@@ -488,7 +488,7 @@ void quickTestForGmqParts()
 	ud.update_ref_id_at_publisher = true;
 //	ParserT parser3( buff );
 	BufferT buff2;
-	globalmq::marshalling::helperParseAndUpdatePublishableStateMessageBegin<ParserT, ComposerT>( buff, buff2, ud );
+	globalmq::marshalling::helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( buff, buff2, ud );
 	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
 	{
 		std::string_view sview( reinterpret_cast<const char*>(buff2.begin()), buff2.size() );
