@@ -115,13 +115,6 @@ class GMQueue
 		return authority == myAuthority || authority.empty();
 	}
 
-	struct ReplyProcessingInfo
-	{
-		uint64_t ref_id_at_subscriber;
-		uint64_t ref_id_at_publisher;
-		// TODO: for externally outgoing: generalized socket; etc
-	};
-
 	class ConcentratorWrapper
 	{
 		template<class PlatformSupportT>
@@ -131,10 +124,11 @@ class GMQueue
 		bool subscriptionResponseReceived = false;
 		uint64_t idAtPublisher;
 
+	public:
 		struct SubscriberData
 		{
-			ReplyProcessingInfo info; // TODO: consider having postingInstruction itself here to avoid extra searches
-			uint64_t subscriberQGlobalID;
+			uint64_t ref_id_at_subscriber;
+			uint64_t ref_id_at_publisher;
 		};
 		GMQ_COLL vector<SubscriberData> subscribers;
 
@@ -151,18 +145,10 @@ class GMQueue
 		uint64_t id;
 
 	public:
-		uint64_t addSubscriber( ReplyProcessingInfo info )
+		uint64_t addSubscriber( SubscriberData sd )
 		{
-			SubscriberData sd;
-			sd.info = info;
 			subscribers.push_back( sd );
 			return subscribers.size() - 1;
-		}
-
-		void setSubscriberQGlobalID( uint64_t subscriberID, uint64_t subscriberQGlobalID )
-		{
-			assert( subscriberID < subscribers.size() );
-			subscribers[subscriberID].subscriberQGlobalID = subscriberQGlobalID;
 		}
 
 		bool isSsubscriptionResponseReceived() { return subscriptionResponseReceived; }
@@ -218,8 +204,8 @@ class GMQueue
 
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
 
-	uint64_t addConcentratorSubscriberPair( uint64_t concentratorID, uint64_t subscriberDataID ) {
-		auto ins = ID2ConcentratorSubscriberPairMapping.insert( std::make_pair( ++publisherAndItsConcentratorBase, std::make_pair( concentratorID, subscriberDataID ) ) );
+	void addConcentratorSubscriberPair( uint64_t id, uint64_t concentratorID, uint64_t subscriberDataID ) {
+		auto ins = ID2ConcentratorSubscriberPairMapping.insert( std::make_pair( id, std::make_pair( concentratorID, subscriberDataID ) ) );
 		assert( ins.second );
 	}
 	void removeConcentratorSubscriberPair( uint64_t ID ) {
@@ -362,17 +348,18 @@ public:
 				{
 					assert( !pc.nodeName.empty() );
 
-					ReplyProcessingInfo rpi;
-					rpi.type = ReplyProcessingInfo::Type::local;
-					rpi.idx = senderSlotIdx;
-					rpi.ref_id_at_subscriber = mh.ref_id_at_subscriber;
-
 					auto findCr = findOrAddStateConcentrator( addr, mh.state_type_id );
 					ConcentratorWrapper* concentrator = findCr.first;
 					assert( concentrator != nullptr );
+
+					typename ConcentratorWrapper::SubscriberData sd;
+					sd.ref_id_at_subscriber = mh.ref_id_at_subscriber;
+					sd.ref_at_publisher = ++publisherAndItsConcentratorBase;
+					uint64_t sid = concentrator->addSubscriber( sd );
+					addConcentratorSubscriberPair( sd.ref_at_publisher, sid, concentrator->id );
+
 					if ( findCr.second )
 					{
-						uint64_t sid = concentrator->addSubscriber( rpi );
 						if ( concentrator->isSsubscriptionResponseReceived() )
 						{
 							PublishableStateMessageHeader hdrBack;
@@ -393,7 +380,7 @@ public:
 					}
 					else
 					{
-						concentrator->addSubscriber( rpi );
+//						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 						if ( targetIdx.idx != SlotIdx::invalid_idx )
 							throw std::exception(); // TODO: post permanent error message to sender instead or in addition
@@ -427,11 +414,8 @@ public:
 				for ( auto& subscriber : concentrator->subscribers )
 				{
 					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
-					ud.ref_id_at_publisher = subscriber.subscriberQGlobalID;
+					ud.ref_id_at_publisher = subscriber.ref_id_at_publisher;
 					typename ComposerT::BufferType msgForward;
-//					ComposerT composer( msgForward );
-//					ParserT parser( msg );
-//					PublishableStateMessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
@@ -452,11 +436,8 @@ public:
 				for ( auto& subscriber : concentrator->subscribers )
 				{
 					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
-					ud.ref_id_at_publisher = subscriber.subscriberQGlobalID;
+					ud.ref_id_at_publisher = subscriber.ref_id_at_publisher;
 					typename ComposerT::BufferType msgForward;
-//					ComposerT composer( msgForward );
-//					ParserT parser( msg );
-//					PublishableStateMessageHeader::parseAndUpdate<ParserT, ComposerT>( parser, msgForward, ud );
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
