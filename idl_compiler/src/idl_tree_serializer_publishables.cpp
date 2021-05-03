@@ -1436,7 +1436,9 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 //	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
 	fprintf( header, "\npublic:\n" );
-	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n\n", s.numID );
+	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
+	fprintf( header, "\tstatic constexpr const char* stringTypeID = \"%s\";\n", s.name.c_str() );
+	fprintf( header, "\n" );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
@@ -1444,7 +1446,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
 	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
 	fprintf( header, "\tconst char* name() {\n" );
-	fprintf( header, "\t\treturn \"%s\";\n", s.name.c_str() );
+	fprintf( header, "\t\treturn stringTypeID;\n" );
 	fprintf( header, "\t}\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
@@ -1498,13 +1500,15 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
 	fprintf( header, "\npublic:\n" );
-	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n\n", s.numID );
+	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
+	fprintf( header, "\tstatic constexpr const char* stringTypeID = \"%s\";\n", s.name.c_str() );
+	fprintf( header, "\n" );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
 	fprintf( header, "\t%s_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
-	fprintf( header, "\tvirtual const char* name() { return \"%s\"; }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* name() { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
 	fprintf( header, "\n" );
 
@@ -1561,9 +1565,9 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::name();\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
-	fprintf( header, "\tvoid subscribe()\n" );
+	fprintf( header, "\tvoid subscribe(GMQ_COLL string path)\n" );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\tregistrar.subscribe( this );\n" );
+	fprintf( header, "\t\tregistrar.subscribe( this, path );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "};\n\n" );
 }

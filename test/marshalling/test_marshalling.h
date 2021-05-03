@@ -2277,6 +2277,7 @@ class publishable_short_sample_WrapperForPublisher : public globalmq::marshallin
 
 public:
 	static constexpr uint64_t numTypeID = 1;
+	static constexpr const char* stringTypeID = "publishable_short_sample";
 
 	template<class ... ArgsT>
 	publishable_short_sample_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
@@ -2285,7 +2286,7 @@ public:
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() {
-		return "publishable_short_sample";
+		return stringTypeID;
 	}
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
@@ -2357,13 +2358,14 @@ class publishable_short_sample_WrapperForSubscriber : public globalmq::marshalli
 
 public:
 	static constexpr uint64_t numTypeID = 1;
+	static constexpr const char* stringTypeID = "publishable_short_sample";
 
 	template<class ... ArgsT>
 	publishable_short_sample_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
-	virtual const char* name() { return "publishable_short_sample"; }
+	virtual const char* name() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
@@ -2483,9 +2485,9 @@ public:
 	{
 		return publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::name();
 	}
-	void subscribe()
+	void subscribe(GMQ_COLL string path)
 	{
-		registrar.subscribe( this );
+		registrar.subscribe( this, path );
 	}
 };
 
@@ -2610,6 +2612,7 @@ class publishable_sample_WrapperForPublisher : public globalmq::marshalling::Sta
 
 public:
 	static constexpr uint64_t numTypeID = 2;
+	static constexpr const char* stringTypeID = "publishable_sample";
 
 	template<class ... ArgsT>
 	publishable_sample_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
@@ -2618,7 +2621,7 @@ public:
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() {
-		return "publishable_sample";
+		return stringTypeID;
 	}
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
@@ -2814,13 +2817,14 @@ class publishable_sample_WrapperForSubscriber : public globalmq::marshalling::St
 
 public:
 	static constexpr uint64_t numTypeID = 2;
+	static constexpr const char* stringTypeID = "publishable_sample";
 
 	template<class ... ArgsT>
 	publishable_sample_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
-	virtual const char* name() { return "publishable_sample"; }
+	virtual const char* name() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
@@ -3509,9 +3513,9 @@ public:
 	{
 		return publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::name();
 	}
-	void subscribe()
+	void subscribe(GMQ_COLL string path)
 	{
-		registrar.subscribe( this );
+		registrar.subscribe( this, path );
 	}
 };
 

@@ -564,12 +564,18 @@ void publishableTestOne()
 
 	fmt::print( "OK so far...\n" );
 
+	globalmq::marshalling::GmqPathHelper::PathComponents pc;
+	pc.authority = "";
+	pc.nodeName = "myNode";
+	pc.statePublisherName = mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT>::stringTypeID;
+	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
+
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp );
-	publishableSampleWrapperSlave.subscribe();
+	publishableSampleWrapperSlave.subscribe( path );
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD, MetaPoolT> publishableSampleWrapperSlave2( mp, node );
-	publishableSampleWrapperSlave2.subscribe();
+	publishableSampleWrapperSlave2.subscribe( path );
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample_UPD_D, MetaPoolT> publishableSampleWrapperSlave3( mp, node );
-	publishableSampleWrapperSlave3.subscribe();
+	publishableSampleWrapperSlave3.subscribe( path );
 
 	deliverMessages(); // simulate transport layer
 	deliverMessages(); // simulate transport layer

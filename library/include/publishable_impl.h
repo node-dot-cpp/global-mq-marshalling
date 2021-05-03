@@ -1000,6 +1000,7 @@ public:
 	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
 	virtual const char* name() = 0;
+	virtual uint64_t stateTypeID() = 0;
 	virtual ~StateSubscriberBase() {}
 };
 
@@ -1030,18 +1031,26 @@ public:
 			}
 		assert( false ); // not found
 	}
-	void subscribe( StateSubscriberT* subscriber )
+	void subscribe( StateSubscriberT* subscriber, GMQ_COLL string path )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
 			if ( subscribers[i] == subscriber )
 			{
 				BufferT buff;
 				ComposerT composer( buff );
-				globalmq::marshalling::impl::composeStructBegin( composer );
+				PublishableStateMessageHeader mh;
+				mh.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionRequest;
+				mh.priority = 0; // TODO: source
+				mh.state_type_id = subscriber->stateTypeID();
+				mh.path = path;
+				mh.ref_id_at_subscriber = i;
+				helperComposePublishableStateMessageBegin( composer, mh );
+				helperComposePublishableStateMessageEnd( composer );
+				/*globalmq::marshalling::impl::composeStructBegin( composer );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(StatePublisherSubscriberMessageType::subscriptionRequest), "msg_type", true );
 				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "publisher_name", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, i, "subscriber_id", false );
-				globalmq::marshalling::impl::composeStructEnd( composer );
+				globalmq::marshalling::impl::composeStructEnd( composer );*/
 				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
 				return;
 			}
