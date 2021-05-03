@@ -864,7 +864,6 @@ public:
 	void onMessage( ParserT& parser, NodeAddressT nodeAddr )
 	{
 		PublishableStateMessageHeader mh;
-//		ParserT parser( msg );
 		helperParsePublishableStateMessageBegin( parser, mh );
 		switch ( mh.type )
 		{
@@ -904,36 +903,6 @@ public:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 		helperParsePublishableStateMessageEnd( parser );
-		/*globalmq::marshalling::impl::parseStructBegin( parser );
-		size_t msgType;
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
-		switch ( msgType )
-		{
-			case StatePublisherSubscriberMessageType::subscriptionRequest:
-			{
-				GMQ_COLL string publisherName;
-				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &publisherName, "publisher_name" );
-				auto findres = publishers.find( publisherName );
-				if ( findres == publishers.end() )
-					throw std::exception(); // not found / misdirected
-				uint64_t subscriberID;
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
-				findres->second.onSubscriptionRequest( SubscriberAddress<PlatformSupportT>({nodeAddr, subscriberID}) );
-				BufferT buff;
-				ComposerT composer( buff );
-				globalmq::marshalling::impl::composeStructBegin( composer );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(StatePublisherSubscriberMessageType::subscriptionResponse), "msg_type", true );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, subscriberID, "subscriber_id", true );
-				globalmq::marshalling::impl::composeKey( composer, "state" );
-				findres->second.generateStateSyncMessage( composer );
-				globalmq::marshalling::impl::composeStructEnd( composer );
-				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, nodeAddr );
-				break;
-			}
-			default:
-				throw std::exception(); // TODO: ... (unknown msg type)
-		}
-		globalmq::marshalling::impl::parseStructEnd( parser );*/
 	}
 
 	void postAllUpdates()
@@ -952,12 +921,8 @@ public:
 			BufferT msgBase;
 			ComposerT composer( msgBase );
 			helperComposePublishableStateMessageBegin( composer, mhBase );
-//			publisher.generateStateSyncMessage( composer );
 			ParserT stateUpdateBuffParser( stateUpdateBuff );
-//			globalmq::marshalling::impl::composeKey( composer, "update" );
-//			globalmq::marshalling::impl::composeStructBegin( composer );
 			copy<typename ParserT::RiterT, typename ComposerT::BufferType>( stateUpdateBuffParser.getIterator(), msgBase );
-//			globalmq::marshalling::impl::composeStructEnd( composer );
 			helperComposePublishableStateMessageEnd( composer );
 
 			for ( auto& subscriber : publisher.subscribers )
@@ -975,33 +940,6 @@ public:
 			}
 			BufferT newBuff; // just empty
 			publisher.startTick( std::move( newBuff ) );
-/*			BufferT stateUpdateBuff = publisher.getStateUpdateBuff();
-			for ( auto& s : publisher.subscribers )
-			{
-				BufferT buff;
-				ComposerT composer( buff );
-				globalmq::marshalling::impl::composeStructBegin( composer );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(StatePublisherSubscriberMessageType::stateUpdate), "msg_type", true );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, s.address.subscriberAddrInNode, "subscriber_id", true );
-				globalmq::marshalling::impl::composeKey( composer, "update" );
-
-				// TODO: consider other ways to insert collected data
-				auto riter = stateUpdateBuff.getReadIter();
-				size_t availsz = riter.directlyAvailableSize();
-				while (availsz)
-				{
-					const uint8_t* b = riter.directRead( availsz );
-					buff.append( b, availsz );					
-					availsz = riter.directlyAvailableSize();
-				}
-				// end of copying
-
-				globalmq::marshalling::impl::composeStructEnd( composer );
-				PlatformSupportT::sendMsgFromPublisherToSubscriber( buff, s.address.nodeAddr );
-			}
-
-			BufferT newBuff; // just empty
-			publisher.startTick( std::move( newBuff ) );*/
 		}
 	}
 };
@@ -1061,11 +999,6 @@ public:
 				mh.ref_id_at_subscriber = i;
 				helperComposePublishableStateMessageBegin( composer, mh );
 				helperComposePublishableStateMessageEnd( composer );
-				/*globalmq::marshalling::impl::composeStructBegin( composer );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(StatePublisherSubscriberMessageType::subscriptionRequest), "msg_type", true );
-				globalmq::marshalling::impl::publishableStructComposeString( composer, subscriber->name(), "publisher_name", true );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, i, "subscriber_id", false );
-				globalmq::marshalling::impl::composeStructEnd( composer );*/
 				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
 				return;
 			}
@@ -1074,7 +1007,6 @@ public:
 	void onMessage( ParserT& parser ) 
 	{
 		PublishableStateMessageHeader mh;
-//		ParserT parser( msg );
 		helperParsePublishableStateMessageBegin( parser, mh );
 		switch ( mh.type )
 		{
@@ -1108,47 +1040,6 @@ public:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 		helperParsePublishableStateMessageEnd( parser );
-		/*globalmq::marshalling::impl::parseStructBegin( parser );
-		size_t msgType;
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
-		switch ( msgType )
-		{
-			case StatePublisherSubscriberMessageType::subscriptionResponse:
-			{
-				size_t subscriberID;
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
-				if ( subscriberID >= subscribers.size() )
-					throw std::exception(); // TODO: ... (invalid ID)
-				globalmq::marshalling::impl::parseKey( parser, "state" );
-				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
-					subscribers[subscriberID]->applyJsonStateSyncMessage( parser );
-				else 
-				{
-					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
-					subscribers[subscriberID]->applyGmqStateSyncMessage( parser );
-				}
-				break;
-			}
-			case StatePublisherSubscriberMessageType::stateUpdate:
-			{
-				size_t subscriberID;
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &subscriberID, "subscriber_id" );
-				if ( subscriberID >= subscribers.size() )
-					throw std::exception(); // TODO: ... (invalid ID)
-				globalmq::marshalling::impl::parseKey( parser, "update" );
-				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
-					subscribers[subscriberID]->applyJsonMessageWithUpdates( parser );
-				else 
-				{
-					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
-					subscribers[subscriberID]->applyGmqMessageWithUpdates( parser );
-				}
-				break;
-			}
-			default:
-				throw std::exception(); // TODO: ... (unknown msg type)
-		}
-		globalmq::marshalling::impl::parseStructEnd( parser );*/
 	}
 };
 
