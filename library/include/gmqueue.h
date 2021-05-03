@@ -134,6 +134,7 @@ class GMQueue
 		struct SubscriberData
 		{
 			ReplyProcessingInfo info; // TODO: consider having postingInstruction itself here to avoid extra searches
+			uint64_t subscriberQGlobalID;
 		};
 		GMQ_COLL vector<SubscriberData> subscribers;
 
@@ -150,11 +151,18 @@ class GMQueue
 		uint64_t id;
 
 	public:
-		void addSubscriber( ReplyProcessingInfo info )
+		uint64_t addSubscriber( ReplyProcessingInfo info )
 		{
 			SubscriberData sd;
 			sd.info = info;
 			subscribers.push_back( sd );
+			return subscribers.size() - 1;
+		}
+
+		void setSubscriberQGlobalID( uint64_t subscriberID, uint64_t subscriberQGlobalID )
+		{
+			assert( subscriberID < subscribers.size() );
+			subscribers[subscriberID].subscriberQGlobalID = subscriberQGlobalID;
 		}
 
 		bool isSsubscriptionResponseReceived() { return subscriptionResponseReceived; }
@@ -205,7 +213,25 @@ class GMQueue
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
 
+	GMQ_COLL unordered_map<uint64_t, std::pair<uint64_t, uint64_t>> ID2ConcentratorSubscriberPairMapping;
+	uint64_t publisherAndItsConcentratorBase = 0;
+
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
+
+	uint64_t addConcentratorSubscriberPair( uint64_t concentratorID, uint64_t subscriberDataID ) {
+		auto ins = ID2ConcentratorSubscriberPairMapping.insert( std::make_pair( ++publisherAndItsConcentratorBase, std::make_pair( concentratorID, subscriberDataID ) ) );
+		assert( ins.second );
+	}
+	void removeConcentratorSubscriberPair( uint64_t ID ) {
+		ID2ConcentratorSubscriberPairMapping.erase( ID );
+	}
+	std::pair<uint64_t, uint64_t> findConcentratorSubscriberPair( uint64_t ID ) {
+		auto f = ID2ConcentratorSubscriberPairMapping.find( ID );
+		if ( f != ID2ConcentratorSubscriberPairMapping.end() )
+			return *(f->second);
+		else
+			throw std::exception();
+	}
 
 	// concentrators (address2concentrators)
 	std::pair<ConcentratorWrapper*, bool> findOrAddStateConcentrator( GMQ_COLL string path, uint64_t stateTypeID ) {
@@ -346,14 +372,14 @@ public:
 					assert( concentrator != nullptr );
 					if ( findCr.second )
 					{
-						concentrator->addSubscriber( rpi );
+						uint64_t sid = concentrator->addSubscriber( rpi );
 						if ( concentrator->isSsubscriptionResponseReceived() )
 						{
 							PublishableStateMessageHeader hdrBack;
 							hdrBack.type = PublishableStateMessageHeader::MsgType::subscriptionResponse;
 							hdrBack.priority = mh.priority;
 							hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
-							hdrBack.ref_id_at_publisher = concentrator->id;
+							hdrBack.ref_id_at_publisher = addConcentratorSubscriberPair( sid, concentrator->id ); // TODO: must be an index for mapping to (concentrator, subscriber entry)
 
 							typename ComposerT::BufferType msgBack;
 							ComposerT composer( msgBack );
@@ -396,12 +422,12 @@ public:
 
 				// forward message to all concentrator's subscribers
 				PublishableStateMessageHeader::UpdatedData ud;
-				ud.ref_id_at_publisher = concentrator->id; // TODO!!! revise, this is insufficient!
 				ud.update_ref_id_at_publisher = true;
 				ud.update_ref_id_at_subscriber = true;
 				for ( auto& subscriber : concentrator->subscribers )
 				{
 					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
+					ud.ref_id_at_publisher = subscriber.subscriberQGlobalID;
 					typename ComposerT::BufferType msgForward;
 //					ComposerT composer( msgForward );
 //					ParserT parser( msg );
@@ -421,12 +447,12 @@ public:
 
 				// forward message to all concentrator's subscribers
 				PublishableStateMessageHeader::UpdatedData ud;
-				ud.ref_id_at_publisher = concentrator->id; // TODO!!! revise, this is insufficient!
 				ud.update_ref_id_at_publisher = true;
 				ud.update_ref_id_at_subscriber = true;
 				for ( auto& subscriber : concentrator->subscribers )
 				{
 					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
+					ud.ref_id_at_publisher = subscriber.subscriberQGlobalID;
 					typename ComposerT::BufferType msgForward;
 //					ComposerT composer( msgForward );
 //					ParserT parser( msg );
