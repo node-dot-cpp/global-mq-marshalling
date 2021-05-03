@@ -626,9 +626,9 @@ struct PublishableStateMessageHeader
 				assert( !udata.update_ref_id_at_publisher );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
-					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", false );
 				else
-					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", false );
 				break;
 			}
 			case MsgType::subscriptionResponse:
@@ -641,9 +641,9 @@ struct PublishableStateMessageHeader
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_publisher" );
 				if ( udata.update_ref_id_at_publisher )
-					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", false );
 				else
-					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_publisher", true );
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_publisher", false );
 				break;
 			}
 			default:
@@ -664,14 +664,14 @@ struct PublishableStateMessageHeader
 			case MsgType::subscriptionRequest:
 			{
 				globalmq::marshalling::impl::publishableStructComposeString( composer, path, "path", true );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", false );
 				break;
 			}
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
 			{
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", false );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", false );
 				break;
 			}
 		}
@@ -728,7 +728,6 @@ void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& 
 
 
 enum StateSubscriberStatus { waitingForSubscriptionIni, subscribed };
-enum StatePublisherSubscriberMessageType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
 
 template<class PlatformSupportT>
 struct SubscriberAddress
@@ -763,6 +762,7 @@ public:
 	virtual void startTick( BufferT&& buff ) = 0;
 	virtual BufferT&& endTick() = 0;
 	virtual const char* name() = 0;
+	virtual uint64_t stateTypeID() = 0;
 };
 
 template<class PlatformSupportT>
@@ -799,6 +799,10 @@ public:
 		publisher = nullptr;
 	}
 	bool isUsed() { return publisher != nullptr; }
+	uint64_t stateTypeID() {
+		assert( publisher != nullptr );
+		return publisher->stateTypeID();
+	}
 
 	// processing requests (by now they seem to be independent on state wrappers)
 	uint64_t onSubscriptionRequest( uint64_t externalID, SubscriberAddress<PlatformSupportT> address )
@@ -883,6 +887,7 @@ public:
 
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::subscriptionResponse;
+				hdrBack.state_type_id = findres->second->stateTypeID();
 				hdrBack.priority = mh.priority;
 				hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 				hdrBack.ref_id_at_publisher = id;
@@ -898,6 +903,7 @@ public:
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
+		helperParsePublishableStateMessageEnd( parser );
 		/*globalmq::marshalling::impl::parseStructBegin( parser );
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
@@ -935,7 +941,8 @@ public:
 		for ( auto& publisher : publishers )
 		{
 			PublishableStateMessageHeader mhBase;
-			mhBase.type = PublishableStateMessageHeader::MsgType::subscriptionResponse;
+			mhBase.type = PublishableStateMessageHeader::MsgType::stateUpdate;
+			mhBase.state_type_id = publisher.stateTypeID();
 			mhBase.priority = 0; // TODO: source
 			mhBase.ref_id_at_subscriber = 0; // later
 			mhBase.ref_id_at_publisher = 0; // later
@@ -943,7 +950,7 @@ public:
 			BufferT msgBase;
 			ComposerT composer( msgBase );
 			helperComposePublishableStateMessageBegin( composer, mhBase );
-			publisher.generateStateSyncMessage( composer );
+			publisher.generateStateUpdateMessage( composer );
 			helperComposePublishableStateMessageEnd( composer );
 
 			for ( auto& subscriber : publisher.subscribers )
@@ -958,7 +965,7 @@ public:
 				typename ComposerT::BufferType msgForward;
 				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msgBase, msgForward, ud );
 
-				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgBase, subscriber.address.nodeAddr );
+				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgForward, subscriber.address.nodeAddr );
 			}
 /*			BufferT stateUpdateBuff = publisher.getStateUpdateBuff();
 			for ( auto& s : publisher.subscribers )
@@ -1058,7 +1065,42 @@ public:
 	}
 	void onMessage( ParserT& parser ) 
 	{
-		globalmq::marshalling::impl::parseStructBegin( parser );
+		PublishableStateMessageHeader mh;
+//		ParserT parser( msg );
+		helperParsePublishableStateMessageBegin( parser, mh );
+		switch ( mh.type )
+		{
+			case PublishableStateMessageHeader::MsgType::subscriptionResponse:
+			{
+				if ( mh.ref_id_at_subscriber >= subscribers.size() )
+					throw std::exception(); // TODO: ... (invalid ID)
+				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+					subscribers[mh.ref_id_at_subscriber]->applyJsonStateSyncMessage( parser );
+				else 
+				{
+					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+					subscribers[mh.ref_id_at_subscriber]->applyGmqStateSyncMessage( parser );
+				}
+				break;
+			}
+			case PublishableStateMessageHeader::MsgType::stateUpdate:
+			{
+				if ( mh.ref_id_at_subscriber >= subscribers.size() )
+					throw std::exception(); // TODO: ... (invalid ID)
+				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
+					subscribers[mh.ref_id_at_subscriber]->applyJsonMessageWithUpdates( parser );
+				else 
+				{
+					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+					subscribers[mh.ref_id_at_subscriber]->applyGmqMessageWithUpdates( parser );
+				}
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		helperParsePublishableStateMessageEnd( parser );
+		/*globalmq::marshalling::impl::parseStructBegin( parser );
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
 		switch ( msgType )
@@ -1098,7 +1140,7 @@ public:
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
-		globalmq::marshalling::impl::parseStructEnd( parser );
+		globalmq::marshalling::impl::parseStructEnd( parser );*/
 	}
 };
 
@@ -1140,16 +1182,15 @@ public:
 	void onMessage( ParserT& parser, NodeAddressT nodeAddr )
 	{
 		ParserT parser1( parser );
-		globalmq::marshalling::impl::parseStructBegin( parser1 );
-		size_t msgType;
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser1, &msgType, "msg_type" );
-		switch ( msgType )
+		PublishableStateMessageHeader mh;
+		helperParsePublishableStateMessageBegin( parser1, mh );
+		switch ( mh.type )
 		{
-			case StatePublisherSubscriberMessageType::subscriptionResponse:
-			case StatePublisherSubscriberMessageType::stateUpdate:
+			case PublishableStateMessageHeader::MsgType::subscriptionResponse:
+			case PublishableStateMessageHeader::MsgType::stateUpdate:
 				StateSubscriberPool<PlatformSupportT>::onMessage( parser );
 				break;
-			case StatePublisherSubscriberMessageType::subscriptionRequest:
+			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 				StatePublisherPool<PlatformSupportT>::onMessage( parser, nodeAddr );
 				break;
 			default:

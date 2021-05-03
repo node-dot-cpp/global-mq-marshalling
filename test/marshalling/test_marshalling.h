@@ -2285,9 +2285,8 @@ public:
 	ComposerT& getComposer() { return composer; }
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
-	const char* name() {
-		return stringTypeID;
-	}
+	const char* name() { return stringTypeID; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 
@@ -2620,9 +2619,8 @@ public:
 	ComposerT& getComposer() { return composer; }
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
-	const char* name() {
-		return stringTypeID;
-	}
+	const char* name() { return stringTypeID; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
 		t.ID = val; 

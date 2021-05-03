@@ -1445,9 +1445,8 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
 	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
 	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
-	fprintf( header, "\tconst char* name() {\n" );
-	fprintf( header, "\t\treturn stringTypeID;\n" );
-	fprintf( header, "\t}\n" );
+	fprintf( header, "\tconst char* name() { return stringTypeID; }\n" );
+	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
 	fprintf( header, "\n" );
