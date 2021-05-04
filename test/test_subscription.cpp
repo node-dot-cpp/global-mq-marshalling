@@ -505,11 +505,11 @@ void quickTestForGmqParts()
 
 
 	// gmqueue
-	GMQueue<StatePublisherSubscriberInfo> gmqueue;
+	GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
 	gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 	gmqueue.setAuthority( "" );
 
-	using PostmanT = globalmq::marshalling::ThreadQueuePostman<StatePublisherSubscriberInfo::BufferT>;
+	using PostmanT = globalmq::marshalling::ThreadQueuePostman<GMQueueStatePublisherSubscriberTypeInfo::BufferT>;
 	typename PostmanT::MsgQueue queue;
 
 	BufferT msgBuff;

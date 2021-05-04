@@ -41,6 +41,7 @@
     <ClInclude Include="..\..\library\include\platforms\qt_queue.h" />
     <ClInclude Include="..\..\library\include\publishable_impl.h" />
     <ClInclude Include="..\marshalling\test_marshalling.h" />
+    <ClInclude Include="..\nodecpp_gmqueue_customized_types.h" />
     <ClInclude Include="..\nodecpp_publish_subscribe_support.h" />
     <ClInclude Include="..\tests.h" />
   </ItemGroup>
@@ -130,7 +131,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GMQUEUE_CUSTOMIZED_Q_TYPES="../../test/nodecpp_gmqueue_customized_types.h";WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
@@ -146,7 +147,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GMQUEUE_CUSTOMIZED_Q_TYPES="../../test/nodecpp_gmqueue_customized_types.h";WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
@@ -162,7 +163,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GMQUEUE_CUSTOMIZED_Q_TYPES="../../test/nodecpp_gmqueue_customized_types.h";_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
@@ -178,7 +179,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GMQUEUE_CUSTOMIZED_Q_TYPES="../../test/nodecpp_gmqueue_customized_types.h";NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>

@@ -5,6 +5,8 @@
 #include <marshalling.h>
 #include <publishable_impl.h>
 
+#include "nodecpp_gmqueue_customized_types.h"
+
 class StatePublisherSubscriberPoolInfo;
 //extern thread_local globalmq::marshalling::StatePublisherPool<StatePublisherSubscriberPoolInfo> publishers;
 //extern thread_local globalmq::marshalling::StateSubscriberPool<StatePublisherSubscriberPoolInfo> subscribers;
@@ -14,19 +16,7 @@ constexpr uint32_t publisherPoolAddress = 1;
 constexpr uint32_t subscriberPoolAddress = 0;
 extern GMQ_COLL vector<globalmq::marshalling::Buffer> likeQueues[2];
 
-class StatePublisherSubscriberInfo
-{
-public:
-	using BufferT = globalmq::marshalling::Buffer;
-	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
-	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
-//	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
-//	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
-	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
-	using StatePublisherT = globalmq::marshalling::StatePublisherBase<ComposerT>;
-};
-
-class StatePublisherSubscriberPoolInfo : public StatePublisherSubscriberInfo
+class StatePublisherSubscriberPoolInfo : public GMQueueStatePublisherSubscriberTypeInfo
 {
 public:
 	// publishers and subscribers

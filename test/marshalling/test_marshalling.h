@@ -2315,14 +2315,14 @@ public:
 };
 
 template<class T, class RegistrarT>
-class publishable_short_sample_NodecppWrapperForPublisher : public publishable_short_sample_WrapperForPublisher<T, typename StatePublisherSubscriberInfo::ComposerT>
+class publishable_short_sample_NodecppWrapperForPublisher : public publishable_short_sample_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
 {
-	using ComposerT = typename StatePublisherSubscriberInfo::ComposerT;
+	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
 	RegistrarT& registrar;
 public:
-	using BufferT = typename StatePublisherSubscriberInfo::ComposerT::BufferType;
+	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
 	template<class ... ArgsT>
-	publishable_short_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_short_sample_WrapperForPublisher<T, typename StatePublisherSubscriberInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_short_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_short_sample_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -2446,12 +2446,12 @@ public:
 };
 
 template<class T, class RegistrarT>
-class publishable_short_sample_NodecppWrapperForSubscriber : public publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>
+class publishable_short_sample_NodecppWrapperForSubscriber : public publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
 {
 	RegistrarT& registrar;
 public:
 	template<class ... ArgsT>
-	publishable_short_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_short_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -2461,28 +2461,28 @@ public:
 		registrar.remove( this );
 	}
 
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename StatePublisherSubscriberInfo::BufferT>& parser ) 
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
 	{
-		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::applyMessageWithUpdates(parser);
+		publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename StatePublisherSubscriberInfo::BufferT>& parser )
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
 	{
-		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::applyMessageWithUpdates(parser);
+		publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename StatePublisherSubscriberInfo::BufferT>& parser ) 
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
 	{
-		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
+		publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename StatePublisherSubscriberInfo::BufferT>& parser )
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
 	{
-		publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
+		publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 	virtual const char* name()
 	{
-		return publishable_short_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::name();
+		return publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
 	}
 	void subscribe(GMQ_COLL string path)
 	{
@@ -2723,14 +2723,14 @@ public:
 };
 
 template<class T, class RegistrarT>
-class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_WrapperForPublisher<T, typename StatePublisherSubscriberInfo::ComposerT>
+class publishable_sample_NodecppWrapperForPublisher : public publishable_sample_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
 {
-	using ComposerT = typename StatePublisherSubscriberInfo::ComposerT;
+	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
 	RegistrarT& registrar;
 public:
-	using BufferT = typename StatePublisherSubscriberInfo::ComposerT::BufferType;
+	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
 	template<class ... ArgsT>
-	publishable_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_sample_WrapperForPublisher<T, typename StatePublisherSubscriberInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_sample_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_sample_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -3473,12 +3473,12 @@ public:
 };
 
 template<class T, class RegistrarT>
-class publishable_sample_NodecppWrapperForSubscriber : public publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>
+class publishable_sample_NodecppWrapperForSubscriber : public publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
 {
 	RegistrarT& registrar;
 public:
 	template<class ... ArgsT>
-	publishable_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	publishable_sample_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
@@ -3488,28 +3488,28 @@ public:
 		registrar.remove( this );
 	}
 
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename StatePublisherSubscriberInfo::BufferT>& parser ) 
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
 	{
-		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::applyMessageWithUpdates(parser);
+		publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename StatePublisherSubscriberInfo::BufferT>& parser )
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
 	{
-		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::applyMessageWithUpdates(parser);
+		publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename StatePublisherSubscriberInfo::BufferT>& parser ) 
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
 	{
-		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
+		publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename StatePublisherSubscriberInfo::BufferT>& parser )
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
 	{
-		publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::parseStateSyncMessage(parser);
+		publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 	virtual const char* name()
 	{
-		return publishable_sample_WrapperForSubscriber<T, typename StatePublisherSubscriberInfo::BufferT>::name();
+		return publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
 	}
 	void subscribe(GMQ_COLL string path)
 	{

@@ -226,7 +226,7 @@ private:
 public:
 	ThreadQueuePostman( MsgQueue& msgQueue_, uint64_t recipientID_ ) : msgQueue( msgQueue_ ), recipientID( recipientID_ ) {}
 	virtual ~ThreadQueuePostman() {}
-	virtual void postMessage( InterThreadMsg&& msg ) override
+	virtual void postMessage( InterThreadMsgT&& msg ) override
 	{
 		msgQueue.push_back( ThreadQueueItem<InterThreadMsgT>({std::move( msg ), recipientID}) );
 	}

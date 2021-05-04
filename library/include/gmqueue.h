@@ -35,16 +35,32 @@
 #include <condition_variable>
 #include "publishable_impl.h"
 
+#ifndef GMQUEUE_CUSTOMIZED_Q_TYPES
+class GMQueueStatePublisherSubscriberTypeInfo
+{
+public:
+	using BufferT = globalmq::marshalling::Buffer;
+	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
+	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
+//	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
+//	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
+	using StatePublisherT = globalmq::marshalling::StatePublisherBase<ComposerT>;
+};
+#else
+#include GMQUEUE_CUSTOMIZED_Q_TYPES
+#endif
+
 
 namespace globalmq::marshalling {
 
-using InterThreadMsg = Buffer;
+using MessageBufferT = typename GMQueueStatePublisherSubscriberTypeInfo::BufferT;
 
 class InProcessMessagePostmanBase
 {
 public:
 	InProcessMessagePostmanBase() {};
-	virtual void postMessage( InterThreadMsg&& ) = 0;
+	virtual void postMessage( MessageBufferT&& ) = 0;
 	virtual ~InProcessMessagePostmanBase() {}
 };
 
@@ -65,7 +81,7 @@ struct SlotIdx
 class AddressableLocations // one per process; provides process-unique Slot with Postman and returns its SlotIdx
 {
 	std::mutex mx;
-	std::vector<AddressableLocation> slots; // mx-protected!
+	GMQ_COLL vector<AddressableLocation> slots; // mx-protected!
 public:
 	SlotIdx add( InProcessMessagePostmanBase* postman )
 	{ 
@@ -191,14 +207,14 @@ class GMQueue
 
 	std::mutex mx;
 
-	std::unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
-	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
+	GMQ_COLL unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
+	GMQ_COLL unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	uint64_t concentratorIDBase = 0;
 
-//	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
-	std::unordered_map<GMQ_COLL string, SlotIdx> namedRecipients; // node name to location, mx-protected
+//	GMQ_COLL unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
+	GMQ_COLL unordered_map<GMQ_COLL string, SlotIdx> namedRecipients; // node name to location, mx-protected
 
-	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
+	GMQ_COLL unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
 
 	GMQ_COLL unordered_map<uint64_t, std::pair<uint64_t, uint64_t>> ID2ConcentratorSubscriberPairMapping;
@@ -326,7 +342,7 @@ public:
 		myAuthority = authority;
 	}
 
-	void postMessage( InterThreadMsg&& msg, uint64_t senderID, SlotIdx senderSlotIdx )
+	void postMessage( MessageBufferT&& msg, uint64_t senderID, SlotIdx senderSlotIdx )
 	{
 		std::unique_lock<std::mutex> lock(mx);
 
@@ -482,7 +498,7 @@ public:
 		gmq.remove( name, idx );
 	}
 
-	void postMessage( InterThreadMsg&& msg ){
+	void postMessage( MessageBufferT&& msg ){
 		gmq.postMessage( std::move( msg ), id, idx );
 	}
 };
