@@ -204,22 +204,31 @@ public:
 	}
 };
 
+template<class InterThreadMsgT>
+struct ThreadQueueItem
+{
+	static constexpr uint64_t invalidRecipientID = (uint64_t)(-1);
+	InterThreadMsgT msg;
+	uint64_t recipientID = invalidRecipientID;
+//	ThreadQueueItem( InterThreadMsgT&& msg
+};
 
 template<class InterThreadMsgT>
 class ThreadQueuePostman : public InProcessMessagePostmanBase
 {
 public:
-	using MsgQueue = MWSRFixedSizeQueueWithFlowControl<CircularBuffer<InterThreadMsgT, 4>>; // TODO: revise the second param value
+	using MsgQueue = MWSRFixedSizeQueueWithFlowControl<CircularBuffer<ThreadQueueItem<InterThreadMsgT>, 4>>; // TODO: revise the second param value
 
 private:
 	MsgQueue& msgQueue;
+	uint64_t recipientID;
 
 public:
-	ThreadQueuePostman( MsgQueue& msgQueue_ ) : msgQueue( msgQueue_ ) {}
+	ThreadQueuePostman( MsgQueue& msgQueue_, uint64_t recipientID_ ) : msgQueue( msgQueue_ ), recipientID( recipientID_ ) {}
 	virtual ~ThreadQueuePostman() {}
 	virtual void postMessage( InterThreadMsg&& msg ) override
 	{
-		msgQueue.push_back( std::move( msg ) );
+		msgQueue.push_back( ThreadQueueItem<InterThreadMsgT>({std::move( msg ), recipientID}) );
 	}
 };
 
@@ -230,7 +239,7 @@ class GMQThreadQueueTransport : public GMQTransportBase<PlatformSupportT>
 	ThreadQueuePostman<BufferT> postman;
 
 public:
-	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue ) : GMQTransportBase( gmq, name, &postman ), postman( queue ) {}
+	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, uint64_t recipientID ) : GMQTransportBase( gmq, name, &postman ), postman( queue, recipientID ) {}
 	virtual ~GMQThreadQueueTransport() {}
 };
 

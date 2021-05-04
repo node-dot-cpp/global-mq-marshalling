@@ -431,6 +431,8 @@ public:
 			case PublishableStateMessageHeader::MsgType::stateUpdate: // so far we have the same processing
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
+				if ( concentrator == nullptr )
+					throw std::exception(); // TODO: ?
 				concentrator->onStateUpdateMessage( parser );
 
 				// forward message to all concentrator's subscribers
