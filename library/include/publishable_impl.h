@@ -418,7 +418,7 @@ struct GmqPathHelper
 		bool furtherResolution = false;
 		bool hasPort = false;
 		uint16_t port = 0xFFFF;
-		GMQ_COLL string localPart; // TODO: revise
+//		GMQ_COLL string localPart; // TODO: revise
 		GMQ_COLL string nodeName;
 		GMQ_COLL string statePublisherName;
 	};
@@ -465,6 +465,11 @@ struct GmqPathHelper
 	static GMQ_COLL string localPart( GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
 	{
 		return fmt::format( "{}?sp={}", nodeName, statePublisherName );
+	}
+
+	static GMQ_COLL string localPart( const PathComponents& components )
+	{
+		return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherName );
 	}
 
 	static bool parse( GMQ_COLL string path, PathComponents& components )
@@ -670,7 +675,7 @@ struct PublishableStateMessageHeader
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
 			{
-				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", false );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", false );
 				break;
 			}

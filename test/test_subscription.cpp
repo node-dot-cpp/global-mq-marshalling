@@ -511,6 +511,21 @@ void quickTestForGmqParts()
 
 	using PostmanT = globalmq::marshalling::ThreadQueuePostman<StatePublisherSubscriberInfo::BufferT>;
 	typename PostmanT::MsgQueue queue;
+
+	BufferT msgBuff;
+	ComposerT composer3( msgBuff );
+	globalmq::marshalling::helperComposePublishableStateMessageBegin( composer3, mh1 );
+//	globalmq::marshalling::impl::composeString( composer3, "fake" );
+	globalmq::marshalling::helperComposePublishableStateMessageEnd( composer3 );
+	if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON )
+	{
+		std::string_view sview( reinterpret_cast<const char*>(msgBuff.begin()), msgBuff.size() );
+		fmt::print( "{}\n\n", sview );
+	}
+
+	globalmq::marshalling::SlotIdx idx;
+
+	gmqueue.postMessage( std::move( msgBuff ), 0, idx );
 }
 
 

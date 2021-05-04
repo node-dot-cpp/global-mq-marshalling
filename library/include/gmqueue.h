@@ -129,6 +129,7 @@ class GMQueue
 		{
 			uint64_t ref_id_at_subscriber;
 			uint64_t ref_id_at_publisher;
+			SlotIdx senderSlotIdx;
 		};
 		GMQ_COLL vector<SubscriberData> subscribers;
 
@@ -194,7 +195,8 @@ class GMQueue
 	std::unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	uint64_t concentratorIDBase = 0;
 
-	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
+//	std::unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
+	std::unordered_map<GMQ_COLL string, SlotIdx> namedRecipients; // node name to location, mx-protected
 
 	std::unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
@@ -224,7 +226,7 @@ class GMQueue
 		assert( !path.empty() );
 		auto f = addressesToStateConcentrators.find( path );
 		if ( f != addressesToStateConcentrators.end() )
-			return std::make_pair(&(*(f->second)), true);
+			return std::make_pair(&(f->second), true);
 		else
 		{
 			assert( !path.empty() );
@@ -236,18 +238,18 @@ class GMQueue
 			assert( ins.second );
 			ConcentratorWrapper* c = &(ins.first->second);
 			uint64_t concentratorID = ++concentratorIDBase;
-			auto ins = idToStateConcentrators.insert( std::make_pair( concentratorID, std::move( concentrator ) ) );
-			assert( ins.second );
+			auto ins1 = idToStateConcentrators.insert( std::make_pair( concentratorID, c ) );
+			assert( ins1.second );
 			c->address = path;
 			c->id = concentratorID;
-			return std::make_pair<c, concentratorID>;
+			return std::make_pair(c, false);
 		}
 	}
 	ConcentratorWrapper* findStateConcentrator( uint64_t id ) {
 		assert( id != 0 );
 		auto f = idToStateConcentrators.find( id );
 		if ( f != idToStateConcentrators.end() )
-			return &(*(f->second));
+			return f->second;
 		else
 			return nullptr;
 	}
@@ -272,7 +274,7 @@ class GMQueue
 		assert( !name.empty() );
 		auto f = namedRecipients.find( name );
 		if ( f != namedRecipients.end() )
-			return *(f->second);
+			return f->second;
 		else
 			return SlotIdx();
 	}
@@ -293,7 +295,7 @@ class GMQueue
 	SlotIdx senderIDToSlotIdx( uint64_t id ) {
 		auto f = senders.find( id );
 		if ( f != senders.end() )
-			return *(f->second);
+			return f->second;
 		else
 			return SlotIdx();
 	}
@@ -336,7 +338,7 @@ public:
 		helperParsePublishableStateMessageBegin( parser, mh );
 		switch ( mh.type )
 		{
-			case PublishableStateMessageHeader::Type::subscriptionRequest:
+			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 			{
 				GmqPathHelper::PathComponents pc;
 				bool pathOK = GmqPathHelper::parse( mh.path, pc );
@@ -354,9 +356,10 @@ public:
 
 					typename ConcentratorWrapper::SubscriberData sd;
 					sd.ref_id_at_subscriber = mh.ref_id_at_subscriber;
-					sd.ref_at_publisher = ++publisherAndItsConcentratorBase;
+					sd.ref_id_at_publisher = ++publisherAndItsConcentratorBase;
+					sd.senderSlotIdx = senderSlotIdx;
 					uint64_t sid = concentrator->addSubscriber( sd );
-					addConcentratorSubscriberPair( sd.ref_at_publisher, sid, concentrator->id );
+					addConcentratorSubscriberPair( sd.ref_id_at_publisher, sid, concentrator->id );
 
 					if ( findCr.second )
 					{
@@ -366,7 +369,7 @@ public:
 							hdrBack.type = PublishableStateMessageHeader::MsgType::subscriptionResponse;
 							hdrBack.priority = mh.priority;
 							hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
-							hdrBack.ref_id_at_publisher = addConcentratorSubscriberPair( sid, concentrator->id ); // TODO: must be an index for mapping to (concentrator, subscriber entry)
+							hdrBack.ref_id_at_publisher = sd.ref_id_at_publisher;
 
 							typename ComposerT::BufferType msgBack;
 							ComposerT composer( msgBack );
@@ -380,6 +383,7 @@ public:
 					}
 					else
 					{
+						// TODO: revise!
 //						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 						if ( targetIdx.idx != SlotIdx::invalid_idx )
@@ -402,7 +406,7 @@ public:
 				}
 				break;
 			}
-			case PublishableStateMessageHeader::Type::subscriptionResponse:
+			case PublishableStateMessageHeader::MsgType::subscriptionResponse:
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
 				concentrator->onSubscriptionResponseMessage( parser, mh.ref_id_at_publisher );
@@ -413,18 +417,18 @@ public:
 				ud.update_ref_id_at_subscriber = true;
 				for ( auto& subscriber : concentrator->subscribers )
 				{
-					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
+					ud.ref_id_at_subscriber = subscriber.ref_id_at_subscriber;
 					ud.ref_id_at_publisher = subscriber.ref_id_at_publisher;
 					typename ComposerT::BufferType msgForward;
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
-					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
+					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.senderSlotIdx );
 					postman->postMessage( std::move( msgForward ) );
 				}
 
 				break;
 			}
-			case PublishableStateMessageHeader::Type::stateUpdate: // so far we have the same processing
+			case PublishableStateMessageHeader::MsgType::stateUpdate: // so far we have the same processing
 			{
 				ConcentratorWrapper* concentrator = findStateConcentrator( mh.ref_id_at_publisher );
 				concentrator->onStateUpdateMessage( parser );
@@ -435,12 +439,12 @@ public:
 				ud.update_ref_id_at_subscriber = true;
 				for ( auto& subscriber : concentrator->subscribers )
 				{
-					ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
+					ud.ref_id_at_subscriber = subscriber.ref_id_at_subscriber;
 					ud.ref_id_at_publisher = subscriber.ref_id_at_publisher;
 					typename ComposerT::BufferType msgForward;
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
-					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.info.ref_id_at_subscriber );
+					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.senderSlotIdx );
 					postman->postMessage( std::move( msgForward ) );
 				}
 
