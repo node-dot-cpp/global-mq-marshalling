@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef GMQ_GT_QUEUE_H
-#define GMQ_GT_QUEUE_H
+#ifndef GMQ_QT_QUEUE_H
+#define GMQ_QT_QUEUE_H
 
 #include "global_mq_common.h"
 #include "marshalling.h"
@@ -34,44 +34,47 @@
 
 namespace globalmq::marshalling {
 
+template<class InterThreadMsgT>
 class QtGmqEvent : public QEvent
 {
-	InterThreadMsgPtr ptr;
+	uintptr_t uptr = 0;
 public:
-	QtGmqEvent( int eventType, InterThreadMsgPtr ptr_) : QEvent( (Type)eventType ), ptr(ptr_) {}
-	InterThreadMsgPtr getPtr() { return ptr; }
-	void setPtr(InterThreadMsgPtr ptr_) {
-		ptr = ptr_;
+	QtGmqEvent( int eventType, InterThreadMsgT&& msg) : QEvent( (Type)eventType ), uptr((uintptr_t)(msg.convertToPointer())) {}
+	InterThreadMsgT&& getMsg() {
+		InterThreadMsgT ret;
+		ret.restoreFromPointer( static_cast<InterThreadMsgT>( uptr ) );
+		return ret; 
 	}
 };
 
 
-class Widget;
+template<class InterThreadMsgT>
 class QtPostman : public InProcessMessagePostmanBase
 {
-	Widget* widget = nullptr;
+	QWidget* widget = nullptr;
 	int eventType; // typically QEvent::Type::User + XXX
 public:
-	QtPostman( Widget* widget_, int eventType_ ) : widget( widget_ ), eventType( eventType_ ) {}
+	QtPostman( QWidget* widget_, int eventType_ ) : widget( widget_ ), eventType( eventType_ ) {}
 	virtual ~QtPostman() {}
-	virtual void postMessage( InterThreadMsg&& msg ) override
+	virtual void postMessage( InterThreadMsgT&& msg ) override
 	{
 		// create a move-copy in heap, otherwise the msg will be destructed at the end of this call (and, potentially, before it will be received and processed)
-		QtGmqEvent* mEvent = nodecpp::stdalloc<QtGmqEvent>( 1 );
-		new(mEvent) QtGmqEvent( eventType, msg.convertToPointer() );
+		QtGmqEvent<InterThreadMsgT>* mEvent = nodecpp::stdalloc<QtGmqEvent<InterThreadMsgT>>( 1, eventType, std::move(msg) );
 		QApplication::postEvent( widget, mEvent );
 	}
 };
 
-class GMQQtTransport : public GMQTransportBase
+template<class PlatformSupportT>
+class GMQQtTransport : public GMQTransportBase<PlatformSupportT>
 {
-	QtPostman postman;
+	using BufferT = typename PlatformSupportT::BufferT;
+	QtPostman<BufferT> postman;
 
 public:
-	GMQQtTransport( GMQueue& gmq, GMQ_COLL string_literal name, HWND hwnd, uint32_t msgType ) : GMQTransportBase( gmq, name, &postman ), postman( hwnd, msgType ) {}
+	GMQQtTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq, name, &postman ), postman( widget, qtEventType ) {}
 	virtual ~GMQQtTransport() {}
 };
 
 } // namespace globalmq::marshalling
 
-#endif // GMQ_GT_QUEUE_H
+#endif // GMQ_QT_QUEUE_H
