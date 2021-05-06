@@ -410,20 +410,20 @@ namespace impl {
 } // namespace impl
 
 
-template<class PlatformSupportT>
+/*template<class PlatformSupportT>
 struct SubscriberAddress
 {
 	using NodeAddressT = typename PlatformSupportT::NodeAddressT;
 	NodeAddressT nodeAddr;
 	uint64_t subscriberAddrInNode;
-};
+};*/
 
 template<class PlatformSupportT>
 struct StateSubscriberData
 {
-	SubscriberAddress<PlatformSupportT> address;
-	uint64_t externalID; // for indexing purposes
-	StateSubscriberStatus status;
+//	SubscriberAddress<PlatformSupportT> address;
+	uint64_t IdInPool; // for indexing purposes
+	uint64_t ref_id_at_subscriber;
 };
 
 template<class ComposerT>
@@ -486,10 +486,10 @@ public:
 	}
 
 	// processing requests (by now they seem to be independent on state wrappers)
-	uint64_t onSubscriptionRequest( uint64_t externalID, SubscriberAddress<PlatformSupportT> address )
+	uint64_t onSubscriptionRequest( uint64_t IdInPool, /*SubscriberAddress<PlatformSupportT> address*/uint64_t ref_id_at_subscriber )
 	{
 		// TODO: who will check uniqueness?
-		subscribers.push_back( StateSubscriberData<PlatformSupportT>({address, externalID, StateSubscriberStatus::waitingForSubscriptionIni}) );
+		subscribers.push_back( StateSubscriberData<PlatformSupportT>({IdInPool, ref_id_at_subscriber}) );
 		return subscribers.size() - 1;
 	}
 	void generateStateSyncMessage( ComposerT& composer ) { assert( publisher != nullptr ); publisher->generateStateSyncMessage( composer ); }
@@ -505,7 +505,8 @@ protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
-	using NodeAddressT = typename PlatformSupportT::NodeAddressT;
+
+	GMQTransportBase<PlatformSupportT>* transport;
 
 public: // TODO: just a tmp approach to continue immediate dev
 	GMQ_COLL vector<StatePublisherData<PlatformSupportT>> publishers;
@@ -536,13 +537,15 @@ public:
 		assert( publisher->idx < publishers.size() );
 		for ( auto& subscriber : publishers[publisher->idx].subscribers )
 		{
-			res = ID2PublisherAndItsSubscriberMapping.erase( subscriber.externalID );
+			res = ID2PublisherAndItsSubscriberMapping.erase( subscriber.IdInPool );
 			assert( res == 1 );
 		}
 		publishers[publisher->idx].setUnused( publisher );
 	}
 
-	void onMessage( ParserT& parser, NodeAddressT nodeAddr )
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
+
+	void onMessage( ParserT& parser )
 	{
 		PublishableStateMessageHeader mh;
 		helperParsePublishableStateMessageBegin( parser, mh );
@@ -561,7 +564,7 @@ public:
 					throw std::exception(); // not found / misdirected
 
 				uint64_t id = ++publisherAndItsSubscriberBase;
-				size_t refIdAtPublisher = findres->second->onSubscriptionRequest( id, SubscriberAddress<PlatformSupportT>({nodeAddr, mh.ref_id_at_subscriber}) );
+				size_t refIdAtPublisher = findres->second->onSubscriptionRequest( id, mh.ref_id_at_subscriber );
 				auto ret = ID2PublisherAndItsSubscriberMapping.insert( std::make_pair( id, std::make_pair( findres->second->idx, refIdAtPublisher ) ) );
 				assert( ret.second );
 
@@ -577,7 +580,9 @@ public:
 				helperComposePublishableStateMessageBegin( composer, hdrBack );
 				findres->second->generateStateSyncMessage( composer );
 				helperComposePublishableStateMessageEnd( composer );
-				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgBack, nodeAddr );
+				assert( transport != nullptr );
+				transport->postMessage( std::move( msgBack ) );
+//				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgBack, nodeAddr );
 				break;
 			}
 			default:
@@ -609,15 +614,17 @@ public:
 			for ( auto& subscriber : publisher.subscribers )
 			{
 				PublishableStateMessageHeader::UpdatedData ud;
-				ud.ref_id_at_publisher = subscriber.externalID; // TODO!!! revise, this is insufficient!
+				ud.ref_id_at_publisher = subscriber.IdInPool;
 				ud.update_ref_id_at_publisher = true;
 				ud.update_ref_id_at_subscriber = true;
 //				ud.ref_id_at_subscriber = subscriber.info.ref_id_at_subscriber;
-				ud.ref_id_at_subscriber = subscriber.address.subscriberAddrInNode;
+				ud.ref_id_at_subscriber = subscriber.ref_id_at_subscriber;
 				typename ComposerT::BufferType msgForward;
 				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msgBase, msgForward, ud );
 
-				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgForward, subscriber.address.nodeAddr );
+//				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgForward, subscriber.address.nodeAddr );
+				assert( transport != nullptr );
+				transport->postMessage( std::move( msgForward ) );
 			}
 			BufferT newBuff; // just empty
 			publisher.startTick( std::move( newBuff ) );
@@ -650,6 +657,8 @@ protected:
 
 	GMQ_COLL vector<StateSubscriberT*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
+	GMQTransportBase<PlatformSupportT>* transport;
+
 public:
 	void add( StateSubscriberT* subscriber )
 	{
@@ -665,6 +674,8 @@ public:
 			}
 		assert( false ); // not found
 	}
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
+
 	void subscribe( StateSubscriberT* subscriber, GMQ_COLL string path )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
@@ -680,7 +691,9 @@ public:
 				mh.ref_id_at_subscriber = i;
 				helperComposePublishableStateMessageBegin( composer, mh );
 				helperComposePublishableStateMessageEnd( composer );
-				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
+//				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
+				assert( transport != nullptr );
+				transport->postMessage( std::move( buff ) );
 				return;
 			}
 		assert( false ); // not found
@@ -732,7 +745,6 @@ class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscr
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
 	using StatePublisherT = globalmq::marshalling::StatePublisherBase<BufferT>;
-	using NodeAddressT = typename PlatformSupportT::NodeAddressT;
 
 public:
 	template<class T>
@@ -759,7 +771,13 @@ public:
 		}
 	}
 
-	void onMessage( ParserT& parser, NodeAddressT nodeAddr )
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr )
+	{
+		StatePublisherPool<PlatformSupportT>::setTransport( tr );
+		StateSubscriberPool<PlatformSupportT>::setTransport( tr );
+	}
+
+	void onMessage( ParserT& parser )
 	{
 		ParserT parser1( parser );
 		PublishableStateMessageHeader mh;
@@ -771,7 +789,7 @@ public:
 				StateSubscriberPool<PlatformSupportT>::onMessage( parser );
 				break;
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
-				StatePublisherPool<PlatformSupportT>::onMessage( parser, nodeAddr );
+				StatePublisherPool<PlatformSupportT>::onMessage( parser );
 				break;
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
@@ -779,10 +797,10 @@ public:
 //		globalmq::marshalling::impl::parseStructEnd( parser );
 	}
 
-	void onMessage( BufferT& buffer, NodeAddressT nodeAddr )
+	void onMessage( BufferT& buffer )
 	{
 		ParserT parser( buffer );
-		onMessage( parser, nodeAddr );
+		onMessage( parser );
 	}
 
 	void postAllUpdates()
