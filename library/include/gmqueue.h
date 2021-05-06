@@ -818,6 +818,14 @@ public:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 	}
+	void add( GMQ_COLL string name, SlotIdx idx )
+	{
+		assert( false ); // TODO: implement
+	}
+	void remove( GMQ_COLL string name, SlotIdx idx )
+	{
+		assert( false ); // TODO: implement
+	}
 };
 
 template<class PlatformSupportT>

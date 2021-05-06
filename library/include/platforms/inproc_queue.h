@@ -210,7 +210,21 @@ struct ThreadQueueItem
 	static constexpr uint64_t invalidRecipientID = (uint64_t)(-1);
 	InterThreadMsgT msg;
 	uint64_t recipientID = invalidRecipientID;
-//	ThreadQueueItem( InterThreadMsgT&& msg
+	ThreadQueueItem() {}
+	ThreadQueueItem( InterThreadMsgT&& msg_, uint64_t recipientID_ ) : msg( std::move( msg_ ) ), recipientID( recipientID_ ) {}
+	ThreadQueueItem( const ThreadQueueItem& other ) = delete;
+	ThreadQueueItem& operator = ( const ThreadQueueItem& other ) = delete;
+	ThreadQueueItem( ThreadQueueItem&& other ) {
+		msg = std::move( other.msg );
+		recipientID = other.recipientID;
+		other.recipientID = invalidRecipientID;
+	}
+	ThreadQueueItem& operator = ( ThreadQueueItem&& other ) {
+		msg = std::move( other.msg );
+		recipientID = other.recipientID;
+		other.recipientID = invalidRecipientID;
+		return *this;
+	}
 };
 
 template<class InterThreadMsgT>
