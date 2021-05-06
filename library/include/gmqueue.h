@@ -33,7 +33,6 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include "publishable_impl.h"
 
 #ifndef GMQUEUE_CUSTOMIZED_Q_TYPES
 class GMQueueStatePublisherSubscriberTypeInfo
@@ -55,6 +54,353 @@ public:
 namespace globalmq::marshalling {
 
 using MessageBufferT = typename GMQueueStatePublisherSubscriberTypeInfo::BufferT;
+
+struct GmqPathHelper
+{
+	struct PathComponents
+	{
+		GMQ_COLL string authority;
+		bool furtherResolution = false;
+		bool hasPort = false;
+		uint16_t port = 0xFFFF;
+//		GMQ_COLL string localPart; // TODO: revise
+		GMQ_COLL string nodeName;
+		GMQ_COLL string statePublisherName;
+	};
+
+	static GMQ_COLL string compose( GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
+	{
+		// TODO: check components
+		GMQ_COLL string ret = "globalmq:";
+		if ( !authority.empty() )
+		{
+			ret += "//";
+			ret += authority;
+		}
+		assert( !nodeName.empty() );
+		assert( !statePublisherName.empty() );
+		ret += '/';
+		ret += localPart( nodeName, statePublisherName );
+		return ret;
+	}
+
+	static GMQ_COLL string compose( const PathComponents& components )
+	{
+		// TODO: check components
+		GMQ_COLL string ret = "globalmq:";
+		if ( !components.authority.empty() )
+		{
+			ret += "//";
+			ret += components.authority;
+		}
+		if ( components.furtherResolution )
+			ret += "!gmq";
+		if ( components.hasPort )
+		{
+			auto str = fmt::format( ":{}", components.port );
+			ret += str;
+		}
+		assert( !components.nodeName.empty() );
+		assert( !components.statePublisherName.empty() );
+		ret += '/';
+		ret += localPart( components.nodeName, components.statePublisherName );
+		return ret;
+	}
+
+	static GMQ_COLL string localPart( GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
+	{
+		return fmt::format( "{}?sp={}", nodeName, statePublisherName );
+	}
+
+	static GMQ_COLL string localPart( const PathComponents& components )
+	{
+		return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherName );
+	}
+
+	static bool parse( GMQ_COLL string path, PathComponents& components )
+	{
+		size_t pos = path.find( "globalmq:" );
+		if ( pos != 0 )
+			return false;
+		pos += sizeof( "globalmq:" ) - 1;
+		if ( path.size() <= pos )
+			return false;
+		if ( path[pos++] != '/' )
+			return false;
+		if ( path[pos++] == '/' ) // double-slash, authority component is present
+		{
+			size_t pos1 = path.find( "/", pos );
+			if ( pos1 == GMQ_COLL string::npos )
+				return false;
+			components.authority = path.substr( pos, pos1 - pos );
+			pos = pos1 + 1;
+			pos1 = components.authority.find_last_of( ':' );
+			if ( pos1 != GMQ_COLL string::npos )
+			{
+				char* end = nullptr;
+				size_t port = strtol( components.authority.c_str() + pos1 + 1, &end, 10 );
+				if ( components.authority.c_str() + pos1 + 1 == end )
+					return false;
+				if ( end - components.authority.c_str() < components.authority.size() ) // there are remaining chars
+					return false;
+				if ( port >= UINT16_MAX )
+					return false;
+				components.hasPort = true;
+				components.port = (uint16_t)port;
+				components.authority.erase( pos1 );
+			}
+			else
+			{
+				components.hasPort = false;
+				components.port = 0xFFFF;
+			}
+
+			size_t pos2 = components.authority.find_last_of( '!' );
+			if ( pos2 != GMQ_COLL string::npos )
+			{
+				if ( components.authority.size() - pos2 < sizeof( "gmq" ) - 1 )
+					return false;
+				if ( components.authority.substr( pos2 + 1 ) != "gmq" )
+					return false;
+				components.furtherResolution = true;
+				components.authority.erase( pos2 );
+			}
+			else
+			{
+				components.furtherResolution = false;
+			}
+		}
+		else
+		{
+			components.authority = "";
+			components.hasPort = false;
+			components.furtherResolution = false;
+			components.port = 0xFFFF;
+		}
+
+		// node name
+		size_t pos1 = path.find( '?', pos );
+		if ( pos1 == GMQ_COLL string::npos )
+			return false;
+		components.nodeName = path.substr( pos, pos1 - pos );
+		pos = pos1;
+
+		// statePublisherName
+		pos = path.find( "sp=", pos );
+		if ( pos == GMQ_COLL string::npos )
+			return false;
+		pos += sizeof( "sp=" ) - 1;
+		pos1 = path.find( '&', pos );
+		if ( pos1 == GMQ_COLL string::npos )
+			components.statePublisherName = path.substr( pos );
+		else
+			components.statePublisherName = path.substr( pos, pos1 - pos );
+		return true;
+	}
+};
+
+struct PublishableStateMessageHeader
+{
+	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
+	MsgType type;
+	uint64_t state_type_id; // Note: may be removed in future versions
+	uint64_t priority;
+	GMQ_COLL string path;  // subscriptionRequest only
+	uint64_t ref_id_at_subscriber; // updatable
+	uint64_t ref_id_at_publisher; // updatable
+
+	struct UpdatedData
+	{
+		uint64_t ref_id_at_subscriber;
+		uint64_t ref_id_at_publisher;
+		bool update_ref_id_at_subscriber = false;
+		bool update_ref_id_at_publisher = false;
+	};
+
+	template<class ParserT>
+	void parse( ParserT& parser )
+	{
+		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "hdr" );
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id, "state_type_id" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &priority, "priority" );
+		switch ( msgType )
+		{
+			case MsgType::subscriptionRequest:
+			{
+				type = MsgType::subscriptionRequest;
+				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &path, "path" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
+				break;
+			}
+			case MsgType::subscriptionResponse:
+			{
+				type = MsgType::subscriptionResponse;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
+				break;
+			}
+			case MsgType::stateUpdate:
+			{
+				type = MsgType::stateUpdate;
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+	}
+
+	template<class ParserT, class ComposerT>
+	static void parseAndUpdate( ParserT& msgStartParser, ParserT& parser, typename ComposerT::BufferType& buff, const UpdatedData& udata )
+	{
+		ComposerT composer( buff );
+//		ParserT parser2 = parser;
+		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "hdr" );
+		size_t msgType;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
+		if ( msgType == MsgType::subscriptionRequest )
+			throw std::exception(); // inapplicable
+		uint64_t dummy;
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
+		size_t offset = parser.getCurrentOffset();
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
+		switch ( msgType )
+		{
+			case MsgType::subscriptionRequest:
+			{
+				assert( !udata.update_ref_id_at_publisher );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
+				if ( udata.update_ref_id_at_subscriber )
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", false );
+				else
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", false );
+				break;
+			}
+			case MsgType::subscriptionResponse:
+			case MsgType::stateUpdate:
+			{
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
+				if ( udata.update_ref_id_at_subscriber )
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
+				else
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_publisher" );
+				if ( udata.update_ref_id_at_publisher )
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", false );
+				else
+					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_publisher", false );
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( parser.getIterator(), buff );
+	}
+
+	template<class ComposerT>
+	void compose(ComposerT& composer, bool addSeparator) const
+	{
+		globalmq::marshalling::impl::composePublishableStructBegin( composer, "hdr" );
+		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(type), "msg_type", true );
+		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, state_type_id, "state_type_id", true );
+		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, priority, "priority", true );
+		switch ( type )
+		{
+			case MsgType::subscriptionRequest:
+			{
+				globalmq::marshalling::impl::publishableStructComposeString( composer, path, "path", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", false );
+				break;
+			}
+			case MsgType::subscriptionResponse:
+			case MsgType::stateUpdate:
+			{
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", false );
+				break;
+			}
+		}
+		globalmq::marshalling::impl::composePublishableStructEnd( composer, addSeparator );
+	}
+};
+
+template<class ComposerT>
+void helperComposePublishableStateMessageBegin(ComposerT& composer, const PublishableStateMessageHeader& header)
+{
+	globalmq::marshalling::impl::composeStructBegin( composer );
+	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate )
+	{
+		header.compose( composer, true );
+		globalmq::marshalling::impl::composeKey( composer, "data" );
+		// next call would be generateXXXMessage()
+	}
+	else
+		header.compose( composer, false );
+}
+
+template<class ComposerT>
+void helperComposePublishableStateMessageEnd(ComposerT& composer)
+{
+	globalmq::marshalling::impl::composeStructEnd( composer );
+}
+
+template<class ParserT>
+void helperParsePublishableStateMessageBegin( ParserT& parser, PublishableStateMessageHeader& header ) // leaves parser pos at the beginning of message data part (if any)
+{
+	globalmq::marshalling::impl::parseStructBegin( parser );
+	header.parse( parser );
+	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate )
+		globalmq::marshalling::impl::parseKey( parser, "data" );
+}
+
+template<class ParserT>
+void helperParsePublishableStateMessageEnd(ParserT& parser)
+{
+	globalmq::marshalling::impl::parseStructEnd( parser );
+}
+
+template<class ParserT, class ComposerT>
+void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& buffFrom, typename ComposerT::BufferType& buffTo, const PublishableStateMessageHeader::UpdatedData& udata )
+{
+	ParserT parser( buffFrom );
+	ParserT parserCurrent( buffFrom );
+	PublishableStateMessageHeader header;
+	globalmq::marshalling::impl::parseStructBegin( parserCurrent );
+	header.parseAndUpdate<ParserT, ComposerT>( parser, parserCurrent, buffTo, udata );
+}
+
+
+
+
+template<class InputBufferT, class ComposerT>
+class StateConcentratorBase
+{
+	using OutputBufferT = typename ComposerT::BufferType;
+
+public:
+	virtual ~StateConcentratorBase() {}
+	// as subscriber
+	virtual void applyGmqMessageWithUpdates( GmqParser<InputBufferT>& parser ) = 0;
+	virtual void applyJsonMessageWithUpdates( JsonParser<InputBufferT>& parser ) = 0;
+	virtual void applyGmqStateSyncMessage( GmqParser<InputBufferT>& parser ) = 0;
+	virtual void applyJsonStateSyncMessage( JsonParser<InputBufferT>& parser ) = 0;
+	// as publisher
+	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
+
+	virtual const char* name() = 0;
+};
+
+template<class InputBufferT, class ComposerT>
+class StateConcentratorFactoryBase
+{
+public:
+	virtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID ) = 0;
+};
 
 class InProcessMessagePostmanBase
 {
