@@ -29,7 +29,7 @@ void deliverMessages()
 		}
 
 		ParserT parser( likeQueues[publisherPoolAddress][i] );
-		mp.onMessage( parser, subscriberPoolAddress );
+		mp.onMessage( parser/*, subscriberPoolAddress*/ );
 	}
 	likeQueues[publisherPoolAddress].clear();
 
@@ -43,7 +43,7 @@ void deliverMessages()
 		}
 
 		ParserT parser( likeQueues[subscriberPoolAddress][i] );
-		mp.onMessage( parser, subscriberPoolAddress );
+		mp.onMessage( parser/*, subscriberPoolAddress*/ );
 	}
 	likeQueues[subscriberPoolAddress].clear();
 }
@@ -371,11 +371,20 @@ struct PublishableShortSample {
 
 void quickTestForGmqParts()
 {
-	using BufferT = globalmq::marshalling::Buffer;
+	using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
+	using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
+	using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
+//	using BufferT = globalmq::marshalling::Buffer;
 //	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
 //	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
-	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
+/*	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
 	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
+
+	using BufferT = StatePublisherSubscriberPoolInfo::BufferT;
+//	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+//	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
+	using ComposerT = StatePublisherSubscriberPoolInfo::ParserT;
+	using ParserT = StatePublisherSubscriberPoolInfo::ComposerT;*/
 
 	mtest::StateConcentratorFactory<BufferT, ComposerT> cf;
 	auto p1 = cf.createConcentrator( 1 );

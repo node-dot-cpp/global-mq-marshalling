@@ -423,16 +423,17 @@ struct SlotIdx
 	static constexpr size_t invalid_reincarnation = (size_t)(-1);
 	size_t idx = invalid_idx;
 	uint64_t reincarnation = invalid_reincarnation;
+	bool isInitialized() { return idx != invalid_idx && reincarnation != invalid_reincarnation; }
+	bool operator == ( const SlotIdx& other ) { return idx == other.idx && reincarnation == other.reincarnation; }
+	void invalidate() { idx = invalid_idx; reincarnation = invalid_reincarnation; }
 };
 
 class AddressableLocations // one per process; provides process-unique Slot with Postman and returns its SlotIdx
 {
-	std::mutex mx;
 	GMQ_COLL vector<AddressableLocation> slots; // mx-protected!
 public:
 	SlotIdx add( InProcessMessagePostmanBase* postman )
 	{ 
-		std::unique_lock<std::mutex> lock(mx);
 		// essentially add to slots and return its idx
 		for ( size_t i = 0; i<slots.size(); ++i )
 			if ( slots[i].postman == nullptr )
@@ -446,7 +447,6 @@ public:
 	}
 	void remove( SlotIdx idx )
 	{ 
-		std::unique_lock<std::mutex> lock(mx);
 		// find by idx.idx, check reincarnaion, set postman to null
 		assert ( idx.idx < slots.size() ); 
 		assert ( idx.reincarnation == slots[idx.idx].reincarnation ); 
@@ -454,7 +454,6 @@ public:
 	}
 	InProcessMessagePostmanBase* getPostman( SlotIdx idx )
 	{
-		std::unique_lock<std::mutex> lock(mx);
 		// access, verify, return
 		assert ( idx.idx < slots.size() ); 
 		assert ( idx.reincarnation == slots[idx.idx].reincarnation ); 
@@ -462,14 +461,14 @@ public:
 	}
 };
 
-extern AddressableLocations& getAddressableLocations();
-
 template<class PlatformSupportT>
 class GMQueue
 {
 	using InputBufferT = typename PlatformSupportT::BufferT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ParserT = typename PlatformSupportT::ParserT;
+
+	AddressableLocations addressableLocations;
 
 	GMQ_COLL string myAuthority;
 	bool isMyAuthority( GMQ_COLL string authority )
@@ -633,6 +632,8 @@ class GMQueue
 		assert( !name.empty() );
 		namedRecipients.erase( name );
 	}
+
+	public:
 	SlotIdx locationNameToSlotIdx( GMQ_COLL string name ) {
 		assert( !name.empty() );
 		auto f = namedRecipients.find( name );
@@ -642,6 +643,7 @@ class GMQueue
 			return SlotIdx();
 	}
 
+	private:
 	uint64_t addSender( SlotIdx idx ) {
 		uint64_t id = ++senderIDBase;
 		auto ins = senders.insert( std::make_pair( id, idx ) );
@@ -655,6 +657,7 @@ class GMQueue
 		assert( f->second.reincarnation == idx.reincarnation );
 		senders.erase( id );
 	}
+	public:
 	SlotIdx senderIDToSlotIdx( uint64_t id ) {
 		auto f = senders.find( id );
 		if ( f != senders.end() )
@@ -740,7 +743,7 @@ public:
 							concentrator->generateStateSyncMessage( composer );
 							helperComposePublishableStateMessageEnd( composer );
 
-							InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( senderSlotIdx );
+							InProcessMessagePostmanBase* postman = addressableLocations.getPostman( senderSlotIdx );
 							postman->postMessage( std::move( msgBack ) );
 						}
 					}
@@ -759,7 +762,7 @@ public:
 						typename ComposerT::BufferType msgForward;
 						helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
-						InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( targetIdx );
+						InProcessMessagePostmanBase* postman = addressableLocations.getPostman( targetIdx );
 						postman->postMessage( std::move( msgForward ) );
 					}
 				}
@@ -785,7 +788,7 @@ public:
 					typename ComposerT::BufferType msgForward;
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
-					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.senderSlotIdx );
+					InProcessMessagePostmanBase* postman = addressableLocations.getPostman( subscriber.senderSlotIdx );
 					postman->postMessage( std::move( msgForward ) );
 				}
 
@@ -809,7 +812,7 @@ public:
 					typename ComposerT::BufferType msgForward;
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
-					InProcessMessagePostmanBase* postman = getAddressableLocations().getPostman( subscriber.senderSlotIdx );
+					InProcessMessagePostmanBase* postman = addressableLocations.getPostman( subscriber.senderSlotIdx );
 					postman->postMessage( std::move( msgForward ) );
 				}
 
@@ -819,20 +822,34 @@ public:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 	}
-	uint64_t add( GMQ_COLL string name, SlotIdx idx )
+	uint64_t add( GMQ_COLL string name, InProcessMessagePostmanBase* postman, SlotIdx& idx )
 	{
 		assert( !name.empty() );
+		idx = addressableLocations.add( postman );
 		addNamedLocation( name, idx );
 		return addSender( idx );
 	}
-	uint64_t add( SlotIdx idx )
+	uint64_t add( InProcessMessagePostmanBase* postman, SlotIdx& idx )
 	{
+		idx = addressableLocations.add( postman );
 		return addSender( idx );
 	}
 	void remove( GMQ_COLL string name, SlotIdx idx )
 	{
+		if ( !name.empty() )
+			addressableLocations.remove( idx );
 		assert( false ); // TODO: implement
 	}
+
+	template<class PostmanT, class ... Args>
+	static InProcessMessagePostmanBase* allocPostman(Args&& ... args)
+	{
+		static_assert( alignof( PostmanT ) <= sizeof(::std::max_align_t) );
+		PostmanT* ret = static_cast<PostmanT *>( ::malloc( sizeof(PostmanT) ) );
+		new (ret) PostmanT( std::forward<Args>( args )...);
+		return ret;
+	}
+
 };
 
 template<class PlatformSupportT>
@@ -840,27 +857,54 @@ class GMQTransportBase
 {
 protected:
 	GMQueue<PlatformSupportT>& gmq;
-	SlotIdx idx;
 	GMQ_COLL string name;
+	SlotIdx idx;
 	uint64_t id;
+	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, SlotIdx idx_, uint64_t id_ ) : gmq( queue ), name( name_ ), idx( idx_ ), id ( id_ ) {}
 
-public:
+protected:
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
 		assert( !name_.empty() );
-		idx = getAddressableLocations().add( postman );
-		id = gmq.add( name, idx );
+		id = gmq.add( name, postman, idx );
 	};
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, InProcessMessagePostmanBase* postman ) : gmq( queue ) {
-		idx = getAddressableLocations().add( postman );
-		id = gmq.add( idx );
+		id = gmq.add( postman, idx );
 	};
 	virtual ~GMQTransportBase() {
-		getAddressableLocations().remove( idx );
-		gmq.remove( name, idx );
+		if ( idx.isInitialized() )
+			gmq.remove( name, idx );
 	}
 
+public:
 	void postMessage( MessageBufferT&& msg ){
 		gmq.postMessage( std::move( msg ), id, idx );
+	}
+
+public:
+	struct InProcTransferrable
+	{
+		GMQ_COLL string name;
+		uint64_t id;
+	};
+
+	InProcTransferrable makeTransferrable()
+	{
+		InProcTransferrable ret;
+		ret.name = name;
+		ret.id = id;
+		idx.invalidate();
+		return ret;
+	}
+
+	static
+	GMQTransportBase restore( const InProcTransferrable& t, GMQueue<PlatformSupportT>& queue ) {
+		assert( !t.name.empty() );
+		SlotIdx idx1 = queue.locationNameToSlotIdx( t.name );
+		assert( idx.isInitialized() );
+		SlotIdx idx2 = queue.senderIDToSlotIdx( t.id );
+		assert( idx2.isInitialized() );
+		assert( idx1 == idx2 );
+		return GMQTransportBase( queue, t.name, idx1, t.id );
 	}
 };
 

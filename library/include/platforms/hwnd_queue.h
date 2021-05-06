@@ -51,11 +51,11 @@ public:
 
 class GMQHwndTransport : public GMQTransportBase
 {
-	HwndPostman postman;
+//	HwndPostman postman;
 
 public:
-	GMQHwndTransport( GMQueue& gmq, GMQ_COLL string_literal name, HWND hwnd, uint32_t msgType ) : GMQTransportBase( gmq, name, &postman ), postman( hwnd, msgType ) {}
-	GMQHwndTransport( GMQueue<PlatformSupportT>& gmq, HWND hwnd, int qtEventType ) : GMQTransportBase( gmq, &postman ), postman( hwnd, qtEventType ) {}
+	GMQHwndTransport( GMQueue& gmq, GMQ_COLL string_literal name, HWND hwnd, uint32_t msgType ) : GMQTransportBase( gmq, name, gmq.template allocPostman<HwndPostman>( hwnd, msgType ) )/*, postman( hwnd, msgType )*/ {}
+	GMQHwndTransport( GMQueue<PlatformSupportT>& gmq, HWND hwnd, int qtEventType ) : GMQTransportBase( gmq, gmq.template allocPostman<HwndPostman>( hwnd, msgType ) ) )/*, postman( hwnd, qtEventType )*/ {}
 	virtual ~GMQHwndTransport() {}
 };
 
