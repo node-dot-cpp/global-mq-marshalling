@@ -72,6 +72,7 @@ class GMQQtTransport : public GMQTransportBase<PlatformSupportT>
 
 public:
 	GMQQtTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq, name, &postman ), postman( widget, qtEventType ) {}
+	GMQQtTransport( GMQueue<PlatformSupportT>& gmq, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq, &postman ), postman( widget, qtEventType ) {}
 	virtual ~GMQQtTransport() {}
 };
 

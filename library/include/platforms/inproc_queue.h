@@ -254,6 +254,7 @@ class GMQThreadQueueTransport : public GMQTransportBase<PlatformSupportT>
 
 public:
 	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, uint64_t recipientID ) : GMQTransportBase( gmq, name, &postman ), postman( queue, recipientID ) {}
+	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, int qtEventType ) : GMQTransportBase( gmq, &postman ), postman( queue, qtEventType ) {}
 	virtual ~GMQThreadQueueTransport() {}
 };
 

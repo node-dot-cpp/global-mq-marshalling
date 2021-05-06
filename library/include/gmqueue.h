@@ -818,9 +818,15 @@ public:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 	}
-	void add( GMQ_COLL string name, SlotIdx idx )
+	uint64_t add( GMQ_COLL string name, SlotIdx idx )
 	{
-		assert( false ); // TODO: implement
+		assert( !name.empty() );
+		addNamedLocation( name, idx );
+		return addSender( idx );
+	}
+	uint64_t add( SlotIdx idx )
+	{
+		return addSender( idx );
 	}
 	void remove( GMQ_COLL string name, SlotIdx idx )
 	{
@@ -841,11 +847,11 @@ public:
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
 		assert( !name_.empty() );
 		idx = getAddressableLocations().add( postman );
-		gmq.add( name, idx );
+		id = gmq.add( name, idx );
 	};
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, InProcessMessagePostmanBase* postman ) : gmq( queue ) {
 		idx = getAddressableLocations().add( postman );
-		gmq.add( name, idx );
+		id = gmq.add( idx );
 	};
 	virtual ~GMQTransportBase() {
 		getAddressableLocations().remove( idx );
