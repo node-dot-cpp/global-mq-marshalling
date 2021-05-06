@@ -127,8 +127,9 @@ struct GmqPathHelper
 			return false;
 		if ( path[pos++] != '/' )
 			return false;
-		if ( path[pos++] == '/' ) // double-slash, authority component is present
+		if ( path[pos] == '/' ) // double-slash, authority component is present
 		{
+			++pos;
 			size_t pos1 = path.find( "/", pos );
 			if ( pos1 == GMQ_COLL string::npos )
 				return false;
@@ -262,9 +263,8 @@ struct PublishableStateMessageHeader
 		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "hdr" );
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
-		if ( msgType == MsgType::subscriptionRequest )
-			throw std::exception(); // inapplicable
 		uint64_t dummy;
+		GMQ_COLL string dummyStr;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
 		size_t offset = parser.getCurrentOffset();
@@ -273,6 +273,7 @@ struct PublishableStateMessageHeader
 		{
 			case MsgType::subscriptionRequest:
 			{
+				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &dummyStr, "path" );
 				assert( !udata.update_ref_id_at_publisher );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
@@ -748,7 +749,7 @@ public:
 						// TODO: revise!
 //						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
-						if ( targetIdx.idx != SlotIdx::invalid_idx )
+						if ( targetIdx.idx == SlotIdx::invalid_idx )
 							throw std::exception(); // TODO: post permanent error message to sender instead or in addition
 
 						globalmq::marshalling::PublishableStateMessageHeader::UpdatedData ud;
