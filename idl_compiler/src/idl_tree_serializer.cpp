@@ -617,9 +617,11 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	}
 	fprintf( header, "\n//===============================================================================\n\n" );
 
-	generateStateConcentratorFactory( header, s );
-
-	fprintf( header, "\n//===============================================================================\n\n" );
+	if ( !s.publishables.empty() )
+	{
+		generateStateConcentratorFactory( header, s );
+		fprintf( header, "\n//===============================================================================\n\n" );
+	}
 
 	for ( auto& it : structsOrderedByDependency )
 	{
