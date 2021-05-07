@@ -250,7 +250,6 @@ template<class PlatformSupportT>
 class GMQThreadQueueTransport : public GMQTransportBase<PlatformSupportT>
 {
 	using BufferT = typename PlatformSupportT::BufferT;
-//	ThreadQueuePostman<BufferT> postman;
 
 public:
 	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, uint64_t recipientID ) : GMQTransportBase( gmq, name, gmq.template allocPostman<ThreadQueuePostman<BufferT>>( queue, recipientID ) )/*, postman( queue, recipientID )*/ {}

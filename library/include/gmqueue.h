@@ -854,6 +854,24 @@ public:
 
 };
 
+struct InProcTransferrable
+{
+	GMQ_COLL string name;
+	uint64_t id;
+	void serialize( uint8_t* buff, size_t maxSz ) // NOTE: temporary solution
+	{
+		assert( name.size() + 1 + sizeof( id ) <= maxSz );
+		memcpy( buff, &id, sizeof( id ) );
+		memcpy( buff + sizeof( id ), name.c_str(), name.size() );
+		buff[ sizeof( id ) + name.size() ] = 0;
+	}
+	void deserilaize( uint8_t* buff ) // NOTE: temporary solution
+	{
+		memcpy( &id, buff, sizeof( id ) );
+		name = (char*)(buff + sizeof( id ) );
+	}
+};
+
 template<class PlatformSupportT>
 class GMQTransportBase
 {
@@ -864,6 +882,12 @@ protected:
 	uint64_t id;
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, SlotIdx idx_, uint64_t id_ ) : gmq( queue ), name( name_ ), idx( idx_ ), id ( id_ ) {}
 
+public:
+	GMQTransportBase( GMQueue<PlatformSupportT>& queue ) : gmq( queue ) {}
+	virtual ~GMQTransportBase() {
+		if ( idx.isInitialized() )
+			gmq.remove( name, idx );
+	}
 protected:
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
 		assert( !name_.empty() );
@@ -872,23 +896,14 @@ protected:
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, InProcessMessagePostmanBase* postman ) : gmq( queue ) {
 		id = gmq.add( postman, idx );
 	};
-	virtual ~GMQTransportBase() {
-		if ( idx.isInitialized() )
-			gmq.remove( name, idx );
-	}
 
 public:
 	void postMessage( MessageBufferT&& msg ){
+		assert( idx.isInitialized() );
 		gmq.postMessage( std::move( msg ), id, idx );
 	}
 
 public:
-	struct InProcTransferrable
-	{
-		GMQ_COLL string name;
-		uint64_t id;
-	};
-
 	InProcTransferrable makeTransferrable()
 	{
 		InProcTransferrable ret;
@@ -898,15 +913,15 @@ public:
 		return ret;
 	}
 
-	static
-	GMQTransportBase restore( const InProcTransferrable& t, GMQueue<PlatformSupportT>& queue ) {
+	void restore( const InProcTransferrable& t, GMQueue<PlatformSupportT>& queue_ ) {
+		assert( &gmq == &queue_ );
+		assert( !idx.isInitialized() );
 		assert( !t.name.empty() );
-		SlotIdx idx1 = queue.locationNameToSlotIdx( t.name );
-		assert( idx.isInitialized() );
-		SlotIdx idx2 = queue.senderIDToSlotIdx( t.id );
+		SlotIdx idx1 = gmq.locationNameToSlotIdx( t.name );
+		assert( idx1.isInitialized() );
+		SlotIdx idx2 = gmq.senderIDToSlotIdx( t.id );
 		assert( idx2.isInitialized() );
 		assert( idx1 == idx2 );
-		return GMQTransportBase( queue, t.name, idx1, t.id );
 	}
 };
 
