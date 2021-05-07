@@ -267,14 +267,14 @@ struct PublishableStateMessageHeader
 		GMQ_COLL string dummyStr;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
-		size_t offset = parser.getCurrentOffset();
-		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
 			{
 				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &dummyStr, "path" );
 				assert( !udata.update_ref_id_at_publisher );
+				size_t offset = parser.getCurrentOffset();
+				::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", false );
@@ -285,6 +285,8 @@ struct PublishableStateMessageHeader
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
 			{
+				size_t offset = parser.getCurrentOffset();
+				::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );

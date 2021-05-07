@@ -68,11 +68,10 @@ template<class PlatformSupportT>
 class GMQQtTransport : public GMQTransportBase<PlatformSupportT>
 {
 	using BufferT = typename PlatformSupportT::BufferT;
-	QtPostman<BufferT> postman;
 
 public:
-	GMQQtTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq, name, gmq.template allocPostman<HwndPostman>( widget, qtEventType ) )/*, postman( widget, qtEventType )*/ {}
-	GMQQtTransport( GMQueue<PlatformSupportT>& gmq, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq, gmq.template allocPostman<HwndPostman>( widget, qtEventType ) ) )/*, postman( widget, qtEventType )*/ {}
+	GMQQtTransport( GMQueue<PlatformSupportT>& gmq_, GMQ_COLL string name, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq_, name, GMQueue<PlatformSupportT>::allocPostman<QtPostman<BufferT>, QWidget*, int>( widget, qtEventType ) )/*, postman( widget, qtEventType )*/ {}
+	GMQQtTransport( GMQueue<PlatformSupportT>& gmq_, QWidget* widget, int qtEventType ) : GMQTransportBase( gmq_, GMQueue<PlatformSupportT>::allocPostman<QtPostman<BufferT>, QWidget*, int>( std::move(widget), std::move(qtEventType) ) )/*, postman( widget, qtEventType )*/ {}
 	virtual ~GMQQtTransport() {}
 };
 
