@@ -598,7 +598,7 @@ class GMQueue
 			auto concentrator = stateConcentratorFactory->createConcentrator( stateTypeID );
 			assert( concentrator != nullptr );
 			ConcentratorWrapper cwrapper( concentrator );
-			auto ins = addressesToStateConcentrators.insert( std::make_pair( path, std::move( concentrator ) ) );
+			auto ins = addressesToStateConcentrators.insert( std::make_pair( path, std::move( cwrapper ) ) );
 			assert( ins.second );
 			ConcentratorWrapper* c = &(ins.first->second);
 			uint64_t concentratorID = ++concentratorIDBase;
@@ -917,11 +917,13 @@ public:
 		assert( &gmq == &queue_ );
 		assert( !idx.isInitialized() );
 		assert( !t.name.empty() );
-		SlotIdx idx1 = gmq.locationNameToSlotIdx( t.name );
-		assert( idx1.isInitialized() );
+		idx = gmq.locationNameToSlotIdx( t.name );
+		assert( idx.isInitialized() );
 		SlotIdx idx2 = gmq.senderIDToSlotIdx( t.id );
 		assert( idx2.isInitialized() );
-		assert( idx1 == idx2 );
+		assert( idx == idx2 );
+		name = t.name;
+		id = t.id;
 	}
 };
 
