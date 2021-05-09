@@ -30,7 +30,7 @@
 
 #include "../global_mq_common.h"
 #include "../gmqueue.h"
-//#include "marshalling.h"
+#include <Windows.h>
 
 
 namespace globalmq::marshalling {
@@ -42,20 +42,19 @@ class HwndPostman : public InProcessMessagePostmanBase
 public:
 	HwndPostman( HWND hWnd_, uint32_t msgType_ ) : hWnd( hWnd_ ), msgType( msgType_ ) {}
 	virtual ~HwndPostman() {}
-	virtual void postMessage( InterThreadMsg&& msg ) override
+	virtual void postMessage( MessageBufferT&& msg ) override
 	{
 		// create a move-copy in heap, otherwise the msg will be destructed at the end of this call (and, potentially, before it will be received and processed)
 		PostMessage(hWnd, msgType, WPARAM(msg.convertToPointer()), 0 );
 	}
 };
 
-class GMQHwndTransport : public GMQTransportBase
+template<class PlatformSupportT>
+class GMQHwndTransport : public GMQTransportBase<PlatformSupportT>
 {
-//	HwndPostman postman;
-
 public:
-	GMQHwndTransport( GMQueue& gmq, GMQ_COLL string_literal name, HWND hwnd, uint32_t msgType ) : GMQTransportBase( gmq, name, gmq.template allocPostman<HwndPostman>( hwnd, msgType ) )/*, postman( hwnd, msgType )*/ {}
-	GMQHwndTransport( GMQueue<PlatformSupportT>& gmq, HWND hwnd, int qtEventType ) : GMQTransportBase( gmq, gmq.template allocPostman<HwndPostman>( hwnd, msgType ) ) )/*, postman( hwnd, qtEventType )*/ {}
+	GMQHwndTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, HWND hwnd, uint32_t msgType ) : GMQTransportBase<PlatformSupportT>( gmq, name, gmq.template allocPostman<HwndPostman>( hwnd, msgType ) ) {}
+	GMQHwndTransport( GMQueue<PlatformSupportT>& gmq, HWND hwnd, uint32_t msgType ) : GMQTransportBase<PlatformSupportT>( gmq, gmq.template allocPostman<HwndPostman>( hwnd, msgType ) ) {}
 	virtual ~GMQHwndTransport() {}
 };
 
