@@ -839,8 +839,9 @@ public:
 	void remove( GMQ_COLL string name, SlotIdx idx )
 	{
 		if ( !name.empty() )
-			addressableLocations.remove( idx );
-		assert( false ); // TODO: implement
+			removeNamedLocation( name );
+		addressableLocations.remove( idx );
+		// TODO: revise and finalize implementation
 	}
 
 	template<class PostmanT, class ... Args>
