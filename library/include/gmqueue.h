@@ -917,14 +917,22 @@ public:
 	void restore( const InProcTransferrable& t, GMQueue<PlatformSupportT>& queue_ ) {
 		assert( &gmq == &queue_ );
 		assert( !idx.isInitialized() );
-		assert( !t.name.empty() );
-		idx = gmq.locationNameToSlotIdx( t.name );
-		assert( idx.isInitialized() );
-		SlotIdx idx2 = gmq.senderIDToSlotIdx( t.id );
-		assert( idx2.isInitialized() );
-		assert( idx == idx2 );
-		name = t.name;
-		id = t.id;
+		if ( t.name.empty() )
+		{
+			idx = gmq.senderIDToSlotIdx( t.id );
+			assert( idx.isInitialized() );
+			id = t.id;
+		}
+		else
+		{
+			idx = gmq.locationNameToSlotIdx( t.name );
+			assert( idx.isInitialized() );
+			SlotIdx idx2 = gmq.senderIDToSlotIdx( t.id );
+			assert( idx2.isInitialized() );
+			assert( idx == idx2 );
+			name = t.name;
+			id = t.id;
+		}
 	}
 };
 
