@@ -39,10 +39,12 @@ class QtGmqEvent : public QEvent
 {
 	uintptr_t uptr = 0;
 public:
-	QtGmqEvent( int eventType, InterThreadMsgT&& msg) : QEvent( (Type)eventType ), uptr((uintptr_t)(msg.convertToPointer())) {}
-	InterThreadMsgT&& getMsg() {
+	QtGmqEvent( int eventType, InterThreadMsgT&& msg) : QEvent( (Type)eventType ) {
+		uptr = (uintptr_t)(msg.convertToPointer());
+	}
+	InterThreadMsgT getMsg() {
 		InterThreadMsgT ret;
-		ret.restoreFromPointer( static_cast<InterThreadMsgT>( uptr ) );
+		ret.restoreFromPointer( reinterpret_cast<InterThreadMsgT*>( uptr ) );
 		return ret; 
 	}
 };
