@@ -481,8 +481,7 @@ class GMQueue
 
 	class ConcentratorWrapper
 	{
-		template<class PlatformSupportT>
-		friend class GMQueue;
+		friend class GMQueue<PlatformSupportT>;
 
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
 		bool subscriptionResponseReceived = false;
@@ -580,7 +579,7 @@ class GMQueue
 	std::pair<uint64_t, uint64_t> findConcentratorSubscriberPair( uint64_t ID ) {
 		auto f = ID2ConcentratorSubscriberPairMapping.find( ID );
 		if ( f != ID2ConcentratorSubscriberPairMapping.end() )
-			return *(f->second);
+			return f->second;
 		else
 			throw std::exception();
 	}

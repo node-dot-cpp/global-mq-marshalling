@@ -2300,8 +2300,8 @@ public:
 		::globalmq::marshalling::impl::publishableComposeLeafeString( composer, t.name );
 	}
 
-	template<class ComposerT>
-	void compose( ComposerT& composer )
+	template<class ComposerType>
+	void compose( ComposerType& composer )
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
@@ -2509,8 +2509,8 @@ public:
 	
 	// Acting as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
-	template<class ComposerT>
-	void compose( ComposerT& composer )
+	template<class ComposerType>
+	void compose( ComposerType& composer )
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
@@ -2688,8 +2688,8 @@ public:
 	}
 	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 7); }
 
-	template<class ComposerT>
-	void compose( ComposerT& composer )
+	template<class ComposerType>
+	void compose( ComposerType& composer )
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
@@ -3548,8 +3548,8 @@ public:
 	
 	// Acting as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
-	template<class ComposerT>
-	void compose( ComposerT& composer )
+	template<class ComposerType>
+	void compose( ComposerType& composer )
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 

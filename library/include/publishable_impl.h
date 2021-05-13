@@ -449,8 +449,7 @@ public:
 template<class PlatformSupportT>
 class StatePublisherData
 {
-	template<class PlatformSupportT>
-	friend class StatePublisherPool;
+	friend class StatePublisherPool<PlatformSupportT>;
 
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
@@ -648,7 +647,6 @@ public:
 template<class PlatformSupportT>
 class StateSubscriberPool
 {
-	friend typename PlatformSupportT;
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;

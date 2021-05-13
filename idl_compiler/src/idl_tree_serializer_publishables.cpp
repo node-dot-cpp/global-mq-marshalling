@@ -773,8 +773,8 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		);
 	else if ( obj.type == CompositeType::Type::publishable )
 		fprintf( header, 
-			"\ttemplate<class ComposerT>\n"
-			"\tvoid compose( ComposerT& composer )\n"
+			"\ttemplate<class ComposerType>\n"
+			"\tvoid compose( ComposerType& composer )\n"
 			"\t{\n"
 			"\t\t::globalmq::marshalling::impl::composeStructBegin( composer );\n"
 			"\n"
