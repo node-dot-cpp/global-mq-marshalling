@@ -426,6 +426,9 @@ struct StateSubscriberData
 	uint64_t ref_id_at_subscriber;
 };
 
+template<class PlatformSupportT>
+class StatePublisherPool;
+
 template<class ComposerT>
 class StatePublisherBase
 {
