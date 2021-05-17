@@ -202,7 +202,7 @@ struct GmqPathHelper
 
 struct PublishableStateMessageHeader
 {
-	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3 };
+	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3, connectionRequest=4, connectionAccepted=5, connectionMessage=6 };
 	MsgType type;
 	uint64_t state_type_id; // Note: may be removed in future versions
 	uint64_t priority;
@@ -229,22 +229,19 @@ struct PublishableStateMessageHeader
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
+			case MsgType::connectionRequest:
 			{
-				type = MsgType::subscriptionRequest;
+				type = (MsgType)(msgType);
 				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &path, "path" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
 				break;
 			}
 			case MsgType::subscriptionResponse:
-			{
-				type = MsgType::subscriptionResponse;
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
-				break;
-			}
 			case MsgType::stateUpdate:
+			case MsgType::connectionAccepted:
+			case MsgType::connectionMessage:
 			{
-				type = MsgType::stateUpdate;
+				type = (MsgType)(msgType);
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
 				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
 				break;
@@ -270,6 +267,7 @@ struct PublishableStateMessageHeader
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
+			case MsgType::connectionRequest:
 			{
 				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &dummyStr, "path" );
 				assert( !udata.update_ref_id_at_publisher );
@@ -284,6 +282,8 @@ struct PublishableStateMessageHeader
 			}
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
+			case MsgType::connectionAccepted:
+			case MsgType::connectionMessage:
 			{
 				size_t offset = parser.getCurrentOffset();
 				::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
@@ -315,6 +315,7 @@ struct PublishableStateMessageHeader
 		switch ( type )
 		{
 			case MsgType::subscriptionRequest:
+			case MsgType::connectionRequest:
 			{
 				globalmq::marshalling::impl::publishableStructComposeString( composer, path, "path", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", false );
@@ -322,6 +323,8 @@ struct PublishableStateMessageHeader
 			}
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
+			case MsgType::connectionAccepted:
+			case MsgType::connectionMessage:
 			{
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_subscriber, "ref_id_at_subscriber", true );
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", false );
@@ -336,7 +339,7 @@ template<class ComposerT>
 void helperComposePublishableStateMessageBegin(ComposerT& composer, const PublishableStateMessageHeader& header)
 {
 	globalmq::marshalling::impl::composeStructBegin( composer );
-	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate )
+	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate || header.type == PublishableStateMessageHeader::MsgType::connectionMessage )
 	{
 		header.compose( composer, true );
 		globalmq::marshalling::impl::composeKey( composer, "data" );
@@ -357,7 +360,7 @@ void helperParsePublishableStateMessageBegin( ParserT& parser, PublishableStateM
 {
 	globalmq::marshalling::impl::parseStructBegin( parser );
 	header.parse( parser );
-	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate )
+	if ( header.type == PublishableStateMessageHeader::MsgType::subscriptionResponse || header.type == PublishableStateMessageHeader::MsgType::stateUpdate || header.type == PublishableStateMessageHeader::MsgType::connectionMessage )
 		globalmq::marshalling::impl::parseKey( parser, "data" );
 }
 
