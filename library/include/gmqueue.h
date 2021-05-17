@@ -517,7 +517,7 @@ class GMQueue
 
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
 		bool subscriptionResponseReceived = false;
-		uint64_t idAtPublisher;
+		uint64_t idAtPublisher; // one for all subscriber using this concentrator
 
 	public:
 		struct SubscriberData
@@ -538,7 +538,7 @@ class GMQueue
 
 		// Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
 		GMQ_COLL string address;
-		uint64_t id;
+		uint64_t idInQueue; // used as a key for finding this concentrator; reported to publisher as a ref_id_at_subscriber (note: concentrator plays role of subscriber in this case)
 
 	public:
 		uint64_t addSubscriber( SubscriberData sd )
@@ -584,7 +584,21 @@ class GMQueue
 		}
 	};
 
+	struct Connection
+	{
+		// conn initiator info
+		uint64_t ref_id_at_conn_initiator;
+		uint64_t ref_id_at_conn_acceptor;
+		uint64_t idInQueue; // used as a key for finding this concentrator; reported to publisher as a ref_id_at_subscriber (note: concentrator plays role of subscriber in this case)
+
+		SlotIdx senderSlotIdx;
+		GMQ_COLL string address;
+	};
+
 	std::mutex mx;
+
+	GMQ_COLL unordered_map<uint64_t, Connection> idToConnection; // id to concentrator mapping, many - 1, mx-protected
+	uint64_t connectionIDBase = 0;
 
 	GMQ_COLL unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
 	GMQ_COLL unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
@@ -600,6 +614,16 @@ class GMQueue
 	uint64_t publisherAndItsConcentratorBase = 0;
 
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
+
+	uint64_t addConnection( Connection connection ) {
+		uint64_t id = ++connectionIDBase;
+		auto ins = idToConnection.insert( std::make_pair( id, connection ) );
+		assert( ins.second );
+		return id;
+	}
+	void removeConnection( uint64_t id ) {
+		senders.erase( id );
+	}
 
 	void addConcentratorSubscriberPair( uint64_t id, uint64_t concentratorID, uint64_t subscriberDataID ) {
 		auto ins = ID2ConcentratorSubscriberPairMapping.insert( std::make_pair( id, std::make_pair( concentratorID, subscriberDataID ) ) );
@@ -636,7 +660,7 @@ class GMQueue
 			auto ins1 = idToStateConcentrators.insert( std::make_pair( concentratorID, c ) );
 			assert( ins1.second );
 			c->address = path;
-			c->id = concentratorID;
+			c->idInQueue = concentratorID;
 			return std::make_pair(c, false);
 		}
 	}
@@ -758,7 +782,7 @@ public:
 					sd.ref_id_at_publisher = ++publisherAndItsConcentratorBase;
 					sd.senderSlotIdx = senderSlotIdx;
 					uint64_t sid = concentrator->addSubscriber( sd );
-					addConcentratorSubscriberPair( sd.ref_id_at_publisher, sid, concentrator->id );
+					addConcentratorSubscriberPair( sd.ref_id_at_publisher, sid, concentrator->idInQueue );
 
 					if ( findCr.second )
 					{
@@ -789,7 +813,7 @@ public:
 							throw std::exception(); // TODO: post permanent error message to sender instead or in addition
 
 						globalmq::marshalling::PublishableStateMessageHeader::UpdatedData ud;
-						ud.ref_id_at_subscriber = concentrator->id;
+						ud.ref_id_at_subscriber = concentrator->idInQueue;
 						ud.update_ref_id_at_subscriber = true;
 
 						typename ComposerT::BufferType msgForward;
