@@ -55,151 +55,6 @@ namespace globalmq::marshalling {
 
 using MessageBufferT = typename GMQueueStatePublisherSubscriberTypeInfo::BufferT;
 
-struct GmqPathHelper
-{
-	struct PathComponents
-	{
-		GMQ_COLL string authority;
-		bool furtherResolution = false;
-		bool hasPort = false;
-		uint16_t port = 0xFFFF;
-//		GMQ_COLL string localPart; // TODO: revise
-		GMQ_COLL string nodeName;
-		GMQ_COLL string statePublisherName;
-	};
-
-	static GMQ_COLL string compose( GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
-	{
-		// TODO: check components
-		GMQ_COLL string ret = "globalmq:";
-		if ( !authority.empty() )
-		{
-			ret += "//";
-			ret += authority;
-		}
-		assert( !nodeName.empty() );
-		assert( !statePublisherName.empty() );
-		ret += '/';
-		ret += localPart( nodeName, statePublisherName );
-		return ret;
-	}
-
-	static GMQ_COLL string compose( const PathComponents& components )
-	{
-		// TODO: check components
-		GMQ_COLL string ret = "globalmq:";
-		if ( !components.authority.empty() )
-		{
-			ret += "//";
-			ret += components.authority;
-		}
-		if ( components.furtherResolution )
-			ret += "!gmq";
-		if ( components.hasPort )
-		{
-			auto str = fmt::format( ":{}", components.port );
-			ret += str;
-		}
-		assert( !components.nodeName.empty() );
-		assert( !components.statePublisherName.empty() );
-		ret += '/';
-		ret += localPart( components.nodeName, components.statePublisherName );
-		return ret;
-	}
-
-	static GMQ_COLL string localPart( GMQ_COLL string nodeName, GMQ_COLL string statePublisherName )
-	{
-		return fmt::format( "{}?sp={}", nodeName, statePublisherName );
-	}
-
-	static GMQ_COLL string localPart( const PathComponents& components )
-	{
-		return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherName );
-	}
-
-	static bool parse( GMQ_COLL string path, PathComponents& components )
-	{
-		size_t pos = path.find( "globalmq:" );
-		if ( pos != 0 )
-			return false;
-		pos += sizeof( "globalmq:" ) - 1;
-		if ( path.size() <= pos )
-			return false;
-		if ( path[pos++] != '/' )
-			return false;
-		if ( path[pos] == '/' ) // double-slash, authority component is present
-		{
-			++pos;
-			size_t pos1 = path.find( "/", pos );
-			if ( pos1 == GMQ_COLL string::npos )
-				return false;
-			components.authority = path.substr( pos, pos1 - pos );
-			pos = pos1 + 1;
-			pos1 = components.authority.find_last_of( ':' );
-			if ( pos1 != GMQ_COLL string::npos )
-			{
-				char* end = nullptr;
-				size_t port = strtol( components.authority.c_str() + pos1 + 1, &end, 10 );
-				if ( components.authority.c_str() + pos1 + 1 == end )
-					return false;
-				if ( end - components.authority.c_str() < components.authority.size() ) // there are remaining chars
-					return false;
-				if ( port >= UINT16_MAX )
-					return false;
-				components.hasPort = true;
-				components.port = (uint16_t)port;
-				components.authority.erase( pos1 );
-			}
-			else
-			{
-				components.hasPort = false;
-				components.port = 0xFFFF;
-			}
-
-			size_t pos2 = components.authority.find_last_of( '!' );
-			if ( pos2 != GMQ_COLL string::npos )
-			{
-				if ( components.authority.size() - pos2 < sizeof( "gmq" ) - 1 )
-					return false;
-				if ( components.authority.substr( pos2 + 1 ) != "gmq" )
-					return false;
-				components.furtherResolution = true;
-				components.authority.erase( pos2 );
-			}
-			else
-			{
-				components.furtherResolution = false;
-			}
-		}
-		else
-		{
-			components.authority = "";
-			components.hasPort = false;
-			components.furtherResolution = false;
-			components.port = 0xFFFF;
-		}
-
-		// node name
-		size_t pos1 = path.find( '?', pos );
-		if ( pos1 == GMQ_COLL string::npos )
-			return false;
-		components.nodeName = path.substr( pos, pos1 - pos );
-		pos = pos1;
-
-		// statePublisherName
-		pos = path.find( "sp=", pos );
-		if ( pos == GMQ_COLL string::npos )
-			return false;
-		pos += sizeof( "sp=" ) - 1;
-		pos1 = path.find( '&', pos );
-		if ( pos1 == GMQ_COLL string::npos )
-			components.statePublisherName = path.substr( pos );
-		else
-			components.statePublisherName = path.substr( pos, pos1 - pos );
-		return true;
-	}
-};
-
 struct PublishableStateMessageHeader
 {
 	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3, connectionRequest=4, connectionAccepted=5, connectionMessage=6 };
@@ -379,6 +234,179 @@ void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& 
 	globalmq::marshalling::impl::parseStructBegin( parserCurrent );
 	header.parseAndUpdate<ParserT, ComposerT>( parser, parserCurrent, buffTo, udata );
 }
+
+struct GmqPathHelper
+{
+	enum Type { undefined, subscriptionRequest, connectionRequest };
+
+	struct PathComponents
+	{
+		GMQ_COLL string authority;
+		bool furtherResolution = false;
+		bool hasPort = false;
+		uint16_t port = 0xFFFF;
+		GMQ_COLL string nodeName;
+		GMQ_COLL string statePublisherOrConnPeerName; // for subscription request
+	};
+
+	static GMQ_COLL string compose( GmqPathHelper::Type type, GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisherOrConnPeerName )
+	{
+		// TODO: check components
+		GMQ_COLL string ret = "globalmq:";
+		if ( !authority.empty() )
+		{
+			ret += "//";
+			ret += authority;
+		}
+		assert( !nodeName.empty() );
+		assert( !statePublisherOrConnPeerName.empty() );
+		ret += '/';
+		ret += localPart( type, nodeName, statePublisherOrConnPeerName );
+		return ret;
+	}
+
+	static GMQ_COLL string compose( GmqPathHelper::Type type, const PathComponents& components )
+	{
+		// TODO: check components
+		GMQ_COLL string ret = "globalmq:";
+		if ( !components.authority.empty() )
+		{
+			ret += "//";
+			ret += components.authority;
+		}
+		if ( components.furtherResolution )
+			ret += "!gmq";
+		if ( components.hasPort )
+		{
+			auto str = fmt::format( ":{}", components.port );
+			ret += str;
+		}
+		assert( !components.nodeName.empty() );
+		assert( !components.statePublisherOrConnPeerName.empty() );
+		ret += '/';
+		ret += localPart( type, components.nodeName, components.statePublisherOrConnPeerName );
+		return ret;
+	}
+
+	static GMQ_COLL string localPart( GmqPathHelper::Type type, GMQ_COLL string nodeName, GMQ_COLL string statePublisherOrConnPeerName )
+	{
+		switch ( type )
+		{
+			case Type::subscriptionRequest:
+				return fmt::format( "{}?sp={}", nodeName, statePublisherOrConnPeerName );
+			case Type::connectionRequest:
+				return fmt::format( "{}?cn={}", nodeName, statePublisherOrConnPeerName );
+			default:
+				assert( false );
+		}
+	}
+
+	static GMQ_COLL string localPart( GmqPathHelper::Type type, const PathComponents& components )
+	{
+		switch ( type )
+		{
+			case Type::subscriptionRequest:
+				return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherOrConnPeerName );
+			case Type::connectionRequest:
+				return fmt::format( "{}?cn={}", components.nodeName, components.statePublisherOrConnPeerName );
+			default:
+				assert( false );
+		}
+	}
+
+	static bool parse( GmqPathHelper::Type type, GMQ_COLL string path, PathComponents& components )
+	{
+		size_t pos = path.find( "globalmq:" );
+		if ( pos != 0 )
+			return false;
+		pos += sizeof( "globalmq:" ) - 1;
+		if ( path.size() <= pos )
+			return false;
+		if ( path[pos++] != '/' )
+			return false;
+		if ( path[pos] == '/' ) // double-slash, authority component is present
+		{
+			++pos;
+			size_t pos1 = path.find( "/", pos );
+			if ( pos1 == GMQ_COLL string::npos )
+				return false;
+			components.authority = path.substr( pos, pos1 - pos );
+			pos = pos1 + 1;
+			pos1 = components.authority.find_last_of( ':' );
+			if ( pos1 != GMQ_COLL string::npos )
+			{
+				char* end = nullptr;
+				size_t port = strtol( components.authority.c_str() + pos1 + 1, &end, 10 );
+				if ( components.authority.c_str() + pos1 + 1 == end )
+					return false;
+				if ( end - components.authority.c_str() < components.authority.size() ) // there are remaining chars
+					return false;
+				if ( port >= UINT16_MAX )
+					return false;
+				components.hasPort = true;
+				components.port = (uint16_t)port;
+				components.authority.erase( pos1 );
+			}
+			else
+			{
+				components.hasPort = false;
+				components.port = 0xFFFF;
+			}
+
+			size_t pos2 = components.authority.find_last_of( '!' );
+			if ( pos2 != GMQ_COLL string::npos )
+			{
+				if ( components.authority.size() - pos2 < sizeof( "gmq" ) - 1 )
+					return false;
+				if ( components.authority.substr( pos2 + 1 ) != "gmq" )
+					return false;
+				components.furtherResolution = true;
+				components.authority.erase( pos2 );
+			}
+			else
+			{
+				components.furtherResolution = false;
+			}
+		}
+		else
+		{
+			components.authority = "";
+			components.hasPort = false;
+			components.furtherResolution = false;
+			components.port = 0xFFFF;
+		}
+
+		// node name
+		size_t pos1 = path.find( '?', pos );
+		if ( pos1 == GMQ_COLL string::npos )
+			return false;
+		components.nodeName = path.substr( pos, pos1 - pos );
+		pos = pos1;
+
+		// statePublisherOrConnPeerName
+		switch ( type )
+		{
+			case Type::subscriptionRequest: 
+				pos = path.find( "sp=", pos ); 
+				pos += sizeof( "sp=" ) - 1;
+				break;
+			case Type::connectionRequest:
+				pos = path.find( "cn=", pos ); 
+				pos += sizeof( "cn=" ) - 1;
+				break;
+			default:
+				assert( false );
+		}
+		if ( pos == GMQ_COLL string::npos )
+			return false;
+		pos1 = path.find( '&', pos );
+		if ( pos1 == GMQ_COLL string::npos )
+			components.statePublisherOrConnPeerName = path.substr( pos );
+		else
+			components.statePublisherOrConnPeerName = path.substr( pos, pos1 - pos );
+		return true;
+	}
+};
 
 
 
@@ -712,11 +740,11 @@ public:
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 			{
 				GmqPathHelper::PathComponents pc;
-				bool pathOK = GmqPathHelper::parse( mh.path, pc );
+				bool pathOK = GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, mh.path, pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
 
-				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
+				GMQ_COLL string addr = GmqPathHelper::localPart( GmqPathHelper::Type::subscriptionRequest, pc );
 				if ( isMyAuthority( pc.authority ) ) // local
 				{
 					assert( !pc.nodeName.empty() );
