@@ -612,32 +612,50 @@ class GMQueue
 		Connections& operator = ( Connections&& ) = delete;
 		~Connections() {}
 
-		uint64_t onConnRequest( uint64_t ref_id_at_conn_initiator, SlotIdx initiatorSlotIdx, GMQ_COLL string address )
+		struct FieldsForSending
+		{
+			uint64_t idAtSource;
+			uint64_t idAtTarget;
+			SlotIdx targetSlotIdx;
+		};
+
+		FieldsForSending onConnRequest( uint64_t ref_id_at_conn_initiator, SlotIdx initiatorSlotIdx, SlotIdx acceptorSlotIdx, GMQ_COLL string address )
 		{
 			Connection conn;
 			conn.ref_id_at_conn_initiator = ref_id_at_conn_initiator;
 			conn.initiatorSlotIdx = initiatorSlotIdx;
+			conn.acceptorSlotIdx = acceptorSlotIdx;
 			conn.address = address;
 			conn.idInQueueForAcceptor = ++connectionIDBase;
 			auto ins = idToConnectionStorage.insert( std::make_pair( conn.idInQueueForAcceptor, conn ) );
 			assert( ins.second );
 			auto ins2 = idToConnection.insert( std::make_pair( conn.idInQueueForAcceptor, &(*(ins.first)) ) );
 			assert( ins2.second );
-			return conn.idInQueueForAcceptor;
+			FieldsForSending ffs;
+			ffs.idAtSource = conn.idInQueueForAcceptor;
+			ffs.idAtTarget = 0; // TODO: invalid value
+			ffs.targetSlotIdx = acceptorSlotIdx;
+			return ffs;
 		}
-		std::pair<uint64_t, SlotIdx> onConnAccepted( uint64_t connID, uint64_t ref_id_at_conn_acceptor, SlotIdx acceptorSlotIdx )
+		
+		FieldsForSending onConnAccepted( uint64_t connID, uint64_t ref_id_at_conn_acceptor, SlotIdx acceptorSlotIdx )
 		{
 			auto f = idToConnection.find( connID );
 			if ( f == idToConnection.end() )
 				throw std::exception();
 			auto& conn = f->second;
 			assert( connID == conn.idInQueueForAcceptor );
-			conn.ref_id_at_conn_acceptor = idInQueueForAcceptor;
-			conn.acceptorSlotIdx = acceptorSlotIdx;
+			if ( conn.acceptorSlotIdx != acceptorSlotIdx )
+				throw std::exception();
+			conn.ref_id_at_conn_acceptor = ref_id_at_conn_acceptor;
 			conn.idInQueueForInitiator = ++connectionIDBase;
 			auto ins = idToConnection.insert( std::make_pair( conn.idInQueueForInitiator, &(*(ins.first)) ) );
 			assert( ins.second );
-			return std::make_pair(conn.idInQueueForInitiator, conn.initiatorSlotIdx);
+			FieldsForSending ffs;
+			ffs.idAtSource = conn.idInQueueForInitiator;
+			ffs.idAtTarget = conn.ref_id_at_conn_initiator;
+			ffs.targetSlotIdx = conn.initiatorSlotIdx;
+			return ffs;
 		}
 		void onConnMsg( uint64_t connID, uint64_t refIdAtCaller, SlotIdx callerSlotIdx )
 		{
@@ -646,20 +664,29 @@ class GMQueue
 				throw std::exception();
 			auto& conn = f->second;
 			assert( connID == conn.idInQueueForInitiator || connID == conn.idInQueueForAcceptor );
+			FieldsForSending ffs;
 			if ( id == conn.idInQueueForAcceptor ) // from acceptor to initiator
 			{
 				if ( refIdAtCaller != conn.ref_id_at_conn_acceptor )
 					throw std::exception();
 				if ( slotIdx != conn.acceptorSlotIdx )
 					throw std::exception();
-				return std::make_pair(conn.idInQueueForInitiator, conn.initiatorSlotIdx);
+				ffs.idAtSource = conn.idInQueueForInitiator;
+				ffs.idAtTarget = conn.ref_id_at_conn_initiator;
+				ffs.targetSlotIdx = conn.initiatorSlotIdx;
 			}
 			else
 			{
 				if ( slotIdx != conn.initiatorSlotIdx )
 					throw std::exception();
+				if ( slotIdx != conn.initiatorSlotIdx )
+					throw std::exception();
+				ffs.idAtSource = conn.idInQueueForAcceptor;
+				ffs.idAtTarget = conn.ref_id_at_conn_acceptor;
+				ffs.targetSlotIdx = conn.acceptorSlotIdx;
 				return std::make_pair(conn.idInQueueForAcceptor, conn.acceptorSlotIdx);
 			}
+			return ffs;
 		}
 	};
 	Connections connections;
