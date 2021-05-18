@@ -584,21 +584,85 @@ class GMQueue
 		}
 	};
 
-	struct Connection
+	class Connections
 	{
-		// conn initiator info
-		uint64_t ref_id_at_conn_initiator;
-		uint64_t ref_id_at_conn_acceptor;
-		uint64_t idInQueue; // used as a key for finding this concentrator; reported to publisher as a ref_id_at_subscriber (note: concentrator plays role of subscriber in this case)
+		struct Connection
+		{
+			// conn initiator info
+			uint64_t ref_id_at_conn_initiator;
+			uint64_t ref_id_at_conn_acceptor;
+			uint64_t idInQueueForInitiator = 0; // reported to initiator
+			uint64_t idInQueueForAcceptor = 0; // reported to aceptor
 
-		SlotIdx senderSlotIdx;
-		GMQ_COLL string address;
+			SlotIdx initiatorSlotIdx;
+			SlotIdx acceptorSlotIdx;
+
+			GMQ_COLL string address;
+		};
+
+		GMQ_COLL unordered_map<uint64_t, Connection> idToConnectionStorage; // used as storage, mx-protected
+		GMQ_COLL unordered_map<uint64_t, Connection*> idToConnection; // used for searching, mx-protected
+		uint64_t connectionIDBase = 0;
+
+	public:
+		Connections() {}
+		Connections( const Connections& ) = delete;
+		Connections& operator = ( const Connections& ) = delete;
+		Connections( Connections&& ) = delete;
+		Connections& operator = ( Connections&& ) = delete;
+		~Connections() {}
+
+		uint64_t onConnRequest( uint64_t ref_id_at_conn_initiator, SlotIdx initiatorSlotIdx, GMQ_COLL string address )
+		{
+			Connection conn;
+			conn.ref_id_at_conn_initiator = ref_id_at_conn_initiator;
+			conn.initiatorSlotIdx = initiatorSlotIdx;
+			conn.address = address;
+			conn.idInQueueForAcceptor = ++connectionIDBase;
+			auto ins = idToConnectionStorage.insert( std::make_pair( conn.idInQueueForAcceptor, conn ) );
+			assert( ins.second );
+			auto ins2 = idToConnection.insert( std::make_pair( conn.idInQueueForAcceptor, &(*(ins.first)) ) );
+			assert( ins2.second );
+			return conn.idInQueueForAcceptor;
+		}
+		std::pair<uint64_t, SlotIdx> onConnAccepted( uint64_t ref_id_at_conn_acceptor, SlotIdx acceptorSlotIdx )
+		{
+			auto f = idToConnection.find( ref_id_at_conn_acceptor );
+			if ( f == idToConnection.end() )
+				throw std::exception();
+			auto& conn = f->second;
+			if ( ref_id_at_conn_acceptor != conn.idInQueueForAcceptor )
+				throw std::exception();
+			conn.acceptorSlotIdx = acceptorSlotIdx;
+			conn.idInQueueForInitiator = ++connectionIDBase;
+			auto ins = idToConnection.insert( std::make_pair( conn.idInQueueForInitiator, &(*(ins.first)) ) );
+			assert( ins.second );
+			return std::make_pair(conn.idInQueueForInitiator, conn.initiatorSlotIdx);
+		}
+		void onConnMsg( uint64_t id, SlotIdx slotIdx )
+		{
+			auto f = idToConnection.find( id );
+			if ( f == idToConnection.end() )
+				throw std::exception();
+			auto& conn = f->second;
+			assert( id == conn.idInQueueForInitiator || id == conn.idInQueueForAcceptor );
+			if ( id == conn.idInQueueForAcceptor ) // from acceptor to initiator
+			{
+				if ( slotIdx != conn.initiatorSlotIdx )
+					throw std::exception();
+				return std::make_pair(conn.idInQueueForInitiator, conn.initiatorSlotIdx);
+			}
+			else
+			{
+				if ( slotIdx != conn.acceptorSlotIdx )
+					throw std::exception();
+				return std::make_pair(conn.idInQueueForAcceptor, conn.acceptorSlotIdx);
+			}
+		}
 	};
 
 	std::mutex mx;
 
-	GMQ_COLL unordered_map<uint64_t, Connection> idToConnection; // id to concentrator mapping, many - 1, mx-protected
-	uint64_t connectionIDBase = 0;
 
 	GMQ_COLL unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
 	GMQ_COLL unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
@@ -614,16 +678,6 @@ class GMQueue
 	uint64_t publisherAndItsConcentratorBase = 0;
 
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
-
-	uint64_t addConnection( Connection connection ) {
-		uint64_t id = ++connectionIDBase;
-		auto ins = idToConnection.insert( std::make_pair( id, connection ) );
-		assert( ins.second );
-		return id;
-	}
-	void removeConnection( uint64_t id ) {
-		senders.erase( id );
-	}
 
 	void addConcentratorSubscriberPair( uint64_t id, uint64_t concentratorID, uint64_t subscriberDataID ) {
 		auto ins = ID2ConcentratorSubscriberPairMapping.insert( std::make_pair( id, std::make_pair( concentratorID, subscriberDataID ) ) );
