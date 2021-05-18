@@ -957,6 +957,75 @@ public:
 
 				break;
 			}
+			case PublishableStateMessageHeader::MsgType::connectionRequest:
+			{
+				GmqPathHelper::PathComponents pc;
+				bool pathOK = GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, mh.path, pc );
+				if ( !pathOK )
+					throw std::exception(); // TODO: ... (bad path)
+
+				GMQ_COLL string addr = GmqPathHelper::localPart( GmqPathHelper::Type::subscriptionRequest, pc );
+				if ( isMyAuthority( pc.authority ) ) // local
+				{
+					assert( !pc.nodeName.empty() );
+
+					SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
+					if ( targetIdx.idx == SlotIdx::invalid_idx )
+						throw std::exception(); // TODO: post permanent error message to sender instead or in addition
+
+					typename Connections::FieldsForSending fields = connections.onConnRequest( mh.ref_id_at_subscriber, senderSlotIdx, targetIdx, mh.path );
+					globalmq::marshalling::PublishableStateMessageHeader::UpdatedData ud;
+					ud.ref_id_at_subscriber = fields.idAtSource;
+					ud.update_ref_id_at_subscriber = true;
+
+					typename ComposerT::BufferType msgForward;
+					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
+
+					InProcessMessagePostmanBase* postman = addressableLocations.getPostman( targetIdx );
+					postman->postMessage( std::move( msgForward ) );
+				}
+				else
+				{
+					assert( false ); // not yet implemented (but up to Postman should go along the same lines)
+				}
+				break;
+			}
+			case PublishableStateMessageHeader::MsgType::connectionAccepted:
+			{
+				typename Connections::FieldsForSending fields = connections.onConnAccepted( mh.ref_id_at_subscriber, mh.ref_id_at_publisher, senderSlotIdx );
+
+				PublishableStateMessageHeader::UpdatedData ud;
+				ud.update_ref_id_at_publisher = true;
+				ud.update_ref_id_at_subscriber = true;
+				ud.ref_id_at_subscriber = fields.idAtSource;
+				ud.ref_id_at_publisher = fields.idAtTarget;
+
+				typename ComposerT::BufferType msgForward;
+				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
+
+				InProcessMessagePostmanBase* postman = addressableLocations.getPostman( fields.targetSlotIdx );
+				postman->postMessage( std::move( msgForward ) );
+
+				break;
+			}
+			case PublishableStateMessageHeader::MsgType::connectionMessage:
+			{
+				typename Connections::FieldsForSending fields = connections.onConnMsg( mh.ref_id_at_subscriber, mh.ref_id_at_publisher, senderSlotIdx );
+
+				PublishableStateMessageHeader::UpdatedData ud;
+				ud.update_ref_id_at_publisher = true;
+				ud.update_ref_id_at_subscriber = true;
+				ud.ref_id_at_subscriber = fields.idAtSource;
+				ud.ref_id_at_publisher = fields.idAtTarget;
+
+				typename ComposerT::BufferType msgForward;
+				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
+
+				InProcessMessagePostmanBase* postman = addressableLocations.getPostman( fields.targetSlotIdx );
+				postman->postMessage( std::move( msgForward ) );
+
+				break;
+			}
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
