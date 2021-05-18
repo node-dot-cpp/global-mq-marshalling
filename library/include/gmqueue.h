@@ -629,7 +629,7 @@ class GMQueue
 			conn.idInQueueForAcceptor = ++connectionIDBase;
 			auto ins = idToConnectionStorage.insert( std::make_pair( conn.idInQueueForAcceptor, conn ) );
 			assert( ins.second );
-			auto ins2 = idToConnection.insert( std::make_pair( conn.idInQueueForAcceptor, &(*(ins.first)) ) );
+			auto ins2 = idToConnection.insert( std::make_pair( conn.idInQueueForAcceptor, &(ins.first->second) ) );
 			assert( ins2.second );
 			FieldsForSending ffs;
 			ffs.idAtSource = conn.idInQueueForAcceptor;
@@ -643,13 +643,13 @@ class GMQueue
 			auto f = idToConnection.find( connID );
 			if ( f == idToConnection.end() )
 				throw std::exception();
-			auto& conn = f->second;
-			assert( connID == conn.idInQueueForAcceptor );
+			auto& conn = *(f->second);
+			assert( connID == conn.idInQueueForAcceptor ); // self-consistency
 			if ( conn.acceptorSlotIdx != acceptorSlotIdx )
 				throw std::exception();
 			conn.ref_id_at_conn_acceptor = ref_id_at_conn_acceptor;
 			conn.idInQueueForInitiator = ++connectionIDBase;
-			auto ins = idToConnection.insert( std::make_pair( conn.idInQueueForInitiator, &(*(ins.first)) ) );
+			auto ins = idToConnection.insert( std::make_pair( conn.idInQueueForInitiator, &(*(f->second)) ) );
 			assert( ins.second );
 			FieldsForSending ffs;
 			ffs.idAtSource = conn.idInQueueForInitiator;
@@ -657,19 +657,19 @@ class GMQueue
 			ffs.targetSlotIdx = conn.initiatorSlotIdx;
 			return ffs;
 		}
-		void onConnMsg( uint64_t connID, uint64_t refIdAtCaller, SlotIdx callerSlotIdx )
+		FieldsForSending onConnMsg( uint64_t connID, uint64_t refIdAtCaller, SlotIdx callerSlotIdx )
 		{
 			auto f = idToConnection.find( connID );
 			if ( f == idToConnection.end() )
 				throw std::exception();
-			auto& conn = f->second;
+			auto& conn = *(f->second);
 			assert( connID == conn.idInQueueForInitiator || connID == conn.idInQueueForAcceptor );
 			FieldsForSending ffs;
-			if ( id == conn.idInQueueForAcceptor ) // from acceptor to initiator
+			if ( connID == conn.idInQueueForAcceptor ) // from acceptor to initiator
 			{
 				if ( refIdAtCaller != conn.ref_id_at_conn_acceptor )
 					throw std::exception();
-				if ( slotIdx != conn.acceptorSlotIdx )
+				if ( callerSlotIdx != conn.acceptorSlotIdx )
 					throw std::exception();
 				ffs.idAtSource = conn.idInQueueForInitiator;
 				ffs.idAtTarget = conn.ref_id_at_conn_initiator;
@@ -677,14 +677,13 @@ class GMQueue
 			}
 			else
 			{
-				if ( slotIdx != conn.initiatorSlotIdx )
+				if ( refIdAtCaller != conn.ref_id_at_conn_initiator )
 					throw std::exception();
-				if ( slotIdx != conn.initiatorSlotIdx )
+				if ( callerSlotIdx != conn.initiatorSlotIdx )
 					throw std::exception();
 				ffs.idAtSource = conn.idInQueueForAcceptor;
 				ffs.idAtTarget = conn.ref_id_at_conn_acceptor;
 				ffs.targetSlotIdx = conn.acceptorSlotIdx;
-				return std::make_pair(conn.idInQueueForAcceptor, conn.acceptorSlotIdx);
 			}
 			return ffs;
 		}
