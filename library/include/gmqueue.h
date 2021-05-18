@@ -625,41 +625,44 @@ class GMQueue
 			assert( ins2.second );
 			return conn.idInQueueForAcceptor;
 		}
-		std::pair<uint64_t, SlotIdx> onConnAccepted( uint64_t ref_id_at_conn_acceptor, SlotIdx acceptorSlotIdx )
+		std::pair<uint64_t, SlotIdx> onConnAccepted( uint64_t connID, uint64_t ref_id_at_conn_acceptor, SlotIdx acceptorSlotIdx )
 		{
-			auto f = idToConnection.find( ref_id_at_conn_acceptor );
+			auto f = idToConnection.find( connID );
 			if ( f == idToConnection.end() )
 				throw std::exception();
 			auto& conn = f->second;
-			if ( ref_id_at_conn_acceptor != conn.idInQueueForAcceptor )
-				throw std::exception();
+			assert( connID == conn.idInQueueForAcceptor );
+			conn.ref_id_at_conn_acceptor = idInQueueForAcceptor;
 			conn.acceptorSlotIdx = acceptorSlotIdx;
 			conn.idInQueueForInitiator = ++connectionIDBase;
 			auto ins = idToConnection.insert( std::make_pair( conn.idInQueueForInitiator, &(*(ins.first)) ) );
 			assert( ins.second );
 			return std::make_pair(conn.idInQueueForInitiator, conn.initiatorSlotIdx);
 		}
-		void onConnMsg( uint64_t id, SlotIdx slotIdx )
+		void onConnMsg( uint64_t connID, uint64_t refIdAtCaller, SlotIdx callerSlotIdx )
 		{
-			auto f = idToConnection.find( id );
+			auto f = idToConnection.find( connID );
 			if ( f == idToConnection.end() )
 				throw std::exception();
 			auto& conn = f->second;
-			assert( id == conn.idInQueueForInitiator || id == conn.idInQueueForAcceptor );
+			assert( connID == conn.idInQueueForInitiator || connID == conn.idInQueueForAcceptor );
 			if ( id == conn.idInQueueForAcceptor ) // from acceptor to initiator
 			{
-				if ( slotIdx != conn.initiatorSlotIdx )
+				if ( refIdAtCaller != conn.ref_id_at_conn_acceptor )
+					throw std::exception();
+				if ( slotIdx != conn.acceptorSlotIdx )
 					throw std::exception();
 				return std::make_pair(conn.idInQueueForInitiator, conn.initiatorSlotIdx);
 			}
 			else
 			{
-				if ( slotIdx != conn.acceptorSlotIdx )
+				if ( slotIdx != conn.initiatorSlotIdx )
 					throw std::exception();
 				return std::make_pair(conn.idInQueueForAcceptor, conn.acceptorSlotIdx);
 			}
 		}
 	};
+	Connections connections;
 
 	std::mutex mx;
 
@@ -861,10 +864,9 @@ public:
 					else
 					{
 						// TODO: revise!
-//						concentrator->addSubscriber( rpi );
 						SlotIdx targetIdx = locationNameToSlotIdx( pc.nodeName );
 						if ( targetIdx.idx == SlotIdx::invalid_idx )
-							throw std::exception(); // TODO: post permanent error message to sender instead or in addition
+							throw std::exception(); // TODO: post permanent error message to sender instead or in addition; remove concentrator
 
 						globalmq::marshalling::PublishableStateMessageHeader::UpdatedData ud;
 						ud.ref_id_at_subscriber = concentrator->idInQueue;
