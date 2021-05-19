@@ -656,20 +656,33 @@ protected:
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
 
-	GMQ_COLL vector<StateSubscriberT*> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	struct Subscriber
+	{
+		StateSubscriberT* subscriber;
+		uint64_t ref_id_at_subscriber;
+		uint64_t ref_id_at_publisher;
+	};
+
+	GMQ_COLL vector<Subscriber> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
 	GMQTransportBase<PlatformSupportT>* transport;
 
 public:
 	void add( StateSubscriberT* subscriber )
 	{
-		subscribers.push_back( subscriber );
+		// TODO: revise for performance
+		Subscriber s;
+		s.subscriber = subscriber;
+		s.ref_id_at_subscriber = subscribers.size();
+		s.ref_id_at_publisher = 0;
+		subscribers.push_back( s );
 	}
 	void remove( StateSubscriberT* subscriber )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
-			if ( subscribers[i] == subscriber )
+			if ( subscribers[i].subscriber == subscriber )
 			{
+				// TODO: if unsubscribeMessaage is to be sent, it's probably the right place
 				subscribers.erase( subscribers.begin() + i );
 				return;
 			}
@@ -680,7 +693,7 @@ public:
 	void subscribe( StateSubscriberT* subscriber, GMQ_COLL string path )
 	{
 		for ( size_t i=0; i<subscribers.size(); ++i )
-			if ( subscribers[i] == subscriber )
+			if ( subscribers[i].subscriber == subscriber )
 			{
 				BufferT buff;
 				ComposerT composer( buff );
@@ -689,10 +702,10 @@ public:
 				mh.priority = 0; // TODO: source
 				mh.state_type_id = subscriber->stateTypeID();
 				mh.path = path;
-				mh.ref_id_at_subscriber = i;
+				assert( subscribers[i].ref_id_at_subscriber == i );
+				mh.ref_id_at_subscriber = subscribers[i].ref_id_at_subscriber;
 				helperComposePublishableStateMessageBegin( composer, mh );
 				helperComposePublishableStateMessageEnd( composer );
-//				PlatformSupportT::sendSubscriptionRequest( buff, subscriber->name() );
 				assert( transport != nullptr );
 				transport->postMessage( std::move( buff ) );
 				return;
@@ -709,12 +722,13 @@ public:
 			{
 				if ( mh.ref_id_at_subscriber >= subscribers.size() )
 					throw std::exception(); // TODO: ... (invalid ID)
+				subscribers[mh.ref_id_at_subscriber].ref_id_at_publisher = mh.ref_id_at_publisher;
 				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
-					subscribers[mh.ref_id_at_subscriber]->applyJsonStateSyncMessage( parser );
+					subscribers[mh.ref_id_at_subscriber].subscriber->applyJsonStateSyncMessage( parser );
 				else 
 				{
 					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
-					subscribers[mh.ref_id_at_subscriber]->applyGmqStateSyncMessage( parser );
+					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqStateSyncMessage( parser );
 				}
 				break;
 			}
@@ -722,12 +736,15 @@ public:
 			{
 				if ( mh.ref_id_at_subscriber >= subscribers.size() )
 					throw std::exception(); // TODO: ... (invalid ID)
+				// TODO: consider the following:
+				//if ( subscribers[mh.ref_id_at_subscriber].ref_id_at_publisher != mh.ref_id_at_publisher )
+				//	throw std::exception(); // TODO: ... (invalid source)
 				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
-					subscribers[mh.ref_id_at_subscriber]->applyJsonMessageWithUpdates( parser );
+					subscribers[mh.ref_id_at_subscriber].subscriber->applyJsonMessageWithUpdates( parser );
 				else 
 				{
 					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
-					subscribers[mh.ref_id_at_subscriber]->applyGmqMessageWithUpdates( parser );
+					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqMessageWithUpdates( parser );
 				}
 				break;
 			}
