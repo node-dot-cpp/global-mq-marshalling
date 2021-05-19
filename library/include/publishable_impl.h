@@ -738,14 +738,97 @@ public:
 	}
 };
 
+
 template<class PlatformSupportT>
-class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscriberPool<PlatformSupportT>
+struct ConnectionBase
+{
+};
+
+template<class PlatformSupportT>
+class ConnectionPool
+{
+protected:
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
+
+	GMQ_COLL vector<ConnectionT*> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+
+	GMQTransportBase<PlatformSupportT>* transport;
+
+public:
+	void add( ConnectionT* connection )
+	{
+		connections.push_back( connection );
+	}
+	void remove( ConnectionT* connection )
+	{
+		for ( size_t i=0; i<connections.size(); ++i )
+			if ( connections[i] == connection )
+			{
+				connections.erase( connections.begin() + i );
+				return;
+			}
+		assert( false ); // not found
+	}
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
+
+	void connect( ConnectionT* connection, GMQ_COLL string path )
+	{
+		for ( size_t i=0; i<connections.size(); ++i )
+			if ( connections[i] == connection )
+			{
+				BufferT buff;
+				ComposerT composer( buff );
+				PublishableStateMessageHeader mh;
+				mh.type = globalmq::marshalling::PublishableStateMessageHeader::connectionRequest;
+				mh.priority = 0; // TODO: source
+				mh.state_type_id = 0;
+				mh.path = path;
+				mh.ref_id_at_subscriber = i;
+				helperComposePublishableStateMessageBegin( composer, mh );
+				helperComposePublishableStateMessageEnd( composer );
+				assert( transport != nullptr );
+				transport->postMessage( std::move( buff ) );
+				return;
+			}
+		assert( false ); // not found
+	}
+	void onMessage( ParserT& parser ) 
+	{
+		PublishableStateMessageHeader mh;
+		helperParsePublishableStateMessageBegin( parser, mh );
+		switch ( mh.type )
+		{
+			case PublishableStateMessageHeader::MsgType::connectionRequest:
+			{
+				break;
+			}
+			case PublishableStateMessageHeader::MsgType::connectionAccepted:
+			{
+				break;
+			}
+			case PublishableStateMessageHeader::MsgType::connectionMessage:
+			{
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		helperParsePublishableStateMessageEnd( parser );
+	}
+};
+
+template<class PlatformSupportT>
+class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscriberPool<PlatformSupportT>, public ConnectionPool<PlatformSupportT>
 {
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
 	using StatePublisherT = globalmq::marshalling::StatePublisherBase<BufferT>;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
 
 public:
 	template<class T>
@@ -753,10 +836,12 @@ public:
 	{
 		if constexpr ( std::is_base_of<StatePublisherBase<ComposerT>, T>::value )
 			StatePublisherPool<PlatformSupportT>::add( obj );
+		else if constexpr ( std::is_base_of<StateSubscriberBase<BufferT>, T>::value )
+			StateSubscriberPool<PlatformSupportT>::add( obj );
 		else
 		{
-			static_assert ( std::is_base_of<StateSubscriberBase<BufferT>, T>::value );
-			StateSubscriberPool<PlatformSupportT>::add( obj );
+			static_assert ( std::is_base_of<ConnectionBase<BufferT>, T>::value );
+			ConnectionPool<PlatformSupportT>::add( obj );
 		}
 	}
 
@@ -765,10 +850,12 @@ public:
 	{
 		if constexpr ( std::is_base_of<StatePublisherBase<ComposerT>, T>::value )
 			StatePublisherPool<PlatformSupportT>::remove( obj );
+		else if constexpr ( std::is_base_of<StateSubscriberBase<BufferT>, T>::value )
+			StateSubscriberPool<PlatformSupportT>::remove( obj );
 		else
 		{
-			static_assert ( std::is_base_of<StateSubscriberBase<BufferT>, T>::value );
-			StateSubscriberPool<PlatformSupportT>::remove( obj );
+			static_assert ( std::is_base_of<ConnectionBase<BufferT>, T>::value );
+			ConnectionPool<PlatformSupportT>::remove( obj );
 		}
 	}
 
@@ -776,6 +863,7 @@ public:
 	{
 		StatePublisherPool<PlatformSupportT>::setTransport( tr );
 		StateSubscriberPool<PlatformSupportT>::setTransport( tr );
+		ConnectionPool<PlatformSupportT>::setTransport( tr );
 	}
 
 	void onMessage( ParserT& parser )
@@ -791,6 +879,11 @@ public:
 				break;
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 				StatePublisherPool<PlatformSupportT>::onMessage( parser );
+				break;
+			case PublishableStateMessageHeader::MsgType::connectionRequest:
+			case PublishableStateMessageHeader::MsgType::connectionAccepted:
+			case PublishableStateMessageHeader::MsgType::connectionMessage:
+				ConnectionPool<PlatformSupportT>::onMessage( parser );
 				break;
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
