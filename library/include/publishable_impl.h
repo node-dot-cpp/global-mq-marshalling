@@ -688,6 +688,7 @@ public:
 			}
 		assert( false ); // not found
 	}
+
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
 	void subscribe( StateSubscriberT* subscriber, GMQ_COLL string path )
@@ -762,7 +763,7 @@ struct ConnectionBase
 };
 
 template<class PlatformSupportT>
-class ConnectionPool
+class ClientConnectionPool
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
@@ -770,25 +771,39 @@ protected:
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
 
-	GMQ_COLL vector<ConnectionT*> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	struct ClientConnection
+	{
+		ConnectionT* connection;
+		uint64_t ref_id_at_server;
+		uint64_t ref_id_at_client; // that is, local id
+	};
+
+	GMQ_COLL vector<ClientConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
 	GMQTransportBase<PlatformSupportT>* transport;
 
 public:
 	void add( ConnectionT* connection )
 	{
-		connections.push_back( connection );
+		// TODO: revise for performance
+		ClientConnection c;
+		c.connection = connection;
+		c.ref_id_at_client = connections.size();
+		c.ref_id_at_server = 0;
+		connections.push_back( c );
 	}
 	void remove( ConnectionT* connection )
 	{
 		for ( size_t i=0; i<connections.size(); ++i )
-			if ( connections[i] == connection )
+			if ( connections[i].connection == connection )
 			{
+				// TODO: if unsubscribeMessaage is to be sent, it's probably the right place
 				connections.erase( connections.begin() + i );
 				return;
 			}
 		assert( false ); // not found
 	}
+
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
 	void connect( ConnectionT* connection, GMQ_COLL string path )
@@ -803,7 +818,8 @@ public:
 				mh.priority = 0; // TODO: source
 				mh.state_type_id = 0;
 				mh.path = path;
-				mh.ref_id_at_subscriber = i;
+				assert( connections[i].ref_id_at_client == i );
+				mh.ref_id_at_subscriber = connections[i].ref_id_at_client;
 				helperComposePublishableStateMessageBegin( composer, mh );
 				helperComposePublishableStateMessageEnd( composer );
 				assert( transport != nullptr );
@@ -818,10 +834,6 @@ public:
 		helperParsePublishableStateMessageBegin( parser, mh );
 		switch ( mh.type )
 		{
-			case PublishableStateMessageHeader::MsgType::connectionRequest:
-			{
-				break;
-			}
 			case PublishableStateMessageHeader::MsgType::connectionAccepted:
 			{
 				break;
@@ -838,7 +850,64 @@ public:
 };
 
 template<class PlatformSupportT>
-class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscriberPool<PlatformSupportT>, public ConnectionPool<PlatformSupportT>
+class ConnectionFactoryBase
+{
+public:
+	virtual ConnectionBase<PlatformSupportT>* create() = 0;
+};
+
+template<class PlatformSupportT>
+class ServerConnectionPool
+{
+protected:
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ComposerT = typename PlatformSupportT::ComposerT;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
+
+	struct ServerConnection
+	{
+		ConnectionT* connection;
+		uint64_t ref_id_at_server;
+		uint64_t ref_id_at_client; // that is, local id
+	};
+
+	GMQ_COLL vector<ServerConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+
+	ConnectionFactoryBase<PlatformSupportT>* connFactory = nullptr;
+	GMQTransportBase<PlatformSupportT>* transport;
+
+public:
+	void setConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory_ )
+	{
+		assert( connFactory != nullptr );
+		connFactory = connFactory_;
+	}
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
+
+	void onMessage( ParserT& parser ) 
+	{
+		PublishableStateMessageHeader mh;
+		helperParsePublishableStateMessageBegin( parser, mh );
+		switch ( mh.type )
+		{
+			case PublishableStateMessageHeader::MsgType::connectionRequest:
+			{
+				break;
+			}
+			case PublishableStateMessageHeader::MsgType::connectionMessage:
+			{
+				break;
+			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
+		helperParsePublishableStateMessageEnd( parser );
+	}
+};
+
+template<class PlatformSupportT>
+class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscriberPool<PlatformSupportT>, public ClientConnectionPool<PlatformSupportT>, public ServerConnectionPool<PlatformSupportT>
 {
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
@@ -880,7 +949,8 @@ public:
 	{
 		StatePublisherPool<PlatformSupportT>::setTransport( tr );
 		StateSubscriberPool<PlatformSupportT>::setTransport( tr );
-		ConnectionPool<PlatformSupportT>::setTransport( tr );
+		ClientConnectionPool<PlatformSupportT>::setTransport( tr );
+		ServerConnectionPool<PlatformSupportT>::setTransport( tr );
 	}
 
 	void onMessage( ParserT& parser )
@@ -898,10 +968,14 @@ public:
 				StatePublisherPool<PlatformSupportT>::onMessage( parser );
 				break;
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
-			case PublishableStateMessageHeader::MsgType::connectionAccepted:
-			case PublishableStateMessageHeader::MsgType::connectionMessage:
-				ConnectionPool<PlatformSupportT>::onMessage( parser );
+				ServerConnectionPool<PlatformSupportT>::onMessage( parser );
 				break;
+			case PublishableStateMessageHeader::MsgType::connectionAccepted:
+				ClientConnectionPool<PlatformSupportT>::onMessage( parser );
+				break;
+			/*case PublishableStateMessageHeader::MsgType::connectionMessage:
+				ConnectionPool<PlatformSupportT>::onMessage( parser );
+				break;*/
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
