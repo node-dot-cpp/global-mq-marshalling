@@ -763,13 +763,24 @@ struct ConnectionBase
 };
 
 template<class PlatformSupportT>
+class ClientNotifierBase
+{
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
+
+public:
+	virtual void onConnectionAccepted( uint64_t connID ) {};
+	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) {};
+};
+
+template<class PlatformSupportT>
 class ClientConnectionPool
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
 
 	struct ClientConnection
 	{
@@ -783,7 +794,16 @@ protected:
 
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
+	ClientNotifierBase<PlatformSupportT>* notifier = nullptr;
+
 public:
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
+	void setNotifier( ClientNotifierBase<PlatformSupportT>* notifier_ )
+	{
+		assert( notifier != nullptr );
+		notifier = notifier_;
+	}
+
 	uint64_t add( ConnectionT* connection ) // returns connection ID
 	{
 		// TODO: revise for performance
@@ -799,8 +819,6 @@ public:
 	{
 		connections.erase( connID );
 	}
-
-	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
 	void connect( uint64_t connID, GMQ_COLL string path )
 	{
@@ -837,10 +855,20 @@ public:
 				auto& conn = f->second;
 				assert( conn.ref_id_at_client == mh.ref_id_at_subscriber ); // self-consistency
 				conn.ref_id_at_server = mh.ref_id_at_publisher;
+				assert( notifier != nullptr );
+				notifier->onConnectionAccepted( conn.ref_id_at_client );
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
 			{
+				assert( mh.state_type_id_or_direction == PublishableStateMessageHeader::ConnMsgDirection::toClient );
+				auto f = connections.find( mh.ref_id_at_publisher );
+				if ( f == connections.end() )
+					throw std::exception();
+				auto& conn = f->second;
+				assert( notifier != nullptr );
+				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
+				notifier->onMessage( conn.ref_id_at_client, conn.connection, parser );
 				break;
 			}
 			default:
@@ -948,6 +976,7 @@ public:
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
 			{
+				assert( mh.state_type_id_or_direction == PublishableStateMessageHeader::ConnMsgDirection::toServer );
 				auto f = connections.find( mh.ref_id_at_publisher );
 				if ( f == connections.end() )
 					throw std::exception();
