@@ -572,7 +572,7 @@ public:
 
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::subscriptionResponse;
-				hdrBack.state_type_id = findres->second->stateTypeID();
+				hdrBack.state_type_id_or_direction = findres->second->stateTypeID();
 				hdrBack.priority = mh.priority;
 				hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 				hdrBack.ref_id_at_publisher = id;
@@ -599,7 +599,7 @@ public:
 		{
 			PublishableStateMessageHeader mhBase;
 			mhBase.type = PublishableStateMessageHeader::MsgType::stateUpdate;
-			mhBase.state_type_id = publisher.stateTypeID();
+			mhBase.state_type_id_or_direction = publisher.stateTypeID();
 			mhBase.priority = 0; // TODO: source
 			mhBase.ref_id_at_subscriber = 0; // later
 			mhBase.ref_id_at_publisher = 0; // later
@@ -699,9 +699,9 @@ public:
 				BufferT buff;
 				ComposerT composer( buff );
 				PublishableStateMessageHeader mh;
-				mh.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionRequest;
+				mh.type = globalmq::marshalling::PublishableStateMessageHeader::MsgType::subscriptionRequest;
 				mh.priority = 0; // TODO: source
-				mh.state_type_id = subscriber->stateTypeID();
+				mh.state_type_id_or_direction = subscriber->stateTypeID();
 				mh.path = path;
 				assert( subscribers[i].ref_id_at_subscriber == i );
 				mh.ref_id_at_subscriber = subscribers[i].ref_id_at_subscriber;
@@ -778,55 +778,50 @@ protected:
 		uint64_t ref_id_at_client; // that is, local id
 	};
 
-	GMQ_COLL vector<ClientConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	GMQ_COLL unordered_map<uint64_t, ClientConnection> connections;
+	uint64_t connIdxBase = 0;
 
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
 public:
-	void add( ConnectionT* connection )
+	uint64_t add( ConnectionT* connection ) // returns connection ID
 	{
 		// TODO: revise for performance
-		ClientConnection c;
-		c.connection = connection;
-		c.ref_id_at_client = connections.size();
-		c.ref_id_at_server = 0;
-		connections.push_back( c );
+		ClientConnection cc;
+		cc.connection = connection;
+		cc.ref_id_at_client = ++connIdxBase;
+		cc.ref_id_at_server = 0;
+		auto ins = connections.insert( std::make_pair( cc.ref_id_at_client, cc ) );
+		assert( ins.second );
+		return cc.ref_id_at_client;
 	}
-	void remove( ConnectionT* connection )
+	void remove( uint64_t connID )
 	{
-		for ( size_t i=0; i<connections.size(); ++i )
-			if ( connections[i].connection == connection )
-			{
-				// TODO: if unsubscribeMessaage is to be sent, it's probably the right place
-				connections.erase( connections.begin() + i );
-				return;
-			}
-		assert( false ); // not found
+		connections.erase( connID );
 	}
 
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
-	void connect( ConnectionT* connection, GMQ_COLL string path )
+	void connect( uint64_t connID, GMQ_COLL string path )
 	{
-		for ( size_t i=0; i<connections.size(); ++i )
-			if ( connections[i] == connection )
-			{
-				BufferT buff;
-				ComposerT composer( buff );
-				PublishableStateMessageHeader mh;
-				mh.type = globalmq::marshalling::PublishableStateMessageHeader::connectionRequest;
-				mh.priority = 0; // TODO: source
-				mh.state_type_id = 0;
-				mh.path = path;
-				assert( connections[i].ref_id_at_client == i );
-				mh.ref_id_at_subscriber = connections[i].ref_id_at_client;
-				helperComposePublishableStateMessageBegin( composer, mh );
-				helperComposePublishableStateMessageEnd( composer );
-				assert( transport != nullptr );
-				transport->postMessage( std::move( buff ) );
-				return;
-			}
-		assert( false ); // not found
+		auto f = connections.find( connID );
+		assert( f != connections.end() );
+		auto& conn = f->second;
+		assert( conn.ref_id_at_client == connID ); // self-consistency
+		BufferT buff;
+		ComposerT composer( buff );
+		PublishableStateMessageHeader mh;
+		mh.type = globalmq::marshalling::PublishableStateMessageHeader::connectionRequest;
+		mh.priority = 0; // TODO: source
+		mh.state_type_id_or_direction = PublishableStateMessageHeader::ConnMsgDirection::toServer;
+		mh.path = path;
+		assert( conn.ref_id_at_client == connID );
+		mh.ref_id_at_subscriber = conn.ref_id_at_client;
+		helperComposePublishableStateMessageBegin( composer, mh );
+		helperComposePublishableStateMessageEnd( composer );
+		assert( transport != nullptr );
+		transport->postMessage( std::move( buff ) );
+		return;
 	}
 	void onMessage( ParserT& parser ) 
 	{
@@ -836,6 +831,12 @@ public:
 		{
 			case PublishableStateMessageHeader::MsgType::connectionAccepted:
 			{
+				auto f = connections.find( mh.ref_id_at_subscriber );
+				if ( f == connections.end() )
+					throw std::exception();
+				auto& conn = f->second;
+				assert( conn.ref_id_at_client == mh.ref_id_at_subscriber ); // self-consistency
+				conn.ref_id_at_server = mh.ref_id_at_publisher;
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
@@ -931,7 +932,7 @@ public:
 
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::connectionAccepted;
-				hdrBack.state_type_id = 0;
+				hdrBack.state_type_id_or_direction = PublishableStateMessageHeader::ConnMsgDirection::toClient;
 				hdrBack.priority = mh.priority; // TODO: source?
 				hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
 				hdrBack.ref_id_at_publisher = sc.ref_id_at_server;
@@ -1030,9 +1031,19 @@ public:
 			case PublishableStateMessageHeader::MsgType::connectionAccepted:
 				ClientConnectionPool<PlatformSupportT>::onMessage( parser );
 				break;
-			/*case PublishableStateMessageHeader::MsgType::connectionMessage:
-				ConnectionPool<PlatformSupportT>::onMessage( parser );
-				break;*/
+			case PublishableStateMessageHeader::MsgType::connectionMessage:
+				switch ( mh.state_type_id_or_direction )
+				{
+					case PublishableStateMessageHeader::ConnMsgDirection::toClient:
+						ClientConnectionPool<PlatformSupportT>::onMessage( parser );
+						break;
+					case PublishableStateMessageHeader::ConnMsgDirection::toServer:
+						ServerConnectionPool<PlatformSupportT>::onMessage( parser );
+						break;
+					default:
+						throw std::exception(); // TODO: ... (unknown msg type)
+				}
+				break;
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}

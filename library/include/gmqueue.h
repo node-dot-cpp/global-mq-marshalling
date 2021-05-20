@@ -57,9 +57,10 @@ using MessageBufferT = typename GMQueueStatePublisherSubscriberTypeInfo::BufferT
 
 struct PublishableStateMessageHeader
 {
-	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3, connectionRequest=4, connectionAccepted=5, connectionMessage=6 };
-	MsgType type;
-	uint64_t state_type_id; // Note: may be removed in future versions
+	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3, connectionRequest = 4, connectionAccepted = 5, connectionMessage = 6 };
+	enum ConnMsgDirection { toServer = 0, toClient = 1 };
+	MsgType type = MsgType::undefined;
+	uint64_t state_type_id_or_direction; // Note: may be removed in future versions
 	uint64_t priority;
 	GMQ_COLL string path;  // subscriptionRequest only
 	uint64_t ref_id_at_subscriber; // updatable
@@ -79,7 +80,21 @@ struct PublishableStateMessageHeader
 		globalmq::marshalling::impl::parsePublishableStructBegin( parser, "hdr" );
 		size_t msgType;
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id, "state_type_id" );
+		switch ( msgType )
+		{
+			case MsgType::subscriptionRequest:
+			case MsgType::subscriptionResponse:
+			case MsgType::stateUpdate:
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id_or_direction, "state_type_id" );
+				break;
+			case MsgType::connectionRequest:
+			case MsgType::connectionAccepted:
+			case MsgType::connectionMessage:
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id_or_direction, "direction" );
+				break;
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &priority, "priority" );
 		switch ( msgType )
 		{
@@ -117,7 +132,21 @@ struct PublishableStateMessageHeader
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &msgType, "msg_type" );
 		uint64_t dummy;
 		GMQ_COLL string dummyStr;
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
+		switch ( msgType )
+		{
+			case MsgType::subscriptionRequest:
+			case MsgType::subscriptionResponse:
+			case MsgType::stateUpdate:
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
+				break;
+			case MsgType::connectionRequest:
+			case MsgType::connectionAccepted:
+			case MsgType::connectionMessage:
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "direction" );
+				break;
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
 		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
 		switch ( msgType )
 		{
@@ -165,7 +194,21 @@ struct PublishableStateMessageHeader
 	{
 		globalmq::marshalling::impl::composePublishableStructBegin( composer, "hdr" );
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, (uint32_t)(type), "msg_type", true );
-		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, state_type_id, "state_type_id", true );
+		switch ( type )
+		{
+			case MsgType::subscriptionRequest:
+			case MsgType::subscriptionResponse:
+			case MsgType::stateUpdate:
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, state_type_id_or_direction, "state_type_id", true );
+				break;
+			case MsgType::connectionRequest:
+			case MsgType::connectionAccepted:
+			case MsgType::connectionMessage:
+				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, state_type_id_or_direction, "direction", true );
+				break;
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
+		}
 		globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, priority, "priority", true );
 		switch ( type )
 		{
@@ -856,7 +899,7 @@ public:
 				{
 					assert( !pc.nodeName.empty() );
 
-					auto findCr = findOrAddStateConcentrator( addr, mh.state_type_id );
+					auto findCr = findOrAddStateConcentrator( addr, mh.state_type_id_or_direction );
 					ConcentratorWrapper* concentrator = findCr.first;
 					assert( concentrator != nullptr );
 

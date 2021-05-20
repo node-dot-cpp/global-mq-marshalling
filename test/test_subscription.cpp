@@ -424,8 +424,8 @@ void quickTestForGmqParts()
 
 	// testing message header
 	globalmq::marshalling::PublishableStateMessageHeader mh1;
-	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionRequest;
-	mh1.state_type_id = 333;
+	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::MsgType::subscriptionRequest;
+	mh1.state_type_id_or_direction = 333;
 	mh1.priority = 444;
 	mh1.path = globalmq::marshalling::GmqPathHelper::compose( GmqPathHelper::Type::subscriptionRequest, pc1 );
 	mh1.ref_id_at_subscriber = 112;
@@ -445,14 +445,14 @@ void quickTestForGmqParts()
 	globalmq::marshalling::PublishableStateMessageHeader mh2;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser, mh2 );
 	assert( mh1.type == mh2.type );
-	assert( mh1.state_type_id == mh2.state_type_id );
+	assert( mh1.state_type_id_or_direction == mh2.state_type_id_or_direction );
 	assert( mh1.priority == mh2.priority );
 	assert( mh1.path == mh2.path );
 	assert( mh1.ref_id_at_subscriber == mh2.ref_id_at_subscriber );
 
 	buff.set_size(0);
 	ComposerT composer1( buff );
-	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::subscriptionResponse;
+	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::MsgType::subscriptionResponse;
 	globalmq::marshalling::helperComposePublishableStateMessageBegin( composer1, mh1 );
 	globalmq::marshalling::impl::composeString( composer, "fake" );
 	globalmq::marshalling::helperComposePublishableStateMessageEnd( composer1 );
@@ -465,7 +465,7 @@ void quickTestForGmqParts()
 	globalmq::marshalling::PublishableStateMessageHeader mh3;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser1, mh3 );
 	assert( mh1.type == mh3.type );
-	assert( mh1.state_type_id == mh3.state_type_id );
+	assert( mh1.state_type_id_or_direction == mh3.state_type_id_or_direction );
 	assert( mh1.priority == mh3.priority );
 	assert( mh1.ref_id_at_subscriber == mh3.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh3.ref_id_at_publisher );
@@ -485,7 +485,7 @@ void quickTestForGmqParts()
 	globalmq::marshalling::PublishableStateMessageHeader mh4;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser2, mh4 );
 	assert( mh1.type == mh4.type );
-	assert( mh1.state_type_id == mh4.state_type_id );
+	assert( mh1.state_type_id_or_direction == mh4.state_type_id_or_direction );
 	assert( mh1.priority == mh4.priority );
 	assert( mh1.ref_id_at_subscriber == mh4.ref_id_at_subscriber );
 	assert( mh1.ref_id_at_publisher == mh4.ref_id_at_publisher );
@@ -507,7 +507,7 @@ void quickTestForGmqParts()
 	globalmq::marshalling::PublishableStateMessageHeader mh5;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser4, mh5 );
 	assert( mh1.type == mh5.type );
-	assert( mh1.state_type_id == mh5.state_type_id );
+	assert( mh1.state_type_id_or_direction == mh5.state_type_id_or_direction );
 	assert( mh1.priority == mh5.priority );
 	assert( ud.ref_id_at_subscriber == mh5.ref_id_at_subscriber );
 	assert( ud.ref_id_at_publisher == mh5.ref_id_at_publisher );
