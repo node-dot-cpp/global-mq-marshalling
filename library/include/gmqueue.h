@@ -1169,7 +1169,7 @@ public:
 	}
 	void postInfrastructuralMessage( MessageBufferT&& msg, GMQ_COLL string nodeName ){
 		assert( idx.isInitialized() );
-		gmq.postMessage( std::move( msg ), nodeName );
+		gmq.postInfrastructuralMessage( std::move( msg ), nodeName );
 	}
 
 public:
