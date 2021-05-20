@@ -508,7 +508,7 @@ protected:
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 
-	GMQTransportBase<PlatformSupportT>* transport;
+	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
 public: // TODO: just a tmp approach to continue immediate dev
 	GMQ_COLL vector<StatePublisherData<PlatformSupportT>> publishers;
@@ -665,7 +665,7 @@ protected:
 
 	GMQ_COLL vector<Subscriber> subscribers; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
-	GMQTransportBase<PlatformSupportT>* transport;
+	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
 public:
 	void add( StateSubscriberT* subscriber )
@@ -780,7 +780,7 @@ protected:
 
 	GMQ_COLL vector<ClientConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
-	GMQTransportBase<PlatformSupportT>* transport;
+	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
 public:
 	void add( ConnectionT* connection )
@@ -857,6 +857,17 @@ public:
 };
 
 template<class PlatformSupportT>
+class ServerNotifierBase
+{
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
+
+public:
+	virtual void onNewConnection( uint64_t connID ) {};
+	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) {};
+};
+
+template<class PlatformSupportT>
 class ServerConnectionPool
 {
 protected:
@@ -876,7 +887,8 @@ protected:
 	uint64_t connIdxBase = 0;
 
 	ConnectionFactoryBase<PlatformSupportT>* connFactory = nullptr;
-	GMQTransportBase<PlatformSupportT>* transport;
+	GMQTransportBase<PlatformSupportT>* transport = nullptr;
+	ServerNotifierBase<PlatformSupportT>* notifier = nullptr;
 
 public:
 	ServerConnectionPool() {}
@@ -888,8 +900,13 @@ public:
 	}
 	void setConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory_ )
 	{
-		assert( connFactory != nullptr );
+		assert( connFactory_ != nullptr );
 		connFactory = connFactory_;
+	}
+	void setNotifier( ServerNotifierBase<PlatformSupportT>* notifier_ )
+	{
+		assert( notifier != nullptr );
+		notifier = notifier_;
 	}
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
@@ -909,6 +926,9 @@ public:
 				auto ins = connections.insert( std::make_pair( sc.ref_id_at_server, sc ) );
 				assert( ins.second );
 
+				assert( notifier != nullptr );
+				notifier->onNewConnection( sc.ref_id_at_server );
+
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::connectionAccepted;
 				hdrBack.state_type_id = 0;
@@ -923,12 +943,17 @@ public:
 				assert( transport != nullptr );
 				transport->postMessage( std::move( msgBack ) );
 
-				// TODO: call owner::onNewConnection
-
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
 			{
+				auto f = connections.find( mh.ref_id_at_publisher );
+				if ( f == connections.end() )
+					throw std::exception();
+				auto& conn = f->second;
+				assert( notifier != nullptr );
+				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
+				notifier->onMessage( conn.ref_id_at_server, conn.connection, parser );
 				break;
 			}
 			default:
