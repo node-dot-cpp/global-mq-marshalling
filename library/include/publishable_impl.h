@@ -752,8 +752,12 @@ struct ConnectionBase
 {
 };
 
+struct ConnectionNotifierBase
+{
+};
+
 template<class PlatformSupportT>
-class ClientNotifierBase
+class ClientNotifierBase : public ConnectionNotifierBase
 {
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
@@ -876,7 +880,7 @@ public:
 };
 
 template<class PlatformSupportT>
-class ServerNotifierBase
+class ServerNotifierBase : public ConnectionNotifierBase
 {
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
@@ -994,6 +998,32 @@ class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscr
 	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
 
 public:
+	void setTransport( GMQTransportBase<PlatformSupportT>* tr )
+	{
+		StatePublisherPool<PlatformSupportT>::setTransport( tr );
+		StateSubscriberPool<PlatformSupportT>::setTransport( tr );
+		ClientConnectionPool<PlatformSupportT>::setTransport( tr );
+		ServerConnectionPool<PlatformSupportT>::setTransport( tr );
+	}
+
+	void setConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory )
+	{
+		ServerConnectionPool<PlatformSupportT>::setConnectionFactory( connFactory );
+	}
+
+	template<class T>
+	void setNotifier( T* notifier )
+	{
+		static_assert ( std::is_base_of<ConnectionNotifierBase, T>::value );
+		if constexpr ( std::is_base_of<ClientNotifierBase<ComposerT>, T>::value )
+			ClientConnectionPool<PlatformSupportT>::setNotifier( notifier );
+		else
+		{
+			static_assert ( std::is_base_of<ClientNotifierBase<ComposerT>, T>::value );
+			ServerConnectionPool<PlatformSupportT>::setNotifier( notifier );
+		}
+	}
+
 	template<class T>
 	void add( T* obj )
 	{
@@ -1004,7 +1034,7 @@ public:
 		else
 		{
 			static_assert ( std::is_base_of<ConnectionBase<BufferT>, T>::value );
-			ConnectionPool<PlatformSupportT>::add( obj );
+			ClientConnectionPool<PlatformSupportT>::add( obj );
 		}
 	}
 
@@ -1018,16 +1048,8 @@ public:
 		else
 		{
 			static_assert ( std::is_base_of<ConnectionBase<BufferT>, T>::value );
-			ConnectionPool<PlatformSupportT>::remove( obj );
+			ClientConnectionPool<PlatformSupportT>::remove( obj );
 		}
-	}
-
-	void setTransport( GMQTransportBase<PlatformSupportT>* tr )
-	{
-		StatePublisherPool<PlatformSupportT>::setTransport( tr );
-		StateSubscriberPool<PlatformSupportT>::setTransport( tr );
-		ClientConnectionPool<PlatformSupportT>::setTransport( tr );
-		ServerConnectionPool<PlatformSupportT>::setTransport( tr );
 	}
 
 	void onMessage( ParserT& parser )
