@@ -752,6 +752,21 @@ struct ConnectionBase
 {
 };
 
+template<class PlatformSupportT> class ClientConnectionPool;
+template<class PlatformSupportT>
+class ClientConnectionBase
+{
+	template<class PlatformSupportT> friend class ClientConnectionPool;
+	ClientConnectionPool<PlatformSupportT>* pool = nullptr;
+
+public:
+	void connect( GMQ_COLL string path )
+	{
+		assert( pool != nullptr );
+		pool->connect( this, path );
+	}
+};
+
 struct ConnectionNotifierBase
 {
 };
@@ -759,12 +774,12 @@ struct ConnectionNotifierBase
 template<class PlatformSupportT>
 class ClientNotifierBase : public ConnectionNotifierBase
 {
-	using ParserT = typename PlatformSupportT::ParserT;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
-
 public:
+	using ParserT = typename PlatformSupportT::ParserT;
+	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
+
 	virtual void onConnectionAccepted( uint64_t connID ) {};
-	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) {};
+	virtual void onMessage( uint64_t connID, ParserT& parser ) {};
 };
 
 template<class PlatformSupportT>
@@ -774,7 +789,7 @@ protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
+	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
 
 	struct ClientConnection
 	{
@@ -807,6 +822,7 @@ public:
 		cc.ref_id_at_server = 0;
 		auto ins = connections.insert( std::make_pair( cc.ref_id_at_client, cc ) );
 		assert( ins.second );
+		connection->pool = this;
 		return cc.ref_id_at_client;
 	}
 	void remove( uint64_t connID )
@@ -862,7 +878,7 @@ public:
 				auto& conn = f->second;
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
-				notifier->onMessage( conn.ref_id_at_client, conn.connection, parser );
+				notifier->onMessage( conn.ref_id_at_client, parser );
 				break;
 			}
 			default:
@@ -882,10 +898,10 @@ public:
 template<class PlatformSupportT>
 class ServerNotifierBase : public ConnectionNotifierBase
 {
+public:
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
 
-public:
 	virtual void onNewConnection( uint64_t connID ) {};
 	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) {};
 };
@@ -1015,11 +1031,11 @@ public:
 	void setNotifier( T* notifier )
 	{
 		static_assert ( std::is_base_of<ConnectionNotifierBase, T>::value );
-		if constexpr ( std::is_base_of<ClientNotifierBase<ComposerT>, T>::value )
+		if constexpr ( std::is_base_of<ClientNotifierBase<PlatformSupportT>, T>::value )
 			ClientConnectionPool<PlatformSupportT>::setNotifier( notifier );
 		else
 		{
-			static_assert ( std::is_base_of<ClientNotifierBase<ComposerT>, T>::value );
+			static_assert ( std::is_base_of<ServerNotifierBase<PlatformSupportT>, T>::value );
 			ServerConnectionPool<PlatformSupportT>::setNotifier( notifier );
 		}
 	}
@@ -1033,7 +1049,7 @@ public:
 			StateSubscriberPool<PlatformSupportT>::add( obj );
 		else
 		{
-			static_assert ( std::is_base_of<ConnectionBase<BufferT>, T>::value );
+			static_assert ( std::is_base_of<ClientConnectionBase<PlatformSupportT>, T>::value );
 			ClientConnectionPool<PlatformSupportT>::add( obj );
 		}
 	}
