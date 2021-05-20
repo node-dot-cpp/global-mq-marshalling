@@ -409,19 +409,9 @@ namespace impl {
 	}
 } // namespace impl
 
-
-/*template<class PlatformSupportT>
-struct SubscriberAddress
-{
-	using NodeAddressT = typename PlatformSupportT::NodeAddressT;
-	NodeAddressT nodeAddr;
-	uint64_t subscriberAddrInNode;
-};*/
-
 template<class PlatformSupportT>
 struct StateSubscriberData
 {
-//	SubscriberAddress<PlatformSupportT> address;
 	uint64_t IdInPool; // for indexing purposes
 	uint64_t ref_id_at_subscriber;
 };
@@ -488,7 +478,7 @@ public:
 	}
 
 	// processing requests (by now they seem to be independent on state wrappers)
-	uint64_t onSubscriptionRequest( uint64_t IdInPool, /*SubscriberAddress<PlatformSupportT> address*/uint64_t ref_id_at_subscriber )
+	uint64_t onSubscriptionRequest( uint64_t IdInPool, uint64_t ref_id_at_subscriber )
 	{
 		// TODO: who will check uniqueness?
 		subscribers.push_back( StateSubscriberData<PlatformSupportT>({IdInPool, ref_id_at_subscriber}) );
