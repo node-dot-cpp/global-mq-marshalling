@@ -584,7 +584,7 @@ public:
 				helperComposePublishableStateMessageEnd( composer );
 				assert( transport != nullptr );
 				transport->postMessage( std::move( msgBack ) );
-//				PlatformSupportT::sendMsgFromPublisherToSubscriber( msgBack, nodeAddr );
+
 				break;
 			}
 			default:
@@ -863,21 +863,29 @@ protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
+	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
 
 	struct ServerConnection
 	{
-		ConnectionT* connection;
-		uint64_t ref_id_at_server;
-		uint64_t ref_id_at_client; // that is, local id
+		ConnectionT* connection = nullptr;
+		uint64_t ref_id_at_server; // that is, local id
+		uint64_t ref_id_at_client;
 	};
 
-	GMQ_COLL vector<ServerConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	GMQ_COLL unordered_map<uint64_t, ServerConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	uint64_t connIdxBase = 0;
 
 	ConnectionFactoryBase<PlatformSupportT>* connFactory = nullptr;
 	GMQTransportBase<PlatformSupportT>* transport;
 
 public:
+	ServerConnectionPool() {}
+	~ServerConnectionPool()
+	{
+		for ( auto conn : connections )
+			if ( conn.second.connection != nullptr )
+				delete conn.second.connection;
+	}
 	void setConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory_ )
 	{
 		assert( connFactory != nullptr );
@@ -893,6 +901,30 @@ public:
 		{
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
 			{
+				assert( connFactory != nullptr );
+				ServerConnection sc;
+				sc.connection = connFactory->create();
+				sc.ref_id_at_client = mh.ref_id_at_subscriber;
+				sc.ref_id_at_server = ++connIdxBase;
+				auto ins = connections.insert( std::make_pair( sc.ref_id_at_server, sc ) );
+				assert( ins.second );
+
+				PublishableStateMessageHeader hdrBack;
+				hdrBack.type = PublishableStateMessageHeader::MsgType::connectionAccepted;
+				hdrBack.state_type_id = 0;
+				hdrBack.priority = mh.priority; // TODO: source?
+				hdrBack.ref_id_at_subscriber = mh.ref_id_at_subscriber;
+				hdrBack.ref_id_at_publisher = sc.ref_id_at_server;
+
+				BufferT msgBack;
+				ComposerT composer( msgBack );
+				helperComposePublishableStateMessageBegin( composer, hdrBack );
+				helperComposePublishableStateMessageEnd( composer );
+				assert( transport != nullptr );
+				transport->postMessage( std::move( msgBack ) );
+
+				// TODO: call owner::onNewConnection
+
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
