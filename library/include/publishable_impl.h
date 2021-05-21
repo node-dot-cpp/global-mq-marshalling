@@ -870,8 +870,29 @@ public:
 		return;
 	}
 
-	void postMessage( uint64_t connID, BufferT&& buff )
+	void postMessage( uint64_t connID, BufferT&& msgBuff )
 	{
+		auto f = connections.find( connID );
+		assert( f != connections.end() );
+		auto& conn = f->second;
+		assert( conn.ref_id_at_client == connID ); // self-consistency
+		BufferT buff;
+		ComposerT composer( buff );
+		PublishableStateMessageHeader mh;
+		mh.type = globalmq::marshalling::PublishableStateMessageHeader::connectionMessage;
+		mh.priority = 0; // TODO: source
+		mh.state_type_id_or_direction = PublishableStateMessageHeader::ConnMsgDirection::toServer;
+		assert( conn.ref_id_at_client == connID );
+		mh.ref_id_at_subscriber = conn.ref_id_at_client;
+		assert( conn.ref_id_at_server != 0 );
+		mh.ref_id_at_publisher = conn.ref_id_at_server;
+		helperComposePublishableStateMessageBegin( composer, mh );
+
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgBuff.getReadIter(), buff );
+
+		helperComposePublishableStateMessageEnd( composer );
+		assert( transport != nullptr );
+		transport->postMessage( std::move( buff ) );
 	}
 
 	void onMessage( ParserT& parser ) 
@@ -972,8 +993,27 @@ public:
 	}
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
-	void postMessage( uint64_t connID, BufferT&& buff )
+	void postMessage( uint64_t connID, BufferT&& msgBuff )
 	{
+		auto f = connections.find( connID );
+		assert( f != connections.end() );
+		auto& conn = f->second;
+		assert( conn.ref_id_at_server == connID ); // self-consistency
+		BufferT buff;
+		ComposerT composer( buff );
+		PublishableStateMessageHeader mh;
+		mh.type = globalmq::marshalling::PublishableStateMessageHeader::connectionMessage;
+		mh.priority = 0; // TODO: source
+		mh.state_type_id_or_direction = PublishableStateMessageHeader::ConnMsgDirection::toClient;
+		mh.ref_id_at_subscriber = conn.ref_id_at_client;
+		mh.ref_id_at_publisher = conn.ref_id_at_server;
+		helperComposePublishableStateMessageBegin( composer, mh );
+
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgBuff.getReadIter(), buff );
+
+		helperComposePublishableStateMessageEnd( composer );
+		assert( transport != nullptr );
+		transport->postMessage( std::move( buff ) );
 	}
 
 	void onMessage( ParserT& parser ) 
