@@ -782,6 +782,7 @@ template<class PlatformSupportT>
 class ServerConnectionBase : public ConnectionBase<PlatformSupportT, ServerConnectionPool<PlatformSupportT>>
 {
 public:
+	virtual ~ServerConnectionBase() {}
 };
 
 struct ConnectionNotifierBase
@@ -887,8 +888,8 @@ public:
 		assert( conn.ref_id_at_server != 0 );
 		mh.ref_id_at_publisher = conn.ref_id_at_server;
 		helperComposePublishableStateMessageBegin( composer, mh );
-
-		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgBuff.getReadIter(), buff );
+		auto riter = msgBuff.getReadIter();
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( riter, buff );
 
 		helperComposePublishableStateMessageEnd( composer );
 		assert( transport != nullptr );
@@ -947,7 +948,7 @@ public:
 	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
 
 	virtual void onNewConnection( uint64_t connID ) {};
-	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) {};
+	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) = 0;
 };
 
 template<class PlatformSupportT>
