@@ -747,24 +747,41 @@ public:
 };
 
 
-template<class PlatformSupportT>
-struct ConnectionBase
+template<class PlatformSupportT, class PoolT>
+class ConnectionBase
 {
+protected:
+	template<class PlatformSupportT> friend class ClientConnectionPool;
+	template<class PlatformSupportT> friend class ServerConnectionPool;
+	PoolT* pool = nullptr;
+	uint64_t connID = 0;
+
+	ConnectionBase() {}
+
+public:
+	using BufferT = typename PlatformSupportT::BufferT;
+	void postMessage( BufferT&& buff )
+	{
+		assert( pool != nullptr );
+		pool->postMessage( connID, std::move( buff ) );
+	}
 };
 
-template<class PlatformSupportT> class ClientConnectionPool;
 template<class PlatformSupportT>
-class ClientConnectionBase
+class ClientConnectionBase : public ConnectionBase<PlatformSupportT, ClientConnectionPool<PlatformSupportT>>
 {
-	template<class PlatformSupportT> friend class ClientConnectionPool;
-	ClientConnectionPool<PlatformSupportT>* pool = nullptr;
-
 public:
 	void connect( GMQ_COLL string path )
 	{
-		assert( pool != nullptr );
-		pool->connect( this, path );
+		assert( this->pool != nullptr );
+		this->pool->connect( this->connID, path );
 	}
+};
+
+template<class PlatformSupportT>
+class ServerConnectionBase : public ConnectionBase<PlatformSupportT, ServerConnectionPool<PlatformSupportT>>
+{
+public:
 };
 
 struct ConnectionNotifierBase
@@ -809,7 +826,7 @@ public:
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 	void setNotifier( ClientNotifierBase<PlatformSupportT>* notifier_ )
 	{
-		assert( notifier != nullptr );
+		assert( notifier_ != nullptr );
 		notifier = notifier_;
 	}
 
@@ -823,6 +840,7 @@ public:
 		auto ins = connections.insert( std::make_pair( cc.ref_id_at_client, cc ) );
 		assert( ins.second );
 		connection->pool = this;
+		connection->connID = cc.ref_id_at_client;
 		return cc.ref_id_at_client;
 	}
 	void remove( uint64_t connID )
@@ -851,6 +869,11 @@ public:
 		transport->postMessage( std::move( buff ) );
 		return;
 	}
+
+	void postMessage( uint64_t connID, BufferT&& buff )
+	{
+	}
+
 	void onMessage( ParserT& parser ) 
 	{
 		PublishableStateMessageHeader mh;
@@ -892,7 +915,7 @@ template<class PlatformSupportT>
 class ConnectionFactoryBase
 {
 public:
-	virtual ConnectionBase<PlatformSupportT>* create() = 0;
+	virtual ServerConnectionBase<PlatformSupportT>* create() = 0;
 };
 
 template<class PlatformSupportT>
@@ -900,7 +923,7 @@ class ServerNotifierBase : public ConnectionNotifierBase
 {
 public:
 	using ParserT = typename PlatformSupportT::ParserT;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
+	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
 
 	virtual void onNewConnection( uint64_t connID ) {};
 	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) {};
@@ -913,7 +936,7 @@ protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<PlatformSupportT>;
+	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
 
 	struct ServerConnection
 	{
@@ -944,10 +967,14 @@ public:
 	}
 	void setNotifier( ServerNotifierBase<PlatformSupportT>* notifier_ )
 	{
-		assert( notifier != nullptr );
+		assert( notifier_ != nullptr );
 		notifier = notifier_;
 	}
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
+
+	void postMessage( uint64_t connID, BufferT&& buff )
+	{
+	}
 
 	void onMessage( ParserT& parser ) 
 	{
@@ -1011,7 +1038,7 @@ class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscr
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
 	using StatePublisherT = globalmq::marshalling::StatePublisherBase<BufferT>;
-	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
+//	using ConnectionT = globalmq::marshalling::ConnectionBase<BufferT>;
 
 public:
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr )
