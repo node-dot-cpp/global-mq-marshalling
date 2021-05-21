@@ -1040,8 +1040,8 @@ public:
 				PublishableStateMessageHeader::UpdatedData ud;
 				ud.update_ref_id_at_publisher = true;
 				ud.update_ref_id_at_subscriber = true;
-				ud.ref_id_at_subscriber = fields.idAtSource;
-				ud.ref_id_at_publisher = fields.idAtTarget;
+				ud.ref_id_at_subscriber = fields.idAtTarget;
+				ud.ref_id_at_publisher = fields.idAtSource;
 
 				typename ComposerT::BufferType msgForward;
 				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
