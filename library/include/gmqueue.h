@@ -1056,13 +1056,25 @@ public:
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
 			{
-				typename Connections::FieldsForSending fields = connections.onConnMsg( mh.ref_id_at_subscriber, mh.ref_id_at_publisher, senderSlotIdx );
-
 				PublishableStateMessageHeader::UpdatedData ud;
 				ud.update_ref_id_at_publisher = true;
 				ud.update_ref_id_at_subscriber = true;
-				ud.ref_id_at_subscriber = fields.idAtSource;
-				ud.ref_id_at_publisher = fields.idAtTarget;
+
+				typename Connections::FieldsForSending fields;
+				if ( mh.state_type_id_or_direction == PublishableStateMessageHeader::ConnMsgDirection::toServer )
+				{
+					fields = connections.onConnMsg( mh.ref_id_at_publisher, mh.ref_id_at_subscriber, senderSlotIdx );
+					ud.ref_id_at_subscriber = fields.idAtSource;
+					ud.ref_id_at_publisher = fields.idAtTarget;
+				}
+				else
+				{
+					if ( mh.state_type_id_or_direction != PublishableStateMessageHeader::ConnMsgDirection::toClient )
+						throw std::exception();
+					fields = connections.onConnMsg( mh.ref_id_at_subscriber, mh.ref_id_at_publisher, senderSlotIdx );
+					ud.ref_id_at_subscriber = fields.idAtTarget;
+					ud.ref_id_at_publisher = fields.idAtSource;
+				}
 
 				typename ComposerT::BufferType msgForward;
 				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );

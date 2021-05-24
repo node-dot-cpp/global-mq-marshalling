@@ -919,7 +919,7 @@ public:
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
 			{
 				assert( mh.state_type_id_or_direction == PublishableStateMessageHeader::ConnMsgDirection::toClient );
-				auto f = connections.find( mh.ref_id_at_publisher );
+				auto f = connections.find( mh.ref_id_at_subscriber );
 				if ( f == connections.end() )
 					throw std::exception();
 				auto& conn = f->second;
@@ -1038,6 +1038,9 @@ public:
 				sc.ref_id_at_server = ++connIdxBase;
 				auto ins = connections.insert( std::make_pair( sc.ref_id_at_server, sc ) );
 				assert( ins.second );
+
+				sc.connection->pool = this;
+				sc.connection->connID = sc.ref_id_at_server;
 
 				assert( notifier != nullptr );
 				notifier->onNewConnection( sc.ref_id_at_server );
