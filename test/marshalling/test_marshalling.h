@@ -18,11 +18,11 @@ using FileReadBuffer = globalmq::marshalling::FileReadBuffer;
 template<class BufferT>
 class GmqComposer : public globalmq::marshalling::GmqComposer<BufferT> { public: GmqComposer( BufferT& buff_ ) : globalmq::marshalling::GmqComposer<BufferT>( buff_ ) {} };
 template<class BufferT>
-class GmqParser : public globalmq::marshalling::GmqParser<BufferT> { public: GmqParser( BufferT& buff_ ) : globalmq::marshalling::GmqParser<BufferT>( buff_ ) {} GmqParser( const GmqParser<BufferT>& other ) : globalmq::marshalling::GmqParser<BufferT>( other ) {} GmqParser& operator = ( const GmqParser<BufferT>& other ) { globalmq::marshalling::GmqParser<BufferT>::operator = ( other ); return *this; }};
+class GmqParser : public globalmq::marshalling::GmqParser<BufferT> { public: /*GmqParser( BufferT& buff_ ) : globalmq::marshalling::GmqParser<BufferT>( buff_ ) {}*/ GmqParser( typename BufferT::ReadIteratorT& iter ) : globalmq::marshalling::GmqParser<BufferT>( iter ) {} GmqParser( const GmqParser<BufferT>& other ) : globalmq::marshalling::GmqParser<BufferT>( other ) {} GmqParser& operator = ( const GmqParser<BufferT>& other ) { globalmq::marshalling::GmqParser<BufferT>::operator = ( other ); return *this; }};
 template<class BufferT>
 class JsonComposer : public globalmq::marshalling::JsonComposer<BufferT> { public: JsonComposer( BufferT& buff_ ) : globalmq::marshalling::JsonComposer<BufferT>( buff_ ) {} };
 template<class BufferT>
-class JsonParser : public globalmq::marshalling::JsonParser<BufferT> { public: JsonParser( BufferT& buff_ ) : globalmq::marshalling::JsonParser<BufferT>( buff_ ) {} JsonParser( const JsonParser<BufferT>& other ) : globalmq::marshalling::JsonParser<BufferT>( other ) {} JsonParser& operator = ( const JsonParser<BufferT>& other ) { globalmq::marshalling::JsonParser<BufferT>::operator = ( other ); return *this; } };
+class JsonParser : public globalmq::marshalling::JsonParser<BufferT> { public: /*JsonParser( BufferT& buff_ ) : globalmq::marshalling::JsonParser<BufferT>( buff_ ) {}*/ JsonParser( typename BufferT::ReadIteratorT& iter ) : globalmq::marshalling::JsonParser<BufferT>( iter ) {} JsonParser( const JsonParser<BufferT>& other ) : globalmq::marshalling::JsonParser<BufferT>( other ) {} JsonParser& operator = ( const JsonParser<BufferT>& other ) { globalmq::marshalling::JsonParser<BufferT>::operator = ( other ); return *this; } };
 template<class T>
 class SimpleTypeCollectionWrapper : public globalmq::marshalling::SimpleTypeCollectionWrapper<T> { public: SimpleTypeCollectionWrapper( T& coll ) : globalmq::marshalling::SimpleTypeCollectionWrapper<T>( coll ) {} };
 template<class LambdaSize, class LambdaNext>
@@ -1498,12 +1498,12 @@ namespace scope_one {
 using point3D_alias = ::globalmq::marshalling::impl::MessageName<1>;
 using point_alias = ::globalmq::marshalling::impl::MessageName<2>;
 
-template<class BufferT, class ... HandlersT >
-void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class ParserT, class ... HandlersT >
+void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 {
 	uint64_t msgID;
 
-	JsonParser parser( buffer );
+	static_assert( ParserT::proto == Proto::JSON, "According to IDL JSON parser is expected" );
 	parser.skipDelimiter('{');
 	std::string key;
 	parser.readKey(&key);
@@ -1525,12 +1525,24 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 		case point_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point_alias>( parser, handlers... ); break;
 	}
 
-	p.skipMessageFromJson();
-	parser = p;
-
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
 	parser.skipDelimiter('}');
+}
+
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	auto riter = buffer.getReadIter();
+	JsonParser<BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
+}
+
+template<class ReadIteratorT, class ... HandlersT >
+void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
+{
+	JsonParser<typename ReadIteratorT::BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -1594,12 +1606,12 @@ namespace level_trace {
 
 using LevelTraceData = ::globalmq::marshalling::impl::MessageName<1>;
 
-template<class BufferT, class ... HandlersT >
-void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class ParserT, class ... HandlersT >
+void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 {
 	uint64_t msgID;
 
-	JsonParser parser( buffer );
+	static_assert( ParserT::proto == Proto::JSON, "According to IDL JSON parser is expected" );
 	parser.skipDelimiter('{');
 	std::string key;
 	parser.readKey(&key);
@@ -1620,12 +1632,24 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 		case LevelTraceData::id: ::globalmq::marshalling::impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
 	}
 
-	p.skipMessageFromJson();
-	parser = p;
-
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
 	parser.skipDelimiter('}');
+}
+
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	auto riter = buffer.getReadIter();
+	JsonParser<BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
+}
+
+template<class ReadIteratorT, class ... HandlersT >
+void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
+{
+	JsonParser<typename ReadIteratorT::BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -1725,12 +1749,12 @@ using PolygonSt = ::globalmq::marshalling::impl::MessageName<2>;
 using point = ::globalmq::marshalling::impl::MessageName<4>;
 using point3D = ::globalmq::marshalling::impl::MessageName<5>;
 
-template<class BufferT, class ... HandlersT >
-void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class ParserT, class ... HandlersT >
+void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 {
 	uint64_t msgID;
 
-	GmqParser parser( buffer );
+	static_assert( ParserT::proto == Proto::GMQ, "According to IDL GMQ parser is expected" );
 	parser.parseUnsignedInteger( &msgID );
 	switch ( msgID )
 	{
@@ -1739,6 +1763,21 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 		case point3D::id: ::globalmq::marshalling::impl::implHandleMessage<point3D>( parser, handlers... ); break;
 	}
 
+}
+
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	auto riter = buffer.getReadIter();
+	GmqParser<BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
+}
+
+template<class ReadIteratorT, class ... HandlersT >
+void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
+{
+	GmqParser<typename ReadIteratorT::BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -1921,18 +1960,33 @@ namespace test_gmq {
 
 using message_one = ::globalmq::marshalling::impl::MessageName<3>;
 
-template<class BufferT, class ... HandlersT >
-void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class ParserT, class ... HandlersT >
+void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 {
 	uint64_t msgID;
 
-	GmqParser parser( buffer );
+	static_assert( ParserT::proto == Proto::GMQ, "According to IDL GMQ parser is expected" );
 	parser.parseUnsignedInteger( &msgID );
 	switch ( msgID )
 	{
 		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
 	}
 
+}
+
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	auto riter = buffer.getReadIter();
+	GmqParser<BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
+}
+
+template<class ReadIteratorT, class ... HandlersT >
+void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
+{
+	GmqParser<typename ReadIteratorT::BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -2059,12 +2113,12 @@ namespace test_json {
 
 using message_one = ::globalmq::marshalling::impl::MessageName<3>;
 
-template<class BufferT, class ... HandlersT >
-void handleMessage( BufferT& buffer, HandlersT ... handlers )
+template<class ParserT, class ... HandlersT >
+void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 {
 	uint64_t msgID;
 
-	JsonParser parser( buffer );
+	static_assert( ParserT::proto == Proto::JSON, "According to IDL JSON parser is expected" );
 	parser.skipDelimiter('{');
 	std::string key;
 	parser.readKey(&key);
@@ -2085,12 +2139,24 @@ void handleMessage( BufferT& buffer, HandlersT ... handlers )
 		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
 	}
 
-	p.skipMessageFromJson();
-	parser = p;
-
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
 	parser.skipDelimiter('}');
+}
+
+template<class BufferT, class ... HandlersT >
+void handleMessage( BufferT& buffer, HandlersT ... handlers )
+{
+	auto riter = buffer.getReadIter();
+	JsonParser<BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
+}
+
+template<class ReadIteratorT, class ... HandlersT >
+void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
+{
+	JsonParser<typename ReadIteratorT::BufferT> parser( riter );
+	implHandleMessage( parser, handlers... );
 }
 
 template<typename msgID, class BufferT, typename ... Args>

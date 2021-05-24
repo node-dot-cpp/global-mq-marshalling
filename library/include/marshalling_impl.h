@@ -353,7 +353,8 @@ private:
 	RiterT riter;
 
 public:
-	GmqParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
+//	GmqParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
+	GmqParser( RiterT& riter_ ) : riter( riter_ ) {}
 	GmqParser( const GmqParser& other ) { riter = other.riter; }
 	GmqParser& operator = ( const GmqParser& other ) { riter = other.riter; return *this; }
 	GmqParser( GmqParser&& other ) { riter = std::move( other.riter ); }
@@ -603,7 +604,7 @@ public:
 	using RiterT = typename MessageT::ReadIteratorT;
 
 private:
-	RiterT riter;
+	RiterT& riter;
 
 public:
 	RiterT& getIterator() { return riter; }
@@ -634,7 +635,8 @@ public:
 	}
 
 public:
-	JsonParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
+//	JsonParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
+	JsonParser( RiterT& riter_ ) : riter( riter_ ) {}
 	JsonParser( const JsonParser& other ) : riter( other.riter ) {}
 	JsonParser& operator = ( const JsonParser& other ) { riter = other.riter; return *this; }
 	JsonParser( JsonParser&& other ) { riter = std::move( other.riter ); }

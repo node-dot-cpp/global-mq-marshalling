@@ -59,6 +59,10 @@ namespace globalmq::marshalling {
 			const uint8_t* begin = nullptr;
 			const uint8_t* end = nullptr;
 			size_t currentOffset = 0;
+
+		public:
+			using BufferT = Buffer;
+
 		public:
 			ReadIter() {}
 			ReadIter( const Buffer& buff ) {

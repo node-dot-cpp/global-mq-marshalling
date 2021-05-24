@@ -97,8 +97,8 @@ bool impl_processScopes( Root& r )
 void impl_generateScopeHandler( FILE* header, Scope& scope )
 {
 	fprintf( header, 
-		"template<class BufferT, class ... HandlersT >\n"
-		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
+		"template<class ParserT, class ... HandlersT >\n"
+		"void implHandleMessage( ParserT& parser, HandlersT ... handlers )\n"
 		"{\n"
 		"\tuint64_t msgID;\n\n"
 	);
@@ -106,13 +106,15 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 	{
 		case Proto::gmq:
 			fprintf( header, 
-				"\tGmqParser parser( buffer );\n"
+//				"\tGmqParser parser( buffer );\n"
+				"\tstatic_assert( ParserT::proto == Proto::GMQ, \"According to IDL GMQ parser is expected\" );\n"
 				"\tparser.parseUnsignedInteger( &msgID );\n"
 			);
 			break;
 		case Proto::json:
 			fprintf( header, 
-				"\tJsonParser parser( buffer );\n"
+//				"\tJsonParser parser( buffer );\n"
+				"\tstatic_assert( ParserT::proto == Proto::JSON, \"According to IDL JSON parser is expected\" );\n"
 				"\tparser.skipDelimiter(\'{\');\n"
 				"\tstd::string key;\n"
 				"\tparser.readKey(&key);\n"
@@ -144,8 +146,8 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		case Proto::gmq: break;
 		case Proto::json:
 			fprintf( header, 
-				"\tp.skipMessageFromJson();\n"
-				"\tparser = p;\n\n"
+//				"\tp.skipMessageFromJson();\n"
+//				"\tparser = p;\n\n"
 				"\tif (!parser.isDelimiter(\'}\'))\n"
 				"\t\tthrow std::exception(); // bad format\n"
 				"\tparser.skipDelimiter(\'}\');\n"
@@ -154,6 +156,55 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		default:
 			assert( false );
 	}
+	fprintf( header, "}\n\n" );
+
+
+	fprintf( header, 
+		"template<class BufferT, class ... HandlersT >\n"
+		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
+		"{\n"
+		"\tauto riter = buffer.getReadIter();\n"
+	);
+	switch ( scope.proto )
+	{
+		case Proto::gmq:
+			fprintf( header, 
+				"\tGmqParser<BufferT> parser( riter );\n"
+			);
+			break;
+		case Proto::json:
+			fprintf( header, 
+				"\tJsonParser<BufferT> parser( riter );\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+	fprintf( header, "\timplHandleMessage( parser, handlers... );\n" );
+	fprintf( header, "}\n\n" );
+
+
+	fprintf( header, 
+		"template<class ReadIteratorT, class ... HandlersT >\n"
+		"void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )\n"
+		"{\n"
+	);
+	switch ( scope.proto )
+	{
+		case Proto::gmq:
+			fprintf( header, 
+				"\tGmqParser<typename ReadIteratorT::BufferT> parser( riter );\n"
+			);
+			break;
+		case Proto::json:
+			fprintf( header, 
+				"\tJsonParser<typename ReadIteratorT::BufferT> parser( riter );\n"
+			);
+			break;
+		default:
+			assert( false );
+	}
+	fprintf( header, "\timplHandleMessage( parser, handlers... );\n" );
 	fprintf( header, "}\n\n" );
 }
 

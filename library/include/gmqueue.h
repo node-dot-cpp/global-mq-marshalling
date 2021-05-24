@@ -271,8 +271,10 @@ void helperParsePublishableStateMessageEnd(ParserT& parser)
 template<class ParserT, class ComposerT>
 void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& buffFrom, typename ComposerT::BufferType& buffTo, const PublishableStateMessageHeader::UpdatedData& udata )
 {
-	ParserT parser( buffFrom );
-	ParserT parserCurrent( buffFrom );
+	auto riter = buffFrom.getReadIter();
+	auto riter1 = buffFrom.getReadIter();
+	ParserT parser( riter );
+	ParserT parserCurrent( riter1 );
 	PublishableStateMessageHeader header;
 	globalmq::marshalling::impl::parseStructBegin( parserCurrent );
 	header.parseAndUpdate<ParserT, ComposerT>( parser, parserCurrent, buffTo, udata );
@@ -883,7 +885,8 @@ public:
 		assert( senderIdx.idx == senderSlotIdx.idx );
 		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
 		PublishableStateMessageHeader mh;
-		ParserT parser( msg );
+		auto riter = msg.getReadIter();
+		ParserT parser( riter );
 		helperParsePublishableStateMessageBegin( parser, mh );
 		switch ( mh.type )
 		{

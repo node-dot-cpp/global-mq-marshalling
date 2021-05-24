@@ -599,7 +599,8 @@ public:
 			BufferT msgBase;
 			ComposerT composer( msgBase );
 			helperComposePublishableStateMessageBegin( composer, mhBase );
-			ParserT stateUpdateBuffParser( stateUpdateBuff );
+			auto riter = stateUpdateBuff.getReadIter();
+			ParserT stateUpdateBuffParser( riter );
 			copy<typename ParserT::RiterT, typename ComposerT::BufferType>( stateUpdateBuffParser.getIterator(), msgBase );
 			helperComposePublishableStateMessageEnd( composer );
 
@@ -793,11 +794,12 @@ template<class PlatformSupportT>
 class ClientNotifierBase : public ConnectionNotifierBase
 {
 public:
-	using ParserT = typename PlatformSupportT::ParserT;
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ReadIteratorT = typename BufferT::ReadIteratorT;
 	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
 
 	virtual void onConnectionAccepted( uint64_t connID ) {};
-	virtual void onMessage( uint64_t connID, ParserT& parser ) {};
+	virtual void onMessage( uint64_t connID, ReadIteratorT& riter ) = 0;
 };
 
 template<class PlatformSupportT>
@@ -923,7 +925,9 @@ public:
 				auto& conn = f->second;
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
-				notifier->onMessage( conn.ref_id_at_client, parser );
+				auto riter = parser.getIterator();
+				notifier->onMessage( conn.ref_id_at_client, riter );
+				parser = riter;
 				break;
 			}
 			default:
@@ -944,11 +948,12 @@ template<class PlatformSupportT>
 class ServerNotifierBase : public ConnectionNotifierBase
 {
 public:
-	using ParserT = typename PlatformSupportT::ParserT;
+	using BufferT = typename PlatformSupportT::BufferT;
+	using ReadIteratorT = typename BufferT::ReadIteratorT;
 	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
 
 	virtual void onNewConnection( uint64_t connID ) {};
-	virtual void onMessage( uint64_t connID, ConnectionT* connection, ParserT& parser ) = 0;
+	virtual void onMessage( uint64_t connID, ConnectionT* connection, ReadIteratorT& riter ) = 0;
 };
 
 template<class PlatformSupportT>
@@ -1010,7 +1015,8 @@ public:
 		mh.ref_id_at_publisher = conn.ref_id_at_server;
 		helperComposePublishableStateMessageBegin( composer, mh );
 
-		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgBuff.getReadIter(), buff );
+		auto riter = msgBuff.getReadIter();
+		::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( riter, buff );
 
 		helperComposePublishableStateMessageEnd( composer );
 		assert( transport != nullptr );
@@ -1061,7 +1067,7 @@ public:
 				auto& conn = f->second;
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
-				notifier->onMessage( conn.ref_id_at_server, conn.connection, parser );
+				notifier->onMessage( conn.ref_id_at_server, conn.connection, parser.getIterator() );
 				break;
 			}
 			default:
@@ -1138,7 +1144,8 @@ public:
 
 	void onMessage( ParserT& parser )
 	{
-		ParserT parser1( parser );
+		typename ParserT::RiterT riter( parser.getIterator() );
+		ParserT parser1( riter );
 		PublishableStateMessageHeader mh;
 		helperParsePublishableStateMessageBegin( parser1, mh );
 		switch ( mh.type )
@@ -1177,7 +1184,8 @@ public:
 
 	void onMessage( BufferT& buffer )
 	{
-		ParserT parser( buffer );
+		auto riter = buffer.getReadIter();
+		ParserT parser( riter );
 		onMessage( parser );
 	}
 

@@ -39,7 +39,8 @@ void runGmqSample()
 		mtest::sixthParam = mtest::CollectionWrapperForComposing( [&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal){ mtest::STRUCT_point_compose( c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y );} )
 	);
 
-	mtest::GmqParser parser( b );
+	auto riter = b.getReadIter();
+	mtest::GmqParser<mtest::Buffer> parser( riter );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string fifthParam;
@@ -113,7 +114,8 @@ void runJsonSample()
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	mtest::JsonParser parser( b );
+	auto riter = b.getReadIter();
+	mtest::JsonParser<mtest::Buffer> parser( riter );
 	int firstParam = -1;
 	int forthParam = -1;
 	std::string fifthParam;
@@ -230,7 +232,8 @@ void testParsingJsonFile()
 	b.appendUint8( 0 );
 
 	LevelTraceData data;
-	mtest::JsonParser parser( b );
+	auto riter = b.getReadIter();
+	mtest::JsonParser<mtest::Buffer> parser( riter );
 	mtest::level_trace::MESSAGE_LevelTraceData_parse( 
 		parser, 
 		mtest::CharacterParam = mtest::MessageWrapperForParsing( [&](auto& parser)
@@ -265,7 +268,8 @@ void testMessageAliases()
 	std::string_view sview( reinterpret_cast<const char*>(b.begin()), b.size() );
 	fmt::print( "{}\n", sview );
 
-	mtest::JsonParser parser( b );
+	auto riter = b.getReadIter();
+	mtest::JsonParser<mtest::Buffer> parser( riter );
 	Point3D pt3DBack = {0, 0, 0};
 	double seventhParam = 0;
 	mtest::scope_one::MESSAGE_point3D_alias_parse( parser, mtest::x = &(pt3DBack.x), mtest::y = &(pt3DBack.y), mtest::z = &(pt3DBack.z) );

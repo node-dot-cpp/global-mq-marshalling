@@ -28,7 +28,8 @@ void deliverMessages()
 			fmt::print( "{}\n\n", sview );
 		}
 
-		ParserT parser( likeQueues[publisherPoolAddress][i] );
+		auto riter = likeQueues[publisherPoolAddress][i].getReadIter();
+		ParserT parser( riter );
 		mp.onMessage( parser/*, subscriberPoolAddress*/ );
 	}
 	likeQueues[publisherPoolAddress].clear();
@@ -42,7 +43,8 @@ void deliverMessages()
 			fmt::print( "{}\n\n", sview );
 		}
 
-		ParserT parser( likeQueues[subscriberPoolAddress][i] );
+		auto riter = likeQueues[subscriberPoolAddress][i].getReadIter();
+		ParserT parser( riter );
 		mp.onMessage( parser/*, subscriberPoolAddress*/ );
 	}
 	likeQueues[subscriberPoolAddress].clear();
@@ -441,7 +443,8 @@ void quickTestForGmqParts()
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
 		fmt::print( "{}\n\n", sview );
 	}
-	ParserT parser( buff );
+	auto riter = buff.getReadIter();
+	ParserT parser( riter );
 	globalmq::marshalling::PublishableStateMessageHeader mh2;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser, mh2 );
 	assert( mh1.type == mh2.type );
@@ -461,7 +464,8 @@ void quickTestForGmqParts()
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
 		fmt::print( "{}\n\n", sview );
 	}
-	ParserT parser1( buff );
+	auto riter1 = buff.getReadIter();
+	ParserT parser1( riter1 );
 	globalmq::marshalling::PublishableStateMessageHeader mh3;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser1, mh3 );
 	assert( mh1.type == mh3.type );
@@ -481,7 +485,8 @@ void quickTestForGmqParts()
 		std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
 		fmt::print( "{}\n\n", sview );
 	}
-	ParserT parser2( buff );
+	auto riter2 = buff.getReadIter();
+	ParserT parser2( riter2 );
 	globalmq::marshalling::PublishableStateMessageHeader mh4;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser2, mh4 );
 	assert( mh1.type == mh4.type );
@@ -503,7 +508,8 @@ void quickTestForGmqParts()
 		std::string_view sview( reinterpret_cast<const char*>(buff2.begin()), buff2.size() );
 		fmt::print( "{}\n\n", sview );
 	}
-	ParserT parser4( buff2 );
+	auto riter4 = buff2.getReadIter();
+	ParserT parser4( riter4 );
 	globalmq::marshalling::PublishableStateMessageHeader mh5;
 	globalmq::marshalling::helperParsePublishableStateMessageBegin( parser4, mh5 );
 	assert( mh1.type == mh5.type );
