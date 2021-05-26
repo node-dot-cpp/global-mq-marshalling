@@ -486,7 +486,6 @@ class InProcessMessagePostmanBase
 public:
 	InProcessMessagePostmanBase() {};
 	virtual void postMessage( MessageBufferT&& ) = 0;
-	virtual void postInfrastructuralMessage( MessageBufferT&& ) = 0;
 	virtual ~InProcessMessagePostmanBase() {}
 };
 
@@ -1089,20 +1088,6 @@ public:
 		}
 	}
 
-	void postInfrastructuralMessage( MessageBufferT&& msg, GMQ_COLL string nodeName )
-	{
-		std::unique_lock<std::mutex> lock(mx);
-
-		assert( !nodeName.empty() );
-
-		SlotIdx targetIdx = locationNameToSlotIdx( nodeName );
-		if ( targetIdx.idx == SlotIdx::invalid_idx )
-			throw std::exception(); // TODO: post permanent error message to sender instead or in addition
-
-		InProcessMessagePostmanBase* postman = addressableLocations.getPostman( targetIdx );
-		postman->postInfrastructuralMessage( std::move( msg ) );
-	}
-
 	uint64_t add( GMQ_COLL string name, InProcessMessagePostmanBase* postman, SlotIdx& idx )
 	{
 		assert( !name.empty() );
@@ -1181,10 +1166,6 @@ public:
 	void postMessage( MessageBufferT&& msg ){
 		assert( idx.isInitialized() );
 		gmq.postMessage( std::move( msg ), id, idx );
-	}
-	void postInfrastructuralMessage( MessageBufferT&& msg, GMQ_COLL string nodeName ){
-		assert( idx.isInitialized() );
-		gmq.postInfrastructuralMessage( std::move( msg ), nodeName );
 	}
 
 public:
