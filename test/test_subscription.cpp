@@ -400,27 +400,31 @@ void quickTestForGmqParts()
 
 	globalmq::marshalling::GmqPathHelper::PathComponents pc1, pc2;
 
+	pc1.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
 	pc1.authority = "abc.com";
 	pc1.nodeName = "myNode";
-	pc1.statePublisherOrConnPeerName = "state";
-	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( GmqPathHelper::Type::subscriptionRequest, pc1 );
-	bool ok = globalmq::marshalling::GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, path, pc2 );
+	pc1.statePublisherOrConnectionType = "state";
+
+	pc2.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+
+	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
+	bool ok = globalmq::marshalling::GmqPathHelper::parse( path, pc2 );
 	assert( ok );
 	assert( pc2.authority == "abc.com" );
 	assert( pc2.nodeName == "myNode" );
-	assert( pc2.statePublisherOrConnPeerName == "state" );
+	assert( pc2.statePublisherOrConnectionType == "state" );
 	assert( !pc2.furtherResolution );
 	assert( !pc2.hasPort );
 	
 	pc1.furtherResolution = true;
 	pc1.hasPort = true;
 	pc1.port = 12345;
-	path = globalmq::marshalling::GmqPathHelper::compose( GmqPathHelper::Type::subscriptionRequest, pc1 );
-	ok = globalmq::marshalling::GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, path, pc2 );
+	path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
+	ok = globalmq::marshalling::GmqPathHelper::parse( path, pc2 );
 	assert( ok );
 	assert( pc2.authority == "abc.com" );
 	assert( pc2.nodeName == "myNode" );
-	assert( pc2.statePublisherOrConnPeerName == "state" );
+	assert( pc2.statePublisherOrConnectionType == "state" );
 	assert( pc2.furtherResolution );
 	assert( pc2.hasPort );
 
@@ -429,7 +433,7 @@ void quickTestForGmqParts()
 	mh1.type = globalmq::marshalling::PublishableStateMessageHeader::MsgType::subscriptionRequest;
 	mh1.state_type_id_or_direction = 333;
 	mh1.priority = 444;
-	mh1.path = globalmq::marshalling::GmqPathHelper::compose( GmqPathHelper::Type::subscriptionRequest, pc1 );
+	mh1.path = globalmq::marshalling::GmqPathHelper::compose( pc1 );
 	mh1.ref_id_at_subscriber = 112;
 	mh1.ref_id_at_publisher = 113;
 
@@ -595,10 +599,11 @@ void publishableTestOne()
 	fmt::print( "OK so far...\n" );
 
 	globalmq::marshalling::GmqPathHelper::PathComponents pc;
+	pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
 	pc.authority = "";
 	pc.nodeName = "myNode";
-	pc.statePublisherOrConnPeerName = mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT>::stringTypeID;
-	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( GmqPathHelper::Type::subscriptionRequest, pc );
+	pc.statePublisherOrConnectionType = mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT>::stringTypeID;
+	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
 	mtest::publishable_sample_NodecppWrapperForSubscriber<PublishableSample, MetaPoolT> publishableSampleWrapperSlave( mp );
 	publishableSampleWrapperSlave.subscribe( path );

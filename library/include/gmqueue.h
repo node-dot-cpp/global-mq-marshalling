@@ -282,35 +282,18 @@ void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& 
 
 struct GmqPathHelper
 {
-	enum Type { undefined, subscriptionRequest, connectionRequest };
-
 	struct PathComponents
 	{
+		PublishableStateMessageHeader::MsgType type = PublishableStateMessageHeader::MsgType::undefined;
 		GMQ_COLL string authority;
 		bool furtherResolution = false;
 		bool hasPort = false;
 		uint16_t port = 0xFFFF;
 		GMQ_COLL string nodeName;
-		GMQ_COLL string statePublisherOrConnPeerName; // for subscription request
+		GMQ_COLL string statePublisherOrConnectionType; // for subscription request
 	};
 
-	static GMQ_COLL string compose( GmqPathHelper::Type type, GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisherOrConnPeerName )
-	{
-		// TODO: check components
-		GMQ_COLL string ret = "globalmq:";
-		if ( !authority.empty() )
-		{
-			ret += "//";
-			ret += authority;
-		}
-		assert( !nodeName.empty() );
-		assert( !statePublisherOrConnPeerName.empty() );
-		ret += '/';
-		ret += localPart( type, nodeName, statePublisherOrConnPeerName );
-		return ret;
-	}
-
-	static GMQ_COLL string compose( GmqPathHelper::Type type, const PathComponents& components )
+	static GMQ_COLL string compose( const PathComponents& components )
 	{
 		// TODO: check components
 		GMQ_COLL string ret = "globalmq:";
@@ -327,39 +310,46 @@ struct GmqPathHelper
 			ret += str;
 		}
 		assert( !components.nodeName.empty() );
-		assert( !components.statePublisherOrConnPeerName.empty() );
+		assert( !components.statePublisherOrConnectionType.empty() );
 		ret += '/';
-		ret += localPart( type, components.nodeName, components.statePublisherOrConnPeerName );
+		ret += localPart( components );
 		return ret;
 	}
 
-	static GMQ_COLL string localPart( GmqPathHelper::Type type, GMQ_COLL string nodeName, GMQ_COLL string statePublisherOrConnPeerName )
+	static GMQ_COLL string composeForSubscriptionRequest( GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisher )
 	{
-		switch ( type )
+		PathComponents pc;
+		pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+		pc.authority = authority;
+		pc.nodeName = nodeName;
+		pc.statePublisherOrConnectionType = statePublisher;
+		return compose( pc );
+	}
+
+	static GMQ_COLL string composeForConnectionRequest(  GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string connectionType )
+	{
+		PathComponents pc;
+		pc.type = PublishableStateMessageHeader::MsgType::connectionRequest;
+		pc.authority = authority;
+		pc.nodeName = nodeName;
+		pc.statePublisherOrConnectionType = connectionType;
+		return compose( pc );
+	}
+
+	static GMQ_COLL string localPart( const PathComponents& components )
+	{
+		switch ( components.type )
 		{
-			case Type::subscriptionRequest:
-				return fmt::format( "{}?sp={}", nodeName, statePublisherOrConnPeerName );
-			case Type::connectionRequest:
-				return fmt::format( "{}?cn={}", nodeName, statePublisherOrConnPeerName );
+			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
+				return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherOrConnectionType );
+			case PublishableStateMessageHeader::MsgType::connectionRequest:
+				return fmt::format( "{}?cn={}", components.nodeName, components.statePublisherOrConnectionType );
 			default:
 				assert( false );
 		}
 	}
 
-	static GMQ_COLL string localPart( GmqPathHelper::Type type, const PathComponents& components )
-	{
-		switch ( type )
-		{
-			case Type::subscriptionRequest:
-				return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherOrConnPeerName );
-			case Type::connectionRequest:
-				return fmt::format( "{}?cn={}", components.nodeName, components.statePublisherOrConnPeerName );
-			default:
-				assert( false );
-		}
-	}
-
-	static bool parse( GmqPathHelper::Type type, GMQ_COLL string path, PathComponents& components )
+	static bool parse( GMQ_COLL string path, PathComponents& components )
 	{
 		size_t pos = path.find( "globalmq:" );
 		if ( pos != 0 )
@@ -428,14 +418,14 @@ struct GmqPathHelper
 		components.nodeName = path.substr( pos, pos1 - pos );
 		pos = pos1;
 
-		// statePublisherOrConnPeerName
-		switch ( type )
+		// statePublisherOrConnectionType
+		switch ( components.type )
 		{
-			case Type::subscriptionRequest: 
+			case PublishableStateMessageHeader::MsgType::subscriptionRequest: 
 				pos = path.find( "sp=", pos ); 
 				pos += sizeof( "sp=" ) - 1;
 				break;
-			case Type::connectionRequest:
+			case PublishableStateMessageHeader::MsgType::connectionRequest:
 				pos = path.find( "cn=", pos ); 
 				pos += sizeof( "cn=" ) - 1;
 				break;
@@ -446,9 +436,9 @@ struct GmqPathHelper
 			return false;
 		pos1 = path.find( '&', pos );
 		if ( pos1 == GMQ_COLL string::npos )
-			components.statePublisherOrConnPeerName = path.substr( pos );
+			components.statePublisherOrConnectionType = path.substr( pos );
 		else
-			components.statePublisherOrConnPeerName = path.substr( pos, pos1 - pos );
+			components.statePublisherOrConnectionType = path.substr( pos, pos1 - pos );
 		return true;
 	}
 };
@@ -892,11 +882,12 @@ public:
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 			{
 				GmqPathHelper::PathComponents pc;
-				bool pathOK = GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, mh.path, pc );
+				pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
 
-				GMQ_COLL string addr = GmqPathHelper::localPart( GmqPathHelper::Type::subscriptionRequest, pc );
+				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
 				if ( isMyAuthority( pc.authority ) ) // local
 				{
 					assert( !pc.nodeName.empty() );
@@ -1005,11 +996,12 @@ public:
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
 			{
 				GmqPathHelper::PathComponents pc;
-				bool pathOK = GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, mh.path, pc );
+				pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
 
-				GMQ_COLL string addr = GmqPathHelper::localPart( GmqPathHelper::Type::subscriptionRequest, pc );
+				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
 				if ( isMyAuthority( pc.authority ) ) // local
 				{
 					assert( !pc.nodeName.empty() );

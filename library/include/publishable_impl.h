@@ -546,10 +546,11 @@ public:
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 			{
 				GmqPathHelper::PathComponents pc;
-				bool pathOK = GmqPathHelper::parse( GmqPathHelper::Type::subscriptionRequest, mh.path, pc );
+				pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
-				GMQ_COLL string publisherName = pc.statePublisherOrConnPeerName;
+				GMQ_COLL string publisherName = pc.statePublisherOrConnectionType;
 
 				auto findres = name2publisherMapping.find( publisherName );
 				if ( findres == name2publisherMapping.end() )
