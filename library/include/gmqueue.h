@@ -316,26 +316,6 @@ struct GmqPathHelper
 		return ret;
 	}
 
-	static GMQ_COLL string composeForSubscriptionRequest( GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string statePublisher )
-	{
-		PathComponents pc;
-		pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
-		pc.authority = authority;
-		pc.nodeName = nodeName;
-		pc.statePublisherOrConnectionType = statePublisher;
-		return compose( pc );
-	}
-
-	static GMQ_COLL string composeForConnectionRequest(  GMQ_COLL string authority, GMQ_COLL string nodeName, GMQ_COLL string connectionType )
-	{
-		PathComponents pc;
-		pc.type = PublishableStateMessageHeader::MsgType::connectionRequest;
-		pc.authority = authority;
-		pc.nodeName = nodeName;
-		pc.statePublisherOrConnectionType = connectionType;
-		return compose( pc );
-	}
-
 	static GMQ_COLL string localPart( const PathComponents& components )
 	{
 		switch ( components.type )
@@ -343,9 +323,10 @@ struct GmqPathHelper
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 				return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherOrConnectionType );
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
-				return fmt::format( "{}?cn={}", components.nodeName, components.statePublisherOrConnectionType );
+				return fmt::format( "{}?ct={}", components.nodeName, components.statePublisherOrConnectionType );
 			default:
 				assert( false );
+				return "";
 		}
 	}
 
@@ -426,8 +407,8 @@ struct GmqPathHelper
 				pos += sizeof( "sp=" ) - 1;
 				break;
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
-				pos = path.find( "cn=", pos ); 
-				pos += sizeof( "cn=" ) - 1;
+				pos = path.find( "ct=", pos ); 
+				pos += sizeof( "ct=" ) - 1;
 				break;
 			default:
 				assert( false );
