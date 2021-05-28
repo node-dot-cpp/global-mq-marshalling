@@ -749,12 +749,14 @@ public:
 };
 
 
+template<class T> class ClientConnectionPool;
+template<class T> class ServerConnectionPool;
 template<class PlatformSupportT, class PoolT>
 class ConnectionBase
 {
 protected:
-	template<class PlatformSupportT> friend class ClientConnectionPool;
-	template<class PlatformSupportT> friend class ServerConnectionPool;
+	template<class T> friend class ClientConnectionPool;
+	template<class T> friend class ServerConnectionPool;
 	PoolT* pool = nullptr;
 	uint64_t connID = 0;
 
