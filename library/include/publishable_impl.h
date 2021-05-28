@@ -802,7 +802,7 @@ public:
 	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
 
 	virtual void onConnectionAccepted( uint64_t connID ) {};
-	virtual void onMessage( uint64_t connID, ReadIteratorT& riter ) = 0;
+	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { connection->onMessage( riter ); }
 };
 
 template<class PlatformSupportT>
@@ -929,7 +929,7 @@ public:
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
 				auto riter = parser.getIterator();
-				notifier->onMessage( conn.ref_id_at_client, riter );
+				notifier->onMessage( conn.connection, riter );
 				parser = riter;
 				break;
 			}
@@ -1079,7 +1079,9 @@ public:
 				auto& conn = f->second;
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
-				notifier->onMessage( conn.connection, parser.getIterator() );
+				auto riter = parser.getIterator();
+				notifier->onMessage( conn.connection, riter );
+				parser = riter;
 				break;
 			}
 			default:
