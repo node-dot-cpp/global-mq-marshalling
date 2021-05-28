@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2018, OLogN Technologies AG
+* Copyright (c) 2018-2021, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -881,12 +881,15 @@ DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&
 
 namespace impl {
 
-struct MessageNameBase {};
+struct MessageNameBase {
+	static constexpr uint64_t unknownMsgID = 0xFFFFFFFFFFFFFFFFULL;
+};
 template<uint64_t msgID>
 struct MessageName : public MessageNameBase
 {
 	static constexpr uint64_t id = msgID;
 };
+using UnknownMessageName = MessageName<MessageNameBase::unknownMsgID>;
 
 template<typename msgID, class ParserT>
 void implHandleMessage( ParserT& parser )

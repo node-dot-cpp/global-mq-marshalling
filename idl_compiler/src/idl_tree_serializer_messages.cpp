@@ -140,14 +140,13 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 	);
 	for ( auto msg : scope.objectList )
 		fprintf( header, "\t\tcase %s::id: ::globalmq::marshalling::impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
+	fprintf( header, "\t\tdefault: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;\n" );
 	fprintf( header, "\t}\n\n" );
 	switch ( scope.proto )
 	{
 		case Proto::gmq: break;
 		case Proto::json:
 			fprintf( header, 
-//				"\tp.skipMessageFromJson();\n"
-//				"\tparser = p;\n\n"
 				"\tif (!parser.isDelimiter(\'}\'))\n"
 				"\t\tthrow std::exception(); // bad format\n"
 				"\tparser.skipDelimiter(\'}\');\n"
