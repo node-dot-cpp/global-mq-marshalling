@@ -205,6 +205,7 @@ void composeString(ComposerT& composer, const char* str )
 
 namespace json
 {
+	// NOTE: to achieve protocol independence of nested messages never add non-mandatory elements (like spaces) at the end of a composed item
 
 template<typename ComposerT, typename T>
 void composeSignedInteger(ComposerT& composer, T num )
@@ -277,7 +278,6 @@ void addNamePart(ComposerT& composer, GMQ_COLL string name )
 	composer.buff.append( name.c_str(), name.size() );
 	composer.buff.appendUint8( '\"' );
 	composer.buff.appendUint8( ':' );
-	composer.buff.appendUint8( ' ' );
 }
 
 template<typename ComposerT, typename T>
@@ -350,12 +350,11 @@ public:
 	static constexpr Proto proto = Proto::GMQ;
 
 private:
-	RiterT riter;
+	RiterT& riter;
 
 public:
-//	GmqParser( MessageT& msg ) : riter( msg.getReadIter() ) {}
 	GmqParser( RiterT& riter_ ) : riter( riter_ ) {}
-	GmqParser( const GmqParser& other ) { riter = other.riter; }
+	GmqParser( const GmqParser& other ) : riter( other.riter ) {}
 	GmqParser& operator = ( const GmqParser& other ) { riter = other.riter; return *this; }
 	GmqParser( GmqParser&& other ) { riter = std::move( other.riter ); }
 	GmqParser& operator = ( GmqParser&& other ) { riter = std::move( other.riter ); return *this; }

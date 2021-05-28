@@ -762,11 +762,13 @@ protected:
 
 public:
 	using BufferT = typename PlatformSupportT::BufferT;
+	virtual void onMessage( typename BufferT::ReadIteratorT& riter ) = 0;
 	void postMessage( BufferT&& buff )
 	{
 		assert( pool != nullptr );
 		pool->postMessage( connID, std::move( buff ) );
 	}
+	uint64_t getConnID() { return connID; }
 };
 
 template<class PlatformSupportT>
@@ -942,7 +944,7 @@ template<class PlatformSupportT>
 class ConnectionFactoryBase
 {
 public:
-	virtual ServerConnectionBase<PlatformSupportT>* create() = 0;
+	virtual ServerConnectionBase<PlatformSupportT>* create( GMQ_COLL string connType ) = 0;
 };
 
 template<class PlatformSupportT>
@@ -954,7 +956,7 @@ public:
 	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
 
 	virtual void onNewConnection( uint64_t connID ) {};
-	virtual void onMessage( uint64_t connID, ConnectionT* connection, ReadIteratorT& riter ) = 0;
+	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { connection->onMessage( riter ); }
 };
 
 template<class PlatformSupportT>
@@ -969,8 +971,8 @@ protected:
 	struct ServerConnection
 	{
 		ConnectionT* connection = nullptr;
-		uint64_t ref_id_at_server; // that is, local id
-		uint64_t ref_id_at_client;
+		uint64_t ref_id_at_server = 0; // that is, local id
+		uint64_t ref_id_at_client = 0;
 	};
 
 	GMQ_COLL unordered_map<uint64_t, ServerConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
@@ -1033,8 +1035,14 @@ public:
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
 			{
 				assert( connFactory != nullptr );
+				GmqPathHelper::PathComponents pc;
+				pc.type = PublishableStateMessageHeader::MsgType::connectionRequest;
+				bool pathOK = GmqPathHelper::parse( mh.path, pc );
+				if ( !pathOK )
+					throw std::exception(); // TODO: ... (bad path)
+
 				ServerConnection sc;
-				sc.connection = connFactory->create();
+				sc.connection = connFactory->create( pc.statePublisherOrConnectionType );
 				sc.ref_id_at_client = mh.ref_id_at_subscriber;
 				sc.ref_id_at_server = ++connIdxBase;
 				auto ins = connections.insert( std::make_pair( sc.ref_id_at_server, sc ) );
@@ -1071,7 +1079,7 @@ public:
 				auto& conn = f->second;
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
-				notifier->onMessage( conn.ref_id_at_server, conn.connection, parser.getIterator() );
+				notifier->onMessage( conn.connection, parser.getIterator() );
 				break;
 			}
 			default:
