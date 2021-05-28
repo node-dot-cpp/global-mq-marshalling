@@ -1153,7 +1153,7 @@ public:
 			StateSubscriberPool<PlatformSupportT>::remove( obj );
 		else
 		{
-			static_assert ( std::is_base_of<ConnectionBase<BufferT>, T>::value );
+			static_assert ( std::is_base_of<ConnectionBase<BufferT, ClientConnectionPool<PlatformSupportT>>, T>::value );
 			ClientConnectionPool<PlatformSupportT>::remove( obj );
 		}
 	}
