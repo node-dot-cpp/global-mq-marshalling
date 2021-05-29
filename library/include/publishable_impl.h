@@ -749,14 +749,14 @@ public:
 };
 
 
-template<class T> class ClientConnectionPool;
-template<class T> class ServerConnectionPool;
+template<class T> class ClientSimpleConnectionPool;
+template<class T> class ServerSimpleConnectionPool;
 template<class PlatformSupportT, class PoolT>
 class ConnectionBase
 {
 protected:
-	template<class T> friend class ClientConnectionPool;
-	template<class T> friend class ServerConnectionPool;
+	template<class T> friend class ClientSimpleConnectionPool;
+	template<class T> friend class ServerSimpleConnectionPool;
 	PoolT* pool = nullptr;
 	uint64_t connID = 0;
 
@@ -774,7 +774,7 @@ public:
 };
 
 template<class PlatformSupportT>
-class ClientConnectionBase : public ConnectionBase<PlatformSupportT, ClientConnectionPool<PlatformSupportT>>
+class ClientConnectionBase : public ConnectionBase<PlatformSupportT, ClientSimpleConnectionPool<PlatformSupportT>>
 {
 public:
 	void connect( GMQ_COLL string path )
@@ -785,7 +785,7 @@ public:
 };
 
 template<class PlatformSupportT>
-class ServerConnectionBase : public ConnectionBase<PlatformSupportT, ServerConnectionPool<PlatformSupportT>>
+class ServerConnectionBase : public ConnectionBase<PlatformSupportT, ServerSimpleConnectionPool<PlatformSupportT>>
 {
 public:
 	virtual ~ServerConnectionBase() {}
@@ -808,7 +808,7 @@ public:
 };
 
 template<class PlatformSupportT>
-class ClientConnectionPool
+class ClientSimpleConnectionPool
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
@@ -962,7 +962,7 @@ public:
 };
 
 template<class PlatformSupportT>
-class ServerConnectionPool
+class ServerSimpleConnectionPool
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
@@ -985,8 +985,8 @@ protected:
 	ServerNotifierBase<PlatformSupportT>* notifier = nullptr;
 
 public:
-	ServerConnectionPool() {}
-	~ServerConnectionPool()
+	ServerSimpleConnectionPool() {}
+	~ServerSimpleConnectionPool()
 	{
 		for ( auto conn : connections )
 			if ( conn.second.connection != nullptr )
@@ -1099,7 +1099,7 @@ public:
 };
 
 template<class PlatformSupportT>
-class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscriberPool<PlatformSupportT>, public ClientConnectionPool<PlatformSupportT>, public ServerConnectionPool<PlatformSupportT>
+class MetaPool : public StatePublisherPool<PlatformSupportT>, public StateSubscriberPool<PlatformSupportT>, public ClientSimpleConnectionPool<PlatformSupportT>, public ServerSimpleConnectionPool<PlatformSupportT>
 {
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
@@ -1113,13 +1113,13 @@ public:
 	{
 		StatePublisherPool<PlatformSupportT>::setTransport( tr );
 		StateSubscriberPool<PlatformSupportT>::setTransport( tr );
-		ClientConnectionPool<PlatformSupportT>::setTransport( tr );
-		ServerConnectionPool<PlatformSupportT>::setTransport( tr );
+		ClientSimpleConnectionPool<PlatformSupportT>::setTransport( tr );
+		ServerSimpleConnectionPool<PlatformSupportT>::setTransport( tr );
 	}
 
 	void addSimpleConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory, GMQ_COLL string name )
 	{
-		ServerConnectionPool<PlatformSupportT>::addSimpleConnectionFactory( connFactory, name );
+		ServerSimpleConnectionPool<PlatformSupportT>::addSimpleConnectionFactory( connFactory, name );
 	}
 
 	template<class T>
@@ -1127,11 +1127,11 @@ public:
 	{
 		static_assert ( std::is_base_of<ConnectionNotifierBase, T>::value );
 		if constexpr ( std::is_base_of<ClientNotifierBase<PlatformSupportT>, T>::value )
-			ClientConnectionPool<PlatformSupportT>::setNotifier( notifier );
+			ClientSimpleConnectionPool<PlatformSupportT>::setNotifier( notifier );
 		else
 		{
 			static_assert ( std::is_base_of<ServerNotifierBase<PlatformSupportT>, T>::value );
-			ServerConnectionPool<PlatformSupportT>::setNotifier( notifier );
+			ServerSimpleConnectionPool<PlatformSupportT>::setNotifier( notifier );
 		}
 	}
 
@@ -1145,7 +1145,7 @@ public:
 		else
 		{
 			static_assert ( std::is_base_of<ClientConnectionBase<PlatformSupportT>, T>::value );
-			ClientConnectionPool<PlatformSupportT>::add( obj );
+			ClientSimpleConnectionPool<PlatformSupportT>::add( obj );
 		}
 	}
 
@@ -1158,8 +1158,8 @@ public:
 			StateSubscriberPool<PlatformSupportT>::remove( obj );
 		else
 		{
-			static_assert ( std::is_base_of<ConnectionBase<BufferT, ClientConnectionPool<PlatformSupportT>>, T>::value );
-			ClientConnectionPool<PlatformSupportT>::remove( obj );
+			static_assert ( std::is_base_of<ConnectionBase<BufferT, ClientSimpleConnectionPool<PlatformSupportT>>, T>::value );
+			ClientSimpleConnectionPool<PlatformSupportT>::remove( obj );
 		}
 	}
 
@@ -1179,19 +1179,19 @@ public:
 				StatePublisherPool<PlatformSupportT>::onMessage( parser );
 				break;
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
-				ServerConnectionPool<PlatformSupportT>::onMessage( parser );
+				ServerSimpleConnectionPool<PlatformSupportT>::onMessage( parser );
 				break;
 			case PublishableStateMessageHeader::MsgType::connectionAccepted:
-				ClientConnectionPool<PlatformSupportT>::onMessage( parser );
+				ClientSimpleConnectionPool<PlatformSupportT>::onMessage( parser );
 				break;
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
 				switch ( mh.state_type_id_or_direction )
 				{
 					case PublishableStateMessageHeader::ConnMsgDirection::toClient:
-						ClientConnectionPool<PlatformSupportT>::onMessage( parser );
+						ClientSimpleConnectionPool<PlatformSupportT>::onMessage( parser );
 						break;
 					case PublishableStateMessageHeader::ConnMsgDirection::toServer:
-						ServerConnectionPool<PlatformSupportT>::onMessage( parser );
+						ServerSimpleConnectionPool<PlatformSupportT>::onMessage( parser );
 						break;
 					default:
 						throw std::exception(); // TODO: ... (unknown msg type)
