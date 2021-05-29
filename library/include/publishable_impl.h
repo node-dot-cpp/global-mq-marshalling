@@ -946,7 +946,7 @@ template<class PlatformSupportT>
 class ConnectionFactoryBase
 {
 public:
-	virtual ServerConnectionBase<PlatformSupportT>* create( GMQ_COLL string connType ) = 0;
+	virtual ServerConnectionBase<PlatformSupportT>* create() = 0;
 };
 
 template<class PlatformSupportT>
@@ -980,7 +980,7 @@ protected:
 	GMQ_COLL unordered_map<uint64_t, ServerConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 	uint64_t connIdxBase = 0;
 
-	ConnectionFactoryBase<PlatformSupportT>* connFactory = nullptr;
+	GMQ_COLL unordered_map<GMQ_COLL string, ConnectionFactoryBase<PlatformSupportT>*> connFactories;
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 	ServerNotifierBase<PlatformSupportT>* notifier = nullptr;
 
@@ -992,10 +992,11 @@ public:
 			if ( conn.second.connection != nullptr )
 				delete conn.second.connection;
 	}
-	void setConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory_ )
+	void addSimpleConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory, GMQ_COLL string name )
 	{
-		assert( connFactory_ != nullptr );
-		connFactory = connFactory_;
+		assert( connFactory != nullptr );
+		auto ins = connFactories.insert( std::make_pair( name, connFactory ) );
+		assert( ins.second );
 	}
 	void setNotifier( ServerNotifierBase<PlatformSupportT>* notifier_ )
 	{
@@ -1036,15 +1037,19 @@ public:
 		{
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
 			{
-				assert( connFactory != nullptr );
 				GmqPathHelper::PathComponents pc;
 				pc.type = PublishableStateMessageHeader::MsgType::connectionRequest;
 				bool pathOK = GmqPathHelper::parse( mh.path, pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
 
+				auto f = connFactories.find( pc.statePublisherOrConnectionType );
+				if ( f == connFactories.end() )
+					throw std::exception(); // TODO:  ... (no factory for conn name)
+				auto& connFactory = *f->second;
+
 				ServerConnection sc;
-				sc.connection = connFactory->create( pc.statePublisherOrConnectionType );
+				sc.connection = connFactory.create();
 				sc.ref_id_at_client = mh.ref_id_at_subscriber;
 				sc.ref_id_at_server = ++connIdxBase;
 				auto ins = connections.insert( std::make_pair( sc.ref_id_at_server, sc ) );
@@ -1112,9 +1117,9 @@ public:
 		ServerConnectionPool<PlatformSupportT>::setTransport( tr );
 	}
 
-	void setConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory )
+	void addSimpleConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory, GMQ_COLL string name )
 	{
-		ServerConnectionPool<PlatformSupportT>::setConnectionFactory( connFactory );
+		ServerConnectionPool<PlatformSupportT>::addSimpleConnectionFactory( connFactory, name );
 	}
 
 	template<class T>
