@@ -803,7 +803,7 @@ public:
 	using ReadIteratorT = typename BufferT::ReadIteratorT;
 	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
 
-	virtual void onConnectionAccepted( uint64_t connID ) {};
+	virtual void onConnectionAccepted( ConnectionT* connection ) {};
 	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { connection->onMessage( riter ); }
 };
 
@@ -918,7 +918,7 @@ public:
 				assert( conn.ref_id_at_client == mh.ref_id_at_subscriber ); // self-consistency
 				conn.ref_id_at_server = mh.ref_id_at_publisher;
 				assert( notifier != nullptr );
-				notifier->onConnectionAccepted( conn.ref_id_at_client );
+				notifier->onConnectionAccepted( conn.connection );
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
