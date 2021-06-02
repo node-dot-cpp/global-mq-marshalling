@@ -757,20 +757,27 @@ class ConnectionBase
 protected:
 	template<class T> friend class ClientSimpleConnectionPool;
 	template<class T> friend class ServerSimpleConnectionPool;
+
+	enum Status {uninitialized, addedToPool, connRequestSent, connected, removedFromPool }; // TODO: add states as necessary; consider making specific to a particular connection
+	Status status = Status::uninitialized;
+
 	PoolT* pool = nullptr;
 	uint64_t connID = 0;
+	uint64_t getConnID() { return connID; }
 
 	ConnectionBase() {}
 
 public:
 	using BufferT = typename PlatformSupportT::BufferT;
+
+public:
+	bool isConnected() { return status == Status::connected; }
 	virtual void onMessage( typename BufferT::ReadIteratorT& riter ) = 0;
 	void postMessage( BufferT&& buff )
 	{
 		assert( pool != nullptr );
 		pool->postMessage( connID, std::move( buff ) );
 	}
-	uint64_t getConnID() { return connID; }
 };
 
 template<class PlatformSupportT>
@@ -779,8 +786,12 @@ class ClientConnectionBase : public ConnectionBase<PlatformSupportT, ClientSimpl
 public:
 	void connect( GMQ_COLL string path )
 	{
+		assert( this->status == (ConnectionBase<PlatformSupportT, ClientSimpleConnectionPool<PlatformSupportT>>::Status::connected) );
 		assert( this->pool != nullptr );
 		this->pool->connect( this->connID, path );
+	}
+	virtual ~ClientConnectionBase() {
+		// TODO: check status for being disconnected
 	}
 };
 
@@ -849,11 +860,14 @@ public:
 		assert( ins.second );
 		connection->pool = this;
 		connection->connID = cc.ref_id_at_client;
+		connection->status = ConnectionT::Status::addedToPool;
 		return cc.ref_id_at_client;
 	}
-	void remove( uint64_t connID )
+	void remove( ConnectionT* connection )
 	{
-		connections.erase( connID );
+		assert( connection != nullptr );
+		connections.erase( connection->getConnID() );
+		connection->status = ConnectionT::Status::removedFromPool;
 	}
 
 	void connect( uint64_t connID, GMQ_COLL string path )
@@ -875,6 +889,7 @@ public:
 		helperComposePublishableStateMessageEnd( composer );
 		assert( transport != nullptr );
 		transport->postMessage( std::move( buff ) );
+		conn.connection->status = ConnectionT::Status::connRequestSent;
 		return;
 	}
 
@@ -917,6 +932,9 @@ public:
 				auto& conn = f->second;
 				assert( conn.ref_id_at_client == mh.ref_id_at_subscriber ); // self-consistency
 				conn.ref_id_at_server = mh.ref_id_at_publisher;
+				if ( conn.connection->status != ConnectionT::Status::connRequestSent )
+					throw std::exception(); // well, we have not requested connection yet
+				conn.connection->status = ConnectionT::Status::connected;
 				assert( notifier != nullptr );
 				notifier->onConnectionAccepted( conn.connection );
 				break;
@@ -928,6 +946,8 @@ public:
 				if ( f == connections.end() )
 					throw std::exception();
 				auto& conn = f->second;
+				if ( conn.connection->status != ConnectionT::Status::connected )
+					throw std::exception(); // TODO: revise
 				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
 				auto riter = parser.getIterator();
@@ -1057,6 +1077,7 @@ public:
 
 				sc.connection->pool = this;
 				sc.connection->connID = sc.ref_id_at_server;
+				sc.connection->status = ConnectionT::Status::connected;
 
 				assert( notifier != nullptr );
 				notifier->onNewConnection( sc.ref_id_at_server );
