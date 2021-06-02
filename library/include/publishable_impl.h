@@ -815,7 +815,7 @@ public:
 	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
 
 	virtual void onConnectionAccepted( ConnectionT* connection ) {};
-	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { connection->onMessage( riter ); }
+	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { assert( connection != nullptr ); connection->onMessage( riter ); }
 };
 
 template<class PlatformSupportT>
@@ -977,7 +977,7 @@ public:
 	using ReadIteratorT = typename BufferT::ReadIteratorT;
 	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
 
-	virtual void onNewConnection( uint64_t connID ) {};
+	virtual void onNewConnection( ConnectionT* connection ) {};
 	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { connection->onMessage( riter ); }
 };
 
@@ -1080,7 +1080,7 @@ public:
 				sc.connection->status = ConnectionT::Status::connected;
 
 				assert( notifier != nullptr );
-				notifier->onNewConnection( sc.ref_id_at_server );
+				notifier->onNewConnection( sc.connection );
 
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::connectionAccepted;
