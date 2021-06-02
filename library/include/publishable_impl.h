@@ -775,6 +775,7 @@ public:
 	virtual void onMessage( typename BufferT::ReadIteratorT& riter ) = 0;
 	void postMessage( BufferT&& buff )
 	{
+		assert( this->status == Status::connected );
 		assert( pool != nullptr );
 		pool->postMessage( connID, std::move( buff ) );
 	}
@@ -786,7 +787,7 @@ class ClientConnectionBase : public ConnectionBase<PlatformSupportT, ClientSimpl
 public:
 	void connect( GMQ_COLL string path )
 	{
-		assert( this->status == (ConnectionBase<PlatformSupportT, ClientSimpleConnectionPool<PlatformSupportT>>::Status::connected) );
+		assert( this->status == (ConnectionBase<PlatformSupportT, ClientSimpleConnectionPool<PlatformSupportT>>::Status::addedToPool) );
 		assert( this->pool != nullptr );
 		this->pool->connect( this->connID, path );
 	}
