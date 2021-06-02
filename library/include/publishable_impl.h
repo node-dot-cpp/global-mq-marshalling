@@ -791,6 +791,7 @@ public:
 		assert( this->pool != nullptr );
 		this->pool->connect( this->connID, path );
 	}
+	virtual void onConnectionAccepted() {};
 	virtual ~ClientConnectionBase() {
 		// TODO: check status for being disconnected
 	}
@@ -801,22 +802,6 @@ class ServerConnectionBase : public ConnectionBase<PlatformSupportT, ServerSimpl
 {
 public:
 	virtual ~ServerConnectionBase() {}
-};
-
-struct ConnectionNotifierBase
-{
-};
-
-template<class PlatformSupportT>
-class ClientNotifierBase : public ConnectionNotifierBase
-{
-public:
-	using BufferT = typename PlatformSupportT::BufferT;
-	using ReadIteratorT = typename BufferT::ReadIteratorT;
-	using ConnectionT = globalmq::marshalling::ClientConnectionBase<PlatformSupportT>;
-
-	virtual void onConnectionAccepted( ConnectionT* connection ) {};
-	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { assert( connection != nullptr ); connection->onMessage( riter ); }
 };
 
 template<class PlatformSupportT>
@@ -840,15 +825,8 @@ protected:
 
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
-	ClientNotifierBase<PlatformSupportT>* notifier = nullptr;
-
 public:
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
-	void setNotifier( ClientNotifierBase<PlatformSupportT>* notifier_ )
-	{
-		assert( notifier_ != nullptr );
-		notifier = notifier_;
-	}
 
 	uint64_t add( ConnectionT* connection ) // returns connection ID
 	{
@@ -936,8 +914,7 @@ public:
 				if ( conn.connection->status != ConnectionT::Status::connRequestSent )
 					throw std::exception(); // well, we have not requested connection yet
 				conn.connection->status = ConnectionT::Status::connected;
-				assert( notifier != nullptr );
-				notifier->onConnectionAccepted( conn.connection );
+				conn.connection->onConnectionAccepted();
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::connectionMessage:
@@ -949,10 +926,9 @@ public:
 				auto& conn = f->second;
 				if ( conn.connection->status != ConnectionT::Status::connected )
 					throw std::exception(); // TODO: revise
-				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
 				auto riter = parser.getIterator();
-				notifier->onMessage( conn.connection, riter );
+				conn.connection->onMessage( riter );
 				parser = riter;
 				break;
 			}
@@ -968,18 +944,6 @@ class ConnectionFactoryBase
 {
 public:
 	virtual ServerConnectionBase<PlatformSupportT>* create() = 0;
-};
-
-template<class PlatformSupportT>
-class ServerNotifierBase : public ConnectionNotifierBase
-{
-public:
-	using BufferT = typename PlatformSupportT::BufferT;
-	using ReadIteratorT = typename BufferT::ReadIteratorT;
-	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
-
-	virtual void onNewConnection( ConnectionT* connection ) {};
-	virtual void onMessage( ConnectionT* connection, ReadIteratorT& riter ) { connection->onMessage( riter ); }
 };
 
 template<class PlatformSupportT>
@@ -1003,7 +967,6 @@ protected:
 
 	GMQ_COLL unordered_map<GMQ_COLL string, ConnectionFactoryBase<PlatformSupportT>*> connFactories;
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
-	ServerNotifierBase<PlatformSupportT>* notifier = nullptr;
 
 public:
 	ServerSimpleConnectionPool() {}
@@ -1018,11 +981,6 @@ public:
 		assert( connFactory != nullptr );
 		auto ins = connFactories.insert( std::make_pair( name, connFactory ) );
 		assert( ins.second );
-	}
-	void setNotifier( ServerNotifierBase<PlatformSupportT>* notifier_ )
-	{
-		assert( notifier_ != nullptr );
-		notifier = notifier_;
 	}
 	void setTransport( GMQTransportBase<PlatformSupportT>* tr ) { transport = tr; }
 
@@ -1080,9 +1038,6 @@ public:
 				sc.connection->connID = sc.ref_id_at_server;
 				sc.connection->status = ConnectionT::Status::connected;
 
-				assert( notifier != nullptr );
-				notifier->onNewConnection( sc.connection );
-
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::connectionAccepted;
 				hdrBack.state_type_id_or_direction = PublishableStateMessageHeader::ConnMsgDirection::toClient;
@@ -1106,10 +1061,9 @@ public:
 				if ( f == connections.end() )
 					throw std::exception();
 				auto& conn = f->second;
-				assert( notifier != nullptr );
 				assert( conn.ref_id_at_server == mh.ref_id_at_publisher ); // self-consistency
 				auto riter = parser.getIterator();
-				notifier->onMessage( conn.connection, riter );
+				conn.connection->onMessage( riter );
 				parser = riter;
 				break;
 			}
@@ -1142,19 +1096,6 @@ public:
 	void addSimpleConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory, GMQ_COLL string name )
 	{
 		ServerSimpleConnectionPool<PlatformSupportT>::addSimpleConnectionFactory( connFactory, name );
-	}
-
-	template<class T>
-	void setNotifier( T* notifier )
-	{
-		static_assert ( std::is_base_of<ConnectionNotifierBase, T>::value );
-		if constexpr ( std::is_base_of<ClientNotifierBase<PlatformSupportT>, T>::value )
-			ClientSimpleConnectionPool<PlatformSupportT>::setNotifier( notifier );
-		else
-		{
-			static_assert ( std::is_base_of<ServerNotifierBase<PlatformSupportT>, T>::value );
-			ServerSimpleConnectionPool<PlatformSupportT>::setNotifier( notifier );
-		}
 	}
 
 	template<class T>
