@@ -603,6 +603,9 @@ class GMQueue
 	{
 		struct Connection
 		{
+			enum Status {uninitialized, connRequestSent, connected };
+			Status status = Status::uninitialized;
+
 			// conn initiator info
 			uint64_t ref_id_at_conn_initiator;
 			uint64_t ref_id_at_conn_acceptor;
@@ -637,6 +640,7 @@ class GMQueue
 		FieldsForSending onConnRequest( uint64_t ref_id_at_conn_initiator, SlotIdx initiatorSlotIdx, SlotIdx acceptorSlotIdx, GMQ_COLL string address )
 		{
 			Connection conn;
+			conn.status = Connection::Status::connRequestSent;
 			conn.ref_id_at_conn_initiator = ref_id_at_conn_initiator;
 			conn.initiatorSlotIdx = initiatorSlotIdx;
 			conn.acceptorSlotIdx = acceptorSlotIdx;
@@ -660,6 +664,10 @@ class GMQueue
 				throw std::exception();
 			auto& conn = *(f->second);
 			assert( connID == conn.idInQueueForAcceptor ); // self-consistency
+			conn.status = Connection::Status::connRequestSent;
+			if ( conn.status != Connection::Status::connRequestSent )
+				throw std::exception();
+			conn.status = Connection::Status::connected;
 			if ( conn.acceptorSlotIdx != acceptorSlotIdx )
 				throw std::exception();
 			conn.ref_id_at_conn_acceptor = ref_id_at_conn_acceptor;
@@ -679,6 +687,8 @@ class GMQueue
 				throw std::exception();
 			auto& conn = *(f->second);
 			assert( connID == conn.idInQueueForInitiator || connID == conn.idInQueueForAcceptor );
+			if ( conn.status != Connection::Status::connected )
+				throw std::exception();
 			FieldsForSending ffs;
 			if ( connID == conn.idInQueueForAcceptor ) // from acceptor to initiator
 			{
