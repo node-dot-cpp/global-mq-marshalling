@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -943,7 +943,8 @@ template<class PlatformSupportT>
 class ConnectionFactoryBase
 {
 public:
-	virtual ServerConnectionBase<PlatformSupportT>* create() = 0;
+	using OwningPtrToConnection = typename PlatformSupportT::template OwningPtrT<ServerConnectionBase<PlatformSupportT>>;
+	virtual OwningPtrToConnection create() = 0;
 };
 
 template<class PlatformSupportT>
@@ -954,15 +955,16 @@ protected:
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ConnectionT = globalmq::marshalling::ServerConnectionBase<PlatformSupportT>;
+	using OwningPtrToConnection = typename PlatformSupportT::template OwningPtrT<ServerConnectionBase<PlatformSupportT>>;
 
 	struct ServerConnection
 	{
-		ConnectionT* connection = nullptr;
+		OwningPtrToConnection connection;
 		uint64_t ref_id_at_server = 0; // that is, local id
 		uint64_t ref_id_at_client = 0;
 	};
 
-	GMQ_COLL unordered_map<uint64_t, ServerConnection> connections; // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
+	GMQ_COLL unordered_map<uint64_t, ServerConnection> connections;
 	uint64_t connIdxBase = 0;
 
 	GMQ_COLL unordered_map<GMQ_COLL string, ConnectionFactoryBase<PlatformSupportT>*> connFactories;
@@ -970,12 +972,8 @@ protected:
 
 public:
 	ServerSimpleConnectionPool() {}
-	~ServerSimpleConnectionPool()
-	{
-		for ( auto conn : connections )
-			if ( conn.second.connection != nullptr )
-				delete conn.second.connection;
-	}
+	~ServerSimpleConnectionPool() {}
+
 	void addSimpleConnectionFactory( ConnectionFactoryBase<PlatformSupportT>* connFactory, GMQ_COLL string name )
 	{
 		assert( connFactory != nullptr );
@@ -1031,12 +1029,11 @@ public:
 				sc.connection = connFactory.create();
 				sc.ref_id_at_client = mh.ref_id_at_subscriber;
 				sc.ref_id_at_server = ++connIdxBase;
-				auto ins = connections.insert( std::make_pair( sc.ref_id_at_server, sc ) );
-				assert( ins.second );
-
 				sc.connection->pool = this;
 				sc.connection->connID = sc.ref_id_at_server;
 				sc.connection->status = ConnectionT::Status::connected;
+				auto ins = connections.insert( std::move( std::make_pair( sc.ref_id_at_server, std::move(sc) ) ) );
+				assert( ins.second );
 
 				PublishableStateMessageHeader hdrBack;
 				hdrBack.type = PublishableStateMessageHeader::MsgType::connectionAccepted;

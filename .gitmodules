@@ -1,6 +1,3 @@
 [submodule "3rdparty/fmt"]
 	path = 3rdparty/fmt
 	url = https://github.com/fmtlib/fmt
-[submodule "memory-safe-cpp"]
-	path = memory-safe-cpp
-	url = https://github.com/node-dot-cpp/memory-safe-cpp
