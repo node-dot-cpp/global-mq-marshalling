@@ -472,6 +472,7 @@ struct SlotIdx
 	uint64_t reincarnation = invalid_reincarnation;
 	bool isInitialized() { return idx != invalid_idx && reincarnation != invalid_reincarnation; }
 	bool operator == ( const SlotIdx& other ) { return idx == other.idx && reincarnation == other.reincarnation; }
+	bool operator != ( const SlotIdx& other ) { return idx != other.idx || reincarnation != other.reincarnation; }
 	void invalidate() { idx = invalid_idx; reincarnation = invalid_reincarnation; }
 };
 
@@ -857,15 +858,17 @@ public:
 
 	void postMessage( MessageBufferT&& msg, uint64_t senderID, SlotIdx senderSlotIdx )
 	{
+		PublishableStateMessageHeader mh;
+		auto riter = msg.getReadIter();
+		ParserT parser( riter );
+		helperParsePublishableStateMessageBegin( parser, mh );
+
 		std::unique_lock<std::mutex> lock(mx);
 
 		SlotIdx senderIdx = senderIDToSlotIdx( senderID );
 		assert( senderIdx.idx == senderSlotIdx.idx );
 		assert( senderIdx.reincarnation == senderSlotIdx.reincarnation );
-		PublishableStateMessageHeader mh;
-		auto riter = msg.getReadIter();
-		ParserT parser( riter );
-		helperParsePublishableStateMessageBegin( parser, mh );
+
 		switch ( mh.type )
 		{
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
@@ -909,6 +912,7 @@ public:
 							helperComposePublishableStateMessageEnd( composer );
 
 							InProcessMessagePostmanBase* postman = addressableLocations.getPostman( senderSlotIdx );
+							lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 							postman->postMessage( std::move( msgBack ) );
 						}
 					}
@@ -927,6 +931,7 @@ public:
 						helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 						InProcessMessagePostmanBase* postman = addressableLocations.getPostman( targetIdx );
+						lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 						postman->postMessage( std::move( msgForward ) );
 					}
 				}
@@ -953,7 +958,9 @@ public:
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 					InProcessMessagePostmanBase* postman = addressableLocations.getPostman( subscriber.senderSlotIdx );
+					lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 					postman->postMessage( std::move( msgForward ) );
+					lock.lock();
 				}
 
 				break;
@@ -977,7 +984,9 @@ public:
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 					InProcessMessagePostmanBase* postman = addressableLocations.getPostman( subscriber.senderSlotIdx );
+					lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 					postman->postMessage( std::move( msgForward ) );
+					lock.lock();
 				}
 
 				break;
@@ -1008,6 +1017,7 @@ public:
 					helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 					InProcessMessagePostmanBase* postman = addressableLocations.getPostman( targetIdx );
+					lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 					postman->postMessage( std::move( msgForward ) );
 				}
 				else
@@ -1030,6 +1040,7 @@ public:
 				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 				InProcessMessagePostmanBase* postman = addressableLocations.getPostman( fields.targetSlotIdx );
+				lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 				postman->postMessage( std::move( msgForward ) );
 
 				break;
@@ -1060,6 +1071,7 @@ public:
 				helperParseAndUpdatePublishableStateMessage<ParserT, ComposerT>( msg, msgForward, ud );
 
 				InProcessMessagePostmanBase* postman = addressableLocations.getPostman( fields.targetSlotIdx );
+				lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
 				postman->postMessage( std::move( msgForward ) );
 
 				break;
@@ -1072,17 +1084,24 @@ public:
 	uint64_t add( GMQ_COLL string name, InProcessMessagePostmanBase* postman, SlotIdx& idx )
 	{
 		assert( !name.empty() );
+
+		std::unique_lock<std::mutex> lock(mx);
+
 		idx = addressableLocations.add( postman );
 		addNamedLocation( name, idx );
 		return addSender( idx );
 	}
 	uint64_t add( InProcessMessagePostmanBase* postman, SlotIdx& idx )
 	{
+		std::unique_lock<std::mutex> lock(mx);
+
 		idx = addressableLocations.add( postman );
 		return addSender( idx );
 	}
 	void remove( GMQ_COLL string name, SlotIdx idx )
 	{
+		std::unique_lock<std::mutex> lock(mx);
+
 		if ( !name.empty() )
 			removeNamedLocation( name );
 		addressableLocations.remove( idx );
