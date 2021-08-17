@@ -83,17 +83,17 @@ struct PublishableStateMessageHeader
 			case MsgType::subscriptionRequest:
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id_or_direction, "state_type_id" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &state_type_id_or_direction, "state_type_id" );
 				break;
 			case MsgType::connectionRequest:
 			case MsgType::connectionAccepted:
 			case MsgType::connectionMessage:
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &state_type_id_or_direction, "direction" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &state_type_id_or_direction, "direction" );
 				break;
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &priority, "priority" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &priority, "priority" );
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
@@ -101,7 +101,7 @@ struct PublishableStateMessageHeader
 			{
 				type = (MsgType)(msgType);
 				globalmq::marshalling::impl::publishableParseString<ParserT, GMQ_COLL string>( parser, &path, "path" );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
 				break;
 			}
 			case MsgType::subscriptionResponse:
@@ -110,8 +110,8 @@ struct PublishableStateMessageHeader
 			case MsgType::connectionMessage:
 			{
 				type = (MsgType)(msgType);
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &ref_id_at_subscriber, "ref_id_at_subscriber" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &ref_id_at_publisher, "ref_id_at_publisher" );
 				break;
 			}
 			default:
@@ -135,17 +135,17 @@ struct PublishableStateMessageHeader
 			case MsgType::subscriptionRequest:
 			case MsgType::subscriptionResponse:
 			case MsgType::stateUpdate:
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "state_type_id" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &dummy, "state_type_id" );
 				break;
 			case MsgType::connectionRequest:
 			case MsgType::connectionAccepted:
 			case MsgType::connectionMessage:
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "direction" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &dummy, "direction" );
 				break;
 			default:
 				throw std::exception(); // TODO: ... (unknown msg type)
 		}
-		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "priority" );
+		globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &dummy, "priority" );
 		switch ( msgType )
 		{
 			case MsgType::subscriptionRequest:
@@ -155,7 +155,7 @@ struct PublishableStateMessageHeader
 				assert( !udata.update_ref_id_at_publisher );
 				size_t offset = parser.getCurrentOffset();
 				::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", false );
 				else
@@ -169,12 +169,12 @@ struct PublishableStateMessageHeader
 			{
 				size_t offset = parser.getCurrentOffset();
 				::globalmq::marshalling::copy<typename ParserT::RiterT, typename ComposerT::BufferType>( msgStartParser.getIterator(), buff, offset );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_subscriber" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &dummy, "ref_id_at_subscriber" );
 				if ( udata.update_ref_id_at_subscriber )
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_subscriber, "ref_id_at_subscriber", true );
 				else
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, dummy, "ref_id_at_subscriber", true );
-				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, size_t>( parser, &dummy, "ref_id_at_publisher" );
+				globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &dummy, "ref_id_at_publisher" );
 				if ( udata.update_ref_id_at_publisher )
 					globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, udata.ref_id_at_publisher, "ref_id_at_publisher", false );
 				else
