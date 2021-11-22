@@ -9,7 +9,7 @@ int main()
 	runGmqSample();
 	testParsingJsonFile();
 	testMessageAliases();
-	testScopedMessageComposingAndParsing();
-	publishableTestOne();
-	quickTestForGmqParts();
+	//testScopedMessageComposingAndParsing();
+	// publishableTestOne();
+	//quickTestForGmqParts();
 }

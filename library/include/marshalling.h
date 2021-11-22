@@ -408,9 +408,9 @@ void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected
 				{
 					size_t itemSz = 0;
 					p.parseUnsignedInteger( &itemSz );
-					ParserT itemParser( p );
-					coll.parse_next( itemParser, i );
-					p.adjustParsingPos( itemSz );
+					// ParserT itemParser( p );
+					coll.parse_next( p, i );
+					// p.adjustParsingPos( itemSz );
 				}
 			}
 			else

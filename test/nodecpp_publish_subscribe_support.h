@@ -5,7 +5,7 @@
 #include <marshalling.h>
 #include <publishable_impl.h>
 
-#include "nodecpp_gmqueue_customized_types.h"
+//#include "nodecpp_gmqueue_customized_types.h"
 
 class StatePublisherSubscriberPoolInfo;
 //extern thread_local globalmq::marshalling::StatePublisherPool<StatePublisherSubscriberPoolInfo> publishers;
