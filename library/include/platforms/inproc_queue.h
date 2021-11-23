@@ -252,8 +252,8 @@ class GMQThreadQueueTransport : public GMQTransportBase<PlatformSupportT>
 	using BufferT = typename PlatformSupportT::BufferT;
 
 public:
-	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, uint64_t recipientID ) : GMQTransportBase( gmq, name, gmq.template allocPostman<ThreadQueuePostman<BufferT>>( queue, recipientID ) )/*, postman( queue, recipientID )*/ {}
-	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, int recipientID ) : GMQTransportBase( gmq, gmq.template allocPostman<ThreadQueuePostman<BufferT>>( queue, recipientID ) )/*, postman( queue, recipientID )*/ {}
+	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, GMQ_COLL string name, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, uint64_t recipientID ) : GMQTransportBase<PlatformSupportT>( gmq, name, gmq.template allocPostman<ThreadQueuePostman<BufferT>>( queue, recipientID ) )/*, postman( queue, recipientID )*/ {}
+	GMQThreadQueueTransport( GMQueue<PlatformSupportT>& gmq, typename ThreadQueuePostman<BufferT>::MsgQueue& queue, int recipientID ) : GMQTransportBase<PlatformSupportT>( gmq, gmq.template allocPostman<ThreadQueuePostman<BufferT>>( queue, recipientID ) )/*, postman( queue, recipientID )*/ {}
 	virtual ~GMQThreadQueueTransport() {}
 };
 

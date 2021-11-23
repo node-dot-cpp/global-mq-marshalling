@@ -35,6 +35,8 @@
 #include "../include/parser.h"
 #include "lex.h"
 
+#include <climits>
+
 using namespace std;
 
 static const bool dbgEnableLeakDetector = true;

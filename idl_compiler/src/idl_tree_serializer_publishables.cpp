@@ -82,7 +82,7 @@ string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterTyp
 			else
 				return fmt::format( "VECTOR<{}>", impl_kindToString( type.vectorElemKind ) );
 
-		case MessageParameterType::KIND::ENUM: return ( "ENUM {}", type.name );
+		case MessageParameterType::KIND::ENUM: return fmt::format( "ENUM {}", type.name );
 		case MessageParameterType::KIND::UNDEFINED: return "UNDEFINED";
 		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
 		default: assert( false ); return "";
@@ -416,6 +416,9 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
 				break;
+			default:
+				fprintf( header, "\t\t\t\t\t\t\t\t\tstatic_assert(false);\n" );
+				break;
 		}
 		fprintf( header, "\t\t\t\t\t\t\t\tcurrentChanged = %s::parse<ParserT, typename decltype(T::%s)::value_type, bool>( parser, value, addr, %s2 );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), member.name.c_str(), offsetPlusStr );
 		fprintf( header, "\t\t\t\t\t\t\t\tif ( currentChanged )\n" );
@@ -503,6 +506,9 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 			break;
 		case MessageParameterType::KIND::STRUCT:
 			fprintf( header, "\t\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
+			break;
+		default:
+			fprintf( header, "\t\t\t\t\t\t\t\t\tstatic_assert(false);\n" );
 			break;
 	}
 				

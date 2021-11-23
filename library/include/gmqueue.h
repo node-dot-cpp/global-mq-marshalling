@@ -226,6 +226,8 @@ struct PublishableStateMessageHeader
 				globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, ref_id_at_publisher, "ref_id_at_publisher", false );
 				break;
 			}
+			default:
+				throw std::exception(); // TODO: ... (unknown msg type)
 		}
 		globalmq::marshalling::impl::composePublishableStructEnd( composer, addSeparator );
 	}
@@ -448,6 +450,7 @@ class StateConcentratorFactoryBase
 {
 public:
 	virtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID ) = 0;
+	virtual ~StateConcentratorFactoryBase() = default;
 };
 
 class InProcessMessagePostmanBase

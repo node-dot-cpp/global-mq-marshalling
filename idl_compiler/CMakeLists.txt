@@ -15,3 +15,12 @@ add_executable(idl_compiler
 
 target_include_directories(idl_compiler PRIVATE include)
 target_link_libraries(idl_compiler fmt::fmt)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+    CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    
+    target_compile_options(idl_compiler PRIVATE -Wno-register)
+    target_compile_options(idl_compiler PRIVATE -Wno-potentially-evaluated-expression)
+    target_compile_options(idl_compiler PRIVATE -Wno-format)
+
+endif()

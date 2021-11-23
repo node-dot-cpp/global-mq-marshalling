@@ -633,6 +633,9 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 				case MessageParameterType::KIND::UINTEGER: fprintf( header, " (DEFAULT: %lld)", (uint64_t)(param.type.numericalDefault) ); break;
 				case MessageParameterType::KIND::REAL: fprintf( header, " (DEFAULT: %f)", param.type.numericalDefault ); break;
 				case MessageParameterType::KIND::CHARACTER_STRING: fprintf( header, " (DEFAULT: \"%s\")", param.type.stringDefault.c_str() ); break;
+				default:
+					fprintf( header, " (REQUIRED)" );
+					break;
 			}
 		}
 		else
