@@ -19,3 +19,4 @@ test/build/.vs/
 test/build/x64/
 .vs/
 out/
+/build/

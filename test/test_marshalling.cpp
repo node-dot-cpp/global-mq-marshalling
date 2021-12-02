@@ -12,6 +12,12 @@ struct Point
 	int y;
 };
 
+struct Point64
+{
+	int64_t x;
+	int64_t y;
+};
+
 struct Point3D
 {
 	int x;
@@ -123,7 +129,7 @@ void runJsonSample()
 	std::vector<double> vectorOfRealNumbersBack;
 	std::vector<Point> vectorOfPointsBack;
 	std::vector<Point3D> vectorOfPoints3DBack;
-	Point ptBack = {0, 0};
+	Point64 ptBack = {0, 0};
 	Point3D pt3DBack = {0, 0, 0};
 	double seventhParam = 0;
 	mtest::test_json::MESSAGE_message_one_parse( parser, 
