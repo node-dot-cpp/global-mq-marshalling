@@ -20,3 +20,5 @@ test/build/x64/
 .vs/
 out/
 /build/
+bin/
+obj/
