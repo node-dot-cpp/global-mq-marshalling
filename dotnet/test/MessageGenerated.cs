@@ -10,7 +10,7 @@ namespace TestProject1
 {
     //using generated classes
 
-    public class UnitTest2
+    public class MessageGenerated
     {
 
         public static mtest.message_one GetSampleData()
@@ -67,6 +67,41 @@ namespace TestProject1
 
             Assert.Equal(m, mback);
         }
+        [Fact]
+        public static void TestGmqFile()
+        {
+            SimpleBuffer buffer = SimpleBuffer.readFromFile("message_one.gmq");
+            GmqParser parser = new GmqParser(buffer.getReadIterator());
+
+            mtest.message_one m = new mtest.message_one();
+            mtest.MESSAGE_message_one_parse(parser, m);
+
+            SimpleBuffer buffer2 = new SimpleBuffer();
+            GmqComposer composer = new GmqComposer(buffer2);
+
+            mtest.MESSAGE_message_one_compose(composer, m);
+
+            Assert.Equal(buffer, buffer2);
+
+        }
+
+        [Fact]
+        public static void TestJsonFile()
+        {
+            SimpleBuffer buffer = SimpleBuffer.readFromFile("message_one.json");
+            JsonParser parser = new JsonParser(buffer.getReadIterator());
+
+            mtest.message_one m = new mtest.message_one();
+            mtest.MESSAGE_message_one_parse(parser, m);
+
+            SimpleBuffer buffer2 = new SimpleBuffer();
+            JsonComposer composer = new JsonComposer(buffer2);
+
+            mtest.MESSAGE_message_one_compose(composer, m);
+
+            Assert.Equal(buffer, buffer2);
+        }
+
     }
 
 }

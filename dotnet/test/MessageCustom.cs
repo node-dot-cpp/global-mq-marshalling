@@ -15,7 +15,7 @@ namespace TestProject1
     //    }
     //}
 
-    public class UnitTest1
+    public class MessageCustom
     {
         public struct Point
         {
@@ -72,7 +72,7 @@ namespace TestProject1
                 );
             }
 
-            public void setSampleData()
+            public void SetSampleData()
             {
                 one = 1;
                 five = "def";
@@ -101,43 +101,28 @@ namespace TestProject1
                        Enumerable.SequenceEqual(ten, msg.ten);
             }
 
-        }
-
-        public static message_one GetSampleData()
-        {
-            message_one m = new message_one();
-            m.one = 1;
-            m.five = "def";
-            m.four = 3;
-            m.seven = 3.1416;
-            m.two = new int[] { 0, 1, 2, 3, 4, 5 };
-            m.ten = new List<double> { 0.1, 1.2, 2.3 };
-            m.eight = new Point { x = 175, y = 186 };
-            m.nine = new Point3D { x = 123, y = 456, z = 789 };
-            m.six = new Point[] { new Point { x = 0, y = 1 }, new Point { x = 2, y = 3 }, new Point { x = 4, y = 5 } };
-            m.three = new System.Collections.Generic.List<Point3D> { new Point3D { x = 0, y = 1, z = 2 }, new Point3D { x = 3, y = 4, z = 5 } };
-
-            return m;
-        }
-        public static void DebugAssertEquals(message_one left, message_one right)
-        {
-            Assert.Equal(left.one, right.one);
-            Assert.True(left.two.SequenceEqual(right.two));
-            Assert.True(left.three.SequenceEqual(right.three));
-            Assert.True(left.four == right.four);
-            Assert.True(left.five.Equals(right.five));
-            Assert.True(left.six.SequenceEqual(right.six));
-            Assert.True(left.seven == right.seven);
-            Assert.True(left.eight.Equals(right.eight));
-            Assert.True(left.nine.Equals(right.nine));
-            Assert.True(left.ten.SequenceEqual(right.ten));
+            public override int GetHashCode()
+            {
+                HashCode hash = new HashCode();
+                hash.Add(one);
+                hash.Add(five);
+                hash.Add(four);
+                hash.Add(seven);
+                hash.Add(two);
+                hash.Add(ten);
+                hash.Add(eight);
+                hash.Add(nine);
+                hash.Add(six);
+                hash.Add(three);
+                return hash.ToHashCode();
+            }
         }
 
         [Fact]
         public static void TestGmq()
         {
             message_one m = new message_one();
-            m.setSampleData();
+            m.SetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
@@ -159,7 +144,7 @@ namespace TestProject1
         {
 
             message_one m = new message_one();
-            m.setSampleData();
+            m.SetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer);
