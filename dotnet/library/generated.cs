@@ -20,6 +20,8 @@
 
 using globalmq.marshalling;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public class mtest
 {
@@ -123,7 +125,7 @@ public class mtest
         }
     }
 
-    public static void STRUCT_point3D_parse(ParserBase parser, out Int32 x, out Int32 y, out Int32 z)
+    public static void STRUCT_point3D_parse(ParserBase parser, out Int64 x, out Int64 y, out Int64 z)
     {
         if (parser is GmqParser gmq)
         {
@@ -183,13 +185,136 @@ public class mtest
     // 10. VECTOR<REAL> tenthParam (REQUIRED)
 
     //**********************************************************************
+    public struct Point : IEquatable<Point>
+    {
+        public Int64 x;
+        public Int64 y;
 
+        public override bool Equals(object obj)
+        {
+            return obj is Point point && Equals(point);
+        }
+
+        public bool Equals(Point other)
+        {
+            return x == other.x &&
+                   y == other.y;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(x, y);
+        }
+
+        public static bool operator ==(Point left, Point right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Point left, Point right)
+        {
+            return !(left == right);
+        }
+    }
+    public struct Point3D : IEquatable<Point3D>
+    {
+        public Int64 x;
+        public Int64 y;
+        public Int64 z;
+
+        public override bool Equals(object obj)
+        {
+            return obj is Point3D d && Equals(d);
+        }
+
+        public bool Equals(Point3D other)
+        {
+            return x == other.x &&
+                   y == other.y &&
+                   z == other.z;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(x, y, z);
+        }
+
+        public static bool operator ==(Point3D left, Point3D right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Point3D left, Point3D right)
+        {
+            return !(left == right);
+        }
+    }
+    public class message_one
+    {
+        public Int64 firstParam;
+        public Int64[] secondParam;
+        public Point3D[] thirdParam;
+        public UInt64 forthParam;
+        public string fifthParam;
+        public Point[] sixthParam;
+        public Double seventhParam;
+        public Point eighthParam;
+        public Point3D ninethParam;
+        public Double[] tenthParam;
+
+        public override bool Equals(object obj)
+        {
+            return obj is message_one one &&
+                   firstParam == one.firstParam &&
+                   Enumerable.SequenceEqual(secondParam, one.secondParam) &&
+                   Enumerable.SequenceEqual(thirdParam, one.thirdParam) &&
+                   forthParam == one.forthParam &&
+                   fifthParam == one.fifthParam &&
+                   Enumerable.SequenceEqual(sixthParam, one.sixthParam) &&
+                   seventhParam == one.seventhParam &&
+                   eighthParam.Equals(one.eighthParam) &&
+                   ninethParam.Equals(one.ninethParam) &&
+                   Enumerable.SequenceEqual(tenthParam, one.tenthParam);
+        }
+
+        public override int GetHashCode()
+        {
+            HashCode hash = new HashCode();
+            hash.Add(firstParam);
+            hash.Add(secondParam);
+            hash.Add(thirdParam);
+            hash.Add(forthParam);
+            hash.Add(fifthParam);
+            hash.Add(sixthParam);
+            hash.Add(seventhParam);
+            hash.Add(eighthParam);
+            hash.Add(ninethParam);
+            hash.Add(tenthParam);
+            return hash.ToHashCode();
+        }
+    }
+
+    public static void MESSAGE_message_one_compose(ComposerBase composer, message_one msg)
+    {
+        MESSAGE_message_one_compose(composer,
+            firstParam: msg.firstParam,
+            secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
+            thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Length; }, (ComposerBase composer, int ordinal) => { mtest.STRUCT_point3D_compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
+            forthParam: msg.forthParam,
+            fifthParam: msg.fifthParam,
+            sixthParam: new CollectionWrapperForComposing(() => { return msg.sixthParam.Length; }, (ComposerBase composer, int ordinal) => { mtest.STRUCT_point_compose(composer, x: msg.sixthParam[ordinal].x, y: msg.sixthParam[ordinal].y); }),
+            seventhParam: msg.seventhParam,
+            eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
+            ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.STRUCT_point3D_compose(composer, x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z); }),
+            tenthParam: SimpleTypeCollection.makeComposer( msg.tenthParam )
+            );
+    }
     public static void MESSAGE_message_one_compose(ComposerBase composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam,
             UInt64 forthParam, string fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
     {
         if (composer is GmqComposer gmq)
             MESSAGE_message_one_compose(gmq, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-        if (composer is JsonComposer json)
+        else if (composer is JsonComposer json)
             MESSAGE_message_one_compose(json, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
         else
             throw new Exception(); //TODO
@@ -247,12 +372,28 @@ public class mtest
         gmq.composeParamToGmq(composer, tenthParam);
     }
 
+    public static void MESSAGE_message_one_parse(ParserBase parser, message_one msg)
+    {
+        mtest.MESSAGE_message_one_parse(parser,
+            firstParam: ref msg.firstParam,
+            secondParam: new CollectionWrapperForParsing((int size) => { msg.secondParam = new Int64[size]; }, (ParserBase parser, int ordinal) => { parser.parseSignedInteger(out msg.secondParam[ordinal]); }),
+            thirdParam: new CollectionWrapperForParsing((int size) => { msg.thirdParam = new Point3D[size]; }, (ParserBase parser, int ordinal) => { Point3D value; mtest.STRUCT_point3D_parse(parser, x: out value.x, y: out value.y, z: out value.z); msg.thirdParam[ordinal] = value; }),
+            forthParam: ref msg.forthParam,
+            fifthParam: ref msg.fifthParam,
+            sixthParam: new CollectionWrapperForParsing((int size) => { msg.sixthParam = new Point[size]; }, (ParserBase parser, int ordinal) => { Point value; mtest.STRUCT_point_parse(parser, x: out value.x, y: out value.y); msg.sixthParam[ordinal] = value; }),
+            seventhParam: ref msg.seventhParam,
+            eighthParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.STRUCT_point_parse(parser, x: out msg.eighthParam.x, y: out msg.eighthParam.y); }),
+            ninethParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.STRUCT_point3D_parse(parser, x: out msg.ninethParam.x, y: out msg.ninethParam.y, z: out msg.ninethParam.z); }),
+            tenthParam: new CollectionWrapperForParsing((int size) => { msg.tenthParam = new Double[size]; }, (ParserBase parser, int ordinal) => { parser.parseReal(out msg.tenthParam[ordinal]); })
+           );
+    }
+
     public static void MESSAGE_message_one_parse(ParserBase parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam,
             ref UInt64 forthParam, ref string fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
     {
         if (parser is GmqParser gmq)
             MESSAGE_message_one_parse(gmq, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
-        if (parser is JsonParser json)
+        else if (parser is JsonParser json)
             MESSAGE_message_one_parse(json, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
         else
             throw new Exception(); //TODO

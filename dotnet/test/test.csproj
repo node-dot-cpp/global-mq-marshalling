@@ -23,4 +23,13 @@
     <ProjectReference Include="..\library\global-mq-dotnet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="message_one.gmq">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="message_one.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

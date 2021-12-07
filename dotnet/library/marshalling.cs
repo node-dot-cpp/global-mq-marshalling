@@ -90,6 +90,146 @@ namespace globalmq.marshalling
         }
     };
 
+    public class SimpleTypeCollection
+    {
+        public static ICompose makeComposer(IList<SByte> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<Int16> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<Int32> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<Int64> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(SByte[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(Int16[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(Int32[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(Int64[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<Byte> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<UInt16> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<UInt32> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<UInt64> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(Byte[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(UInt16[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(UInt32[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(UInt64[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+
+        public static ICompose makeComposer(IList<Single> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<Double> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(Single[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(Double[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<String> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeString(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(String[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeString(coll[ordinal]); });
+        }
+
+
+
+
+        public static IParse makeParser(IList<SByte> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { SByte value; parser.parseSignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<Int16> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Int16 value; parser.parseSignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<Int32> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Int32 value; parser.parseSignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<Int64> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Int64 value; parser.parseSignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<Byte> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<UInt16> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { UInt16 value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<UInt32> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { UInt32 value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<UInt64> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { UInt64 value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<Single> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Single value; parser.parseReal(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<Double> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Double value; parser.parseReal(out value); coll.Add(value); });
+        }
+        public static IParse makeParser(IList<String> coll)
+        {
+            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { String value; parser.parseString(out value); coll.Add(value); });
+        }
+    };
 
     interface MessageWrapperBase
     {

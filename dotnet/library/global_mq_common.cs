@@ -26,7 +26,9 @@
 * -------------------------------------------------------------------------------*/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace globalmq.marshalling
@@ -59,10 +61,10 @@ namespace globalmq.marshalling
         static readonly int MIN_BUFFER = 1024;
 
         int _size = 0;
-        int _capacity = 0;
+        //int _capacity = 0;
         byte[] _data;
 
-        public ReadIter getReadIterator() { return new ReadIter(this); }
+        public ReadIter getReadIterator() { return new ReadIter(_data, _size); }
 
         void ensureCapacity(int sz) // NOTE: may invalidate pointers
         {
@@ -70,12 +72,12 @@ namespace globalmq.marshalling
             {
                 reserve(sz);
             }
-            else if (sz > _capacity)
+            else if (sz > _data.Length)
             {
                 int cp = Math.Max(sz, MIN_BUFFER);
                 byte[] tmp = new byte[cp];
                 Buffer.BlockCopy(_data, 0, tmp, 0, _size);
-                _capacity = cp;
+                //_capacity = cp;
                 _data = tmp;
             }
         }
@@ -83,19 +85,43 @@ namespace globalmq.marshalling
         void reserve(int sz)
         {
             Debug.Assert(_size == 0);
-            Debug.Assert(_capacity == 0);
+            //Debug.Assert(_capacity == 0);
             Debug.Assert(_data == null);
 
             int cp = Math.Max(sz, MIN_BUFFER);
             byte[] tmp = new byte[cp];
 
-            _capacity = cp;
+            //_capacity = cp;
             _data = tmp;
         }
         public SimpleBuffer() { }
+        public SimpleBuffer(byte[] _data, int _size)
+        {
+            this._data = _data;
+            this._size = _size;
+        }
+        public void writeToFile(string path)
+        {
+            using (FileStream fs = File.OpenWrite(path))
+            {
+                fs.Write(_data, 0, _size);
+            }
+        }
+        public static SimpleBuffer readFromFile(string path)
+        {
+            using (FileStream fs = File.OpenRead(path))
+            {
+                SimpleBuffer b = new SimpleBuffer();
+                int sz = (int)fs.Length;
+                b.reserve(sz);
+                fs.Read(b._data, 0, sz);
+                b._size = sz;
+                return b;
+            }
+        }
         public int size() { return _size; }
         public bool empty() { return _size == 0; }
-        public int capacity() { return _capacity; }
+        public int capacity() { return _data.Length; }
         public void append(byte[] dt) // NOTE: may invalidate pointers
         {
             ensureCapacity(_size + dt.Length);
@@ -119,16 +145,35 @@ namespace globalmq.marshalling
             appendUint8((byte)val);
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is SimpleBuffer buffer && _size == buffer._size)
+            {
+                for (int i = 0; i < _size; ++i)
+                {
+                    if (_data[i] != buffer._data[i])
+                        return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_size, _data);
+        }
+
         public class ReadIter : ReadIterT
         {
             int _size = 0;
             int currentOffset = 0;
             byte[] _data;
             public ReadIter() { }
-            public ReadIter(SimpleBuffer buff)
+            public ReadIter(byte[] _data, Int32 _size)
             {
-                _data = buff._data;
-                _size = buff._size;
+                this._data = _data;
+                this._size = _size;
             }
             public bool isData() { return currentOffset < _size; }
             public int directlyAvailableSize() { return _data != null ? _size - currentOffset : 0; }
