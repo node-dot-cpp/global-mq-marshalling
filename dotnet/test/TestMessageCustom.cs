@@ -15,7 +15,7 @@ namespace TestProject1
     //    }
     //}
 
-    public class MessageCustom
+    public class TestMessageCustom
     {
         public struct Point
         {
@@ -72,7 +72,7 @@ namespace TestProject1
                 );
             }
 
-            public void SetSampleData()
+            public void setSampleData()
             {
                 one = 1;
                 five = "def";
@@ -122,7 +122,7 @@ namespace TestProject1
         public static void TestGmq()
         {
             message_one m = new message_one();
-            m.SetSampleData();
+            m.setSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
@@ -144,7 +144,7 @@ namespace TestProject1
         {
 
             message_one m = new message_one();
-            m.SetSampleData();
+            m.setSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer);

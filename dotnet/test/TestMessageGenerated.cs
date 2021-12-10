@@ -10,7 +10,7 @@ namespace TestProject1
 {
     //using generated classes
 
-    public class MessageGenerated
+    public class TestMessageGenerated
     {
 
         public static mtest.message_one GetSampleData()

@@ -264,11 +264,168 @@ namespace globalmq.marshalling
         }
     };
 
+    public class Base
+    {
+        public static UInt64[] makeAddress(UInt64[] baseAddress, UInt64 last)
+        {
+            UInt64[] address = new UInt64[baseAddress.Length + 1];
+            baseAddress.CopyTo(address, 0);
+            address[baseAddress.Length] = last;
+            return address;
+        }
+        public static void composeAddressInPublishable(ComposerBase composer, UInt64[] addr, UInt64 last)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composeAddressInPublishable(gmqComposer, addr, last);
+            else if (composer is JsonComposer jsonComposer)
+                json.composeAddressInPublishable(jsonComposer, addr, last);
+            else
+                throw new Exception(); //TODO
+        }
+        
+        public static void composeStateUpdateMessageBegin(ComposerBase composer)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composeStateUpdateMessageBegin(gmqComposer);
+            else if (composer is JsonComposer jsonComposer)
+                json.composeStateUpdateMessageBegin(jsonComposer);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void composeStateUpdateMessageEnd(ComposerBase composer)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composeStateUpdateMessageEnd(gmqComposer);
+            else if (composer is JsonComposer jsonComposer)
+                json.composeStateUpdateMessageEnd(jsonComposer);
+            else
+                throw new Exception(); //TODO
+        }
 
+        public static void publishableComposeLeafeInteger(ComposerBase composer, Int64 value)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableComposeLeafeInteger(gmqComposer, value);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableComposeLeafeInteger(jsonComposer, value);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableComposeLeafeReal(ComposerBase composer, Double value)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableComposeLeafeReal(gmqComposer, value);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableComposeLeafeReal(jsonComposer, value);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableComposeLeafeString(ComposerBase composer, String value)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableComposeLeafeString(gmqComposer, value);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableComposeLeafeString(jsonComposer, value);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableComposeLeafeStructBegin(ComposerBase composer)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableComposeLeafeStructBegin(gmqComposer);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableComposeLeafeStructBegin(jsonComposer);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableComposeLeafeStructEnd(ComposerBase composer)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableComposeLeafeStructEnd(gmqComposer);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableComposeLeafeStructEnd(jsonComposer);
+            else
+                throw new Exception(); //TODO
+        }
+        
+        public static void publishableStructComposeInteger(ComposerBase composer, String name, Int64 value, bool separator)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableStructComposeInteger(gmqComposer, name, value, separator);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableStructComposeInteger(jsonComposer, name, value, separator);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableStructComposeUnsigned(ComposerBase composer, String name, UInt64 value, bool separator)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableStructComposeUnsigned(gmqComposer, name, value, separator);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableStructComposeUnsigned(jsonComposer, name, value, separator);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableStructComposeReal(ComposerBase composer, String name, Double value, bool separator)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableStructComposeReal(gmqComposer, name, value, separator);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableStructComposeReal(jsonComposer, name, value, separator);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableStructComposeString(ComposerBase composer, String name, String value, bool separator)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableStructComposeString(gmqComposer, name, value, separator);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableStructComposeString(jsonComposer, name, value, separator);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void composeStructBegin(ComposerBase composer)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composeStructBegin(gmqComposer);
+            else if (composer is JsonComposer jsonComposer)
+                json.composeStructBegin(jsonComposer);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void composeStructEnd(ComposerBase composer)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composeStructEnd(gmqComposer);
+            else if (composer is JsonComposer jsonComposer)
+                json.composeStructEnd(jsonComposer);
+            else
+                throw new Exception(); //TODO
+        }
+
+        public static void composePublishableStructBegin(ComposerBase composer, String name)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composePublishableStructBegin(gmqComposer, name);
+            else if (composer is JsonComposer jsonComposer)
+                json.composePublishableStructBegin(jsonComposer, name);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void composePublishableStructEnd(ComposerBase composer, bool separator)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.composePublishableStructEnd(gmqComposer, separator);
+            else if (composer is JsonComposer jsonComposer)
+                json.composePublishableStructEnd(jsonComposer, separator);
+            else
+                throw new Exception(); //TODO
+        }
+
+    }
 
     public class gmq
     {
-
         public static void parseGmqParam(GmqParser parser, IParse o)
         {
             if (o is CollectionWrapperForParsing coll)
@@ -304,6 +461,85 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
+
+        public static void handleMessage(GmqParser parser, MessageHandlerArray handlers)
+        {
+            UInt64 msgID;
+            parser.parseUnsignedInteger(out msgID);
+            handlers.handle(parser, msgID);
+        }
+
+        public static void composeStateUpdateMessageBegin(GmqComposer composer)
+        {
+            /* nothing */
+        }
+        public static void composeStateUpdateMessageEnd(GmqComposer composer)
+        {
+            /* nothing */
+        }
+
+        public static void composeAddressInPublishable(GmqComposer composer, UInt64[] addr, UInt64 last)
+        {
+            int collSz = addr.Length;
+            composer.composeUnsignedInteger((UInt64)collSz + 1);
+            for (int i = 0; i < collSz; ++i)
+                composer.composeUnsignedInteger(addr[i]);
+            composer.composeUnsignedInteger(last);
+        }
+        public static void publishableComposeLeafeInteger(GmqComposer composer, Int64 value)
+        {
+            composer.composeSignedInteger(value);
+        }
+        public static void publishableComposeLeafeReal(GmqComposer composer, Double value)
+        {
+            composer.composeReal(value);
+        }
+
+        public static void publishableComposeLeafeString(GmqComposer composer, String value)
+        {
+            composer.composeString(value);
+        }
+        public static void publishableComposeLeafeStructBegin(GmqComposer composer)
+        {
+            /* nothing */
+        }
+        public static void publishableComposeLeafeStructEnd(GmqComposer composer)
+        {
+            /* nothing */
+        }
+        public static void publishableStructComposeInteger(GmqComposer composer, String name, Int64 value, bool separator)
+        {
+            composer.composeSignedInteger(value);
+        }
+        public static void publishableStructComposeUnsigned(GmqComposer composer, String name, UInt64 value, bool separator)
+        {
+            composer.composeUnsignedInteger(value);
+        }
+        public static void publishableStructComposeReal(GmqComposer composer, String name, Double value, bool separator)
+        {
+            composer.composeReal(value);
+        }
+        public static void publishableStructComposeString(GmqComposer composer, String name, String value, bool separator)
+        {
+            composer.composeString(value);
+        }
+        public static void composePublishableStructBegin(GmqComposer composer, String name)
+        {
+            /* nothing */
+        }
+        public static void composePublishableStructEnd(GmqComposer composer, bool separator)
+        {
+            /* nothing */
+        }
+        public static void composeStructBegin(GmqComposer composer)
+        {
+            /* nothing */
+        }
+        public static void composeStructEnd(GmqComposer composer)
+        {
+            /* nothing */
+        }
+
 
     } // class gmq
 
@@ -407,7 +643,140 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-    }
+
+        public static void handleMessage(JsonParser parser, MessageHandlerArray handlers)
+        {
+            parser.skipDelimiter('{');
+            string key;
+            parser.readKeyFromJson(out key);
+            if (key != "msgid")
+                throw new Exception(); // bad format
+            UInt64 msgID;
+            parser.parseUnsignedInteger(out msgID);
+            parser.skipSpacesEtc();
+            parser.skipDelimiter(',');
+            parser.readKeyFromJson(out key);
+            if (key != "msgbody")
+                throw new Exception(); // bad format
+
+            bool handled = handlers.handle(parser, msgID);
+
+            //TODO what to do if not handled???
+            if (handled)
+                parser.skipDelimiter('}');
+        }
+
+        public static void composeStateUpdateMessageBegin(JsonComposer composer)
+        {
+            composer.append("{\"changes\":[");
+        }
+        public static void composeStateUpdateMessageEnd(JsonComposer composer)
+        {
+            composer.append("{}]}");
+        }
+
+        public static void composeAddressInPublishable(JsonComposer composer, UInt64[] addr, UInt64 last)
+        {
+            composer.append('{');
+            composer.addNamePart("addr");
+            composer.append('[');
+            int collSz = addr.Length;
+            for (int i = 0; i < collSz; ++i)
+            {
+                composer.composeUnsignedInteger(addr[i]);
+                composer.append(", ");
+            }
+            composer.composeUnsignedInteger(last);
+            composer.append(']');
+            composer.append(',');
+        }
+
+        public static void publishableComposeLeafeInteger(JsonComposer composer, Int64 value)
+        {
+            composer.addNamePart("value");
+            composer.composeSignedInteger(value);
+
+            composer.append("}");
+            composer.append(",");
+        }
+        public static void publishableComposeLeafeReal(JsonComposer composer, Double value)
+        {
+            composer.addNamePart("value");
+            composer.composeReal(value);
+
+            composer.append("}");
+            composer.append(",");
+        }
+
+        public static void publishableComposeLeafeString(JsonComposer composer, String value)
+        {
+            composer.addNamePart("value");
+            composer.composeString(value);
+
+            composer.append("}");
+            composer.append(",");
+        }
+        public static void publishableComposeLeafeStructBegin(JsonComposer composer)
+        {
+            composer.addNamePart("value");
+            composer.append("{");
+        }
+        public static void publishableComposeLeafeStructEnd(JsonComposer composer)
+        {
+            composer.append("}");
+            composer.append("}");
+            composer.append(",");
+        }
+        public static void publishableStructComposeInteger(JsonComposer composer, String name, Int64 value, bool separator)
+        {
+            composer.addNamePart(name);
+            composer.composeSignedInteger(value);
+            if (separator)
+                composer.append(",");
+        }
+        public static void publishableStructComposeUnsigned(JsonComposer composer, String name, UInt64 value, bool separator)
+        {
+            composer.addNamePart(name);
+            composer.composeUnsignedInteger(value);
+            if (separator)
+                composer.append(",");
+        }
+        public static void publishableStructComposeReal(JsonComposer composer, String name, Double value, bool separator)
+        {
+            composer.addNamePart(name);
+            composer.composeReal(value);
+            if(separator)
+                composer.append(",");
+        }
+        public static void publishableStructComposeString(JsonComposer composer, String name, String value, bool separator)
+        {
+            composer.addNamePart(name);
+            composer.composeString(value);
+            if (separator)
+                composer.append(",");
+        }
+
+        public static void composePublishableStructBegin(JsonComposer composer, String name)
+        {
+            composer.addNamePart(name);
+            composer.append("{");
+        }
+        public static void composePublishableStructEnd(JsonComposer composer, bool separator)
+        {
+            composer.append("}");
+            if (separator)
+                composer.append(",");
+        }
+        public static void composeStructBegin(JsonComposer composer)
+        {
+            composer.append("{");
+        }
+        public static void composeStructEnd(JsonComposer composer)
+        {
+            composer.append("}");
+        }
+
+    }//json
 
     public class MessageHandler
     {
@@ -425,6 +794,51 @@ namespace globalmq.marshalling
         public void handle(ParserBase parser )
         {
             lhandler_(parser);
+        }
+
+    }
+
+    // TODO: mb this class is to keep array out of user sight,
+    // so we can refactor how we handle this without breaking user code
+    // because I want to delay performance tunning until better measurements
+    // can be made
+    public class MessageHandlerArray
+    {
+        MessageHandler[] handlers;
+
+        MessageHandlerArray(MessageHandler[] handlers)
+        {
+            this.handlers = handlers;
+        }
+        public bool handle(ParserBase parser, UInt64 msgID)
+        {
+            // TODO improve
+            MessageHandler defaultHandler = null;
+
+            for (int i = 0; i != handlers.Length; ++i)
+            {
+                if (msgID == handlers[i].msgID)
+                {
+                    handlers[i].handle(parser);
+                    return true;
+                }
+                else if (handlers[i].msgID == MessageHandler.DefaultHandler)
+                {
+                    defaultHandler = handlers[i];
+                }
+            }
+
+            if (defaultHandler != null)
+            {
+                defaultHandler.handle(parser);
+                return true;
+            }
+
+            return false;
+        }
+        public static MessageHandlerArray make(MessageHandler[] handlers)
+        {
+            return new MessageHandlerArray(handlers);
         }
     }
 

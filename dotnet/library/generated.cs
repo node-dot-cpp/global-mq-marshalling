@@ -21,10 +21,26 @@
 using globalmq.marshalling;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 public class mtest
 {
+    public static bool DebugWithJson { get; set; }
+    public static ComposerBase makeComposer(BufferT buff)
+    {
+        if (DebugWithJson)
+            return new JsonComposer(buff);
+        else
+            return new GmqComposer(buff);
+    }
+    public static ParserBase makeParser(ReadIterT it)
+    {
+        if (DebugWithJson)
+            return new JsonParser(it);
+        else
+            return new GmqParser(it);
+    }
     public enum MessageName  { message_one = 1, message_two = 2 }
     public static void STRUCT_point_compose(ComposerBase composer, Int64 x, Int64 y)
     {
@@ -458,72 +474,15 @@ public class mtest
         gmq.parseGmqParam(parser, tenthParam);
     }
 
-    public static void handleMessage(ParserBase parser, params MessageHandler[] handlers)
+    public static void handleGmqMessage(ReadIterT it, MessageHandlerArray handlers)
     {
-        if (parser is GmqParser gmq)
-            handleMessage(gmq, handlers);
-        if (parser is JsonParser json)
-            handleMessage(json, handlers);
-        else
-            throw new Exception(); //TODO
+        GmqParser parser = new GmqParser(it);
+        gmq.handleMessage(parser, handlers);
     }
-
-    public static void handleMessage(GmqParser parser, params MessageHandler[] handlers)
+    public static void handleJsonMessage(ReadIterT it, MessageHandlerArray handlers)
     {
-        UInt64 msgID;
-        parser.parseUnsignedInteger(out msgID);
-        implHandleMessage(parser, msgID, handlers);
-    }
-
-
-    public static void handleMessage(JsonParser parser, params MessageHandler[] handlers)
-    {
-        parser.skipDelimiter('{');
-        string key;
-        parser.readKeyFromJson(out key);
-        if (key != "msgid")
-            throw new Exception(); // bad format
-        UInt64 msgID;
-        parser.parseUnsignedInteger(out msgID);
-        parser.skipSpacesEtc();
-        parser.skipDelimiter(',');
-        parser.readKeyFromJson(out key);
-        if (key != "msgbody")
-            throw new Exception(); // bad format
-
-        bool handled = implHandleMessage(parser, msgID, handlers);
-
-        //TODO what to do if not handled???
-        if (handled)
-            parser.skipDelimiter('}');
-    }
-
-
-    static bool implHandleMessage(ParserBase parser, UInt64 msgID, MessageHandler[] handlers)
-    {
-        // TODO improve
-        MessageHandler defaultHandler = null;
-
-        for (int i = 0; i != handlers.Length; ++i)
-        {
-            if (msgID == handlers[i].msgID)
-            {
-                handlers[i].handle(parser);
-                return true;
-            }
-            else if (handlers[i].msgID == MessageHandler.DefaultHandler)
-            {
-                defaultHandler = handlers[i];
-            }
-        }
-
-        if (defaultHandler != null)
-        {
-            defaultHandler.handle(parser);
-            return true;
-        }
-
-        return false;
+        JsonParser parser = new JsonParser(it);
+        json.handleMessage(parser, handlers);
     }
 
     //TODO Message handler should be constructible only from this methods
@@ -534,5 +493,827 @@ public class mtest
     public MessageHandler defaultMessageHandler(MessageHandler.HandlerDelegate handler)
     {
         return new MessageHandler(MessageHandler.DefaultHandler, handler);
+    }
+
+    public MessageHandlerArray makeHandlerArray(params MessageHandler[] handlers)
+    {
+        return MessageHandlerArray.make(handlers);
+    }
+
+    public void composeGmqMessage_message_one(BufferT buffer, Int64 firstParam, ICompose secondParam, ICompose thirdParam,
+            UInt64 forthParam, string fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam,
+            ICompose ninethParam, ICompose tenthParam)
+    {
+        JsonComposer composer = new JsonComposer(buffer);
+        composer.append("{\n  ");
+
+        composer.addNamePart("msgid");
+
+        composer.composeUnsignedInteger((UInt64) MessageName.message_one);
+        composer.append(",\n  ");
+
+        composer.addNamePart("msgbody");
+
+        MESSAGE_message_one_compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam,
+            seventhParam, eighthParam, ninethParam, tenthParam);
+        composer.append("\n}");
+    }
+
+    public void composeJsonMessage_message_one(BufferT buffer, Int64 firstParam, ICompose secondParam, ICompose thirdParam,
+            UInt64 forthParam, string fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam,
+            ICompose ninethParam, ICompose tenthParam)
+    {
+        GmqComposer composer = new GmqComposer(buffer);
+        composer.composeUnsignedInteger((UInt64)MessageName.message_one);
+        MESSAGE_message_one_compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam,
+            seventhParam, eighthParam, ninethParam, tenthParam);
+    }
+
+
+
+    //PUBLISHABLE publishable_sample = 2 {
+
+    //    INTEGER ID;
+    //    CHARACTER-STRING name;
+    //    STRUCT SIZE size;
+    // STRUCT CharacterParamStruct chp;
+    // VECTOR<INTEGER> vector_of_int;
+    //    VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
+    //    STRUCT StructWithVectorOfInt structWithVectorOfInt;
+    // STRUCT StructWithVectorOfSize structWithVectorOfSize;
+    //};
+    public interface SIZE
+    {
+        Double X { get; set; }
+        Double Y { get; set; }
+        Double Z { get; set; }
+    };
+    public class SIZE_impl : SIZE
+    {
+        public Double X { get; set; }
+        public Double Y { get; set; }
+        public Double Z { get; set; }
+    };
+
+    public class SIZE_RefWrapper : SIZE
+    {
+        SIZE t;
+
+        public SIZE_RefWrapper(SIZE t)
+        {
+            this.t = t;
+        }
+        public Double X
+        {
+            get { return t.X; }
+            set { throw new InvalidOperationException(); }
+        }
+        public Double Y
+        {
+            get { return t.Y; }
+            set { throw new InvalidOperationException(); }
+        }
+
+        public Double Z
+        {
+            get { return t.Z; }
+            set { throw new InvalidOperationException(); }
+        }
+    }
+
+    public class SIZE_RefWrapper4Set : SIZE
+    {
+        SIZE t;
+        ComposerBase composer;
+        UInt64[] address;
+        enum Address { X = 0, Y = 1, Z = 2};
+
+        public SIZE_RefWrapper4Set(SIZE t, ComposerBase composer, UInt64[] baseAddr, UInt64 id)
+        {
+            this.t = t;
+            this.composer = composer;
+            this.address = Base.makeAddress(baseAddr, id);
+        }
+        public Double X 
+        {
+            get { return t.X; }
+            set
+            {
+                if (value != t.X)
+                {
+                    t.X = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.X);
+                    Base.publishableComposeLeafeReal(composer, value);
+                }
+            }
+        }
+        public Double Y
+        {
+            get { return t.Y; }
+            set
+            {
+                if (value != t.Y)
+                {
+                    t.Y = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.Y);
+                    Base.publishableComposeLeafeReal(composer, value);
+                }
+            }
+        }
+
+        public Double Z
+        {
+            get { return t.Z; }
+            set
+            {
+                if (value != t.Z)
+                {
+                    t.Z = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.Z);
+                    Base.publishableComposeLeafeReal(composer, value);
+                }
+            }
+        }
+    }
+
+    public class publishable_STRUCT_SIZE
+    {
+        public static void compose(ComposerBase composer, SIZE t)
+        {
+            Base.publishableStructComposeReal(composer, "X", t.X, true);
+            Base.publishableStructComposeReal(composer, "Y", t.Y, true);
+            Base.publishableStructComposeReal(composer, "Z", t.Z, false);
+        }
+        public static bool parse(ParserBase parser, SIZE t)
+        {
+            bool changed = false;
+            {
+                Double newVal;
+                Base.publishableParseReal(parser, "X", out newVal);
+                if (newVal != t.X)
+                {
+                    t.X = newVal;
+                    changed = true;
+                    //        if constexpr(has_void_update_notifier_for_X)
+
+                    //                    t.notifyUpdated_X();
+                    //        if constexpr(has_update_notifier_for_X)
+
+                    //                    t.notifyUpdated_X(oldVal);
+                    //    }
+                }
+            }
+            {
+                Double newVal;
+
+                Base.publishableParseReal(parser, "Y", out newVal);
+                if (newVal != t.Y)
+                {
+                    t.Y = newVal;
+                    changed = true;
+                    //    if constexpr(has_void_update_notifier_for_Y)
+
+                    //                t.notifyUpdated_Y();
+                    //    if constexpr(has_update_notifier_for_Y)
+
+                    //                t.notifyUpdated_Y(oldVal);
+                }
+            }
+
+                    {
+                Double newVal;
+
+                Base.publishableParseReal(parser, "Z", out newVal );
+                if (newVal != t.Z)
+                {
+                    t.Z = newVal;
+                    changed = true;
+                    //    if constexpr(has_void_update_notifier_for_Z)
+
+                    //                t.notifyUpdated_Z();
+                    //    if constexpr(has_update_notifier_for_Z)
+
+                    //                t.notifyUpdated_Z(oldVal);
+                }
+            }
+
+
+   
+            return changed;
+        }
+	public static void parseForStateSync(ParserBase parser, SIZE t)
+        {
+            Double newX;
+            Base.publishableParseReal(parser, "X", out newX);
+            t.X = newX;
+
+
+            Double newY;
+            Base.publishableParseReal(parser, "Y", out newY);
+            t.Y = newY;
+
+
+            Double newZ;
+            Base.publishableParseReal(parser, "Z", out newZ);
+            t.Z = newZ;
+        }
+
+       
+	public static bool parse(ParserBase parser, SIZE t, UInt64[] addr, int offset)
+        {
+            bool changed = false;
+
+            switch (addr[offset])
+            {
+                case 0:
+                    if (addr.Length > offset + 1)
+                        throw new Exception(); // bad format, TODO: ...
+                    //if constexpr(has_any_notifier_for_X || reportChanges)
+
+                    {
+                        Double newVal;
+
+                        Base.publishableParseLeafeReal(parser, out newVal);
+                        if (newVal != t.X)
+                        {
+                            t.X = newVal;
+                            changed = true;
+                            //if constexpr(has_void_update_notifier_for_X)
+
+                            //    t.notifyUpdated_X();
+                            //if constexpr(has_update_notifier_for_X)
+
+                            //    t.notifyUpdated_X(oldVal);
+                        }
+                    }
+                    break;
+                case 1:
+                    if (addr.Length > offset + 1)
+                        throw new Exception(); // bad format, TODO: ...
+                    {
+                        Double newVal;
+
+                        Base.publishableParseLeafeReal(parser, out newVal);
+                        if (newVal != t.Y)
+                        {
+                            t.Y = newVal;
+                            changed = true;
+                            //if constexpr(has_void_update_notifier_for_Y)
+
+                            //    t.notifyUpdated_Y();
+                            //if constexpr(has_update_notifier_for_Y)
+
+                            //    t.notifyUpdated_Y(oldVal);
+                        }
+                    }
+                    break;
+                case 2:
+                    if (addr.Length > offset + 1)
+                        throw new Exception(); // bad format, TODO: ...
+                    {
+                        Double newVal;
+
+                        Base.publishableParseLeafeReal(parser, out newVal);
+                        if (newVal != t.Z)
+                        {
+                            t.Z = newVal;
+                            changed = true;
+                        }
+                    }
+                    break;
+                default:
+                    throw new Exception(); // unexpected
+            }
+    
+            return changed;
+        }
+
+        public static void copy(SIZE src, SIZE dst)
+        {
+            dst.X = src.X;
+            dst.Y = src.Y;
+            dst.Z = src.Z;
+        }
+    }
+    public interface POINT3DREAL
+    {
+        Double X { get; set; }
+        Double Y { get; set; }
+        Double Z { get; set; }
+    };
+
+    public interface CharacterParamStruct
+    {
+        Int64 ID { get; set; }
+        SIZE Size { get; set; }
+        SIZE make_Size();
+    };
+
+    public class CharacterParamStruct_impl : CharacterParamStruct
+    {
+        public Int64 ID { get; set; }
+        public SIZE Size { get; set; }
+        public SIZE make_Size() { return new SIZE_impl(); }
+    };
+    public class CharacterParamStruct_RefWrapper: CharacterParamStruct
+    {
+        CharacterParamStruct t;
+
+        public CharacterParamStruct_RefWrapper(CharacterParamStruct t)
+        {
+            this.t = t;
+        }
+        public Int64 ID
+        {
+            get { return t.ID; }
+            set { throw new InvalidOperationException(); }
+        }
+        public SIZE Size
+        {
+            get { return new SIZE_RefWrapper(t.Size); }
+            set { throw new InvalidOperationException(); }
+        }
+        public SIZE make_Size() { throw new InvalidOperationException(); }
+    }
+
+    public class CharacterParamStruct_RefWrapper4Set : CharacterParamStruct
+    {
+        CharacterParamStruct t;
+        ComposerBase composer;
+        UInt64[] address;
+        enum Address { ID = 0, Size = 1 };
+
+        public CharacterParamStruct_RefWrapper4Set(CharacterParamStruct t, ComposerBase composer, UInt64[] baseAddr, UInt64 id)
+        {
+            this.t = t;
+            this.composer = composer;
+            this.address = Base.makeAddress(baseAddr, id);
+        }
+        public Int64 ID
+        {
+            get { return t.ID; }
+            set
+            {
+                if (value != t.ID)
+                {
+                    t.ID = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.ID);
+                    Base.publishableComposeLeafeInteger(composer, value);
+                }
+            }
+        }
+        public SIZE Size
+        {
+            get { return new SIZE_RefWrapper4Set(t.Size, composer, address, (UInt64)Address.Size); }
+            set
+            {
+                if (value != t.Size)
+                {
+                    t.Size = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.Size);
+                    Base.publishableComposeLeafeStructBegin(composer);
+                    publishable_STRUCT_SIZE.compose(composer, value);
+                    Base.publishableComposeLeafeStructEnd(composer);
+                }
+            }
+        }
+        public SIZE make_Size() { return t.make_Size(); }
+    }
+
+    public class publishable_STRUCT_CharacterParamStruct
+    {
+        public static void compose(ComposerBase composer, CharacterParamStruct t)
+        {
+            Base.publishableStructComposeInteger(composer, "ID", t.ID, true);
+            Base.composePublishableStructBegin(composer, "Size");
+            publishable_STRUCT_SIZE.compose(composer, t.Size);
+            Base.composePublishableStructEnd(composer, false);
+        }
+    }
+    public interface StructWithVectorOfInt
+    {
+        Int64 ID { get; set; }
+        IList<Int64> signedInts { get; set; }
+    };
+    public interface StructWithVectorOfSize
+    {
+        IList<SIZE> sizes { get; set; }
+        Int64 NN { get; set; }
+    };
+
+    public interface publishable_sample
+    {
+        // Property declaration:
+        Int64 ID { get; set; }
+        String name { get; set; }
+        SIZE size { get; set; }
+        SIZE make_size();
+        CharacterParamStruct chp { get; set; }
+        CharacterParamStruct make_chp();
+        //IList<Int64> vector_of_int { get; set; }
+        //IList<POINT3DREAL> vector_struct_point3dreal { get; set; }
+        //StructWithVectorOfInt structWithVectorOfInt { get; set; }
+        //StructWithVectorOfSize structWithVectorOfSize { get; set; }
+    }
+
+    public class publishable_sample_impl : publishable_sample
+    {
+        public Int64 ID { get; set; }
+        public String name { get; set; }
+        public SIZE size { get; set; }
+        public SIZE make_size() { return new SIZE_impl(); }
+        public CharacterParamStruct chp { get; set; }
+        public CharacterParamStruct make_chp() { return new CharacterParamStruct_impl(); }
+        //public IList<Int64> vector_of_int { get; set; }
+        //public IList<POINT3DREAL> vector_struct_point3dreal { get; set; }
+        //public StructWithVectorOfInt structWithVectorOfInt { get; set; }
+        //public StructWithVectorOfSize structWithVectorOfSize { get; set; }
+    }
+
+    public class publishable_sample_WrapperForPublisher : publishable_sample
+    {
+        publishable_sample t;
+        ComposerBase composer;
+        UInt64[] address;
+        enum Address { ID = 0, name = 1, size = 2, chp = 3 }
+        static readonly UInt64 numTypeID_ = 1;
+    	static readonly String stringTypeID_ = "publishable_sample";
+
+        public publishable_sample_WrapperForPublisher(publishable_sample t)
+        {
+            this.t = t;
+            this.composer = null;
+            this.address = new UInt64[] { };
+        }
+
+        void startTick(ComposerBase composer)
+        {
+            Debug.Assert(this.composer == null);
+            this.composer = composer;
+            Base.composeStateUpdateMessageBegin(composer);
+        }
+        void startTick(BufferT buff )
+        {
+            startTick(mtest.makeComposer(buff));
+        }
+        void endTick()
+        {
+            Debug.Assert(this.composer != null);
+            Base.composeStateUpdateMessageEnd(composer);
+            composer = null;
+        }
+        String stringTypeID() { return stringTypeID_; }
+        UInt64 stateTypeID() { return numTypeID_; }
+
+        public Int64 ID
+        {
+            get { return t.ID; }
+            set
+            {
+                if (value != t.ID)
+                {
+                    t.ID = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.ID);
+                    Base.publishableComposeLeafeInteger(composer, value);
+                }
+            }
+        }
+        public String name
+        {
+            get { return t.name; }
+            set
+            {
+                if (value != t.name)
+                {
+                    t.name = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.name);
+                    Base.publishableComposeLeafeString(composer, value);
+                }
+            }
+        }
+        public SIZE size
+        {
+            get { return new SIZE_RefWrapper4Set(t.size, composer, address, (UInt64)Address.size); } 
+            set
+            {
+                if (value != t.size)
+                {
+                    t.size = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.size);
+                    Base.publishableComposeLeafeStructBegin(composer);
+                    publishable_STRUCT_SIZE.compose(composer, value);
+                    Base.publishableComposeLeafeStructEnd(composer);
+                }
+            }
+        }
+        public CharacterParamStruct chp
+        {
+            get { return new CharacterParamStruct_RefWrapper4Set(t.chp, composer, address, (UInt64)Address.chp); }
+            set
+            {
+                if (value != t.chp)
+                {
+                    t.chp = value;
+                    Base.composeAddressInPublishable(composer, address, (UInt64)Address.chp);
+                    Base.publishableComposeLeafeStructBegin(composer);
+                    publishable_STRUCT_CharacterParamStruct.compose(composer, value);
+                    Base.publishableComposeLeafeStructEnd(composer);
+                }
+            }
+        }
+        public SIZE make_size() { return t.make_size(); }
+        public CharacterParamStruct make_chp() { return t.make_chp(); }
+
+        public static void compose(ComposerBase composer, publishable_sample t)
+        {
+            Base.composeStructBegin(composer);
+            Base.publishableStructComposeInteger(composer, "ID", t.ID, true);
+            Base.publishableStructComposeString(composer, "name", t.name, true);
+            Base.composePublishableStructBegin(composer, "size");
+            publishable_STRUCT_SIZE.compose(composer, t.size);
+            Base.composePublishableStructEnd(composer, true);
+            Base.composePublishableStructBegin(composer, "chp");
+            publishable_STRUCT_CharacterParamStruct.compose(composer, t.chp);
+            Base.composePublishableStructEnd(composer, true); 
+            Base.composeStructEnd(composer);
+        }
+
+    }
+
+    public class publishable_sample_WrapperForSubscriber : publishable_sample
+    {
+        publishable_sample t;
+        ParserBase parser;
+        UInt64[] address;
+        enum Address { ID = 0, name = 1, size = 2, chp = 3 }
+        static readonly UInt64 numTypeID_ = 1;
+        static readonly String stringTypeID_ = "publishable_sample";
+
+        public publishable_sample_WrapperForSubscriber(publishable_sample t)
+        {
+            this.t = t;
+            this.parser = null;
+            this.address = new UInt64[] { };
+        }
+        String stringTypeID() { return stringTypeID_; }
+        UInt64 stateTypeID() { return numTypeID_; }
+
+        public Int64 ID
+        {
+            get { return t.ID; }
+            set { throw new InvalidOperationException(); }
+        }
+        public String name
+        {
+            get { return t.name; }
+            set { throw new InvalidOperationException(); }
+        }
+        public SIZE size
+        {
+            get { return new SIZE_RefWrapper(t.size); }
+            set { throw new InvalidOperationException(); }
+        }
+        public CharacterParamStruct chp
+        {
+            get { return new CharacterParamStruct_RefWrapper(t.chp); }
+            set { throw new InvalidOperationException(); }
+        }
+        public SIZE make_size() { throw new InvalidOperationException(); }
+        public CharacterParamStruct make_chp() { throw new InvalidOperationException(); }
+
+        void applyMessageWithUpdates(ParserBase parser)
+        {
+
+            Base.parseStateUpdateMessageBegin(parser);
+            UInt64[] addr;
+            while ( Base.parseAddressInPublishable(parser, out addr) )
+		    {
+                Debug.Assert(addr.Length != 0);
+                switch ((Address)addr[0])
+                {
+                    case Address.ID:
+                        {
+                            if (addr.Length > 1)
+                                throw new Exception(); // bad format, TODO: ...
+                                Int64 newVal;
+
+                                Base.publishableParseLeafeInteger(parser, out newVal);
+                                if (newVal != t.ID)
+                                {
+                                    t.ID = newVal;
+                                    //                if constexpr(has_void_update_notifier_for_ID)
+
+                                    //            t.notifyUpdated_ID();
+                                    //                if constexpr(has_update_notifier_for_ID)
+
+                                    //            t.notifyUpdated_ID(oldVal);
+                                    //            }
+                                    //        }
+                                    //        else
+                                }
+                            break;
+                        }
+                    case Address.name:
+                        {
+                            if (addr.Length > 1)
+                                throw new Exception(); // bad format, TODO: ...
+
+                            String newVal;
+
+                            Base.publishableParseLeafeString(parser, out newVal);
+                            if (newVal != t.name)
+                            {
+                                t.name = newVal;
+                                //        if constexpr(has_any_notifier_for_name)
+
+                                //{
+                                //            decltype(T::name) oldVal = t.name;
+
+                                //    ::globalmq::marshalling::impl::publishableParseLeafeString < ParserT, decltype(T::name) > (parser, &(t.name));
+                                //            bool currentChanged = oldVal != t.name;
+                                //            if (currentChanged)
+                                //            {
+                                //                if constexpr(has_void_update_notifier_for_name)
+
+                                //            t.notifyUpdated_name();
+                                //                if constexpr(has_update_notifier_for_name)
+
+                                //            t.notifyUpdated_name(oldVal);
+                                //            }
+                                //        }
+                                //        else
+                            }
+                            break;
+                        }
+                    case Address.size:
+                        {
+                            if (addr.Length == 1) // we have to parse and apply changes of this child
+                            {
+
+                                Base.publishableParseLeafeStructBegin(parser);
+
+                                //        if constexpr(has_update_notifier_for_size)
+
+                                //{
+                                SIZE newVal = t.make_size();
+                                publishable_STRUCT_SIZE::copy(t.size, newVal);
+                                bool changedCurrent = publishable_STRUCT_SIZE.parse(parser, newVal);
+                                if (changedCurrent)
+                                {
+                                    t.size = newVal;
+                                    //                if constexpr(has_void_update_notifier_for_size)
+
+                                    //            t.notifyUpdated_size();
+                                    //                t.notifyUpdated_size(temp_size);
+                                    //            }
+                                    //        }
+                                    //        else if constexpr(has_void_update_notifier_for_size)
+
+                                    //{
+                                    //            bool changedCurrent = publishable_STRUCT_SIZE::parse < ParserT, decltype(T::size), bool> (parser, t.size);
+                                    //            if (changedCurrent)
+                                    //            {
+                                    //                t.notifyUpdated_size();
+                                    //            }
+                                    //        }
+
+                                    //        else
+                                    //        {
+                                    //publishable_STRUCT_SIZE.parse(parser, ref t.size);
+                                }
+
+
+                                Base.publishableParseLeafeStructEnd(parser);
+                            }
+                            else // let child continue parsing
+                            {
+                                    SIZE newVal = t.make_size();
+                                    publishable_STRUCT_SIZE::copy(t.size, newVal);
+                                    bool changedCurrent = publishable_STRUCT_SIZE.parse(parser, newVal, addr, 1);
+                                    if (changedCurrent)
+                                    {
+                                        t.size = newVal;
+                                        //                if constexpr(has_void_update_notifier_for_size)
+
+                                        //            t.notifyUpdated_size();
+                                        //                t.notifyUpdated_size(temp_size);
+                                        //            }
+                                        //        }
+                                        //        else if constexpr(has_void_update_notifier_for_size)
+
+                                        //{
+                                        //            bool changedCurrent = publishable_STRUCT_SIZE::parse < ParserT, decltype(T::size), bool> (parser, t.size, addr, 1);
+                                        //            if (changedCurrent)
+                                        //            {
+                                        //                t.notifyUpdated_size();
+                                        //            }
+                                    }
+                                    //        else
+                                    //publishable_STRUCT_SIZE.parse(parser, t.size, addr, 1);
+                            }
+                            break;
+                        }
+                    case Address.chp:
+                        {
+                            if (addr.Length == 1) // we have to parse and apply changes of this child
+                            {
+
+                                Base.publishableParseLeafeStructBegin(parser);
+
+                                //        if constexpr(has_update_notifier_for_chp)
+                                CharacterParamStruct newVal = t.make_chp();
+                                publishable_STRUCT_CharacterParamStruct.copy(t.chp, newVal);
+                                bool changedCurrent = publishable_STRUCT_CharacterParamStruct.parse(parser, newVal);
+
+                                //{
+                                //            decltype(T::chp) temp_chp;
+                                //            publishable_STRUCT_CharacterParamStruct::copy < decltype(T::chp) > (t.chp, temp_chp);
+                                //            bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse < ParserT, decltype(T::chp), bool> (parser, t.chp);
+                                if (changedCurrent)
+                                {
+                                    t.chp = newVal;
+                                    //                if constexpr(has_void_update_notifier_for_chp)
+
+                                    //            t.notifyUpdated_chp();
+                                    //                t.notifyUpdated_chp(temp_chp);
+                                    //            }
+                                    //        }
+                                    //        else if constexpr(has_void_update_notifier_for_chp)
+
+                                    //{
+                                    //            bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse < ParserT, decltype(T::chp), bool> (parser, t.chp);
+                                    //            if (changedCurrent)
+                                    //            {
+                                    //                t.notifyUpdated_chp();
+                                    //            }
+                                    //        }
+
+                                    //        else
+                                    //        {
+                                    //publishable_STRUCT_CharacterParamStruct.parse(parser, ref t.chp);
+                                }
+
+
+                                Base.publishableParseLeafeStructEnd(parser);
+                            }
+                            else // let child continue parsing
+                            {
+                                //        if constexpr(has_update_notifier_for_chp)
+                                CharacterParamStruct newVal = t.make_chp();
+                                publishable_STRUCT_CharacterParamStruct.copy(t.chp, newVal);
+                                bool changedCurrent = publishable_STRUCT_CharacterParamStruct.parse(parser, newVal, addr, 1);
+
+                                //{
+                                //            decltype(T::chp) temp_chp;
+                                //            publishable_STRUCT_CharacterParamStruct::copy < decltype(T::chp) > (t.chp, temp_chp);
+                                //            bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse < ParserT, decltype(T::chp), bool> (parser, t.chp, addr, 1);
+                                if (changedCurrent)
+                                {
+                                    t.chp = newVal;
+                                    //                if constexpr(has_void_update_notifier_for_chp)
+
+                                    //            t.notifyUpdated_chp();
+                                    //                t.notifyUpdated_chp(temp_chp);
+                                    //            }
+                                    //        }
+                                    //        else if constexpr(has_void_update_notifier_for_chp)
+
+                                    //{
+                                    //            bool changedCurrent = publishable_STRUCT_CharacterParamStruct::parse < ParserT, decltype(T::chp), bool> (parser, t.chp, addr, 1);
+                                    //            if (changedCurrent)
+                                    //            {
+                                    //                t.notifyUpdated_chp();
+                                    //            }
+                                }
+                                //        else
+                                //publishable_STRUCT_CharacterParamStruct::parse(parser, out t.chp, addr, 1);
+                            }
+                            break;
+                        }
+                    default:
+                        throw new Exception(); // bad format, TODO: ...
+                }
+                addr = null ;
+            }
+        }
+
+        public void parseStateSyncMessage(ParserBase parser)
+        {
+            this.t = new publishable_sample_impl();
+
+            Base.parseStructBegin(parser);
+            Base.publishableParseInteger(parser, "ID", ref t.ID);
+            Base.publishableParseString(parser, "name", ref t.name);
+            Base.parsePublishableStructBegin(parser, "size");
+            t.size = new SIZE_impl();
+            t.size.parseStateSyncMessage(parser);
+            Base.parsePublishableStructEnd(parser);
+            Base.parsePublishableStructBegin(parser, "chp");
+            t.chp = new CharacterParamStruct_impl();
+            t.chp.parseStateSyncMessage(parser);
+            Base.parsePublishableStructEnd(parser);
+            Base.parseStructEnd(parser);
+        }
+
     }
 }
