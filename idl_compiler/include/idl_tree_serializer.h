@@ -77,11 +77,15 @@ void printScope( Scope& s, size_t offset );
 void printMessage( CompositeType& s, size_t offset );
 void printPublishable( CompositeType& s, size_t offset );
 void printStruct( CompositeType& s, size_t offset );
+void printDiscriminatedUnionCase( CompositeType& s, size_t offset );
+//void printDiscriminatedUnion( CompositeType& s, size_t offset );
 
 void printMessageParameter( MessageParameter& s, size_t offset );
+//void printDiscriminatedUnionCase( MessageParameter& s, size_t offset );
 void printMessageMembers( CompositeType& s, size_t offset );
 void printPublishableMembers( CompositeType& s, size_t offset );
 void printStructMembers( CompositeType& s, size_t offset );
+void printDiscriminatedUnionCases( CompositeType& s, size_t offset );
 void printLimit( Limit& s, size_t offset );
 void printLocation( Location& s, size_t offset );
 void printDataType( MessageParameterType& s, size_t offset );
@@ -90,6 +94,7 @@ void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_MessageParameter( unique_ptr<MessageParameter>& s, size_t offset );
+void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, size_t offset );
 
 void printDataType( MessageParameterType& s );
 void printLimit( Limit& s );

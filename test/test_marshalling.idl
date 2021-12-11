@@ -152,4 +152,15 @@ MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
   STRUCT point3D pt;
 };
 
+DISCRIMINATED_UNION du_one {
+	CASE one=1: { 
+//		STRUCT point3D pt3d_1;
+//		INTEGER i_1;
+	}
+	CASE two=2: { 
+//		STRUCT point3D pt3d_2;
+//		INTEGER i_2;
+	}
+};
+
 

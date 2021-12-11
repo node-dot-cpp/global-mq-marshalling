@@ -35,7 +35,7 @@
     <ClInclude Include="..\include\idl_tree.h" />
     <ClInclude Include="..\include\idl_tree_serializer.h" />
     <ClInclude Include="..\include\lex.h" />
-    <ClInclude Include="..\include\parser.h" />
+    <ClInclude Include="..\include\idl_parser.h" />
     <ClInclude Include="..\include\raiistdiofile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

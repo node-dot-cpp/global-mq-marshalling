@@ -152,7 +152,7 @@ std::string impl_generatePublishableStructName( MessageParameter& s )
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 		fprintf( header, "\tstatic constexpr bool has_%s = has_%s_member<T>;\n", it->name.c_str(), it->name.c_str() );
@@ -178,7 +178,7 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 	*	has_full_element_updated_notifier_call_for_%s   notifyElementUpdated_%s<T, MemberT>(index_type_for_array_notifiers, MemberT)
 	*/
 	assert( s.type == CompositeType::Type::publishable || ( s.type == CompositeType::Type::structure && s.isStruct4Publishing ) );
-	for ( auto& member : s.members )
+	for ( auto& member : s.getMembers() )
 	{
 		assert( member != nullptr );
 		fprintf( header, "%sstatic constexpr bool has_void_update_notifier_for_%s = has_void_update_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
@@ -790,12 +790,12 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 
 	const char* composer = "composer";
 
-	for ( size_t i=0; i<obj.members.size(); ++i )
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
 	{
-		auto& it = obj.members[i];
+		auto& it = obj.getMembers()[i];
 		assert( it != nullptr );
 		auto& member = *it;
-		const char* addSepar = i + 1 < obj.members.size() ? "true": "false";
+		const char* addSepar = i + 1 < obj.getMembers().size() ? "true": "false";
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -883,11 +883,11 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		"\t\t{\n"
 	);
 
-	for ( size_t i=0; i<obj.members.size(); ++i )
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
 	{
 		fprintf( header, "\t\t\tcase %zd:\n", i );
-		assert( obj.members[i] != nullptr );
-		auto& member = *(obj.members[i]);
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -959,10 +959,10 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 
-	for ( size_t i=0; i<obj.members.size(); ++i )
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
 	{
-		assert( obj.members[i] != nullptr );
-		auto& member = *(obj.members[i]);
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -1026,10 +1026,10 @@ void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root
 	fprintf( header, "\tRetT parseForStateSync( ParserT& parser, T& t )\n" );
 	fprintf( header, "\t{\n" );
 
-	for ( size_t i=0; i<obj.members.size(); ++i )
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
 	{
-		assert( obj.members[i] != nullptr );
-		auto& member = *(obj.members[i]);
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -1066,10 +1066,10 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 	fprintf( header, "\t\t::globalmq::marshalling::impl::parseStructBegin( parser );\n" );
 	fprintf( header, "\n" );
 
-	for ( size_t i=0; i<obj.members.size(); ++i )
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
 	{
-		assert( obj.members[i] != nullptr );
-		auto& member = *(obj.members[i]);
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -1129,10 +1129,10 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 		"\tstatic void copy(const UserT& src, UserT& dst) {\n"
 	);
 
-	for ( size_t i=0; i<s.members.size(); ++i )
+	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
-		assert( s.members[i] != nullptr );
-		auto& member = *(s.members[i]);
+		assert( s.getMembers()[i] != nullptr );
+		auto& member = *(s.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -1173,10 +1173,10 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 		"\tstatic bool isSame(const UserT& s1, const UserT& s2) {\n"
 	);
 
-	for ( size_t i=0; i<s.members.size(); ++i )
+	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
-		assert( s.members[i] != nullptr );
-		auto& member = *(s.members[i]);
+		assert( s.getMembers()[i] != nullptr );
+		auto& member = *(s.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -1319,9 +1319,9 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 	bool forRoot = s.type == CompositeType::Type::publishable;
 	const char* rootName = forRoot ? s.name.c_str() : nullptr;
 //	const char* rootName = forRoot ? s.name.c_str() : "RootT";
-	for ( size_t i=0; i<s.members.size(); ++i )
+	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
-		auto& it = s.members[i];
+		auto& it = s.getMembers()[i];
 		assert( it != nullptr );
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
 		if ( allowSeters )
@@ -1347,15 +1347,15 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 		"\t\t\t{\n"
 	);
 
-	for ( size_t i=0; i<s.members.size(); ++i )
+	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
 		fprintf( header, 
 			"\t\t\t\tcase %zd:\n"
 			"\t\t\t\t{\n", 
 			i
 		);
-		assert( s.members[i] != nullptr );
-		auto& member = *(s.members[i]);
+		assert( s.getMembers()[i] != nullptr );
+		auto& member = *(s.getMembers()[i]);
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
@@ -1696,10 +1696,10 @@ void impl_generatePublishableCommentBlock( FILE* header, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable );
 	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// %s %s (%zd parameters)\n", s.type2string(), s.name.c_str(), s.members.size() );
+	fprintf( header, "// %s %s (%zd parameters)\n", s.type2string(), s.name.c_str(), s.getMembers().size() );
 
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 		MessageParameter& param = *it;
@@ -1735,9 +1735,9 @@ void collectMemberNamesFromPublishableObjects( vector<unique_ptr<CompositeType>>
 	for ( auto& s : structs )
 	{
 		assert( s != nullptr );
-		assert( s->type == CompositeType::structure || s->type == CompositeType::publishable );
+		assert( s->type == CompositeType::structure || s->type == CompositeType::Type::discriminated_union || s->type == CompositeType::publishable );
 		if ( s->type == CompositeType::publishable || ( s->type == CompositeType::structure && s->isStruct4Publishing ) )
-			for ( auto& member : s->members )
+			for ( auto& member : s->getMembers() )
 			{
 				assert( member != nullptr );
 				names.insert( member->name );
@@ -1750,9 +1750,9 @@ void collectVectorMemberNamesFromPublishableObjects( vector<unique_ptr<Composite
 	for ( auto& s : structs )
 	{
 		assert( s != nullptr );
-		assert( s->type == CompositeType::structure || s->type == CompositeType::publishable );
+		assert( s->type == CompositeType::structure || s->type == CompositeType::discriminated_union || s->type == CompositeType::publishable );
 		if ( s->type == CompositeType::publishable || ( s->type == CompositeType::structure && s->isStruct4Publishing ) )
-			for ( auto& member : s->members )
+			for ( auto& member : s->getMembers() )
 			{
 				assert( member != nullptr );
 				if ( member->type.kind == MessageParameterType::KIND::VECTOR )
@@ -1863,9 +1863,9 @@ void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "struct %s\n", s.name.c_str() );
 	fprintf( header, "{\n" );
 
-	for ( size_t i=0; i<s.members.size(); ++i )
+	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
-		auto& it = s.members[i];
+		auto& it = s.getMembers()[i];
 		assert( it != nullptr );
 		auto& member = *it;
 		switch ( member.type.kind )

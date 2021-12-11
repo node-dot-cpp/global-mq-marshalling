@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_b5cd8d74_guard
-#define _test_marshalling_h_b5cd8d74_guard
+#ifndef _test_marshalling_h_d565b79d_guard
+#define _test_marshalling_h_d565b79d_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -1523,6 +1523,7 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 	{
 		case point3D_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
 		case point_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point_alias>( parser, handlers... ); break;
+		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
 	if (!parser.isDelimiter('}'))
@@ -1630,6 +1631,7 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 	switch ( msgID )
 	{
 		case LevelTraceData::id: ::globalmq::marshalling::impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
+		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
 	if (!parser.isDelimiter('}'))
@@ -1761,6 +1763,7 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		case PolygonSt::id: ::globalmq::marshalling::impl::implHandleMessage<PolygonSt>( parser, handlers... ); break;
 		case point::id: ::globalmq::marshalling::impl::implHandleMessage<point>( parser, handlers... ); break;
 		case point3D::id: ::globalmq::marshalling::impl::implHandleMessage<point3D>( parser, handlers... ); break;
+		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
 }
@@ -1970,6 +1973,7 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 	switch ( msgID )
 	{
 		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
 }
@@ -2137,6 +2141,7 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 	switch ( msgID )
 	{
 		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
 	if (!parser.isDelimiter('}'))
@@ -4868,4 +4873,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_b5cd8d74_guard
+#endif // _test_marshalling_h_d565b79d_guard

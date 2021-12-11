@@ -120,18 +120,25 @@ public:
 	string name;
 	bool extendTo = false;
 	Variant defaultValue;
-	vector<string> whenDiscriminant;
+//	vector<string> whenDiscriminant;
 };
 
 enum Proto { undefined, json, gmq };
 
 class CompositeType : public ObjectBase
 {
+private:
+	// Note: indeed, CompositeType is a discriminated union itself: all types but discriminated union have members (and not cases), discriminated union has cases only
+	//       what's not checked right while parsing, must be ensured at a later checks
+	// TODO: think about better representation (if any)
+	vector<unique_ptr<MessageParameter>> structMembers; // all but discriminated_union
+	vector<unique_ptr<CompositeType>> discriminatedUnionCases; // for discriminated_union only
+
 public:
 	static constexpr uint64_t invalid_num_id = (uint64_t)(-1);
 
 public:
-	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3 };
+	enum Type { undefined = 0,  message = 1, publishable = 2, structure = 3, discriminated_union_case = 4, discriminated_union = 5 };
 	Type type = Type::undefined;
 	static const char* type2string( Type type_ )
 	{
@@ -141,6 +148,8 @@ public:
 			case Type::message: return "MESSAGE";
 			case Type::publishable: return "PUBLISHABLE";
 			case Type::structure: return "STRUCT";
+			case Type::discriminated_union_case: return "CASE";
+			case Type::discriminated_union: return "DISCRIMINATED_UNION";
 			default:
 				assert( false );
 				return "";
@@ -149,7 +158,6 @@ public:
 	const char* type2string() { return type2string( type ); }
 
 public:
-	vector<unique_ptr<MessageParameter>> members;
 	string scopeName;
 	string name;
 	uint64_t numID = invalid_num_id; // we will analize/sanitize it at time of code generation
@@ -157,6 +165,10 @@ public:
 	bool isAlias = false;
 	string aliasOf;
 	
+	bool isDiscriminatedUnion() const { assert( ( type == Type::discriminated_union && structMembers.empty() ) || ( type != Type::discriminated_union && discriminatedUnionCases.empty() ) ); return type == Type::discriminated_union; }
+	vector<unique_ptr<MessageParameter>>& getMembers() { assert( type != Type::discriminated_union ); assert( discriminatedUnionCases.empty() ); return structMembers; }
+	vector<unique_ptr<CompositeType>>& getDiscriminatedUnionCases() { assert( type == Type::discriminated_union ); assert( structMembers.empty() ); return discriminatedUnionCases; }
+
 	// preprocessing for code generation
 	bool processingOK = true;
 	bool isStruct4Messaging = false; // used for STRUCT only
@@ -179,6 +191,7 @@ public:
 	vector<unique_ptr<CompositeType>> messages;
 	vector<unique_ptr<CompositeType>> publishables;
 	vector<unique_ptr<CompositeType>> structs;
+	vector<unique_ptr<CompositeType>> discriminatedUnions;
 	vector<unique_ptr<Scope>> scopes;
 };
 

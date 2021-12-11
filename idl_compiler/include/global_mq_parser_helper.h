@@ -71,12 +71,15 @@ YYSTYPE addScopeToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addMessageToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addPublishableToFile(YYSTYPE file, YYSTYPE item);
 YYSTYPE addStructToFile(YYSTYPE file, YYSTYPE item);
+YYSTYPE addDiscriminatedUnionToFile(YYSTYPE file, YYSTYPE item);
 
 void processLineDirective(YYSTYPE line_number, YYSTYPE file_name);
 
 YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr);
 YYSTYPE addToPublishable(YYSTYPE decl, YYSTYPE attr);
 YYSTYPE addToStruct(YYSTYPE decl, YYSTYPE attr);
+YYSTYPE addToDiscriminatedUnionCase(YYSTYPE decl, YYSTYPE attr);
+YYSTYPE addToDiscriminatedUnion(YYSTYPE decl, YYSTYPE attr);
 
 YYSTYPE createAttribute(YYSTYPE type, YYSTYPE id);
 YYSTYPE insertExtensionMarkerToMessage(YYSTYPE decl);
@@ -88,6 +91,8 @@ YYSTYPE createScope(YYSTYPE token, YYSTYPE id, YYSTYPE protoID);
 YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID);
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID);
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
+YYSTYPE createDiscriminatedUnionCase(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID);
+YYSTYPE createDiscriminatedUnion(YYSTYPE token, bool isNonExtendable, YYSTYPE id);
 
 YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId);
 

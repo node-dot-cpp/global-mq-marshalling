@@ -272,7 +272,7 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 {
 	int count = 0; // let's see whether we need this block at all
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		if ( it != nullptr )
 		{
@@ -316,7 +316,7 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 	fprintf( header, "namespace %s {\n", impl_MessageNameToDefaultsNamespaceName(s.name).c_str() );
 
 	count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 
@@ -363,7 +363,7 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 {
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 
@@ -450,7 +450,7 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
 {
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 
@@ -505,7 +505,7 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, const char* offset )
 {
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 
@@ -556,7 +556,7 @@ void impl_generateMatchCountBlock( FILE* header, CompositeType& s )
 	fprintf( header, "\tconstexpr size_t matchCount = " );
 
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 		MessageParameter& param = *it;
@@ -597,10 +597,10 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 			case Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
-	fprintf( header, "(%zd parameters)\n", s.members.size() );
+	fprintf( header, "(%zd parameters)\n", s.getMembers().size() );
 
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 		MessageParameter& param = *it;
@@ -651,7 +651,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 {
 	fprintf( header, "%scomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n", offset );
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 
@@ -702,7 +702,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			}
 		}
 	
-		if ( count != s.members.size() )
+		if ( count != s.getMembers().size() )
 			fprintf( header, "%scomposer.buff.append( \",\\n  \", 4 );\n", offset );
 	}
 
@@ -718,7 +718,7 @@ void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, 
 	fprintf( header, "%s\tp.readKey( &key );\n", offset );
 
 	int count = 0;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 

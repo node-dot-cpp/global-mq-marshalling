@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,7 @@ void impl_CollectParamNamesFromeMessageParameter( std::set<string>& params, Mess
 
 void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s )
 {
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
 		if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
@@ -99,7 +99,7 @@ void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, Root& s )
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Messaging )
 			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
@@ -139,7 +139,7 @@ bool impl_checkParamNameUniqueness(CompositeType& s)
 {
 	bool ok = true;
 	std::map<string, Location> names;
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
 			continue;
@@ -159,9 +159,9 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 	bool ok = true;
 	bool extMarkFound = false;
 	std::map<string, Location> names;
-	for ( size_t i=0; i<s.members.size(); ++i )
+	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
-		auto& msg = *(s.members[i]);
+		auto& msg = *(s.getMembers()[i]);
 		if ( msg.type.kind != MessageParameterType::KIND::EXTENSION )
 		{
 			if ( msg.type.hasDefault && !extMarkFound )
@@ -197,6 +197,7 @@ void impl_propagateParentPropsToStruct( CompositeType& parent, CompositeType& me
 			memberOrArrayElementType.isStruct4Publishing = true;
 			break;
 		case CompositeType::Type::structure:
+		case CompositeType::Type::discriminated_union:
 			memberOrArrayElementType.isStruct4Messaging = memberOrArrayElementType.isStruct4Messaging || parent.isStruct4Messaging;
 			memberOrArrayElementType.isStruct4Publishing = memberOrArrayElementType.isStruct4Publishing || parent.isStruct4Publishing;
 			memberOrArrayElementType.protoList.insert( parent.protoList.begin(), parent.protoList.end() );
@@ -231,7 +232,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 
 	bool ok = true;
 
-	for ( auto& param : ct.members )
+	for ( auto& param : ct.getMembers() )
 	{
 		if ( param->type.kind == MessageParameterType::KIND::VECTOR )
 		{
@@ -350,7 +351,7 @@ void impl_CollectPublishableMemberNamesFromRoot( std::set<string>& params, Root&
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
 			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
@@ -421,19 +422,27 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 	while ( processed < structs.size() )
 	{
 		for ( auto& s : structs )
-			if ( s->dependsOnCnt != -1 )
-				for ( auto& member : s->members )
+			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt != -1 ) // TODO: DU
+				for ( auto& member : s->getMembers() )
 					if ( member->type.kind == MessageParameterType::KIND::STRUCT )
 						structs[member->type.messageIdx]->dependsOnCnt = 1;
 		for ( auto& s : structs )
-			if ( s->dependsOnCnt == 0 )
+			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt == 0 )
+			{
+				tmpStructs.push_back( s.get() );
+				s->dependsOnCnt = -1;
+				++processed;
+			}
+			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt == 0 ) // TODO: DU
 			{
 				tmpStructs.push_back( s.get() );
 				s->dependsOnCnt = -1;
 				++processed;
 			}
 		for ( auto& s : structs )
-			if ( s->dependsOnCnt != -1 )
+			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt != -1 )
+				s->dependsOnCnt = 0;
+			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 ) // TODO: DU
 				s->dependsOnCnt = 0;
 	}
 	for ( size_t i=0; i<tmpStructs.size(); ++i )
@@ -541,8 +550,8 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
-		if ( it->isStruct4Publishing )
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+		if ( it->type == CompositeType::Type::structure && it->isStruct4Publishing )
 		{
 			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
@@ -557,7 +566,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
@@ -602,7 +611,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
 			generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
@@ -627,7 +636,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
 		{
 			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
@@ -639,7 +648,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Messaging )
 			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}

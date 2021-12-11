@@ -30,6 +30,8 @@
 %token KW_MESSAGE
 %token KW_PUBLISHABLE
 %token KW_STRUCT
+%token KW_DISCRIMINATED_UNION
+%token KW_CASE
 %token KW_NONEXTENDABLE
 %token KW_EXTENSION
 %token KW_HASH_LINE
@@ -65,6 +67,7 @@ file : { $$ = 0; }
 	| file message_alias { $$ = addMessageToFile($1, $2); }
 	| file publishable { $$ = addPublishableToFile($1, $2); }
 	| file struct { $$ = addStructToFile($1, $2); }
+	| file discriminated_union { $$ = addDiscriminatedUnionToFile($1, $2); }
 	| file scope { $$ = addScopeToFile($1, $2); }
 ;
 
@@ -119,6 +122,26 @@ struct_begin
 
 struct
 	: struct_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
+;
+
+discriminated_union_case_begin
+	: KW_CASE IDENTIFIER '=' INTEGER_LITERAL ':' '{' { $$ = createDiscriminatedUnionCase($1, false, $2, $4); releaseYys3($3, $5, $6); }
+	| KW_CASE KW_NONEXTENDABLE IDENTIFIER '=' INTEGER_LITERAL ':' '{' { $$ = createDiscriminatedUnionCase($1, true, $3, $5); releaseYys4($2, $4, $6, $7); }
+	| discriminated_union_begin data_type IDENTIFIER ';' { $$ = addToDiscriminatedUnionCase($1, createAttribute($2, $3)); releaseYys($4); }
+;
+
+discriminated_union_case
+	: discriminated_union_case_begin '}' { $$ = $1; releaseYys($2); }
+;
+
+discriminated_union_begin
+	: KW_DISCRIMINATED_UNION IDENTIFIER '{' { $$ = createDiscriminatedUnion($1, false, $2); releaseYys($3); }
+	| KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createDiscriminatedUnion($1, true, $3); releaseYys2($2, $4); }
+	| discriminated_union_begin discriminated_union_case { $$ = addToDiscriminatedUnion($1, $2); }
+;
+
+discriminated_union
+	: discriminated_union_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
 ;
 
 data_type
