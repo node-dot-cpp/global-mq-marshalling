@@ -501,7 +501,7 @@ YYSTYPE addDiscriminatedUnionToFile(YYSTYPE file, YYSTYPE item)
 	unique_ptr<YyBase> d0(item);
 
 	CompositeType* s = releasePointedFromYyPtr<CompositeType>(item);
-	currentRoot->discriminatedUnions.push_back(unique_ptr<CompositeType>(s));
+	currentRoot->structs.push_back(unique_ptr<CompositeType>(s));
 
 	return 0;
 }

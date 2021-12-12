@@ -183,6 +183,7 @@ public:
 	string name;
 	std::vector<CompositeType*> objectList;
 	Proto proto = Proto::undefined;
+	const char* type2string() { return "SCOPE"; }
 };
 
 class Root
@@ -191,7 +192,6 @@ public:
 	vector<unique_ptr<CompositeType>> messages;
 	vector<unique_ptr<CompositeType>> publishables;
 	vector<unique_ptr<CompositeType>> structs;
-	vector<unique_ptr<CompositeType>> discriminatedUnions;
 	vector<unique_ptr<Scope>> scopes;
 };
 

@@ -107,16 +107,26 @@ void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, Root& s )
 }
 
 template<class CompositeObjPtrT>
-bool impl_checkCompositeTypeNameUniqueness(vector<CompositeObjPtrT>& coll, const char* typeName)
+bool impl_checkCompositeTypeNameUniqueness(vector<CompositeObjPtrT>& coll)
 {
+	struct PrevInstaceInfo
+	{
+		Location location;
+		string typeStr;
+	};
+
 	bool ok = true;
-	std::map<string, Location> names;
+	std::map<string, PrevInstaceInfo> names;
 	for ( auto& it : coll )
 	{
-		auto ins = names.insert( std::make_pair( it->name, it->location ) );
+		string typeStr = it->type2string();
+		auto ins = names.insert( std::make_pair( it->name, PrevInstaceInfo({it->location, typeStr}) ) );
 		if ( !ins.second )
 		{
-			fprintf( stderr, "%s name \"%s\" has already been used, see %s : %d\n", typeName, it->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+			if ( typeStr == ins.first->second.typeStr )
+				fprintf( stderr, "line %d: %s \"%s\" has already been defined, see %s : %d\n", it->location.lineNumber, typeStr.c_str(), it->name.c_str(), ins.first->second.location.fileName.c_str(), ins.first->second.location.lineNumber );
+			else
+				fprintf( stderr, "line %d: %s \"%s\" has already been defined as %s, see %s : %d\n", it->location.lineNumber, typeStr.c_str(), it->name.c_str(), ins.first->second.typeStr.c_str(), ins.first->second.location.fileName.c_str(), ins.first->second.location.lineNumber );
 			ok = false;
 		}
 	}
@@ -128,10 +138,9 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 {
 	bool ok = true;
 	for ( auto& scope : s.scopes )
-		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList, "MESSAGE") && ok;
-	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
-	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
-	ok = impl_checkCompositeTypeNameUniqueness(s.discriminatedUnions, "DISCRIMINATED_UNION") && ok;
+		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList) && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.publishables) && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.structs) && ok;
 	return ok;
 }
 
@@ -139,11 +148,48 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 bool impl_checkDiscriminatedUnions(Root& s)
 {
 	bool ok = true;
-	for ( auto& scope : s.scopes )
-		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList, "MESSAGE") && ok;
-	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
-	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
-	ok = impl_checkCompositeTypeNameUniqueness(s.discriminatedUnions, "DISCRIMINATED_UNION") && ok;
+	for ( auto& du : s.structs )
+		if ( du->type == CompositeType::Type::discriminated_union )
+		{
+			auto& cases = du->getDiscriminatedUnionCases();
+			std::map<string, Location> labels;
+			for ( auto& ducase: cases )
+			{
+				assert( ducase->type == CompositeType::Type::discriminated_union_case );
+				auto ins = labels.insert( std::make_pair( ducase->name, ducase->location ) );
+				if ( !ins.second )
+				{
+					fprintf( stderr, "line %d: CASE \"%s\" has already been defined, see %s : %d\n", ducase->location.lineNumber, ducase->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+					ok = false;
+				}
+			}
+			std::map<uint64_t, Location> values;
+			for ( auto& ducase: cases )
+			{
+				assert( ducase->type == CompositeType::Type::discriminated_union_case );
+				auto ins = values.insert( std::make_pair( ducase->numID, ducase->location ) );
+				if ( !ins.second )
+				{
+					fprintf( stderr, "line %d: CASE VALUE \'%lld\' has already been used, see %s : %d\n", ducase->location.lineNumber, ducase->numID, ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+					ok = false;
+				}
+			}
+			std::map<string, Location> fieldNames;
+			for ( auto& ducase: cases )
+			{
+				assert( ducase->type == CompositeType::Type::discriminated_union_case );
+				auto& members = ducase->getMembers();
+				for ( auto& m: members )
+				{
+					auto ins = fieldNames.insert( std::make_pair( m->name, m->location ) );
+					if ( !ins.second )
+					{
+						fprintf( stderr, "line %d: Name \'%s\' has already been defined within this DISCRIMINATED UNION, see %s : %d\n", m->location.lineNumber, m->name.c_str(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+						ok = false;
+					}
+				}
+			}
+		}
 	return ok;
 }
 
@@ -525,7 +571,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
-	ok = impl_checkDiscriminatedUnions(s);
+	ok = impl_checkDiscriminatedUnions(s) && ok;
 	ok = impl_processScopes(s) && ok;
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
 	if ( !ok )
