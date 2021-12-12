@@ -436,6 +436,9 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 				else
 					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
 				break;
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf( header, "\t    // TODO: generation for DISCRIMINATED UNION\n" ); // TODO: DU
+				break;
 			default:
 			{
 				assert( false ); // unexpected
@@ -493,6 +496,9 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
 				break; // TODO: treatment
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf( header, "\t    // TODO: generation for DISCRIMINATED UNION\n" ); // TODO: DU
+				break;
 			default:
 			{
 				assert( false ); // unexpected
@@ -542,6 +548,9 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
 				break; // TODO: ...
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf( header, "\t    // TODO: generation for DISCRIMINATED UNION\n" ); // TODO: DU
+				break;
 			default:
 			{
 				assert( false ); // unexpected
@@ -612,6 +621,8 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 		{
 			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
+			else if ( param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+				fprintf( header, "\t    // TODO: generation for DISCRIMINATED UNION\n" ); // TODO: DU
 			else
 				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
 			fprintf( header, " %s", param.name.c_str() );
@@ -620,6 +631,10 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 		{
 			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
 			fprintf( header, " %s", param.name.c_str() );
+		}
+		else if ( param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		{
+				fprintf( header, "\t    // TODO: generation for DISCRIMINATED UNION\n" ); // TODO: DU
 		}
 		else
 			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
@@ -695,6 +710,9 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			case MessageParameterType::KIND::STRUCT:
 				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
 				break; // TODO: ...
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf( header, "\t    // TODO: generation for DISCRIMINATED UNION\n" ); // TODO: DU
+				break;
 			default:
 			{
 				assert( false ); // unexpected

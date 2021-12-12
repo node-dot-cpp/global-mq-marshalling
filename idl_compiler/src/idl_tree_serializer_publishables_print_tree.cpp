@@ -303,7 +303,7 @@ void printDataType( MessageParameterType& s )
 		else
 			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
-	else if ( s.kind == MessageParameterType::KIND::STRUCT )
+	else if ( s.kind == MessageParameterType::KIND::STRUCT || s.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
 		printf( "%s %s %s", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", s.name.c_str() );
 	}

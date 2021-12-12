@@ -148,10 +148,6 @@ MESSAGE NONEXTENDABLE infrastructural:point=4 {
   STRUCT point point;
 };
 
-MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
-  STRUCT point3D pt;
-};
-
 DISCRIMINATED_UNION du_one {
 	CASE one=1: { 
 		STRUCT point3D pt3d_1;
@@ -161,6 +157,11 @@ DISCRIMINATED_UNION du_one {
 		INTEGER i_2;
 		VECTOR<REAL> vp_2;
 	}
+};
+
+MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
+  STRUCT point3D pt;
+  DISCRIMINATED_UNION du_one du_one_instance;
 };
 
 

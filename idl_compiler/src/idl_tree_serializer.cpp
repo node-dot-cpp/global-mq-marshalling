@@ -78,12 +78,23 @@ void impl_CollectParamNamesFromeMessageParameter( std::set<string>& params, Mess
 
 void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s )
 {
-	for ( auto& it : s.getMembers() )
+	if ( s.type == CompositeType::Type::discriminated_union )
 	{
-		assert( it != nullptr );
-		if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(it)))) );
+		for ( auto& cc : s.getDiscriminatedUnionCases() )
+		{
+			assert( cc != nullptr );
+			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(cc)))) );
+		}
+	}
+	else
+	{
+		for ( auto& it : s.getMembers() )
+		{
+			assert( it != nullptr );
+			if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
+				continue;
+			impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(it)))) );
+		}
 	}
 }
 
@@ -246,7 +257,7 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 
 void impl_propagateParentPropsToStruct( CompositeType& parent, CompositeType& memberOrArrayElementType )
 {
-	assert( memberOrArrayElementType.type == CompositeType::Type::structure );
+	assert( memberOrArrayElementType.type == CompositeType::Type::structure || memberOrArrayElementType.type == CompositeType::Type::discriminated_union );
 	switch ( parent.type )
 	{
 		case CompositeType::Type::message:
