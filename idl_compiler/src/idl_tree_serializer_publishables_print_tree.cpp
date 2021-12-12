@@ -263,7 +263,7 @@ void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, siz
 		printf( "%sCase <null> {}\n", offsetch );
 		return;
 	}
-	printStruct( *(dynamic_cast<CompositeType*>(&(*(s)))), offset + 4 );
+	printDiscriminatedUnionCase( *(dynamic_cast<CompositeType*>(&(*(s)))), offset + 4 );
 }
 
 /*void printDiscriminatedUnionCase( MessageParameter& s, size_t offset )

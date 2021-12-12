@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_d565b79d_guard
-#define _test_marshalling_h_d565b79d_guard
+#ifndef _test_marshalling_h_3052b45b_guard
+#define _test_marshalling_h_3052b45b_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -4873,4 +4873,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_d565b79d_guard
+#endif // _test_marshalling_h_3052b45b_guard

@@ -127,7 +127,7 @@ struct
 discriminated_union_case_begin
 	: KW_CASE IDENTIFIER '=' INTEGER_LITERAL ':' '{' { $$ = createDiscriminatedUnionCase($1, false, $2, $4); releaseYys3($3, $5, $6); }
 	| KW_CASE KW_NONEXTENDABLE IDENTIFIER '=' INTEGER_LITERAL ':' '{' { $$ = createDiscriminatedUnionCase($1, true, $3, $5); releaseYys4($2, $4, $6, $7); }
-	| discriminated_union_begin data_type IDENTIFIER ';' { $$ = addToDiscriminatedUnionCase($1, createAttribute($2, $3)); releaseYys($4); }
+	| discriminated_union_case_begin data_type IDENTIFIER ';' { $$ = addToDiscriminatedUnionCase($1, createAttribute($2, $3)); releaseYys($4); }
 ;
 
 discriminated_union_case
@@ -154,6 +154,7 @@ data_type
 	| blob_type
 	| vector_type
 	| struct_type
+	| discriminated_union_type
 ;
 
 integer_type
@@ -284,6 +285,11 @@ struct_type
 	: KW_STRUCT IDENTIFIER { $$ = createStructType($1, false, $2); }
 	| KW_STRUCT KW_NONEXTENDABLE IDENTIFIER { $$ = createStructType($1, true, $3); releaseYys( $2 );}
 	| KW_NONEXTENDABLE KW_STRUCT IDENTIFIER { $$ = createStructType($2, true, $3); releaseYys( $1 ); }
+
+discriminated_union_type
+	: KW_DISCRIMINATED_UNION IDENTIFIER { $$ = createDiscriminatedUnionType($1, false, $2); }
+	| KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER { $$ = createDiscriminatedUnionType($1, true, $3); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_DISCRIMINATED_UNION IDENTIFIER { $$ = createDiscriminatedUnionType($2, true, $3); releaseYys( $1 ); }
 
 blob_type
 	: KW_BLOB { $$ = createBlobType($1); }

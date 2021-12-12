@@ -501,7 +501,7 @@ YYSTYPE addDiscriminatedUnionToFile(YYSTYPE file, YYSTYPE item)
 	unique_ptr<YyBase> d0(item);
 
 	CompositeType* s = releasePointedFromYyPtr<CompositeType>(item);
-	currentRoot->structs.push_back(unique_ptr<CompositeType>(s));
+	currentRoot->discriminatedUnions.push_back(unique_ptr<CompositeType>(s));
 
 	return 0;
 }
@@ -636,7 +636,7 @@ YYSTYPE impl_createStructOrMessageOrPublishable(YYSTYPE token, CompositeType::Ty
 	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
+YYSTYPE impl_createMessageOrPublishableOrDUCase(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
 	unique_ptr<YyBase> d0(numID);
 
@@ -659,7 +659,7 @@ YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeNam
 {
 	unique_ptr<YyBase> d0(scopeName);
 
-	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, id, numID);
+	auto ret = impl_createMessageOrPublishableOrDUCase(token, CompositeType::Type::message, isNonExtendable, id, numID);
 
 	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
 	msg->scopeName = nameFromYyIdentifier( scopeName );
@@ -674,7 +674,7 @@ YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YY
 
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
-	return impl_createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, id, numID);
+	return impl_createMessageOrPublishableOrDUCase(token, CompositeType::Type::publishable, isNonExtendable, id, numID);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
@@ -684,7 +684,7 @@ YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 
 YYSTYPE createDiscriminatedUnionCase(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
-	return impl_createStructOrMessageOrPublishable(token, CompositeType::Type::discriminated_union_case, isNonExtendable, id);
+	return impl_createMessageOrPublishableOrDUCase(token, CompositeType::Type::discriminated_union_case, isNonExtendable, id, numID);
 }
 
 YYSTYPE createDiscriminatedUnion(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
@@ -1020,6 +1020,11 @@ YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE composi
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName)
 {
 	return createCompositeType(token, isNonExtendable, structName, MessageParameterType::STRUCT);
+}
+
+YYSTYPE createDiscriminatedUnionType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName)
+{
+	return createCompositeType(token, isNonExtendable, structName, MessageParameterType::DISCRIMINATED_UNION);
 }
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)

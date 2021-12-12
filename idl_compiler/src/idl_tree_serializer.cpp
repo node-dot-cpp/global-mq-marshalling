@@ -43,6 +43,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
 		case MessageParameterType::KIND::STRUCT: return "STRUCT";
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "DISCRIMINATED_UNION";
 		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
 		default: assert( false ); return "";
 	}
@@ -130,6 +131,19 @@ bool impl_checkCompositeTypeNameUniqueness(Root& s)
 		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList, "MESSAGE") && ok;
 	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
 	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.discriminatedUnions, "DISCRIMINATED_UNION") && ok;
+	return ok;
+}
+
+
+bool impl_checkDiscriminatedUnions(Root& s)
+{
+	bool ok = true;
+	for ( auto& scope : s.scopes )
+		ok = impl_checkCompositeTypeNameUniqueness(scope->objectList, "MESSAGE") && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.publishables, "PUBLISHABLE") && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.structs, "STRUCT") && ok;
+	ok = impl_checkCompositeTypeNameUniqueness(s.discriminatedUnions, "DISCRIMINATED_UNION") && ok;
 	return ok;
 }
 
@@ -511,6 +525,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
+	ok = impl_checkDiscriminatedUnions(s);
 	ok = impl_processScopes(s) && ok;
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
 	if ( !ok )

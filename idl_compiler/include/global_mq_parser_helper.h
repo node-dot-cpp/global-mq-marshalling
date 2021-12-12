@@ -126,6 +126,7 @@ YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
 
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
+YYSTYPE createDiscriminatedUnionType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values);
 YYSTYPE createInlineEnumWithDefault(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values, YYSTYPE defaultValue);
