@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_3052b45b_guard
-#define _test_marshalling_h_3052b45b_guard
+#ifndef _test_marshalling_h_64e6c37d_guard
+#define _test_marshalling_h_64e6c37d_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -85,6 +85,7 @@ using Z_Type = NamedParameter<struct Z_Struct>;
 using a_Type = NamedParameter<struct a_Struct>;
 using b_Type = NamedParameter<struct b_Struct>;
 using concaveMap_Type = NamedParameter<struct concaveMap_Struct>;
+using du_one_instance_Type = NamedParameter<struct du_one_instance_Struct>;
 using eighthParam_Type = NamedParameter<struct eighthParam_Struct>;
 using fifthParam_Type = NamedParameter<struct fifthParam_Struct>;
 using firstParam_Type = NamedParameter<struct firstParam_Struct>;
@@ -119,6 +120,7 @@ constexpr Z_Type::TypeConverter Z;
 constexpr a_Type::TypeConverter a;
 constexpr b_Type::TypeConverter b;
 constexpr concaveMap_Type::TypeConverter concaveMap;
+constexpr du_one_instance_Type::TypeConverter du_one_instance;
 constexpr eighthParam_Type::TypeConverter eighthParam;
 constexpr fifthParam_Type::TypeConverter fifthParam;
 constexpr firstParam_Type::TypeConverter firstParam;
@@ -1902,8 +1904,9 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (1 parameters)
+// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (2 parameters)
 // 1. STRUCT point3D pt (REQUIRED)
+// 2. DISCRIMINATED_UNION du_one du_one_instance (REQUIRED)
 
 //**********************************************************************
 
@@ -1913,8 +1916,10 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
 	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
 
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -1922,6 +1927,7 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -1930,8 +1936,10 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
 	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
 
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -1939,6 +1947,7 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4873,4 +4882,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_3052b45b_guard
+#endif // _test_marshalling_h_64e6c37d_guard
