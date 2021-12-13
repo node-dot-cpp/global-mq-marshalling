@@ -9,4 +9,8 @@
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="generated2.cs" />
+  </ItemGroup>
+
 </Project>
