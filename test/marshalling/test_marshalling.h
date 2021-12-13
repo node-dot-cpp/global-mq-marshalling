@@ -1495,6 +1495,51 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 	}
 };
 
+class du_one : public ::globalmq::marshalling::impl::DiscriminatedUnionType
+{
+public:
+	enum Variants { unknown, one, two };
+private:
+	Variants v = Variants::unknown;
+	struct Case_one
+	{
+		point3D pt3d_1;
+		int64_t i_1;
+	};
+
+	struct Case_two
+	{
+		int64_t i_2;
+		GMQ_COLL vector<double> vp_2;
+	};
+
+public:
+	Variants currentVariant() { return v; }
+	void initAs( Variants v_ ) {
+		if ( v != Variants::unknown )
+			// TODO: destruct existing value
+			;
+		// TODO: init for a new type
+		v = v_;
+	}
+
+	// IDL CASE one:
+	auto get_pt3d_1() { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
+	void set_pt3d_1(/**/) { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
+	
+	auto get_i_1() { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
+	void set_i_1(/**/) { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
+	
+
+	// IDL CASE two:
+	auto get_i_2() { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
+	void set_i_2(/**/) { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
+	
+	auto get_vp_2() { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
+	void set_vp_2(/**/) { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
+	
+};
+
 namespace scope_one {
 
 using point3D_alias = ::globalmq::marshalling::impl::MessageName<1>;

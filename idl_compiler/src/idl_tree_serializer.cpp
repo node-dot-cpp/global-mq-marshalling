@@ -167,6 +167,11 @@ bool impl_checkDiscriminatedUnions(Root& s)
 			for ( auto& ducase: cases )
 			{
 				assert( ducase->type == CompositeType::Type::discriminated_union_case );
+				if ( ducase->name == "unknown" )
+				{
+					fprintf( stderr, "line %d: identifier \'unknown\' is reserved and cannot be used as a CASE name\n", ducase->location.lineNumber );
+					ok = false;
+				}
 				auto ins = labels.insert( std::make_pair( ducase->name, ducase->location ) );
 				if ( !ins.second )
 				{
@@ -579,6 +584,130 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 	fprintf( header, "};\n" );
 }
 
+std::string impl_generateDiscriminatedUnionCaseStructName( CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::discriminated_union_case );
+//	return fmt::format( "{}_{}", s.type2string(), s.name );
+	return fmt::format( "{}", s.name ); // let's see whether it is enough
+}
+
+std::string impl_generateStandardCppTypeName( MessageParameterType& s )
+{
+	// TODO: depending on limits this could be tuned on
+	switch ( s.kind )
+	{
+		// simple types
+		case MessageParameterType::KIND::INTEGER: return "int64_t";
+		case MessageParameterType::KIND::UINTEGER: return "uint64_t";
+		case MessageParameterType::KIND::REAL: return "double";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "string";
+		// collections
+		case MessageParameterType::KIND::VECTOR: 
+		{
+			switch ( s.vectorElemKind )
+			{
+				case MessageParameterType::KIND::INTEGER: return "GMQ_COLL vector<int64_t>";
+				case MessageParameterType::KIND::UINTEGER: return "GMQ_COLL vector<uint64_t>";
+				case MessageParameterType::KIND::REAL: return "GMQ_COLL vector<double>";
+				case MessageParameterType::KIND::CHARACTER_STRING: return "GMQ_COLL vector<string>";
+				case MessageParameterType::KIND::ENUM:
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+					return fmt::format( "GMQ_COLL vector<{}>", s.name );
+				default: assert( false ); return ""; // unexpected or not implemented
+			}
+		}
+		// named types
+		case MessageParameterType::KIND::ENUM:
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			return s.name;
+		// unsupported (yet)
+		case MessageParameterType::KIND::BYTE_ARRAY: assert( false ); return "";
+		case MessageParameterType::KIND::BLOB: assert( false ); return "";
+		// unexpected
+		case MessageParameterType::KIND::EXTENSION: assert( false ); return "";
+		case MessageParameterType::KIND::UNDEFINED: assert( false ); return "";
+		default: assert( false ); return "";
+	}
+}
+
+void generateDiscriminatedUnionCaseStruct( FILE* header, CompositeType& ducs, const char* offset )
+{
+	assert( ducs.type == CompositeType::Type::discriminated_union_case );
+	fprintf( header, "%sstruct Case_%s\n", offset, impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
+	fprintf( header, "%s{\n", offset );
+	for ( auto& mbit: ducs.getMembers() )
+	{
+		assert( mbit != nullptr );
+		auto& m = *mbit;
+		assert( typeid( m ) == typeid( MessageParameter ) );
+		assert( m.type.kind != MessageParameterType::KIND::UNDEFINED );
+		if ( m.type.kind != MessageParameterType::KIND::EXTENSION )
+			fprintf( header, "%s\t%s %s;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
+	}
+	fprintf( header, "%s};\n\n", offset );
+}
+
+void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
+{
+	assert( du.type == CompositeType::Type::discriminated_union );
+	fprintf( header, "class %s : public ::globalmq::marshalling::impl::%s\n", du.name.c_str(), du.isNonExtendable ? "NonextDiscriminatedUnionType" : "DiscriminatedUnionType" );
+	fprintf( header, "{\n" );
+	fprintf( header, "public:\n" );
+	fprintf( header, "\tenum Variants { unknown" );
+	// list of cases
+	for ( auto& duit: du.getDiscriminatedUnionCases() )
+	{
+		assert( duit != nullptr );
+		auto& cs = *duit;
+		assert( typeid( cs ) == typeid( CompositeType ) );
+		assert( cs.type == CompositeType::Type::discriminated_union_case );
+		fprintf( header, ", %s", cs.name.c_str() );
+	}
+	fprintf( header, " };\n" );
+	fprintf( header, "private:\n" );
+	fprintf( header, "\tVariants v = Variants::unknown;\n" );
+	// list of structures
+	for ( auto& duit: du.getDiscriminatedUnionCases() )
+		generateDiscriminatedUnionCaseStruct( header, *duit, "\t" );
+
+	fprintf( header, "public:\n" );
+	fprintf( header, "\tVariants currentVariant() { return v; }\n" );
+	// initAS()
+	fprintf( header, "\tvoid initAs( Variants v_ ) {\n" );
+	// TODO: add processing details
+	fprintf( header, "\t\tif ( v != Variants::unknown )\n" );
+	fprintf( header, "\t\t\t// TODO: destruct existing value\n" );
+	fprintf( header, "\t\t\t;\n" );
+	fprintf( header, "\t\t// TODO: init for a new type\n" );
+
+//	fprintf( header, "\t\t\n" );
+
+	fprintf( header, "\t\tv = v_;\n" );
+	fprintf( header, "\t}\n" );
+
+	for ( auto& duit: du.getDiscriminatedUnionCases() )
+	{
+		fprintf( header, "\n" );
+		assert( duit != nullptr );
+		auto& cs = *duit;
+		fprintf( header, "\t// IDL CASE %s:\n", cs.name.c_str() );
+
+		for ( auto& mbit: cs.getMembers() )
+		{
+			assert( mbit != nullptr );
+			auto& m = *mbit;
+			assert( typeid( m ) == typeid( MessageParameter ) );
+			fprintf( header, "\tauto get_%s() { assert( v == Variants::%s ); /*TODO: convert, access, return*/ }\n", m.name.c_str(), cs.name.c_str() );
+			fprintf( header, "\tvoid set_%s(/**/) { assert( v == Variants::%s ); /*TODO: convert, access, return*/ }\n", m.name.c_str(), cs.name.c_str() );
+			fprintf( header, "\t\n" );
+		}
+	}
+
+	fprintf( header, "};\n\n" );
+}
+
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
@@ -641,6 +770,14 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+
+	for ( auto it : structsOrderedByDependency )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		if ( it->type == CompositeType::Type::discriminated_union )
+			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
 	for ( auto& scope : s.scopes )
@@ -732,6 +869,8 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		metascope,
 		fileName, fileChecksum );
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint32_t adler32( uint8_t* buff, size_t sz ) 
 {
