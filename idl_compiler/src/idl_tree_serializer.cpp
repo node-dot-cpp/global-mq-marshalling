@@ -439,6 +439,9 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 	for ( size_t i=0; i<tmpStructs.size(); ++i )
 		out.push_back( tmpStructs[tmpStructs.size()-1-i] );
 	assert( out.size() == structs.size() );
+
+	for (auto& s : structs)
+		s->dependsOnCnt = 0;
 }
 
 void addLibAliasingBlock( FILE* header )
@@ -499,14 +502,17 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 	fprintf( header, "};\n" );
 }
 
-void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
+void preprocessRoot(Root& s)
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
 	ok = impl_processScopes(s) && ok;
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
-	if ( !ok )
+	if (!ok)
 		throw std::exception();
+}
 
+void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
+{
 	std::set<string> msgParams;
 	impl_CollectMessageParamNamesFromRoot( msgParams, s );
 

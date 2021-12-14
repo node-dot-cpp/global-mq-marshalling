@@ -597,53 +597,62 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 			case Proto::json: fprintf( header, "JSON " ); break;
 			default: assert( false );
 		}
-	fprintf( header, "(%zd parameters)\n", s.members.size() );
 
-	int count = 0;
-	for ( auto& it : s.members )
+	if (s.isAlias)
 	{
-		assert( it != nullptr );
-		MessageParameter& param = *it;
-		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		++count;
-			
-		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
-		{
-			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT )
-				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
-			else
-				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else if ( param.type.kind == MessageParameterType::KIND::STRUCT )
-		{
-			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else
-			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
+		fprintf(header, "(Alias of %s)\n", s.aliasOf.c_str());
+	}
+	else
+	{
+		fprintf(header, "(%zd parameters)\n", s.members.size());
 
-		if ( param.type.hasDefault )
+		int count = 0;
+		for (auto& it : s.members)
 		{
-			switch ( param.type.kind )
+			assert(it != nullptr);
+			MessageParameter& param = *it;
+			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+				continue;
+			++count;
+
+			if (param.type.kind == MessageParameterType::KIND::VECTOR)
 			{
-				case MessageParameterType::KIND::ENUM: fprintf( header, " (DEFAULT: %s::%s)", param.type.name.c_str(), param.type.stringDefault.c_str() ); break;
-				case MessageParameterType::KIND::INTEGER: fprintf( header, " (DEFAULT: %lld)", (int64_t)(param.type.numericalDefault) ); break;
-				case MessageParameterType::KIND::UINTEGER: fprintf( header, " (DEFAULT: %lld)", (uint64_t)(param.type.numericalDefault) ); break;
-				case MessageParameterType::KIND::REAL: fprintf( header, " (DEFAULT: %f)", param.type.numericalDefault ); break;
-				case MessageParameterType::KIND::CHARACTER_STRING: fprintf( header, " (DEFAULT: \"%s\")", param.type.stringDefault.c_str() ); break;
-				default:
-					fprintf( header, " (REQUIRED)" );
-					break;
+				if (param.type.vectorElemKind == MessageParameterType::KIND::STRUCT)
+					fprintf(header, "// %d. %s<%s%s %s>", count, impl_kindToString(param.type.kind), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString(param.type.vectorElemKind), param.type.name.c_str());
+				else
+					fprintf(header, "// %d. %s<%s>", count, impl_kindToString(param.type.kind), impl_kindToString(param.type.vectorElemKind));
+				fprintf(header, " %s", param.name.c_str());
 			}
+			else if (param.type.kind == MessageParameterType::KIND::STRUCT)
+			{
+				fprintf(header, "// %d. %s %s%s", count, impl_kindToString(param.type.kind), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str());
+				fprintf(header, " %s", param.name.c_str());
+			}
+			else
+				fprintf(header, "// %d. %s %s", count, impl_kindToString(param.type.kind), param.name.c_str());
+
+			if (param.type.hasDefault)
+			{
+				switch (param.type.kind)
+				{
+				case MessageParameterType::KIND::ENUM: fprintf(header, " (DEFAULT: %s::%s)", param.type.name.c_str(), param.type.stringDefault.c_str()); break;
+				case MessageParameterType::KIND::INTEGER: fprintf(header, " (DEFAULT: %lld)", (int64_t)(param.type.numericalDefault)); break;
+				case MessageParameterType::KIND::UINTEGER: fprintf(header, " (DEFAULT: %lld)", (uint64_t)(param.type.numericalDefault)); break;
+				case MessageParameterType::KIND::REAL: fprintf(header, " (DEFAULT: %f)", param.type.numericalDefault); break;
+				case MessageParameterType::KIND::CHARACTER_STRING: fprintf(header, " (DEFAULT: \"%s\")", param.type.stringDefault.c_str()); break;
+				default:
+					fprintf(header, " (REQUIRED)");
+					break;
+				}
+			}
+			else
+				fprintf(header, " (REQUIRED)");
+			fprintf(header, "\n");
+
 		}
-		else
-			fprintf( header, " (REQUIRED)" );
-		fprintf( header, "\n" );
+		//fprintf(header, "\n");
 	}
 
-	fprintf( header, "\n" );
 	fprintf( header, "//**********************************************************************\n\n" );
 }
 

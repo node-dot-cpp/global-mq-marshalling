@@ -19,6 +19,7 @@
 //**********************************************************************
 
 using globalmq.marshalling;
+using globalmq.marshalling.impl;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -129,6 +130,7 @@ public class mtest
             json.composeSignedInteger(x);
             json.append(",\n  ");
             json.addNamePart("y");
+
             json.composeSignedInteger(y);
             json.append(",\n  ");
             json.addNamePart("z");
@@ -490,7 +492,7 @@ public class mtest
     {
         return new MessageHandler((UInt64)msgID, handler);
     }
-    public MessageHandler defaultMessageHandler(MessageHandler.HandlerDelegate handler)
+    public MessageHandler makeDefaultMessageHandler(MessageHandler.HandlerDelegate handler)
     {
         return new MessageHandler(MessageHandler.DefaultHandler, handler);
     }

@@ -25,6 +25,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
+using globalmq.marshalling.impl;
 using System;
 using System.Collections.Generic;
 
@@ -56,8 +57,8 @@ namespace globalmq.marshalling
         public delegate void NextDelegate(ComposerBase composer, int ordinal);
         public CollectionWrapperForComposing(SizeDelegate lsize, NextDelegate lnext)
         {
-            this.lsize_ = lsize;
-            this.lnext_ = lnext;
+            lsize_ = lsize;
+            lnext_ = lnext;
         }
         public int size() { return lsize_(); }
         public void compose_next(ComposerBase composer, int ordinal)
@@ -76,8 +77,8 @@ namespace globalmq.marshalling
         public CollectionWrapperForParsing(SizeDelegate lsize, NextDelegate lnext)
 
         {
-            this.lsize_ = lsize;
-            this.lnext_ = lnext;
+            lsize_ = lsize;
+            lnext_ = lnext;
         }
         public void size_hint(int sz)
         {
@@ -92,142 +93,142 @@ namespace globalmq.marshalling
 
     public class SimpleTypeCollection
     {
-        public static ICompose makeComposer(IList<SByte> coll)
+        public static ICompose makeComposer(IList<sbyte> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<Int16> coll)
+        public static ICompose makeComposer(IList<short> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<Int32> coll)
+        public static ICompose makeComposer(IList<int> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<Int64> coll)
+        public static ICompose makeComposer(IList<long> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(SByte[] coll)
+        public static ICompose makeComposer(sbyte[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(Int16[] coll)
+        public static ICompose makeComposer(short[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(Int32[] coll)
+        public static ICompose makeComposer(int[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(Int64[] coll)
+        public static ICompose makeComposer(long[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<Byte> coll)
+        public static ICompose makeComposer(IList<byte> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<UInt16> coll)
+        public static ICompose makeComposer(IList<ushort> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<UInt32> coll)
+        public static ICompose makeComposer(IList<uint> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<UInt64> coll)
+        public static ICompose makeComposer(IList<ulong> coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(Byte[] coll)
+        public static ICompose makeComposer(byte[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(UInt16[] coll)
+        public static ICompose makeComposer(ushort[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(UInt32[] coll)
+        public static ICompose makeComposer(uint[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(UInt64[] coll)
+        public static ICompose makeComposer(ulong[] coll)
         {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-
-        public static ICompose makeComposer(IList<Single> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static ICompose makeComposer(IList<Double> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static ICompose makeComposer(Single[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static ICompose makeComposer(Double[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static ICompose makeComposer(IList<String> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (ComposerBase composer, int ordinal) => { composer.composeString(coll[ordinal]); });
-        }
-        public static ICompose makeComposer(String[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (ComposerBase composer, int ordinal) => { composer.composeString(coll[ordinal]); });
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
 
+        public static ICompose makeComposer(IList<float> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<double> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(float[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(double[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(IList<string> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
+        }
+        public static ICompose makeComposer(string[] coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
+        }
 
 
 
-        public static IParse makeParser(IList<SByte> coll)
+
+        public static IParse makeParser(IList<sbyte> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { SByte value; parser.parseSignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { sbyte value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<Int16> coll)
+        public static IParse makeParser(IList<short> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Int16 value; parser.parseSignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { short value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<Int32> coll)
+        public static IParse makeParser(IList<int> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Int32 value; parser.parseSignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { int value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<Int64> coll)
+        public static IParse makeParser(IList<long> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Int64 value; parser.parseSignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { long value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<Byte> coll)
+        public static IParse makeParser(IList<byte> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<UInt16> coll)
+        public static IParse makeParser(IList<ushort> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { UInt16 value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { ushort value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<UInt32> coll)
+        public static IParse makeParser(IList<uint> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { UInt32 value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { uint value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<UInt64> coll)
+        public static IParse makeParser(IList<ulong> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { UInt64 value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { ulong value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<Single> coll)
+        public static IParse makeParser(IList<float> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Single value; parser.parseReal(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { float value; parser.parseReal(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<Double> coll)
+        public static IParse makeParser(IList<double> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Double value; parser.parseReal(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { double value; parser.parseReal(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<String> coll)
+        public static IParse makeParser(IList<string> coll)
         {
-            return new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { String value; parser.parseString(out value); coll.Add(value); });
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { string value; parser.parseString(out value); coll.Add(value); });
         }
     };
 
@@ -242,7 +243,7 @@ namespace globalmq.marshalling
 
         public delegate void ComposeDelegate(ComposerBase composer);
 
-        public MessageWrapperForComposing(ComposeDelegate lcompose) { this.lcompose_ = lcompose; }
+        public MessageWrapperForComposing(ComposeDelegate lcompose) { lcompose_ = lcompose; }
 
         public void compose(ComposerBase composer)
         {
@@ -257,7 +258,7 @@ namespace globalmq.marshalling
         public delegate void ParseDelegate(ParserBase composer);
 
 
-        public MessageWrapperForParsing(ParseDelegate lparse) { this.lparse_ = lparse; }
+        public MessageWrapperForParsing(ParseDelegate lparse) { lparse_ = lparse; }
         public void parse(ParserBase parser)
         {
             lparse_(parser);
@@ -266,14 +267,14 @@ namespace globalmq.marshalling
 
     public class Base
     {
-        public static UInt64[] makeAddress(UInt64[] baseAddress, UInt64 last)
+        public static ulong[] makeAddress(ulong[] baseAddress, ulong last)
         {
-            UInt64[] address = new UInt64[baseAddress.Length + 1];
+            ulong[] address = new ulong[baseAddress.Length + 1];
             baseAddress.CopyTo(address, 0);
             address[baseAddress.Length] = last;
             return address;
         }
-        public static void composeAddressInPublishable(ComposerBase composer, UInt64[] addr, UInt64 last)
+        public static void composeAddressInPublishable(ComposerBase composer, ulong[] addr, ulong last)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.composeAddressInPublishable(gmqComposer, addr, last);
@@ -282,7 +283,7 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        
+
         public static void composeStateUpdateMessageBegin(ComposerBase composer)
         {
             if (composer is GmqComposer gmqComposer)
@@ -302,7 +303,7 @@ namespace globalmq.marshalling
                 throw new Exception(); //TODO
         }
 
-        public static void publishableComposeLeafeInteger(ComposerBase composer, Int64 value)
+        public static void publishableComposeLeafeInteger(ComposerBase composer, long value)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableComposeLeafeInteger(gmqComposer, value);
@@ -311,7 +312,7 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableComposeLeafeReal(ComposerBase composer, Double value)
+        public static void publishableComposeLeafeReal(ComposerBase composer, double value)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableComposeLeafeReal(gmqComposer, value);
@@ -320,7 +321,7 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableComposeLeafeString(ComposerBase composer, String value)
+        public static void publishableComposeLeafeString(ComposerBase composer, string value)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableComposeLeafeString(gmqComposer, value);
@@ -347,8 +348,8 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        
-        public static void publishableStructComposeInteger(ComposerBase composer, String name, Int64 value, bool separator)
+
+        public static void publishableStructComposeInteger(ComposerBase composer, string name, long value, bool separator)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableStructComposeInteger(gmqComposer, name, value, separator);
@@ -357,7 +358,7 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableStructComposeUnsigned(ComposerBase composer, String name, UInt64 value, bool separator)
+        public static void publishableStructComposeUnsigned(ComposerBase composer, string name, ulong value, bool separator)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableStructComposeUnsigned(gmqComposer, name, value, separator);
@@ -366,7 +367,7 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableStructComposeReal(ComposerBase composer, String name, Double value, bool separator)
+        public static void publishableStructComposeReal(ComposerBase composer, string name, double value, bool separator)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableStructComposeReal(gmqComposer, name, value, separator);
@@ -375,7 +376,7 @@ namespace globalmq.marshalling
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableStructComposeString(ComposerBase composer, String name, String value, bool separator)
+        public static void publishableStructComposeString(ComposerBase composer, string name, string value, bool separator)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.publishableStructComposeString(gmqComposer, name, value, separator);
@@ -403,7 +404,7 @@ namespace globalmq.marshalling
                 throw new Exception(); //TODO
         }
 
-        public static void composePublishableStructBegin(ComposerBase composer, String name)
+        public static void composePublishableStructBegin(ComposerBase composer, string name)
         {
             if (composer is GmqComposer gmqComposer)
                 gmq.composePublishableStructBegin(gmqComposer, name);
@@ -424,6 +425,12 @@ namespace globalmq.marshalling
 
     }
 
+
+
+} // namespace globalmq::marshalling
+
+namespace globalmq.marshalling.impl
+{
     public class gmq
     {
         public static void parseGmqParam(GmqParser parser, IParse o)
@@ -431,7 +438,7 @@ namespace globalmq.marshalling
             if (o is CollectionWrapperForParsing coll)
             {
                 int sz;
-				parser.parseUnsignedInteger(out sz);
+                parser.parseUnsignedInteger(out sz);
                 coll.size_hint(sz);
                 for (int i = 0; i < sz; ++i)
                     coll.parse_next(parser, i);
@@ -456,7 +463,7 @@ namespace globalmq.marshalling
                 for (int i = 0; i < collSz; ++i)
                     coll.compose_next(composer, i);
             }
-            else if(o is MessageWrapperForComposing msg)
+            else if (o is MessageWrapperForComposing msg)
                 msg.compose(composer);
             else
                 throw new Exception(); //TODO
@@ -464,7 +471,7 @@ namespace globalmq.marshalling
 
         public static void handleMessage(GmqParser parser, MessageHandlerArray handlers)
         {
-            UInt64 msgID;
+            ulong msgID;
             parser.parseUnsignedInteger(out msgID);
             handlers.handle(parser, msgID);
         }
@@ -478,24 +485,24 @@ namespace globalmq.marshalling
             /* nothing */
         }
 
-        public static void composeAddressInPublishable(GmqComposer composer, UInt64[] addr, UInt64 last)
+        public static void composeAddressInPublishable(GmqComposer composer, ulong[] addr, ulong last)
         {
             int collSz = addr.Length;
-            composer.composeUnsignedInteger((UInt64)collSz + 1);
+            composer.composeUnsignedInteger((ulong)collSz + 1);
             for (int i = 0; i < collSz; ++i)
                 composer.composeUnsignedInteger(addr[i]);
             composer.composeUnsignedInteger(last);
         }
-        public static void publishableComposeLeafeInteger(GmqComposer composer, Int64 value)
+        public static void publishableComposeLeafeInteger(GmqComposer composer, long value)
         {
             composer.composeSignedInteger(value);
         }
-        public static void publishableComposeLeafeReal(GmqComposer composer, Double value)
+        public static void publishableComposeLeafeReal(GmqComposer composer, double value)
         {
             composer.composeReal(value);
         }
 
-        public static void publishableComposeLeafeString(GmqComposer composer, String value)
+        public static void publishableComposeLeafeString(GmqComposer composer, string value)
         {
             composer.composeString(value);
         }
@@ -507,23 +514,23 @@ namespace globalmq.marshalling
         {
             /* nothing */
         }
-        public static void publishableStructComposeInteger(GmqComposer composer, String name, Int64 value, bool separator)
+        public static void publishableStructComposeInteger(GmqComposer composer, string name, long value, bool separator)
         {
             composer.composeSignedInteger(value);
         }
-        public static void publishableStructComposeUnsigned(GmqComposer composer, String name, UInt64 value, bool separator)
+        public static void publishableStructComposeUnsigned(GmqComposer composer, string name, ulong value, bool separator)
         {
             composer.composeUnsignedInteger(value);
         }
-        public static void publishableStructComposeReal(GmqComposer composer, String name, Double value, bool separator)
+        public static void publishableStructComposeReal(GmqComposer composer, string name, double value, bool separator)
         {
             composer.composeReal(value);
         }
-        public static void publishableStructComposeString(GmqComposer composer, String name, String value, bool separator)
+        public static void publishableStructComposeString(GmqComposer composer, string name, string value, bool separator)
         {
             composer.composeString(value);
         }
-        public static void composePublishableStructBegin(GmqComposer composer, String name)
+        public static void composePublishableStructBegin(GmqComposer composer, string name)
         {
             /* nothing */
         }
@@ -541,8 +548,12 @@ namespace globalmq.marshalling
         }
 
 
-    } // class gmq
+    }
+    // class gmq
+}
 
+namespace globalmq.marshalling.impl
+{
     public class json
     {
         public static void parseJson(JsonParser parser, CollectionWrapperForParsing coll)
@@ -608,7 +619,7 @@ namespace globalmq.marshalling
             composer.addNamePart("size");
 
             int collSz = coll.size();
-            composer.composeUnsignedInteger((UInt64)collSz);
+            composer.composeUnsignedInteger((ulong)collSz);
             composer.append(", ");
             composer.addNamePart("data");
 
@@ -651,7 +662,7 @@ namespace globalmq.marshalling
             parser.readKeyFromJson(out key);
             if (key != "msgid")
                 throw new Exception(); // bad format
-            UInt64 msgID;
+            ulong msgID;
             parser.parseUnsignedInteger(out msgID);
             parser.skipSpacesEtc();
             parser.skipDelimiter(',');
@@ -675,7 +686,7 @@ namespace globalmq.marshalling
             composer.append("{}]}");
         }
 
-        public static void composeAddressInPublishable(JsonComposer composer, UInt64[] addr, UInt64 last)
+        public static void composeAddressInPublishable(JsonComposer composer, ulong[] addr, ulong last)
         {
             composer.append('{');
             composer.addNamePart("addr");
@@ -691,7 +702,7 @@ namespace globalmq.marshalling
             composer.append(',');
         }
 
-        public static void publishableComposeLeafeInteger(JsonComposer composer, Int64 value)
+        public static void publishableComposeLeafeInteger(JsonComposer composer, long value)
         {
             composer.addNamePart("value");
             composer.composeSignedInteger(value);
@@ -699,7 +710,7 @@ namespace globalmq.marshalling
             composer.append("}");
             composer.append(",");
         }
-        public static void publishableComposeLeafeReal(JsonComposer composer, Double value)
+        public static void publishableComposeLeafeReal(JsonComposer composer, double value)
         {
             composer.addNamePart("value");
             composer.composeReal(value);
@@ -708,7 +719,7 @@ namespace globalmq.marshalling
             composer.append(",");
         }
 
-        public static void publishableComposeLeafeString(JsonComposer composer, String value)
+        public static void publishableComposeLeafeString(JsonComposer composer, string value)
         {
             composer.addNamePart("value");
             composer.composeString(value);
@@ -727,28 +738,28 @@ namespace globalmq.marshalling
             composer.append("}");
             composer.append(",");
         }
-        public static void publishableStructComposeInteger(JsonComposer composer, String name, Int64 value, bool separator)
+        public static void publishableStructComposeInteger(JsonComposer composer, string name, long value, bool separator)
         {
             composer.addNamePart(name);
             composer.composeSignedInteger(value);
             if (separator)
                 composer.append(",");
         }
-        public static void publishableStructComposeUnsigned(JsonComposer composer, String name, UInt64 value, bool separator)
+        public static void publishableStructComposeUnsigned(JsonComposer composer, string name, ulong value, bool separator)
         {
             composer.addNamePart(name);
             composer.composeUnsignedInteger(value);
             if (separator)
                 composer.append(",");
         }
-        public static void publishableStructComposeReal(JsonComposer composer, String name, Double value, bool separator)
+        public static void publishableStructComposeReal(JsonComposer composer, string name, double value, bool separator)
         {
             composer.addNamePart(name);
             composer.composeReal(value);
-            if(separator)
+            if (separator)
                 composer.append(",");
         }
-        public static void publishableStructComposeString(JsonComposer composer, String name, String value, bool separator)
+        public static void publishableStructComposeString(JsonComposer composer, string name, string value, bool separator)
         {
             composer.addNamePart(name);
             composer.composeString(value);
@@ -756,7 +767,7 @@ namespace globalmq.marshalling
                 composer.append(",");
         }
 
-        public static void composePublishableStructBegin(JsonComposer composer, String name)
+        public static void composePublishableStructBegin(JsonComposer composer, string name)
         {
             composer.addNamePart(name);
             composer.append("{");
@@ -777,21 +788,24 @@ namespace globalmq.marshalling
         }
 
     }//json
+}
 
+namespace globalmq.marshalling
+{
     public class MessageHandler
     {
-        public static UInt64 DefaultHandler = UInt64.MaxValue;
-        public UInt64 msgID { get; set; }
+        public static ulong DefaultHandler = ulong.MaxValue;
+        public ulong msgID { get; set; }
         HandlerDelegate lhandler_;
 
         public delegate void HandlerDelegate(ParserBase parser);
-        public MessageHandler(UInt64 msgID, HandlerDelegate lhandler)
+        public MessageHandler(ulong msgID, HandlerDelegate lhandler)
         {
             this.msgID = msgID;
-            this.lhandler_ = lhandler;
+            lhandler_ = lhandler;
         }
 
-        public void handle(ParserBase parser )
+        public void handle(ParserBase parser)
         {
             lhandler_(parser);
         }
@@ -810,7 +824,7 @@ namespace globalmq.marshalling
         {
             this.handlers = handlers;
         }
-        public bool handle(ParserBase parser, UInt64 msgID)
+        public bool handle(ParserBase parser, ulong msgID)
         {
             // TODO improve
             MessageHandler defaultHandler = null;
@@ -841,7 +855,4 @@ namespace globalmq.marshalling
             return new MessageHandlerArray(handlers);
         }
     }
-
-
-
-} // namespace globalmq::marshalling
+}

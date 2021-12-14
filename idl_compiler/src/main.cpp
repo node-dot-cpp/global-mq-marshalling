@@ -27,6 +27,7 @@
 
 #include <parser.h>
 #include <idl_tree_serializer.h>
+#include "idl_tree_2_csharp.h"
 
 int main( int argc, char *argv[] )
 {
@@ -115,8 +116,14 @@ int main( int argc, char *argv[] )
 		Root* root = parseSourceFile(idlPath, false);
 		printRoot( *root );
 
+		preprocessRoot( *root );
+
 		FILE* header = fopen( targetPath.c_str(), "wb" );
 		generateRoot( fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root );
+
+		std::string cs_name = targetPath + ".cs";
+		FILE* cs_file = fopen(cs_name.c_str(), "wb");
+		generateCsharp(cs_name.c_str(), chksm, cs_file, metascope.c_str(), platformPrefix, classNotifierName, *root);
 	}
 	catch ( std::exception& x )
 	{

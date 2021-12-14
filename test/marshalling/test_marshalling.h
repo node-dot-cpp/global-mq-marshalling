@@ -1661,7 +1661,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
 // 1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
 // 2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -1794,7 +1793,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 // 4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
 // 5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
 // 6. REAL polygonSpeed (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -1864,7 +1862,6 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 // MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
 // 1. STRUCT point point (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -1904,7 +1901,6 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 // MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (1 parameters)
 // 1. STRUCT point3D pt (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -2008,7 +2004,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 // 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
 // 9. STRUCT point3D ninethParam (REQUIRED)
 // 10. VECTOR<REAL> tenthParam (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -2179,7 +2174,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 // 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
 // 9. STRUCT point3D ninethParam (REQUIRED)
 // 10. VECTOR<REAL> tenthParam (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4240,7 +4234,6 @@ public:
 // STRUCT "CharacterParamStruct" Targets: JSON (2 parameters)
 // 1. INTEGER ID (REQUIRED)
 // 2. STRUCT SIZE Size (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4311,7 +4304,6 @@ void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
 // 1. REAL X (REQUIRED)
 // 2. REAL Y (REQUIRED)
 // 3. REAL Z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4390,7 +4382,6 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 // 1. REAL X (REQUIRED)
 // 2. REAL Y (REQUIRED)
 // 3. REAL Z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4467,7 +4458,6 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
 // 1. VECTOR< STRUCT Line> LineMap (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4508,7 +4498,6 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 // STRUCT "Line" Targets: GMQ (2 parameters)
 // 1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
 // 2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4554,7 +4543,6 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
 // 1. VECTOR< STRUCT PolygonMap> ObstacleMap (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4594,7 +4582,6 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
 // 1. VECTOR<NONEXTENDABLE STRUCT Vertex> PolygonMap (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4636,7 +4623,6 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 // 3. INTEGER z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4689,7 +4675,6 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 // STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4777,7 +4762,6 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 // 1. INTEGER x (REQUIRED)
 // 2. INTEGER y (REQUIRED)
 // 3. INTEGER z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>

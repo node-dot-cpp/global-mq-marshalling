@@ -68,7 +68,9 @@ void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, Compos
 void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s );
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
-
+//mb exported to be used from C#
+void impl_insertScopeList(FILE* header, Root& r);
+void impl_generateMessageCommentBlock(FILE* header, CompositeType& s);
 
 // printing global_mq tree
 void printRoot( Root& s );
@@ -96,6 +98,7 @@ void printLimit( Limit& s );
 void printVariant( Variant& s );
 
 // code generation
+void preprocessRoot(Root& s);
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
 void generateMessage( FILE* header, CompositeType& s );
 void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
