@@ -5,8 +5,6 @@
 //////////////////////////////////////////////////////////////
 
 using globalmq.marshalling;
-using globalmq.marshalling;
-using globalmq.marshalling;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -140,7 +138,7 @@ public class SIZE : IEquatable<SIZE>
 			Y: ref tmp.Y,
 			Z: ref tmp.Z
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class SIZE
 
@@ -268,7 +266,7 @@ public class point3D : IEquatable<point3D>
 			y: ref tmp.y,
 			z: ref tmp.z
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class point3D
 
@@ -384,7 +382,7 @@ public class point : IEquatable<point>
 			x: ref tmp.x,
 			y: ref tmp.y
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class point
 
@@ -512,7 +510,7 @@ public class Vertex : IEquatable<Vertex>
 			y: ref tmp.y,
 			z: ref tmp.z
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class Vertex
 
@@ -547,7 +545,7 @@ public class PolygonMap : IEquatable<PolygonMap>
 		return
 			Enumerable.SequenceEqual(this.polygonMap, other.polygonMap);
 	}
-	public static void compose(ComposerBase composer, ICompose polygonMap)
+	public static void compose(ComposerBase composer, ICollectionCompose polygonMap)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, polygonMap);
@@ -556,18 +554,18 @@ public class PolygonMap : IEquatable<PolygonMap>
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose polygonMap)
+	public static void compose(JsonComposer composer, ICollectionCompose polygonMap)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("polygonMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, polygonMap);
+		polygonMap.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose polygonMap)
+	public static void compose(GmqComposer composer, ICollectionCompose polygonMap)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, polygonMap);
+		polygonMap.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, IParse polygonMap)
+	public static void parse(ParserBase parser, ICollectionParse polygonMap)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, polygonMap);
@@ -576,7 +574,7 @@ public class PolygonMap : IEquatable<PolygonMap>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse polygonMap)
+	public static void parse(JsonParser parser, ICollectionParse polygonMap)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -584,7 +582,7 @@ public class PolygonMap : IEquatable<PolygonMap>
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "polygonMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, polygonMap);
+				polygonMap.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -600,9 +598,9 @@ public class PolygonMap : IEquatable<PolygonMap>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse polygonMap)
+	public static void parse(GmqParser parser, ICollectionParse polygonMap)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, polygonMap);
+		polygonMap.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, PolygonMap msg)
 	{
@@ -620,7 +618,7 @@ public class PolygonMap : IEquatable<PolygonMap>
 				(int size) => { tmp.polygonMap = new Vertex[size]; },
 				(ParserBase parser, int ordinal) => { Vertex.parse(parser, out tmp.polygonMap[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class PolygonMap
 
@@ -655,7 +653,7 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 		return
 			Enumerable.SequenceEqual(this.obstacleMap, other.obstacleMap);
 	}
-	public static void compose(ComposerBase composer, ICompose obstacleMap)
+	public static void compose(ComposerBase composer, ICollectionCompose obstacleMap)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, obstacleMap);
@@ -664,18 +662,18 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose obstacleMap)
+	public static void compose(JsonComposer composer, ICollectionCompose obstacleMap)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("obstacleMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, obstacleMap);
+		obstacleMap.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose obstacleMap)
+	public static void compose(GmqComposer composer, ICollectionCompose obstacleMap)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, obstacleMap);
+		obstacleMap.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, IParse obstacleMap)
+	public static void parse(ParserBase parser, ICollectionParse obstacleMap)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, obstacleMap);
@@ -684,7 +682,7 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse obstacleMap)
+	public static void parse(JsonParser parser, ICollectionParse obstacleMap)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -692,7 +690,7 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "obstacleMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, obstacleMap);
+				obstacleMap.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -708,9 +706,9 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse obstacleMap)
+	public static void parse(GmqParser parser, ICollectionParse obstacleMap)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, obstacleMap);
+		obstacleMap.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, ObstacleMap msg)
 	{
@@ -728,7 +726,7 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 				(int size) => { tmp.obstacleMap = new PolygonMap[size]; },
 				(ParserBase parser, int ordinal) => { PolygonMap.parse(parser, out tmp.obstacleMap[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class ObstacleMap
 
@@ -766,7 +764,7 @@ public class Line : IEquatable<Line>
 			Enumerable.SequenceEqual(this.a, other.a) &&
 			Enumerable.SequenceEqual(this.b, other.b);
 	}
-	public static void compose(ComposerBase composer, ICompose a, ICompose b)
+	public static void compose(ComposerBase composer, ICollectionCompose a, ICollectionCompose b)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, a, b);
@@ -775,22 +773,22 @@ public class Line : IEquatable<Line>
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose a, ICompose b)
+	public static void compose(JsonComposer composer, ICollectionCompose a, ICollectionCompose b)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("a");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, a);
+		a.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("b");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, b);
+		b.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose a, ICompose b)
+	public static void compose(GmqComposer composer, ICollectionCompose a, ICollectionCompose b)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, a);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, b);
+		a.composeGmq(composer);
+		b.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, IParse a, IParse b)
+	public static void parse(ParserBase parser, ICollectionParse a, ICollectionParse b)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, a, b);
@@ -799,7 +797,7 @@ public class Line : IEquatable<Line>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse a, IParse b)
+	public static void parse(JsonParser parser, ICollectionParse a, ICollectionParse b)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -807,9 +805,9 @@ public class Line : IEquatable<Line>
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "a" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, a);
+				a.parseJson(parser);
 			else if ( key == "b" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, b);
+				b.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -825,10 +823,10 @@ public class Line : IEquatable<Line>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse a, IParse b)
+	public static void parse(GmqParser parser, ICollectionParse a, ICollectionParse b)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, a);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, b);
+		a.parseGmq(parser);
+		b.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, Line msg)
 	{
@@ -852,7 +850,7 @@ public class Line : IEquatable<Line>
 				(int size) => { tmp.b = new Vertex[size]; },
 				(ParserBase parser, int ordinal) => { Vertex.parse(parser, out tmp.b[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class Line
 
@@ -887,7 +885,7 @@ public class LineMap : IEquatable<LineMap>
 		return
 			Enumerable.SequenceEqual(this.lineMap, other.lineMap);
 	}
-	public static void compose(ComposerBase composer, ICompose lineMap)
+	public static void compose(ComposerBase composer, ICollectionCompose lineMap)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, lineMap);
@@ -896,18 +894,18 @@ public class LineMap : IEquatable<LineMap>
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose lineMap)
+	public static void compose(JsonComposer composer, ICollectionCompose lineMap)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("lineMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, lineMap);
+		lineMap.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose lineMap)
+	public static void compose(GmqComposer composer, ICollectionCompose lineMap)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, lineMap);
+		lineMap.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, IParse lineMap)
+	public static void parse(ParserBase parser, ICollectionParse lineMap)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, lineMap);
@@ -916,7 +914,7 @@ public class LineMap : IEquatable<LineMap>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse lineMap)
+	public static void parse(JsonParser parser, ICollectionParse lineMap)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -924,7 +922,7 @@ public class LineMap : IEquatable<LineMap>
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "lineMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, lineMap);
+				lineMap.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -940,9 +938,9 @@ public class LineMap : IEquatable<LineMap>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse lineMap)
+	public static void parse(GmqParser parser, ICollectionParse lineMap)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, lineMap);
+		lineMap.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, LineMap msg)
 	{
@@ -960,7 +958,7 @@ public class LineMap : IEquatable<LineMap>
 				(int size) => { tmp.lineMap = new Line[size]; },
 				(ParserBase parser, int ordinal) => { Line.parse(parser, out tmp.lineMap[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class LineMap
 
@@ -1088,7 +1086,7 @@ public class POINT3DREAL : IEquatable<POINT3DREAL>
 			Y: ref tmp.Y,
 			Z: ref tmp.Z
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class POINT3DREAL
 
@@ -1126,7 +1124,7 @@ public class CharacterParamStruct : IEquatable<CharacterParamStruct>
 			this.ID == other.ID &&
 			this.Size.Equals(other.Size);
 	}
-	public static void compose(ComposerBase composer, Int64 ID, ICompose Size)
+	public static void compose(ComposerBase composer, Int64 ID, IMessageCompose Size)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, ID, Size);
@@ -1135,22 +1133,22 @@ public class CharacterParamStruct : IEquatable<CharacterParamStruct>
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, Int64 ID, ICompose Size)
+	public static void compose(JsonComposer composer, Int64 ID, IMessageCompose Size)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("ID");
 		composer.composeSignedInteger(ID);
 		composer.append( ",\n  " );
 		composer.addNamePart("Size");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, Size);
+		Size.compose(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, Int64 ID, ICompose Size)
+	public static void compose(GmqComposer composer, Int64 ID, IMessageCompose Size)
 	{
 		composer.composeSignedInteger(ID);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, Size);
+		Size.compose(composer);
 	}
-	public static void parse(ParserBase parser, ref Int64 ID, IParse Size)
+	public static void parse(ParserBase parser, ref Int64 ID, IMessageParse Size)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref ID, Size);
@@ -1159,7 +1157,7 @@ public class CharacterParamStruct : IEquatable<CharacterParamStruct>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ref Int64 ID, IParse Size)
+	public static void parse(JsonParser parser, ref Int64 ID, IMessageParse Size)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -1169,7 +1167,7 @@ public class CharacterParamStruct : IEquatable<CharacterParamStruct>
 			if ( key == "ID" )
 				parser.parseSignedInteger(out ID);
 			else if ( key == "Size" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, Size);
+				Size.parse(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -1185,10 +1183,10 @@ public class CharacterParamStruct : IEquatable<CharacterParamStruct>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ref Int64 ID, IParse Size)
+	public static void parse(GmqParser parser, ref Int64 ID, IMessageParse Size)
 	{
 		parser.parseSignedInteger(out ID);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, Size);
+		Size.parse(parser);
 	}
 	public static void compose(ComposerBase composer, CharacterParamStruct msg)
 	{
@@ -1206,7 +1204,7 @@ public class CharacterParamStruct : IEquatable<CharacterParamStruct>
 			Size: new MessageWrapperForParsing(
 				(ParserBase parser) => { SIZE.parse(parser, out tmp.Size); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
 } // class CharacterParamStruct
 
@@ -1251,11 +1249,12 @@ public class scope_one
 		ReadIteratorT riter = buffer.getReadIterator();
 		handleMessage(riter, handlers);
 	}
-public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-{
-	JsonParser parser = new JsonParser( riter );
-	globalmq.marshalling.impl.json.handleMessage(parser, handlers);
-}
+	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	{
+		JsonParser parser = new JsonParser( riter );
+		handlers.handleJson(parser);
+	}
+
 //**********************************************************************
 // MESSAGE "point3D_alias" Targets: JSON (Alias of point3D)
 //**********************************************************************
@@ -1371,11 +1370,12 @@ public class level_trace
 		ReadIteratorT riter = buffer.getReadIterator();
 		handleMessage(riter, handlers);
 	}
-public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-{
-	JsonParser parser = new JsonParser( riter );
-	globalmq.marshalling.impl.json.handleMessage(parser, handlers);
-}
+	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	{
+		JsonParser parser = new JsonParser( riter );
+		handlers.handleJson(parser);
+	}
+
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
 // 1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
@@ -1384,7 +1384,8 @@ public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handl
 
 public class LevelTraceData : IEquatable<LevelTraceData>
 {
-public static UInt64 MsgId = 1;
+	public static UInt64 MsgId = 1;
+
 	public CharacterParamStruct CharacterParam;
 	public POINT3DREAL[] Points;
 
@@ -1411,7 +1412,7 @@ public static UInt64 MsgId = 1;
 			this.CharacterParam.Equals(other.CharacterParam) &&
 			Enumerable.SequenceEqual(this.Points, other.Points);
 	}
-	public static void compose(ComposerBase composer, ICompose CharacterParam, ICompose Points)
+	public static void compose(ComposerBase composer, IMessageCompose CharacterParam, ICollectionCompose Points)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, CharacterParam, Points);
@@ -1420,22 +1421,22 @@ public static UInt64 MsgId = 1;
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose CharacterParam, ICompose Points)
+	public static void compose(JsonComposer composer, IMessageCompose CharacterParam, ICollectionCompose Points)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("CharacterParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, CharacterParam);
+		CharacterParam.compose(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("Points");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, Points);
+		Points.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose CharacterParam, ICompose Points)
+	public static void compose(GmqComposer composer, IMessageCompose CharacterParam, ICollectionCompose Points)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, CharacterParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, Points);
+		CharacterParam.compose(composer);
+		Points.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, IParse CharacterParam, IParse Points)
+	public static void parse(ParserBase parser, IMessageParse CharacterParam, ICollectionParse Points)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, CharacterParam, Points);
@@ -1444,7 +1445,7 @@ public static UInt64 MsgId = 1;
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse CharacterParam, IParse Points)
+	public static void parse(JsonParser parser, IMessageParse CharacterParam, ICollectionParse Points)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -1452,9 +1453,9 @@ public static UInt64 MsgId = 1;
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "CharacterParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, CharacterParam);
+				CharacterParam.parse(parser);
 			else if ( key == "Points" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, Points);
+				Points.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -1470,10 +1471,10 @@ public static UInt64 MsgId = 1;
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse CharacterParam, IParse Points)
+	public static void parse(GmqParser parser, IMessageParse CharacterParam, ICollectionParse Points)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, CharacterParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, Points);
+		CharacterParam.parse(parser);
+		Points.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, LevelTraceData msg)
 	{
@@ -1495,9 +1496,9 @@ public static UInt64 MsgId = 1;
 				(int size) => { tmp.Points = new POINT3DREAL[size]; },
 				(ParserBase parser, int ordinal) => { POINT3DREAL.parse(parser, out tmp.Points[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, ICompose CharacterParam, ICompose Points)
+	public static void composeMessage(ComposerBase composer, IMessageCompose CharacterParam, ICollectionCompose Points)
 	{
 		if (composer is GmqComposer gmqC)
 		{
@@ -1528,11 +1529,12 @@ public class infrastructural
 		ReadIteratorT riter = buffer.getReadIterator();
 		handleMessage(riter, handlers);
 	}
-public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-{
-	GmqParser parser = new GmqParser( riter );
-	globalmq.marshalling.impl.gmq.handleMessage(parser, handlers);
-}
+	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	{
+		GmqParser parser = new GmqParser( riter );
+		handlers.handleGmq(parser);
+	}
+
 //**********************************************************************
 // MESSAGE "PolygonSt" Targets: GMQ (6 parameters)
 // 1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
@@ -1545,7 +1547,8 @@ public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handl
 
 public class PolygonSt : IEquatable<PolygonSt>
 {
-public static UInt64 MsgId = 2;
+	public static UInt64 MsgId = 2;
+
 	public PolygonMap[] polygonMap;
 	public PolygonMap[] concaveMap;
 	public ObstacleMap[] obstacleMap;
@@ -1580,7 +1583,7 @@ public static UInt64 MsgId = 2;
 			Enumerable.SequenceEqual(this.jumpMap, other.jumpMap) &&
 			this.polygonSpeed == other.polygonSpeed;
 	}
-	public static void compose(ComposerBase composer, ICompose polygonMap, ICompose concaveMap, ICompose obstacleMap, ICompose portalMap, ICompose jumpMap, Double polygonSpeed)
+	public static void compose(ComposerBase composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, polygonSpeed);
@@ -1589,38 +1592,38 @@ public static UInt64 MsgId = 2;
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose polygonMap, ICompose concaveMap, ICompose obstacleMap, ICompose portalMap, ICompose jumpMap, Double polygonSpeed)
+	public static void compose(JsonComposer composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("polygonMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, polygonMap);
+		polygonMap.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("concaveMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, concaveMap);
+		concaveMap.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("obstacleMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, obstacleMap);
+		obstacleMap.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("portalMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, portalMap);
+		portalMap.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("jumpMap");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, jumpMap);
+		jumpMap.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("polygonSpeed");
 		composer.composeReal(polygonSpeed);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose polygonMap, ICompose concaveMap, ICompose obstacleMap, ICompose portalMap, ICompose jumpMap, Double polygonSpeed)
+	public static void compose(GmqComposer composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, polygonMap);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, concaveMap);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, obstacleMap);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, portalMap);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, jumpMap);
+		polygonMap.composeGmq(composer);
+		concaveMap.composeGmq(composer);
+		obstacleMap.composeGmq(composer);
+		portalMap.composeGmq(composer);
+		jumpMap.composeGmq(composer);
 		composer.composeReal(polygonSpeed);
 	}
-	public static void parse(ParserBase parser, IParse polygonMap, IParse concaveMap, IParse obstacleMap, IParse portalMap, IParse jumpMap, ref Double polygonSpeed)
+	public static void parse(ParserBase parser, ICollectionParse polygonMap, ICollectionParse concaveMap, ICollectionParse obstacleMap, ICollectionParse portalMap, ICollectionParse jumpMap, ref Double polygonSpeed)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, ref polygonSpeed);
@@ -1629,7 +1632,7 @@ public static UInt64 MsgId = 2;
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse polygonMap, IParse concaveMap, IParse obstacleMap, IParse portalMap, IParse jumpMap, ref Double polygonSpeed)
+	public static void parse(JsonParser parser, ICollectionParse polygonMap, ICollectionParse concaveMap, ICollectionParse obstacleMap, ICollectionParse portalMap, ICollectionParse jumpMap, ref Double polygonSpeed)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -1637,15 +1640,15 @@ public static UInt64 MsgId = 2;
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "polygonMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, polygonMap);
+				polygonMap.parseJson(parser);
 			else if ( key == "concaveMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, concaveMap);
+				concaveMap.parseJson(parser);
 			else if ( key == "obstacleMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, obstacleMap);
+				obstacleMap.parseJson(parser);
 			else if ( key == "portalMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, portalMap);
+				portalMap.parseJson(parser);
 			else if ( key == "jumpMap" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, jumpMap);
+				jumpMap.parseJson(parser);
 			else if ( key == "polygonSpeed" )
 				parser.parseReal(out polygonSpeed);
 
@@ -1663,13 +1666,13 @@ public static UInt64 MsgId = 2;
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse polygonMap, IParse concaveMap, IParse obstacleMap, IParse portalMap, IParse jumpMap, ref Double polygonSpeed)
+	public static void parse(GmqParser parser, ICollectionParse polygonMap, ICollectionParse concaveMap, ICollectionParse obstacleMap, ICollectionParse portalMap, ICollectionParse jumpMap, ref Double polygonSpeed)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, polygonMap);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, concaveMap);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, obstacleMap);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, portalMap);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, jumpMap);
+		polygonMap.parseGmq(parser);
+		concaveMap.parseGmq(parser);
+		obstacleMap.parseGmq(parser);
+		portalMap.parseGmq(parser);
+		jumpMap.parseGmq(parser);
 		parser.parseReal(out polygonSpeed);
 	}
 	public static void compose(ComposerBase composer, PolygonSt msg)
@@ -1714,9 +1717,9 @@ public static UInt64 MsgId = 2;
 				(ParserBase parser, int ordinal) => { LineMap.parse(parser, out tmp.jumpMap[ordinal]); }),
 			polygonSpeed: ref tmp.polygonSpeed
 		);
-	msg = tmp;
+		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, ICompose polygonMap, ICompose concaveMap, ICompose obstacleMap, ICompose portalMap, ICompose jumpMap, Double polygonSpeed)
+	public static void composeMessage(ComposerBase composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
 	{
 		if (composer is GmqComposer gmqC)
 		{
@@ -1745,7 +1748,8 @@ public static UInt64 MsgId = 2;
 
 public class point : IEquatable<point>
 {
-public static UInt64 MsgId = 4;
+	public static UInt64 MsgId = 4;
+
 	public point pt;
 
 	public override bool Equals(object obj)
@@ -1770,7 +1774,7 @@ public static UInt64 MsgId = 4;
 		return
 			this.pt.Equals(other.pt);
 	}
-	public static void compose(ComposerBase composer, ICompose pt)
+	public static void compose(ComposerBase composer, IMessageCompose pt)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, pt);
@@ -1779,18 +1783,18 @@ public static UInt64 MsgId = 4;
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose pt)
+	public static void compose(JsonComposer composer, IMessageCompose pt)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("pt");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, pt);
+		pt.compose(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose pt)
+	public static void compose(GmqComposer composer, IMessageCompose pt)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, pt);
+		pt.compose(composer);
 	}
-	public static void parse(ParserBase parser, IParse pt)
+	public static void parse(ParserBase parser, IMessageParse pt)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, pt);
@@ -1799,7 +1803,7 @@ public static UInt64 MsgId = 4;
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse pt)
+	public static void parse(JsonParser parser, IMessageParse pt)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -1807,7 +1811,7 @@ public static UInt64 MsgId = 4;
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "pt" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, pt);
+				pt.parse(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -1823,9 +1827,9 @@ public static UInt64 MsgId = 4;
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse pt)
+	public static void parse(GmqParser parser, IMessageParse pt)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, pt);
+		pt.parse(parser);
 	}
 	public static void compose(ComposerBase composer, point msg)
 	{
@@ -1841,9 +1845,9 @@ public static UInt64 MsgId = 4;
 			pt: new MessageWrapperForParsing(
 				(ParserBase parser) => { point.parse(parser, out tmp.pt); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, ICompose pt)
+	public static void composeMessage(ComposerBase composer, IMessageCompose pt)
 	{
 		if (composer is GmqComposer gmqC)
 		{
@@ -1872,7 +1876,8 @@ public static UInt64 MsgId = 4;
 
 public class point3D : IEquatable<point3D>
 {
-public static UInt64 MsgId = 5;
+	public static UInt64 MsgId = 5;
+
 	public point3D pt;
 
 	public override bool Equals(object obj)
@@ -1897,7 +1902,7 @@ public static UInt64 MsgId = 5;
 		return
 			this.pt.Equals(other.pt);
 	}
-	public static void compose(ComposerBase composer, ICompose pt)
+	public static void compose(ComposerBase composer, IMessageCompose pt)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, pt);
@@ -1906,18 +1911,18 @@ public static UInt64 MsgId = 5;
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICompose pt)
+	public static void compose(JsonComposer composer, IMessageCompose pt)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("pt");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, pt);
+		pt.compose(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICompose pt)
+	public static void compose(GmqComposer composer, IMessageCompose pt)
 	{
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, pt);
+		pt.compose(composer);
 	}
-	public static void parse(ParserBase parser, IParse pt)
+	public static void parse(ParserBase parser, IMessageParse pt)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, pt);
@@ -1926,7 +1931,7 @@ public static UInt64 MsgId = 5;
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IParse pt)
+	public static void parse(JsonParser parser, IMessageParse pt)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -1934,7 +1939,7 @@ public static UInt64 MsgId = 5;
 			string key;
 			parser.readKeyFromJson( out key );
 			if ( key == "pt" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, pt);
+				pt.parse(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -1950,9 +1955,9 @@ public static UInt64 MsgId = 5;
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IParse pt)
+	public static void parse(GmqParser parser, IMessageParse pt)
 	{
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, pt);
+		pt.parse(parser);
 	}
 	public static void compose(ComposerBase composer, point3D msg)
 	{
@@ -1968,9 +1973,9 @@ public static UInt64 MsgId = 5;
 			pt: new MessageWrapperForParsing(
 				(ParserBase parser) => { point3D.parse(parser, out tmp.pt); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, ICompose pt)
+	public static void composeMessage(ComposerBase composer, IMessageCompose pt)
 	{
 		if (composer is GmqComposer gmqC)
 		{
@@ -2001,11 +2006,12 @@ public class test_gmq
 		ReadIteratorT riter = buffer.getReadIterator();
 		handleMessage(riter, handlers);
 	}
-public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-{
-	GmqParser parser = new GmqParser( riter );
-	globalmq.marshalling.impl.gmq.handleMessage(parser, handlers);
-}
+	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	{
+		GmqParser parser = new GmqParser( riter );
+		handlers.handleGmq(parser);
+	}
+
 //**********************************************************************
 // MESSAGE "message_one" Targets: GMQ (10 parameters)
 // 1. INTEGER firstParam (REQUIRED)
@@ -2022,7 +2028,8 @@ public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handl
 
 public class message_one : IEquatable<message_one>
 {
-public static UInt64 MsgId = 3;
+	public static UInt64 MsgId = 3;
+
 	public Int64 firstParam;
 	public Int64[] secondParam;
 	public point3D[] thirdParam;
@@ -2065,7 +2072,7 @@ public static UInt64 MsgId = 3;
 			this.ninethParam.Equals(other.ninethParam) &&
 			Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
-	public static void compose(ComposerBase composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
@@ -2074,17 +2081,17 @@ public static UInt64 MsgId = 3;
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("firstParam");
 		composer.composeSignedInteger(firstParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("secondParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, secondParam);
+		secondParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("thirdParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, thirdParam);
+		thirdParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("forthParam");
 		composer.composeUnsignedInteger(forthParam);
@@ -2093,35 +2100,35 @@ public static UInt64 MsgId = 3;
 		composer.composeString(fifthParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("sixthParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, sixthParam);
+		sixthParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("seventhParam");
 		composer.composeReal(seventhParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("eighthParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, eighthParam);
+		eighthParam.compose(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("ninethParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, ninethParam);
+		ninethParam.compose(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("tenthParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, tenthParam);
+		tenthParam.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		composer.composeSignedInteger(firstParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, secondParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, thirdParam);
+		secondParam.composeGmq(composer);
+		thirdParam.composeGmq(composer);
 		composer.composeUnsignedInteger(forthParam);
 		composer.composeString(fifthParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, sixthParam);
+		sixthParam.composeGmq(composer);
 		composer.composeReal(seventhParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, eighthParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, ninethParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, tenthParam);
+		eighthParam.compose(composer);
+		ninethParam.compose(composer);
+		tenthParam.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam, ref UInt64 forthParam, ref String fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
+	public static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
@@ -2130,7 +2137,7 @@ public static UInt64 MsgId = 3;
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam, ref UInt64 forthParam, ref String fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
+	public static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -2140,23 +2147,23 @@ public static UInt64 MsgId = 3;
 			if ( key == "firstParam" )
 				parser.parseSignedInteger(out firstParam);
 			else if ( key == "secondParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, secondParam);
+				secondParam.parseJson(parser);
 			else if ( key == "thirdParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, thirdParam);
+				thirdParam.parseJson(parser);
 			else if ( key == "forthParam" )
 				parser.parseUnsignedInteger(out forthParam);
 			else if ( key == "fifthParam" )
 				parser.parseString(out fifthParam);
 			else if ( key == "sixthParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, sixthParam);
+				sixthParam.parseJson(parser);
 			else if ( key == "seventhParam" )
 				parser.parseReal(out seventhParam);
 			else if ( key == "eighthParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, eighthParam);
+				eighthParam.parse(parser);
 			else if ( key == "ninethParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, ninethParam);
+				ninethParam.parse(parser);
 			else if ( key == "tenthParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, tenthParam);
+				tenthParam.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -2172,18 +2179,18 @@ public static UInt64 MsgId = 3;
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam, ref UInt64 forthParam, ref String fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
+	public static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.parseSignedInteger(out firstParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, secondParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, thirdParam);
+		secondParam.parseGmq(parser);
+		thirdParam.parseGmq(parser);
 		parser.parseUnsignedInteger(out forthParam);
 		parser.parseString(out fifthParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, sixthParam);
+		sixthParam.parseGmq(parser);
 		parser.parseReal(out seventhParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, eighthParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, ninethParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, tenthParam);
+		eighthParam.parse(parser);
+		ninethParam.parse(parser);
+		tenthParam.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, message_one msg)
 	{
@@ -2231,9 +2238,9 @@ public static UInt64 MsgId = 3;
 				(int size) => { tmp.tenthParam = new Double[size]; },
 				(ParserBase parser, int ordinal) => { parser.parseReal(out tmp.tenthParam[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void composeMessage(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		if (composer is GmqComposer gmqC)
 		{
@@ -2264,11 +2271,12 @@ public class test_json
 		ReadIteratorT riter = buffer.getReadIterator();
 		handleMessage(riter, handlers);
 	}
-public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-{
-	JsonParser parser = new JsonParser( riter );
-	globalmq.marshalling.impl.json.handleMessage(parser, handlers);
-}
+	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	{
+		JsonParser parser = new JsonParser( riter );
+		handlers.handleJson(parser);
+	}
+
 //**********************************************************************
 // MESSAGE "message_one" Targets: JSON (10 parameters)
 // 1. INTEGER firstParam (REQUIRED)
@@ -2285,7 +2293,8 @@ public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handl
 
 public class message_one : IEquatable<message_one>
 {
-public static UInt64 MsgId = 3;
+	public static UInt64 MsgId = 3;
+
 	public Int64 firstParam;
 	public Int64[] secondParam;
 	public point3D[] thirdParam;
@@ -2328,7 +2337,7 @@ public static UInt64 MsgId = 3;
 			this.ninethParam.Equals(other.ninethParam) &&
 			Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
-	public static void compose(ComposerBase composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		if (composer is GmqComposer gmqC)
 			compose(gmqC, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
@@ -2337,17 +2346,17 @@ public static UInt64 MsgId = 3;
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("firstParam");
 		composer.composeSignedInteger(firstParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("secondParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, secondParam);
+		secondParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("thirdParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, thirdParam);
+		thirdParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("forthParam");
 		composer.composeUnsignedInteger(forthParam);
@@ -2356,35 +2365,35 @@ public static UInt64 MsgId = 3;
 		composer.composeString(fifthParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("sixthParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, sixthParam);
+		sixthParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("seventhParam");
 		composer.composeReal(seventhParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("eighthParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, eighthParam);
+		eighthParam.compose(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("ninethParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, ninethParam);
+		ninethParam.compose(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("tenthParam");
-		globalmq.marshalling.impl.json.composeParamToJson(composer, tenthParam);
+		tenthParam.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		composer.composeSignedInteger(firstParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, secondParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, thirdParam);
+		secondParam.composeGmq(composer);
+		thirdParam.composeGmq(composer);
 		composer.composeUnsignedInteger(forthParam);
 		composer.composeString(fifthParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, sixthParam);
+		sixthParam.composeGmq(composer);
 		composer.composeReal(seventhParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, eighthParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, ninethParam);
-		globalmq.marshalling.impl.gmq.composeParamToGmq(composer, tenthParam);
+		eighthParam.compose(composer);
+		ninethParam.compose(composer);
+		tenthParam.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam, ref UInt64 forthParam, ref String fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
+	public static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
@@ -2393,7 +2402,7 @@ public static UInt64 MsgId = 3;
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam, ref UInt64 forthParam, ref String fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
+	public static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -2403,23 +2412,23 @@ public static UInt64 MsgId = 3;
 			if ( key == "firstParam" )
 				parser.parseSignedInteger(out firstParam);
 			else if ( key == "secondParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, secondParam);
+				secondParam.parseJson(parser);
 			else if ( key == "thirdParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, thirdParam);
+				thirdParam.parseJson(parser);
 			else if ( key == "forthParam" )
 				parser.parseUnsignedInteger(out forthParam);
 			else if ( key == "fifthParam" )
 				parser.parseString(out fifthParam);
 			else if ( key == "sixthParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, sixthParam);
+				sixthParam.parseJson(parser);
 			else if ( key == "seventhParam" )
 				parser.parseReal(out seventhParam);
 			else if ( key == "eighthParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, eighthParam);
+				eighthParam.parse(parser);
 			else if ( key == "ninethParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, ninethParam);
+				ninethParam.parse(parser);
 			else if ( key == "tenthParam" )
-				globalmq.marshalling.impl.json.parseJsonEntry(parser, tenthParam);
+				tenthParam.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -2435,18 +2444,18 @@ public static UInt64 MsgId = 3;
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ref Int64 firstParam, IParse secondParam, IParse thirdParam, ref UInt64 forthParam, ref String fifthParam, IParse sixthParam, ref Double seventhParam, IParse eighthParam, IParse ninethParam, IParse tenthParam)
+	public static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.parseSignedInteger(out firstParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, secondParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, thirdParam);
+		secondParam.parseGmq(parser);
+		thirdParam.parseGmq(parser);
 		parser.parseUnsignedInteger(out forthParam);
 		parser.parseString(out fifthParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, sixthParam);
+		sixthParam.parseGmq(parser);
 		parser.parseReal(out seventhParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, eighthParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, ninethParam);
-		globalmq.marshalling.impl.gmq.parseGmqParam(parser, tenthParam);
+		eighthParam.parse(parser);
+		ninethParam.parse(parser);
+		tenthParam.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, message_one msg)
 	{
@@ -2494,9 +2503,9 @@ public static UInt64 MsgId = 3;
 				(int size) => { tmp.tenthParam = new Double[size]; },
 				(ParserBase parser, int ordinal) => { parser.parseReal(out tmp.tenthParam[ordinal]); })
 		);
-	msg = tmp;
+		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, Int64 firstParam, ICompose secondParam, ICompose thirdParam, UInt64 forthParam, String fifthParam, ICompose sixthParam, Double seventhParam, ICompose eighthParam, ICompose ninethParam, ICompose tenthParam)
+	public static void composeMessage(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		if (composer is GmqComposer gmqC)
 		{

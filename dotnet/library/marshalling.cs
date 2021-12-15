@@ -31,24 +31,13 @@ using System.Collections.Generic;
 
 namespace globalmq.marshalling
 {
-    public interface ICompose
+    public interface ICollectionCompose
     {
+        public void composeGmq(GmqComposer composer);
+        public void composeJson(JsonComposer composer);
     };
 
-    public interface IParse
-    {
-    };
-
-    interface AnyCollectionWrapperBase
-    {
-        public static readonly int unknown_size = -1;
-    };
-
-    interface CollectionWrapperBase : AnyCollectionWrapperBase { }
-
-    interface SimpleTypeCollectionWrapperBase : AnyCollectionWrapperBase { }
-
-    public class CollectionWrapperForComposing : CollectionWrapperBase, ICompose
+    public class CollectionWrapperForComposing : ICollectionCompose
     {
         SizeDelegate lsize_;
         NextDelegate lnext_;
@@ -60,17 +49,51 @@ namespace globalmq.marshalling
             lsize_ = lsize;
             lnext_ = lnext;
         }
-        public int size() { return lsize_(); }
-        public void compose_next(ComposerBase composer, int ordinal)
+        public void composeGmq(GmqComposer composer)
         {
-            lnext_(composer, ordinal);
+            int collSz = lsize_();
+            composer.composeUnsignedInteger((uint)collSz);
+            for (int i = 0; i < collSz; ++i)
+                lnext_(composer, i);
         }
+        public void composeJson(JsonComposer composer)
+        {
+
+            //mb: new format writes 'size' and 'data' for collections
+            // that do have size on GMQ format.
+            // So client perceived behaviour can be replicated at parsing
+
+            composer.append('{');
+            composer.addNamePart("size");
+
+            int collSz = lsize_();
+            composer.composeUnsignedInteger((ulong)collSz);
+            composer.append(", ");
+            composer.addNamePart("data");
+
+            composer.append('[');
+            for (int i = 0; i < collSz; ++i)
+            {
+                if (i != 0)
+                    composer.append(", ");
+                lnext_(composer, i);
+            }
+            composer.append(']');
+            composer.append('}');
+        }
+
+    };
+    public interface ICollectionParse
+    {
+        public void parseGmq(GmqParser parser);
+        public void parseJson(JsonParser parser);
     };
 
-    public class CollectionWrapperForParsing : CollectionWrapperBase, IParse
+    public class CollectionWrapperForParsing : ICollectionParse
     {
         SizeDelegate lsize_;
         NextDelegate lnext_;
+        bool newFormat = false;
         public delegate void SizeDelegate(int size);
         public delegate void NextDelegate(ParserBase parser, int ordinal);
 
@@ -80,105 +103,153 @@ namespace globalmq.marshalling
             lsize_ = lsize;
             lnext_ = lnext;
         }
-        public void size_hint(int sz)
+        public void parseGmq(GmqParser parser)
         {
-            if (lsize_ != null)
-                lsize_(sz);
+            int sz;
+            parser.parseUnsignedInteger(out sz);
+            lsize_(sz);
+            for (int i = 0; i < sz; ++i)
+                lnext_(parser, i);
         }
-        public void parse_next(ParserBase parser, int ordinal)
+        public void parseJson(JsonParser parser)
         {
-            lnext_(parser, ordinal);
+            if (parser.isDelimiter('{'))
+            {
+                newFormat = true;
+                parser.skipDelimiter('{');
+
+                string key;
+                parser.readKeyFromJson(out key);
+                if (key != "size")
+                    throw new Exception();
+
+                int sz;
+                parser.parseUnsignedInteger(out sz);
+                lsize_(sz);
+
+                parser.skipSpacesEtc();
+                parser.skipDelimiter(',');
+
+                parser.readKeyFromJson(out key);
+                if (key != "data")
+                    throw new Exception();
+            }
+
+            parser.skipDelimiter('[');
+
+            if (!parser.isDelimiter(']')) // there are some items there
+            {
+                for (int i = 0; ; ++i)
+                {
+                    lnext_(parser, i);
+                    if (parser.isDelimiter(','))
+                    {
+                        parser.skipDelimiter(',');
+                        continue;
+                    }
+                    if (parser.isDelimiter(']'))
+                    {
+                        parser.skipDelimiter(']');
+                        break;
+                    }
+                }
+            }
+            else
+                parser.skipDelimiter(']');
+
+            if (newFormat)
+                parser.skipDelimiter('}');
         }
     };
 
     public class SimpleTypeCollection
     {
-        public static ICompose makeComposer(IList<sbyte> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<sbyte> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<short> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<short> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<int> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<int> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<long> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<long> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(sbyte[] coll)
+        public static CollectionWrapperForComposing makeComposer(sbyte[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(short[] coll)
+        public static CollectionWrapperForComposing makeComposer(short[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(int[] coll)
+        public static CollectionWrapperForComposing makeComposer(int[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(long[] coll)
+        public static CollectionWrapperForComposing makeComposer(long[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<byte> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<byte> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<ushort> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<ushort> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<uint> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<uint> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<ulong> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<ulong> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(byte[] coll)
+        public static CollectionWrapperForComposing makeComposer(byte[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(ushort[] coll)
+        public static CollectionWrapperForComposing makeComposer(ushort[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(uint[] coll)
+        public static CollectionWrapperForComposing makeComposer(uint[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
-        public static ICompose makeComposer(ulong[] coll)
+        public static CollectionWrapperForComposing makeComposer(ulong[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
         }
 
-        public static ICompose makeComposer(IList<float> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<float> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<double> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<double> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
         }
-        public static ICompose makeComposer(float[] coll)
+        public static CollectionWrapperForComposing makeComposer(float[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
         }
-        public static ICompose makeComposer(double[] coll)
+        public static CollectionWrapperForComposing makeComposer(double[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
         }
-        public static ICompose makeComposer(IList<string> coll)
+        public static CollectionWrapperForComposing makeComposer(IList<string> coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
         }
-        public static ICompose makeComposer(string[] coll)
+        public static CollectionWrapperForComposing makeComposer(string[] coll)
         {
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
         }
@@ -186,58 +257,58 @@ namespace globalmq.marshalling
 
 
         // mb: delegate can't use ref params, so only IList and not array for parse
-        public static IParse makeParser(IList<sbyte> coll)
+        public static CollectionWrapperForParsing makeParser(IList<sbyte> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { sbyte value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<short> coll)
+        public static CollectionWrapperForParsing makeParser(IList<short> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { short value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<int> coll)
+        public static CollectionWrapperForParsing makeParser(IList<int> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { int value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<long> coll)
+        public static CollectionWrapperForParsing makeParser(IList<long> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { long value; parser.parseSignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<byte> coll)
+        public static CollectionWrapperForParsing makeParser(IList<byte> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<ushort> coll)
+        public static CollectionWrapperForParsing makeParser(IList<ushort> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { ushort value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<uint> coll)
+        public static CollectionWrapperForParsing makeParser(IList<uint> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { uint value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<ulong> coll)
+        public static CollectionWrapperForParsing makeParser(IList<ulong> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { ulong value; parser.parseUnsignedInteger(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<float> coll)
+        public static CollectionWrapperForParsing makeParser(IList<float> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { float value; parser.parseReal(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<double> coll)
+        public static CollectionWrapperForParsing makeParser(IList<double> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { double value; parser.parseReal(out value); coll.Add(value); });
         }
-        public static IParse makeParser(IList<string> coll)
+        public static CollectionWrapperForParsing makeParser(IList<string> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { string value; parser.parseString(out value); coll.Add(value); });
         }
     };
 
-    interface MessageWrapperBase
+    public interface IMessageCompose
     {
+        public void compose(ComposerBase composer);
     };
 
-
-    public class MessageWrapperForComposing : MessageWrapperBase, ICompose
+    public class MessageWrapperForComposing : IMessageCompose
     {
         ComposeDelegate lcompose_;
 
@@ -251,7 +322,11 @@ namespace globalmq.marshalling
         }
     };
 
-    public class MessageWrapperForParsing : MessageWrapperBase, IParse
+    public interface IMessageParse
+    {
+        public void parse(ParserBase parser);
+    };
+    public class MessageWrapperForParsing :IMessageParse
     {
         ParseDelegate lparse_;
 
@@ -433,49 +508,6 @@ namespace globalmq.marshalling.impl
 {
     public class gmq
     {
-        public static void parseGmqParam(GmqParser parser, IParse o)
-        {
-            if (o is CollectionWrapperForParsing coll)
-            {
-                int sz;
-                parser.parseUnsignedInteger(out sz);
-                coll.size_hint(sz);
-                for (int i = 0; i < sz; ++i)
-                    coll.parse_next(parser, i);
-
-            }
-            else if (o is MessageWrapperForParsing msg)
-                msg.parse(parser);
-            else
-                throw new Exception(); //TODO
-        }
-
-
-        ///////////////////////////////////////////
-
-        public static void composeParamToGmq(GmqComposer composer, ICompose o)
-        {
-
-            if (o is CollectionWrapperForComposing coll)
-            {
-                int collSz = coll.size();
-                composer.composeUnsignedInteger((uint)collSz);
-                for (int i = 0; i < collSz; ++i)
-                    coll.compose_next(composer, i);
-            }
-            else if (o is MessageWrapperForComposing msg)
-                msg.compose(composer);
-            else
-                throw new Exception(); //TODO
-        }
-
-        public static void handleMessage(GmqParser parser, MessageHandlerArray handlers)
-        {
-            ulong msgID;
-            parser.parseUnsignedInteger(out msgID);
-            handlers.handle(parser, msgID);
-        }
-
         public static void composeStateUpdateMessageBegin(GmqComposer composer)
         {
             /* nothing */
@@ -556,126 +588,6 @@ namespace globalmq.marshalling.impl
 {
     public class json
     {
-        public static void parseJson(JsonParser parser, CollectionWrapperForParsing coll)
-        {
-            bool newFormat = false;
-            if (parser.isDelimiter('{'))
-            {
-                newFormat = true;
-                parser.skipDelimiter('{');
-
-                string key;
-                parser.readKeyFromJson(out key);
-                if (key != "size")
-                    throw new Exception();
-
-                int sz;
-                parser.parseUnsignedInteger(out sz);
-                coll.size_hint(sz);
-
-                parser.skipSpacesEtc();
-                parser.skipDelimiter(',');
-
-                parser.readKeyFromJson(out key);
-                if (key != "data")
-                    throw new Exception();
-            }
-
-            parser.skipDelimiter('[');
-
-            if (!parser.isDelimiter(']')) // there are some items there
-            {
-                for (int i = 0; ; ++i)
-                {
-                    coll.parse_next(parser, i);
-                    if (parser.isDelimiter(','))
-                    {
-                        parser.skipDelimiter(',');
-                        continue;
-                    }
-                    if (parser.isDelimiter(']'))
-                    {
-                        parser.skipDelimiter(']');
-                        break;
-                    }
-                }
-            }
-            else
-                parser.skipDelimiter(']');
-
-            if (newFormat)
-                parser.skipDelimiter('}');
-
-        }
-
-        public static void composeJson(JsonComposer composer, CollectionWrapperForComposing coll)
-        {
-
-            //mb: new format writes 'size' and 'data' for collections
-            // that do have size on GMQ format.
-            // So client perceived behaviour can be replicated at parsing
-
-            composer.append('{');
-            composer.addNamePart("size");
-
-            int collSz = coll.size();
-            composer.composeUnsignedInteger((ulong)collSz);
-            composer.append(", ");
-            composer.addNamePart("data");
-
-            composer.append('[');
-            for (int i = 0; i < collSz; ++i)
-            {
-                if (i != 0)
-                    composer.append(", ");
-                coll.compose_next(composer, i);
-            }
-            composer.append(']');
-            composer.append('}');
-        }
-
-        public static void parseJsonEntry(JsonParser parser, IParse o)
-        {
-            if (o is CollectionWrapperForParsing coll)
-                parseJson(parser, coll);
-            else if (o is MessageWrapperForParsing msg)
-                msg.parse(parser);
-            else
-                throw new Exception(); //TODO
-        }
-
-        public static void composeParamToJson(JsonComposer composer, ICompose o)
-        {
-
-            if (o is CollectionWrapperForComposing coll)
-                composeJson(composer, coll);
-            else if (o is MessageWrapperForComposing msg)
-                msg.compose(composer);
-            else
-                throw new Exception(); //TODO
-        }
-
-        public static void handleMessage(JsonParser parser, MessageHandlerArray handlers)
-        {
-            parser.skipDelimiter('{');
-            string key;
-            parser.readKeyFromJson(out key);
-            if (key != "msgid")
-                throw new Exception(); // bad format
-            ulong msgID;
-            parser.parseUnsignedInteger(out msgID);
-            parser.skipSpacesEtc();
-            parser.skipDelimiter(',');
-            parser.readKeyFromJson(out key);
-            if (key != "msgbody")
-                throw new Exception(); // bad format
-
-            bool handled = handlers.handle(parser, msgID);
-
-            //TODO what to do if not handled???
-            if (handled)
-                parser.skipDelimiter('}');
-        }
 
         public static void composeStateUpdateMessageBegin(JsonComposer composer)
         {
@@ -850,6 +762,35 @@ namespace globalmq.marshalling
 
             return false;
         }
+        public void handleGmq(GmqParser parser)
+        {
+            ulong msgID;
+            parser.parseUnsignedInteger(out msgID);
+            handle(parser, msgID);
+        }
+        public void handleJson(JsonParser parser)
+        {
+            parser.skipDelimiter('{');
+            string key;
+            parser.readKeyFromJson(out key);
+            if (key != "msgid")
+                throw new Exception(); // bad format
+            ulong msgID;
+            parser.parseUnsignedInteger(out msgID);
+            parser.skipSpacesEtc();
+            parser.skipDelimiter(',');
+            parser.readKeyFromJson(out key);
+            if (key != "msgbody")
+                throw new Exception(); // bad format
+
+            bool handled = handle(parser, msgID);
+
+            //TODO what to do if not handled???
+            if (handled)
+                parser.skipDelimiter('}');
+        }
+
+
         public static MessageHandlerArray make(MessageHandler[] handlers)
         {
             return new MessageHandlerArray(handlers);

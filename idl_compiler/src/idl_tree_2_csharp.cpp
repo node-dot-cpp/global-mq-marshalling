@@ -105,55 +105,14 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "String %s", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				fprintf(header, "ICompose %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::BLOB:
-				fprintf(header, "ICompose %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::ENUM:
-				fprintf(header, "ICompose %s", param.name.c_str());
-				break;
+			//case MessageParameterType::KIND::BYTE_ARRAY:
+			//case MessageParameterType::KIND::BLOB:
+			//case MessageParameterType::KIND::ENUM:
 			case MessageParameterType::KIND::VECTOR:
-				switch (param.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::REAL:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::BYTE_ARRAY:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::BLOB:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::ENUM:
-					fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::STRUCT:
-					if (param.type.isNonExtendable)
-						fprintf(header, "ICompose %s", param.name.c_str());
-					else
-						fprintf(header, "ICompose %s", param.name.c_str());
-					break;
-				default:
-					assert(false); // unexpected
-					break;
-				}
+				fprintf(header, "ICollectionCompose %s", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
-				if (param.type.isNonExtendable)
-					fprintf(header, "ICompose %s", param.name.c_str());
-				else
-					fprintf(header, "ICompose %s", param.name.c_str());
+				fprintf(header, "IMessageCompose %s", param.name.c_str());
 				break;
 			default:
 				assert(false); // unexpected
@@ -192,55 +151,14 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "ref String %s", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				fprintf(header, "IParse %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::BLOB:
-				fprintf(header, "IParse %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::ENUM:
-				fprintf(header, "IParse %s", param.name.c_str());
-				break;
+			//case MessageParameterType::KIND::BYTE_ARRAY:
+			//case MessageParameterType::KIND::BLOB:
+			//case MessageParameterType::KIND::ENUM:
 			case MessageParameterType::KIND::VECTOR:
-				switch (param.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::REAL:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::BYTE_ARRAY:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::BLOB:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::ENUM:
-					fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::STRUCT:
-					if (param.type.isNonExtendable)
-						fprintf(header, "IParse %s", param.name.c_str());
-					else
-						fprintf(header, "IParse %s", param.name.c_str());
-					break;
-				default:
-					assert(false); // unexpected
-					break;
-				}
+				fprintf(header, "ICollectionParse %s", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
-				if (param.type.isNonExtendable)
-					fprintf(header, "IParse %s", param.name.c_str());
-				else
-					fprintf(header, "IParse %s", param.name.c_str());
+				fprintf(header, "IMessageParse %s", param.name.c_str());
 				break;
 			default:
 				assert(false); // unexpected
@@ -325,12 +243,12 @@ namespace {
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\tglobalmq.marshalling.impl.gmq.composeParamToGmq(composer, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.composeGmq(composer);\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::STRUCT:
-				fprintf(header, "\t\tglobalmq.marshalling.impl.gmq.composeParamToGmq(composer, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.compose(composer);\n", param.name.c_str());
 				break; // TODO: treatment
 			default:
 				assert(false); // unexpected
@@ -380,12 +298,12 @@ namespace {
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\tglobalmq.marshalling.impl.gmq.parseGmqParam(parser, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.parseGmq(parser);\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::STRUCT:
-				fprintf(header, "\t\tglobalmq.marshalling.impl.gmq.parseGmqParam(parser, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.parse(parser);\n", param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
@@ -443,12 +361,12 @@ namespace {
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\tglobalmq.marshalling.impl.json.composeParamToJson(composer, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.composeJson(composer);\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
-				fprintf(header, "\t\tglobalmq.marshalling.impl.json.composeParamToJson(composer, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.compose(composer);\n", param.name.c_str());
 				break; // TODO: ...
 			default:
 			{
@@ -512,12 +430,12 @@ namespace {
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\t\t\tglobalmq.marshalling.impl.json.parseJsonEntry(parser, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\t%s.parseJson(parser);\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
-				fprintf(header, "\t\t\t\tglobalmq.marshalling.impl.json.parseJsonEntry(parser, %s);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\t%s.parse(parser);\n", param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
@@ -707,7 +625,7 @@ namespace {
 		}
 		fprintf(header, 
 			"\n\t\t);\n"
-			"\tmsg = tmp;\n"
+			"\t\tmsg = tmp;\n"
 			"\t}\n");
 	}
 
@@ -959,7 +877,7 @@ namespace {
 			"{\n", s.name.c_str(), s.name.c_str());
 
 		if (s.type == CompositeType::Type::message)
-			fprintf(header, "public static UInt64 MsgId = %lld;\n", s.numID);
+			fprintf(header, "\tpublic static UInt64 MsgId = %lld;\n\n", s.numID);
 
 		csharpMsg_generateMembers(header, root, s);
 
@@ -1049,27 +967,27 @@ namespace {
 
 
 		fprintf(header,
-			"public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n"
-			"{\n"
+			"\tpublic static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n"
+			"\t{\n"
 		);
 		switch (scope.proto)
 		{
 		case Proto::gmq:
 			fprintf(header,
-				"\tGmqParser parser = new GmqParser( riter );\n"
-				"\tglobalmq.marshalling.impl.gmq.handleMessage(parser, handlers);\n"
+				"\t\tGmqParser parser = new GmqParser( riter );\n"
+				"\t\thandlers.handleGmq(parser);\n"
 			);
 			break;
 		case Proto::json:
 			fprintf(header,
-				"\tJsonParser parser = new JsonParser( riter );\n"
-				"\tglobalmq.marshalling.impl.json.handleMessage(parser, handlers);\n"
+				"\t\tJsonParser parser = new JsonParser( riter );\n"
+				"\t\thandlers.handleJson(parser);\n"
 			);
 			break;
 		default:
 			assert(false);
 		}
-		fprintf(header, "}\n");
+		fprintf(header, "\t}\n");
 	}
 
 
@@ -1187,6 +1105,8 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 		csharpMsg_generateScopeHandler( header, *scope );
 		//impl_generateScopeComposerForwardDeclaration( header, *scope );
 		//csharpMsg_generateScopeComposer(header, *scope);
+		
+		fprintf(header, "\n");
 
 		for ( auto it : scope->objectList )
 		{
