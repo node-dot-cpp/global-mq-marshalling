@@ -22,3 +22,7 @@ out/
 /build/
 bin/
 obj/
+/.vscode
+*.user
+/idl_compiler/build/Debug
+/dotnet/Debug
