@@ -1124,8 +1124,6 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 
 	fprintf( header,
 		"using globalmq.marshalling;\n"
-		"using globalmq.marshalling;\n"
-		"using globalmq.marshalling;\n"
 		"using System;\n"
 		"using System.Collections.Generic;\n"
 		"using System.Diagnostics;\n"
