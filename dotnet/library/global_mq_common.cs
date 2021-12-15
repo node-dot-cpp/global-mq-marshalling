@@ -34,7 +34,7 @@ using System.Text;
 namespace globalmq.marshalling
 {
 
-    public interface ReadIterT
+    public interface ReadIteratorT
     {
         bool isData();
         int directlyAvailableSize();
@@ -55,6 +55,7 @@ namespace globalmq.marshalling
         void appendAscii(string str);
         void appendUint8(byte val);
         void appendUint8(char val);
+        ReadIteratorT getReadIterator();
     }
     public class SimpleBuffer : BufferT
     {
@@ -64,7 +65,7 @@ namespace globalmq.marshalling
         //int _capacity = 0;
         byte[] _data;
 
-        public ReadIter getReadIterator() { return new ReadIter(_data, _size); }
+        public ReadIteratorT getReadIterator() { return new ReadIter(_data, _size); }
 
         void ensureCapacity(int sz) // NOTE: may invalidate pointers
         {
@@ -164,7 +165,7 @@ namespace globalmq.marshalling
             return HashCode.Combine(_size, _data);
         }
 
-        public class ReadIter : ReadIterT
+        public class ReadIter : ReadIteratorT
         {
             int _size = 0;
             int currentOffset = 0;

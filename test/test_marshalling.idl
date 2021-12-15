@@ -82,7 +82,7 @@ MESSAGE infrastructural:PolygonSt=2{
 };
 
 STRUCT LineMap{
-	VECTOR<STRUCT Line> LineMap;
+	VECTOR<STRUCT Line> lineMap;
 };
 
 STRUCT Line{
@@ -91,11 +91,11 @@ STRUCT Line{
 };
 
 STRUCT ObstacleMap{
-	VECTOR<STRUCT PolygonMap> ObstacleMap;
+	VECTOR<STRUCT PolygonMap> obstacleMap;
 };
 
 STRUCT PolygonMap{
-	VECTOR<STRUCT NONEXTENDABLE Vertex> PolygonMap;
+	VECTOR<STRUCT NONEXTENDABLE Vertex> polygonMap;
 };
 
 STRUCT NONEXTENDABLE Vertex{
@@ -145,7 +145,7 @@ MESSAGE test_json:message_one=3 {
 };
 
 MESSAGE NONEXTENDABLE infrastructural:point=4 {
-  STRUCT point point;
+  STRUCT point pt;
 };
 
 MESSAGE NONEXTENDABLE infrastructural:point3D=5 {

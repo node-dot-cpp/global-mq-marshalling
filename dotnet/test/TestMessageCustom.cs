@@ -47,28 +47,28 @@ namespace TestProject1
             msg.three = new List<Point3D>();
             msg.ten = new List<Double>();
 
-            mtest.MESSAGE_message_one_parse(parser,
+            mtest.test_gmq.message_one.parse(parser,
                 firstParam: ref msg.one, forthParam: ref msg.four,
                 secondParam: new CollectionWrapperForParsing((int size) => { msg.two = new int[size]; }, (ParserBase parser, int ordinal) => { parser.parseSignedInteger(out msg.two[ordinal]); }),
                 tenthParam: SimpleTypeCollection.makeParser(msg.ten),
-                thirdParam: new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Point3D pt; mtest.STRUCT_point3D_parse(parser, x: out pt.x, y: out pt.y, z: out pt.z); msg.three.Add(pt); }),
-                sixthParam: new CollectionWrapperForParsing((int size) => { msg.six = new Point[size]; }, (ParserBase parser, int ordinal) => { Point pt; mtest.STRUCT_point_parse(parser, x: out pt.x, y: out pt.y); msg.six[ordinal] = pt; }),
-                eighthParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.STRUCT_point_parse(parser, x: out msg.eight.x, y: out msg.eight.y); }),
-                ninethParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.STRUCT_point3D_parse(parser, x: out msg.nine.x, y: out msg.nine.y, z: out msg.nine.z); }),
+                thirdParam: new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Point3D pt = new Point3D(); mtest.point3D.parse(parser, x: ref pt.x, y: ref pt.y, z: ref pt.z); msg.three.Add(pt); }),
+                sixthParam: new CollectionWrapperForParsing((int size) => { msg.six = new Point[size]; }, (ParserBase parser, int ordinal) => { Point pt = new Point(); mtest.point.parse(parser, x: ref pt.x, y: ref pt.y); msg.six[ordinal] = pt; }),
+                eighthParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.point.parse(parser, x: ref msg.eight.x, y: ref msg.eight.y); }),
+                ninethParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.point3D.parse(parser, x: ref msg.nine.x, y: ref msg.nine.y, z: ref msg.nine.z); }),
                 fifthParam: ref msg.five, seventhParam: ref msg.seven
                 );
         }
 
         public static void compose(ComposerBase composer, message_one msg)
         {
-            mtest.MESSAGE_message_one_compose(composer,
-                thirdParam: new CollectionWrapperForComposing(() => { return msg.three.Count; }, (ComposerBase composer, int ordinal) => { mtest.STRUCT_point3D_compose(composer, x: msg.three[ordinal].x, y: msg.three[ordinal].y, z: msg.three[ordinal].z); }),
+            mtest.test_gmq.message_one.compose(composer,
+                thirdParam: new CollectionWrapperForComposing(() => { return msg.three.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.three[ordinal].x, y: msg.three[ordinal].y, z: msg.three[ordinal].z); }),
                 firstParam: msg.one, fifthParam: msg.five, forthParam: msg.four, seventhParam: msg.seven,
-                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.STRUCT_point_compose(composer, x: msg.eight.x, y: msg.eight.y); }),
-                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.STRUCT_point3D_compose(composer, x: msg.nine.x, y: msg.nine.y, z: msg.nine.z); }),
+                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eight.x, y: msg.eight.y); }),
+                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.nine.x, y: msg.nine.y, z: msg.nine.z); }),
                 secondParam: SimpleTypeCollection.makeComposer(msg.two),
                 tenthParam: SimpleTypeCollection.makeComposer(msg.ten),
-                sixthParam: new CollectionWrapperForComposing(() => { return msg.six.Length; }, (ComposerBase composer, int ordinal) => { mtest.STRUCT_point_compose(composer, x: msg.six[ordinal].x, y: msg.six[ordinal].y); })
+                sixthParam: new CollectionWrapperForComposing(() => { return msg.six.Length; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.six[ordinal].x, y: msg.six[ordinal].y); })
             );
         }
 

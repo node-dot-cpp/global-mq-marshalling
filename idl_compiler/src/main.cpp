@@ -44,6 +44,7 @@ int main( int argc, char *argv[] )
 	std::string metascope = "m";
 	std::string platformPrefix;
 	std::string classNotifierName;
+	std::string csharpFile;
 	for ( int i=3; i<argc; ++i )
 	{
 		std::string entry = argv[i];
@@ -78,6 +79,15 @@ int main( int argc, char *argv[] )
 			if ( classNotifierName == "" )
 			{
 				fmt::print( "notifier class name (-c) option, if specified, must not be empty {}\n", key );
+				return 0;
+			}
+		}
+		else if (key == "-csharp")
+		{
+			csharpFile = entry.substr(separPos + 1);
+			if (csharpFile == "")
+			{
+				fmt::print("output C# file name (-csharp) option, if specified, must not be empty {}\n", key);
 				return 0;
 			}
 		}
@@ -121,9 +131,11 @@ int main( int argc, char *argv[] )
 		FILE* header = fopen( targetPath.c_str(), "wb" );
 		generateRoot( fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root );
 
-		std::string cs_name = targetPath + ".cs";
-		FILE* cs_file = fopen(cs_name.c_str(), "wb");
-		generateCsharp(cs_name.c_str(), chksm, cs_file, metascope.c_str(), platformPrefix, classNotifierName, *root);
+		if (!csharpFile.empty())
+		{
+			FILE* cs_file = fopen(csharpFile.c_str(), "wb");
+			generateCsharp(csharpFile.c_str(), chksm, cs_file, metascope.c_str(), platformPrefix, classNotifierName, *root);
+		}
 	}
 	catch ( std::exception& x )
 	{

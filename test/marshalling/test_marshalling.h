@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_56488595_guard
-#define _test_marshalling_h_56488595_guard
+#ifndef _test_marshalling_h_5a8f84af_guard
+#define _test_marshalling_h_5a8f84af_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -74,10 +74,7 @@ DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&
 
 using CharacterParam_Type = NamedParameter<struct CharacterParam_Struct>;
 using ID_Type = NamedParameter<struct ID_Struct>;
-using LineMap_Type = NamedParameter<struct LineMap_Struct>;
-using ObstacleMap_Type = NamedParameter<struct ObstacleMap_Struct>;
 using Points_Type = NamedParameter<struct Points_Struct>;
-using PolygonMap_Type = NamedParameter<struct PolygonMap_Struct>;
 using Size_Type = NamedParameter<struct Size_Struct>;
 using X_Type = NamedParameter<struct X_Struct>;
 using Y_Type = NamedParameter<struct Y_Struct>;
@@ -90,9 +87,9 @@ using fifthParam_Type = NamedParameter<struct fifthParam_Struct>;
 using firstParam_Type = NamedParameter<struct firstParam_Struct>;
 using forthParam_Type = NamedParameter<struct forthParam_Struct>;
 using jumpMap_Type = NamedParameter<struct jumpMap_Struct>;
+using lineMap_Type = NamedParameter<struct lineMap_Struct>;
 using ninethParam_Type = NamedParameter<struct ninethParam_Struct>;
 using obstacleMap_Type = NamedParameter<struct obstacleMap_Struct>;
-using point_Type = NamedParameter<struct point_Struct>;
 using polygonMap_Type = NamedParameter<struct polygonMap_Struct>;
 using polygonSpeed_Type = NamedParameter<struct polygonSpeed_Struct>;
 using portalMap_Type = NamedParameter<struct portalMap_Struct>;
@@ -108,10 +105,7 @@ using z_Type = NamedParameter<struct z_Struct>;
 
 constexpr CharacterParam_Type::TypeConverter CharacterParam;
 constexpr ID_Type::TypeConverter ID;
-constexpr LineMap_Type::TypeConverter LineMap;
-constexpr ObstacleMap_Type::TypeConverter ObstacleMap;
 constexpr Points_Type::TypeConverter Points;
-constexpr PolygonMap_Type::TypeConverter PolygonMap;
 constexpr Size_Type::TypeConverter Size;
 constexpr X_Type::TypeConverter X;
 constexpr Y_Type::TypeConverter Y;
@@ -124,9 +118,9 @@ constexpr fifthParam_Type::TypeConverter fifthParam;
 constexpr firstParam_Type::TypeConverter firstParam;
 constexpr forthParam_Type::TypeConverter forthParam;
 constexpr jumpMap_Type::TypeConverter jumpMap;
+constexpr lineMap_Type::TypeConverter lineMap;
 constexpr ninethParam_Type::TypeConverter ninethParam;
 constexpr obstacleMap_Type::TypeConverter obstacleMap;
-constexpr point_Type::TypeConverter point;
 constexpr polygonMap_Type::TypeConverter polygonMap;
 constexpr polygonSpeed_Type::TypeConverter polygonSpeed;
 constexpr portalMap_Type::TypeConverter portalMap;
@@ -1861,7 +1855,7 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
-// 1. STRUCT point point (REQUIRED)
+// 1. STRUCT point pt (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -1869,7 +1863,7 @@ void MESSAGE_point_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, point_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -1886,7 +1880,7 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, point_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4457,7 +4451,7 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT Line> LineMap (REQUIRED)
+// 1. VECTOR< STRUCT Line> lineMap (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4465,7 +4459,7 @@ void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, LineMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, lineMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4482,7 +4476,7 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, LineMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, lineMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4542,7 +4536,7 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT PolygonMap> ObstacleMap (REQUIRED)
+// 1. VECTOR< STRUCT PolygonMap> obstacleMap (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4550,7 +4544,7 @@ void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, ObstacleMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, obstacleMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4567,7 +4561,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, ObstacleMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, obstacleMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4581,7 +4575,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
-// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> PolygonMap (REQUIRED)
+// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> polygonMap (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4589,7 +4583,7 @@ void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, polygonMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4606,7 +4600,7 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, polygonMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4857,4 +4851,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_56488595_guard
+#endif // _test_marshalling_h_5a8f84af_guard

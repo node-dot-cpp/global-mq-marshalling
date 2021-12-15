@@ -185,7 +185,7 @@ namespace globalmq.marshalling
 
 
 
-
+        // mb: delegate can't use ref params, so only IList and not array for parse
         public static IParse makeParser(IList<sbyte> coll)
         {
             return new CollectionWrapperForParsing(null, (parser, ordinal) => { sbyte value; parser.parseSignedInteger(out value); coll.Add(value); });

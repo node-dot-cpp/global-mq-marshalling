@@ -207,9 +207,9 @@ namespace globalmq.marshalling
     }
     public class GmqParser : ParserBase
 	{
-		ReadIterT riter;
+		ReadIteratorT riter;
 
-		public GmqParser(ReadIterT riter_) { riter = riter_; }
+		public GmqParser(ReadIteratorT riter_) { riter = riter_; }
 
 		public void parseSignedInteger(out sbyte num)
 		{
@@ -296,12 +296,12 @@ namespace globalmq.marshalling
 	};
 	public class JsonParser : ParserBase
 	{
-		ReadIterT riter;
+		ReadIteratorT riter;
 
 		// mb: this is needed to make float format independant of locale
 		NumberFormatInfo nfi = new NumberFormatInfo();
 
-		public JsonParser(ReadIterT riter_) { riter = riter_; nfi.NumberDecimalSeparator = "."; }
+		public JsonParser(ReadIteratorT riter_) { riter = riter_; nfi.NumberDecimalSeparator = "."; }
 		void impl_skipBlockFromJson(char left, char right)
 		{
 			// mb: TODO this needs more work
