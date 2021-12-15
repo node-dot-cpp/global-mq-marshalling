@@ -605,7 +605,7 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 
 void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 	fprintf( header, "//**********************************************************************\n" );
 	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
 	for ( auto t:s.protoList )

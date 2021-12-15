@@ -211,30 +211,55 @@ bool impl_checkDiscriminatedUnions(Root& s)
 
 
 
-bool impl_checkParamNameUniqueness(CompositeType& s)
+bool impl_checkParamNameUniqueness(CompositeType& s, std::map<string, Location>& names)
 {
 	bool ok = true;
-	std::map<string, Location> names;
-	for ( auto& it : s.getMembers() )
+	if ( s.type == CompositeType::Type::discriminated_union )
 	{
-		if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		auto ins = names.insert( std::make_pair( it->name, it->location ) );
-		if ( !ins.second )
+		for ( auto& it : s.getDiscriminatedUnionCases() )
 		{
-			fprintf( stderr, "%s parameter \"%s\" has already been used within this %s, see %s : %d\n", s.type2string(), it->name.c_str(), s.type2string(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
-			ok = false;
+			assert( it != nullptr );
+			impl_checkParamNameUniqueness( *it );
+		}
+	}
+	else
+	{
+		for ( auto& it : s.getMembers() )
+		{
+			if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
+				continue;
+			auto ins = names.insert( std::make_pair( it->name, it->location ) );
+			if ( !ins.second )
+			{
+				fprintf( stderr, "%s parameter \"%s\" has already been used within this %s, see %s : %d\n", s.type2string(), it->name.c_str(), s.type2string(), ins.first->second.fileName.c_str(), ins.first->second.lineNumber );
+				ok = false;
+			}
 		}
 	}
 	return ok;
 }
 
+bool impl_checkParamNameUniqueness(CompositeType& s)
+{
+	std::map<string, Location> names;
+	if ( s.type == CompositeType::Type::discriminated_union )
+	{
+		bool ok = true;
+		for ( auto& it : s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			ok = impl_checkParamNameUniqueness( *it, names ) && ok;
+		}
+		return ok;
+	}
+	else
+		return impl_checkParamNameUniqueness( s, names );
+}
 
-bool impl_checkFollowingExtensionRules(CompositeType& s)
+
+bool impl_checkFollowingExtensionRules(CompositeType& s, bool& extMarkFound, std::map<string, Location>& names)
 {
 	bool ok = true;
-	bool extMarkFound = false;
-	std::map<string, Location> names;
 	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
 		auto& msg = *(s.getMembers()[i]);
@@ -255,6 +280,26 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 			extMarkFound = true;
 	}
 	return ok;
+}
+
+bool impl_checkFollowingExtensionRules(CompositeType& s)
+{
+	// TODO: revise logic around discriminated unions
+	bool ok = true;
+	bool extMarkFound = false;
+	std::map<string, Location> names;
+	if ( s.type == CompositeType::Type::discriminated_union )
+	{
+		bool ok = true;
+		for ( auto& it : s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			ok = impl_checkFollowingExtensionRules( *it, extMarkFound, names ) && ok;
+		}
+		return ok;
+	}
+	else
+		return impl_checkFollowingExtensionRules( s, extMarkFound, names );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -283,6 +328,61 @@ void impl_propagateParentPropsToStruct( CompositeType& parent, CompositeType& me
 	}
 }
 
+bool impl_processCompositeTypeNamesInParamss(Root& s, CompositeType& parent, MessageParameter& param, std::vector<CompositeType*>& stack )
+{
+	bool ok = true;
+
+	if ( param.type.kind == MessageParameterType::KIND::VECTOR )
+	{
+		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // existance and extentability
+		{
+			param.type.messageIdx = (size_t)(-1);
+			for ( size_t i=0; i<s.structs.size(); ++i )
+				if ( param.type.name == s.structs[i]->name )
+				{
+					param.type.messageIdx = i;
+					if ( param.type.isNonExtendable && !s.structs[i]->isNonExtendable )
+					{
+						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( param.type.kind ), param.type.name.c_str(), parent.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+						ok = false;
+					}
+					impl_propagateParentPropsToStruct( parent, *(s.structs[i]) );
+					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
+					break;
+				}
+			if ( param.type.messageIdx == (size_t)(-1) )
+			{
+				fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param.type.name.c_str() );
+				ok = false;
+			}
+		}
+	}
+	else if ( param.type.kind == MessageParameterType::KIND::STRUCT || param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // extentability only
+	{
+		param.type.messageIdx = (size_t)(-1);
+		for ( size_t i=0; i<s.structs.size(); ++i )
+			if ( param.type.name == s.structs[i]->name )
+			{
+				param.type.messageIdx = i;
+				if ( param.type.isNonExtendable && !s.structs[i]->isNonExtendable )
+				{
+					fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( param.type.kind ), param.type.name.c_str(), parent.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
+					ok = false;
+				}
+				impl_propagateParentPropsToStruct( parent, *(s.structs[i]) );
+				impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
+				break;
+			}
+		if ( param.type.messageIdx == (size_t)(-1) )
+		{
+			fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( param.type.kind ), param.type.name.c_str() );
+			ok = false;
+		}
+	}
+
+	return ok;
+}
+
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack )
 {
 	if ( !ct.processingOK )
@@ -308,11 +408,37 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 
 	bool ok = true;
 
-	for ( auto& param : ct.getMembers() )
+	if ( ct.type != CompositeType::Type::discriminated_union )
 	{
-		if ( param->type.kind == MessageParameterType::KIND::VECTOR )
+		for ( auto& param : ct.getMembers() )
 		{
-			if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT ) // existance and extentability
+	#if 0
+			if ( param->type.kind == MessageParameterType::KIND::VECTOR )
+			{
+				if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT || param->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // existance and extentability
+				{
+					param->type.messageIdx = (size_t)(-1);
+					for ( size_t i=0; i<s.structs.size(); ++i )
+						if ( param->type.name == s.structs[i]->name )
+						{
+							param->type.messageIdx = i;
+							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
+							{
+								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+								ok = false;
+							}
+							impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
+							impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
+							break;
+						}
+					if ( param->type.messageIdx == (size_t)(-1) )
+					{
+						fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
+						ok = false;
+					}
+				}
+			}
+			else if ( param->type.kind == MessageParameterType::KIND::STRUCT || param->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // extentability only
 			{
 				param->type.messageIdx = (size_t)(-1);
 				for ( size_t i=0; i<s.structs.size(); ++i )
@@ -321,7 +447,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 						param->type.messageIdx = i;
 						if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
 						{
-							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
+							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
 							ok = false;
 						}
 						impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
@@ -330,33 +456,22 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 					}
 				if ( param->type.messageIdx == (size_t)(-1) )
 				{
-					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
+					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
 					ok = false;
 				}
 			}
+	#else
+			ok = impl_processCompositeTypeNamesInParamss( s, ct, *param, stack ) && ok;
+	#endif
 		}
-		else if ( param->type.kind == MessageParameterType::KIND::STRUCT ) // extentability only
-		{
-			param->type.messageIdx = (size_t)(-1);
-			for ( size_t i=0; i<s.structs.size(); ++i )
-				if ( param->type.name == s.structs[i]->name )
-				{
-					param->type.messageIdx = i;
-					if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
-					{
-						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
-						ok = false;
-					}
-					impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
-					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
-					break;
-				}
-			if ( param->type.messageIdx == (size_t)(-1) )
+	}
+	else
+	{
+		for ( auto& cs : ct.getDiscriminatedUnionCases() )
+			for ( auto& param : cs->getMembers() )
 			{
-				fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
-				ok = false;
+				ok = impl_processCompositeTypeNamesInParamss( s, ct, *param, stack ) && ok;
 			}
-		}
 	}
 
 	stack.pop_back();
@@ -498,27 +613,32 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 	while ( processed < structs.size() )
 	{
 		for ( auto& s : structs )
-			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt != -1 ) // TODO: DU
-				for ( auto& member : s->getMembers() )
-					if ( member->type.kind == MessageParameterType::KIND::STRUCT )
-						structs[member->type.messageIdx]->dependsOnCnt = 1;
-		for ( auto& s : structs )
-			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt == 0 )
-			{
-				tmpStructs.push_back( s.get() );
-				s->dependsOnCnt = -1;
-				++processed;
-			}
-			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt == 0 ) // TODO: DU
-			{
-				tmpStructs.push_back( s.get() );
-				s->dependsOnCnt = -1;
-				++processed;
-			}
-		for ( auto& s : structs )
 			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt != -1 )
-				s->dependsOnCnt = 0;
-			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 ) // TODO: DU
+				for ( auto& member : s->getMembers() )
+				{
+					if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+						structs[member->type.messageIdx]->dependsOnCnt = 1;
+					else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+						structs[member->type.messageIdx]->dependsOnCnt = 1;
+				}
+			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 )
+				for ( auto& cs : s->getDiscriminatedUnionCases() )
+					for ( auto& member : cs->getMembers() )
+					{
+						if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+							structs[member->type.messageIdx]->dependsOnCnt = 1;
+						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+							structs[member->type.messageIdx]->dependsOnCnt = 1;
+					}
+		for ( auto& s : structs )
+			if ( ( s->type == CompositeType::Type::structure || s->type == CompositeType::Type::discriminated_union ) && s->dependsOnCnt == 0 )
+			{
+				tmpStructs.push_back( s.get() );
+				s->dependsOnCnt = -1;
+				++processed;
+			}
+		for ( auto& s : structs )
+			if ( ( s->type == CompositeType::Type::structure || s->type == CompositeType::Type::discriminated_union ) && s->dependsOnCnt != -1 )
 				s->dependsOnCnt = 0;
 	}
 	for ( size_t i=0; i<tmpStructs.size(); ++i )
@@ -586,7 +706,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 
 std::string impl_generateDiscriminatedUnionCaseStructName( CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::discriminated_union_case );
+	assert( s.type == CompositeType::Type::discriminated_union_case || s.type == CompositeType::Type::structure );
 //	return fmt::format( "{}_{}", s.type2string(), s.name );
 	return fmt::format( "{}", s.name ); // let's see whether it is enough
 }
@@ -632,10 +752,10 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 	}
 }
 
-void generateDiscriminatedUnionCaseStruct( FILE* header, CompositeType& ducs, const char* offset )
+void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& ducs, const char* offset )
 {
-	assert( ducs.type == CompositeType::Type::discriminated_union_case );
-	fprintf( header, "%sstruct Case_%s\n", offset, impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
+	assert( ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
+	fprintf( header, "%sstruct %s%s\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
 	fprintf( header, "%s{\n", offset );
 	for ( auto& mbit: ducs.getMembers() )
 	{
@@ -655,7 +775,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 	fprintf( header, "class %s : public ::globalmq::marshalling::impl::%s\n", du.name.c_str(), du.isNonExtendable ? "NonextDiscriminatedUnionType" : "DiscriminatedUnionType" );
 	fprintf( header, "{\n" );
 	fprintf( header, "public:\n" );
-	fprintf( header, "\tenum Variants { unknown" );
+	fprintf( header, "\tenum Variants { " );
 	// list of cases
 	for ( auto& duit: du.getDiscriminatedUnionCases() )
 	{
@@ -663,14 +783,14 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		auto& cs = *duit;
 		assert( typeid( cs ) == typeid( CompositeType ) );
 		assert( cs.type == CompositeType::Type::discriminated_union_case );
-		fprintf( header, ", %s", cs.name.c_str() );
+		fprintf( header, "%s=%lld, ", cs.name.c_str(), cs.numID );
 	}
-	fprintf( header, " };\n" );
+	fprintf( header, "unknown };\n" );
 	fprintf( header, "private:\n" );
 	fprintf( header, "\tVariants v = Variants::unknown;\n" );
 	// list of structures
 	for ( auto& duit: du.getDiscriminatedUnionCases() )
-		generateDiscriminatedUnionCaseStruct( header, *duit, "\t" );
+		generateStructOrDiscriminatedUnionCaseStruct( header, *duit, "\t" );
 
 	fprintf( header, "public:\n" );
 	fprintf( header, "\tVariants currentVariant() { return v; }\n" );
@@ -747,6 +867,19 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	vector<CompositeType*> structsOrderedByDependency;
 	orderStructsByDependency( s.structs, structsOrderedByDependency );
 
+	fprintf( header, "// STRUCTURES AND DISCRIMINATED UNIONS\n\n" );
+	for ( auto it : structsOrderedByDependency )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+		if ( it->type == CompositeType::Type::structure )
+			generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
+		else
+			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+	fprintf( header, "// end of STRUCTURES AND DISCRIMINATED UNIONS\n\n" );
+
 	for ( auto& it : s.structs )
 	{
 		assert( it != nullptr );
@@ -772,13 +905,13 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
-	for ( auto it : structsOrderedByDependency )
+	/*for ( auto it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		if ( it->type == CompositeType::Type::discriminated_union )
 			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	}
+	}*/
 
 	for ( auto& scope : s.scopes )
 	{
