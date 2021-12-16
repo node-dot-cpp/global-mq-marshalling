@@ -107,7 +107,8 @@ namespace globalmq.marshalling
         {
             int sz;
             parser.parseUnsignedInteger(out sz);
-            lsize_(sz);
+            if(lsize_ != null)
+                lsize_(sz);
             for (int i = 0; i < sz; ++i)
                 lnext_(parser, i);
         }
@@ -125,7 +126,8 @@ namespace globalmq.marshalling
 
                 int sz;
                 parser.parseUnsignedInteger(out sz);
-                lsize_(sz);
+                if (lsize_ != null)
+                    lsize_(sz);
 
                 parser.skipSpacesEtc();
                 parser.skipDelimiter(',');
