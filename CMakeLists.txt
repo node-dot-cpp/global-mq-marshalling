@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.0)
 
-project(global-mq CXX)
+project(global-mq LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 include(CTest)
 
@@ -26,5 +26,6 @@ endif()
 
 if(GLOBAL_MQ_TEST)
   # only when not a subproject
-  add_subdirectory(test)
+#  add_subdirectory(test/cpp)
+  add_subdirectory(test/message)
 endif()

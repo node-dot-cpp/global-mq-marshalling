@@ -114,6 +114,7 @@ namespace globalmq.marshalling
         }
         public void parseJson(JsonParser parser)
         {
+            int sz = 0;
             if (parser.isDelimiter('{'))
             {
                 newFormat = true;
@@ -124,7 +125,6 @@ namespace globalmq.marshalling
                 if (key != "size")
                     throw new Exception();
 
-                int sz;
                 parser.parseUnsignedInteger(out sz);
                 if (lsize_ != null)
                     lsize_(sz);
@@ -141,7 +141,7 @@ namespace globalmq.marshalling
 
             if (!parser.isDelimiter(']')) // there are some items there
             {
-                for (int i = 0; ; ++i)
+                for (int i = 0; !newFormat || i < sz; ++i)
                 {
                     lnext_(parser, i);
                     if (parser.isDelimiter(','))

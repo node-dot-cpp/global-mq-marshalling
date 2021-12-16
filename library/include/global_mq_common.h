@@ -198,6 +198,25 @@ namespace globalmq::marshalling {
 			GMQ_ASSERT( _data != nullptr );
 			_size = sz;
 		}
+
+		void read_file(FILE* input)
+		{
+			constexpr size_t size = 4000;
+			std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
+
+			size_t r = 0;
+			do
+			{
+				r = fread(tmp.get(), 1, size, input);
+				append(tmp.get(), r);
+
+			} while (r == size);
+		}
+
+		void write_file(FILE* output)
+		{
+			fwrite( _data.get(), 1, _size, output );
+		}		
 	};
 
 	class FileReadBuffer : public Buffer // rather a temporary solution
