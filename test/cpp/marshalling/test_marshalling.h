@@ -4809,4 +4809,46 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	if constexpr( ParserT::proto == Proto::GMQ )
+	{
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+	}
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON );
+		p.skipDelimiter( '{' );
+		for ( ;; )
+		{
+			std::string key;
+			p.readKey( &key );
+			if ( key == "x" )
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
+			else if ( key == "y" )
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
+			else if ( key == "z" )
+				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
+			p.skipSpacesEtc();
+			if ( p.isDelimiter( ',' ) )
+			{
+				p.skipDelimiter( ',' );
+				continue;
+			}
+			if ( p.isDelimiter( '}' ) )
+			{
+				p.skipDelimiter( '}' );
+				break;
+			}
+			throw std::exception(); // bad format
+		}
+	}
+}
+
+
+} // namespace mtest
+
+#endif // _test_marshalling_h_5a8f84af_guard
