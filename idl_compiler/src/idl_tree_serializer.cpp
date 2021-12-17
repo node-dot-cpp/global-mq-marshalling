@@ -470,8 +470,8 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
 		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
 	for ( auto& s : r.publishables )
 		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
-//	for ( auto& s : r.structs )
-//		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
+	for ( auto& s : r.structs )
+		ok = impl_processCompositeTypeNamesInMessagesAndPublishables( r, *s ) && ok;
 	return ok;
 }
 
@@ -652,7 +652,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 
 std::string impl_generateDiscriminatedUnionCaseStructName( CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::discriminated_union_case || s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::discriminated_union_case || s.type == CompositeType::Type::structure );
 //	return fmt::format( "{}_{}", s.type2string(), s.name );
 	return fmt::format( "{}", s.name ); // let's see whether it is enough
 }
@@ -666,7 +666,12 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 		case MessageParameterType::KIND::INTEGER: return "int64_t";
 		case MessageParameterType::KIND::UINTEGER: return "uint64_t";
 		case MessageParameterType::KIND::REAL: return "double";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "string";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "GMQ_COLL string";
+		// named types
+		case MessageParameterType::KIND::ENUM:
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			return s.name;
 		// collections
 		case MessageParameterType::KIND::VECTOR: 
 		{
@@ -675,7 +680,7 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 				case MessageParameterType::KIND::INTEGER: return "GMQ_COLL vector<int64_t>";
 				case MessageParameterType::KIND::UINTEGER: return "GMQ_COLL vector<uint64_t>";
 				case MessageParameterType::KIND::REAL: return "GMQ_COLL vector<double>";
-				case MessageParameterType::KIND::CHARACTER_STRING: return "GMQ_COLL vector<string>";
+				case MessageParameterType::KIND::CHARACTER_STRING: return "GMQ_COLL vector<GMQ_COLL string>";
 				case MessageParameterType::KIND::ENUM:
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
@@ -683,11 +688,6 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 				default: assert( false ); return ""; // unexpected or not implemented
 			}
 		}
-		// named types
-		case MessageParameterType::KIND::ENUM:
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			return s.name;
 		// unsupported (yet)
 		case MessageParameterType::KIND::BYTE_ARRAY: assert( false ); return "";
 		case MessageParameterType::KIND::BLOB: assert( false ); return "";
@@ -700,7 +700,12 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 
 void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& ducs, const char* offset )
 {
-	assert( ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
+	assert( ducs.type == CompositeType::Type::publishable || ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
+
+	bool checked = impl_checkParamNameUniqueness(ducs);
+	if ( !checked )
+		throw std::exception();
+
 	fprintf( header, "%sstruct %s%s\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
 	fprintf( header, "%s{\n", offset );
 	for ( auto& mbit: ducs.getMembers() )
@@ -723,6 +728,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 	fprintf( header, "public:\n" );
 	fprintf( header, "\tenum Variants { " );
 	// list of cases
+	std::string concatenatedNames;
 	for ( auto& duit: du.getDiscriminatedUnionCases() )
 	{
 		assert( duit != nullptr );
@@ -730,25 +736,68 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		assert( typeid( cs ) == typeid( CompositeType ) );
 		assert( cs.type == CompositeType::Type::discriminated_union_case );
 		fprintf( header, "%s=%lld, ", cs.name.c_str(), cs.numID );
+		concatenatedNames += cs.name;
+		concatenatedNames += "_";
 	}
 	fprintf( header, "unknown };\n" );
 	fprintf( header, "private:\n" );
 	fprintf( header, "\tVariants v = Variants::unknown;\n" );
+
 	// list of structures
 	for ( auto& duit: du.getDiscriminatedUnionCases() )
 		generateStructOrDiscriminatedUnionCaseStruct( header, *duit, "\t" );
 
+	std::string memName;
+	// memory and its size
+	if ( du.getDiscriminatedUnionCases().size() )
+	{
+		if ( du.getDiscriminatedUnionCases().size() == 1 )
+		{
+			fprintf( header, "\tstatic constexpr size_t %smemsz = sizeof( %s );\n", concatenatedNames.c_str(), concatenatedNames.c_str() );
+		}
+		else
+		{
+			std::string val = fmt::format( "sizeof( Case_{} )", du.getDiscriminatedUnionCases()[0]->name );
+			for ( size_t i=1; i<du.getDiscriminatedUnionCases().size(); ++i )
+				val = fmt::format( "sizeof( Case_{} ) > ( {} ) ? sizeof( Case_{} ) : ( {} )", du.getDiscriminatedUnionCases()[i]->name, val, du.getDiscriminatedUnionCases()[i]->name, val );
+			fprintf( header, "\tstatic constexpr size_t %smemsz = %s;\n", concatenatedNames.c_str(), val.c_str() );
+		}
+		memName = fmt::format( "{}mem", concatenatedNames );
+		fprintf( header, "\tuint8_t %s[%ssz];\n", memName.c_str(), memName.c_str() );
+	}
+
 	fprintf( header, "public:\n" );
 	fprintf( header, "\tVariants currentVariant() { return v; }\n" );
+
+	if ( du.getDiscriminatedUnionCases().empty() )
+	{
+		fprintf( header, "};\n" );
+		return;
+	}
+
 	// initAS()
 	fprintf( header, "\tvoid initAs( Variants v_ ) {\n" );
-	// TODO: add processing details
-	fprintf( header, "\t\tif ( v != Variants::unknown )\n" );
-	fprintf( header, "\t\t\t// TODO: destruct existing value\n" );
-	fprintf( header, "\t\t\t;\n" );
-	fprintf( header, "\t\t// TODO: init for a new type\n" );
 
-//	fprintf( header, "\t\t\n" );
+	fprintf( header, "\t\tif ( v != Variants::unknown ) // then destruct existing value\n" );
+	fprintf( header, "\t\t{\n" );
+	fprintf( header, "\t\t\tswitch ( v )\n" );
+	fprintf( header, "\t\t\t{\n" );
+	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	{
+		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+		fprintf( header, "\t\t\t\tcase Variants::%s: reinterpret_cast<Case_%s*>( %s ) -> ~Case_%s(); break;\n", name, name, memName.c_str(), name );
+	}
+	fprintf( header, "\t\t\t}\n" );
+	fprintf( header, "\t\t}\n" );
+
+	fprintf( header, "\t\tswitch ( v ) // init for a new type\n" );
+	fprintf( header, "\t\t{\n" );
+	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	{
+		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+		fprintf( header, "\t\t\t\tcase Variants::%s: new ( %s ) Case_%s; break;\n", name, memName.c_str(), name );
+	}
+	fprintf( header, "\t\t}\n" );
 
 	fprintf( header, "\t\tv = v_;\n" );
 	fprintf( header, "\t}\n" );
@@ -765,8 +814,17 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 			assert( mbit != nullptr );
 			auto& m = *mbit;
 			assert( typeid( m ) == typeid( MessageParameter ) );
-			fprintf( header, "\tauto get_%s() { assert( v == Variants::%s ); /*TODO: convert, access, return*/ }\n", m.name.c_str(), cs.name.c_str() );
-			fprintf( header, "\tvoid set_%s(/**/) { assert( v == Variants::%s ); /*TODO: convert, access, return*/ }\n", m.name.c_str(), cs.name.c_str() );
+
+			if ( m.type.isNumericType() || m.type.kind == MessageParameterType::KIND::ENUM )
+				fprintf( header, "\tauto get_%s() const { assert( v == Variants::%s ); return reinterpret_cast<const Case_%s*>( %s )->%s; }\n", m.name.c_str(), cs.name.c_str(), cs.name.c_str(), memName.c_str(), m.name.c_str() );
+			else
+				fprintf( header, "\tconst auto& get_%s() const { assert( v == Variants::%s ); return reinterpret_cast<const Case_%s*>( %s )->%s; }\n", m.name.c_str(), cs.name.c_str(), cs.name.c_str(), memName.c_str(), m.name.c_str() );
+
+			if ( m.type.isNumericType() || m.type.kind == MessageParameterType::KIND::ENUM )
+				fprintf( header, "\tvoid set_%s( decltype(Case_%s::%s) val ) { assert( v == Variants::%s ); reinterpret_cast<Case_%s*>( %s )->%s = val; }\n", m.name.c_str(), cs.name.c_str(), m.name.c_str(), cs.name.c_str(), cs.name.c_str(), memName.c_str(), m.name.c_str() );
+			else
+				fprintf( header, "\tvoid set_%s(const decltype(Case_%s::%s)& val ) { assert( v == Variants::%s ); reinterpret_cast<Case_%s*>( %s )->%s = std::move( val ); }\n", m.name.c_str(), cs.name.c_str(), m.name.c_str(), cs.name.c_str(), cs.name.c_str(), memName.c_str(), m.name.c_str() );
+			
 			fprintf( header, "\t\n" );
 		}
 	}
@@ -813,7 +871,8 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	vector<CompositeType*> structsOrderedByDependency;
 	orderStructsByDependency( s.structs, structsOrderedByDependency );
 
-	fprintf( header, "// STRUCTURES AND DISCRIMINATED UNIONS\n\n" );
+	fprintf( header, "//===============================================================================\n" );
+	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs and PUBLISHABLEs\n" );
 	for ( auto it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );
@@ -824,7 +883,15 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		else
 			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
-	fprintf( header, "// end of STRUCTURES AND DISCRIMINATED UNIONS\n\n" );
+
+	for ( auto& it : s.publishables )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::publishable );
+		generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
+	}
+	fprintf( header, "\n//===============================================================================\n\n" );
 
 	for ( auto& it : s.structs )
 	{

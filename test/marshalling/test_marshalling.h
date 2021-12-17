@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_64e6c37d_guard
-#define _test_marshalling_h_64e6c37d_guard
+#ifndef _test_marshalling_h_5037c499_guard
+#define _test_marshalling_h_5037c499_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -75,17 +75,16 @@ DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&
 using CharacterParam_Type = NamedParameter<struct CharacterParam_Struct>;
 using ID_Type = NamedParameter<struct ID_Struct>;
 using LineMap_Type = NamedParameter<struct LineMap_Struct>;
-using ObstacleMap_Type = NamedParameter<struct ObstacleMap_Struct>;
 using Points_Type = NamedParameter<struct Points_Struct>;
-using PolygonMap_Type = NamedParameter<struct PolygonMap_Struct>;
 using Size_Type = NamedParameter<struct Size_Struct>;
 using X_Type = NamedParameter<struct X_Struct>;
 using Y_Type = NamedParameter<struct Y_Struct>;
 using Z_Type = NamedParameter<struct Z_Struct>;
+using _ObstacleMap_Type = NamedParameter<struct _ObstacleMap_Struct>;
+using _PolygonMap_Type = NamedParameter<struct _PolygonMap_Struct>;
 using a_Type = NamedParameter<struct a_Struct>;
 using b_Type = NamedParameter<struct b_Struct>;
 using concaveMap_Type = NamedParameter<struct concaveMap_Struct>;
-using du_one_instance_Type = NamedParameter<struct du_one_instance_Struct>;
 using eighthParam_Type = NamedParameter<struct eighthParam_Struct>;
 using fifthParam_Type = NamedParameter<struct fifthParam_Struct>;
 using firstParam_Type = NamedParameter<struct firstParam_Struct>;
@@ -110,17 +109,16 @@ using z_Type = NamedParameter<struct z_Struct>;
 constexpr CharacterParam_Type::TypeConverter CharacterParam;
 constexpr ID_Type::TypeConverter ID;
 constexpr LineMap_Type::TypeConverter LineMap;
-constexpr ObstacleMap_Type::TypeConverter ObstacleMap;
 constexpr Points_Type::TypeConverter Points;
-constexpr PolygonMap_Type::TypeConverter PolygonMap;
 constexpr Size_Type::TypeConverter Size;
 constexpr X_Type::TypeConverter X;
 constexpr Y_Type::TypeConverter Y;
 constexpr Z_Type::TypeConverter Z;
+constexpr _ObstacleMap_Type::TypeConverter _ObstacleMap;
+constexpr _PolygonMap_Type::TypeConverter _PolygonMap;
 constexpr a_Type::TypeConverter a;
 constexpr b_Type::TypeConverter b;
 constexpr concaveMap_Type::TypeConverter concaveMap;
-constexpr du_one_instance_Type::TypeConverter du_one_instance;
 constexpr eighthParam_Type::TypeConverter eighthParam;
 constexpr fifthParam_Type::TypeConverter fifthParam;
 constexpr firstParam_Type::TypeConverter firstParam;
@@ -230,6 +228,158 @@ template<typename StateT, typename MemberT> concept has_insert_notifier_call3_fo
 template<typename T> concept has_void_erased_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyErased_vector_struct_point3dreal() }; };
 template<typename StateT> concept has_erased_notifier_call2_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
 template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+
+//===============================================================================
+// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs and PUBLISHABLEs
+struct Vertex
+{
+	int64_t x;
+	int64_t y;
+	int64_t z;
+};
+
+struct point3D
+{
+	int64_t x;
+	int64_t y;
+	int64_t z;
+};
+
+struct PolygonMap
+{
+	GMQ_COLL vector<Vertex> _PolygonMap;
+};
+
+struct Line
+{
+	GMQ_COLL vector<Vertex> a;
+	GMQ_COLL vector<Vertex> b;
+};
+
+struct SIZE
+{
+	double X;
+	double Y;
+	double Z;
+};
+
+class du_one : public ::globalmq::marshalling::impl::DiscriminatedUnionType
+{
+public:
+	enum Variants { one=1, two=2, unknown };
+private:
+	Variants v = Variants::unknown;
+	struct Case_one
+	{
+		point3D pt3d_1;
+		int64_t i_1;
+	};
+
+	struct Case_two
+	{
+		int64_t i_2;
+		GMQ_COLL vector<double> vp_2;
+	};
+
+	static constexpr size_t one_two_memsz = sizeof( Case_two ) > ( sizeof( Case_one ) ) ? sizeof( Case_two ) : ( sizeof( Case_one ) );
+	uint8_t one_two_mem[one_two_memsz];
+public:
+	Variants currentVariant() { return v; }
+	void initAs( Variants v_ ) {
+		if ( v != Variants::unknown ) // then destruct existing value
+		{
+			switch ( v )
+			{
+				case Variants::one: reinterpret_cast<Case_one*>( one_two_mem ) -> ~Case_one(); break;
+				case Variants::two: reinterpret_cast<Case_two*>( one_two_mem ) -> ~Case_two(); break;
+			}
+		}
+		switch ( v ) // init for a new type
+		{
+				case Variants::one: new ( one_two_mem ) Case_one; break;
+				case Variants::two: new ( one_two_mem ) Case_two; break;
+		}
+		v = v_;
+	}
+
+	// IDL CASE one:
+	const auto& get_pt3d_1() const { assert( v == Variants::one ); return reinterpret_cast<const Case_one*>( one_two_mem )->pt3d_1; }
+	void set_pt3d_1(const decltype(Case_one::pt3d_1)& val ) { assert( v == Variants::one ); reinterpret_cast<Case_one*>( one_two_mem )->pt3d_1 = std::move( val ); }
+	
+	auto get_i_1() const { assert( v == Variants::one ); return reinterpret_cast<const Case_one*>( one_two_mem )->i_1; }
+	void set_i_1( decltype(Case_one::i_1) val ) { assert( v == Variants::one ); reinterpret_cast<Case_one*>( one_two_mem )->i_1 = val; }
+	
+
+	// IDL CASE two:
+	auto get_i_2() const { assert( v == Variants::two ); return reinterpret_cast<const Case_two*>( one_two_mem )->i_2; }
+	void set_i_2( decltype(Case_two::i_2) val ) { assert( v == Variants::two ); reinterpret_cast<Case_two*>( one_two_mem )->i_2 = val; }
+	
+	const auto& get_vp_2() const { assert( v == Variants::two ); return reinterpret_cast<const Case_two*>( one_two_mem )->vp_2; }
+	void set_vp_2(const decltype(Case_two::vp_2)& val ) { assert( v == Variants::two ); reinterpret_cast<Case_two*>( one_two_mem )->vp_2 = std::move( val ); }
+	
+};
+
+struct point
+{
+	int64_t x;
+	int64_t y;
+};
+
+struct ObstacleMap
+{
+	GMQ_COLL vector<PolygonMap> _ObstacleMap;
+};
+
+struct LineMap
+{
+	GMQ_COLL vector<Line> LineMap;
+};
+
+struct POINT3DREAL
+{
+	double X;
+	double Y;
+	double Z;
+};
+
+struct CharacterParamStruct
+{
+	int64_t ID;
+	SIZE Size;
+};
+
+struct StructWithVectorOfSize
+{
+	GMQ_COLL vector<SIZE> sizes;
+	int64_t NN;
+};
+
+struct StructWithVectorOfInt
+{
+	int64_t ID;
+	GMQ_COLL vector<int64_t> signedInts;
+};
+
+struct publishable_short_sample
+{
+	int64_t ID;
+	GMQ_COLL string name;
+};
+
+struct publishable_sample
+{
+	int64_t ID;
+	GMQ_COLL string name;
+	SIZE size;
+	CharacterParamStruct chp;
+	GMQ_COLL vector<int64_t> vector_of_int;
+	GMQ_COLL vector<POINT3DREAL> vector_struct_point3dreal;
+	StructWithVectorOfInt structWithVectorOfInt;
+	StructWithVectorOfSize structWithVectorOfSize;
+};
+
+
+//===============================================================================
 
 struct publishable_STRUCT_StructWithVectorOfInt;
 template<class T> class StructWithVectorOfInt_RefWrapper;
@@ -1495,51 +1645,6 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 	}
 };
 
-class du_one : public ::globalmq::marshalling::impl::DiscriminatedUnionType
-{
-public:
-	enum Variants { unknown, one, two };
-private:
-	Variants v = Variants::unknown;
-	struct Case_one
-	{
-		point3D pt3d_1;
-		int64_t i_1;
-	};
-
-	struct Case_two
-	{
-		int64_t i_2;
-		GMQ_COLL vector<double> vp_2;
-	};
-
-public:
-	Variants currentVariant() { return v; }
-	void initAs( Variants v_ ) {
-		if ( v != Variants::unknown )
-			// TODO: destruct existing value
-			;
-		// TODO: init for a new type
-		v = v_;
-	}
-
-	// IDL CASE one:
-	auto get_pt3d_1() { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
-	void set_pt3d_1(/**/) { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
-	
-	auto get_i_1() { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
-	void set_i_1(/**/) { assert( v == Variants::one ); /*TODO: convert, access, return*/ }
-	
-
-	// IDL CASE two:
-	auto get_i_2() { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
-	void set_i_2(/**/) { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
-	
-	auto get_vp_2() { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
-	void set_vp_2(/**/) { assert( v == Variants::two ); /*TODO: convert, access, return*/ }
-	
-};
-
 namespace scope_one {
 
 using point3D_alias = ::globalmq::marshalling::impl::MessageName<1>;
@@ -1949,9 +2054,8 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (2 parameters)
+// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (1 parameters)
 // 1. STRUCT point3D pt (REQUIRED)
-// 2. DISCRIMINATED_UNION du_one du_one_instance (REQUIRED)
 
 //**********************************************************************
 
@@ -1961,10 +2065,8 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
 	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
 
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -1972,7 +2074,6 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -1981,10 +2082,8 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
 	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
 
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -1992,7 +2091,6 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -3947,63 +4045,6 @@ public:
 	}
 };
 
-//===============================================================================
-// Publishable c-structures
-// Use them as-is or copy and edit member types as necessary
-
-struct SIZE
-{
-	double X;
-	double Y;
-	double Z;
-};
-
-struct POINT3DREAL
-{
-	double X;
-	double Y;
-	double Z;
-};
-
-struct CharacterParamStruct
-{
-	int64_t ID;
-	SIZE Size;
-};
-
-struct StructWithVectorOfSize
-{
-	GMQ_COLL vector<SIZE> sizes;
-	int64_t NN;
-};
-
-struct StructWithVectorOfInt
-{
-	int64_t ID;
-	GMQ_COLL vector<int64_t> signedInts;
-};
-
-struct publishable_short_sample
-{
-	int64_t ID;
-	GMQ_COLL string name;
-};
-
-struct publishable_sample
-{
-	int64_t ID;
-	GMQ_COLL string name;
-	SIZE size;
-	CharacterParamStruct chp;
-	GMQ_COLL vector<int64_t> vector_of_int;
-	GMQ_COLL vector<POINT3DREAL> vector_struct_point3dreal;
-	StructWithVectorOfInt structWithVectorOfInt;
-	StructWithVectorOfSize structWithVectorOfSize;
-};
-
-
-//===============================================================================
-
 template<class InputBufferT, class ComposerT>
 class StateConcentratorFactory : public ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>
 {
@@ -4607,7 +4648,7 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT PolygonMap> ObstacleMap (REQUIRED)
+// 1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
 
 //**********************************************************************
 
@@ -4616,7 +4657,7 @@ void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, ObstacleMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, _ObstacleMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4633,7 +4674,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, ObstacleMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, _ObstacleMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4647,7 +4688,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
-// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> PolygonMap (REQUIRED)
+// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
 
 //**********************************************************************
 
@@ -4656,7 +4697,7 @@ void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, _PolygonMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4673,7 +4714,7 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, PolygonMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, _PolygonMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4927,4 +4968,4 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_64e6c37d_guard
+#endif // _test_marshalling_h_5037c499_guard

@@ -91,11 +91,11 @@ STRUCT Line{
 };
 
 STRUCT ObstacleMap{
-	VECTOR<STRUCT PolygonMap> ObstacleMap;
+	VECTOR<STRUCT PolygonMap> _ObstacleMap;
 };
 
 STRUCT PolygonMap{
-	VECTOR<STRUCT NONEXTENDABLE Vertex> PolygonMap;
+	VECTOR<STRUCT NONEXTENDABLE Vertex> _PolygonMap;
 };
 
 STRUCT NONEXTENDABLE Vertex{
