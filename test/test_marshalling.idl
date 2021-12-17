@@ -161,7 +161,7 @@ DISCRIMINATED_UNION du_one {
 
 MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
   STRUCT point3D pt;
-//  DISCRIMINATED_UNION du_one du_one_instance;
+  DISCRIMINATED_UNION du_one du_one_instance;
 };
 
 

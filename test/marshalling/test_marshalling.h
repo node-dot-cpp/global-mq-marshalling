@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_5037c499_guard
-#define _test_marshalling_h_5037c499_guard
+#ifndef _test_marshalling_h_d322c43b_guard
+#define _test_marshalling_h_d322c43b_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -85,10 +85,13 @@ using _PolygonMap_Type = NamedParameter<struct _PolygonMap_Struct>;
 using a_Type = NamedParameter<struct a_Struct>;
 using b_Type = NamedParameter<struct b_Struct>;
 using concaveMap_Type = NamedParameter<struct concaveMap_Struct>;
+using du_one_instance_Type = NamedParameter<struct du_one_instance_Struct>;
 using eighthParam_Type = NamedParameter<struct eighthParam_Struct>;
 using fifthParam_Type = NamedParameter<struct fifthParam_Struct>;
 using firstParam_Type = NamedParameter<struct firstParam_Struct>;
 using forthParam_Type = NamedParameter<struct forthParam_Struct>;
+using i_1_Type = NamedParameter<struct i_1_Struct>;
+using i_2_Type = NamedParameter<struct i_2_Struct>;
 using jumpMap_Type = NamedParameter<struct jumpMap_Struct>;
 using ninethParam_Type = NamedParameter<struct ninethParam_Struct>;
 using obstacleMap_Type = NamedParameter<struct obstacleMap_Struct>;
@@ -97,11 +100,13 @@ using polygonMap_Type = NamedParameter<struct polygonMap_Struct>;
 using polygonSpeed_Type = NamedParameter<struct polygonSpeed_Struct>;
 using portalMap_Type = NamedParameter<struct portalMap_Struct>;
 using pt_Type = NamedParameter<struct pt_Struct>;
+using pt3d_1_Type = NamedParameter<struct pt3d_1_Struct>;
 using secondParam_Type = NamedParameter<struct secondParam_Struct>;
 using seventhParam_Type = NamedParameter<struct seventhParam_Struct>;
 using sixthParam_Type = NamedParameter<struct sixthParam_Struct>;
 using tenthParam_Type = NamedParameter<struct tenthParam_Struct>;
 using thirdParam_Type = NamedParameter<struct thirdParam_Struct>;
+using vp_2_Type = NamedParameter<struct vp_2_Struct>;
 using x_Type = NamedParameter<struct x_Struct>;
 using y_Type = NamedParameter<struct y_Struct>;
 using z_Type = NamedParameter<struct z_Struct>;
@@ -119,10 +124,13 @@ constexpr _PolygonMap_Type::TypeConverter _PolygonMap;
 constexpr a_Type::TypeConverter a;
 constexpr b_Type::TypeConverter b;
 constexpr concaveMap_Type::TypeConverter concaveMap;
+constexpr du_one_instance_Type::TypeConverter du_one_instance;
 constexpr eighthParam_Type::TypeConverter eighthParam;
 constexpr fifthParam_Type::TypeConverter fifthParam;
 constexpr firstParam_Type::TypeConverter firstParam;
 constexpr forthParam_Type::TypeConverter forthParam;
+constexpr i_1_Type::TypeConverter i_1;
+constexpr i_2_Type::TypeConverter i_2;
 constexpr jumpMap_Type::TypeConverter jumpMap;
 constexpr ninethParam_Type::TypeConverter ninethParam;
 constexpr obstacleMap_Type::TypeConverter obstacleMap;
@@ -131,11 +139,13 @@ constexpr polygonMap_Type::TypeConverter polygonMap;
 constexpr polygonSpeed_Type::TypeConverter polygonSpeed;
 constexpr portalMap_Type::TypeConverter portalMap;
 constexpr pt_Type::TypeConverter pt;
+constexpr pt3d_1_Type::TypeConverter pt3d_1;
 constexpr secondParam_Type::TypeConverter secondParam;
 constexpr seventhParam_Type::TypeConverter seventhParam;
 constexpr sixthParam_Type::TypeConverter sixthParam;
 constexpr tenthParam_Type::TypeConverter tenthParam;
 constexpr thirdParam_Type::TypeConverter thirdParam;
+constexpr vp_2_Type::TypeConverter vp_2;
 constexpr x_Type::TypeConverter x;
 constexpr y_Type::TypeConverter y;
 constexpr z_Type::TypeConverter z;
@@ -1811,8 +1821,8 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
-// 1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
-// 2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
+//  1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
+//  2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
 
 //**********************************************************************
 
@@ -1940,12 +1950,12 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
 // MESSAGE "PolygonSt" Targets: GMQ (6 parameters)
-// 1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
-// 2. VECTOR< STRUCT PolygonMap> concaveMap (REQUIRED)
-// 3. VECTOR< STRUCT ObstacleMap> obstacleMap (REQUIRED)
-// 4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
-// 5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
-// 6. REAL polygonSpeed (REQUIRED)
+//  1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
+//  2. VECTOR< STRUCT PolygonMap> concaveMap (REQUIRED)
+//  3. VECTOR< STRUCT ObstacleMap> obstacleMap (REQUIRED)
+//  4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
+//  5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
+//  6. REAL polygonSpeed (REQUIRED)
 
 //**********************************************************************
 
@@ -2015,7 +2025,7 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
-// 1. STRUCT point point (REQUIRED)
+//  1. STRUCT point point (REQUIRED)
 
 //**********************************************************************
 
@@ -2054,8 +2064,9 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 }
 
 //**********************************************************************
-// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (1 parameters)
-// 1. STRUCT point3D pt (REQUIRED)
+// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (2 parameters)
+//  1. STRUCT point3D pt (REQUIRED)
+//  2. DISCRIMINATED_UNION du_one du_one_instance (REQUIRED)
 
 //**********************************************************************
 
@@ -2065,8 +2076,10 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
 	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
 
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -2074,6 +2087,7 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 }
 
 template<class ParserT, typename ... Args>
@@ -2082,8 +2096,10 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
 	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
 
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
+	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
+		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
 		ensureUniqueness(args.nameAndTypeID...);
@@ -2091,6 +2107,7 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -2150,16 +2167,16 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
 // MESSAGE "message_one" Targets: GMQ (10 parameters)
-// 1. INTEGER firstParam (REQUIRED)
-// 2. VECTOR<INTEGER> secondParam (REQUIRED)
-// 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
-// 4. UINTEGER forthParam (REQUIRED)
-// 5. CHARACTER_STRING fifthParam (REQUIRED)
-// 6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
-// 7. REAL seventhParam (REQUIRED)
-// 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
-// 9. STRUCT point3D ninethParam (REQUIRED)
-// 10. VECTOR<REAL> tenthParam (REQUIRED)
+//  1. INTEGER firstParam (REQUIRED)
+//  2. VECTOR<INTEGER> secondParam (REQUIRED)
+//  3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
+//  4. UINTEGER forthParam (REQUIRED)
+//  5. CHARACTER_STRING fifthParam (REQUIRED)
+//  6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
+//  7. REAL seventhParam (REQUIRED)
+//  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
+//  9. STRUCT point3D ninethParam (REQUIRED)
+//  10. VECTOR<REAL> tenthParam (REQUIRED)
 
 //**********************************************************************
 
@@ -2321,16 +2338,16 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
 // MESSAGE "message_one" Targets: JSON (10 parameters)
-// 1. INTEGER firstParam (REQUIRED)
-// 2. VECTOR<INTEGER> secondParam (REQUIRED)
-// 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
-// 4. UINTEGER forthParam (REQUIRED)
-// 5. CHARACTER_STRING fifthParam (REQUIRED)
-// 6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
-// 7. REAL seventhParam (REQUIRED)
-// 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
-// 9. STRUCT point3D ninethParam (REQUIRED)
-// 10. VECTOR<REAL> tenthParam (REQUIRED)
+//  1. INTEGER firstParam (REQUIRED)
+//  2. VECTOR<INTEGER> secondParam (REQUIRED)
+//  3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
+//  4. UINTEGER forthParam (REQUIRED)
+//  5. CHARACTER_STRING fifthParam (REQUIRED)
+//  6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
+//  7. REAL seventhParam (REQUIRED)
+//  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
+//  9. STRUCT point3D ninethParam (REQUIRED)
+//  10. VECTOR<REAL> tenthParam (REQUIRED)
 
 //**********************************************************************
 
@@ -4333,8 +4350,8 @@ public:
 
 //**********************************************************************
 // STRUCT "CharacterParamStruct" Targets: JSON (2 parameters)
-// 1. INTEGER ID (REQUIRED)
-// 2. STRUCT SIZE Size (REQUIRED)
+//  1. INTEGER ID (REQUIRED)
+//  2. STRUCT SIZE Size (REQUIRED)
 
 //**********************************************************************
 
@@ -4403,9 +4420,9 @@ void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "SIZE" Targets: JSON (3 parameters)
-// 1. REAL X (REQUIRED)
-// 2. REAL Y (REQUIRED)
-// 3. REAL Z (REQUIRED)
+//  1. REAL X (REQUIRED)
+//  2. REAL Y (REQUIRED)
+//  3. REAL Z (REQUIRED)
 
 //**********************************************************************
 
@@ -4482,9 +4499,9 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "POINT3DREAL" Targets: JSON (3 parameters)
-// 1. REAL X (REQUIRED)
-// 2. REAL Y (REQUIRED)
-// 3. REAL Z (REQUIRED)
+//  1. REAL X (REQUIRED)
+//  2. REAL Y (REQUIRED)
+//  3. REAL Z (REQUIRED)
 
 //**********************************************************************
 
@@ -4561,7 +4578,7 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT Line> LineMap (REQUIRED)
+//  1. VECTOR< STRUCT Line> LineMap (REQUIRED)
 
 //**********************************************************************
 
@@ -4601,8 +4618,8 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "Line" Targets: GMQ (2 parameters)
-// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
-// 2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
+//  1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
+//  2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
 
 //**********************************************************************
 
@@ -4648,7 +4665,7 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
+//  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
 
 //**********************************************************************
 
@@ -4688,7 +4705,7 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
-// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
+//  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
 
 //**********************************************************************
 
@@ -4728,9 +4745,9 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "Vertex" NONEXTENDABLE Targets: GMQ (3 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
-// 3. INTEGER z (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
+//  3. INTEGER z (REQUIRED)
 
 //**********************************************************************
 
@@ -4782,8 +4799,8 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
 
 //**********************************************************************
 
@@ -4869,9 +4886,9 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "point3D" Targets: JSON GMQ (3 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
-// 3. INTEGER z (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
+//  3. INTEGER z (REQUIRED)
 
 //**********************************************************************
 
@@ -4965,7 +4982,31 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 	}
 }
 
+//**********************************************************************
+// DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
+//  CASE one (2 parameters)(2 parameters)
+//    1. STRUCT point3D pt3d_1 (REQUIRED)
+//    2. INTEGER i_1 (REQUIRED)
+//  CASE two (2 parameters)(2 parameters)
+//    1. INTEGER i_2 (REQUIRED)
+//    2. VECTOR<REAL> vp_2 (REQUIRED)
+
+//**********************************************************************
+
+template<class ParserT, typename ... Args>
+void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	constexpr size_t argCount = sizeof ... (Args);
+	if constexpr ( argCount != 0 )
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	static_assert( ParserT::proto == Proto::GMQ, "this DISCRIMINATED_UNION assumes only GMQ protocol" );
+}
+
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_5037c499_guard
+#endif // _test_marshalling_h_d322c43b_guard

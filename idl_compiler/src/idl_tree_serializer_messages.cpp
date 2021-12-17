@@ -603,18 +603,10 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 		"\tstatic_assert( argCount == matchCount, \"unexpected arguments found\" );\n\n" );
 }
 
-void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
+void impl_generateMessageCommentBlock_MemberBlock( FILE* header, CompositeType& s, const char* offset )
 {
-	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
-	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
-	for ( auto t:s.protoList )
-		switch ( t )
-		{
-			case Proto::gmq: fprintf( header, "GMQ " ); break;
-			case Proto::json: fprintf( header, "JSON " ); break;
-			default: assert( false );
-		}
+	assert( s.type != CompositeType::Type::discriminated_union );
+
 	fprintf( header, "(%zd parameters)\n", s.getMembers().size() );
 
 	int count = 0;
@@ -629,18 +621,18 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 		{
 			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
+				fprintf( header, "//%s%d. %s<%s%s %s>", offset, count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
 			else
-				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
+				fprintf( header, "//%s%d. %s<%s>", offset, count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
 			fprintf( header, " %s", param.name.c_str() );
 		}
 		else if ( param.type.kind == MessageParameterType::KIND::STRUCT || param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 		{
-			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
+			fprintf( header, "//%s%d. %s %s%s", offset, count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
 			fprintf( header, " %s", param.name.c_str() );
 		}
 		else
-			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
+			fprintf( header, "//%s%d. %s %s", offset, count, impl_kindToString( param.type.kind ), param.name.c_str() );
 
 		if ( param.type.hasDefault )
 		{
@@ -659,6 +651,36 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 		else
 			fprintf( header, " (REQUIRED)" );
 		fprintf( header, "\n" );
+	}
+}
+
+void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
+{
+	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
+	fprintf( header, "//**********************************************************************\n" );
+	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
+	for ( auto t:s.protoList )
+		switch ( t )
+		{
+			case Proto::gmq: fprintf( header, "GMQ " ); break;
+			case Proto::json: fprintf( header, "JSON " ); break;
+			default: assert( false );
+		}
+	if ( s.isDiscriminatedUnion() )
+	{
+		fprintf( header, "(%zd cases)\n", s.getDiscriminatedUnionCases().size() );
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			fprintf( header, "//  CASE %s (%zd parameters)", cs.name.c_str(), cs.getMembers().size() );
+			impl_generateMessageCommentBlock_MemberBlock( header, cs, "    " );
+		}
+	}
+	else
+	{
+		impl_generateMessageCommentBlock_MemberBlock( header, s, "  " );
 	}
 
 	fprintf( header, "\n" );
