@@ -360,9 +360,9 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
 }
 
-void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
+void impl_generateParamTypeLIst_MemberBlock( FILE* header, CompositeType& s, int& count )
 {
-	int count = 0;
+	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
@@ -455,13 +455,30 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 			}
 		}
 	}
+}
+
+void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
+{
+	int count = 0;
+	if ( s.isDiscriminatedUnion() )
+	{
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateParamTypeLIst_MemberBlock( header, cs, count );
+		}
+	}
+	else
+		impl_generateParamTypeLIst_MemberBlock( header, s, count );
 
 	fprintf( header, "\n" );
 }
 
-void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
+void impl_generateParamCallBlockForComposingGmq_MemberBlock( FILE* header, CompositeType& s, int& count, const char* offset )
 {
-	int count = 0;
+	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
@@ -517,9 +534,27 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 	}
 }
 
-void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, const char* offset )
+void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
 {
 	int count = 0;
+	if ( s.isDiscriminatedUnion() )
+	{
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateParamCallBlockForComposingGmq_MemberBlock( header, cs, count, offset );
+		}
+	}
+	else
+		impl_generateParamCallBlockForComposingGmq_MemberBlock( header, s, count, offset );
+
+}
+
+void impl_generateParamCallBlockForParsingGmq_MemberBlock( FILE* header, CompositeType& s, int& count, const char* offset )
+{
+	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
@@ -567,6 +602,24 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 			}
 		}
 	}
+}
+
+void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, const char* offset )
+{
+	int count = 0;
+	if ( s.isDiscriminatedUnion() )
+	{
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateParamCallBlockForParsingGmq_MemberBlock( header, cs, count, offset );
+		}
+	}
+	else
+		impl_generateParamCallBlockForParsingGmq_MemberBlock( header, s, count, offset );
+
 }
 
 void impl_generateMatchCountBlock( FILE* header, CompositeType& s )
@@ -944,7 +997,7 @@ void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
 
 void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
 	"void %s(ComposerT& composer, Args&& ... args)\n"
 	"{\n", impl_generateComposeFunctionName( s ).c_str() );

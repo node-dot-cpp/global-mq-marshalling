@@ -4993,10 +4993,37 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 
 //**********************************************************************
 
+template<class ComposerT, typename ... Args>
+void DISCRIMINATED_UNION_du_one_compose(ComposerT& composer, Args&& ... args)
+{
+	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
+
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt3d_1_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, i_1_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, i_2_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, vp_2_Type::Name>;
+
+	constexpr size_t argCount = sizeof ... (Args);
+	if constexpr ( argCount != 0 )
+		ensureUniqueness(args.nameAndTypeID...);
+	static_assert( argCount == matchCount, "unexpected arguments found" );
+
+	static_assert( ComposerT::proto == Proto::GMQ, "this DISCRIMINATED_UNION assumes only GMQ protocol" );
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
+}
+
 template<class ParserT, typename ... Args>
 void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt3d_1_Type::Name>;
+	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, i_1_Type::Name>;
+	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, i_2_Type::Name>;
+	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, vp_2_Type::Name>;
 
 	constexpr size_t argCount = sizeof ... (Args);
 	if constexpr ( argCount != 0 )
@@ -5004,6 +5031,10 @@ void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 	static_assert( argCount == matchCount, "unexpected arguments found" );
 
 	static_assert( ParserT::proto == Proto::GMQ, "this DISCRIMINATED_UNION assumes only GMQ protocol" );
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
 }
 
 
