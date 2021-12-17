@@ -58,18 +58,13 @@ namespace globalmq.marshalling
         }
         public void composeJson(JsonComposer composer)
         {
-
-            //mb: new format writes 'size' and 'data' for collections
-            // that do have size on GMQ format.
-            // So client perceived behaviour can be replicated at parsing
-
-            composer.append('{');
-            composer.addNamePart("size");
+            //composer.append('{');
+            //composer.addNamePart("size");
 
             int collSz = lsize_();
-            composer.composeUnsignedInteger((ulong)collSz);
-            composer.append(", ");
-            composer.addNamePart("data");
+            //composer.composeUnsignedInteger((ulong)collSz);
+            //composer.append(", ");
+            //composer.addNamePart("data");
 
             composer.append('[');
             for (int i = 0; i < collSz; ++i)
@@ -79,7 +74,7 @@ namespace globalmq.marshalling
                 lnext_(composer, i);
             }
             composer.append(']');
-            composer.append('}');
+            //composer.append('}');
         }
 
     };
@@ -91,29 +86,34 @@ namespace globalmq.marshalling
 
     public class CollectionWrapperForParsing : ICollectionParse
     {
-        SizeDelegate lsize_;
-        NextDelegate lnext_;
+        MakeDelegate lmake;
+        NextDelegate lnext;
         bool newFormat = false;
-        public delegate void SizeDelegate(int size);
+        public delegate void MakeDelegate();
         public delegate void NextDelegate(ParserBase parser, int ordinal);
 
-        public CollectionWrapperForParsing(SizeDelegate lsize, NextDelegate lnext)
-
+        public CollectionWrapperForParsing(MakeDelegate lmake, NextDelegate lnext)
         {
-            lsize_ = lsize;
-            lnext_ = lnext;
+            this.lmake = lmake;
+            this.lnext = lnext;
+        }
+        public CollectionWrapperForParsing(NextDelegate lnext)
+        {
+            this.lnext = lnext;
         }
         public void parseGmq(GmqParser parser)
         {
+            if (lmake != null)
+                lmake();
             int sz;
             parser.parseUnsignedInteger(out sz);
-            if(lsize_ != null)
-                lsize_(sz);
             for (int i = 0; i < sz; ++i)
-                lnext_(parser, i);
+                lnext(parser, i);
         }
         public void parseJson(JsonParser parser)
         {
+            if (lmake != null)
+                lmake();
             int sz = 0;
             if (parser.isDelimiter('{'))
             {
@@ -126,8 +126,6 @@ namespace globalmq.marshalling
                     throw new Exception();
 
                 parser.parseUnsignedInteger(out sz);
-                if (lsize_ != null)
-                    lsize_(sz);
 
                 parser.skipSpacesEtc();
                 parser.skipDelimiter(',');
@@ -143,7 +141,7 @@ namespace globalmq.marshalling
             {
                 for (int i = 0; !newFormat || i < sz; ++i)
                 {
-                    lnext_(parser, i);
+                    lnext(parser, i);
                     if (parser.isDelimiter(','))
                     {
                         parser.skipDelimiter(',');

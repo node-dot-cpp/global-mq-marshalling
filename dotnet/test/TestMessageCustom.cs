@@ -35,11 +35,11 @@ namespace TestProject1
             public string five;
             public UInt64 four;
             public Double seven;
-            public int[] two;
+            public List<int> two;
             public List<double> ten;
             public Point eight;
             public Point3D nine;
-            public Point[] six;
+            public List<Point> six;
             public List<Point3D> three;
         }
         public static void parse(ParserBase parser, message_one msg)
@@ -49,10 +49,10 @@ namespace TestProject1
 
             mtest.test_gmq.message_one.parse(parser,
                 firstParam: ref msg.one, forthParam: ref msg.four,
-                secondParam: new CollectionWrapperForParsing((int size) => { msg.two = new int[size]; }, (ParserBase parser, int ordinal) => { parser.parseSignedInteger(out msg.two[ordinal]); }),
+                secondParam: new CollectionWrapperForParsing(() => { msg.two = new List<int>(); }, (ParserBase parser, int ordinal) => { int val;  parser.parseSignedInteger(out val);  msg.two.Add(val); }),
                 tenthParam: SimpleTypeCollection.makeParser(msg.ten),
                 thirdParam: new CollectionWrapperForParsing(null, (ParserBase parser, int ordinal) => { Point3D pt = new Point3D(); mtest.point3D.parse(parser, x: ref pt.x, y: ref pt.y, z: ref pt.z); msg.three.Add(pt); }),
-                sixthParam: new CollectionWrapperForParsing((int size) => { msg.six = new Point[size]; }, (ParserBase parser, int ordinal) => { Point pt = new Point(); mtest.point.parse(parser, x: ref pt.x, y: ref pt.y); msg.six[ordinal] = pt; }),
+                sixthParam: new CollectionWrapperForParsing(() => { msg.six = new List<Point>(); }, (ParserBase parser, int ordinal) => { Point pt = new Point(); mtest.point.parse(parser, x: ref pt.x, y: ref pt.y); msg.six.Add(pt); }),
                 eighthParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.point.parse(parser, x: ref msg.eight.x, y: ref msg.eight.y); }),
                 ninethParam: new MessageWrapperForParsing((ParserBase parser) => { mtest.point3D.parse(parser, x: ref msg.nine.x, y: ref msg.nine.y, z: ref msg.nine.z); }),
                 fifthParam: ref msg.five, seventhParam: ref msg.seven
@@ -68,7 +68,7 @@ namespace TestProject1
                 ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.nine.x, y: msg.nine.y, z: msg.nine.z); }),
                 secondParam: SimpleTypeCollection.makeComposer(msg.two),
                 tenthParam: SimpleTypeCollection.makeComposer(msg.ten),
-                sixthParam: new CollectionWrapperForComposing(() => { return msg.six.Length; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.six[ordinal].x, y: msg.six[ordinal].y); })
+                sixthParam: new CollectionWrapperForComposing(() => { return msg.six.Count; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.six[ordinal].x, y: msg.six[ordinal].y); })
             );
         }
 
@@ -78,11 +78,11 @@ namespace TestProject1
             msg.five = "def";
             msg.four = 3;
             msg.seven = 3.1416;
-            msg.two = new int[] { 0, 1, 2, 3, 4, 5 };
+            msg.two = new List<int> { 0, 1, 2, 3, 4, 5 };
             msg.ten = new List<double> { 0.1, 1.2, 2.3 };
             msg.eight = new Point { x = 175, y = 186 };
             msg.nine = new Point3D { x = 123, y = 456, z = 789 };
-            msg.six = new Point[] { new Point { x = 0, y = 1 }, new Point { x = 2, y = 3 }, new Point { x = 4, y = 5 } };
+            msg.six = new List<Point> { new Point { x = 0, y = 1 }, new Point { x = 2, y = 3 }, new Point { x = 4, y = 5 } };
             msg.three = new System.Collections.Generic.List<Point3D> { new Point3D { x = 0, y = 1, z = 2 }, new Point3D { x = 3, y = 4, z = 5 } };
         }
 

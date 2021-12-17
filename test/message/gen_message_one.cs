@@ -275,15 +275,15 @@ public class point : IEquatable<point>
 public class message_one : IEquatable<message_one>
 {
 	public Int64 firstParam;
-	public Int64[] secondParam;
-	public point3D[] thirdParam;
+	public IList<Int64> secondParam;
+	public IList<point3D> thirdParam;
 	public UInt64 forthParam;
 	public String fifthParam;
-	public point[] sixthParam;
+	public IList<point> sixthParam;
 	public Double seventhParam;
 	public point eighthParam;
 	public point3D ninethParam;
-	public Double[] tenthParam;
+	public IList<Double> tenthParam;
 
 	public override bool Equals(object obj)
 	{
@@ -442,12 +442,12 @@ public class message_one : IEquatable<message_one>
 			firstParam: msg.firstParam,
 			secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
 			thirdParam: new CollectionWrapperForComposing(
-				() => { return msg.thirdParam.Length; },
+				() => { return msg.thirdParam.Count; },
 				(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
 			forthParam: msg.forthParam,
 			fifthParam: msg.fifthParam,
 			sixthParam: new CollectionWrapperForComposing(
-				() => { return msg.sixthParam.Length; },
+				() => { return msg.sixthParam.Count; },
 				(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
 			seventhParam: msg.seventhParam,
 			eighthParam: new MessageWrapperForComposing(
@@ -463,24 +463,24 @@ public class message_one : IEquatable<message_one>
 		parse(parser,
 			firstParam: ref tmp.firstParam,
 			secondParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.secondParam = new Int64[size]; },
-				(ParserBase parser, int ordinal) => { parser.parseSignedInteger(out tmp.secondParam[ordinal]); }),
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
 			thirdParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.thirdParam = new point3D[size]; },
-				(ParserBase parser, int ordinal) => { point3D.parse(parser, out tmp.thirdParam[ordinal]); }),
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val; point3D.parse(parser, out val); tmp.thirdParam.Add(val); }),
 			forthParam: ref tmp.forthParam,
 			fifthParam: ref tmp.fifthParam,
 			sixthParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.sixthParam = new point[size]; },
-				(ParserBase parser, int ordinal) => { point.parse(parser, out tmp.sixthParam[ordinal]); }),
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val; point.parse(parser, out val); tmp.sixthParam.Add(val); }),
 			seventhParam: ref tmp.seventhParam,
 			eighthParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { point.parse(parser, out tmp.eighthParam); }),
 			ninethParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { point3D.parse(parser, out tmp.ninethParam); }),
 			tenthParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.tenthParam = new Double[size]; },
-				(ParserBase parser, int ordinal) => { parser.parseReal(out tmp.tenthParam[ordinal]); })
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
 		);
 		msg = tmp;
 	}

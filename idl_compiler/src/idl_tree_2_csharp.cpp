@@ -513,7 +513,7 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 					//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForComposing(\n"
-						"\t\t\t\t() => { return msg.%s.Length; },\n", param.name.c_str(), param.name.c_str());
+						"\t\t\t\t() => { return msg.%s.Count; },\n", param.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\t(ComposerBase composer, int ordinal) => "
 						"{ %s.compose(composer, msg.%s[ordinal]); })", param.type.name.c_str(), param.name.c_str());
 					break;
@@ -577,27 +577,27 @@ namespace {
 				{
 				case MessageParameterType::KIND::INTEGER:
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t(int size) => { tmp.%s = new Int64[size]; },\n", param.name.c_str(), param.name.c_str());
+						"\t\t\t\t() => { tmp.%s = new List<Int64>(); },\n", param.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ parser.parseSignedInteger(out tmp.%s[ordinal]); })", param.name.c_str());
+						"{ Int64 val; parser.parseSignedInteger(out val); tmp.%s.Add(val); })", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t(int size) => { tmp.%s = new UInt64[size]; },\n", param.name.c_str(), param.name.c_str());
+						"\t\t\t\t() => { tmp.%s = new List<UInt64>(); },\n", param.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ parser.parseUnsignedInteger(out tmp.%s[ordinal]); })", param.name.c_str());
+						"{ UInt64 val; parser.parseUnsignedInteger(out val); tmp.%s.Add(val); })", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t(int size) => { tmp.%s = new Double[size]; },\n", param.name.c_str(), param.name.c_str());
+						"\t\t\t\t() => { tmp.%s = new List<Double>(); },\n", param.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ parser.parseReal(out tmp.%s[ordinal]); })", param.name.c_str());
+						"{ Double val; parser.parseReal(out val); tmp.%s.Add(val); })", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t(int size) => { tmp.%s = new String[size]; },\n", param.name.c_str(), param.name.c_str());
+						"\t\t\t\t() => { tmp.%s = new List<String>(); },\n", param.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ parse.parseString(out tmp.%s[ordinal]); })", param.name.c_str());
+						"{ String val; parse.parseString(out val); tmp.%s.Add(val); })", param.name.c_str());
 					break;
 					//case MessageParameterType::KIND::BYTE_ARRAY:
 					//case MessageParameterType::KIND::BLOB:
@@ -605,9 +605,9 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 					//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t(int size) => { tmp.%s = new %s[size]; },\n", param.name.c_str(), param.name.c_str(), param.type.name.c_str());
+						"\t\t\t\t() => { tmp.%s = new List<%s>(); },\n", param.name.c_str(), param.name.c_str(), param.type.name.c_str());
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ %s.parse(parser, out tmp.%s[ordinal]); })", param.type.name.c_str(), param.name.c_str());
+						"{ %s val; %s.parse(parser, out val); tmp.%s.Add(val); })", param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
@@ -728,23 +728,23 @@ namespace {
 				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\tpublic Int64[] %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic IList<Int64> %s;\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\tpublic UInt64[] %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic IList<UInt64> %s;\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\tpublic Double[] %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic IList<Double> %s;\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\tpublic String[] %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic IList<String> %s;\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert(false); // unexpected
 					break;
 				case MessageParameterType::KIND::STRUCT:
 					assert(member.type.messageIdx < root.structs.size());
-					fprintf(header, "\tpublic %s[] %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
+					fprintf(header, "\tpublic IList<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
 					break;
 				default:
 					assert(false); // not implemented (yet)

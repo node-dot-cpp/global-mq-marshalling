@@ -521,7 +521,7 @@ public class Vertex : IEquatable<Vertex>
 
 public class PolygonMap : IEquatable<PolygonMap>
 {
-	public Vertex[] polygonMap;
+	public IList<Vertex> polygonMap;
 
 	public override bool Equals(object obj)
 	{
@@ -606,7 +606,7 @@ public class PolygonMap : IEquatable<PolygonMap>
 	{
 		compose(composer,
 			polygonMap: new CollectionWrapperForComposing(
-				() => { return msg.polygonMap.Length; },
+				() => { return msg.polygonMap.Count; },
 				(ComposerBase composer, int ordinal) => { Vertex.compose(composer, msg.polygonMap[ordinal]); })
 		);
 	}
@@ -615,8 +615,8 @@ public class PolygonMap : IEquatable<PolygonMap>
 		PolygonMap tmp = new PolygonMap();
 		parse(parser,
 			polygonMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.polygonMap = new Vertex[size]; },
-				(ParserBase parser, int ordinal) => { Vertex.parse(parser, out tmp.polygonMap[ordinal]); })
+				() => { tmp.polygonMap = new List<Vertex>(); },
+				(ParserBase parser, int ordinal) => { Vertex val; Vertex.parse(parser, out val); tmp.polygonMap.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -629,7 +629,7 @@ public class PolygonMap : IEquatable<PolygonMap>
 
 public class ObstacleMap : IEquatable<ObstacleMap>
 {
-	public PolygonMap[] obstacleMap;
+	public IList<PolygonMap> obstacleMap;
 
 	public override bool Equals(object obj)
 	{
@@ -714,7 +714,7 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 	{
 		compose(composer,
 			obstacleMap: new CollectionWrapperForComposing(
-				() => { return msg.obstacleMap.Length; },
+				() => { return msg.obstacleMap.Count; },
 				(ComposerBase composer, int ordinal) => { PolygonMap.compose(composer, msg.obstacleMap[ordinal]); })
 		);
 	}
@@ -723,8 +723,8 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 		ObstacleMap tmp = new ObstacleMap();
 		parse(parser,
 			obstacleMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.obstacleMap = new PolygonMap[size]; },
-				(ParserBase parser, int ordinal) => { PolygonMap.parse(parser, out tmp.obstacleMap[ordinal]); })
+				() => { tmp.obstacleMap = new List<PolygonMap>(); },
+				(ParserBase parser, int ordinal) => { PolygonMap val; PolygonMap.parse(parser, out val); tmp.obstacleMap.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -738,8 +738,8 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 
 public class Line : IEquatable<Line>
 {
-	public Vertex[] a;
-	public Vertex[] b;
+	public IList<Vertex> a;
+	public IList<Vertex> b;
 
 	public override bool Equals(object obj)
 	{
@@ -832,10 +832,10 @@ public class Line : IEquatable<Line>
 	{
 		compose(composer,
 			a: new CollectionWrapperForComposing(
-				() => { return msg.a.Length; },
+				() => { return msg.a.Count; },
 				(ComposerBase composer, int ordinal) => { Vertex.compose(composer, msg.a[ordinal]); }),
 			b: new CollectionWrapperForComposing(
-				() => { return msg.b.Length; },
+				() => { return msg.b.Count; },
 				(ComposerBase composer, int ordinal) => { Vertex.compose(composer, msg.b[ordinal]); })
 		);
 	}
@@ -844,11 +844,11 @@ public class Line : IEquatable<Line>
 		Line tmp = new Line();
 		parse(parser,
 			a: new CollectionWrapperForParsing(
-				(int size) => { tmp.a = new Vertex[size]; },
-				(ParserBase parser, int ordinal) => { Vertex.parse(parser, out tmp.a[ordinal]); }),
+				() => { tmp.a = new List<Vertex>(); },
+				(ParserBase parser, int ordinal) => { Vertex val; Vertex.parse(parser, out val); tmp.a.Add(val); }),
 			b: new CollectionWrapperForParsing(
-				(int size) => { tmp.b = new Vertex[size]; },
-				(ParserBase parser, int ordinal) => { Vertex.parse(parser, out tmp.b[ordinal]); })
+				() => { tmp.b = new List<Vertex>(); },
+				(ParserBase parser, int ordinal) => { Vertex val; Vertex.parse(parser, out val); tmp.b.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -861,7 +861,7 @@ public class Line : IEquatable<Line>
 
 public class LineMap : IEquatable<LineMap>
 {
-	public Line[] lineMap;
+	public IList<Line> lineMap;
 
 	public override bool Equals(object obj)
 	{
@@ -946,7 +946,7 @@ public class LineMap : IEquatable<LineMap>
 	{
 		compose(composer,
 			lineMap: new CollectionWrapperForComposing(
-				() => { return msg.lineMap.Length; },
+				() => { return msg.lineMap.Count; },
 				(ComposerBase composer, int ordinal) => { Line.compose(composer, msg.lineMap[ordinal]); })
 		);
 	}
@@ -955,8 +955,8 @@ public class LineMap : IEquatable<LineMap>
 		LineMap tmp = new LineMap();
 		parse(parser,
 			lineMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.lineMap = new Line[size]; },
-				(ParserBase parser, int ordinal) => { Line.parse(parser, out tmp.lineMap[ordinal]); })
+				() => { tmp.lineMap = new List<Line>(); },
+				(ParserBase parser, int ordinal) => { Line val; Line.parse(parser, out val); tmp.lineMap.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -1387,7 +1387,7 @@ public class LevelTraceData : IEquatable<LevelTraceData>
 	public static UInt64 MsgId = 1;
 
 	public CharacterParamStruct CharacterParam;
-	public POINT3DREAL[] Points;
+	public IList<POINT3DREAL> Points;
 
 	public override bool Equals(object obj)
 	{
@@ -1482,7 +1482,7 @@ public class LevelTraceData : IEquatable<LevelTraceData>
 			CharacterParam: new MessageWrapperForComposing(
 				(ComposerBase composer) => { CharacterParamStruct.compose(composer, msg.CharacterParam); }),
 			Points: new CollectionWrapperForComposing(
-				() => { return msg.Points.Length; },
+				() => { return msg.Points.Count; },
 				(ComposerBase composer, int ordinal) => { POINT3DREAL.compose(composer, msg.Points[ordinal]); })
 		);
 	}
@@ -1493,8 +1493,8 @@ public class LevelTraceData : IEquatable<LevelTraceData>
 			CharacterParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { CharacterParamStruct.parse(parser, out tmp.CharacterParam); }),
 			Points: new CollectionWrapperForParsing(
-				(int size) => { tmp.Points = new POINT3DREAL[size]; },
-				(ParserBase parser, int ordinal) => { POINT3DREAL.parse(parser, out tmp.Points[ordinal]); })
+				() => { tmp.Points = new List<POINT3DREAL>(); },
+				(ParserBase parser, int ordinal) => { POINT3DREAL val; POINT3DREAL.parse(parser, out val); tmp.Points.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -1549,11 +1549,11 @@ public class PolygonSt : IEquatable<PolygonSt>
 {
 	public static UInt64 MsgId = 2;
 
-	public PolygonMap[] polygonMap;
-	public PolygonMap[] concaveMap;
-	public ObstacleMap[] obstacleMap;
-	public LineMap[] portalMap;
-	public LineMap[] jumpMap;
+	public IList<PolygonMap> polygonMap;
+	public IList<PolygonMap> concaveMap;
+	public IList<ObstacleMap> obstacleMap;
+	public IList<LineMap> portalMap;
+	public IList<LineMap> jumpMap;
 	public Double polygonSpeed;
 
 	public override bool Equals(object obj)
@@ -1679,19 +1679,19 @@ public class PolygonSt : IEquatable<PolygonSt>
 	{
 		compose(composer,
 			polygonMap: new CollectionWrapperForComposing(
-				() => { return msg.polygonMap.Length; },
+				() => { return msg.polygonMap.Count; },
 				(ComposerBase composer, int ordinal) => { PolygonMap.compose(composer, msg.polygonMap[ordinal]); }),
 			concaveMap: new CollectionWrapperForComposing(
-				() => { return msg.concaveMap.Length; },
+				() => { return msg.concaveMap.Count; },
 				(ComposerBase composer, int ordinal) => { PolygonMap.compose(composer, msg.concaveMap[ordinal]); }),
 			obstacleMap: new CollectionWrapperForComposing(
-				() => { return msg.obstacleMap.Length; },
+				() => { return msg.obstacleMap.Count; },
 				(ComposerBase composer, int ordinal) => { ObstacleMap.compose(composer, msg.obstacleMap[ordinal]); }),
 			portalMap: new CollectionWrapperForComposing(
-				() => { return msg.portalMap.Length; },
+				() => { return msg.portalMap.Count; },
 				(ComposerBase composer, int ordinal) => { LineMap.compose(composer, msg.portalMap[ordinal]); }),
 			jumpMap: new CollectionWrapperForComposing(
-				() => { return msg.jumpMap.Length; },
+				() => { return msg.jumpMap.Count; },
 				(ComposerBase composer, int ordinal) => { LineMap.compose(composer, msg.jumpMap[ordinal]); }),
 			polygonSpeed: msg.polygonSpeed
 		);
@@ -1701,20 +1701,20 @@ public class PolygonSt : IEquatable<PolygonSt>
 		PolygonSt tmp = new PolygonSt();
 		parse(parser,
 			polygonMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.polygonMap = new PolygonMap[size]; },
-				(ParserBase parser, int ordinal) => { PolygonMap.parse(parser, out tmp.polygonMap[ordinal]); }),
+				() => { tmp.polygonMap = new List<PolygonMap>(); },
+				(ParserBase parser, int ordinal) => { PolygonMap val; PolygonMap.parse(parser, out val); tmp.polygonMap.Add(val); }),
 			concaveMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.concaveMap = new PolygonMap[size]; },
-				(ParserBase parser, int ordinal) => { PolygonMap.parse(parser, out tmp.concaveMap[ordinal]); }),
+				() => { tmp.concaveMap = new List<PolygonMap>(); },
+				(ParserBase parser, int ordinal) => { PolygonMap val; PolygonMap.parse(parser, out val); tmp.concaveMap.Add(val); }),
 			obstacleMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.obstacleMap = new ObstacleMap[size]; },
-				(ParserBase parser, int ordinal) => { ObstacleMap.parse(parser, out tmp.obstacleMap[ordinal]); }),
+				() => { tmp.obstacleMap = new List<ObstacleMap>(); },
+				(ParserBase parser, int ordinal) => { ObstacleMap val; ObstacleMap.parse(parser, out val); tmp.obstacleMap.Add(val); }),
 			portalMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.portalMap = new LineMap[size]; },
-				(ParserBase parser, int ordinal) => { LineMap.parse(parser, out tmp.portalMap[ordinal]); }),
+				() => { tmp.portalMap = new List<LineMap>(); },
+				(ParserBase parser, int ordinal) => { LineMap val; LineMap.parse(parser, out val); tmp.portalMap.Add(val); }),
 			jumpMap: new CollectionWrapperForParsing(
-				(int size) => { tmp.jumpMap = new LineMap[size]; },
-				(ParserBase parser, int ordinal) => { LineMap.parse(parser, out tmp.jumpMap[ordinal]); }),
+				() => { tmp.jumpMap = new List<LineMap>(); },
+				(ParserBase parser, int ordinal) => { LineMap val; LineMap.parse(parser, out val); tmp.jumpMap.Add(val); }),
 			polygonSpeed: ref tmp.polygonSpeed
 		);
 		msg = tmp;
@@ -2031,15 +2031,15 @@ public class message_one : IEquatable<message_one>
 	public static UInt64 MsgId = 3;
 
 	public Int64 firstParam;
-	public Int64[] secondParam;
-	public point3D[] thirdParam;
+	public IList<Int64> secondParam;
+	public IList<point3D> thirdParam;
 	public UInt64 forthParam;
 	public String fifthParam;
-	public point[] sixthParam;
+	public IList<point> sixthParam;
 	public Double seventhParam;
 	public point eighthParam;
 	public point3D ninethParam;
-	public Double[] tenthParam;
+	public IList<Double> tenthParam;
 
 	public override bool Equals(object obj)
 	{
@@ -2198,12 +2198,12 @@ public class message_one : IEquatable<message_one>
 			firstParam: msg.firstParam,
 			secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
 			thirdParam: new CollectionWrapperForComposing(
-				() => { return msg.thirdParam.Length; },
+				() => { return msg.thirdParam.Count; },
 				(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
 			forthParam: msg.forthParam,
 			fifthParam: msg.fifthParam,
 			sixthParam: new CollectionWrapperForComposing(
-				() => { return msg.sixthParam.Length; },
+				() => { return msg.sixthParam.Count; },
 				(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
 			seventhParam: msg.seventhParam,
 			eighthParam: new MessageWrapperForComposing(
@@ -2219,24 +2219,24 @@ public class message_one : IEquatable<message_one>
 		parse(parser,
 			firstParam: ref tmp.firstParam,
 			secondParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.secondParam = new Int64[size]; },
-				(ParserBase parser, int ordinal) => { parser.parseSignedInteger(out tmp.secondParam[ordinal]); }),
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
 			thirdParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.thirdParam = new point3D[size]; },
-				(ParserBase parser, int ordinal) => { point3D.parse(parser, out tmp.thirdParam[ordinal]); }),
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val; point3D.parse(parser, out val); tmp.thirdParam.Add(val); }),
 			forthParam: ref tmp.forthParam,
 			fifthParam: ref tmp.fifthParam,
 			sixthParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.sixthParam = new point[size]; },
-				(ParserBase parser, int ordinal) => { point.parse(parser, out tmp.sixthParam[ordinal]); }),
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val; point.parse(parser, out val); tmp.sixthParam.Add(val); }),
 			seventhParam: ref tmp.seventhParam,
 			eighthParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { point.parse(parser, out tmp.eighthParam); }),
 			ninethParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { point3D.parse(parser, out tmp.ninethParam); }),
 			tenthParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.tenthParam = new Double[size]; },
-				(ParserBase parser, int ordinal) => { parser.parseReal(out tmp.tenthParam[ordinal]); })
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -2296,15 +2296,15 @@ public class message_one : IEquatable<message_one>
 	public static UInt64 MsgId = 3;
 
 	public Int64 firstParam;
-	public Int64[] secondParam;
-	public point3D[] thirdParam;
+	public IList<Int64> secondParam;
+	public IList<point3D> thirdParam;
 	public UInt64 forthParam;
 	public String fifthParam;
-	public point[] sixthParam;
+	public IList<point> sixthParam;
 	public Double seventhParam;
 	public point eighthParam;
 	public point3D ninethParam;
-	public Double[] tenthParam;
+	public IList<Double> tenthParam;
 
 	public override bool Equals(object obj)
 	{
@@ -2463,12 +2463,12 @@ public class message_one : IEquatable<message_one>
 			firstParam: msg.firstParam,
 			secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
 			thirdParam: new CollectionWrapperForComposing(
-				() => { return msg.thirdParam.Length; },
+				() => { return msg.thirdParam.Count; },
 				(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
 			forthParam: msg.forthParam,
 			fifthParam: msg.fifthParam,
 			sixthParam: new CollectionWrapperForComposing(
-				() => { return msg.sixthParam.Length; },
+				() => { return msg.sixthParam.Count; },
 				(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
 			seventhParam: msg.seventhParam,
 			eighthParam: new MessageWrapperForComposing(
@@ -2484,24 +2484,24 @@ public class message_one : IEquatable<message_one>
 		parse(parser,
 			firstParam: ref tmp.firstParam,
 			secondParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.secondParam = new Int64[size]; },
-				(ParserBase parser, int ordinal) => { parser.parseSignedInteger(out tmp.secondParam[ordinal]); }),
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
 			thirdParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.thirdParam = new point3D[size]; },
-				(ParserBase parser, int ordinal) => { point3D.parse(parser, out tmp.thirdParam[ordinal]); }),
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val; point3D.parse(parser, out val); tmp.thirdParam.Add(val); }),
 			forthParam: ref tmp.forthParam,
 			fifthParam: ref tmp.fifthParam,
 			sixthParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.sixthParam = new point[size]; },
-				(ParserBase parser, int ordinal) => { point.parse(parser, out tmp.sixthParam[ordinal]); }),
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val; point.parse(parser, out val); tmp.sixthParam.Add(val); }),
 			seventhParam: ref tmp.seventhParam,
 			eighthParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { point.parse(parser, out tmp.eighthParam); }),
 			ninethParam: new MessageWrapperForParsing(
 				(ParserBase parser) => { point3D.parse(parser, out tmp.ninethParam); }),
 			tenthParam: new CollectionWrapperForParsing(
-				(int size) => { tmp.tenthParam = new Double[size]; },
-				(ParserBase parser, int ordinal) => { parser.parseReal(out tmp.tenthParam[ordinal]); })
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
 		);
 		msg = tmp;
 	}
