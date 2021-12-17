@@ -28,6 +28,7 @@ PUBLISHABLE publishable_sample=2 {
 	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
 	STRUCT StructWithVectorOfInt structWithVectorOfInt;
 	STRUCT StructWithVectorOfSize structWithVectorOfSize;
+	DISCRIMINATED_UNION du_one du_one_instance;
 };
 
 SCOPE scope_one PROTO = JSON;

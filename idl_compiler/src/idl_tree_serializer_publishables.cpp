@@ -36,6 +36,7 @@ const char* paramTypeToLibType( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
 		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
 		case MessageParameterType::KIND::STRUCT: return "::globalmq::marshalling::impl::StructType";
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "::globalmq::marshalling::impl::DiscriminatedUnionType";
 		default: return nullptr;
 	}
 }
@@ -51,6 +52,9 @@ string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& ty
 		case MessageParameterType::KIND::STRUCT: 
 			assert( type.messageIdx < root.structs.size() );
 			return fmt::format( "publishable_STRUCT_{}", root.structs[type.messageIdx]->name );
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+			assert( type.messageIdx < root.structs.size() );
+			return fmt::format( "publishable_DISCRIMINATED_UNION_{}", root.structs[type.messageIdx]->name );
 		default: 
 			assert( false );
 			return "";
@@ -71,11 +75,19 @@ string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterTyp
 		case MessageParameterType::KIND::STRUCT: 
 			assert( type.messageIdx <= s.structs.size() );
 			return fmt::format( "STRUCT {}", s.structs[type.messageIdx]->name );
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+			assert( type.messageIdx <= s.structs.size() );
+			return fmt::format( "DISCRIMINATED_UNION {}", s.structs[type.messageIdx]->name );
 		case MessageParameterType::KIND::VECTOR: 
 			if ( type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 			{
 				assert( type.messageIdx <= s.structs.size() );
 				return fmt::format( "VECTOR<STRUCT {}>", s.structs[type.messageIdx]->name );
+			}
+			else if ( type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+			{
+				assert( type.messageIdx <= s.structs.size() );
+				return fmt::format( "VECTOR<DISCRIMINATED_UNION {}>", s.structs[type.messageIdx]->name );
 			}
 			else if ( type.vectorElemKind == MessageParameterType::KIND::ENUM )
 				return fmt::format( "VECTOR<ENUM {}>", type.name );
@@ -115,8 +127,12 @@ const char* paramTypeToParser( MessageParameterType::KIND kind )
 
 std::string impl_generateComposeFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
 {
-	assert( s.type.kind == MessageParameterType::KIND::STRUCT );
-	return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+		return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+	else
+		assert( false );
 }
 
 std::string impl_generateComposeFunctionNameForPublishableStruct( CompositeType& s )
@@ -127,8 +143,11 @@ std::string impl_generateComposeFunctionNameForPublishableStruct( CompositeType&
 
 std::string impl_generateParseFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
 {
-	assert( s.type.kind == MessageParameterType::KIND::STRUCT );
-	return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+		return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+	else assert( false );
 }
 
 std::string impl_generateParseFunctionNameForPublishableStruct( CompositeType& s )
@@ -139,14 +158,18 @@ std::string impl_generateParseFunctionNameForPublishableStruct( CompositeType& s
 
 std::string impl_generatePublishableStructName( CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 	return fmt::format( "publishable_{}_{}", s.type2string(), s.name );
 }
 
 std::string impl_generatePublishableStructName( MessageParameter& s )
 {
-	assert( s.type.kind == MessageParameterType::KIND::STRUCT );
-	return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+	else
+		assert( false );
 }
 
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
@@ -414,6 +437,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 				fprintf( header, "\t\t\t\t\t\t\t\toldValue = value;\n" );
 				break;
 			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf( header, "\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
 				break;
 			default:
@@ -505,6 +529,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 			fprintf( header, "\t\t\t\t\t\t\t\t\toldValue = value;\n" );
 			break;
 		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 			fprintf( header, "\t\t\t\t\t\t\t\t\t%s::copy( value, oldValue );\n", impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
 			break;
 		default:
@@ -768,25 +793,9 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 }
 
 
-void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj )
 {
-	if ( obj.type == CompositeType::Type::structure )
-		fprintf( header, 
-			"\ttemplate<class ComposerT, class T>\n"
-			"\tstatic\n"
-			"\tvoid compose( ComposerT& composer, const T& t )\n"
-			"\t{\n"
-		);
-	else if ( obj.type == CompositeType::Type::publishable )
-		fprintf( header, 
-			"\ttemplate<class ComposerType>\n"
-			"\tvoid compose( ComposerType& composer )\n"
-			"\t{\n"
-			"\t\t::globalmq::marshalling::impl::composeStructBegin( composer );\n"
-			"\n"
-		);
-	else
-		assert( false );
+	assert( obj.type != CompositeType::Type::discriminated_union );
 
 	const char* composer = "composer";
 
@@ -855,6 +864,40 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 				assert( false ); // not implemented (yet)
 		}
 	}
+}
+
+void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+{
+	if ( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union )
+		fprintf( header, 
+			"\ttemplate<class ComposerT, class T>\n"
+			"\tstatic\n"
+			"\tvoid compose( ComposerT& composer, const T& t )\n"
+			"\t{\n"
+		);
+	else if ( obj.type == CompositeType::Type::publishable )
+		fprintf( header, 
+			"\ttemplate<class ComposerType>\n"
+			"\tvoid compose( ComposerType& composer )\n"
+			"\t{\n"
+			"\t\t::globalmq::marshalling::impl::composeStructBegin( composer );\n"
+			"\n"
+		);
+	else
+		assert( false );
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( header, root, cs );
+		}
+	}
+	else
+		impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( header, root, obj );
 
 	if ( obj.type == CompositeType::Type::publishable )
 		fprintf( header, 
