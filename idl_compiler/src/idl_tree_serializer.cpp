@@ -411,67 +411,13 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 	if ( ct.type != CompositeType::Type::discriminated_union )
 	{
 		for ( auto& param : ct.getMembers() )
-		{
-	#if 0
-			if ( param->type.kind == MessageParameterType::KIND::VECTOR )
-			{
-				if ( param->type.vectorElemKind == MessageParameterType::KIND::STRUCT || param->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // existance and extentability
-				{
-					param->type.messageIdx = (size_t)(-1);
-					for ( size_t i=0; i<s.structs.size(); ++i )
-						if ( param->type.name == s.structs[i]->name )
-						{
-							param->type.messageIdx = i;
-							if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
-							{
-								fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
-								ok = false;
-							}
-							impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
-							impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
-							break;
-						}
-					if ( param->type.messageIdx == (size_t)(-1) )
-					{
-						fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param->type.name.c_str() );
-						ok = false;
-					}
-				}
-			}
-			else if ( param->type.kind == MessageParameterType::KIND::STRUCT || param->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // extentability only
-			{
-				param->type.messageIdx = (size_t)(-1);
-				for ( size_t i=0; i<s.structs.size(); ++i )
-					if ( param->type.name == s.structs[i]->name )
-					{
-						param->type.messageIdx = i;
-						if ( param->type.isNonExtendable && !s.structs[i]->isNonExtendable )
-						{
-							fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str(), ct.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
-							ok = false;
-						}
-						impl_propagateParentPropsToStruct( ct, *(s.structs[i]) );
-						impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
-						break;
-					}
-				if ( param->type.messageIdx == (size_t)(-1) )
-				{
-					fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param->location.fileName.c_str(), param->location.lineNumber, impl_kindToString( param->type.kind ), param->type.name.c_str() );
-					ok = false;
-				}
-			}
-	#else
 			ok = impl_processCompositeTypeNamesInParamss( s, ct, *param, stack ) && ok;
-	#endif
-		}
 	}
 	else
 	{
 		for ( auto& cs : ct.getDiscriminatedUnionCases() )
 			for ( auto& param : cs->getMembers() )
-			{
 				ok = impl_processCompositeTypeNamesInParamss( s, ct, *param, stack ) && ok;
-			}
 	}
 
 	stack.pop_back();
@@ -905,14 +851,6 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
-	/*for ( auto it : structsOrderedByDependency )
-	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		if ( it->type == CompositeType::Type::discriminated_union )
-			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	}*/
-
 	for ( auto& scope : s.scopes )
 	{
 		fprintf( header, "namespace %s {\n\n", scope->name.c_str() );
@@ -945,28 +883,6 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( obj_1->type == CompositeType::Type::publishable );
 		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), platformPrefix, classNotifierName );
 	}
-
-	fprintf( header, "//===============================================================================\n" );
-	fprintf( header, "// Publishable c-structures\n" );
-	fprintf( header, "// Use them as-is or copy and edit member types as necessary\n\n" );
-	for ( auto it : structsOrderedByDependency )
-	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-		if ( it->isStruct4Publishing )
-			generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	}
-
-	for ( auto& it : s.publishables )
-	{
-		auto& obj_1 = it;
-		assert( obj_1 != nullptr );
-		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-		assert( obj_1->type == CompositeType::Type::publishable );
-		generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	}
-	fprintf( header, "\n//===============================================================================\n\n" );
 
 	if ( !s.publishables.empty() )
 	{
