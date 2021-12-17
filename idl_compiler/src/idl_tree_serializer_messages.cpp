@@ -269,9 +269,10 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 		"}\n\n" );
 }
 
-void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
+void impl_GenerateMessageDefaults_MemberIterationBlock_GetCount( FILE* header, CompositeType& s, int& count )
 {
-	int count = 0; // let's see whether we need this block at all
+	assert( s.type != CompositeType::Type::discriminated_union );
+
 	for ( auto& it : s.getMembers() )
 	{
 		if ( it != nullptr )
@@ -309,13 +310,11 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 				}
 		}
 	}
+}
 
-	if ( count == 0 )
-		return;
-
-	fprintf( header, "namespace %s {\n", impl_MessageNameToDefaultsNamespaceName(s.name).c_str() );
-
-	count = 0;
+void impl_GenerateMessageDefaults_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
+{
+	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
@@ -356,11 +355,48 @@ void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
 				}
 			}
 	}
+}
+
+void impl_GenerateMessageDefaults( FILE* header, CompositeType& s )
+{
+	int count = 0; // let's see whether we need this block at all
+
+	if ( s.isDiscriminatedUnion() )
+	{
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_GenerateMessageDefaults_MemberIterationBlock_GetCount( header, cs, count );
+		}
+	}
+	else
+		impl_GenerateMessageDefaults_MemberIterationBlock_GetCount( header, s, count );
+
+	if ( count == 0 )
+		return;
+
+	fprintf( header, "namespace %s {\n", impl_MessageNameToDefaultsNamespaceName(s.name).c_str() );
+
+	count = 0;
+	if ( s.isDiscriminatedUnion() )
+	{
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_GenerateMessageDefaults_MemberIterationBlock( header, cs, count );
+		}
+	}
+	else
+		impl_GenerateMessageDefaults_MemberIterationBlock( header, s, count );
 
 	fprintf( header, "} // namespace Message_%s_defaults\n\n", s.name.c_str() );
 }
 
-void impl_generateParamTypeLIst_MemberBlock( FILE* header, CompositeType& s, int& count )
+void impl_generateParamTypeLIst_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
@@ -467,16 +503,16 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParamTypeLIst_MemberBlock( header, cs, count );
+			impl_generateParamTypeLIst_MemberIterationBlock( header, cs, count );
 		}
 	}
 	else
-		impl_generateParamTypeLIst_MemberBlock( header, s, count );
+		impl_generateParamTypeLIst_MemberIterationBlock( header, s, count );
 
 	fprintf( header, "\n" );
 }
 
-void impl_generateParamCallBlockForComposingGmq_MemberBlock( FILE* header, CompositeType& s, int& count, const char* offset )
+void impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( FILE* header, CompositeType& s, int& count, const char* offset )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
@@ -544,15 +580,15 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParamCallBlockForComposingGmq_MemberBlock( header, cs, count, offset );
+			impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, cs, count, offset );
 		}
 	}
 	else
-		impl_generateParamCallBlockForComposingGmq_MemberBlock( header, s, count, offset );
+		impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, s, count, offset );
 
 }
 
-void impl_generateParamCallBlockForParsingGmq_MemberBlock( FILE* header, CompositeType& s, int& count, const char* offset )
+void impl_generateParamCallBlockForParsingGmq_MemberIterationBlock( FILE* header, CompositeType& s, int& count, const char* offset )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
@@ -614,19 +650,17 @@ void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, c
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParamCallBlockForParsingGmq_MemberBlock( header, cs, count, offset );
+			impl_generateParamCallBlockForParsingGmq_MemberIterationBlock( header, cs, count, offset );
 		}
 	}
 	else
-		impl_generateParamCallBlockForParsingGmq_MemberBlock( header, s, count, offset );
+		impl_generateParamCallBlockForParsingGmq_MemberIterationBlock( header, s, count, offset );
 
 }
 
-void impl_generateMatchCountBlock( FILE* header, CompositeType& s )
+void impl_generateMatchCountBlock_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
 {
-	fprintf( header, "\tconstexpr size_t matchCount = " );
-
-	int count = 0;
+	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& it : s.getMembers() )
 	{
 		assert( it != nullptr );
@@ -642,8 +676,30 @@ void impl_generateMatchCountBlock( FILE* header, CompositeType& s )
 
 		fprintf( header, "isMatched(arg_%d_type::nameAndTypeID, Args::nameAndTypeID...)", count );
 	}
+}
 
-	fprintf( header, ";\n" );
+void impl_generateMatchCountBlock( FILE* header, CompositeType& s )
+{
+	fprintf( header, "\tconstexpr size_t matchCount = " );
+
+	int count = 0;
+	if ( s.isDiscriminatedUnion() )
+	{
+		for ( auto& it: s.getDiscriminatedUnionCases() )
+		{
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateMatchCountBlock_MemberIterationBlock( header, cs, count );
+		}
+	}
+	else
+		impl_generateMatchCountBlock_MemberIterationBlock( header, s, count );
+
+	if ( count )
+		fprintf( header, ";\n" );
+	else
+		fprintf( header, "0;\n" );
 }
 
 void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
@@ -656,7 +712,7 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 		"\tstatic_assert( argCount == matchCount, \"unexpected arguments found\" );\n\n" );
 }
 
-void impl_generateMessageCommentBlock_MemberBlock( FILE* header, CompositeType& s, const char* offset )
+void impl_generateMessageCommentBlock_MemberIterationBlock( FILE* header, CompositeType& s, const char* offset )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 
@@ -728,12 +784,12 @@ void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
 			fprintf( header, "//  CASE %s (%zd parameters)", cs.name.c_str(), cs.getMembers().size() );
-			impl_generateMessageCommentBlock_MemberBlock( header, cs, "    " );
+			impl_generateMessageCommentBlock_MemberIterationBlock( header, cs, "    " );
 		}
 	}
 	else
 	{
-		impl_generateMessageCommentBlock_MemberBlock( header, s, "  " );
+		impl_generateMessageCommentBlock_MemberIterationBlock( header, s, "  " );
 	}
 
 	fprintf( header, "\n" );
