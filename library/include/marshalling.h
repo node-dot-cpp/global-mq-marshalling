@@ -578,72 +578,78 @@ void parseJsonEntry( ParserT& p, ArgT& arg)
 	else if constexpr ( std::is_base_of<impl::VectorType, ParamTypeClassifier>::value )
 	{
 		auto& coll = arg.get();
-
-		bool newFormat = false;
-		size_t sz = 0;
-
-		if (p.isDelimiter('{'))
+		coll.size_hint( CollectionWrapperBase::unknown_size );
+		if constexpr ( std::is_base_of<VectorOfSympleTypesBase, ParamTypeClassifier>::value/* && std::is_base_of<SimpleTypeCollectionWrapperBase, ArgT>::value*/ )
 		{
-			newFormat = true;
-			p.skipDelimiter('{');
-
-			std::string key;
-			p.readKey(&key);
-			if (key != "size")
-				throw std::exception();
-
-			p.readUnsignedIntegerFromJson(&sz);
-			coll.size_hint( sz );
-
-			p.skipSpacesEtc();
-			p.skipDelimiter(',');
-
-			p.readKey(&key);
-			if (key != "data")
-				throw std::exception();
-		}
-		else
-			coll.size_hint( CollectionWrapperBase::unknown_size );
-
-
-		p.skipDelimiter( '[' );
-		if ( !p.isDelimiter( ']' ) ) // there are some items there
-		{
-			for ( size_t i = 0; !newFormat || i < sz; ++i )
+			p.skipDelimiter( '[' );
+			if ( !p.isDelimiter( ']' ) ) // there are some items there
 			{
-				if constexpr ( std::is_base_of<VectorOfSympleTypesBase, ParamTypeClassifier>::value/* && std::is_base_of<SimpleTypeCollectionWrapperBase, ArgT>::value*/ )
+				for ( ;; )
 				{
 					coll.template parse_next_from_json<ParamTypeClassifier>( p );
-				}
-				else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
-				{
-					coll.parse_next( p, i );
-				}
-				else if constexpr ( std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
-				{
-					coll.parse_next( p, i );
-				}
-				else
-					static_assert( false, "unsupported type" );
-
-
-				if ( p.isDelimiter( ',' ) )
-				{
-					p.skipDelimiter( ',' );
-					continue;
-				}
-				if ( p.isDelimiter( ']' ) )
-				{
-					p.skipDelimiter( ']' );
-					break;
+					if ( p.isDelimiter( ',' ) )
+					{
+						p.skipDelimiter( ',' );
+						continue;
+					}
+					if ( p.isDelimiter( ']' ) )
+					{
+						p.skipDelimiter( ']' );
+						break;
+					}
 				}
 			}
+			else
+				p.skipDelimiter( ']' );
+		}
+		else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
+		{
+			p.skipDelimiter( '[' );
+			if ( !p.isDelimiter( ']' ) ) // there are some items there
+			{
+				for ( size_t i=0;;++i )
+				{
+					coll.parse_next( p, i );
+					if ( p.isDelimiter( ',' ) )
+					{
+						p.skipDelimiter( ',' );
+						continue;
+					}
+					if ( p.isDelimiter( ']' ) )
+					{
+						p.skipDelimiter( ']' );
+						break;
+					}
+				}
+			}
+			else
+				p.skipDelimiter( ']' );
+		}
+		else if constexpr ( std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
+		{
+			p.skipDelimiter( '[' );
+			if ( !p.isDelimiter( ']' ) ) // there are some items there
+			{
+				for ( size_t i=0;;++i )
+				{
+					coll.parse_next( p, i );
+					if ( p.isDelimiter( ',' ) )
+					{
+						p.skipDelimiter( ',' );
+						continue;
+					}
+					if ( p.isDelimiter( ']' ) )
+					{
+						p.skipDelimiter( ']' );
+						break;
+					}
+				}
+			}
+			else
+				p.skipDelimiter( ']' );
 		}
 		else
-			p.skipDelimiter( ']' );
-
-	    if (newFormat)
-            p.skipDelimiter('}');
+			static_assert( std::is_same<ArgT, AllowedDataType>::value, "unsupported type" );
 	}
 	else if constexpr ( std::is_base_of<impl::MessageType, ParamTypeClassifier>::value )
 	{
@@ -681,41 +687,48 @@ void composeEntryToJson(ComposerT& composer, GMQ_COLL string name, ArgT& arg)
 			composeNamedString( composer, name, arg.get() );
 		else if constexpr ( std::is_base_of<impl::VectorType, ParamTypeClassifier>::value )
 		{
-			auto& coll = arg.get();
-			json::addNamePart( composer, name );
-			composer.buff.appendUint8( '{' );
-
-			json::addNamePart( composer, "size" );
-            size_t collSz = coll.size();
-			json::composeUnsignedInteger( composer, collSz );
-			composer.buff.append( ", ", 2 );
-			json::addNamePart( composer, "data" );
-
-			composer.buff.appendUint8( '[' );
-
-			for ( size_t i=0; i<collSz; ++i )
+			if constexpr ( std::is_base_of<VectorOfSympleTypesBase, ParamTypeClassifier>::value && std::is_base_of<SimpleTypeCollectionWrapperBase, AgrType>::value )
 			{
-				if ( i )
-					composer.buff.append( ", ", 2 );
-
-				if constexpr ( std::is_base_of<VectorOfSympleTypesBase, ParamTypeClassifier>::value && std::is_base_of<SimpleTypeCollectionWrapperBase, AgrType>::value )
+				json::addNamePart( composer, name );
+				composer.buff.appendUint8( '[' );
+				auto& coll = arg.get();
+				size_t collSz = coll.size();
+				for ( size_t i=0; i<collSz; ++i )
 				{
+					if ( i )
+						composer.buff.append( ", ", 2 );
 					bool ok = coll.template compose_next_to_json<ParamTypeClassifier>(composer);
 				}
-				else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value && std::is_base_of<CollectionWrapperBase, AgrType>::value )
-				{
-					coll.compose_next(composer, i);
-				}
-				else if constexpr ( std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value && std::is_base_of<CollectionWrapperBase, AgrType>::value )
-				{
-					coll.compose_next(composer, i);
-				}
-				else
-					static_assert( false, "unsupported type" );
+				composer.buff.appendUint8( ']' );
 			}
-
-			composer.buff.appendUint8( ']' );
-			composer.buff.appendUint8( '}' );
+			else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value && std::is_base_of<CollectionWrapperBase, AgrType>::value )
+			{
+				json::addNamePart( composer, name );
+				composer.buff.appendUint8( '[' );
+				auto& coll = arg.get();
+				size_t collSz = coll.size();
+				for ( size_t i=0; i<collSz; ++i )
+				{
+					if ( i )
+						composer.buff.append( ", ", 2 );
+					coll.compose_next(composer, i);
+				}
+				composer.buff.appendUint8( ']' );
+			}
+			else if constexpr ( std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value && std::is_base_of<CollectionWrapperBase, AgrType>::value )
+			{
+				json::addNamePart( composer, name );
+				composer.buff.appendUint8( '[' );
+				auto& coll = arg.get();
+				size_t collSz = coll.size();
+				for ( size_t i=0; i<collSz; ++i )
+				{
+					if ( i )
+						composer.buff.append( ", ", 2 );
+					coll.compose_next(composer, i);
+				}
+				composer.buff.appendUint8( ']' );
+			}
 		}
 		else if constexpr ( std::is_base_of<impl::MessageType, ParamTypeClassifier>::value )
 		{
