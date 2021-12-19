@@ -319,6 +319,7 @@ void impl_propagateParentPropsToStruct( CompositeType& parent, CompositeType& me
 			break;
 		case CompositeType::Type::structure:
 		case CompositeType::Type::discriminated_union:
+		case CompositeType::Type::discriminated_union_case:
 			memberOrArrayElementType.isStruct4Messaging = memberOrArrayElementType.isStruct4Messaging || parent.isStruct4Messaging;
 			memberOrArrayElementType.isStruct4Publishing = memberOrArrayElementType.isStruct4Publishing || parent.isStruct4Publishing;
 			memberOrArrayElementType.protoList.insert( parent.protoList.begin(), parent.protoList.end() );
@@ -328,7 +329,7 @@ void impl_propagateParentPropsToStruct( CompositeType& parent, CompositeType& me
 	}
 }
 
-bool impl_processCompositeTypeNamesInParamss(Root& s, CompositeType& parent, MessageParameter& param, std::vector<CompositeType*>& stack )
+bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, MessageParameter& param, std::vector<CompositeType*>& stack )
 {
 	bool ok = true;
 
@@ -411,13 +412,17 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 	if ( ct.type != CompositeType::Type::discriminated_union )
 	{
 		for ( auto& param : ct.getMembers() )
-			ok = impl_processCompositeTypeNamesInParamss( s, ct, *param, stack ) && ok;
+			ok = impl_processCompositeTypeNamesInParams( s, ct, *param, stack ) && ok;
 	}
 	else
 	{
 		for ( auto& cs : ct.getDiscriminatedUnionCases() )
+		{
+			cs->isStruct4Messaging = cs->isStruct4Messaging || ct.isStruct4Messaging;
+			cs->isStruct4Publishing = cs->isStruct4Publishing || ct.isStruct4Publishing;
 			for ( auto& param : cs->getMembers() )
-				ok = impl_processCompositeTypeNamesInParamss( s, ct, *param, stack ) && ok;
+				ok = impl_processCompositeTypeNamesInParams( s, ct, *param, stack ) && ok;
+		}
 	}
 
 	stack.pop_back();
