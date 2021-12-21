@@ -324,8 +324,14 @@ private:
 		GMQ_COLL vector<double> vp_2;
 	};
 
+	using Case_one_pt3d_1_T = decltype( Case_one::pt3d_1 );
+	using Case_one_i_1_T = decltype( Case_one::i_1 );
+	using Case_two_i_2_T = decltype( Case_two::i_2 );
+	using Case_two_vp_2_T = decltype( Case_two::vp_2 );
+
 	static constexpr size_t one_two_memsz = sizeof( Case_two ) > ( sizeof( Case_one ) ) ? sizeof( Case_two ) : ( sizeof( Case_one ) );
 	uint8_t one_two_mem[one_two_memsz];
+
 public:
 	Variants currentVariant() { return v; }
 	void initAs( Variants v_ ) {
@@ -346,19 +352,51 @@ public:
 	}
 
 	// IDL CASE one:
-	const auto& get_pt3d_1() const { assert( v == Variants::one ); return reinterpret_cast<const Case_one*>( one_two_mem )->pt3d_1; }
-	void set_pt3d_1(const decltype(Case_one::pt3d_1)& val ) { assert( v == Variants::one ); reinterpret_cast<Case_one*>( one_two_mem )->pt3d_1 = std::move( val ); }
+	const auto& get_pt3d_1() const {
+		if ( v != Variants::one )
+			throw std::exception();
+		return reinterpret_cast<const Case_one*>( one_two_mem )->pt3d_1;
+	}
+	void set_pt3d_1( const decltype(Case_one::pt3d_1)& val ) { 
+		if ( v != Variants::one )
+			throw std::exception();
+		reinterpret_cast<Case_one*>( one_two_mem )->pt3d_1 = std::move( val );
+	}
 	
-	auto get_i_1() const { assert( v == Variants::one ); return reinterpret_cast<const Case_one*>( one_two_mem )->i_1; }
-	void set_i_1( decltype(Case_one::i_1) val ) { assert( v == Variants::one ); reinterpret_cast<Case_one*>( one_two_mem )->i_1 = val; }
+	auto get_i_1() const {
+		if ( v != Variants::one )
+			throw std::exception();
+		return reinterpret_cast<const Case_one*>( one_two_mem )->i_1;
+	}
+	void set_i_1( decltype(Case_one::i_1) val ) { 
+		if ( v != Variants::one )
+			throw std::exception();
+		reinterpret_cast<Case_one*>( one_two_mem )->i_1 = val;
+	}
 	
 
 	// IDL CASE two:
-	auto get_i_2() const { assert( v == Variants::two ); return reinterpret_cast<const Case_two*>( one_two_mem )->i_2; }
-	void set_i_2( decltype(Case_two::i_2) val ) { assert( v == Variants::two ); reinterpret_cast<Case_two*>( one_two_mem )->i_2 = val; }
+	auto get_i_2() const {
+		if ( v != Variants::two )
+			throw std::exception();
+		return reinterpret_cast<const Case_two*>( one_two_mem )->i_2;
+	}
+	void set_i_2( decltype(Case_two::i_2) val ) { 
+		if ( v != Variants::two )
+			throw std::exception();
+		reinterpret_cast<Case_two*>( one_two_mem )->i_2 = val;
+	}
 	
-	const auto& get_vp_2() const { assert( v == Variants::two ); return reinterpret_cast<const Case_two*>( one_two_mem )->vp_2; }
-	void set_vp_2(const decltype(Case_two::vp_2)& val ) { assert( v == Variants::two ); reinterpret_cast<Case_two*>( one_two_mem )->vp_2 = std::move( val ); }
+	const auto& get_vp_2() const {
+		if ( v != Variants::two )
+			throw std::exception();
+		return reinterpret_cast<const Case_two*>( one_two_mem )->vp_2;
+	}
+	void set_vp_2( const decltype(Case_two::vp_2)& val ) { 
+		if ( v != Variants::two )
+			throw std::exception();
+		reinterpret_cast<Case_two*>( one_two_mem )->vp_2 = std::move( val );
+	}
 	
 };
 

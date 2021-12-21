@@ -68,6 +68,8 @@ void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, Compos
 void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s );
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
+inline
+std::string impl_discriminatedUnionCaseMemberType( std::string caseName, std::string memberName ) { return fmt::format( "Case_{}_{}_T", caseName, memberName ); }
 
 
 // printing global_mq tree
