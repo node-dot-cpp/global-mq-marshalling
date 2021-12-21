@@ -121,6 +121,8 @@ public:
 	bool extendTo = false;
 	Variant defaultValue;
 //	vector<string> whenDiscriminant;
+	bool duCaseParam = false; // set at time of tree checking and code generation
+	std::string caseName; // for discriminated union case members
 };
 
 enum Proto { undefined, json, gmq };

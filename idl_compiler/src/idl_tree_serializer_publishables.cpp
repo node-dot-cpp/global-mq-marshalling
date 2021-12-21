@@ -218,17 +218,24 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock_MemberIterationBlock( FILE* header, Root& root, CompositeType& s, const char* offset )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
+	bool ducs = s.type == CompositeType::Type::discriminated_union_case;
 	for ( auto& member : s.getMembers() )
 	{
 		assert( member != nullptr );
 		fprintf( header, "%sstatic constexpr bool has_void_update_notifier_for_%s = has_void_update_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
-		fprintf( header, "%sstatic constexpr bool has_update_notifier_for_%s = has_update_notifier_call_for_%s<T, decltype(T::%s)>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+		if ( ducs )
+			fprintf( header, "%sstatic constexpr bool has_update_notifier_for_%s = has_update_notifier_call_for_%s<T, typename T::%s>;\n", offset, member->name.c_str(), member->name.c_str(), impl_discriminatedUnionCaseMemberType(*member).c_str() );
+		else
+			fprintf( header, "%sstatic constexpr bool has_update_notifier_for_%s = has_update_notifier_call_for_%s<T, decltype(T::%s)>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
 		fprintf( header, "%sstatic constexpr bool has_any_notifier_for_%s = has_void_update_notifier_for_%s || has_update_notifier_for_%s;\n", 
 			offset, member->name.c_str(), member->name.c_str(), member->name.c_str()
 		);
 		if ( member->type.kind == MessageParameterType::KIND::VECTOR )
 		{
-			fprintf( header, "%susing %sT = decltype(T::%s);\n", offset, member->name.c_str(), member->name.c_str() );
+			if ( ducs )
+				fprintf( header, "%susing %sT = typename T::%s;\n", offset, member->name.c_str(), impl_discriminatedUnionCaseMemberType(*member).c_str() );
+			else
+				fprintf( header, "%susing %sT = decltype(T::%s);\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_void_insert_notifier_for_%s = has_void_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_insert_notifier2_for_%s = has_insert_notifier_call2_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
 			fprintf( header, "%sstatic constexpr bool has_insert_notifier3_for_%s = has_insert_notifier_call3_for_%s<T, GMQ_COLL vector<%sT>&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
@@ -285,9 +292,9 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	fprintf( header, "\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\tdecltype(T::%s) oldVal = t.%s;\n", member.name.c_str(), member.name.c_str() );
 	if ( isLeafe )
-		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	else
-		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\tbool currentChanged = oldVal != t.%s;\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\tif ( currentChanged )\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
@@ -304,17 +311,17 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\telse\n" );
 	if ( isLeafe )
-		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	else
-		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
 }
 
 void impl_generateApplyUpdateForSimpleTypeNoNotifiers( FILE* header, MessageParameter& member, bool isLeafe )
 {
 	if ( isLeafe )
-		fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s) );\n", paramTypeToLeafeParser( member.type.kind ), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	else
-		fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t::globalmq::marshalling::impl::%s<ParserT, decltype(T::%s)>( parser, &(t.%s), \"%s\" );\n", paramTypeToParser( member.type.kind ), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
 }
 
 void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& member, bool addReportChanges )
@@ -324,7 +331,7 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 	fprintf( header, "\t\t\t\t\t\t\tdecltype(T::%s) temp_%s;\n", member.name.c_str(), member.name.c_str() );
 //	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	if ( addReportChanges )
@@ -339,7 +346,7 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	if ( addReportChanges )
@@ -356,18 +363,18 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 	if ( addReportChanges )
 	{
 		fprintf( header, "\t\t\t\t\t\t\t\tif constexpr ( reportChanges )\n" );
-		fprintf( header, "\t\t\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 		fprintf( header, "\t\t\t\t\t\t\t\telse\n" );
-		fprintf( header, "\t\t\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	}
 	else
-		fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 }
 
 void impl_generateApplyUpdateForStructItselfNoNotifiers( FILE* header, MessageParameter& member )
 {
-	fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 }
 
 void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, bool forwardAddress )
@@ -380,9 +387,9 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 //	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s), decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t\t%s::copy<decltype(T::%s)>( t.%s, temp_%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), member.name.c_str() );
 	if ( forwardAddress )
-		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
+		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 	else
-		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	if ( addReportChanges )
@@ -398,9 +405,9 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	fprintf( header, "\t\t\t\t\t\telse if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
 	if ( forwardAddress )
-		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
+		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 	else
-		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t\tbool changedCurrent = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t\tif ( changedCurrent )\n" );
 	fprintf( header, "\t\t\t\t\t\t\t{\n" );
 	if ( addReportChanges )
@@ -415,22 +422,22 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	{
 		fprintf( header, "\t\t\t\t\t\telse if constexpr ( reportChanges )\n" );
 		if ( forwardAddress )
-			fprintf( header, "\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str(), offsetPlusStr );
+			fprintf( header, "\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 		else
-			fprintf( header, "\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), member.name.c_str() );
+			fprintf( header, "\t\t\t\t\t\t\tchanged = %s::parse<ParserT, decltype(T::%s), bool>( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 		fprintf( header, "\t\t\t\t\t\telse\n" );
 		if ( forwardAddress )
-			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 		else
-			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	}
 	else
 	{
 		fprintf( header, "\t\t\t\t\t\telse\n" );
 		if ( forwardAddress )
-			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 		else
-			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+			fprintf( header, "\t\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	}
 }
 
@@ -440,9 +447,9 @@ void impl_generateApplyUpdateForFurtherProcessingInStructNoNotifiers( FILE* head
 	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
 	if ( forwardAddress )
-		fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str(), offsetPlusStr );
+		fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s, addr, %s1 );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 	else
-		fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+		fprintf( header, "\t\t\t\t\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 }
 
 void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges )
@@ -667,11 +674,11 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\t\tif constexpr( alwaysCollectChanges )\n" );
 	fprintf( header, "\t\t\t\t\t\t{\n" );
-	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-	fprintf( header, "\t\t\t\t\t\t\tcurrentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tcurrentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t}\n" );
 	fprintf( header, "\t\t\t\t\t\telse\n" );
-	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\n" );
 	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
@@ -757,7 +764,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* head
 	fprintf( header, "\t\t\t\t\telse // replacement of the whole vector\n" );
 	fprintf( header, "\t\t\t\t\t{\n" );
 	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
-	fprintf( header, "\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+	fprintf( header, "\t\t\t\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\t\t\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
 	fprintf( header, "\t\t\t\t\t}\n" );
 	fprintf( header, "\n" );
@@ -1110,14 +1117,14 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 				fprintf( header, "\t\t\tdecltype(T::%s) oldVectorVal;\n", member.name.c_str() );
 				fprintf( header, "\t\t\t::globalmq::marshalling::impl::copyVector<decltype(T::%s), %s>( t.%s, oldVectorVal );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
 				fprintf( header, "\t\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
-				fprintf( header, "\t\t\tbool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "\t\t\tbool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::%s), %s>( oldVectorVal, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "\t\t\tchanged = changed || currentChanged;\n" );
 				fprintf( header, "\t\t}\n" );
 				fprintf( header, "\t\telse\n" );
 				fprintf( header, "\t\t{\n" );
 				fprintf( header, "\t\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "\t\t}\n" );
 				fprintf( header, "\n" );
 
@@ -1156,7 +1163,9 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		}
 	}
 	else
+	{
 		impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( header, root, obj );
+	}
 
 	fprintf( header, 
 		"\n"
@@ -1191,7 +1200,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 			case MessageParameterType::KIND::VECTOR:
 				assert( member.type.messageIdx < root.structs.size() );				
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, true>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s, true>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			default:
 				assert( false );
@@ -1252,7 +1261,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			case  MessageParameterType::KIND::STRUCT:
 			{
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\t%s::parse( parser, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 				fprintf( header, "\n" );
 				break;
@@ -1262,7 +1271,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 				assert( member.type.messageIdx < root.structs.size() );
 				
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), member.name.c_str() );
+				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, decltype(T::%s), %s>( parser, t.%s );\n", member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "\n" );
 
 				break;

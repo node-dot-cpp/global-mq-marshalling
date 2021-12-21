@@ -69,7 +69,16 @@ void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, 
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
 inline
-std::string impl_discriminatedUnionCaseMemberType( std::string caseName, std::string memberName ) { return fmt::format( "Case_{}_{}_T", caseName, memberName ); }
+std::string impl_discriminatedUnionCaseMemberType( MessageParameter member ) { return fmt::format( "Case_{}_{}_T", member.caseName, member.name ); }
+inline
+std::string impl_memberOrAccessFunctionName( const MessageParameter& member ) { return fmt::format( member.duCaseParam ? "{}()" : "{}", member.name ); }
+inline
+std::string impl_templateMemberTypeName( const MessageParameter& member, std::string templateParentName ) {
+	if ( member.duCaseParam )
+		return fmt::format( "typename {}::{}", templateParentName, member.name );
+	else
+		return fmt::format( "decltype({}::{})", templateParentName, impl_discriminatedUnionCaseMemberType( member ) );
+}
 
 
 // printing global_mq tree
