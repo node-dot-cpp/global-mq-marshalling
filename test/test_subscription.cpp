@@ -227,6 +227,7 @@ struct PublishableSample {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt structWithVectorOfInt;
 	StructWithVectorOfSize structWithVectorOfSize;
+	mtest::du_one du_one_instance;
 };
 
 
@@ -296,6 +297,7 @@ struct PublishableSample_UPD {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt_UPD structWithVectorOfInt;
 	StructWithVectorOfSize_UPD structWithVectorOfSize;
+	mtest::du_one du_one_instance;
 
 	PublishableSample_UPD( SampleNode& node_ ) : node( node_ ) {}
 
@@ -358,6 +360,7 @@ struct PublishableSample_UPD_D {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt_UPD_D structWithVectorOfInt;
 	StructWithVectorOfSize_UPD_D structWithVectorOfSize;
+	mtest::du_one du_one_instance;
 
 	PublishableSample_UPD_D( SampleNode& node_ ) : node( node_ ) {}
 

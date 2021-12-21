@@ -53,7 +53,7 @@ struct FloatingParts
 const char* impl_kindToString( MessageParameterType::KIND kind );
 bool impl_checkParamNameUniqueness(CompositeType& s);
 bool impl_checkFollowingExtensionRules(CompositeType& s);
-void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s );
+void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
 bool impl_processScopes( Root& r );
 void impl_generateScopeHandler( FILE* header, Scope& scope );
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope );

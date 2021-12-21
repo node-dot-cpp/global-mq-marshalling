@@ -76,36 +76,39 @@ void impl_CollectParamNamesFromeMessageParameter( std::set<string>& params, Mess
 	params.insert( s.name );
 }
 
-void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s )
+void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s )
 {
 	if ( s.type == CompositeType::Type::discriminated_union )
 	{
 		for ( auto& cc : s.getDiscriminatedUnionCases() )
 		{
 			assert( cc != nullptr );
-			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(cc)))) );
+			impl_CollectParamNamesFromMessage( params, caseParams, *(dynamic_cast<CompositeType*>(&(*(cc)))) );
 		}
 	}
 	else
 	{
+		bool isCase = s.type == CompositeType::Type::discriminated_union_case;
 		for ( auto& it : s.getMembers() )
 		{
 			assert( it != nullptr );
 			if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
 				continue;
 			impl_CollectParamNamesFromeMessageParameter( params, *(dynamic_cast<MessageParameter*>(&(*(it)))) );
+			if ( isCase )
+				impl_CollectParamNamesFromeMessageParameter( caseParams, *(dynamic_cast<MessageParameter*>(&(*(it)))) );
 		}
 	}
 }
 
-void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, Root& s )
+void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, std::set<string>& caseParams, Root& s )
 {
 	for ( auto& it : s.messages )
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::message );
-		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+		impl_CollectParamNamesFromMessage( params, caseParams, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 	for ( auto& it : s.structs )
 	{
@@ -113,7 +116,7 @@ void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, Root& s )
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Messaging )
-			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_CollectParamNamesFromMessage( params, caseParams, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 }
 
@@ -480,14 +483,14 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& r)
 	return ok;
 }
 
-void impl_CollectPublishableMemberNamesFromRoot( std::set<string>& params, Root& s )
+void impl_CollectPublishableMemberNamesFromRoot( std::set<string>& params, std::set<string>& caseParams, Root& s )
 {
 	for ( auto& it : s.publishables )
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::publishable );
-		impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+		impl_CollectParamNamesFromMessage( params, caseParams, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 	for ( auto& it : s.structs )
 	{
@@ -495,7 +498,7 @@ void impl_CollectPublishableMemberNamesFromRoot( std::set<string>& params, Root&
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
-			impl_CollectParamNamesFromMessage( params, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_CollectParamNamesFromMessage( params, caseParams, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 }
 
@@ -556,6 +559,17 @@ void generatePublishableMemberNameBlock( FILE* header, const std::set<string>& n
 		fprintf( header, "template<typename T> concept has_%s_member = requires { { T::%s }; };\n", name.c_str(), name.c_str() );
 	fprintf( header, "\n\n" );
 }
+
+/*void generatePublishableCaseMemberNameBlock( FILE* header, const std::set<string>& names )
+{
+	fprintf( header, "// member accessor presence checkers\n" );
+	for ( auto name : names )
+	{
+		fprintf( header, "template<typename T> concept has_%s_getter = requires(T t) { { t.get_%s() }; };\n", name.c_str(), name.c_str() );
+		fprintf( header, "template<typename T> concept has_%s_setter = requires(T t) { { t.set_%s() }; };\n", name.c_str(), name.c_str() );
+	}
+	fprintf( header, "\n\n" );
+}*/
 
 void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vector<CompositeType*>& out )
 {
@@ -771,7 +785,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		fprintf( header, "\tuint8_t %s[%ssz];\n", memName.c_str(), memName.c_str() );
 	}
 
-	fprintf( header, "public:\n" );
+	fprintf( header, "\npublic:\n" );
 	fprintf( header, "\tVariants currentVariant() { return v; }\n" );
 
 	if ( du.getDiscriminatedUnionCases().empty() )
@@ -847,10 +861,12 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		throw std::exception();
 
 	std::set<string> msgParams;
-	impl_CollectMessageParamNamesFromRoot( msgParams, s );
+	std::set<string> msgCaseParams;
+	impl_CollectMessageParamNamesFromRoot( msgParams, msgCaseParams, s );
 
 	std::set<string> publishableMembers;
-	impl_CollectPublishableMemberNamesFromRoot( publishableMembers, s );
+	std::set<string> publishableCaseMembers;
+	impl_CollectPublishableMemberNamesFromRoot( publishableMembers, publishableCaseMembers, s );
 
 	fprintf( header, "#ifndef %s_%08x_guard\n"
 		"#define %s_%08x_guard\n"
@@ -871,6 +887,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 
 	generateMessageParamNameBlock( header, msgParams );
 	generatePublishableMemberNameBlock( header, publishableMembers );
+//	generatePublishableCaseMemberNameBlock( header, publishableCaseMembers );
 	generateNotifierPresenceTesterBlock( header, s );
 
 	vector<CompositeType*> structsOrderedByDependency;

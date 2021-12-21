@@ -196,8 +196,14 @@ template<typename T> concept has_void_update_notifier_call_for_chp = requires(T 
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_chp = requires { { std::declval<StateT>().notifyUpdated_chp(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_du_one_instance = requires(T t) { { t.notifyUpdated_du_one_instance() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_du_one_instance = requires { { std::declval<StateT>().notifyUpdated_du_one_instance(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_i_1 = requires(T t) { { t.notifyUpdated_i_1() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_i_1 = requires { { std::declval<StateT>().notifyUpdated_i_1(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_i_2 = requires(T t) { { t.notifyUpdated_i_2() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_i_2 = requires { { std::declval<StateT>().notifyUpdated_i_2(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_name = requires(T t) { { t.notifyUpdated_name() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_name = requires { { std::declval<StateT>().notifyUpdated_name(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_pt3d_1 = requires(T t) { { t.notifyUpdated_pt3d_1() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_pt3d_1 = requires { { std::declval<StateT>().notifyUpdated_pt3d_1(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_signedInts = requires(T t) { { t.notifyUpdated_signedInts() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_signedInts = requires { { std::declval<StateT>().notifyUpdated_signedInts(std::declval<MemberT>()) }; };
 template<typename T> concept has_element_updated_void_notifier_call_for_signedInts = requires(T t) { { t.notifyElementUpdated_signedInts() }; };
@@ -248,6 +254,17 @@ template<typename StateT, typename MemberT> concept has_insert_notifier_call3_fo
 template<typename T> concept has_void_erased_notifier_call_for_vector_struct_point3dreal = requires(T t) { { t.notifyErased_vector_struct_point3dreal() }; };
 template<typename StateT> concept has_erased_notifier_call2_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
 template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vector_struct_point3dreal = requires { { std::declval<StateT>().notifyErased_vector_struct_point3dreal(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_vp_2 = requires(T t) { { t.notifyUpdated_vp_2() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_vp_2 = requires { { std::declval<StateT>().notifyUpdated_vp_2(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_vp_2 = requires(T t) { { t.notifyElementUpdated_vp_2() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_vp_2 = requires { { std::declval<StateT>().notifyElementUpdated_vp_2(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_vp_2 = requires { { std::declval<StateT>().notifyElementUpdated_vp_2(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_vp_2 = requires(T t) { { t.notifyInserted_vp_2() }; };
+template<typename StateT> concept has_insert_notifier_call2_for_vp_2 = requires { { std::declval<StateT>().notifyInserted_vp_2(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_insert_notifier_call3_for_vp_2 = requires { { std::declval<StateT>().notifyInserted_vp_2(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()), std::declval<MemberT>() }; };
+template<typename T> concept has_void_erased_notifier_call_for_vp_2 = requires(T t) { { t.notifyErased_vp_2() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_vp_2 = requires { { std::declval<StateT>().notifyErased_vp_2(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_vp_2 = requires { { std::declval<StateT>().notifyErased_vp_2(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_x = requires(T t) { { t.notifyUpdated_x() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_x = requires { { std::declval<StateT>().notifyUpdated_x(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_y = requires(T t) { { t.notifyUpdated_y() }; };
@@ -4995,22 +5012,6 @@ template<class T>
 class du_one_RefWrapper
 {
 	T& t;
-	static constexpr bool has_pt3d_1 = has_pt3d_1_getter<T>;
-	static_assert( has_pt3d_1, "type T must have member function T::get_pt3d_1() of a return type corresponding to IDL type STRUCT point3D" );
-	static constexpr bool has_pt3d_1 = has_pt3d_1_setter<T>;
-	static_assert( has_pt3d_1, "type T must have void member function T::set_pt3d_1 with a single input parameter of a type corresponding to IDL type STRUCT point3D" );
-	static constexpr bool has_i_1 = has_i_1_getter<T>;
-	static_assert( has_i_1, "type T must have member function T::get_i_1() of a return type corresponding to IDL type INTEGER" );
-	static constexpr bool has_i_1 = has_i_1_setter<T>;
-	static_assert( has_i_1, "type T must have void member function T::set_i_1 with a single input parameter of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_i_2 = has_i_2_getter<T>;
-	static_assert( has_i_2, "type T must have member function T::get_i_2() of a return type corresponding to IDL type INTEGER" );
-	static constexpr bool has_i_2 = has_i_2_setter<T>;
-	static_assert( has_i_2, "type T must have void member function T::set_i_2 with a single input parameter of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_vp_2 = has_vp_2_getter<T>;
-	static_assert( has_vp_2, "type T must have member function T::get_vp_2() of a return type corresponding to IDL type VECTOR<REAL>" );
-	static constexpr bool has_vp_2 = has_vp_2_setter<T>;
-	static_assert( has_vp_2, "type T must have void member function T::set_vp_2 with a single input parameter of a type corresponding to IDL type VECTOR<REAL>" );
 
 
 public:
@@ -5027,22 +5028,6 @@ class du_one_RefWrapper4Set
 	T& t;
 	RootT& root;
 	GMQ_COLL vector<size_t> address;
-	static constexpr bool has_pt3d_1 = has_pt3d_1_getter<T>;
-	static_assert( has_pt3d_1, "type T must have member function T::get_pt3d_1() of a return type corresponding to IDL type STRUCT point3D" );
-	static constexpr bool has_pt3d_1 = has_pt3d_1_setter<T>;
-	static_assert( has_pt3d_1, "type T must have void member function T::set_pt3d_1 with a single input parameter of a type corresponding to IDL type STRUCT point3D" );
-	static constexpr bool has_i_1 = has_i_1_getter<T>;
-	static_assert( has_i_1, "type T must have member function T::get_i_1() of a return type corresponding to IDL type INTEGER" );
-	static constexpr bool has_i_1 = has_i_1_setter<T>;
-	static_assert( has_i_1, "type T must have void member function T::set_i_1 with a single input parameter of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_i_2 = has_i_2_getter<T>;
-	static_assert( has_i_2, "type T must have member function T::get_i_2() of a return type corresponding to IDL type INTEGER" );
-	static constexpr bool has_i_2 = has_i_2_setter<T>;
-	static_assert( has_i_2, "type T must have void member function T::set_i_2 with a single input parameter of a type corresponding to IDL type INTEGER" );
-	static constexpr bool has_vp_2 = has_vp_2_getter<T>;
-	static_assert( has_vp_2, "type T must have member function T::get_vp_2() of a return type corresponding to IDL type VECTOR<REAL>" );
-	static constexpr bool has_vp_2 = has_vp_2_setter<T>;
-	static_assert( has_vp_2, "type T must have void member function T::set_vp_2 with a single input parameter of a type corresponding to IDL type VECTOR<REAL>" );
 
 
 public:

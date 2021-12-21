@@ -188,7 +188,7 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 	if ( s.isDiscriminatedUnion() )
 	{
 		// TODO: revise DU
-		for ( auto& it: s.getDiscriminatedUnionCases() )
+		/*for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
 			assert( it != nullptr );
 			CompositeType& cs = *it;
@@ -201,7 +201,7 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 				fprintf( header, "\tstatic constexpr bool has_%s = has_%s_setter<T>;\n", it->name.c_str(), it->name.c_str() );
 				fprintf( header, "\tstatic_assert( has_%s, \"type T must have void member function T::set_%s with a single input parameter of a type corresponding to IDL type %s\" );\n", it->name.c_str(), it->name.c_str(), impl_parameterTypeToDescriptiveString( root, it->type ).c_str() );
 			}
-		}
+		}*/
 	}
 	else
 	{
@@ -1995,6 +1995,13 @@ void collectMemberNamesFromPublishableObjects( vector<unique_ptr<CompositeType>>
 				assert( member != nullptr );
 				names.insert( member->name );
 			}
+		else if ( s->type == CompositeType::discriminated_union && s->isStruct4Publishing )
+			for ( auto& cs : s->getDiscriminatedUnionCases() )
+				for ( auto& member : cs->getMembers() )
+				{
+					assert( member != nullptr );
+					names.insert( member->name );
+				}
 	}
 }
 
@@ -2011,6 +2018,14 @@ void collectVectorMemberNamesFromPublishableObjects( vector<unique_ptr<Composite
 				if ( member->type.kind == MessageParameterType::KIND::VECTOR )
 					names.insert( member->name );
 			}
+		else if ( s->type == CompositeType::discriminated_union && s->isStruct4Publishing )
+			for ( auto& cs : s->getDiscriminatedUnionCases() )
+				for ( auto& member : cs->getMembers() )
+				{
+					assert( member != nullptr );
+					if ( member->type.kind == MessageParameterType::KIND::VECTOR )
+						names.insert( member->name );
+				}
 	}
 }
 
