@@ -73,11 +73,11 @@ std::string impl_discriminatedUnionCaseMemberType( MessageParameter member ) { r
 inline
 std::string impl_memberOrAccessFunctionName( const MessageParameter& member ) { return fmt::format( member.duCaseParam ? "{}()" : "{}", member.name ); }
 inline
-std::string impl_templateMemberTypeName( const MessageParameter& member, std::string templateParentName ) {
+std::string impl_templateMemberTypeName( std::string templateParentName, const MessageParameter& member, bool noTypeNameAppending = false ) {
 	if ( member.duCaseParam )
-		return fmt::format( "typename {}::{}", templateParentName, member.name );
+		return fmt::format( "{}{}::{}", noTypeNameAppending ? "" : "typename ", templateParentName, impl_discriminatedUnionCaseMemberType( member ) );
 	else
-		return fmt::format( "decltype({}::{})", templateParentName, impl_discriminatedUnionCaseMemberType( member ) );
+		return fmt::format( "decltype({}::{})", templateParentName, member.name );
 }
 
 
