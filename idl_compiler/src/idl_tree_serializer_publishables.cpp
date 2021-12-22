@@ -1039,25 +1039,46 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 
 	if ( obj.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\t\tuint64_t caseId;\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
+
+		fprintf( header, "\t\tswitch ( caseId )\n" );
+		fprintf( header, "\t\t{\n" );
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
+			fprintf( header, "\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
+			fprintf( header, "\t\t\t{\n" );
+			fprintf( header, "\t\t\t\tswitch ( addr[offset] )\n" );
+			fprintf( header, "\t\t\t\t{\n" );
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
 			impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
+			fprintf( header, "\t\t\t\t\tdefault:\n" );
+			fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+			fprintf( header, "\t\t\t\t}\n" );
+			fprintf( header, "\t\t\t\tbreak;\n" );
+			fprintf( header, "\t\t\t}\n" );
 		}
+		fprintf( header, "\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t}\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 	}
 	else
+	{
+		fprintf( header, "\t\tswitch ( addr[offset] )\n" );
+		fprintf( header, "\t\t{\n" );
 		impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( header, root, obj, "\t\t\t" );
+		fprintf( header, "\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t}\n" );
+	}
 
-	fprintf( header, "\t\t\tdefault:\n" );
-	fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
-	fprintf( header, 
-		"\t\t}\n"
-		"\t\tif constexpr ( reportChanges )\n"
-		"\t\t\treturn changed;\n"
-		"\t}\n"
-	);
+	fprintf( header, "\t\tif constexpr ( reportChanges )\n" );
+	fprintf( header, "\t\t\treturn changed;\n" );
+	fprintf( header, "\t}\n" );
 }
 
 void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj, std::string offset )
@@ -1083,7 +1104,7 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 			{
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
 
-				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false, "\t\t" );
+				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false, offset );
 
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n", offset.c_str() );
 				break;
@@ -1093,7 +1114,7 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 				
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
 
-				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false, "\t\t" ); // TODO: revise DU: we may need something DU-spec here
+				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false, offset ); // TODO: revise DU: we may need something DU-spec here
 
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n", offset.c_str() );
 				break;
@@ -1142,13 +1163,29 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 
 	if ( obj.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\t\tuint64_t caseId;\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
+
+		fprintf( header, "\t\tswitch ( caseId )\n" );
+		fprintf( header, "\t\t{\n" );
+
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
+			fprintf( header, "\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
+			fprintf( header, "\t\t\t{\n" );
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( header, root, cs, "\t\t" );
+			impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( header, root, cs, "\t\t\t\t" );
+			fprintf( header, "\t\t\t\tbreak;\n" );
+			fprintf( header, "\t\t\t}\n" );
 		}
+
+		fprintf( header, "\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t}\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 	}
 	else
 	{
@@ -1205,13 +1242,33 @@ void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root
 
 	if ( obj.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\t\tuint64_t caseId;\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
+
+		fprintf( header, "\t\tswitch ( caseId )\n" );
+		fprintf( header, "\t\t{\n" );
+
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
+			fprintf( header, "\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
+			fprintf( header, "\t\t\t{\n" );
+
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, cs, "\t\t" );
+			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, cs, "\t\t\t\t" );
+
+			fprintf( header, "\t\t\t\tdefault:\n" );
+			fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+			fprintf( header, "\t\t\t\tbreak;\n" );
+			fprintf( header, "\t\t\t}\n" );
 		}
+
+		fprintf( header, "\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t}\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 	}
 	else
 		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, obj, "\t\t" );
@@ -1323,13 +1380,28 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 
 	if ( s.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\t\tauto srcCaseId = src.currentVariant();\n" );
+		fprintf( header, "\t\tdst.initAs( srcCaseId );\n" );
+
+		fprintf( header, "\t\tif ( srcCaseId != UserT::Variants::unknown )\n" );
+		fprintf( header, "\t\t\tswitch ( srcCaseId )\n" );
+		fprintf( header, "\t\t\t{\n" );
+
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
+			fprintf( header, "\t\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
+			fprintf( header, "\t\t\t\t{\n" );
+
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStructCopyFn_MemberIterationBlock( header, root, cs, "\t\t" );
+			impl_GeneratePublishableStructCopyFn_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
+
+			fprintf( header, "\t\t\t\t}\n" );
 		}
+		fprintf( header, "\t\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t}\n" );
 	}
 	else
 		impl_GeneratePublishableStructCopyFn_MemberIterationBlock( header, root, s, "\t\t" );

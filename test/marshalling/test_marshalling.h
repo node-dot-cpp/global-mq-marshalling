@@ -521,59 +521,59 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 		static constexpr bool has_update_notifier_for_z = has_update_notifier_call_for_z<T, decltype(T::z)>;
 		static constexpr bool has_any_notifier_for_z = has_void_update_notifier_for_z || has_update_notifier_for_z;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-					if constexpr( has_any_notifier_for_x || reportChanges )
-					{
-						decltype(T::x) oldVal = t.x;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
-						bool currentChanged = oldVal != t.x;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_x )
-								t.notifyUpdated_x();
-							if constexpr ( has_update_notifier_for_x )
-								t.notifyUpdated_x( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+		if constexpr( has_any_notifier_for_x || reportChanges )
+		{
+			decltype(T::x) oldVal = t.x;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+			bool currentChanged = oldVal != t.x;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_x )
+					t.notifyUpdated_x();
+				if constexpr ( has_update_notifier_for_x )
+					t.notifyUpdated_x( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
 
-					if constexpr( has_any_notifier_for_y || reportChanges )
-					{
-						decltype(T::y) oldVal = t.y;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
-						bool currentChanged = oldVal != t.y;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_y )
-								t.notifyUpdated_y();
-							if constexpr ( has_update_notifier_for_y )
-								t.notifyUpdated_y( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+		if constexpr( has_any_notifier_for_y || reportChanges )
+		{
+			decltype(T::y) oldVal = t.y;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+			bool currentChanged = oldVal != t.y;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_y )
+					t.notifyUpdated_y();
+				if constexpr ( has_update_notifier_for_y )
+					t.notifyUpdated_y( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
 
-					if constexpr( has_any_notifier_for_z || reportChanges )
-					{
-						decltype(T::z) oldVal = t.z;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
-						bool currentChanged = oldVal != t.z;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_z )
-								t.notifyUpdated_z();
-							if constexpr ( has_update_notifier_for_z )
-								t.notifyUpdated_z( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+		if constexpr( has_any_notifier_for_z || reportChanges )
+		{
+			decltype(T::z) oldVal = t.z;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+			bool currentChanged = oldVal != t.z;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_z )
+					t.notifyUpdated_z();
+				if constexpr ( has_update_notifier_for_z )
+					t.notifyUpdated_z( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
 
 
 		if constexpr ( reportChanges )
@@ -613,68 +613,74 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 		switch ( addr[offset] )
 		{
 			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_x || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_x || reportChanges )
+				{
+					decltype(T::x) oldVal = t.x;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::x)>( parser, &(t.x) );
+					bool currentChanged = oldVal != t.x;
+					if ( currentChanged )
 					{
-						decltype(T::x) oldVal = t.x;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::x)>( parser, &(t.x) );
-						bool currentChanged = oldVal != t.x;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_x )
-								t.notifyUpdated_x();
-							if constexpr ( has_update_notifier_for_x )
-								t.notifyUpdated_x( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_x )
+							t.notifyUpdated_x();
+						if constexpr ( has_update_notifier_for_x )
+							t.notifyUpdated_x( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::x)>( parser, &(t.x) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::x)>( parser, &(t.x) );
 				break;
+			}
 			case 1:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_y || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_y || reportChanges )
+				{
+					decltype(T::y) oldVal = t.y;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::y)>( parser, &(t.y) );
+					bool currentChanged = oldVal != t.y;
+					if ( currentChanged )
 					{
-						decltype(T::y) oldVal = t.y;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::y)>( parser, &(t.y) );
-						bool currentChanged = oldVal != t.y;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_y )
-								t.notifyUpdated_y();
-							if constexpr ( has_update_notifier_for_y )
-								t.notifyUpdated_y( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_y )
+							t.notifyUpdated_y();
+						if constexpr ( has_update_notifier_for_y )
+							t.notifyUpdated_y( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::y)>( parser, &(t.y) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::y)>( parser, &(t.y) );
 				break;
+			}
 			case 2:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_z || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_z || reportChanges )
+				{
+					decltype(T::z) oldVal = t.z;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::z)>( parser, &(t.z) );
+					bool currentChanged = oldVal != t.z;
+					if ( currentChanged )
 					{
-						decltype(T::z) oldVal = t.z;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::z)>( parser, &(t.z) );
-						bool currentChanged = oldVal != t.z;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_z )
-								t.notifyUpdated_z();
-							if constexpr ( has_update_notifier_for_z )
-								t.notifyUpdated_z( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_z )
+							t.notifyUpdated_z();
+						if constexpr ( has_update_notifier_for_z )
+							t.notifyUpdated_z( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::z)>( parser, &(t.z) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::z)>( parser, &(t.z) );
 				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
@@ -729,59 +735,59 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-					if constexpr( has_any_notifier_for_X || reportChanges )
-					{
-						decltype(T::X) oldVal = t.X;
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-						bool currentChanged = oldVal != t.X;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_X )
-								t.notifyUpdated_X();
-							if constexpr ( has_update_notifier_for_X )
-								t.notifyUpdated_X( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+		if constexpr( has_any_notifier_for_X || reportChanges )
+		{
+			decltype(T::X) oldVal = t.X;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+			bool currentChanged = oldVal != t.X;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_X )
+					t.notifyUpdated_X();
+				if constexpr ( has_update_notifier_for_X )
+					t.notifyUpdated_X( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-					if constexpr( has_any_notifier_for_Y || reportChanges )
-					{
-						decltype(T::Y) oldVal = t.Y;
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-						bool currentChanged = oldVal != t.Y;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Y )
-								t.notifyUpdated_Y();
-							if constexpr ( has_update_notifier_for_Y )
-								t.notifyUpdated_Y( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+		if constexpr( has_any_notifier_for_Y || reportChanges )
+		{
+			decltype(T::Y) oldVal = t.Y;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+			bool currentChanged = oldVal != t.Y;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_Y )
+					t.notifyUpdated_Y();
+				if constexpr ( has_update_notifier_for_Y )
+					t.notifyUpdated_Y( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-					if constexpr( has_any_notifier_for_Z || reportChanges )
-					{
-						decltype(T::Z) oldVal = t.Z;
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-						bool currentChanged = oldVal != t.Z;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Z )
-								t.notifyUpdated_Z();
-							if constexpr ( has_update_notifier_for_Z )
-								t.notifyUpdated_Z( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		if constexpr( has_any_notifier_for_Z || reportChanges )
+		{
+			decltype(T::Z) oldVal = t.Z;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+			bool currentChanged = oldVal != t.Z;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_Z )
+					t.notifyUpdated_Z();
+				if constexpr ( has_update_notifier_for_Z )
+					t.notifyUpdated_Z( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 
 		if constexpr ( reportChanges )
@@ -821,68 +827,74 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 		switch ( addr[offset] )
 		{
 			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_X || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_X || reportChanges )
+				{
+					decltype(T::X) oldVal = t.X;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+					bool currentChanged = oldVal != t.X;
+					if ( currentChanged )
 					{
-						decltype(T::X) oldVal = t.X;
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
-						bool currentChanged = oldVal != t.X;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_X )
-								t.notifyUpdated_X();
-							if constexpr ( has_update_notifier_for_X )
-								t.notifyUpdated_X( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_X )
+							t.notifyUpdated_X();
+						if constexpr ( has_update_notifier_for_X )
+							t.notifyUpdated_X( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
+			}
 			case 1:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_Y || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_Y || reportChanges )
+				{
+					decltype(T::Y) oldVal = t.Y;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+					bool currentChanged = oldVal != t.Y;
+					if ( currentChanged )
 					{
-						decltype(T::Y) oldVal = t.Y;
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
-						bool currentChanged = oldVal != t.Y;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Y )
-								t.notifyUpdated_Y();
-							if constexpr ( has_update_notifier_for_Y )
-								t.notifyUpdated_Y( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_Y )
+							t.notifyUpdated_Y();
+						if constexpr ( has_update_notifier_for_Y )
+							t.notifyUpdated_Y( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
+			}
 			case 2:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_Z || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_Z || reportChanges )
+				{
+					decltype(T::Z) oldVal = t.Z;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+					bool currentChanged = oldVal != t.Z;
+					if ( currentChanged )
 					{
-						decltype(T::Z) oldVal = t.Z;
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
-						bool currentChanged = oldVal != t.Z;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Z )
-								t.notifyUpdated_Z();
-							if constexpr ( has_update_notifier_for_Z )
-								t.notifyUpdated_Z( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_Z )
+							t.notifyUpdated_Z();
+						if constexpr ( has_update_notifier_for_Z )
+							t.notifyUpdated_Z( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
@@ -913,14 +925,14 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	void compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "pt3d_1" );
-		publishable_STRUCT_point3D::compose( composer, t.pt3d_1 );
+		publishable_STRUCT_point3D::compose( composer, t.pt3d_1() );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
-		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.i_1, "i_1", false );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.i_1(), "i_1", false );
 
-		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.i_2, "i_2", true );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.i_2(), "i_2", true );
 
-		PublishableVectorProcessor::compose<ComposerT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( composer, t.vp_2, "vp_2", false );
+		PublishableVectorProcessor::compose<ComposerT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( composer, t.vp_2(), "vp_2", false );
 
 	}
 
@@ -954,87 +966,104 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		static constexpr bool has_element_updated_notifier_for_vp_2 = has_element_updated_notifier_call_for_vp_2<T>;
 		static constexpr bool has_full_element_updated_notifier_for_vp_2 = has_full_element_updated_notifier_call_for_vp_2<T, vp_2T&>;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
-						if constexpr( has_update_notifier_for_pt3d_1 )
-						{
-							typename T::Case_one_pt3d_1_T temp_pt3d_1;
-							publishable_STRUCT_point3D::copy<typename T::Case_one_pt3d_1_T>( t.pt3d_1, temp_pt3d_1 );
-							bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								if constexpr( has_void_update_notifier_for_pt3d_1 )
-									t.notifyUpdated_pt3d_1();
-								t.notifyUpdated_pt3d_1( temp_pt3d_1 );
-							}
-						}
-						else if constexpr( has_void_update_notifier_for_pt3d_1 )
-						{
-							bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								t.notifyUpdated_pt3d_1();
-							}
-						}
-						else if constexpr ( reportChanges )
-							changed = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
-						else
-							publishable_STRUCT_point3D::parse( parser, t.pt3d_1() );
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+		switch ( caseId )
+		{
+			case 1: // IDL CASE one
+			{
+				::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
+				if constexpr( has_update_notifier_for_pt3d_1 )
+				{
+					typename T::Case_one_pt3d_1_T temp_pt3d_1;
+					publishable_STRUCT_point3D::copy<typename T::Case_one_pt3d_1_T>( t.pt3d_1, temp_pt3d_1 );
+					bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
+					if ( changedCurrent )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr( has_void_update_notifier_for_pt3d_1 )
+							t.notifyUpdated_pt3d_1();
+						t.notifyUpdated_pt3d_1( temp_pt3d_1 );
+					}
+				}
+				else if constexpr( has_void_update_notifier_for_pt3d_1 )
+				{
+					bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
+					if ( changedCurrent )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						t.notifyUpdated_pt3d_1();
+					}
+				}
+				else if constexpr ( reportChanges )
+					changed = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
+				else
+					publishable_STRUCT_point3D::parse( parser, t.pt3d_1() );
+				::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+				if constexpr( has_any_notifier_for_i_1 || reportChanges )
+				{
+					typename T::Case_one_i_1_T oldVal = t.i_1;
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
+					bool currentChanged = oldVal != t.i_1;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_i_1 )
+							t.notifyUpdated_i_1();
+						if constexpr ( has_update_notifier_for_i_1 )
+							t.notifyUpdated_i_1( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
+
+				break;
+			}
+			case 2: // IDL CASE two
+			{
+				if constexpr( has_any_notifier_for_i_2 || reportChanges )
+				{
+					typename T::Case_two_i_2_T oldVal = t.i_2;
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
+					bool currentChanged = oldVal != t.i_2;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_i_2 )
+							t.notifyUpdated_i_2();
+						if constexpr ( has_update_notifier_for_i_2 )
+							t.notifyUpdated_i_2( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
+
+				if constexpr( reportChanges )
+				{
+					typename T::Case_two_vp_2_T oldVectorVal;
+					::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2(), oldVectorVal );
+					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
+					bool currentChanged = !::globalmq::marshalling::impl::isSameVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( oldVectorVal, t.vp_2() );
+					changed = changed || currentChanged;
+				}
+				else
+				{
+					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
+				}
+
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-					if constexpr( has_any_notifier_for_i_1 || reportChanges )
-					{
-						typename T::Case_one_i_1_T oldVal = t.i_1;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
-						bool currentChanged = oldVal != t.i_1;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_i_1 )
-								t.notifyUpdated_i_1();
-							if constexpr ( has_update_notifier_for_i_1 )
-								t.notifyUpdated_i_1( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
-
-					if constexpr( has_any_notifier_for_i_2 || reportChanges )
-					{
-						typename T::Case_two_i_2_T oldVal = t.i_2;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
-						bool currentChanged = oldVal != t.i_2;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_i_2 )
-								t.notifyUpdated_i_2();
-							if constexpr ( has_update_notifier_for_i_2 )
-								t.notifyUpdated_i_2( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
-
-		if constexpr( reportChanges )
-		{
-			typename T::Case_two_vp_2_T oldVectorVal;
-			::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2(), oldVectorVal );
-			::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
-			PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
-			bool currentChanged = !::globalmq::marshalling::impl::isSameVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( oldVectorVal, t.vp_2() );
-			changed = changed || currentChanged;
-		}
-		else
-		{
-			::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
-			PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
-		}
-
 
 		if constexpr ( reportChanges )
 			return changed;
@@ -1044,17 +1073,38 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	static
 	RetT parseForStateSync( ParserT& parser, T& t )
 	{
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
-		publishable_STRUCT_point3D::parseForStateSync( parser, t.pt3d_1 );
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+		switch ( caseId )
+		{
+			case 1: // IDL CASE one
+			{
+				::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
+				publishable_STRUCT_point3D::parseForStateSync( parser, t.pt3d_1 );
+				::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+				::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1), "i_1" );
+
+				default:
+					throw std::exception(); // unexpected
+				break;
+			}
+			case 2: // IDL CASE two
+			{
+				::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2), "i_2" );
+
+				::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
+				PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
+
+				default:
+					throw std::exception(); // unexpected
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1), "i_1" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2), "i_2" );
-
-		::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
-		PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -1088,263 +1138,307 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		static constexpr bool has_full_element_updated_notifier_for_vp_2 = has_full_element_updated_notifier_call_for_vp_2<T, vp_2T&>;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
-		switch ( addr[offset] )
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+		switch ( caseId )
 		{
-			case 0:
-				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
+			case 1: // IDL CASE one
+			{
+				switch ( addr[offset] )
 				{
-					::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
-						if constexpr( has_update_notifier_for_pt3d_1 )
-						{
-							typename T::Case_one_pt3d_1_T temp_pt3d_1;
-							publishable_STRUCT_point3D::copy<typename T::Case_one_pt3d_1_T>( t.pt3d_1, temp_pt3d_1 );
-							bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								if constexpr( has_void_update_notifier_for_pt3d_1 )
-									t.notifyUpdated_pt3d_1();
-								t.notifyUpdated_pt3d_1( temp_pt3d_1 );
-							}
-						}
-						else if constexpr( has_void_update_notifier_for_pt3d_1 )
-						{
-							bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								t.notifyUpdated_pt3d_1();
-							}
-						}
-
-						else
-						{
-								if constexpr ( reportChanges )
-									changed = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
-								else
-									publishable_STRUCT_point3D::parse( parser, t.pt3d_1() );
-						}
-					::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
-				}
-				else // let child continue parsing
-				{
-						if constexpr( has_update_notifier_for_pt3d_1 )
-						{
-							typename T::Case_one_pt3d_1_T temp_pt3d_1;
-							publishable_STRUCT_point3D::copy<typename T::Case_one_pt3d_1_T>( t.pt3d_1, temp_pt3d_1 );
-							bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1(), addr, offset + 1 );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								if constexpr( has_void_update_notifier_for_pt3d_1 )
-									t.notifyUpdated_pt3d_1();
-								t.notifyUpdated_pt3d_1( temp_pt3d_1 );
-							}
-						}
-						else if constexpr( has_void_update_notifier_for_pt3d_1 )
-						{
-							bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1(), addr, offset + 1 );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								t.notifyUpdated_pt3d_1();
-							}
-						}
-						else if constexpr ( reportChanges )
-							changed = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1(), addr, offset + 1 );
-						else
-							publishable_STRUCT_point3D::parse( parser, t.pt3d_1(), addr, offset + 1 );
-				}
-				break;
-			case 1:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_i_1 || reportChanges )
+					case 0:
 					{
-						typename T::Case_one_i_1_T oldVal = t.i_1;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()) );
-						bool currentChanged = oldVal != t.i_1;
-						if ( currentChanged )
+						if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_i_1 )
-								t.notifyUpdated_i_1();
-							if constexpr ( has_update_notifier_for_i_1 )
-								t.notifyUpdated_i_1( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()) );
-				break;
-			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_i_2 || reportChanges )
-					{
-						typename T::Case_two_i_2_T oldVal = t.i_2;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()) );
-						bool currentChanged = oldVal != t.i_2;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_i_2 )
-								t.notifyUpdated_i_2();
-							if constexpr ( has_update_notifier_for_i_2 )
-								t.notifyUpdated_i_2( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()) );
-				break;
-			case 1:
-				{
-					typename T::Case_two_vp_2_T oldVectorVal;
-					bool currentChanged = false;
-					constexpr bool alwaysCollectChanges = has_any_notifier_for_vp_2;
-					if constexpr( alwaysCollectChanges )
-						::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2, oldVectorVal );
-					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
-					{
-						size_t pos = addr[offset + 1];
-						if ( pos >= t.vp_2().size() )
-							throw std::exception();
-						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
-						{
-							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.vp_2 elements is REAL)
-						}
-						else // update of one or more elelments as a whole
-						{
-							size_t action;
-							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
-							switch ( action )
+							::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+							if constexpr( has_update_notifier_for_pt3d_1 )
 							{
-								case ActionOnVector::remove_at:
+								typename T::Case_one_pt3d_1_T temp_pt3d_1;
+								publishable_STRUCT_point3D::copy<typename T::Case_one_pt3d_1_T>( t.pt3d_1, temp_pt3d_1 );
+								bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
+								if ( changedCurrent )
 								{
-									typename T::Case_two_vp_2_T oldVal;
-									::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2(), oldVal );
-									t.vp_2().erase( t.vp_2().begin() + pos );
-									if constexpr ( has_erased_notifier3_for_vp_2 )
-										t.notifyErased_vp_2( pos, oldVal );
-									if constexpr ( has_erased_notifier2_for_vp_2 )
-										t.notifyErased_vp_2( pos );
-									if constexpr ( has_void_erased_notifier_for_vp_2 )
-										t.notifyErased_vp_2();
-									if constexpr ( alwaysCollectChanges )
-										currentChanged = true;
-									break;
+									if constexpr ( reportChanges )
+										changed = true;
+									if constexpr( has_void_update_notifier_for_pt3d_1 )
+										t.notifyUpdated_pt3d_1();
+									t.notifyUpdated_pt3d_1( temp_pt3d_1 );
 								}
-								case ActionOnVector::update_at:
+							}
+							else if constexpr( has_void_update_notifier_for_pt3d_1 )
+							{
+								bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
+								if ( changedCurrent )
 								{
-									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
-									typename T::Case_two_vp_2_T::value_type& value = t.vp_2()[pos];
-									typename T::Case_two_vp_2_T::value_type oldValue;
-									oldValue = value;
-									if constexpr ( has_full_element_updated_notifier_for_vp_2 )
-									{
-										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
-										if ( currentChanged )
-										{
-											t.notifyElementUpdated_vp_2( pos, oldValue );
-											if constexpr ( has_element_updated_notifier_for_vp_2 )
-												t.notifyElementUpdated_vp_2();
-											if constexpr ( has_void_element_updated_notifier_for_vp_2 )
-												t.notifyElementUpdated_vp_2();
-										}
-									}
-									else if constexpr ( has_element_updated_notifier_for_vp_2 )
-									{
-										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
-										if ( currentChanged )
-										{
-											t.notifyElementUpdated_vp_2( pos );
-											if constexpr ( has_void_element_updated_notifier_for_vp_2 )
-												t.notifyElementUpdated_vp_2();
-										}
-									}
-									else if constexpr ( has_void_element_updated_notifier_for_vp_2 )
-									{
-										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
-										if ( currentChanged )
-											t.notifyElementUpdated_vp_2();
-									}
+									if constexpr ( reportChanges )
+										changed = true;
+									t.notifyUpdated_pt3d_1();
+								}
+							}
+
+							else
+							{
+									if constexpr ( reportChanges )
+										changed = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1() );
 									else
-									{
-										if constexpr ( alwaysCollectChanges )
-											currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
-										else
-											PublishableVectorProcessor::parseSingleValue<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value );
-									}
-									break;
-								}
-								case ActionOnVector::insert_single_before:
-								{
-									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
-									typename T::Case_two_vp_2_T::value_type value;
-									PublishableVectorProcessor::parseSingleValue<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value );
-									if constexpr ( has_insert_notifier3_for_vp_2 )
-									{
-										typename T::Case_two_vp_2_T oldVal;
-										::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2(), oldVal );
-										t.notifyInserted_vp_2( pos, oldVal );
-									}
-									if constexpr ( has_insert_notifier2_for_vp_2 )
-										t.notifyInserted_vp_2( pos );
-									if constexpr ( has_void_insert_notifier_for_vp_2 )
-										t.notifyInserted_vp_2();
-									t.vp_2().insert( t.vp_2().begin() + pos, value );
-									if constexpr ( alwaysCollectChanges )
-										currentChanged = true;
-									break;
-								}
-								default:
-									throw std::exception();
+										publishable_STRUCT_point3D::parse( parser, t.pt3d_1() );
 							}
-							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
+							::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 						}
-					}
-					else // replacement of the whole vector
-					{
-						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
-
-						if constexpr( alwaysCollectChanges )
+						else // let child continue parsing
 						{
-							PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
-							currentChanged = !::globalmq::marshalling::impl::isSameVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( oldVectorVal, t.vp_2() );
+							if constexpr( has_update_notifier_for_pt3d_1 )
+							{
+								typename T::Case_one_pt3d_1_T temp_pt3d_1;
+								publishable_STRUCT_point3D::copy<typename T::Case_one_pt3d_1_T>( t.pt3d_1, temp_pt3d_1 );
+								bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1(), addr, offset + 1 );
+								if ( changedCurrent )
+								{
+									if constexpr ( reportChanges )
+										changed = true;
+									if constexpr( has_void_update_notifier_for_pt3d_1 )
+										t.notifyUpdated_pt3d_1();
+									t.notifyUpdated_pt3d_1( temp_pt3d_1 );
+								}
+							}
+							else if constexpr( has_void_update_notifier_for_pt3d_1 )
+							{
+								bool changedCurrent = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1(), addr, offset + 1 );
+								if ( changedCurrent )
+								{
+									if constexpr ( reportChanges )
+										changed = true;
+									t.notifyUpdated_pt3d_1();
+								}
+							}
+							else if constexpr ( reportChanges )
+								changed = publishable_STRUCT_point3D::parse<ParserT, typename T::Case_one_pt3d_1_T, bool>( parser, t.pt3d_1(), addr, offset + 1 );
+							else
+								publishable_STRUCT_point3D::parse( parser, t.pt3d_1(), addr, offset + 1 );
+						}
+						break;
+					}
+					case 1:
+					{
+						if ( addr.size() > offset + 1 )
+							throw std::exception(); // bad format, TODO: ...
+						if constexpr( has_any_notifier_for_i_1 || reportChanges )
+						{
+							typename T::Case_one_i_1_T oldVal = t.i_1;
+							::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()) );
+							bool currentChanged = oldVal != t.i_1;
+							if ( currentChanged )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								if constexpr ( has_void_update_notifier_for_i_1 )
+									t.notifyUpdated_i_1();
+								if constexpr ( has_update_notifier_for_i_1 )
+									t.notifyUpdated_i_1( oldVal );
+							}
 						}
 						else
-							PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
-
-						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+							::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()) );
+						break;
 					}
-
-					if ( currentChanged )
-					{
-						if constexpr( has_void_update_notifier_for_vp_2 )
-							t.notifyUpdated_vp_2();
-						if constexpr( has_update_notifier_for_vp_2 )
-							t.notifyUpdated_vp_2( oldVectorVal );
-					}
+					default:
+						throw std::exception(); // unexpected
 				}
 				break;
+			}
+			case 2: // IDL CASE two
+			{
+				switch ( addr[offset] )
+				{
+					case 0:
+					{
+						if ( addr.size() > offset + 1 )
+							throw std::exception(); // bad format, TODO: ...
+						if constexpr( has_any_notifier_for_i_2 || reportChanges )
+						{
+							typename T::Case_two_i_2_T oldVal = t.i_2;
+							::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()) );
+							bool currentChanged = oldVal != t.i_2;
+							if ( currentChanged )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								if constexpr ( has_void_update_notifier_for_i_2 )
+									t.notifyUpdated_i_2();
+								if constexpr ( has_update_notifier_for_i_2 )
+									t.notifyUpdated_i_2( oldVal );
+							}
+						}
+						else
+							::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()) );
+						break;
+					}
+					case 1:
+					{
+						{
+							typename T::Case_two_vp_2_T oldVectorVal;
+							bool currentChanged = false;
+							constexpr bool alwaysCollectChanges = has_any_notifier_for_vp_2;
+							if constexpr( alwaysCollectChanges )
+								::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2, oldVectorVal );
+							if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
+							{
+								size_t pos = addr[offset + 1];
+								if ( pos >= t.vp_2().size() )
+									throw std::exception();
+								if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
+								{
+									throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.vp_2 elements is REAL)
+								}
+								else // update of one or more elelments as a whole
+								{
+									size_t action;
+									::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
+									switch ( action )
+									{
+										case ActionOnVector::remove_at:
+										{
+											typename T::Case_two_vp_2_T oldVal;
+											::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2(), oldVal );
+											t.vp_2().erase( t.vp_2().begin() + pos );
+											if constexpr ( has_erased_notifier3_for_vp_2 )
+												t.notifyErased_vp_2( pos, oldVal );
+											if constexpr ( has_erased_notifier2_for_vp_2 )
+												t.notifyErased_vp_2( pos );
+											if constexpr ( has_void_erased_notifier_for_vp_2 )
+												t.notifyErased_vp_2();
+											if constexpr ( alwaysCollectChanges )
+												currentChanged = true;
+											break;
+										}
+										case ActionOnVector::update_at:
+										{
+											::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+											typename T::Case_two_vp_2_T::value_type& value = t.vp_2()[pos];
+											typename T::Case_two_vp_2_T::value_type oldValue;
+											oldValue = value;
+											if constexpr ( has_full_element_updated_notifier_for_vp_2 )
+											{
+												currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
+												if ( currentChanged )
+												{
+													t.notifyElementUpdated_vp_2( pos, oldValue );
+													if constexpr ( has_element_updated_notifier_for_vp_2 )
+														t.notifyElementUpdated_vp_2();
+													if constexpr ( has_void_element_updated_notifier_for_vp_2 )
+														t.notifyElementUpdated_vp_2();
+												}
+											}
+											else if constexpr ( has_element_updated_notifier_for_vp_2 )
+											{
+												currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
+												if ( currentChanged )
+												{
+													t.notifyElementUpdated_vp_2( pos );
+													if constexpr ( has_void_element_updated_notifier_for_vp_2 )
+														t.notifyElementUpdated_vp_2();
+												}
+											}
+											else if constexpr ( has_void_element_updated_notifier_for_vp_2 )
+											{
+												currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
+												if ( currentChanged )
+													t.notifyElementUpdated_vp_2();
+											}
+											else
+											{
+												if constexpr ( alwaysCollectChanges )
+													currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value, oldValue );
+												else
+													PublishableVectorProcessor::parseSingleValue<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value );
+											}
+											break;
+										}
+										case ActionOnVector::insert_single_before:
+										{
+											::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+											typename T::Case_two_vp_2_T::value_type value;
+											PublishableVectorProcessor::parseSingleValue<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, value );
+											if constexpr ( has_insert_notifier3_for_vp_2 )
+											{
+												typename T::Case_two_vp_2_T oldVal;
+												::globalmq::marshalling::impl::copyVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( t.vp_2(), oldVal );
+												t.notifyInserted_vp_2( pos, oldVal );
+											}
+											if constexpr ( has_insert_notifier2_for_vp_2 )
+												t.notifyInserted_vp_2( pos );
+											if constexpr ( has_void_insert_notifier_for_vp_2 )
+												t.notifyInserted_vp_2();
+											t.vp_2().insert( t.vp_2().begin() + pos, value );
+											if constexpr ( alwaysCollectChanges )
+												currentChanged = true;
+											break;
+										}
+										default:
+											throw std::exception();
+									}
+									::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
+								}
+							}
+							else // replacement of the whole vector
+							{
+								::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+
+								if constexpr( alwaysCollectChanges )
+								{
+									PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
+									currentChanged = !::globalmq::marshalling::impl::isSameVector<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( oldVectorVal, t.vp_2() );
+								}
+								else
+									PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( parser, t.vp_2() );
+
+								::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+							}
+
+							if ( currentChanged )
+							{
+								if constexpr( has_void_update_notifier_for_vp_2 )
+									t.notifyUpdated_vp_2();
+								if constexpr( has_update_notifier_for_vp_2 )
+									t.notifyUpdated_vp_2( oldVectorVal );
+							}
+						}
+						break;
+					}
+					default:
+						throw std::exception(); // unexpected
+				}
+				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 		if constexpr ( reportChanges )
 			return changed;
 	}
 
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
-		publishable_STRUCT_point3D::copy( src.pt3d_1, dst.pt3d_1 );
-		dst.i_1 = src.i_1;
-		dst.i_2 = src.i_2;
-		::globalmq::marshalling::impl::copyVector<decltype(UserT::vp_2), ::globalmq::marshalling::impl::RealType>( src.vp_2, dst.vp_2 );
+		auto srcCaseId = src.currentVariant();
+		dst.initAs( srcCaseId );
+		if ( srcCaseId != UserT::Variants::unknown )
+			switch ( srcCaseId )
+			{
+				case 1: // IDL CASE one
+				{
+					publishable_STRUCT_point3D::copy( src.pt3d_1, dst.pt3d_1 );
+					dst.i_1 = src.i_1;
+				}
+				case 2: // IDL CASE two
+				{
+					dst.i_2 = src.i_2;
+					::globalmq::marshalling::impl::copyVector<decltype(UserT::vp_2), ::globalmq::marshalling::impl::RealType>( src.vp_2, dst.vp_2 );
+				}
+				default:
+					throw std::exception(); // unexpected
+			}
 	}
 
 	template<typename UserT>
@@ -1388,59 +1482,59 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 		static constexpr bool has_update_notifier_for_Z = has_update_notifier_call_for_Z<T, decltype(T::Z)>;
 		static constexpr bool has_any_notifier_for_Z = has_void_update_notifier_for_Z || has_update_notifier_for_Z;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-					if constexpr( has_any_notifier_for_X || reportChanges )
-					{
-						decltype(T::X) oldVal = t.X;
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-						bool currentChanged = oldVal != t.X;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_X )
-								t.notifyUpdated_X();
-							if constexpr ( has_update_notifier_for_X )
-								t.notifyUpdated_X( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+		if constexpr( has_any_notifier_for_X || reportChanges )
+		{
+			decltype(T::X) oldVal = t.X;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+			bool currentChanged = oldVal != t.X;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_X )
+					t.notifyUpdated_X();
+				if constexpr ( has_update_notifier_for_X )
+					t.notifyUpdated_X( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
-					if constexpr( has_any_notifier_for_Y || reportChanges )
-					{
-						decltype(T::Y) oldVal = t.Y;
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-						bool currentChanged = oldVal != t.Y;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Y )
-								t.notifyUpdated_Y();
-							if constexpr ( has_update_notifier_for_Y )
-								t.notifyUpdated_Y( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+		if constexpr( has_any_notifier_for_Y || reportChanges )
+		{
+			decltype(T::Y) oldVal = t.Y;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+			bool currentChanged = oldVal != t.Y;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_Y )
+					t.notifyUpdated_Y();
+				if constexpr ( has_update_notifier_for_Y )
+					t.notifyUpdated_Y( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
 
-					if constexpr( has_any_notifier_for_Z || reportChanges )
-					{
-						decltype(T::Z) oldVal = t.Z;
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-						bool currentChanged = oldVal != t.Z;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Z )
-								t.notifyUpdated_Z();
-							if constexpr ( has_update_notifier_for_Z )
-								t.notifyUpdated_Z( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+		if constexpr( has_any_notifier_for_Z || reportChanges )
+		{
+			decltype(T::Z) oldVal = t.Z;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+			bool currentChanged = oldVal != t.Z;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_Z )
+					t.notifyUpdated_Z();
+				if constexpr ( has_update_notifier_for_Z )
+					t.notifyUpdated_Z( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
 
 
 		if constexpr ( reportChanges )
@@ -1480,68 +1574,74 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 		switch ( addr[offset] )
 		{
 			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_X || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_X || reportChanges )
+				{
+					decltype(T::X) oldVal = t.X;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+					bool currentChanged = oldVal != t.X;
+					if ( currentChanged )
 					{
-						decltype(T::X) oldVal = t.X;
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
-						bool currentChanged = oldVal != t.X;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_X )
-								t.notifyUpdated_X();
-							if constexpr ( has_update_notifier_for_X )
-								t.notifyUpdated_X( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_X )
+							t.notifyUpdated_X();
+						if constexpr ( has_update_notifier_for_X )
+							t.notifyUpdated_X( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::X)>( parser, &(t.X) );
 				break;
+			}
 			case 1:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_Y || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_Y || reportChanges )
+				{
+					decltype(T::Y) oldVal = t.Y;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+					bool currentChanged = oldVal != t.Y;
+					if ( currentChanged )
 					{
-						decltype(T::Y) oldVal = t.Y;
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
-						bool currentChanged = oldVal != t.Y;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Y )
-								t.notifyUpdated_Y();
-							if constexpr ( has_update_notifier_for_Y )
-								t.notifyUpdated_Y( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_Y )
+							t.notifyUpdated_Y();
+						if constexpr ( has_update_notifier_for_Y )
+							t.notifyUpdated_Y( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Y)>( parser, &(t.Y) );
 				break;
+			}
 			case 2:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_Z || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_Z || reportChanges )
+				{
+					decltype(T::Z) oldVal = t.Z;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+					bool currentChanged = oldVal != t.Z;
+					if ( currentChanged )
 					{
-						decltype(T::Z) oldVal = t.Z;
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
-						bool currentChanged = oldVal != t.Z;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_Z )
-								t.notifyUpdated_Z();
-							if constexpr ( has_update_notifier_for_Z )
-								t.notifyUpdated_Z( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_Z )
+							t.notifyUpdated_Z();
+						if constexpr ( has_update_notifier_for_Z )
+							t.notifyUpdated_Z( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::Z)>( parser, &(t.Z) );
 				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
@@ -1593,53 +1693,53 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 		static constexpr bool has_update_notifier_for_Size = has_update_notifier_call_for_Size<T, decltype(T::Size)>;
 		static constexpr bool has_any_notifier_for_Size = has_void_update_notifier_for_Size || has_update_notifier_for_Size;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-					if constexpr( has_any_notifier_for_ID || reportChanges )
-					{
-						decltype(T::ID) oldVal = t.ID;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-						bool currentChanged = oldVal != t.ID;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_ID )
-								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		if constexpr( has_any_notifier_for_ID || reportChanges )
+		{
+			decltype(T::ID) oldVal = t.ID;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+			bool currentChanged = oldVal != t.ID;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_ID )
+					t.notifyUpdated_ID();
+				if constexpr ( has_update_notifier_for_ID )
+					t.notifyUpdated_ID( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
-						if constexpr( has_update_notifier_for_Size )
-						{
-							decltype(T::Size) temp_Size;
-							publishable_STRUCT_SIZE::copy<decltype(T::Size)>( t.Size, temp_Size );
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								if constexpr( has_void_update_notifier_for_Size )
-									t.notifyUpdated_Size();
-								t.notifyUpdated_Size( temp_Size );
-							}
-						}
-						else if constexpr( has_void_update_notifier_for_Size )
-						{
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								t.notifyUpdated_Size();
-							}
-						}
-						else if constexpr ( reportChanges )
-							changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-						else
-							publishable_STRUCT_SIZE::parse( parser, t.Size );
+		if constexpr( has_update_notifier_for_Size )
+		{
+			decltype(T::Size) temp_Size;
+			publishable_STRUCT_SIZE::copy<decltype(T::Size)>( t.Size, temp_Size );
+			bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+			if ( changedCurrent )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr( has_void_update_notifier_for_Size )
+					t.notifyUpdated_Size();
+				t.notifyUpdated_Size( temp_Size );
+			}
+		}
+		else if constexpr( has_void_update_notifier_for_Size )
+		{
+			bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+			if ( changedCurrent )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				t.notifyUpdated_Size();
+			}
+		}
+		else if constexpr ( reportChanges )
+			changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+		else
+			publishable_STRUCT_SIZE::parse( parser, t.Size );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		if constexpr ( reportChanges )
@@ -1676,96 +1776,100 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 		switch ( addr[offset] )
 		{
 			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_ID || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_ID || reportChanges )
+				{
+					decltype(T::ID) oldVal = t.ID;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					bool currentChanged = oldVal != t.ID;
+					if ( currentChanged )
 					{
-						decltype(T::ID) oldVal = t.ID;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
-						bool currentChanged = oldVal != t.ID;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_ID )
-								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_ID )
+							t.notifyUpdated_ID();
+						if constexpr ( has_update_notifier_for_ID )
+							t.notifyUpdated_ID( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
+			}
 			case 1:
+			{
 				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 				{
 					::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
-						if constexpr( has_update_notifier_for_Size )
+					if constexpr( has_update_notifier_for_Size )
+					{
+						decltype(T::Size) temp_Size;
+						publishable_STRUCT_SIZE::copy<decltype(T::Size)>( t.Size, temp_Size );
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+						if ( changedCurrent )
 						{
-							decltype(T::Size) temp_Size;
-							publishable_STRUCT_SIZE::copy<decltype(T::Size)>( t.Size, temp_Size );
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								if constexpr( has_void_update_notifier_for_Size )
-									t.notifyUpdated_Size();
-								t.notifyUpdated_Size( temp_Size );
-							}
-						}
-						else if constexpr( has_void_update_notifier_for_Size )
-						{
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr( has_void_update_notifier_for_Size )
 								t.notifyUpdated_Size();
-							}
+							t.notifyUpdated_Size( temp_Size );
 						}
-
-						else
+					}
+					else if constexpr( has_void_update_notifier_for_Size )
+					{
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+						if ( changedCurrent )
 						{
-								if constexpr ( reportChanges )
-									changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
-								else
-									publishable_STRUCT_SIZE::parse( parser, t.Size );
+							if constexpr ( reportChanges )
+								changed = true;
+							t.notifyUpdated_Size();
 						}
+					}
+
+					else
+					{
+							if constexpr ( reportChanges )
+								changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size );
+							else
+								publishable_STRUCT_SIZE::parse( parser, t.Size );
+					}
 					::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 				}
 				else // let child continue parsing
 				{
-						if constexpr( has_update_notifier_for_Size )
+					if constexpr( has_update_notifier_for_Size )
+					{
+						decltype(T::Size) temp_Size;
+						publishable_STRUCT_SIZE::copy<decltype(T::Size)>( t.Size, temp_Size );
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+						if ( changedCurrent )
 						{
-							decltype(T::Size) temp_Size;
-							publishable_STRUCT_SIZE::copy<decltype(T::Size)>( t.Size, temp_Size );
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
-								if constexpr( has_void_update_notifier_for_Size )
-									t.notifyUpdated_Size();
-								t.notifyUpdated_Size( temp_Size );
-							}
-						}
-						else if constexpr( has_void_update_notifier_for_Size )
-						{
-							bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
-							if ( changedCurrent )
-							{
-								if constexpr ( reportChanges )
-									changed = true;
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr( has_void_update_notifier_for_Size )
 								t.notifyUpdated_Size();
-							}
+							t.notifyUpdated_Size( temp_Size );
 						}
-						else if constexpr ( reportChanges )
-							changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
-						else
-							publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
+					}
+					else if constexpr( has_void_update_notifier_for_Size )
+					{
+						bool changedCurrent = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+						if ( changedCurrent )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							t.notifyUpdated_Size();
+						}
+					}
+					else if constexpr ( reportChanges )
+						changed = publishable_STRUCT_SIZE::parse<ParserT, decltype(T::Size), bool>( parser, t.Size, addr, offset + 1 );
+					else
+						publishable_STRUCT_SIZE::parse( parser, t.Size, addr, offset + 1 );
 				}
 				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
@@ -1838,23 +1942,23 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 			PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE>( parser, t.sizes );
 		}
 
-					if constexpr( has_any_notifier_for_NN || reportChanges )
-					{
-						decltype(T::NN) oldVal = t.NN;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
-						bool currentChanged = oldVal != t.NN;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_NN )
-								t.notifyUpdated_NN();
-							if constexpr ( has_update_notifier_for_NN )
-								t.notifyUpdated_NN( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+		if constexpr( has_any_notifier_for_NN || reportChanges )
+		{
+			decltype(T::NN) oldVal = t.NN;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+			bool currentChanged = oldVal != t.NN;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_NN )
+					t.notifyUpdated_NN();
+				if constexpr ( has_update_notifier_for_NN )
+					t.notifyUpdated_NN( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
 
 
 		if constexpr ( reportChanges )
@@ -1900,6 +2004,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 		switch ( addr[offset] )
 		{
 			case 0:
+			{
 				{
 					decltype(T::sizes) oldVectorVal;
 					bool currentChanged = false;
@@ -2066,27 +2171,30 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 					}
 				}
 				break;
+			}
 			case 1:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_NN || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_NN || reportChanges )
+				{
+					decltype(T::NN) oldVal = t.NN;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
+					bool currentChanged = oldVal != t.NN;
+					if ( currentChanged )
 					{
-						decltype(T::NN) oldVal = t.NN;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
-						bool currentChanged = oldVal != t.NN;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_NN )
-								t.notifyUpdated_NN();
-							if constexpr ( has_update_notifier_for_NN )
-								t.notifyUpdated_NN( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_NN )
+							t.notifyUpdated_NN();
+						if constexpr ( has_update_notifier_for_NN )
+							t.notifyUpdated_NN( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::NN)>( parser, &(t.NN) );
 				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
@@ -2144,23 +2252,23 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 		static constexpr bool has_element_updated_notifier_for_signedInts = has_element_updated_notifier_call_for_signedInts<T>;
 		static constexpr bool has_full_element_updated_notifier_for_signedInts = has_full_element_updated_notifier_call_for_signedInts<T, signedIntsT&>;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-					if constexpr( has_any_notifier_for_ID || reportChanges )
-					{
-						decltype(T::ID) oldVal = t.ID;
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-						bool currentChanged = oldVal != t.ID;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_ID )
-								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( oldVal );
-						}
-					}
-					else
-						::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+		if constexpr( has_any_notifier_for_ID || reportChanges )
+		{
+			decltype(T::ID) oldVal = t.ID;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+			bool currentChanged = oldVal != t.ID;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_ID )
+					t.notifyUpdated_ID();
+				if constexpr ( has_update_notifier_for_ID )
+					t.notifyUpdated_ID( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
 		if constexpr( reportChanges )
 		{
@@ -2221,27 +2329,30 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 		switch ( addr[offset] )
 		{
 			case 0:
-					if ( addr.size() > offset + 1 )
-						throw std::exception(); // bad format, TODO: ...
-					if constexpr( has_any_notifier_for_ID || reportChanges )
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_ID || reportChanges )
+				{
+					decltype(T::ID) oldVal = t.ID;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+					bool currentChanged = oldVal != t.ID;
+					if ( currentChanged )
 					{
-						decltype(T::ID) oldVal = t.ID;
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
-						bool currentChanged = oldVal != t.ID;
-						if ( currentChanged )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr ( has_void_update_notifier_for_ID )
-								t.notifyUpdated_ID();
-							if constexpr ( has_update_notifier_for_ID )
-								t.notifyUpdated_ID( oldVal );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_ID )
+							t.notifyUpdated_ID();
+						if constexpr ( has_update_notifier_for_ID )
+							t.notifyUpdated_ID( oldVal );
 					}
-					else
-						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::ID)>( parser, &(t.ID) );
 				break;
+			}
 			case 1:
+			{
 				{
 					decltype(T::signedInts) oldVectorVal;
 					bool currentChanged = false;
@@ -2371,6 +2482,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 					}
 				}
 				break;
+			}
 			default:
 				throw std::exception(); // unexpected
 		}
@@ -5080,7 +5192,7 @@ public:
 		t.pt3d_1 = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		publishable_STRUCT_point3D::compose( root.getComposer(), t.pt3d_1 );
+		publishable_STRUCT_point3D::compose( root.getComposer(), t.pt3d_1() );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
 	auto get4set_pt3d_1() { return point3D_RefWrapper4Set<typename T::Case_one_pt3d_1_T, RootT>(t.pt3d_1, *this, address, 0); }
