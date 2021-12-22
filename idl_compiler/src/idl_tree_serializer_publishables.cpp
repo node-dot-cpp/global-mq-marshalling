@@ -863,26 +863,26 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeInteger( %s, t.%s, \"%s\", %s );\n", composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( %s, t.%s, \"%s\", %s );\n", composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeReal( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeReal( %s, t.%s, \"%s\", %s );\n", composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, member.name.c_str(), member.name.c_str(), addSepar );
+				fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeString( %s, t.%s, \"%s\", %s );\n", composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 				fprintf( header, "\n" );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION: // TODO: revise DU
 			{
 				fprintf( header, "\t\t::globalmq::marshalling::impl::composePublishableStructBegin( %s, \"%s\" );\n", composer, member.name.c_str() );
-				fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), composer, member.name.c_str() );
+				fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( member ).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "\t\t::globalmq::marshalling::impl::composePublishableStructEnd( %s, %s );\n", composer, addSepar );
 				fprintf( header, "\n" );
 				break;
@@ -892,16 +892,16 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 				switch ( member.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::SignedIntegralType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::SignedIntegralType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::UnsignedIntegralType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::UnsignedIntegralType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::RealType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::RealType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::StringType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, member.name.c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "\t\tPublishableVectorProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::StringType>( %s, t.%s, \"%s\", %s );\n", impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::VECTOR:
 						assert( false ); // unexpected
@@ -1504,7 +1504,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 					assert( param.type.messageIdx < root.structs.size() );
 //					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-//					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, param.name.c_str() );
+//					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
 //					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, %s, %s>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( param.type, root ).c_str(), composer, param.name.c_str() );
 					break;
@@ -1518,7 +1518,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 		{
 			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-			fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, param.name.c_str() );
+			fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( param ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
 			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 			break;
 		}
