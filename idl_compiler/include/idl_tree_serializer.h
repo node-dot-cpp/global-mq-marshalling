@@ -58,7 +58,7 @@ bool impl_processScopes( Root& r );
 void impl_generateScopeHandler( FILE* header, Scope& scope );
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope );
 void impl_generateScopeComposer( FILE* header, Scope& scope );
-bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack );
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack, bool isCollectionElementType = false );
 string paramNameToNameTagType( string name );
 void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj );
 void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj );

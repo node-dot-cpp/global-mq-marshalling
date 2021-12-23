@@ -1003,6 +1003,11 @@ YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE structName, bool nonext
 	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::STRUCT);
 }
 
+YYSTYPE createVectorOfDiscriminatedUnionsType(YYSTYPE token, YYSTYPE structName, bool nonext, bool hasDefault)
+{
+	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::DISCRIMINATED_UNION);
+}
+
 YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
 {
 	unique_ptr<YyBase> d0(token);
