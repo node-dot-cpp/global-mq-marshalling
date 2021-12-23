@@ -926,25 +926,28 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
 	if ( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union )
-		fprintf( header, 
-			"\ttemplate<class ComposerT, class T>\n"
-			"\tstatic\n"
-			"\tvoid compose( ComposerT& composer, const T& t )\n"
-			"\t{\n"
-		);
+	{
+		fprintf( header, "\ttemplate<class ComposerT, class T>\n" );
+		fprintf( header, "\tstatic\n" );
+		fprintf( header, "\tvoid compose( ComposerT& composer, const T& t )\n" );
+		fprintf( header, "\t{\n" );
+	}
 	else if ( obj.type == CompositeType::Type::publishable )
-		fprintf( header, 
-			"\ttemplate<class ComposerType>\n"
-			"\tvoid compose( ComposerType& composer )\n"
-			"\t{\n"
-			"\t\t::globalmq::marshalling::impl::composeStructBegin( composer );\n"
-			"\n"
-		);
+	{
+		fprintf( header, "\ttemplate<class ComposerType>\n" );
+		fprintf( header, "\tvoid compose( ComposerType& composer )\n" );
+		fprintf( header, "\t{\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::composeStructBegin( composer );\n" );
+		fprintf( header, "\n" );
+	}
 	else
 		assert( false );
 
 	if ( obj.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\t\tuint64_t caseId = t.currentVariant();\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, caseId, \"caseId\", true );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::composePublishableStructBegin( composer, \"caseData\" );\n" );
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
 			assert( it != nullptr );
@@ -952,14 +955,16 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
 			impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( header, root, cs );
 		}
+		fprintf( header, "\t\t::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );\n" );
 	}
 	else
 		impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( header, root, obj );
 
 	if ( obj.type == CompositeType::Type::publishable )
-		fprintf( header, 
-			"\n"
-			"\t\t::globalmq::marshalling::impl::composeStructEnd( composer );\n" );
+	{
+		fprintf( header, "\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::composeStructEnd( composer );\n" );
+	}
 
 	fprintf( header, "\t}\n" );
 }
@@ -1023,16 +1028,15 @@ void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlo
 
 void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
-	fprintf( header, 
-		"\ttemplate<class ParserT, class T, class RetT = void>\n"
-		"\tstatic\n"
-		"\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n"
-		"\t{\n"
-//		"\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" 
-		"\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n"
-		"\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n"
-		"\t\tbool changed = false;\n"
-	);
+	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
+	fprintf( header, "\tstatic\n" );
+	fprintf( header, "\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n" );
+	fprintf( header, "\t{\n" );
+//	fprintf( header, "\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" );
+	fprintf( header, "\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n" );
+	fprintf( header, "\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n" );
+	fprintf( header, "\t\tbool changed = false;\n" );
+
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 
 	fprintf( header, "\t\tGMQ_ASSERT( addr.size() );\n" );
@@ -1399,6 +1403,7 @@ void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeTy
 
 			fprintf( header, "\t\t\t\t}\n" );
 		}
+
 		fprintf( header, "\t\t\t\tdefault:\n" );
 		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
 		fprintf( header, "\t\t\t}\n" );
@@ -1447,13 +1452,24 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 
 	if ( s.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\t\tif ( s1.currentVariant() != s2.currentVariant() )\n" );
+		fprintf( header, "\t\t\treturn false;\n" );
+
+		fprintf( header, "\t\tif ( s1.currentVariant() != UserT::Variants::unknown )\n" );
+		fprintf( header, "\t\t\tswitch ( s1.currentVariant() )\n" );
+		fprintf( header, "\t\t\t{\n" );
+
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, cs, "\t\t" );
+			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, cs, "\t\t\t\t" );
 		}
+
+		fprintf( header, "\t\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t}\n" );
 	}
 	else
 		impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, s, "\t\t" );
