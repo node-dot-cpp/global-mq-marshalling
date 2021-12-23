@@ -351,7 +351,7 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 						ok = false;
 					}
 					impl_propagateParentPropsToStruct( parent, *(s.structs[i]) );
-					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
+//					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack, true );
 					break;
 				}
 			if ( param.type.messageIdx == (size_t)(-1) )
@@ -387,24 +387,27 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 	return ok;
 }
 
-bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack )
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack, bool isCollectionElementType )
 {
 	if ( !ct.processingOK )
 		return false;
 
-	for ( size_t i=0; i<stack.size(); ++i )
+	if ( !isCollectionElementType ) // do dependency checking
 	{
-		if ( &ct == stack[i] )
+		for ( size_t i=0; i<stack.size(); ++i )
 		{
-			fprintf( stderr, "Error: cyclic dependency\n" );
-			for ( size_t j=i; j<stack.size(); ++j )
+			if ( &ct == stack[i] )
 			{
-				stack[j]->processingOK = false;
-				fprintf( stderr, "    File \"%s\", line %d: %s %s depends on ...\n", stack[j]->location.fileName.c_str(), stack[j]->location.lineNumber, stack[j]->type2string(), stack[j]->name.c_str() );
+				fprintf( stderr, "Error: cyclic dependency\n" );
+				for ( size_t j=i; j<stack.size(); ++j )
+				{
+					stack[j]->processingOK = false;
+					fprintf( stderr, "    File \"%s\", line %d: %s %s depends on ...\n", stack[j]->location.fileName.c_str(), stack[j]->location.lineNumber, stack[j]->type2string(), stack[j]->name.c_str() );
+				}
+				ct.processingOK = false;
+				fprintf( stderr, "    File \"%s\", line %d: %s %s\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
+				return false;
 			}
-			ct.processingOK = false;
-			fprintf( stderr, "    File \"%s\", line %d: %s %s\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
-			return false;
 		}
 	}
 
@@ -583,8 +586,8 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 				{
 					if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 						structs[member->type.messageIdx]->dependsOnCnt = 1;
-					else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-						structs[member->type.messageIdx]->dependsOnCnt = 1;
+//					else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+//						structs[member->type.messageIdx]->dependsOnCnt = 1;
 				}
 			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 )
 				for ( auto& cs : s->getDiscriminatedUnionCases() )
@@ -592,8 +595,8 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 					{
 						if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 							structs[member->type.messageIdx]->dependsOnCnt = 1;
-						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-							structs[member->type.messageIdx]->dependsOnCnt = 1;
+//						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+//							structs[member->type.messageIdx]->dependsOnCnt = 1;
 					}
 		for ( auto& s : structs )
 			if ( ( s->type == CompositeType::Type::structure || s->type == CompositeType::Type::discriminated_union ) && s->dependsOnCnt == 0 )
@@ -834,7 +837,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 	}
 
 	fprintf( header, "\npublic:\n" );
-	fprintf( header, "\tVariants currentVariant() { return v; }\n" );
+	fprintf( header, "\tVariants currentVariant() const { return v; }\n" );
 
 	if ( du.getDiscriminatedUnionCases().empty() )
 	{
@@ -917,6 +920,19 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 	fprintf( header, "};\n\n" );
 }
 
+void generateStructOrDiscriminatedUnionForwardDeclaration( FILE* header, Root& s )
+{
+	for ( auto& it: s.structs )
+	{
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+	
+		if ( it->type == CompositeType::Type::discriminated_union )
+			fprintf( header, "class %s;\n", it->name.c_str() );
+		else
+			fprintf( header, "struct %s;\n", impl_generateDiscriminatedUnionCaseStructName( *it ).c_str() );
+	}
+}
+			
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
@@ -963,6 +979,8 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 
 	fprintf( header, "//===============================================================================\n" );
 	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs and PUBLISHABLEs\n" );
+	generateStructOrDiscriminatedUnionForwardDeclaration( header, s );
+	fprintf( header, "\n" );
 	for ( auto it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );

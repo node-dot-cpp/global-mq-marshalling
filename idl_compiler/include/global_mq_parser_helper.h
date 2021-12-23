@@ -124,6 +124,7 @@ YYSTYPE createVectorOfCharStringType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
+YYSTYPE createVectorOfDiscriminatedUnionsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
 
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 YYSTYPE createDiscriminatedUnionType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
