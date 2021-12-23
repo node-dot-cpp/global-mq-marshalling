@@ -1368,7 +1368,7 @@ void impl_GeneratePublishableStructCopyFn_MemberIterationBlock( FILE* header, Ro
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "%s::globalmq::marshalling::impl::copyVector<decltype(UserT::%s), %s>( src.%s, dst.%s );\n", offset.c_str(), member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s::globalmq::marshalling::impl::copyVector<%s, %s>( src.%s, dst.%s );\n", offset.c_str(), impl_templateMemberTypeName( "UserT", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			}
 			default:

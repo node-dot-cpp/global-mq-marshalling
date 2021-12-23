@@ -166,3 +166,26 @@ MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
 };
 
 
+PUBLISHABLE publishable_html_node=3 {
+	STRUCT HtmlNode nodes;
+};
+
+STRUCT Property {
+  CHARACTER-STRING name;
+  CHARACTER-STRING value;
+};
+
+STRUCT HtmlNode {
+	VECTOR<STRUCT Property> properties;
+	DISCRIMINATED_UNION HtmlTextOrNodes nodes;
+};
+
+DISCRIMINATED_UNION HtmlTextOrNodes {
+	CASE text=1: { 
+		CHARACTER-STRING str;
+	}
+	CASE nodes=2: { 
+		VECTOR<STRUCT HtmlNode> nodes_;
+	}
+};
+

@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_5493d326_guard
-#define _test_marshalling_h_5493d326_guard
+#ifndef _test_marshalling_h_519f486f_guard
+#define _test_marshalling_h_519f486f_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -163,12 +163,17 @@ template<typename T> concept has_du_one_instance_member = requires { { T::du_one
 template<typename T> concept has_i_1_member = requires { { T::i_1 }; };
 template<typename T> concept has_i_2_member = requires { { T::i_2 }; };
 template<typename T> concept has_name_member = requires { { T::name }; };
+template<typename T> concept has_nodes_member = requires { { T::nodes }; };
+template<typename T> concept has_nodes__member = requires { { T::nodes_ }; };
+template<typename T> concept has_properties_member = requires { { T::properties }; };
 template<typename T> concept has_pt3d_1_member = requires { { T::pt3d_1 }; };
 template<typename T> concept has_signedInts_member = requires { { T::signedInts }; };
 template<typename T> concept has_size_member = requires { { T::size }; };
 template<typename T> concept has_sizes_member = requires { { T::sizes }; };
+template<typename T> concept has_str_member = requires { { T::str }; };
 template<typename T> concept has_structWithVectorOfInt_member = requires { { T::structWithVectorOfInt }; };
 template<typename T> concept has_structWithVectorOfSize_member = requires { { T::structWithVectorOfSize }; };
+template<typename T> concept has_value_member = requires { { T::value }; };
 template<typename T> concept has_vector_of_int_member = requires { { T::vector_of_int }; };
 template<typename T> concept has_vector_struct_point3dreal_member = requires { { T::vector_struct_point3dreal }; };
 template<typename T> concept has_vp_2_member = requires { { T::vp_2 }; };
@@ -202,6 +207,30 @@ template<typename T> concept has_void_update_notifier_call_for_i_2 = requires(T 
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_i_2 = requires { { std::declval<StateT>().notifyUpdated_i_2(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_name = requires(T t) { { t.notifyUpdated_name() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_name = requires { { std::declval<StateT>().notifyUpdated_name(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_nodes = requires(T t) { { t.notifyUpdated_nodes() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_nodes = requires { { std::declval<StateT>().notifyUpdated_nodes(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_nodes_ = requires(T t) { { t.notifyUpdated_nodes_() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_nodes_ = requires { { std::declval<StateT>().notifyUpdated_nodes_(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_nodes_ = requires(T t) { { t.notifyElementUpdated_nodes_() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_nodes_ = requires { { std::declval<StateT>().notifyElementUpdated_nodes_(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_nodes_ = requires { { std::declval<StateT>().notifyElementUpdated_nodes_(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_nodes_ = requires(T t) { { t.notifyInserted_nodes_() }; };
+template<typename StateT> concept has_insert_notifier_call2_for_nodes_ = requires { { std::declval<StateT>().notifyInserted_nodes_(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_insert_notifier_call3_for_nodes_ = requires { { std::declval<StateT>().notifyInserted_nodes_(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()), std::declval<MemberT>() }; };
+template<typename T> concept has_void_erased_notifier_call_for_nodes_ = requires(T t) { { t.notifyErased_nodes_() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_nodes_ = requires { { std::declval<StateT>().notifyErased_nodes_(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_nodes_ = requires { { std::declval<StateT>().notifyErased_nodes_(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_properties = requires(T t) { { t.notifyUpdated_properties() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_properties = requires { { std::declval<StateT>().notifyUpdated_properties(std::declval<MemberT>()) }; };
+template<typename T> concept has_element_updated_void_notifier_call_for_properties = requires(T t) { { t.notifyElementUpdated_properties() }; };
+template<typename StateT> concept has_element_updated_notifier_call_for_properties = requires { { std::declval<StateT>().notifyElementUpdated_properties(std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_full_element_updated_notifier_call_for_properties = requires { { std::declval<StateT>().notifyElementUpdated_properties(std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_properties = requires(T t) { { t.notifyInserted_properties() }; };
+template<typename StateT> concept has_insert_notifier_call2_for_properties = requires { { std::declval<StateT>().notifyInserted_properties(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_insert_notifier_call3_for_properties = requires { { std::declval<StateT>().notifyInserted_properties(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()), std::declval<MemberT>() }; };
+template<typename T> concept has_void_erased_notifier_call_for_properties = requires(T t) { { t.notifyErased_properties() }; };
+template<typename StateT> concept has_erased_notifier_call2_for_properties = requires { { std::declval<StateT>().notifyErased_properties(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
+template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_properties = requires { { std::declval<StateT>().notifyErased_properties(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_pt3d_1 = requires(T t) { { t.notifyUpdated_pt3d_1() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_pt3d_1 = requires { { std::declval<StateT>().notifyUpdated_pt3d_1(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_signedInts = requires(T t) { { t.notifyUpdated_signedInts() }; };
@@ -228,10 +257,14 @@ template<typename StateT, typename MemberT> concept has_insert_notifier_call3_fo
 template<typename T> concept has_void_erased_notifier_call_for_sizes = requires(T t) { { t.notifyErased_sizes() }; };
 template<typename StateT> concept has_erased_notifier_call2_for_sizes = requires { { std::declval<StateT>().notifyErased_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>()) }; };
 template<typename StateT, typename MemberT> concept has_erased_notifier_call3_for_sizes = requires { { std::declval<StateT>().notifyErased_sizes(std::declval<index_type_for_array_notifiers>(), std::declval<index_type_for_array_notifiers>(), std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_str = requires(T t) { { t.notifyUpdated_str() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_str = requires { { std::declval<StateT>().notifyUpdated_str(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_structWithVectorOfInt = requires(T t) { { t.notifyUpdated_structWithVectorOfInt() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_structWithVectorOfInt = requires { { std::declval<StateT>().notifyUpdated_structWithVectorOfInt(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_structWithVectorOfSize = requires(T t) { { t.notifyUpdated_structWithVectorOfSize() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_structWithVectorOfSize = requires { { std::declval<StateT>().notifyUpdated_structWithVectorOfSize(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_value = requires(T t) { { t.notifyUpdated_value() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_value = requires { { std::declval<StateT>().notifyUpdated_value(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_vector_of_int = requires(T t) { { t.notifyUpdated_vector_of_int() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_vector_of_int = requires { { std::declval<StateT>().notifyUpdated_vector_of_int(std::declval<MemberT>()) }; };
 template<typename T> concept has_element_updated_void_notifier_call_for_vector_of_int = requires(T t) { { t.notifyElementUpdated_vector_of_int() }; };
@@ -287,6 +320,79 @@ struct Vertex;
 struct point;
 struct point3D;
 class du_one;
+struct Property;
+struct HtmlNode;
+class HtmlTextOrNodes;
+
+class HtmlTextOrNodes : public ::globalmq::marshalling::impl::DiscriminatedUnionType
+{
+public:
+	enum Variants { text=1, nodes=2, unknown };
+private:
+	Variants v = Variants::unknown;
+	struct Case_text
+	{
+		GMQ_COLL string str;
+	};
+
+	struct Case_nodes
+	{
+		GMQ_COLL vector<HtmlNode> nodes_;
+	};
+
+public:
+	using Case_text_str_T = decltype( Case_text::str );
+	using Case_nodes_nodes__T = decltype( Case_nodes::nodes_ );
+
+private:
+	static constexpr size_t text_nodes_memsz = sizeof( Case_nodes ) > ( sizeof( Case_text ) ) ? sizeof( Case_nodes ) : ( sizeof( Case_text ) );
+	uint8_t text_nodes_mem[text_nodes_memsz];
+
+public:
+	Variants currentVariant() const { return v; }
+	void initAs( Variants v_ ) {
+		if ( v != Variants::unknown ) // then destruct existing value
+		{
+			switch ( v )
+			{
+				case Variants::text: reinterpret_cast<Case_text*>( text_nodes_mem ) -> ~Case_text(); break;
+				case Variants::nodes: reinterpret_cast<Case_nodes*>( text_nodes_mem ) -> ~Case_nodes(); break;
+			}
+		}
+		switch ( v ) // init for a new type
+		{
+				case Variants::text: new ( text_nodes_mem ) Case_text; break;
+				case Variants::nodes: new ( text_nodes_mem ) Case_nodes; break;
+		}
+		v = v_;
+	}
+
+	// IDL CASE text:
+	Case_text_str_T& str() {
+		if ( v != Variants::text )
+			throw std::exception();
+		return reinterpret_cast<Case_text*>( text_nodes_mem )->str;
+	}
+	const Case_text_str_T& str() const {
+		if ( v != Variants::text )
+			throw std::exception();
+		return reinterpret_cast<const Case_text*>( text_nodes_mem )->str;
+	}
+	
+
+	// IDL CASE nodes:
+	Case_nodes_nodes__T& nodes_() {
+		if ( v != Variants::nodes )
+			throw std::exception();
+		return reinterpret_cast<Case_nodes*>( text_nodes_mem )->nodes_;
+	}
+	const Case_nodes_nodes__T& nodes_() const {
+		if ( v != Variants::nodes )
+			throw std::exception();
+		return reinterpret_cast<const Case_nodes*>( text_nodes_mem )->nodes_;
+	}
+	
+};
 
 struct point3D
 {
@@ -300,6 +406,18 @@ struct SIZE
 	double X;
 	double Y;
 	double Z;
+};
+
+struct HtmlNode
+{
+	GMQ_COLL vector<Property> properties;
+	HtmlTextOrNodes nodes;
+};
+
+struct Property
+{
+	GMQ_COLL string name;
+	GMQ_COLL string value;
 };
 
 class du_one : public ::globalmq::marshalling::impl::DiscriminatedUnionType
@@ -476,6 +594,11 @@ struct publishable_sample
 	du_one du_one_instance;
 };
 
+struct publishable_html_node
+{
+	HtmlNode nodes;
+};
+
 
 //===============================================================================
 
@@ -503,6 +626,425 @@ struct publishable_STRUCT_point3D;
 template<class T> class point3D_RefWrapper;
 template<class T, class RootT> class point3D_RefWrapper4Set;
 
+struct publishable_STRUCT_Property;
+template<class T> class Property_RefWrapper;
+template<class T, class RootT> class Property_RefWrapper4Set;
+
+struct publishable_STRUCT_HtmlNode;
+template<class T> class HtmlNode_RefWrapper;
+template<class T, class RootT> class HtmlNode_RefWrapper4Set;
+
+
+struct publishable_DISCRIMINATED_UNION_HtmlTextOrNodes : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		uint64_t caseId = t.currentVariant();
+		::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, caseId, "caseId", true );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "caseData" );
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.str(), "str", false );
+
+		PublishableVectorProcessor::compose<ComposerT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( composer, t.nodes_(), "nodes_", false );
+
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_str = has_void_update_notifier_call_for_str<T>;
+		static constexpr bool has_update_notifier_for_str = has_update_notifier_call_for_str<T, typename T::Case_text_str_T>;
+		static constexpr bool has_any_notifier_for_str = has_void_update_notifier_for_str || has_update_notifier_for_str;
+		static constexpr bool has_void_update_notifier_for_nodes_ = has_void_update_notifier_call_for_nodes_<T>;
+		static constexpr bool has_update_notifier_for_nodes_ = has_update_notifier_call_for_nodes_<T, typename T::Case_nodes_nodes__T>;
+		static constexpr bool has_any_notifier_for_nodes_ = has_void_update_notifier_for_nodes_ || has_update_notifier_for_nodes_;
+		using nodes_T = typename T::Case_nodes_nodes__T;
+		static constexpr bool has_void_insert_notifier_for_nodes_ = has_void_insert_notifier_call_for_nodes_<T>;
+		static constexpr bool has_insert_notifier2_for_nodes_ = has_insert_notifier_call2_for_nodes_<T>;
+		static constexpr bool has_insert_notifier3_for_nodes_ = has_insert_notifier_call3_for_nodes_<T, GMQ_COLL vector<nodes_T>&>;
+		static constexpr bool has_void_erased_notifier_for_nodes_ = has_void_erased_notifier_call_for_nodes_<T>;
+		static constexpr bool has_erased_notifier2_for_nodes_ = has_erased_notifier_call2_for_nodes_<T>;
+		static constexpr bool has_erased_notifier3_for_nodes_ = has_erased_notifier_call3_for_nodes_<T, GMQ_COLL vector<nodes_T>&>;
+		static constexpr bool has_void_element_updated_notifier_for_nodes_ = has_element_updated_void_notifier_call_for_nodes_<T>;
+		static constexpr bool has_element_updated_notifier_for_nodes_ = has_element_updated_notifier_call_for_nodes_<T>;
+		static constexpr bool has_full_element_updated_notifier_for_nodes_ = has_full_element_updated_notifier_call_for_nodes_<T, nodes_T&>;
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+		switch ( caseId )
+		{
+			case 1: // IDL CASE text
+			{
+				if constexpr( has_any_notifier_for_str || reportChanges )
+				{
+					typename T::Case_text_str_T oldVal = t.str();
+					::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
+					bool currentChanged = oldVal != t.str();
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_str )
+							t.notifyUpdated_str();
+						if constexpr ( has_update_notifier_for_str )
+							t.notifyUpdated_str( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
+
+				break;
+			}
+			case 2: // IDL CASE nodes
+			{
+				if constexpr( reportChanges )
+				{
+					typename T::Case_nodes_nodes__T oldVectorVal;
+					::globalmq::marshalling::impl::copyVector<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( t.nodes_(), oldVectorVal );
+					::globalmq::marshalling::impl::parseKey( parser, "nodes_" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, t.nodes_() );
+					bool currentChanged = !::globalmq::marshalling::impl::isSameVector<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( oldVectorVal, t.nodes_() );
+					changed = changed || currentChanged;
+				}
+				else
+				{
+					::globalmq::marshalling::impl::parseKey( parser, "nodes_" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, t.nodes_() );
+				}
+
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parseForStateSync( ParserT& parser, T& t )
+	{
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+		switch ( caseId )
+		{
+			case 1: // IDL CASE text
+			{
+				::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
+
+				default:
+					throw std::exception(); // unexpected
+				break;
+			}
+			case 2: // IDL CASE nodes
+			{
+				::globalmq::marshalling::impl::parseKey( parser, "nodes_" );
+				PublishableVectorProcessor::parse<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode, true>( parser, t.nodes_() );
+
+				default:
+					throw std::exception(); // unexpected
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_str = has_void_update_notifier_call_for_str<T>;
+		static constexpr bool has_update_notifier_for_str = has_update_notifier_call_for_str<T, typename T::Case_text_str_T>;
+		static constexpr bool has_any_notifier_for_str = has_void_update_notifier_for_str || has_update_notifier_for_str;
+		static constexpr bool has_void_update_notifier_for_nodes_ = has_void_update_notifier_call_for_nodes_<T>;
+		static constexpr bool has_update_notifier_for_nodes_ = has_update_notifier_call_for_nodes_<T, typename T::Case_nodes_nodes__T>;
+		static constexpr bool has_any_notifier_for_nodes_ = has_void_update_notifier_for_nodes_ || has_update_notifier_for_nodes_;
+		using nodes_T = typename T::Case_nodes_nodes__T;
+		static constexpr bool has_void_insert_notifier_for_nodes_ = has_void_insert_notifier_call_for_nodes_<T>;
+		static constexpr bool has_insert_notifier2_for_nodes_ = has_insert_notifier_call2_for_nodes_<T>;
+		static constexpr bool has_insert_notifier3_for_nodes_ = has_insert_notifier_call3_for_nodes_<T, GMQ_COLL vector<nodes_T>&>;
+		static constexpr bool has_void_erased_notifier_for_nodes_ = has_void_erased_notifier_call_for_nodes_<T>;
+		static constexpr bool has_erased_notifier2_for_nodes_ = has_erased_notifier_call2_for_nodes_<T>;
+		static constexpr bool has_erased_notifier3_for_nodes_ = has_erased_notifier_call3_for_nodes_<T, GMQ_COLL vector<nodes_T>&>;
+		static constexpr bool has_void_element_updated_notifier_for_nodes_ = has_element_updated_void_notifier_call_for_nodes_<T>;
+		static constexpr bool has_element_updated_notifier_for_nodes_ = has_element_updated_notifier_call_for_nodes_<T>;
+		static constexpr bool has_full_element_updated_notifier_for_nodes_ = has_full_element_updated_notifier_call_for_nodes_<T, nodes_T&>;
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		GMQ_ASSERT( addr.size() );
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+		switch ( caseId )
+		{
+			case 1: // IDL CASE text
+			{
+				switch ( addr[offset] )
+				{
+					case 0:
+					{
+						if ( addr.size() > offset + 1 )
+							throw std::exception(); // bad format, TODO: ...
+						if constexpr( has_any_notifier_for_str || reportChanges )
+						{
+							typename T::Case_text_str_T oldVal = t.str();
+							::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()) );
+							bool currentChanged = oldVal != t.str();
+							if ( currentChanged )
+							{
+								if constexpr ( reportChanges )
+									changed = true;
+								if constexpr ( has_void_update_notifier_for_str )
+									t.notifyUpdated_str();
+								if constexpr ( has_update_notifier_for_str )
+									t.notifyUpdated_str( oldVal );
+							}
+						}
+						else
+							::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()) );
+						break;
+					}
+					default:
+						throw std::exception(); // unexpected
+				}
+				break;
+			}
+			case 2: // IDL CASE nodes
+			{
+				switch ( addr[offset] )
+				{
+					case 0:
+					{
+						{
+							typename T::Case_nodes_nodes__T oldVectorVal;
+							bool currentChanged = false;
+							constexpr bool alwaysCollectChanges = has_any_notifier_for_nodes_;
+							if constexpr( alwaysCollectChanges )
+								::globalmq::marshalling::impl::copyVector<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( t.nodes_(), oldVectorVal );
+							if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
+							{
+								size_t pos = addr[offset + 1];
+								if ( pos >= t.nodes_().size() )
+									throw std::exception();
+								if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
+								{
+									typename T::Case_nodes_nodes__T::value_type& value = t.nodes_()[pos];
+									if constexpr ( has_full_element_updated_notifier_for_nodes_ )
+									{
+										typename T::Case_nodes_nodes__T::value_type oldValue;
+										publishable_STRUCT_HtmlNode::copy( value, oldValue );
+										currentChanged = publishable_STRUCT_HtmlNode::parse<ParserT, typename T::Case_nodes_nodes__T::value_type, bool>( parser, value, addr, offset + 2 );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_nodes_( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_nodes_ )
+												t.notifyElementUpdated_nodes_();
+											if constexpr ( has_void_element_updated_notifier_for_nodes_ )
+												t.notifyElementUpdated_nodes_();
+										}
+									}
+									else if constexpr ( has_element_updated_notifier_for_nodes_ )
+									{
+										currentChanged = publishable_STRUCT_HtmlNode::parse<ParserT, typename T::Case_nodes_nodes__T::value_type, bool>( parser, value, addr, offset + 2 );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_nodes_( pos );
+											if constexpr ( has_void_element_updated_notifier_for_nodes_ )
+												t.notifyElementUpdated_nodes_();
+										}
+									}
+									else if constexpr ( has_void_element_updated_notifier_for_nodes_ )
+									{
+										currentChanged = publishable_STRUCT_HtmlNode::parse<ParserT, typename T::Case_nodes_nodes__T::value_type, bool>( parser, value, addr, offset + 2 );
+										if ( currentChanged )
+											t.notifyElementUpdated_nodes_();
+									}
+									else
+									{
+										if constexpr ( alwaysCollectChanges )
+											currentChanged = publishable_STRUCT_HtmlNode::parse<ParserT, typename T::Case_nodes_nodes__T::value_type, bool>( parser, value, addr, offset + 2 );
+										else
+											publishable_STRUCT_HtmlNode::parse<ParserT, typename T::Case_nodes_nodes__T::value_type>( parser, value, addr, offset + 2 );
+									}
+								}
+								else // update of one or more elelments as a whole
+								{
+									size_t action;
+									::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
+									switch ( action )
+									{
+										case ActionOnVector::remove_at:
+										{
+											typename T::Case_nodes_nodes__T oldVal;
+											::globalmq::marshalling::impl::copyVector<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( t.nodes_(), oldVal );
+											t.nodes_().erase( t.nodes_().begin() + pos );
+											if constexpr ( has_erased_notifier3_for_nodes_ )
+												t.notifyErased_nodes_( pos, oldVal );
+											if constexpr ( has_erased_notifier2_for_nodes_ )
+												t.notifyErased_nodes_( pos );
+											if constexpr ( has_void_erased_notifier_for_nodes_ )
+												t.notifyErased_nodes_();
+											if constexpr ( alwaysCollectChanges )
+												currentChanged = true;
+											break;
+										}
+										case ActionOnVector::update_at:
+										{
+											::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+											typename T::Case_nodes_nodes__T::value_type& value = t.nodes_()[pos];
+											typename T::Case_nodes_nodes__T::value_type oldValue;
+											publishable_STRUCT_HtmlNode::copy( value, oldValue );
+											if constexpr ( has_full_element_updated_notifier_for_nodes_ )
+											{
+												currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, value, oldValue );
+												if ( currentChanged )
+												{
+													t.notifyElementUpdated_nodes_( pos, oldValue );
+													if constexpr ( has_element_updated_notifier_for_nodes_ )
+														t.notifyElementUpdated_nodes_();
+													if constexpr ( has_void_element_updated_notifier_for_nodes_ )
+														t.notifyElementUpdated_nodes_();
+												}
+											}
+											else if constexpr ( has_element_updated_notifier_for_nodes_ )
+											{
+												currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, value, oldValue );
+												if ( currentChanged )
+												{
+													t.notifyElementUpdated_nodes_( pos );
+													if constexpr ( has_void_element_updated_notifier_for_nodes_ )
+														t.notifyElementUpdated_nodes_();
+												}
+											}
+											else if constexpr ( has_void_element_updated_notifier_for_nodes_ )
+											{
+												currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, value, oldValue );
+												if ( currentChanged )
+													t.notifyElementUpdated_nodes_();
+											}
+											else
+											{
+												if constexpr ( alwaysCollectChanges )
+													currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, value, oldValue );
+												else
+													PublishableVectorProcessor::parseSingleValue<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, value );
+											}
+											break;
+										}
+										case ActionOnVector::insert_single_before:
+										{
+											::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+											typename T::Case_nodes_nodes__T::value_type value;
+											PublishableVectorProcessor::parseSingleValue<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, value );
+											if constexpr ( has_insert_notifier3_for_nodes_ )
+											{
+												typename T::Case_nodes_nodes__T oldVal;
+												::globalmq::marshalling::impl::copyVector<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( t.nodes_(), oldVal );
+												t.notifyInserted_nodes_( pos, oldVal );
+											}
+											if constexpr ( has_insert_notifier2_for_nodes_ )
+												t.notifyInserted_nodes_( pos );
+											if constexpr ( has_void_insert_notifier_for_nodes_ )
+												t.notifyInserted_nodes_();
+											t.nodes_().insert( t.nodes_().begin() + pos, value );
+											if constexpr ( alwaysCollectChanges )
+												currentChanged = true;
+											break;
+										}
+										default:
+											throw std::exception();
+									}
+									::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
+								}
+							}
+							else // replacement of the whole vector
+							{
+								::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+
+								if constexpr( alwaysCollectChanges )
+								{
+									PublishableVectorProcessor::parse<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, t.nodes_() );
+									currentChanged = !::globalmq::marshalling::impl::isSameVector<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( oldVectorVal, t.nodes_() );
+								}
+								else
+									PublishableVectorProcessor::parse<ParserT, typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( parser, t.nodes_() );
+
+								::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+							}
+
+							if ( currentChanged )
+							{
+								if constexpr( has_void_update_notifier_for_nodes_ )
+									t.notifyUpdated_nodes_();
+								if constexpr( has_update_notifier_for_nodes_ )
+									t.notifyUpdated_nodes_( oldVectorVal );
+							}
+						}
+						break;
+					}
+					default:
+						throw std::exception(); // unexpected
+				}
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		auto srcCaseId = src.currentVariant();
+		dst.initAs( srcCaseId );
+		if ( srcCaseId != UserT::Variants::unknown )
+			switch ( srcCaseId )
+			{
+				case 1: // IDL CASE text
+				{
+					dst.str() = src.str();
+				}
+				case 2: // IDL CASE nodes
+				{
+					::globalmq::marshalling::impl::copyVector<typename UserT::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( src.nodes_(), dst.nodes_() );
+				}
+				default:
+					throw std::exception(); // unexpected
+			}
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.currentVariant() != s2.currentVariant() )
+			return false;
+		if ( s1.currentVariant() != UserT::Variants::unknown )
+			switch ( s1.currentVariant() )
+			{
+				if ( s1.str() != s2.str() ) return false;
+				if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::nodes_), publishable_STRUCT_HtmlNode>( s1.nodes_(), s2.nodes_() ) ) return false;
+				default:
+					throw std::exception(); // unexpected
+			}
+		return true;
+	}
+};
 
 struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::StructType
 {
@@ -928,6 +1470,557 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 		if ( s1.X != s2.X ) return false;
 		if ( s1.Y != s2.Y ) return false;
 		if ( s1.Z != s2.Z ) return false;
+		return true;
+	}
+};
+
+struct publishable_STRUCT_HtmlNode : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		PublishableVectorProcessor::compose<ComposerT, decltype(T::properties), publishable_STRUCT_Property>( composer, t.properties, "properties", true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "nodes" );
+		publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::compose( composer, t.nodes );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_properties = has_void_update_notifier_call_for_properties<T>;
+		static constexpr bool has_update_notifier_for_properties = has_update_notifier_call_for_properties<T, decltype(T::properties)>;
+		static constexpr bool has_any_notifier_for_properties = has_void_update_notifier_for_properties || has_update_notifier_for_properties;
+		using propertiesT = decltype(T::properties);
+		static constexpr bool has_void_insert_notifier_for_properties = has_void_insert_notifier_call_for_properties<T>;
+		static constexpr bool has_insert_notifier2_for_properties = has_insert_notifier_call2_for_properties<T>;
+		static constexpr bool has_insert_notifier3_for_properties = has_insert_notifier_call3_for_properties<T, GMQ_COLL vector<propertiesT>&>;
+		static constexpr bool has_void_erased_notifier_for_properties = has_void_erased_notifier_call_for_properties<T>;
+		static constexpr bool has_erased_notifier2_for_properties = has_erased_notifier_call2_for_properties<T>;
+		static constexpr bool has_erased_notifier3_for_properties = has_erased_notifier_call3_for_properties<T, GMQ_COLL vector<propertiesT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_properties = has_element_updated_void_notifier_call_for_properties<T>;
+		static constexpr bool has_element_updated_notifier_for_properties = has_element_updated_notifier_call_for_properties<T>;
+		static constexpr bool has_full_element_updated_notifier_for_properties = has_full_element_updated_notifier_call_for_properties<T, propertiesT&>;
+		static constexpr bool has_void_update_notifier_for_nodes = has_void_update_notifier_call_for_nodes<T>;
+		static constexpr bool has_update_notifier_for_nodes = has_update_notifier_call_for_nodes<T, decltype(T::nodes)>;
+		static constexpr bool has_any_notifier_for_nodes = has_void_update_notifier_for_nodes || has_update_notifier_for_nodes;
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		if constexpr( reportChanges )
+		{
+			decltype(T::properties) oldVectorVal;
+			::globalmq::marshalling::impl::copyVector<decltype(T::properties), publishable_STRUCT_Property>( t.properties, oldVectorVal );
+			::globalmq::marshalling::impl::parseKey( parser, "properties" );
+			PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, t.properties );
+			bool currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::properties), publishable_STRUCT_Property>( oldVectorVal, t.properties );
+			changed = changed || currentChanged;
+		}
+		else
+		{
+			::globalmq::marshalling::impl::parseKey( parser, "properties" );
+			PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, t.properties );
+		}
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "nodes" );
+		if constexpr( has_update_notifier_for_nodes )
+		{
+			decltype(T::nodes) temp_nodes;
+			publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
+			bool changedCurrent = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+			if ( changedCurrent )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr( has_void_update_notifier_for_nodes )
+					t.notifyUpdated_nodes();
+				t.notifyUpdated_nodes( temp_nodes );
+			}
+		}
+		else if constexpr( has_void_update_notifier_for_nodes )
+		{
+			bool changedCurrent = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+			if ( changedCurrent )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				t.notifyUpdated_nodes();
+			}
+		}
+		else if constexpr ( reportChanges )
+			changed = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+		else
+			publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse( parser, t.nodes );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parseForStateSync( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "properties" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property, true>( parser, t.properties );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "nodes" );
+		publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parseForStateSync( parser, t.nodes );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_properties = has_void_update_notifier_call_for_properties<T>;
+		static constexpr bool has_update_notifier_for_properties = has_update_notifier_call_for_properties<T, decltype(T::properties)>;
+		static constexpr bool has_any_notifier_for_properties = has_void_update_notifier_for_properties || has_update_notifier_for_properties;
+		using propertiesT = decltype(T::properties);
+		static constexpr bool has_void_insert_notifier_for_properties = has_void_insert_notifier_call_for_properties<T>;
+		static constexpr bool has_insert_notifier2_for_properties = has_insert_notifier_call2_for_properties<T>;
+		static constexpr bool has_insert_notifier3_for_properties = has_insert_notifier_call3_for_properties<T, GMQ_COLL vector<propertiesT>&>;
+		static constexpr bool has_void_erased_notifier_for_properties = has_void_erased_notifier_call_for_properties<T>;
+		static constexpr bool has_erased_notifier2_for_properties = has_erased_notifier_call2_for_properties<T>;
+		static constexpr bool has_erased_notifier3_for_properties = has_erased_notifier_call3_for_properties<T, GMQ_COLL vector<propertiesT>&>;
+		static constexpr bool has_void_element_updated_notifier_for_properties = has_element_updated_void_notifier_call_for_properties<T>;
+		static constexpr bool has_element_updated_notifier_for_properties = has_element_updated_notifier_call_for_properties<T>;
+		static constexpr bool has_full_element_updated_notifier_for_properties = has_full_element_updated_notifier_call_for_properties<T, propertiesT&>;
+		static constexpr bool has_void_update_notifier_for_nodes = has_void_update_notifier_call_for_nodes<T>;
+		static constexpr bool has_update_notifier_for_nodes = has_update_notifier_call_for_nodes<T, decltype(T::nodes)>;
+		static constexpr bool has_any_notifier_for_nodes = has_void_update_notifier_for_nodes || has_update_notifier_for_nodes;
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+			{
+				{
+					decltype(T::properties) oldVectorVal;
+					bool currentChanged = false;
+					constexpr bool alwaysCollectChanges = has_any_notifier_for_properties;
+					if constexpr( alwaysCollectChanges )
+						::globalmq::marshalling::impl::copyVector<decltype(T::properties), publishable_STRUCT_Property>( t.properties, oldVectorVal );
+					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
+					{
+						size_t pos = addr[offset + 1];
+						if ( pos >= t.properties.size() )
+							throw std::exception();
+						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
+						{
+							typename decltype(T::properties)::value_type& value = t.properties[pos];
+							if constexpr ( has_full_element_updated_notifier_for_properties )
+							{
+								typename decltype(T::properties)::value_type oldValue;
+								publishable_STRUCT_Property::copy( value, oldValue );
+								currentChanged = publishable_STRUCT_Property::parse<ParserT, typename decltype(T::properties)::value_type, bool>( parser, value, addr, offset + 2 );
+								if ( currentChanged )
+								{
+									t.notifyElementUpdated_properties( pos, oldValue );
+									if constexpr ( has_element_updated_notifier_for_properties )
+										t.notifyElementUpdated_properties();
+									if constexpr ( has_void_element_updated_notifier_for_properties )
+										t.notifyElementUpdated_properties();
+								}
+							}
+							else if constexpr ( has_element_updated_notifier_for_properties )
+							{
+								currentChanged = publishable_STRUCT_Property::parse<ParserT, typename decltype(T::properties)::value_type, bool>( parser, value, addr, offset + 2 );
+								if ( currentChanged )
+								{
+									t.notifyElementUpdated_properties( pos );
+									if constexpr ( has_void_element_updated_notifier_for_properties )
+										t.notifyElementUpdated_properties();
+								}
+							}
+							else if constexpr ( has_void_element_updated_notifier_for_properties )
+							{
+								currentChanged = publishable_STRUCT_Property::parse<ParserT, typename decltype(T::properties)::value_type, bool>( parser, value, addr, offset + 2 );
+								if ( currentChanged )
+									t.notifyElementUpdated_properties();
+							}
+							else
+							{
+								if constexpr ( alwaysCollectChanges )
+									currentChanged = publishable_STRUCT_Property::parse<ParserT, typename decltype(T::properties)::value_type, bool>( parser, value, addr, offset + 2 );
+								else
+									publishable_STRUCT_Property::parse<ParserT, typename decltype(T::properties)::value_type>( parser, value, addr, offset + 2 );
+							}
+						}
+						else // update of one or more elelments as a whole
+						{
+							size_t action;
+							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnVector::remove_at:
+								{
+									decltype(T::properties) oldVal;
+									::globalmq::marshalling::impl::copyVector<decltype(T::properties), publishable_STRUCT_Property>( t.properties, oldVal );
+									t.properties.erase( t.properties.begin() + pos );
+									if constexpr ( has_erased_notifier3_for_properties )
+										t.notifyErased_properties( pos, oldVal );
+									if constexpr ( has_erased_notifier2_for_properties )
+										t.notifyErased_properties( pos );
+									if constexpr ( has_void_erased_notifier_for_properties )
+										t.notifyErased_properties();
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								case ActionOnVector::update_at:
+								{
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::properties)::value_type& value = t.properties[pos];
+									typename decltype(T::properties)::value_type oldValue;
+									publishable_STRUCT_Property::copy( value, oldValue );
+									if constexpr ( has_full_element_updated_notifier_for_properties )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, value, oldValue );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_properties( pos, oldValue );
+											if constexpr ( has_element_updated_notifier_for_properties )
+												t.notifyElementUpdated_properties();
+											if constexpr ( has_void_element_updated_notifier_for_properties )
+												t.notifyElementUpdated_properties();
+										}
+									}
+									else if constexpr ( has_element_updated_notifier_for_properties )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, value, oldValue );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_properties( pos );
+											if constexpr ( has_void_element_updated_notifier_for_properties )
+												t.notifyElementUpdated_properties();
+										}
+									}
+									else if constexpr ( has_void_element_updated_notifier_for_properties )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, value, oldValue );
+										if ( currentChanged )
+											t.notifyElementUpdated_properties();
+									}
+									else
+									{
+										if constexpr ( alwaysCollectChanges )
+											currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, value, oldValue );
+										else
+											PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, value );
+									}
+									break;
+								}
+								case ActionOnVector::insert_single_before:
+								{
+									::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );
+									typename decltype(T::properties)::value_type value;
+									PublishableVectorProcessor::parseSingleValue<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, value );
+									if constexpr ( has_insert_notifier3_for_properties )
+									{
+										decltype(T::properties) oldVal;
+										::globalmq::marshalling::impl::copyVector<decltype(T::properties), publishable_STRUCT_Property>( t.properties, oldVal );
+										t.notifyInserted_properties( pos, oldVal );
+									}
+									if constexpr ( has_insert_notifier2_for_properties )
+										t.notifyInserted_properties( pos );
+									if constexpr ( has_void_insert_notifier_for_properties )
+										t.notifyInserted_properties();
+									t.properties.insert( t.properties.begin() + pos, value );
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								default:
+									throw std::exception();
+							}
+							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
+						}
+					}
+					else // replacement of the whole vector
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );
+
+						if constexpr( alwaysCollectChanges )
+						{
+							PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, t.properties );
+							currentChanged = !::globalmq::marshalling::impl::isSameVector<decltype(T::properties), publishable_STRUCT_Property>( oldVectorVal, t.properties );
+						}
+						else
+							PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property>( parser, t.properties );
+
+						::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );
+					}
+
+					if ( currentChanged )
+					{
+						if constexpr( has_void_update_notifier_for_properties )
+							t.notifyUpdated_properties();
+						if constexpr( has_update_notifier_for_properties )
+							t.notifyUpdated_properties( oldVectorVal );
+					}
+				}
+				break;
+			}
+			case 1:
+			{
+				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
+				{
+					::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+					if constexpr( has_update_notifier_for_nodes )
+					{
+						decltype(T::nodes) temp_nodes;
+						publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
+						bool changedCurrent = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+						if ( changedCurrent )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr( has_void_update_notifier_for_nodes )
+								t.notifyUpdated_nodes();
+							t.notifyUpdated_nodes( temp_nodes );
+						}
+					}
+					else if constexpr( has_void_update_notifier_for_nodes )
+					{
+						bool changedCurrent = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+						if ( changedCurrent )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							t.notifyUpdated_nodes();
+						}
+					}
+
+					else
+					{
+							if constexpr ( reportChanges )
+								changed = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+							else
+								publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse( parser, t.nodes );
+					}
+					::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+				}
+				else // let child continue parsing
+				{
+					if constexpr( has_update_notifier_for_nodes )
+					{
+						decltype(T::nodes) temp_nodes;
+						publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
+						bool changedCurrent = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, offset + 1 );
+						if ( changedCurrent )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							if constexpr( has_void_update_notifier_for_nodes )
+								t.notifyUpdated_nodes();
+							t.notifyUpdated_nodes( temp_nodes );
+						}
+					}
+					else if constexpr( has_void_update_notifier_for_nodes )
+					{
+						bool changedCurrent = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, offset + 1 );
+						if ( changedCurrent )
+						{
+							if constexpr ( reportChanges )
+								changed = true;
+							t.notifyUpdated_nodes();
+						}
+					}
+					else if constexpr ( reportChanges )
+						changed = publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, offset + 1 );
+					else
+						publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::parse( parser, t.nodes, addr, offset + 1 );
+				}
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		::globalmq::marshalling::impl::copyVector<decltype(UserT::properties), publishable_STRUCT_Property>( src.properties, dst.properties );
+		publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::copy( src.nodes, dst.nodes );
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::properties), publishable_STRUCT_Property>( s1.properties, s2.properties ) ) return false;
+		if( ! publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::isSame( s1.nodes, s2.nodes ) ) return false;
+		return true;
+	}
+};
+
+struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t )
+	{
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.value, "value", false );
+
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
+		static constexpr bool has_void_update_notifier_for_value = has_void_update_notifier_call_for_value<T>;
+		static constexpr bool has_update_notifier_for_value = has_update_notifier_call_for_value<T, decltype(T::value)>;
+		static constexpr bool has_any_notifier_for_value = has_void_update_notifier_for_value || has_update_notifier_for_value;
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		if constexpr( has_any_notifier_for_name || reportChanges )
+		{
+			decltype(T::name) oldVal = t.name;
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+			bool currentChanged = oldVal != t.name;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_name )
+					t.notifyUpdated_name();
+				if constexpr ( has_update_notifier_for_name )
+					t.notifyUpdated_name( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		if constexpr( has_any_notifier_for_value || reportChanges )
+		{
+			decltype(T::value) oldVal = t.value;
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
+			bool currentChanged = oldVal != t.value;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_value )
+					t.notifyUpdated_value();
+				if constexpr ( has_update_notifier_for_value )
+					t.notifyUpdated_value( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
+
+
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parseForStateSync( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
+
+	}
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	{
+		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
+		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
+		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
+		static constexpr bool has_void_update_notifier_for_value = has_void_update_notifier_call_for_value<T>;
+		static constexpr bool has_update_notifier_for_value = has_update_notifier_call_for_value<T, decltype(T::value)>;
+		static constexpr bool has_any_notifier_for_value = has_void_update_notifier_for_value || has_update_notifier_for_value;
+		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		GMQ_ASSERT( addr.size() );
+		switch ( addr[offset] )
+		{
+			case 0:
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_name || reportChanges )
+				{
+					decltype(T::name) oldVal = t.name;
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					bool currentChanged = oldVal != t.name;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_name )
+							t.notifyUpdated_name();
+						if constexpr ( has_update_notifier_for_name )
+							t.notifyUpdated_name( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+				break;
+			}
+			case 1:
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_value || reportChanges )
+				{
+					decltype(T::value) oldVal = t.value;
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::value)>( parser, &(t.value) );
+					bool currentChanged = oldVal != t.value;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_value )
+							t.notifyUpdated_value();
+						if constexpr ( has_update_notifier_for_value )
+							t.notifyUpdated_value( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::value)>( parser, &(t.value) );
+				break;
+			}
+			default:
+				throw std::exception(); // unexpected
+		}
+		if constexpr ( reportChanges )
+			return changed;
+	}
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst) {
+		dst.name = src.name;
+		dst.value = src.value;
+	}
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.name != s2.name ) return false;
+		if ( s1.value != s2.value ) return false;
 		return true;
 	}
 };
@@ -1452,7 +2545,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 				case 2: // IDL CASE two
 				{
 					dst.i_2() = src.i_2();
-					::globalmq::marshalling::impl::copyVector<decltype(UserT::vp_2), ::globalmq::marshalling::impl::RealType>( src.vp_2(), dst.vp_2() );
+					::globalmq::marshalling::impl::copyVector<typename UserT::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( src.vp_2(), dst.vp_2() );
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -5050,6 +6143,329 @@ public:
 	}
 };
 
+//**********************************************************************
+// PUBLISHABLE publishable_html_node (1 parameters)
+// 1. STRUCT HtmlNode nodes
+//**********************************************************************
+
+template<class T, class ComposerT>
+class publishable_html_node_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>
+{
+	T t;
+	using BufferT = typename ComposerT::BufferType;
+	BufferT buffer;
+	ComposerT composer;
+	static constexpr bool has_nodes = has_nodes_member<T>;
+	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type STRUCT HtmlNode" );
+
+
+public:
+	static constexpr uint64_t numTypeID = 3;
+	static constexpr const char* stringTypeID = "publishable_html_node";
+
+	template<class ... ArgsT>
+	publishable_html_node_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
+	const T& getState() { return t; }
+	ComposerT& getComposer() { return composer; }
+	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
+	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	const char* name() { return stringTypeID; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
+	const auto& get_nodes() { return t.nodes; }
+	void set_nodes( decltype(T::nodes) val) { 
+		t.nodes = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_HtmlNode::compose( composer, t.nodes );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+	}
+	auto get4set_nodes() { return HtmlNode_RefWrapper4Set<decltype(T::nodes), publishable_html_node_WrapperForPublisher>(t.nodes, *this, GMQ_COLL vector<size_t>(), 0); }
+
+	template<class ComposerType>
+	void compose( ComposerType& composer )
+	{
+		::globalmq::marshalling::impl::composeStructBegin( composer );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "nodes" );
+		publishable_STRUCT_HtmlNode::compose( composer, t.nodes );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+
+
+		::globalmq::marshalling::impl::composeStructEnd( composer );
+	}
+};
+
+template<class T, class RegistrarT>
+class publishable_html_node_NodecppWrapperForPublisher : public publishable_html_node_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
+{
+	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
+	RegistrarT& registrar;
+public:
+	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
+	template<class ... ArgsT>
+	publishable_html_node_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_html_node_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	{ 
+		registrar.add( this );
+	}
+
+	virtual ~publishable_html_node_NodecppWrapperForPublisher()
+	{ 
+		registrar.remove( this );
+	}
+
+	virtual void startTick( BufferT&& buff ) { publishable_html_node_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
+	virtual BufferT&& endTick() { return  publishable_html_node_WrapperForPublisher<T, ComposerT>::endTick(); }
+	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_html_node_WrapperForPublisher<T, ComposerT>::compose(composer); }
+	virtual const char* name() { return publishable_html_node_WrapperForPublisher<T, ComposerT>::name(); }
+};
+
+template<class T, class BufferT>
+class publishable_html_node_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
+{
+	T t;
+	static constexpr bool has_nodes = has_nodes_member<T>;
+	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type STRUCT HtmlNode" );
+
+	static constexpr bool has_void_update_notifier_for_nodes = has_void_update_notifier_call_for_nodes<T>;
+	static constexpr bool has_update_notifier_for_nodes = has_update_notifier_call_for_nodes<T, decltype(T::nodes)>;
+	static constexpr bool has_any_notifier_for_nodes = has_void_update_notifier_for_nodes || has_update_notifier_for_nodes;
+	static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+
+public:
+	static constexpr uint64_t numTypeID = 3;
+	static constexpr const char* stringTypeID = "publishable_html_node";
+
+	template<class ... ArgsT>
+	publishable_html_node_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	const T& getState() { return t; }
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual const char* name() { return stringTypeID; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
+
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser)
+	{
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						if constexpr( has_update_notifier_for_nodes )
+						{
+							decltype(T::nodes) temp_nodes;
+							publishable_STRUCT_HtmlNode::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_nodes )
+									t.notifyUpdated_nodes();
+								t.notifyUpdated_nodes( temp_nodes );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_nodes )
+						{
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_nodes();
+							}
+						}
+
+						else
+						{
+							publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+						}
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						if constexpr( has_update_notifier_for_nodes )
+						{
+							decltype(T::nodes) temp_nodes;
+							publishable_STRUCT_HtmlNode::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_nodes )
+									t.notifyUpdated_nodes();
+								t.notifyUpdated_nodes( temp_nodes );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_nodes )
+						{
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, 1 );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_nodes();
+							}
+						}
+						else
+							publishable_STRUCT_HtmlNode::parse( parser, t.nodes, addr, 1 );
+					}
+					break;
+				}
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
+
+
+	template<class ParserT>
+	void parseStateSyncMessage( ParserT& parser )
+	{
+		::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "nodes" );
+		publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseStructEnd( parser );
+
+		if constexpr ( has_full_update_notifier )
+			t.notifyFullyUpdated();
+	}
+	const auto& get_nodes() { return t.nodes; }
+};
+
+template<class T, class RegistrarT>
+class publishable_html_node_NodecppWrapperForSubscriber : public publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
+{
+	RegistrarT& registrar;
+public:
+	template<class ... ArgsT>
+	publishable_html_node_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	{ 
+		registrar.add( this );
+	}
+
+	virtual ~publishable_html_node_NodecppWrapperForSubscriber()
+	{ 
+		registrar.remove( this );
+	}
+
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
+	{
+		publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
+	}
+
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
+	{
+		publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
+	}
+
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
+	{
+		publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
+	}
+
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
+	{
+		publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
+	}
+	virtual const char* name()
+	{
+		return publishable_html_node_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
+	}
+	void subscribe(GMQ_COLL string path)
+	{
+		registrar.subscribe( this, path );
+	}
+};
+
+template<class T, class InputBufferT, class ComposerT>
+class publishable_html_node_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
+{
+	T t;
+	using BufferT = typename ComposerT::BufferType;
+	static constexpr bool has_nodes = has_nodes_member<T>;
+	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type STRUCT HtmlNode" );
+
+
+public:
+	static constexpr uint64_t numTypeID = 3;
+
+	publishable_html_node_WrapperForConcentrator() {}
+	const char* name() {return "publishable_html_node";}
+	
+	// Acting as publisher
+	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
+	template<class ComposerType>
+	void compose( ComposerType& composer )
+	{
+		::globalmq::marshalling::impl::composeStructBegin( composer );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "nodes" );
+		publishable_STRUCT_HtmlNode::compose( composer, t.nodes );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
+
+
+		::globalmq::marshalling::impl::composeStructEnd( composer );
+	}
+
+	// Acting as subscriber
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
+
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser)
+	{
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						publishable_STRUCT_HtmlNode::parse( parser, t.nodes, addr, 1 );
+					}
+					break;
+				}
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
+
+	template<class ParserT>
+	void parseStateSyncMessage( ParserT& parser )
+	{
+		::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "nodes" );
+		publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseStructEnd( parser );
+	}
+};
+
 template<class InputBufferT, class ComposerT>
 class StateConcentratorFactory : public ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>
 {
@@ -5062,6 +6478,8 @@ public:
 				return new publishable_short_sample_WrapperForConcentrator<publishable_short_sample, InputBufferT, ComposerT>;
 			case 2:
 				return new publishable_sample_WrapperForConcentrator<publishable_sample, InputBufferT, ComposerT>;
+			case 3:
+				return new publishable_html_node_WrapperForConcentrator<publishable_html_node, InputBufferT, ComposerT>;
 			default:
 				return nullptr;
 		}
@@ -5069,6 +6487,48 @@ public:
 };
 
 //===============================================================================
+
+template<class T>
+class HtmlTextOrNodes_RefWrapper
+{
+	T& t;
+
+
+public:
+	HtmlTextOrNodes_RefWrapper( T& actual ) : t( actual ) {}
+	const auto& get_str() { return t.str(); }
+	auto get_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper<HtmlNode_RefWrapper<typename T::Case_nodes_nodes__T::value_type>, typename T::Case_nodes_nodes__T>(t.nodes_); }
+};
+
+template<class T, class RootT>
+class HtmlTextOrNodes_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+
+
+public:
+	HtmlTextOrNodes_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	const auto& get_str() { return t.str(); }
+	void set_str( typename T::Case_text_str_T val) { 
+		t.str() = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.str() );
+	}
+	auto get_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper<HtmlNode_RefWrapper<typename T::Case_nodes_nodes__T::value_type>, typename T::Case_nodes_nodes__T>(t.nodes_); }
+	void set_nodes_( typename T::Case_nodes_nodes__T val) { 
+		t.nodes_() = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		PublishableVectorProcessor::compose<decltype(root.getComposer()), typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( root.getComposer(), t.nodes_() );
+		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
+	}
+	auto get4set_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<typename T::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode, RootT, HtmlNode_RefWrapper4Set<typename T::Case_nodes_nodes__T::value_type, RootT>>(t.nodes_(), root, address, 0); }
+};
 
 template<class T>
 class point3D_RefWrapper
@@ -5183,6 +6643,106 @@ public:
 		t.Z = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
 		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.Z );
+	}
+};
+
+template<class T>
+class HtmlNode_RefWrapper
+{
+	T& t;
+	static constexpr bool has_properties = has_properties_member<T>;
+	static_assert( has_properties, "type T must have member T::properties of a type corresponding to IDL type VECTOR<STRUCT Property>" );
+	static constexpr bool has_nodes = has_nodes_member<T>;
+	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type DISCRIMINATED_UNION HtmlTextOrNodes" );
+
+
+public:
+	HtmlNode_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_properties() { return globalmq::marshalling::VectorOfStructRefWrapper<Property_RefWrapper<typename decltype(T::properties)::value_type>, decltype(T::properties)>(t.properties); }
+	const auto& get_nodes() { return t.nodes; }
+};
+
+template<class T, class RootT>
+class HtmlNode_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_properties = has_properties_member<T>;
+	static_assert( has_properties, "type T must have member T::properties of a type corresponding to IDL type VECTOR<STRUCT Property>" );
+	static constexpr bool has_nodes = has_nodes_member<T>;
+	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type DISCRIMINATED_UNION HtmlTextOrNodes" );
+
+
+public:
+	HtmlNode_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_properties() { return globalmq::marshalling::VectorOfStructRefWrapper<Property_RefWrapper<typename decltype(T::properties)::value_type>, decltype(T::properties)>(t.properties); }
+	void set_properties( decltype(T::properties) val) { 
+		t.properties = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
+		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::properties), publishable_STRUCT_Property>( root.getComposer(), t.properties );
+		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
+	}
+	auto get4set_properties() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::properties), publishable_STRUCT_Property, RootT, Property_RefWrapper4Set<typename decltype(T::properties)::value_type, RootT>>(t.properties, root, address, 0); }
+	const auto& get_nodes() { return t.nodes; }
+	void set_nodes( decltype(T::nodes) val) { 
+		t.nodes = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
+		publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::compose( root.getComposer(), t.nodes );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
+	}
+	auto get4set_nodes() { return HtmlTextOrNodes_RefWrapper4Set<decltype(T::nodes), RootT>(t.nodes, *this, address, 1); }
+};
+
+template<class T>
+class Property_RefWrapper
+{
+	T& t;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_value = has_value_member<T>;
+	static_assert( has_value, "type T must have member T::value of a type corresponding to IDL type CHARACTER_STRING" );
+
+
+public:
+	Property_RefWrapper( T& actual ) : t( actual ) {}
+	const auto& get_name() { return t.name; }
+	const auto& get_value() { return t.value; }
+};
+
+template<class T, class RootT>
+class Property_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_value = has_value_member<T>;
+	static_assert( has_value, "type T must have member T::value of a type corresponding to IDL type CHARACTER_STRING" );
+
+
+public:
+	Property_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	const auto& get_name() { return t.name; }
+	void set_name( decltype(T::name) val) { 
+		t.name = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.name );
+	}
+	const auto& get_value() { return t.value; }
+	void set_value( decltype(T::value) val) { 
+		t.value = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.value );
 	}
 };
 
@@ -6153,4 +7713,4 @@ void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_5493d326_guard
+#endif // _test_marshalling_h_519f486f_guard
