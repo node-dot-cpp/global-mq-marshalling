@@ -885,21 +885,6 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 			auto& m = *mbit;
 			assert( typeid( m ) == typeid( MessageParameter ) );
 
-			/*const char* outT = ( m.type.isNumericType() || m.type.kind == MessageParameterType::KIND::ENUM ) ? "auto" : "const auto&";
-			fprintf( header, "\t%s get_%s() const {\n", outT, m.name.c_str() );
-			fprintf( header, "\t\tif ( v != Variants::%s )\n", cs.name.c_str() );
-			fprintf( header, "\t\t\tthrow std::exception();\n" );
-			fprintf( header, "\t\treturn reinterpret_cast<const Case_%s*>( %s )->%s;\n", cs.name.c_str(), memName.c_str(), m.name.c_str() );
-			fprintf( header, "\t}\n" );
-
-			auto inT = fmt::format( ( m.type.isNumericType() || m.type.kind == MessageParameterType::KIND::ENUM ) ? "decltype(Case_{}::{})" : "const decltype(Case_{}::{})&", cs.name, m.name );
-			const char* assignedVal = ( m.type.isNumericType() || m.type.kind == MessageParameterType::KIND::ENUM ) ? "val" : "std::move( val )";
-			fprintf( header, "\tvoid set_%s( %s val ) { \n", m.name.c_str(), inT.c_str() );
-			fprintf( header, "\t\tif ( v != Variants::%s )\n", cs.name.c_str() );
-			fprintf( header, "\t\t\tthrow std::exception();\n" );
-			fprintf( header, "\t\treinterpret_cast<Case_%s*>( %s )->%s = %s;\n", cs.name.c_str(), memName.c_str(), m.name.c_str(), assignedVal );
-			fprintf( header, "\t}\n" );*/
-
 			fprintf( header, "\t%s& %s() {\n", impl_discriminatedUnionCaseMemberType( m ).c_str(), m.name.c_str() );
 			fprintf( header, "\t\tif ( v != Variants::%s )\n", cs.name.c_str() );
 			fprintf( header, "\t\t\tthrow std::exception();\n" );

@@ -89,10 +89,8 @@ void printMessage( CompositeType& s, size_t offset );
 void printPublishable( CompositeType& s, size_t offset );
 void printStruct( CompositeType& s, size_t offset );
 void printDiscriminatedUnionCase( CompositeType& s, size_t offset );
-//void printDiscriminatedUnion( CompositeType& s, size_t offset );
 
 void printMessageParameter( MessageParameter& s, size_t offset );
-//void printDiscriminatedUnionCase( MessageParameter& s, size_t offset );
 void printMessageMembers( CompositeType& s, size_t offset );
 void printPublishableMembers( CompositeType& s, size_t offset );
 void printStructMembers( CompositeType& s, size_t offset );

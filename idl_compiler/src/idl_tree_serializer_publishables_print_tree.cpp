@@ -155,19 +155,6 @@ void printDiscriminatedUnionCase( CompositeType& s, size_t offset )
 }
 
 
-/*void printDiscriminatedUnion( CompositeType& s, size_t offset )
-{
-	char offsetch[1024];
-	memset( offsetch, ' ', offset );
-	offsetch[ offset ] = 0;
-
-	printf( "%sDiscriminatedUnion: name = \"%s\"", offsetch, s.name.c_str() );
-	printf( "(%zd cases) {\n", s.getMembers().size() );
-	printDiscriminatedUnionCases( s, offset + 4 );
-	printf( "%s}\n", offsetch );
-}*/
-
-
 void printMessageMembers( CompositeType& s, size_t offset )
 {
 	for ( auto& it : s.getMembers() )
@@ -265,34 +252,6 @@ void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, siz
 	}
 	printDiscriminatedUnionCase( *(dynamic_cast<CompositeType*>(&(*(s)))), offset + 4 );
 }
-
-/*void printDiscriminatedUnionCase( MessageParameter& s, size_t offset )
-{
-	char offsetch[1024];
-	memset( offsetch, ' ', offset );
-	offsetch[ offset ] = 0;
-
-	if ( s.type.kind == MessageParameterType::KIND::EXTENSION )
-	{
-		printf( "%sEXTENSION:\n", offsetch );
-		return;
-	}
-
-	printf( "%sname: \"%s\" type: \"", offsetch, s.name.c_str() );
-	printDataType( s.type );
-
-	if ( s.extendTo )
-	{
-		printf( "\" extendTo: %s ", s.extendTo ? "yes" : "no" );
-		assert( s.defaultValue.kind != Variant::KIND::NONE );
-		printf( ", defaultValue: " );
-		printVariant( s.defaultValue );
-	}
-	else
-		assert( s.defaultValue.kind == Variant::KIND::NONE );
-		
-	printf( "\"\n" );
-}*/
 
 void printDataType( MessageParameterType& s )
 {
