@@ -350,10 +350,7 @@ public:
 private:
 	static constexpr size_t text_nodes_memsz = sizeof( Case_nodes ) > ( sizeof( Case_text ) ) ? sizeof( Case_nodes ) : ( sizeof( Case_text ) );
 	uint8_t text_nodes_mem[text_nodes_memsz];
-
-public:
-	Variants currentVariant() const { return v; }
-	void initAs( Variants v_ ) {
+	void implDeinit() {
 		if ( v != Variants::unknown ) // then destruct existing value
 		{
 			switch ( v )
@@ -361,11 +358,69 @@ public:
 				case Variants::text: reinterpret_cast<Case_text*>( text_nodes_mem ) -> ~Case_text(); break;
 				case Variants::nodes: reinterpret_cast<Case_nodes*>( text_nodes_mem ) -> ~Case_nodes(); break;
 			}
+			v = Variants::unknown;
 		}
+	}
+
+	void implCopyFrom( const HtmlTextOrNodes& other ) {
+		if ( v != other.v )
+			implDeinit();
+		switch ( other.v )
+		{
+			case Variants::text:
+				new ( text_nodes_mem ) Case_text( *reinterpret_cast<const Case_text*>( other.text_nodes_mem ) );
+				break;
+			case Variants::nodes:
+				new ( text_nodes_mem ) Case_nodes( *reinterpret_cast<const Case_nodes*>( other.text_nodes_mem ) );
+				break;
+			case Variants::unknown: break;
+		}
+		v = other.v;
+	}
+
+	void implMoveFrom( HtmlTextOrNodes&& other ) {
+		if ( v != other.v )
+			implDeinit();
+		switch ( other.v )
+		{
+			case Variants::text:
+				new ( text_nodes_mem ) Case_text( std::move( *reinterpret_cast<Case_text*>( other.text_nodes_mem ) ) );
+				break;
+			case Variants::nodes:
+				new ( text_nodes_mem ) Case_nodes( std::move( *reinterpret_cast<Case_nodes*>( other.text_nodes_mem ) ) );
+				break;
+			case Variants::unknown: break;
+		}
+		v = other.v;
+		other.v = Variants::unknown;
+	}
+
+public:
+	HtmlTextOrNodes() {}
+	HtmlTextOrNodes( const HtmlTextOrNodes &other ) {
+		implCopyFrom( other );
+	}
+	HtmlTextOrNodes& operator = ( const HtmlTextOrNodes &other) {
+		implCopyFrom( other );
+		return *this;
+	}
+	HtmlTextOrNodes( HtmlTextOrNodes&& other) {
+		implMoveFrom( std::move( other ) );
+	}
+	HtmlTextOrNodes& operator = ( HtmlTextOrNodes&& other) {
+		implMoveFrom( std::move( other ) );
+		return *this;
+	}
+	virtual ~HtmlTextOrNodes() {
+		implDeinit();
+	}
+	Variants currentVariant() const { return v; }
+	void initAs( Variants v_ ) {
+		implDeinit();
 		switch ( v ) // init for a new type
 		{
-				case Variants::text: new ( text_nodes_mem ) Case_text; break;
-				case Variants::nodes: new ( text_nodes_mem ) Case_nodes; break;
+			case Variants::text: new ( text_nodes_mem ) Case_text; break;
+			case Variants::nodes: new ( text_nodes_mem ) Case_nodes; break;
 		}
 		v = v_;
 	}
@@ -450,10 +505,7 @@ public:
 private:
 	static constexpr size_t one_two_memsz = sizeof( Case_two ) > ( sizeof( Case_one ) ) ? sizeof( Case_two ) : ( sizeof( Case_one ) );
 	uint8_t one_two_mem[one_two_memsz];
-
-public:
-	Variants currentVariant() const { return v; }
-	void initAs( Variants v_ ) {
+	void implDeinit() {
 		if ( v != Variants::unknown ) // then destruct existing value
 		{
 			switch ( v )
@@ -461,11 +513,69 @@ public:
 				case Variants::one: reinterpret_cast<Case_one*>( one_two_mem ) -> ~Case_one(); break;
 				case Variants::two: reinterpret_cast<Case_two*>( one_two_mem ) -> ~Case_two(); break;
 			}
+			v = Variants::unknown;
 		}
+	}
+
+	void implCopyFrom( const du_one& other ) {
+		if ( v != other.v )
+			implDeinit();
+		switch ( other.v )
+		{
+			case Variants::one:
+				new ( one_two_mem ) Case_one( *reinterpret_cast<const Case_one*>( other.one_two_mem ) );
+				break;
+			case Variants::two:
+				new ( one_two_mem ) Case_two( *reinterpret_cast<const Case_two*>( other.one_two_mem ) );
+				break;
+			case Variants::unknown: break;
+		}
+		v = other.v;
+	}
+
+	void implMoveFrom( du_one&& other ) {
+		if ( v != other.v )
+			implDeinit();
+		switch ( other.v )
+		{
+			case Variants::one:
+				new ( one_two_mem ) Case_one( std::move( *reinterpret_cast<Case_one*>( other.one_two_mem ) ) );
+				break;
+			case Variants::two:
+				new ( one_two_mem ) Case_two( std::move( *reinterpret_cast<Case_two*>( other.one_two_mem ) ) );
+				break;
+			case Variants::unknown: break;
+		}
+		v = other.v;
+		other.v = Variants::unknown;
+	}
+
+public:
+	du_one() {}
+	du_one( const du_one &other ) {
+		implCopyFrom( other );
+	}
+	du_one& operator = ( const du_one &other) {
+		implCopyFrom( other );
+		return *this;
+	}
+	du_one( du_one&& other) {
+		implMoveFrom( std::move( other ) );
+	}
+	du_one& operator = ( du_one&& other) {
+		implMoveFrom( std::move( other ) );
+		return *this;
+	}
+	virtual ~du_one() {
+		implDeinit();
+	}
+	Variants currentVariant() const { return v; }
+	void initAs( Variants v_ ) {
+		implDeinit();
 		switch ( v ) // init for a new type
 		{
-				case Variants::one: new ( one_two_mem ) Case_one; break;
-				case Variants::two: new ( one_two_mem ) Case_two; break;
+			case Variants::one: new ( one_two_mem ) Case_one; break;
+			case Variants::two: new ( one_two_mem ) Case_two; break;
 		}
 		v = v_;
 	}

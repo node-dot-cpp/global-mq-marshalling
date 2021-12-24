@@ -836,18 +836,8 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		fprintf( header, "\tuint8_t %s[%ssz];\n", memName.c_str(), memName.c_str() );
 	}
 
-	fprintf( header, "\npublic:\n" );
-	fprintf( header, "\tVariants currentVariant() const { return v; }\n" );
-
-	if ( du.getDiscriminatedUnionCases().empty() )
-	{
-		fprintf( header, "};\n" );
-		return;
-	}
-
-	// initAS()
-	fprintf( header, "\tvoid initAs( Variants v_ ) {\n" );
-
+	// deinitializer
+	fprintf( header, "\tvoid implDeinit() {\n" );
 	fprintf( header, "\t\tif ( v != Variants::unknown ) // then destruct existing value\n" );
 	fprintf( header, "\t\t{\n" );
 	fprintf( header, "\t\t\tswitch ( v )\n" );
@@ -858,17 +848,95 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		fprintf( header, "\t\t\t\tcase Variants::%s: reinterpret_cast<Case_%s*>( %s ) -> ~Case_%s(); break;\n", name, name, memName.c_str(), name );
 	}
 	fprintf( header, "\t\t\t}\n" );
+	fprintf( header, "\t\t\tv = Variants::unknown;\n" );
 	fprintf( header, "\t\t}\n" );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
 
+	// copiers
+	fprintf( header, "\tvoid implCopyFrom( const %s& other ) {\n", du.name.c_str() );
+	fprintf( header, "\t\tif ( v != other.v )\n" );
+	fprintf( header, "\t\t\timplDeinit();\n" );
+	fprintf( header, "\t\tswitch ( other.v )\n" );
+	fprintf( header, "\t\t{\n" );
+	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	{
+		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+		fprintf( header, "\t\t\tcase Variants::%s:\n", name );
+		fprintf( header, "\t\t\t\tnew ( %s ) Case_%s( *reinterpret_cast<const Case_%s*>( other.%s ) );\n", memName.c_str(), name, name, memName.c_str() );
+		fprintf( header, "\t\t\t\tbreak;\n" );
+	}
+	fprintf( header, "\t\t\tcase Variants::unknown: break;\n" );
+	fprintf( header, "\t\t}\n" );
+	fprintf( header, "\t\tv = other.v;\n" );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+
+	fprintf( header, "\tvoid implMoveFrom( %s&& other ) {\n", du.name.c_str() );
+	fprintf( header, "\t\tif ( v != other.v )\n" );
+	fprintf( header, "\t\t\timplDeinit();\n" );
+	fprintf( header, "\t\tswitch ( other.v )\n" );
+	fprintf( header, "\t\t{\n" );
+	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	{
+		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+		fprintf( header, "\t\t\tcase Variants::%s:\n", name );
+		fprintf( header, "\t\t\t\tnew ( %s ) Case_%s( std::move( *reinterpret_cast<Case_%s*>( other.%s ) ) );\n", memName.c_str(), name, name, memName.c_str() );
+		fprintf( header, "\t\t\t\tbreak;\n" );
+	}
+	fprintf( header, "\t\t\tcase Variants::unknown: break;\n" );
+	fprintf( header, "\t\t}\n" );
+	fprintf( header, "\t\tv = other.v;\n" );
+	fprintf( header, "\t\tother.v = Variants::unknown;\n" );
+	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+
+	fprintf( header, "public:\n" );
+
+	// ctors, drtors...
+	fprintf( header, "\t%s() {}\n", du.name.c_str() );
+
+	fprintf( header, "\t%s( const %s &other ) {\n", du.name.c_str(), du.name.c_str() );
+	fprintf( header, "\t\timplCopyFrom( other );\n" );
+	fprintf( header, "\t}\n" );
+
+	fprintf( header, "\t%s& operator = ( const %s &other) {\n", du.name.c_str(), du.name.c_str() );
+	fprintf( header, "\t\timplCopyFrom( other );\n" );
+	fprintf( header, "\t\treturn *this;\n" );
+	fprintf( header, "\t}\n" );
+
+	fprintf( header, "\t%s( %s&& other) {\n", du.name.c_str(), du.name.c_str() );
+	fprintf( header, "\t\timplMoveFrom( std::move( other ) );\n" );
+	fprintf( header, "\t}\n" );
+
+	fprintf( header, "\t%s& operator = ( %s&& other) {\n", du.name.c_str(), du.name.c_str() );
+	fprintf( header, "\t\timplMoveFrom( std::move( other ) );\n" );
+	fprintf( header, "\t\treturn *this;\n" );
+	fprintf( header, "\t}\n" );
+
+	fprintf( header, "\tvirtual ~%s() {\n", du.name.c_str() );
+	fprintf( header, "\t\timplDeinit();\n" );
+	fprintf( header, "\t}\n" );
+
+	fprintf( header, "\tVariants currentVariant() const { return v; }\n" );
+
+	if ( du.getDiscriminatedUnionCases().empty() )
+	{
+		fprintf( header, "};\n" );
+		return;
+	}
+
+	// initAS()
+	fprintf( header, "\tvoid initAs( Variants v_ ) {\n" );
+	fprintf( header, "\t\timplDeinit();\n" );
 	fprintf( header, "\t\tswitch ( v ) // init for a new type\n" );
 	fprintf( header, "\t\t{\n" );
 	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
 	{
 		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
-		fprintf( header, "\t\t\t\tcase Variants::%s: new ( %s ) Case_%s; break;\n", name, memName.c_str(), name );
+		fprintf( header, "\t\t\tcase Variants::%s: new ( %s ) Case_%s; break;\n", name, memName.c_str(), name );
 	}
 	fprintf( header, "\t\t}\n" );
-
 	fprintf( header, "\t\tv = v_;\n" );
 	fprintf( header, "\t}\n" );
 
