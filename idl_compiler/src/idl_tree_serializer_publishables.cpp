@@ -767,14 +767,14 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 {
 	assert( s.type == CompositeType::Type::publishable || ( ( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case ) && s.isStruct4Publishing ) );
 	if ( param.type.isNumericType() )
-		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), param.name.c_str() );
+		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
 		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 		{
 			assert( root.structs.size() > param.type.messageIdx );
 			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::VectorOfStructRefWrapper<%s_RefWrapper<typename %s::value_type>, %s>(t.%s); }\n", 
-				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param, true ).c_str(), impl_templateMemberTypeName( "T", param).c_str(), param.name.c_str() );
+				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param, true ).c_str(), impl_templateMemberTypeName( "T", param).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 		}
 		else
 			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.%s); }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
@@ -803,14 +803,16 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
 	{
 		assert( param.type.messageIdx < root.structs.size() );
-		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<%s, %s>(t.%s, *this, %s, %zd); }\n", 
-			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), addr.c_str(), idx );
+//		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*aaa*/%s, %s>(t.%s, *this, %s, %zd); }\n", 
+//			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), addr.c_str(), idx );
+		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*aaa*/%s, %s>(t.%s, %s, %s, %zd); }\n", 
+			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // TODO: revise DU
 	{
 		assert( param.type.messageIdx < root.structs.size() );
-		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<%s, %s>(t.%s, *this, %s, %zd); }\n", 
-			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), addr.c_str(), idx );
+		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*bbb*/%s, %s>(t.%s, %s, %s, %zd); }\n", 
+			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{

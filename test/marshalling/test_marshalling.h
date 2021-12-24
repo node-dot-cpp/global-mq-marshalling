@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_519f486f_guard
-#define _test_marshalling_h_519f486f_guard
+#ifndef _test_marshalling_h_ceed47fc_guard
+#define _test_marshalling_h_ceed47fc_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -163,6 +163,7 @@ template<typename T> concept has_du_one_instance_member = requires { { T::du_one
 template<typename T> concept has_i_1_member = requires { { T::i_1 }; };
 template<typename T> concept has_i_2_member = requires { { T::i_2 }; };
 template<typename T> concept has_name_member = requires { { T::name }; };
+template<typename T> concept has_node_member = requires { { T::node }; };
 template<typename T> concept has_nodes_member = requires { { T::nodes }; };
 template<typename T> concept has_nodes__member = requires { { T::nodes_ }; };
 template<typename T> concept has_properties_member = requires { { T::properties }; };
@@ -207,6 +208,8 @@ template<typename T> concept has_void_update_notifier_call_for_i_2 = requires(T 
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_i_2 = requires { { std::declval<StateT>().notifyUpdated_i_2(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_name = requires(T t) { { t.notifyUpdated_name() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_name = requires { { std::declval<StateT>().notifyUpdated_name(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_node = requires(T t) { { t.notifyUpdated_node() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_node = requires { { std::declval<StateT>().notifyUpdated_node(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_nodes = requires(T t) { { t.notifyUpdated_nodes() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_nodes = requires { { std::declval<StateT>().notifyUpdated_nodes(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_nodes_ = requires(T t) { { t.notifyUpdated_nodes_() }; };
@@ -596,7 +599,7 @@ struct publishable_sample
 
 struct publishable_html_node
 {
-	HtmlNode nodes;
+	HtmlNode node;
 };
 
 
@@ -4852,7 +4855,7 @@ public:
 		publishable_STRUCT_SIZE::compose( composer, t.size );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_size() { return SIZE_RefWrapper4Set<decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_size() { return SIZE_RefWrapper4Set</*aaa*/decltype(T::size), publishable_sample_WrapperForPublisher>(t.size, *this, GMQ_COLL vector<size_t>(), 2); }
 	const auto& get_chp() { return t.chp; }
 	void set_chp( decltype(T::chp) val) { 
 		t.chp = val; 
@@ -4861,7 +4864,7 @@ public:
 		publishable_STRUCT_CharacterParamStruct::compose( composer, t.chp );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_chp() { return CharacterParamStruct_RefWrapper4Set<decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 3); }
+	auto get4set_chp() { return CharacterParamStruct_RefWrapper4Set</*aaa*/decltype(T::chp), publishable_sample_WrapperForPublisher>(t.chp, *this, GMQ_COLL vector<size_t>(), 3); }
 	auto get_vector_of_int() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vector_of_int); }
 	void set_vector_of_int( decltype(T::vector_of_int) val) { 
 		t.vector_of_int = val; 
@@ -4888,7 +4891,7 @@ public:
 		publishable_STRUCT_StructWithVectorOfInt::compose( composer, t.structWithVectorOfInt );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set<decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 6); }
+	auto get4set_structWithVectorOfInt() { return StructWithVectorOfInt_RefWrapper4Set</*aaa*/decltype(T::structWithVectorOfInt), publishable_sample_WrapperForPublisher>(t.structWithVectorOfInt, *this, GMQ_COLL vector<size_t>(), 6); }
 	const auto& get_structWithVectorOfSize() { return t.structWithVectorOfSize; }
 	void set_structWithVectorOfSize( decltype(T::structWithVectorOfSize) val) { 
 		t.structWithVectorOfSize = val; 
@@ -4897,7 +4900,7 @@ public:
 		publishable_STRUCT_StructWithVectorOfSize::compose( composer, t.structWithVectorOfSize );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set<decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 7); }
+	auto get4set_structWithVectorOfSize() { return StructWithVectorOfSize_RefWrapper4Set</*aaa*/decltype(T::structWithVectorOfSize), publishable_sample_WrapperForPublisher>(t.structWithVectorOfSize, *this, GMQ_COLL vector<size_t>(), 7); }
 	const auto& get_du_one_instance() { return t.du_one_instance; }
 	void set_du_one_instance( decltype(T::du_one_instance) val) { 
 		t.du_one_instance = val; 
@@ -4906,7 +4909,7 @@ public:
 		publishable_DISCRIMINATED_UNION_du_one::compose( composer, t.du_one_instance );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_du_one_instance() { return du_one_RefWrapper4Set<decltype(T::du_one_instance), publishable_sample_WrapperForPublisher>(t.du_one_instance, *this, GMQ_COLL vector<size_t>(), 8); }
+	auto get4set_du_one_instance() { return du_one_RefWrapper4Set</*bbb*/decltype(T::du_one_instance), publishable_sample_WrapperForPublisher>(t.du_one_instance, *this, GMQ_COLL vector<size_t>(), 8); }
 
 	template<class ComposerType>
 	void compose( ComposerType& composer )
@@ -6145,7 +6148,7 @@ public:
 
 //**********************************************************************
 // PUBLISHABLE publishable_html_node (1 parameters)
-// 1. STRUCT HtmlNode nodes
+// 1. STRUCT HtmlNode node
 //**********************************************************************
 
 template<class T, class ComposerT>
@@ -6155,8 +6158,8 @@ class publishable_html_node_WrapperForPublisher : public globalmq::marshalling::
 	using BufferT = typename ComposerT::BufferType;
 	BufferT buffer;
 	ComposerT composer;
-	static constexpr bool has_nodes = has_nodes_member<T>;
-	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type STRUCT HtmlNode" );
+	static constexpr bool has_node = has_node_member<T>;
+	static_assert( has_node, "type T must have member T::node of a type corresponding to IDL type STRUCT HtmlNode" );
 
 
 public:
@@ -6171,23 +6174,23 @@ public:
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
-	const auto& get_nodes() { return t.nodes; }
-	void set_nodes( decltype(T::nodes) val) { 
-		t.nodes = val; 
+	const auto& get_node() { return t.node; }
+	void set_node( decltype(T::node) val) { 
+		t.node = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
-		publishable_STRUCT_HtmlNode::compose( composer, t.nodes );
+		publishable_STRUCT_HtmlNode::compose( composer, t.node );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_nodes() { return HtmlNode_RefWrapper4Set<decltype(T::nodes), publishable_html_node_WrapperForPublisher>(t.nodes, *this, GMQ_COLL vector<size_t>(), 0); }
+	auto get4set_node() { return HtmlNode_RefWrapper4Set</*aaa*/decltype(T::node), publishable_html_node_WrapperForPublisher>(t.node, *this, GMQ_COLL vector<size_t>(), 0); }
 
 	template<class ComposerType>
 	void compose( ComposerType& composer )
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
-		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "nodes" );
-		publishable_STRUCT_HtmlNode::compose( composer, t.nodes );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "node" );
+		publishable_STRUCT_HtmlNode::compose( composer, t.node );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
 
 
@@ -6223,12 +6226,12 @@ template<class T, class BufferT>
 class publishable_html_node_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
 {
 	T t;
-	static constexpr bool has_nodes = has_nodes_member<T>;
-	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type STRUCT HtmlNode" );
+	static constexpr bool has_node = has_node_member<T>;
+	static_assert( has_node, "type T must have member T::node of a type corresponding to IDL type STRUCT HtmlNode" );
 
-	static constexpr bool has_void_update_notifier_for_nodes = has_void_update_notifier_call_for_nodes<T>;
-	static constexpr bool has_update_notifier_for_nodes = has_update_notifier_call_for_nodes<T, decltype(T::nodes)>;
-	static constexpr bool has_any_notifier_for_nodes = has_void_update_notifier_for_nodes || has_update_notifier_for_nodes;
+	static constexpr bool has_void_update_notifier_for_node = has_void_update_notifier_call_for_node<T>;
+	static constexpr bool has_update_notifier_for_node = has_update_notifier_call_for_node<T, decltype(T::node)>;
+	static constexpr bool has_any_notifier_for_node = has_void_update_notifier_for_node || has_update_notifier_for_node;
 	static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 
 public:
@@ -6259,58 +6262,58 @@ public:
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
-						if constexpr( has_update_notifier_for_nodes )
+						if constexpr( has_update_notifier_for_node )
 						{
-							decltype(T::nodes) temp_nodes;
-							publishable_STRUCT_HtmlNode::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
-							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+							decltype(T::node) temp_node;
+							publishable_STRUCT_HtmlNode::copy<decltype(T::node)>( t.node, temp_node );
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::node), bool>( parser, t.node );
 							if ( changedCurrent )
 							{
-								if constexpr( has_void_update_notifier_for_nodes )
-									t.notifyUpdated_nodes();
-								t.notifyUpdated_nodes( temp_nodes );
+								if constexpr( has_void_update_notifier_for_node )
+									t.notifyUpdated_node();
+								t.notifyUpdated_node( temp_node );
 							}
 						}
-						else if constexpr( has_void_update_notifier_for_nodes )
+						else if constexpr( has_void_update_notifier_for_node )
 						{
-							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes );
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::node), bool>( parser, t.node );
 							if ( changedCurrent )
 							{
-								t.notifyUpdated_nodes();
+								t.notifyUpdated_node();
 							}
 						}
 
 						else
 						{
-							publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+							publishable_STRUCT_HtmlNode::parse( parser, t.node );
 						}
 
 						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
-						if constexpr( has_update_notifier_for_nodes )
+						if constexpr( has_update_notifier_for_node )
 						{
-							decltype(T::nodes) temp_nodes;
-							publishable_STRUCT_HtmlNode::copy<decltype(T::nodes)>( t.nodes, temp_nodes );
-							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, 1 );
+							decltype(T::node) temp_node;
+							publishable_STRUCT_HtmlNode::copy<decltype(T::node)>( t.node, temp_node );
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::node), bool>( parser, t.node, addr, 1 );
 							if ( changedCurrent )
 							{
-								if constexpr( has_void_update_notifier_for_nodes )
-									t.notifyUpdated_nodes();
-								t.notifyUpdated_nodes( temp_nodes );
+								if constexpr( has_void_update_notifier_for_node )
+									t.notifyUpdated_node();
+								t.notifyUpdated_node( temp_node );
 							}
 						}
-						else if constexpr( has_void_update_notifier_for_nodes )
+						else if constexpr( has_void_update_notifier_for_node )
 						{
-							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::nodes), bool>( parser, t.nodes, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_HtmlNode::parse<ParserT, decltype(T::node), bool>( parser, t.node, addr, 1 );
 							if ( changedCurrent )
 							{
-								t.notifyUpdated_nodes();
+								t.notifyUpdated_node();
 							}
 						}
 						else
-							publishable_STRUCT_HtmlNode::parse( parser, t.nodes, addr, 1 );
+							publishable_STRUCT_HtmlNode::parse( parser, t.node, addr, 1 );
 					}
 					break;
 				}
@@ -6327,8 +6330,8 @@ public:
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "nodes" );
-		publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "node" );
+		publishable_STRUCT_HtmlNode::parse( parser, t.node );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parseStructEnd( parser );
@@ -6336,7 +6339,7 @@ public:
 		if constexpr ( has_full_update_notifier )
 			t.notifyFullyUpdated();
 	}
-	const auto& get_nodes() { return t.nodes; }
+	const auto& get_node() { return t.node; }
 };
 
 template<class T, class RegistrarT>
@@ -6389,8 +6392,8 @@ class publishable_html_node_WrapperForConcentrator : public globalmq::marshallin
 {
 	T t;
 	using BufferT = typename ComposerT::BufferType;
-	static constexpr bool has_nodes = has_nodes_member<T>;
-	static_assert( has_nodes, "type T must have member T::nodes of a type corresponding to IDL type STRUCT HtmlNode" );
+	static constexpr bool has_node = has_node_member<T>;
+	static_assert( has_node, "type T must have member T::node of a type corresponding to IDL type STRUCT HtmlNode" );
 
 
 public:
@@ -6406,8 +6409,8 @@ public:
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
-		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "nodes" );
-		publishable_STRUCT_HtmlNode::compose( composer, t.nodes );
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "node" );
+		publishable_STRUCT_HtmlNode::compose( composer, t.node );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
 
 
@@ -6436,13 +6439,13 @@ public:
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
-						publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+						publishable_STRUCT_HtmlNode::parse( parser, t.node );
 
 						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
-						publishable_STRUCT_HtmlNode::parse( parser, t.nodes, addr, 1 );
+						publishable_STRUCT_HtmlNode::parse( parser, t.node, addr, 1 );
 					}
 					break;
 				}
@@ -6458,8 +6461,8 @@ public:
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "nodes" );
-		publishable_STRUCT_HtmlNode::parse( parser, t.nodes );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "node" );
+		publishable_STRUCT_HtmlNode::parse( parser, t.node );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parseStructEnd( parser );
@@ -6497,7 +6500,7 @@ class HtmlTextOrNodes_RefWrapper
 public:
 	HtmlTextOrNodes_RefWrapper( T& actual ) : t( actual ) {}
 	const auto& get_str() { return t.str(); }
-	auto get_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper<HtmlNode_RefWrapper<typename T::Case_nodes_nodes__T::value_type>, typename T::Case_nodes_nodes__T>(t.nodes_); }
+	auto get_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper<HtmlNode_RefWrapper<typename T::Case_nodes_nodes__T::value_type>, typename T::Case_nodes_nodes__T>(t.nodes_()); }
 };
 
 template<class T, class RootT>
@@ -6519,7 +6522,7 @@ public:
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.str() );
 	}
-	auto get_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper<HtmlNode_RefWrapper<typename T::Case_nodes_nodes__T::value_type>, typename T::Case_nodes_nodes__T>(t.nodes_); }
+	auto get_nodes_() { return globalmq::marshalling::VectorOfStructRefWrapper<HtmlNode_RefWrapper<typename T::Case_nodes_nodes__T::value_type>, typename T::Case_nodes_nodes__T>(t.nodes_()); }
 	void set_nodes_( typename T::Case_nodes_nodes__T val) { 
 		t.nodes_() = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
@@ -6696,7 +6699,7 @@ public:
 		publishable_DISCRIMINATED_UNION_HtmlTextOrNodes::compose( root.getComposer(), t.nodes );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
-	auto get4set_nodes() { return HtmlTextOrNodes_RefWrapper4Set<decltype(T::nodes), RootT>(t.nodes, *this, address, 1); }
+	auto get4set_nodes() { return HtmlTextOrNodes_RefWrapper4Set</*bbb*/decltype(T::nodes), RootT>(t.nodes, root, address, 1); }
 };
 
 template<class T>
@@ -6755,8 +6758,8 @@ class du_one_RefWrapper
 public:
 	du_one_RefWrapper( T& actual ) : t( actual ) {}
 	const auto& get_pt3d_1() { return t.pt3d_1(); }
-	auto get_i_1() { return t.i_1; }
-	auto get_i_2() { return t.i_2; }
+	auto get_i_1() { return t.i_1(); }
+	auto get_i_2() { return t.i_2(); }
 	auto get_vp_2() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.vp_2()); }
 };
 
@@ -6781,14 +6784,14 @@ public:
 		publishable_STRUCT_point3D::compose( root.getComposer(), t.pt3d_1() );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
-	auto get4set_pt3d_1() { return point3D_RefWrapper4Set<typename T::Case_one_pt3d_1_T, RootT>(t.pt3d_1(), *this, address, 0); }
-	auto get_i_1() { return t.i_1; }
+	auto get4set_pt3d_1() { return point3D_RefWrapper4Set</*aaa*/typename T::Case_one_pt3d_1_T, RootT>(t.pt3d_1(), root, address, 0); }
+	auto get_i_1() { return t.i_1(); }
 	void set_i_1( typename T::Case_one_i_1_T val) { 
 		t.i_1() = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.i_1() );
 	}
-	auto get_i_2() { return t.i_2; }
+	auto get_i_2() { return t.i_2(); }
 	void set_i_2( typename T::Case_two_i_2_T val) { 
 		t.i_2() = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
@@ -6910,7 +6913,7 @@ public:
 		publishable_STRUCT_SIZE::compose( root.getComposer(), t.Size );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
-	auto get4set_Size() { return SIZE_RefWrapper4Set<decltype(T::Size), RootT>(t.Size, *this, address, 1); }
+	auto get4set_Size() { return SIZE_RefWrapper4Set</*aaa*/decltype(T::Size), RootT>(t.Size, root, address, 1); }
 };
 
 template<class T>
@@ -7713,4 +7716,4 @@ void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_519f486f_guard
+#endif // _test_marshalling_h_ceed47fc_guard

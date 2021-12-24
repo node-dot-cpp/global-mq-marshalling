@@ -803,3 +803,47 @@ void publishableTestOne()
 	
 	setCurrentNode( nullptr );
 }
+
+struct HtmlNodeSample
+{
+	mtest::HtmlNode node;
+};
+
+void publishableTestTwo()
+{
+	testCurrentNodeDataManipulation();
+	testCallerValue();
+
+	SampleNode node;
+	setCurrentNode( &node );
+
+	mtest::publishable_html_node_NodecppWrapperForPublisher<HtmlNodeSample, MetaPoolT> htmlNodeWrapper( mp );
+
+	fmt::print( "OK so far...\n" );
+
+	globalmq::marshalling::GmqPathHelper::PathComponents pc;
+	pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+	pc.authority = "";
+	pc.nodeName = "myNode";
+	pc.statePublisherOrConnectionType = mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT>::stringTypeID;
+	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
+
+	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave( mp );
+	/*htmlNodeWrapperSlave.subscribe( path );
+	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave2( mp, node );
+	htmlNodeWrapperSlave2.subscribe( path );
+	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave3( mp, node );
+	htmlNodeWrapperSlave3.subscribe( path );*/
+
+	deliverMessages(); // simulate transport layer
+	deliverMessages(); // simulate transport layer
+
+	// quick test for getting right after ctoring
+	auto& hn = htmlNodeWrapper.get_node();
+	assert( hn.nodes.currentVariant() == mtest::HtmlTextOrNodes::Variants::unknown );
+
+	auto g4s_hn = htmlNodeWrapper.get4set_node();
+	auto g4s_hn_nodes = g4s_hn.get4set_nodes();
+	g4s_hn_nodes.set_str( "abc" );
+
+}

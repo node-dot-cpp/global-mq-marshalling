@@ -167,7 +167,7 @@ MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
 
 
 PUBLISHABLE publishable_html_node=3 {
-	STRUCT HtmlNode nodes;
+	STRUCT HtmlNode node;
 };
 
 STRUCT Property {
