@@ -404,10 +404,10 @@ public:
 		implCopyFrom( other );
 		return *this;
 	}
-	HtmlTextOrNodes( HtmlTextOrNodes&& other) {
+	HtmlTextOrNodes( HtmlTextOrNodes&& other) noexcept {
 		implMoveFrom( std::move( other ) );
 	}
-	HtmlTextOrNodes& operator = ( HtmlTextOrNodes&& other) {
+	HtmlTextOrNodes& operator = ( HtmlTextOrNodes&& other) noexcept {
 		implMoveFrom( std::move( other ) );
 		return *this;
 	}
@@ -417,7 +417,7 @@ public:
 	Variants currentVariant() const { return v; }
 	void initAs( Variants v_ ) {
 		implDeinit();
-		switch ( v ) // init for a new type
+		switch ( v_ ) // init for a new type
 		{
 			case Variants::text: new ( text_nodes_mem ) Case_text; break;
 			case Variants::nodes: new ( text_nodes_mem ) Case_nodes; break;
@@ -559,10 +559,10 @@ public:
 		implCopyFrom( other );
 		return *this;
 	}
-	du_one( du_one&& other) {
+	du_one( du_one&& other) noexcept {
 		implMoveFrom( std::move( other ) );
 	}
-	du_one& operator = ( du_one&& other) {
+	du_one& operator = ( du_one&& other) noexcept {
 		implMoveFrom( std::move( other ) );
 		return *this;
 	}
@@ -572,7 +572,7 @@ public:
 	Variants currentVariant() const { return v; }
 	void initAs( Variants v_ ) {
 		implDeinit();
-		switch ( v ) // init for a new type
+		switch ( v_ ) // init for a new type
 		{
 			case Variants::one: new ( one_two_mem ) Case_one; break;
 			case Variants::two: new ( one_two_mem ) Case_two; break;

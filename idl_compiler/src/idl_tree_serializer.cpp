@@ -905,11 +905,11 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 	fprintf( header, "\t\treturn *this;\n" );
 	fprintf( header, "\t}\n" );
 
-	fprintf( header, "\t%s( %s&& other) {\n", du.name.c_str(), du.name.c_str() );
+	fprintf( header, "\t%s( %s&& other) noexcept {\n", du.name.c_str(), du.name.c_str() );
 	fprintf( header, "\t\timplMoveFrom( std::move( other ) );\n" );
 	fprintf( header, "\t}\n" );
 
-	fprintf( header, "\t%s& operator = ( %s&& other) {\n", du.name.c_str(), du.name.c_str() );
+	fprintf( header, "\t%s& operator = ( %s&& other) noexcept {\n", du.name.c_str(), du.name.c_str() );
 	fprintf( header, "\t\timplMoveFrom( std::move( other ) );\n" );
 	fprintf( header, "\t\treturn *this;\n" );
 	fprintf( header, "\t}\n" );
@@ -929,7 +929,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 	// initAS()
 	fprintf( header, "\tvoid initAs( Variants v_ ) {\n" );
 	fprintf( header, "\t\timplDeinit();\n" );
-	fprintf( header, "\t\tswitch ( v ) // init for a new type\n" );
+	fprintf( header, "\t\tswitch ( v_ ) // init for a new type\n" );
 	fprintf( header, "\t\t{\n" );
 	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
 	{

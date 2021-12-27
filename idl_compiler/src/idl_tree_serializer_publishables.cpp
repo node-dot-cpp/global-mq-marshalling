@@ -844,7 +844,7 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 					addr.c_str(), idx );
 				break;
 			default:
-				assert( false ); // not (yet) implemented
+				assert( false ); // unexpected or not (yet) implemented
 		}
 	}
 }
