@@ -804,7 +804,42 @@ void publishableTestOne()
 	setCurrentNode( nullptr );
 }
 
+// no notifiers
+
 struct HtmlNodeSample
+{
+	mtest::HtmlNode node;
+};
+
+// version with notifiers: we have to add them
+
+struct Property
+{
+	GMQ_COLL string name = "ini_name";
+	GMQ_COLL string value = "ini_value";
+
+	SampleNode& node;
+	Property( SampleNode& node_ ) : node( node_ ) {}
+
+	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_value()\n" ); }
+};
+
+class HtmlTextOrNodes : public mtest::HtmlTextOrNodes
+{
+public:
+	SampleNode& node;
+	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_currentVariant()\n" ); }
+	void notifyUpdated_text_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_text_()\n" ); }
+	void notifyUpdated_nodes_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_nodes_()\n" ); }
+};
+
+struct HtmlNode
+{
+	GMQ_COLL vector<Property> properties;
+	HtmlTextOrNodes nodes;
+};
+
+struct HtmlNodeSampleWithNotifiers
 {
 	mtest::HtmlNode node;
 };
@@ -844,6 +879,7 @@ void publishableTestTwo()
 
 	auto g4s_hn = htmlNodeWrapper.get4set_node();
 	auto g4s_hn_nodes = g4s_hn.get4set_nodes();
+	g4s_hn_nodes.set_currentVariant( mtest::HtmlTextOrNodes::Variants::text );
 	g4s_hn_nodes.set_str( "abc" );
 
 }

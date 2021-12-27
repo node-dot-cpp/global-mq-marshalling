@@ -6685,9 +6685,9 @@ public:
 	}
 	auto get_currentVariant() { return t.v; }
 	void set_currentVariant( decltype(T::v) v ) { 
-		t.v = v; 
+		t.initAs( v ); 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), (uint64_t)(t.v) );
+		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), (uint64_t)(t.currentVariant()) );
 	}
 	const auto& get_str() { return t.str(); }
 	void set_str( typename T::Case_text_str_T val) { 
@@ -6952,9 +6952,9 @@ public:
 	}
 	auto get_currentVariant() { return t.v; }
 	void set_currentVariant( decltype(T::v) v ) { 
-		t.v = v; 
+		t.initAs( v ); 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), (uint64_t)(t.v) );
+		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), (uint64_t)(t.currentVariant()) );
 	}
 	const auto& get_pt3d_1() { return t.pt3d_1(); }
 	void set_pt3d_1( typename T::Case_one_pt3d_1_T val) { 
