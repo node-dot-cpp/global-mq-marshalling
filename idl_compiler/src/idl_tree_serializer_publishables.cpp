@@ -217,6 +217,7 @@ void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Roo
 
 void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock_MemberIterationBlock( FILE* header, Root& root, CompositeType& s, const char* offset )
 {
+	// NOTE: in case of updates here revise impl_GenerateDiscriminatedUnionVariantUpdateNotifierPresenceCheckingBlock() as well
 	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( auto& member : s.getMembers() )
 	{
@@ -971,13 +972,13 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 	fprintf( header, "\t}\n" );
 }
 
-void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj, const char* offset )
+void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj, const char* offset, size_t idxBase )
 {
 	assert( obj.type != CompositeType::Type::discriminated_union );
 
 	for ( size_t i=0; i<obj.getMembers().size(); ++i )
 	{
-		fprintf( header, "%scase %zd:\n", offset, i );
+		fprintf( header, "%scase %zd:\n", offset, idxBase + i );
 		fprintf( header, "%s{\n", offset );
 		assert( obj.getMembers()[i] != nullptr );
 		auto& member = *(obj.getMembers()[i]);
@@ -1028,6 +1029,45 @@ void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlo
 	}
 }
 
+void impl_generateApplyUpdateForDiscriminatedUnionVariant( FILE* header, bool addReportChanges, std::string offset )
+{
+	fprintf( header, "%suint64_t newVar = T::Variants::unknown;\n", offset.c_str() );
+	fprintf( header, "%s::globalmq::marshalling::impl::publishableParseLeafeUnsignedInteger<ParserT, uint64_t>( parser, &newVar );\n", offset.c_str() );
+
+	if ( addReportChanges )
+		fprintf( header, "%sif constexpr( has_any_notifier_for_currentVariant || reportChanges )\n", offset.c_str() );
+	else
+		fprintf( header, "%sif constexpr( has_any_notifier_for_currentVariant )\n", offset.c_str() );
+	fprintf( header, "%s{\n", offset.c_str() );
+	fprintf( header, "%s\tauto oldVal = t.currentVariant();\n", offset.c_str() );
+	fprintf( header, "%s\tt.initAs( (typename T::Variants)( newVar ) );\n", offset.c_str() );
+	fprintf( header, "%s\tbool currentChanged = oldVal != t.currentVariant();\n", offset.c_str() );
+	fprintf( header, "%s\tif ( currentChanged )\n", offset.c_str() );
+	fprintf( header, "%s\t{\n", offset.c_str() );
+	if ( addReportChanges )
+	{
+		fprintf( header, "%s\t\tif constexpr ( reportChanges )\n", offset.c_str() );
+		fprintf( header, "%s\t\t\tchanged = true;\n", offset.c_str() );
+	}
+	fprintf( header, "%s\t\tif constexpr ( has_void_update_notifier_for_currentVariant )\n", offset.c_str() );
+	fprintf( header, "%s\t\t\tt.notifyUpdated_currentVariant();\n", offset.c_str() );
+	fprintf( header, "%s\t\tif constexpr ( has_update_notifier_for_currentVariant )\n", offset.c_str() );
+	fprintf( header, "%s\t\t\tt.notifyUpdated_currentVariant( oldVal );\n", offset.c_str() );
+	fprintf( header, "%s\t}\n", offset.c_str() );
+	fprintf( header, "%s}\n", offset.c_str() );
+	fprintf( header, "%selse\n", offset.c_str() );
+
+	fprintf( header, "%s\tt.initAs( (typename T::Variants)( newVar ) );\n", offset.c_str() );
+}
+
+void impl_GenerateDiscriminatedUnionVariantUpdateNotifierPresenceCheckingBlock( FILE* header, const char* offset )
+{
+	// along lines of impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock()
+	fprintf( header, "%sstatic constexpr bool has_void_update_notifier_for_currentVariant = has_void_update_notifier_call_for_currentVariant<T>;\n", offset );
+	fprintf( header, "%sstatic constexpr bool has_update_notifier_for_currentVariant = has_update_notifier_call_for_currentVariant<T, typename T::Variants>;\n", offset );
+	fprintf( header, "%sstatic constexpr bool has_any_notifier_for_currentVariant = has_void_update_notifier_for_currentVariant || has_update_notifier_for_currentVariant;\n", offset );
+}
+
 void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
 {
 	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
@@ -1041,42 +1081,54 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 
 	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, obj, "\t\t" );
 
-	fprintf( header, "\t\tGMQ_ASSERT( addr.size() );\n" );
 
 	if ( obj.isDiscriminatedUnion() )
 	{
-		fprintf( header, "\t\tuint64_t caseId;\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
-
-		fprintf( header, "\t\tswitch ( caseId )\n" );
+		impl_GenerateDiscriminatedUnionVariantUpdateNotifierPresenceCheckingBlock( header, "\t\t" );
+		fprintf( header, "\t\tGMQ_ASSERT( addr.size() );\n" );
+//		fprintf( header, "\t\tuint64_t caseId;\n" );
+//		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
+//		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
+		fprintf( header, "\t\tif ( addr[0] == 0 ) // changing current variant\n" );
 		fprintf( header, "\t\t{\n" );
+		fprintf( header, "\t\t\tif ( addr.size() > offset + 1 )\n" );
+		fprintf( header, "\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
+		impl_generateApplyUpdateForDiscriminatedUnionVariant( header, true, "\t\t\t" );
+		fprintf( header, "\t\t}\n" );
+
+		fprintf( header, "\t\telse // updating particular members in particular cases\n" );
+
+		fprintf( header, "\t\t{\n" );
+		fprintf( header, "\t\t\tswitch ( t.currentVariant() )\n" );
+		fprintf( header, "\t\t\t{\n" );
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
-			fprintf( header, "\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
-			fprintf( header, "\t\t\t{\n" );
-			fprintf( header, "\t\t\t\tswitch ( addr[offset] )\n" );
+			fprintf( header, "\t\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
 			fprintf( header, "\t\t\t\t{\n" );
+			fprintf( header, "\t\t\t\t\tswitch ( addr[offset] )\n" );
+			fprintf( header, "\t\t\t\t\t{\n" );
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
-			fprintf( header, "\t\t\t\t\tdefault:\n" );
-			fprintf( header, "\t\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+			impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( header, root, cs, "\t\t\t\t\t\t", 1 );
+			fprintf( header, "\t\t\t\t\t\tdefault:\n" );
+			fprintf( header, "\t\t\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+			fprintf( header, "\t\t\t\t\t}\n" );
+			fprintf( header, "\t\t\t\t\tbreak;\n" );
 			fprintf( header, "\t\t\t\t}\n" );
-			fprintf( header, "\t\t\t\tbreak;\n" );
-			fprintf( header, "\t\t\t}\n" );
 		}
-		fprintf( header, "\t\t\tdefault:\n" );
-		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t}\n" );
 		fprintf( header, "\t\t}\n" );
 		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 	}
 	else
 	{
+		fprintf( header, "\t\tGMQ_ASSERT( addr.size() );\n" );
 		fprintf( header, "\t\tswitch ( addr[offset] )\n" );
 		fprintf( header, "\t\t{\n" );
-		impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( header, root, obj, "\t\t\t" );
+		impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock( header, root, obj, "\t\t\t", 0 );
 		fprintf( header, "\t\t\tdefault:\n" );
 		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
 		fprintf( header, "\t\t}\n" );
@@ -1575,7 +1627,7 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 	fprintf( header, "\t}\n" );
 }
 
-void impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( FILE* header, Root& root, CompositeType& s, bool forRoot, const char* rootName, bool allowSeters )
+void impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( FILE* header, Root& root, CompositeType& s, bool forRoot, const char* rootName, bool allowSeters, size_t idxBase )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 	for ( size_t i=0; i<s.getMembers().size(); ++i )
@@ -1585,8 +1637,8 @@ void impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( FILE* he
 		impl_GeneratePublishableStateMemberGetter( header, root, s, *it );
 		if ( allowSeters )
 		{
-			impl_GeneratePublishableStateMemberSetter( header, root, forRoot, *it, i );
-			impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, i );
+			impl_GeneratePublishableStateMemberSetter( header, root, forRoot, *it, idxBase + i );
+			impl_GeneratePublishableStateMemberGetter4Set( header, root, rootName, *it, idxBase + i );
 		}
 	}
 }
@@ -1599,16 +1651,29 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 //	const char* rootName = forRoot ? s.name.c_str() : "RootT";
 	if ( s.isDiscriminatedUnion() )
 	{
+		fprintf( header, "\tauto get_currentVariant() { return t.v; }\n" );
+		if ( allowSeters )
+		{
+			const char* composer = forRoot ? "composer" : "root.getComposer()";
+			const char* composerType = forRoot ? "ComposerT" : "decltype(root.getComposer())";
+			const char* addrVector = forRoot ? "GMQ_COLL vector<size_t>()" : "address";
+			fprintf( header, "\tvoid set_currentVariant( decltype(T::v) v ) { \n" );
+			fprintf( header, "\t\tt.v = v; \n" );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::composeAddressInPublishable( %s, %s, %d );\n", composer, addrVector, 0 );
+			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( %s, (uint64_t)(t.v) );\n", composer );
+			fprintf( header, "\t}\n" );
+		}
+
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( header, root, cs,  forRoot, rootName,  allowSeters );
+			impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( header, root, cs,  forRoot, rootName,  allowSeters, 1 );
 		}
 	}
 	else
-		impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( header, root, s,  forRoot, rootName,  allowSeters );
+		impl_GeneratePublishableStateMemberAccessors_MemberIterationBlock( header, root, s,  forRoot, rootName,  allowSeters, 0 );
 }
 
 void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, CompositeType& s, bool addNotifications )
@@ -1623,6 +1688,8 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 	fprintf( header, "\t\t\tGMQ_ASSERT( addr.size() );\n" );
 	fprintf( header, "\t\t\tswitch ( addr[0] )\n" );
 	fprintf( header, "\t\t\t{\n" );
+
+	assert( s.type != CompositeType::Type::discriminated_union ); // not implemented
 
 	for ( size_t i=0; i<s.getMembers().size(); ++i )
 	{
@@ -2060,6 +2127,7 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 	set<string> names;
 	collectMemberNamesFromPublishableObjects( root.publishables, names );
 	collectMemberNamesFromPublishableObjects( root.structs, names );
+	names.insert( "currentVariant" ); // TODO: if there are DUs...
 	set<string> namesOfVectors;
 	collectVectorMemberNamesFromPublishableObjects( root.publishables, namesOfVectors );
 	collectVectorMemberNamesFromPublishableObjects( root.structs, namesOfVectors );

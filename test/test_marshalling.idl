@@ -181,10 +181,10 @@ STRUCT HtmlNode {
 };
 
 DISCRIMINATED_UNION HtmlTextOrNodes {
-	CASE text=1: { 
+	CASE text=21: { 
 		CHARACTER-STRING str;
 	}
-	CASE nodes=2: { 
+	CASE nodes=22: { 
 		VECTOR<STRUCT HtmlNode> nodes_;
 	}
 };
