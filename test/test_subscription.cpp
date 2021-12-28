@@ -824,9 +824,8 @@ struct Property
 class HtmlTextOrNodes : public mtest::HtmlTextOrNodes
 {
 public:
-	SampleNode& node;
 	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_currentVariant()\n" ); }
-	void notifyUpdated_text_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_text_()\n" ); }
+	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_str()\n" ); }
 	void notifyUpdated_nodes_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_nodes_()\n" ); }
 };
 
@@ -838,7 +837,7 @@ struct HtmlNode
 
 struct HtmlNodeSampleWithNotifiers
 {
-	mtest::HtmlNode node;
+	HtmlNode node;
 
 	SampleNode& processingNode;
 	HtmlNodeSampleWithNotifiers( SampleNode& node_ ) : processingNode( node_ ) {}
@@ -881,10 +880,10 @@ void publishableTestTwo()
 	pc.statePublisherOrConnectionType = mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT>::stringTypeID;
 	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
-	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave( mp );
+	/*mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave( mp );
 	htmlNodeWrapperSlave.subscribe( path );
 	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSampleWithNotifiers, MetaPoolT> htmlNodeWrapperSlave2( mp, node );
-	htmlNodeWrapperSlave2.subscribe( path );
+	htmlNodeWrapperSlave2.subscribe( path );*/
 	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSampleWithNotifiers, MetaPoolT> htmlNodeWrapperSlave3( mp, node );
 	htmlNodeWrapperSlave3.subscribe( path );
 
@@ -894,12 +893,9 @@ void publishableTestTwo()
 	size_t msgCnt = queue.pop_front( messages, maxMsg, 0 );
 	for ( size_t i=0; i<msgCnt; ++i )
 	{
-		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
 		mp.onMessage( messages[i].msg );
 	}
-
-//	deliverMessages(); // simulate transport layer
-//	deliverMessages(); // simulate transport layer
 
 	// quick test for getting right after ctoring
 	auto& hn = htmlNodeWrapper.get_node();
@@ -914,7 +910,7 @@ void publishableTestTwo()
 	msgCnt = queue.pop_front( messages, maxMsg, 0 );
 	for ( size_t i=0; i<msgCnt; ++i )
 	{
-		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
 		mp.onMessage( messages[i].msg );
 	}
 

@@ -807,9 +807,9 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrNodes : public ::globalmq::mars
 		static constexpr bool has_full_element_updated_notifier_for_nodes_ = has_full_element_updated_notifier_call_for_nodes_<T, nodes_T&>;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
 		t.initAs( (typename T::Variants)(caseId) );
-		if ( caseid != T::Variants::unknown )
+		if ( caseId != T::Variants::unknown )
 		{
 			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
 			switch ( caseId )
@@ -925,7 +925,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrNodes : public ::globalmq::mars
 		static constexpr bool has_update_notifier_for_currentVariant = has_update_notifier_call_for_currentVariant<T, typename T::Variants>;
 		static constexpr bool has_any_notifier_for_currentVariant = has_void_update_notifier_for_currentVariant || has_update_notifier_for_currentVariant;
 		GMQ_ASSERT( addr.size() );
-		if ( addr[0] == 0 ) // changing current variant
+		if ( addr[offset] == 0 ) // changing current variant
 		{
 			if ( addr.size() > offset + 1 )
 				throw std::exception(); // bad format, TODO: ...
@@ -1167,7 +1167,6 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrNodes : public ::globalmq::mars
 					throw std::exception(); // unexpected
 			}
 		}
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 		if constexpr ( reportChanges )
 			return changed;
 	}
@@ -1200,7 +1199,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrNodes : public ::globalmq::mars
 			switch ( s1.currentVariant() )
 			{
 				if ( s1.str() != s2.str() ) return false;
-				if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::nodes_), publishable_STRUCT_HtmlNode>( s1.nodes_(), s2.nodes_() ) ) return false;
+				if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_nodes_nodes__T, publishable_STRUCT_HtmlNode>( s1.nodes_(), s2.nodes_() ) ) return false;
 				default:
 					throw std::exception(); // unexpected
 			}
@@ -2256,9 +2255,9 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		static constexpr bool has_full_element_updated_notifier_for_vp_2 = has_full_element_updated_notifier_call_for_vp_2<T, vp_2T&>;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
 		t.initAs( (typename T::Variants)(caseId) );
-		if ( caseid != T::Variants::unknown )
+		if ( caseId != T::Variants::unknown )
 		{
 			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
 			switch ( caseId )
@@ -2434,7 +2433,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		static constexpr bool has_update_notifier_for_currentVariant = has_update_notifier_call_for_currentVariant<T, typename T::Variants>;
 		static constexpr bool has_any_notifier_for_currentVariant = has_void_update_notifier_for_currentVariant || has_update_notifier_for_currentVariant;
 		GMQ_ASSERT( addr.size() );
-		if ( addr[0] == 0 ) // changing current variant
+		if ( addr[offset] == 0 ) // changing current variant
 		{
 			if ( addr.size() > offset + 1 )
 				throw std::exception(); // bad format, TODO: ...
@@ -2734,7 +2733,6 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 					throw std::exception(); // unexpected
 			}
 		}
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 		if constexpr ( reportChanges )
 			return changed;
 	}
@@ -2771,7 +2769,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 				if( ! publishable_STRUCT_point3D::isSame( s1.pt3d_1(), s2.pt3d_1() ) ) return false;
 				if ( s1.i_1() != s2.i_1() ) return false;
 				if ( s1.i_2() != s2.i_2() ) return false;
-				if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::vp_2), ::globalmq::marshalling::impl::RealType>( s1.vp_2(), s2.vp_2() ) ) return false;
+				if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( s1.vp_2(), s2.vp_2() ) ) return false;
 				default:
 					throw std::exception(); // unexpected
 			}

@@ -1100,10 +1100,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 	{
 		impl_GenerateDiscriminatedUnionVariantUpdateNotifierPresenceCheckingBlock( header, "\t\t" );
 		fprintf( header, "\t\tGMQ_ASSERT( addr.size() );\n" );
-//		fprintf( header, "\t\tuint64_t caseId;\n" );
-//		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
-//		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
-		fprintf( header, "\t\tif ( addr[0] == 0 ) // changing current variant\n" );
+		fprintf( header, "\t\tif ( addr[offset] == 0 ) // changing current variant\n" );
 		fprintf( header, "\t\t{\n" );
 		fprintf( header, "\t\t\tif ( addr.size() > offset + 1 )\n" );
 		fprintf( header, "\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
@@ -1135,7 +1132,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Roo
 		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
 		fprintf( header, "\t\t\t}\n" );
 		fprintf( header, "\t\t}\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+//		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 	}
 	else
 	{
@@ -1236,9 +1233,9 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 	if ( obj.isDiscriminatedUnion() )
 	{
 		fprintf( header, "\t\tuint64_t caseId;\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseId\" );\n" );
 		fprintf( header, "\t\tt.initAs( (typename T::Variants)(caseId) );\n" );
-		fprintf( header, "\t\tif ( caseid != T::Variants::unknown )\n" );
+		fprintf( header, "\t\tif ( caseId != T::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
 
 		fprintf( header, "\t\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
@@ -1509,7 +1506,7 @@ void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( FILE* header, 
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				fprintf( header, "%sif ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::%s), %s>( s1.%s, s2.%s ) ) return false;\n", offset.c_str(), member.name.c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%sif ( !::globalmq::marshalling::impl::isSameVector<%s, %s>( s1.%s, s2.%s ) ) return false;\n", offset.c_str(), impl_templateMemberTypeName( "UserT", member ).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			}
 			default:
