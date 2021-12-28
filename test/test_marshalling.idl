@@ -166,8 +166,8 @@ MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
 };
 
 
-PUBLISHABLE publishable_html_node=3 {
-	STRUCT HtmlNode node;
+PUBLISHABLE publishable_html_tag=3 {
+	STRUCT HtmlTag tag;
 };
 
 STRUCT Property {
@@ -175,17 +175,17 @@ STRUCT Property {
   CHARACTER-STRING value;
 };
 
-STRUCT HtmlNode {
+STRUCT HtmlTag {
 	VECTOR<STRUCT Property> properties;
-	DISCRIMINATED_UNION HtmlTextOrNodes nodes;
+	DISCRIMINATED_UNION HtmlTextOrTags tags;
 };
 
-DISCRIMINATED_UNION HtmlTextOrNodes {
+DISCRIMINATED_UNION HtmlTextOrTags {
 	CASE text=21: { 
 		CHARACTER-STRING str;
 	}
-	CASE nodes=22: { 
-		VECTOR<STRUCT HtmlNode> nodes_;
+	CASE taglists=22: { 
+		VECTOR<STRUCT HtmlTag> tags;
 	}
 };
 

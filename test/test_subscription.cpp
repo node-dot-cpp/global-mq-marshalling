@@ -806,9 +806,9 @@ void publishableTestOne()
 
 // no notifiers
 
-struct HtmlNodeSample
+struct HtmlTagSample
 {
-	mtest::HtmlNode node;
+	mtest::HtmlTag tag;
 };
 
 // version with notifiers: we have to add them
@@ -821,26 +821,26 @@ struct Property
 	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_value()\n" ); }
 };
 
-class HtmlTextOrNodes : public mtest::HtmlTextOrNodes
+class HtmlTextOrTags : public mtest::HtmlTextOrTags
 {
 public:
-	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_currentVariant()\n" ); }
-	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_str()\n" ); }
-	void notifyUpdated_nodes_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrNodes::notifyUpdated_nodes_()\n" ); }
+	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_currentVariant()\n" ); }
+	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_str()\n" ); }
+	void notifyUpdated_tags_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_tags_()\n" ); }
 };
 
-struct HtmlNode
+struct HtmlTag
 {
 	GMQ_COLL vector<Property> properties;
-	HtmlTextOrNodes nodes;
+	HtmlTextOrTags tags;
 };
 
-struct HtmlNodeSampleWithNotifiers
+struct HtmlTagSampleWithNotifiers
 {
-	HtmlNode node;
+	HtmlTag tag;
 
 	SampleNode& processingNode;
-	HtmlNodeSampleWithNotifiers( SampleNode& node_ ) : processingNode( node_ ) {}
+	HtmlTagSampleWithNotifiers( SampleNode& node_ ) : processingNode( node_ ) {}
 };
 
 void publishableTestTwo()
@@ -869,23 +869,23 @@ void publishableTestTwo()
 
 		
 
-	fmt::print( "Testing publishing/subscribing...\n" );
+	fmt::print( "\nTesting publishing/subscribing...\n" );
 
-	mtest::publishable_html_node_NodecppWrapperForPublisher<HtmlNodeSample, MetaPoolT> htmlNodeWrapper( mp );
+	mtest::publishable_html_tag_NodecppWrapperForPublisher<HtmlTagSample, MetaPoolT> htmlTagWrapper( mp );
 
 	globalmq::marshalling::GmqPathHelper::PathComponents pc;
 	pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
 	pc.authority = "";
 	pc.nodeName = "myNode";
-	pc.statePublisherOrConnectionType = mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT>::stringTypeID;
+	pc.statePublisherOrConnectionType = mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT>::stringTypeID;
 	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
-	/*mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave( mp );
-	htmlNodeWrapperSlave.subscribe( path );
-	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSampleWithNotifiers, MetaPoolT> htmlNodeWrapperSlave2( mp, node );
-	htmlNodeWrapperSlave2.subscribe( path );*/
-	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSampleWithNotifiers, MetaPoolT> htmlNodeWrapperSlave3( mp, node );
-	htmlNodeWrapperSlave3.subscribe( path );
+	/*mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT> htmlTagWrapperSlave( mp );
+	htmlTagWrapperSlave.subscribe( path );
+	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave2( mp, node );
+	htmlTagWrapperSlave2.subscribe( path );*/
+	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave3( mp, node );
+	htmlTagWrapperSlave3.subscribe( path );
 
 	mp.postAllUpdates();
 	constexpr size_t maxMsg = 1000;
@@ -898,13 +898,13 @@ void publishableTestTwo()
 	}
 
 	// quick test for getting right after ctoring
-	auto& hn = htmlNodeWrapper.get_node();
-	assert( hn.nodes.currentVariant() == mtest::HtmlTextOrNodes::Variants::unknown );
+	auto& hn = htmlTagWrapper.get_tag();
+	assert( hn.tags.currentVariant() == mtest::HtmlTextOrTags::Variants::unknown );
 
-	auto g4s_hn = htmlNodeWrapper.get4set_node();
-	auto g4s_hn_nodes = g4s_hn.get4set_nodes();
-	g4s_hn_nodes.set_currentVariant( mtest::HtmlTextOrNodes::Variants::text );
-	g4s_hn_nodes.set_str( "abc" );
+	auto g4s_hn = htmlTagWrapper.get4set_tag();
+	auto g4s_hn_tags = g4s_hn.get4set_tags();
+	g4s_hn_tags.set_currentVariant( mtest::HtmlTextOrTags::Variants::text );
+	g4s_hn_tags.set_str( "abc" );
 
 	mp.postAllUpdates();
 	msgCnt = queue.pop_front( messages, maxMsg, 0 );
@@ -913,6 +913,5 @@ void publishableTestTwo()
 //		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
 		mp.onMessage( messages[i].msg );
 	}
-
 
 }
