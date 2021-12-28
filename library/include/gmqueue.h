@@ -474,8 +474,8 @@ struct SlotIdx
 	size_t idx = invalid_idx;
 	uint64_t reincarnation = invalid_reincarnation;
 	bool isInitialized() { return idx != invalid_idx && reincarnation != invalid_reincarnation; }
-	bool operator == ( const SlotIdx& other ) { return idx == other.idx && reincarnation == other.reincarnation; }
-	bool operator != ( const SlotIdx& other ) { return idx != other.idx || reincarnation != other.reincarnation; }
+	bool operator == ( const SlotIdx& other ) const { return idx == other.idx && reincarnation == other.reincarnation; }
+	bool operator != ( const SlotIdx& other ) const { return idx != other.idx || reincarnation != other.reincarnation; }
 	void invalidate() { idx = invalid_idx; reincarnation = invalid_reincarnation; }
 };
 

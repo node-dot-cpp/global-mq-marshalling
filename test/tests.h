@@ -9,5 +9,6 @@ void testScopedMessageComposingAndParsing();
 
 void quickTestForGmqParts();
 void publishableTestOne();
+void publishableTestTwo();
 
 #endif // TESTS_H
