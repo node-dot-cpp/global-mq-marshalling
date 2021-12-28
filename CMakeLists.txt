@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------------------
-# Copyright (c) 2020, OLogN Technologies AG
+# Copyright (c) 2020-2021, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.0)
 
@@ -26,5 +26,5 @@ endif()
 
 if(GLOBAL_MQ_TEST)
   # only when not a subproject
-  add_subdirectory(test)
+  add_subdirectory(test/cpp)
 endif()

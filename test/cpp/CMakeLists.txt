@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------------------
-# Copyright (c) 2020, OLogN Technologies AG
+# Copyright (c) 2020-1021, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 
 set(IDL_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/marshalling/test_marshalling.h)
