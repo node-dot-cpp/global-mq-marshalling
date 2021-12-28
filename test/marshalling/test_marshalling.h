@@ -868,30 +868,28 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 	{
 		uint64_t caseId;
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
-		switch ( caseId )
+		t.initAs( (typename T::Variants)(caseId) );
+		if ( caseId != T::Variants::unknown )
 		{
-			case 21: // IDL CASE text
+			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+			switch ( caseId )
 			{
-				::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
+				case 21: // IDL CASE text
+				{
+					::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
 
+				}
+				case 22: // IDL CASE taglists
+				{
+					::globalmq::marshalling::impl::parseKey( parser, "tags" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_taglists_tags_T, publishable_STRUCT_HtmlTag, true>( parser, t.tags() );
+
+				}
 				default:
 					throw std::exception(); // unexpected
-				break;
 			}
-			case 22: // IDL CASE taglists
-			{
-				::globalmq::marshalling::impl::parseKey( parser, "tags" );
-				PublishableVectorProcessor::parse<ParserT, typename T::Case_taglists_tags_T, publishable_STRUCT_HtmlTag, true>( parser, t.tags() );
-
-				default:
-					throw std::exception(); // unexpected
-				break;
-			}
-			default:
-				throw std::exception(); // unexpected
+			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 		}
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -2370,36 +2368,34 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	{
 		uint64_t caseId;
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
-		switch ( caseId )
+		t.initAs( (typename T::Variants)(caseId) );
+		if ( caseId != T::Variants::unknown )
 		{
-			case 1: // IDL CASE one
+			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+			switch ( caseId )
 			{
-				::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
-				publishable_STRUCT_point3D::parseForStateSync( parser, t.pt3d_1() );
-				::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+				case 1: // IDL CASE one
+				{
+					::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
+					publishable_STRUCT_point3D::parseForStateSync( parser, t.pt3d_1() );
+					::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-				::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
 
+				}
+				case 2: // IDL CASE two
+				{
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
+
+					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
+
+				}
 				default:
 					throw std::exception(); // unexpected
-				break;
 			}
-			case 2: // IDL CASE two
-			{
-				::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
-
-				::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
-				PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
-
-				default:
-					throw std::exception(); // unexpected
-				break;
-			}
-			default:
-				throw std::exception(); // unexpected
+			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 		}
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 	}
 
 	template<class ParserT, class T, class RetT = void>

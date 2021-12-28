@@ -818,6 +818,7 @@ struct Property
 	GMQ_COLL string name = "ini_name";
 	GMQ_COLL string value = "ini_value";
 
+	void notifyUpdated_name() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_name()\n" ); }
 	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_value()\n" ); }
 };
 
@@ -829,11 +830,12 @@ public:
 	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_tags()\n" ); }
 };
 
-struct HtmlTag //: public mtest::HtmlTag
+struct HtmlTag
 {
 	GMQ_COLL vector<Property> properties;
 	HtmlTextOrTags tags;
 	void notifyUpdated_properties() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTag::notifyUpdated_properties()\n" ); }
+	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTag::notifyUpdated_tags()\n" ); }
 	// TODO: add other notifiers here, if necessary
 };
 
@@ -934,4 +936,13 @@ void publishableTestTwo()
 //		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
 		mp.onMessage( messages[i].msg );
 	}
+
+	assert( htmlTagWrapper.get_tag().tags.currentVariant() == htmlTagWrapperSlave1.get_tag().tags.currentVariant() );
+	assert( htmlTagWrapperSlave1.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
+	assert( htmlTagWrapperSlave2.get_tag().tags.currentVariant() == htmlTagWrapperSlave3.get_tag().tags.currentVariant() );
+	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == mtest::HtmlTextOrTags::Variants::taglists );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags().size() == 1 );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].name == "some_key" );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].value == "some_value" );
 }

@@ -1318,31 +1318,33 @@ void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root
 	{
 		fprintf( header, "\t\tuint64_t caseId;\n" );
 		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
-
-		fprintf( header, "\t\tswitch ( caseId )\n" );
+		fprintf( header, "\t\tt.initAs( (typename T::Variants)(caseId) );\n" );
+		fprintf( header, "\t\tif ( caseId != T::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
+
+		fprintf( header, "\t\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
+		fprintf( header, "\t\t\tswitch ( caseId )\n" );
+		fprintf( header, "\t\t\t{\n" );
 
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
-			fprintf( header, "\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
-			fprintf( header, "\t\t\t{\n" );
+			fprintf( header, "\t\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
+			fprintf( header, "\t\t\t\t{\n" );
 
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, cs, "\t\t\t\t" );
+			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
 
-			fprintf( header, "\t\t\t\tdefault:\n" );
-			fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
-			fprintf( header, "\t\t\t\tbreak;\n" );
-			fprintf( header, "\t\t\t}\n" );
+			fprintf( header, "\t\t\t\t}\n" );
 		}
 
-		fprintf( header, "\t\t\tdefault:\n" );
-		fprintf( header, "\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t}\n" );
+		fprintf( header, "\t\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+
 		fprintf( header, "\t\t}\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
 	}
 	else
 		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, obj, "\t\t" );
