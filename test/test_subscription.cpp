@@ -818,9 +818,6 @@ struct Property
 	GMQ_COLL string name = "ini_name";
 	GMQ_COLL string value = "ini_value";
 
-	SampleNode& node;
-	Property( SampleNode& node_ ) : node( node_ ) {}
-
 	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_value()\n" ); }
 };
 
@@ -842,6 +839,9 @@ struct HtmlNode
 struct HtmlNodeSampleWithNotifiers
 {
 	mtest::HtmlNode node;
+
+	SampleNode& processingNode;
+	HtmlNodeSampleWithNotifiers( SampleNode& node_ ) : processingNode( node_ ) {}
 };
 
 void publishableTestTwo()
@@ -852,9 +852,27 @@ void publishableTestTwo()
 	SampleNode node;
 	setCurrentNode( &node );
 
-	mtest::publishable_html_node_NodecppWrapperForPublisher<HtmlNodeSample, MetaPoolT> htmlNodeWrapper( mp );
+	// gmqueue
+	using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
+	using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
+	using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
 
-	fmt::print( "OK so far...\n" );
+	GMQueue<StatePublisherSubscriberPoolInfo> gmqueue;
+	gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
+	gmqueue.setAuthority( "" );
+
+	using PostmanT = globalmq::marshalling::ThreadQueuePostman<StatePublisherSubscriberPoolInfo::BufferT>;
+	typename PostmanT::MsgQueue queue;
+
+	globalmq::marshalling::GMQThreadQueueTransport<StatePublisherSubscriberPoolInfo> transport( gmqueue, "myNode", queue, 1 );
+	mp.setTransport( &transport );
+
+
+		
+
+	fmt::print( "Testing publishing/subscribing...\n" );
+
+	mtest::publishable_html_node_NodecppWrapperForPublisher<HtmlNodeSample, MetaPoolT> htmlNodeWrapper( mp );
 
 	globalmq::marshalling::GmqPathHelper::PathComponents pc;
 	pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
@@ -864,14 +882,24 @@ void publishableTestTwo()
 	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
 	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave( mp );
-	/*htmlNodeWrapperSlave.subscribe( path );
-	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave2( mp, node );
+	htmlNodeWrapperSlave.subscribe( path );
+	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSampleWithNotifiers, MetaPoolT> htmlNodeWrapperSlave2( mp, node );
 	htmlNodeWrapperSlave2.subscribe( path );
-	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSample, MetaPoolT> htmlNodeWrapperSlave3( mp, node );
-	htmlNodeWrapperSlave3.subscribe( path );*/
+	mtest::publishable_html_node_NodecppWrapperForSubscriber<HtmlNodeSampleWithNotifiers, MetaPoolT> htmlNodeWrapperSlave3( mp, node );
+	htmlNodeWrapperSlave3.subscribe( path );
 
-	deliverMessages(); // simulate transport layer
-	deliverMessages(); // simulate transport layer
+	mp.postAllUpdates();
+	constexpr size_t maxMsg = 1000;
+	ThreadQueueItem<StatePublisherSubscriberPoolInfo::BufferT> messages[maxMsg];
+	size_t msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
+
+//	deliverMessages(); // simulate transport layer
+//	deliverMessages(); // simulate transport layer
 
 	// quick test for getting right after ctoring
 	auto& hn = htmlNodeWrapper.get_node();
@@ -881,5 +909,14 @@ void publishableTestTwo()
 	auto g4s_hn_nodes = g4s_hn.get4set_nodes();
 	g4s_hn_nodes.set_currentVariant( mtest::HtmlTextOrNodes::Variants::text );
 	g4s_hn_nodes.set_str( "abc" );
+
+	mp.postAllUpdates();
+	msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
+
 
 }
