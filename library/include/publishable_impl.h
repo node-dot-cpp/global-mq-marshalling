@@ -116,7 +116,7 @@ public:
 	}
 
 	void insert_before( size_t idx, typename VectorT::value_type& what ) { 
-		GMQ_ASSERT( idx < b.size());
+		GMQ_ASSERT( idx <= b.size());
 		b.insert( b.begin() + idx, what );
 		impl::composeAddressInPublishable( root.getComposer(), address, idx );
 		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::insert_single_before, false );

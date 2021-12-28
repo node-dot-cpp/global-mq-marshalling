@@ -826,13 +826,15 @@ class HtmlTextOrTags : public mtest::HtmlTextOrTags
 public:
 	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_currentVariant()\n" ); }
 	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_str()\n" ); }
-	void notifyUpdated_tags_() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_tags_()\n" ); }
+	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_tags()\n" ); }
 };
 
-struct HtmlTag
+struct HtmlTag //: public mtest::HtmlTag
 {
 	GMQ_COLL vector<Property> properties;
 	HtmlTextOrTags tags;
+	void notifyUpdated_properties() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTag::notifyUpdated_properties()\n" ); }
+	// TODO: add other notifiers here, if necessary
 };
 
 struct HtmlTagSampleWithNotifiers
@@ -869,7 +871,7 @@ void publishableTestTwo()
 
 		
 
-	fmt::print( "\nTesting publishing/subscribing...\n" );
+	fmt::print( "\nTesting publishing/subscribing...\n\n" );
 
 	mtest::publishable_html_tag_NodecppWrapperForPublisher<HtmlTagSample, MetaPoolT> htmlTagWrapper( mp );
 
@@ -880,10 +882,10 @@ void publishableTestTwo()
 	pc.statePublisherOrConnectionType = mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT>::stringTypeID;
 	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
-	/*mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT> htmlTagWrapperSlave( mp );
-	htmlTagWrapperSlave.subscribe( path );
+	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT> htmlTagWrapperSlave1( mp );
+	htmlTagWrapperSlave1.subscribe( path );
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave2( mp, node );
-	htmlTagWrapperSlave2.subscribe( path );*/
+	htmlTagWrapperSlave2.subscribe( path );
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave3( mp, node );
 	htmlTagWrapperSlave3.subscribe( path );
 
@@ -914,4 +916,22 @@ void publishableTestTwo()
 		mp.onMessage( messages[i].msg );
 	}
 
+	assert( htmlTagWrapper.get_tag().tags.currentVariant() == htmlTagWrapperSlave1.get_tag().tags.currentVariant() );
+	assert( htmlTagWrapperSlave1.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
+	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
+
+	g4s_hn_tags.set_currentVariant( mtest::HtmlTextOrTags::Variants::taglists );
+	mtest::HtmlTag newTag;
+	newTag.properties.push_back( { "some_key", "some_value" } );
+	newTag.tags.initAs( mtest::HtmlTextOrTags::Variants::text );
+	newTag.tags.str() = "def";
+	g4s_hn_tags.get4set_tags().insert_before( 0, newTag );
+
+	mp.postAllUpdates();
+	msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
 }

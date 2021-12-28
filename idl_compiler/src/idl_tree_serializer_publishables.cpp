@@ -464,7 +464,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s{\n", offset.c_str() );
 	fprintf( header, "%s\tsize_t pos = addr[%s1];\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s\tif ( pos >= t.%s.size() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\tif ( pos > t.%s.size() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\tthrow std::exception();\n", offset.c_str() );
 
 	fprintf( header, "%s\tif ( addr.size() > %s2 ) // update for a member of a particular vector element\n", offset.c_str(), offsetPlusStr );
@@ -703,7 +703,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* head
 	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s{\n", offset.c_str() );
 	fprintf( header, "%s\tsize_t pos = addr[%s1];\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s\tif ( pos >= t.%s.size() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\tif ( pos > t.%s.size() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\tthrow std::exception();\n", offset.c_str() );
 
 	fprintf( header, "%s\tif ( addr.size() > %s2 ) // update for a member of a particular vector element\n", offset.c_str(), offsetPlusStr );
@@ -1531,10 +1531,15 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
+			fprintf( header, "\t\t\t\tcase %zd: // IDL CASE %s\n", it->numID, it->name.c_str() );
+			fprintf( header, "\t\t\t\t{\n" );
+
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, cs, "\t\t\t\t" );
+			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
+
+			fprintf( header, "\t\t\t\t}\n" );
 		}
 
 		fprintf( header, "\t\t\t\tdefault:\n" );

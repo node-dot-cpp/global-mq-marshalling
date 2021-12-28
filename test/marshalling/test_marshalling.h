@@ -997,7 +997,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 								if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 								{
 									size_t pos = addr[offset + 1];
-									if ( pos >= t.tags().size() )
+									if ( pos > t.tags().size() )
 										throw std::exception();
 									if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 									{
@@ -1195,8 +1195,14 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 		if ( s1.currentVariant() != UserT::Variants::unknown )
 			switch ( s1.currentVariant() )
 			{
-				if ( s1.str() != s2.str() ) return false;
-				if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_taglists_tags_T, publishable_STRUCT_HtmlTag>( s1.tags(), s2.tags() ) ) return false;
+				case 21: // IDL CASE text
+				{
+					if ( s1.str() != s2.str() ) return false;
+				}
+				case 22: // IDL CASE taglists
+				{
+					if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_taglists_tags_T, publishable_STRUCT_HtmlTag>( s1.tags(), s2.tags() ) ) return false;
+				}
 				default:
 					throw std::exception(); // unexpected
 			}
@@ -1771,7 +1777,7 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[offset + 1];
-						if ( pos >= t.properties.size() )
+						if ( pos > t.properties.size() )
 							throw std::exception();
 						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 						{
@@ -2600,7 +2606,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 								if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 								{
 									size_t pos = addr[offset + 1];
-									if ( pos >= t.vp_2().size() )
+									if ( pos > t.vp_2().size() )
 										throw std::exception();
 									if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 									{
@@ -2763,10 +2769,16 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		if ( s1.currentVariant() != UserT::Variants::unknown )
 			switch ( s1.currentVariant() )
 			{
-				if( ! publishable_STRUCT_point3D::isSame( s1.pt3d_1(), s2.pt3d_1() ) ) return false;
-				if ( s1.i_1() != s2.i_1() ) return false;
-				if ( s1.i_2() != s2.i_2() ) return false;
-				if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( s1.vp_2(), s2.vp_2() ) ) return false;
+				case 1: // IDL CASE one
+				{
+					if( ! publishable_STRUCT_point3D::isSame( s1.pt3d_1(), s2.pt3d_1() ) ) return false;
+					if ( s1.i_1() != s2.i_1() ) return false;
+				}
+				case 2: // IDL CASE two
+				{
+					if ( s1.i_2() != s2.i_2() ) return false;
+					if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( s1.vp_2(), s2.vp_2() ) ) return false;
+				}
 				default:
 					throw std::exception(); // unexpected
 			}
@@ -3337,7 +3349,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[offset + 1];
-						if ( pos >= t.sizes.size() )
+						if ( pos > t.sizes.size() )
 							throw std::exception();
 						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 						{
@@ -3685,7 +3697,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 					if ( addr.size() > offset + 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[offset + 1];
-						if ( pos >= t.signedInts.size() )
+						if ( pos > t.signedInts.size() )
 							throw std::exception();
 						if ( addr.size() > offset + 2 ) // update for a member of a particular vector element
 						{
@@ -5442,7 +5454,7 @@ public:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
-						if ( pos >= t.vector_of_int.size() )
+						if ( pos > t.vector_of_int.size() )
 							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
@@ -5572,7 +5584,7 @@ public:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
-						if ( pos >= t.vector_struct_point3dreal.size() )
+						if ( pos > t.vector_struct_point3dreal.size() )
 							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
@@ -6153,7 +6165,7 @@ public:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
-						if ( pos >= t.vector_of_int.size() )
+						if ( pos > t.vector_of_int.size() )
 							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
@@ -6205,7 +6217,7 @@ public:
 					if ( addr.size() > 1 ) // one of actions over elements of the vector
 					{
 						size_t pos = addr[1];
-						if ( pos >= t.vector_struct_point3dreal.size() )
+						if ( pos > t.vector_struct_point3dreal.size() )
 							throw std::exception();
 						if ( addr.size() > 2 ) // update for a member of a particular vector element
 						{
