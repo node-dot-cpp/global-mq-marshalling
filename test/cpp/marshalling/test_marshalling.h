@@ -687,6 +687,69 @@ struct StructWithVectorOfInt
 	GMQ_COLL vector<int64_t> signedInts;
 };
 
+struct MESSAGE_point3D_alias
+{
+};
+
+struct MESSAGE_point_alias
+{
+};
+
+struct MESSAGE_LevelTraceData
+{
+	CharacterParamStruct CharacterParam;
+	GMQ_COLL vector<POINT3DREAL> Points;
+};
+
+struct MESSAGE_PolygonSt
+{
+	GMQ_COLL vector<PolygonMap> polygonMap;
+	GMQ_COLL vector<PolygonMap> concaveMap;
+	GMQ_COLL vector<ObstacleMap> obstacleMap;
+	GMQ_COLL vector<LineMap> portalMap;
+	GMQ_COLL vector<LineMap> jumpMap;
+	double polygonSpeed;
+};
+
+struct MESSAGE_message_one
+{
+	int64_t firstParam;
+	GMQ_COLL vector<int64_t> secondParam;
+	GMQ_COLL vector<point3D> thirdParam;
+	uint64_t forthParam;
+	GMQ_COLL string fifthParam;
+	GMQ_COLL vector<point> sixthParam;
+	double seventhParam;
+	point eighthParam;
+	point3D ninethParam;
+	GMQ_COLL vector<double> tenthParam;
+};
+
+struct MESSAGE_message_one
+{
+	int64_t firstParam;
+	GMQ_COLL vector<int64_t> secondParam;
+	GMQ_COLL vector<point3D> thirdParam;
+	uint64_t forthParam;
+	GMQ_COLL string fifthParam;
+	GMQ_COLL vector<point> sixthParam;
+	double seventhParam;
+	point eighthParam;
+	point3D ninethParam;
+	GMQ_COLL vector<double> tenthParam;
+};
+
+struct MESSAGE_point
+{
+	point point;
+};
+
+struct MESSAGE_point3D
+{
+	point3D pt;
+	du_one du_one_instance;
+};
+
 struct publishable_short_sample
 {
 	int64_t ID;

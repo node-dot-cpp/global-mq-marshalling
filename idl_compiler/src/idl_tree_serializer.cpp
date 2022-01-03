@@ -674,9 +674,12 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 
 std::string impl_generateDiscriminatedUnionCaseStructName( CompositeType& s )
 {
-	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::discriminated_union_case || s.type == CompositeType::Type::structure );
+	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::message || s.type == CompositeType::Type::discriminated_union_case || s.type == CompositeType::Type::structure );
 //	return fmt::format( "{}_{}", s.type2string(), s.name );
-	return fmt::format( "{}", s.name ); // let's see whether it is enough
+	if ( s.type == CompositeType::Type::message )
+		return fmt::format( "MESSAGE_{}", s.name );
+	else
+		return fmt::format( "{}", s.name );
 }
 
 std::string impl_generateStandardCppTypeName( MessageParameterType& s )
@@ -722,7 +725,7 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 
 void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& ducs, const char* offset )
 {
-	assert( ducs.type == CompositeType::Type::publishable || ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
+	assert( ducs.type == CompositeType::Type::publishable || ducs.type == CompositeType::Type::message || ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
 
 	bool checked = impl_checkParamNameUniqueness(ducs);
 	if ( !checked )
@@ -1043,6 +1046,14 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 			generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
 		else
 			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
+
+	for ( auto& it : s.messages )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::message );
+		generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
 	}
 
 	for ( auto& it : s.publishables )

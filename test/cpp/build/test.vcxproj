@@ -32,26 +32,18 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\library\include\global_mq_common.h" />
-    <ClInclude Include="..\..\library\include\gmqueue.h" />
-    <ClInclude Include="..\..\library\include\marshalling_impl.h" />
-    <ClInclude Include="..\..\library\include\marshalling.h" />
-    <ClInclude Include="..\..\library\include\platforms\hwnd_queue.h" />
-    <ClInclude Include="..\..\library\include\platforms\inproc_queue.h" />
-    <ClInclude Include="..\..\library\include\platforms\qt_queue.h" />
-    <ClInclude Include="..\..\library\include\publishable_impl.h" />
+    <ClInclude Include="..\..\..\library\include\global_mq_common.h" />
+    <ClInclude Include="..\..\..\library\include\gmqueue.h" />
+    <ClInclude Include="..\..\..\library\include\marshalling.h" />
+    <ClInclude Include="..\..\..\library\include\marshalling_impl.h" />
+    <ClInclude Include="..\..\..\library\include\platforms\inproc_queue.h" />
+    <ClInclude Include="..\..\..\library\include\publishable_impl.h" />
     <ClInclude Include="..\marshalling\test_marshalling.h" />
     <ClInclude Include="..\nodecpp_gmqueue_customized_types.h" />
     <ClInclude Include="..\nodecpp_publish_subscribe_support.h" />
     <ClInclude Include="..\tests.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="..\..\library\idl\state_replication.idl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Midl>
     <Midl Include="..\test_marshalling.idl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

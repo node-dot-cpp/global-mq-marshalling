@@ -74,7 +74,7 @@ namespace globalmq::marshalling {
 			size_t directlyAvailableSize() { return begin != nullptr ? end - begin : 0; }
 			const uint8_t* directRead( size_t sz ) { 
 				if ( begin != nullptr ) { 
-					assert( sz <= end - begin ); 
+					assert( end >= begin && sz <= (size_t)(end - begin) ); 
 					auto ret = begin; 
 					begin += sz; 
 					currentOffset += sz;
