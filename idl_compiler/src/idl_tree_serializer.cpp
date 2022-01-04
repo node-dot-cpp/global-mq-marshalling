@@ -732,7 +732,18 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 		throw std::exception();
 
 	if ( ducs.type == CompositeType::Type::message )
-		fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
+	{
+		if ( ducs.isAlias )
+		{
+			fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
+			fprintf( header, "%sstruct %s%s : public %s {};\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str(), ducs.aliasOf.c_str() );
+			fprintf( header, "} // namespace %s\n", ducs.scopeName.c_str() );
+			fprintf( header, "\n" );
+			return;
+		}
+		else
+			fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
+	}
 
 	fprintf( header, "%sstruct %s%s\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
 	fprintf( header, "%s{\n", offset );

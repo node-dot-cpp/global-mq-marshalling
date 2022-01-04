@@ -691,15 +691,11 @@ struct StructWithVectorOfInt
 };
 
 namespace scope_one {
-struct MESSAGE_point3D_alias
-{
-};
+struct MESSAGE_point3D_alias : public point3D {};
 } // namespace scope_one
 
 namespace scope_one {
-struct MESSAGE_point_alias
-{
-};
+struct MESSAGE_point_alias : public point {};
 } // namespace scope_one
 
 namespace level_trace {
