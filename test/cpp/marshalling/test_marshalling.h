@@ -308,7 +308,10 @@ template<typename T> concept has_void_update_notifier_call_for_z = requires(T t)
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_z = requires { { std::declval<StateT>().notifyUpdated_z(std::declval<MemberT>()) }; };
 
 //===============================================================================
-// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs and PUBLISHABLEs
+// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs, MESSAGEs and PUBLISHABLEs
+
+namespace structures {
+
 struct StructWithVectorOfInt;
 struct StructWithVectorOfSize;
 struct CharacterParamStruct;
@@ -687,20 +690,27 @@ struct StructWithVectorOfInt
 	GMQ_COLL vector<int64_t> signedInts;
 };
 
+namespace scope_one {
 struct MESSAGE_point3D_alias
 {
 };
+} // namespace scope_one
 
+namespace scope_one {
 struct MESSAGE_point_alias
 {
 };
+} // namespace scope_one
 
+namespace level_trace {
 struct MESSAGE_LevelTraceData
 {
 	CharacterParamStruct CharacterParam;
 	GMQ_COLL vector<POINT3DREAL> Points;
 };
+} // namespace level_trace
 
+namespace infrastructural {
 struct MESSAGE_PolygonSt
 {
 	GMQ_COLL vector<PolygonMap> polygonMap;
@@ -710,7 +720,9 @@ struct MESSAGE_PolygonSt
 	GMQ_COLL vector<LineMap> jumpMap;
 	double polygonSpeed;
 };
+} // namespace infrastructural
 
+namespace test_gmq {
 struct MESSAGE_message_one
 {
 	int64_t firstParam;
@@ -724,7 +736,9 @@ struct MESSAGE_message_one
 	point3D ninethParam;
 	GMQ_COLL vector<double> tenthParam;
 };
+} // namespace test_gmq
 
+namespace test_json {
 struct MESSAGE_message_one
 {
 	int64_t firstParam;
@@ -738,17 +752,22 @@ struct MESSAGE_message_one
 	point3D ninethParam;
 	GMQ_COLL vector<double> tenthParam;
 };
+} // namespace test_json
 
+namespace infrastructural {
 struct MESSAGE_point
 {
 	point point;
 };
+} // namespace infrastructural
 
+namespace infrastructural {
 struct MESSAGE_point3D
 {
 	point3D pt;
 	du_one du_one_instance;
 };
+} // namespace infrastructural
 
 struct publishable_short_sample
 {
@@ -774,6 +793,8 @@ struct publishable_html_tag
 	HtmlTag tag;
 };
 
+
+} // namespace structures
 
 //===============================================================================
 
@@ -6750,11 +6771,11 @@ public:
 		switch( typeID )
 		{
 			case 1:
-				return new publishable_short_sample_WrapperForConcentrator<publishable_short_sample, InputBufferT, ComposerT>;
+				return new publishable_short_sample_WrapperForConcentrator<structures::publishable_short_sample, InputBufferT, ComposerT>;
 			case 2:
-				return new publishable_sample_WrapperForConcentrator<publishable_sample, InputBufferT, ComposerT>;
+				return new publishable_sample_WrapperForConcentrator<structures::publishable_sample, InputBufferT, ComposerT>;
 			case 3:
-				return new publishable_html_tag_WrapperForConcentrator<publishable_html_tag, InputBufferT, ComposerT>;
+				return new publishable_html_tag_WrapperForConcentrator<structures::publishable_html_tag, InputBufferT, ComposerT>;
 			default:
 				return nullptr;
 		}

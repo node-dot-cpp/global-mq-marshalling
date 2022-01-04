@@ -227,7 +227,7 @@ struct PublishableSample {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt structWithVectorOfInt;
 	StructWithVectorOfSize structWithVectorOfSize;
-	mtest::du_one du_one_instance;
+	mtest::structures::du_one du_one_instance;
 };
 
 
@@ -297,7 +297,7 @@ struct PublishableSample_UPD {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt_UPD structWithVectorOfInt;
 	StructWithVectorOfSize_UPD structWithVectorOfSize;
-	mtest::du_one du_one_instance;
+	mtest::structures::du_one du_one_instance;
 
 	PublishableSample_UPD( SampleNode& node_ ) : node( node_ ) {}
 
@@ -360,7 +360,7 @@ struct PublishableSample_UPD_D {
 	std::vector<int> vector_of_int = {111, 112, 113};
 	StructWithVectorOfInt_UPD_D structWithVectorOfInt;
 	StructWithVectorOfSize_UPD_D structWithVectorOfSize;
-	mtest::du_one du_one_instance;
+	mtest::structures::du_one du_one_instance;
 
 	PublishableSample_UPD_D( SampleNode& node_ ) : node( node_ ) {}
 
@@ -808,7 +808,7 @@ void publishableTestOne()
 
 struct HtmlTagSample
 {
-	mtest::HtmlTag tag;
+	mtest::structures::HtmlTag tag;
 };
 
 // version with notifiers: we have to add them
@@ -822,7 +822,7 @@ struct Property
 	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_value()\n" ); }
 };
 
-class HtmlTextOrTags : public mtest::HtmlTextOrTags
+class HtmlTextOrTags : public mtest::structures::HtmlTextOrTags
 {
 public:
 	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_currentVariant()\n" ); }
@@ -903,11 +903,11 @@ void publishableTestTwo()
 
 	// quick test for getting right after ctoring
 	auto& hn = htmlTagWrapper.get_tag();
-	assert( hn.tags.currentVariant() == mtest::HtmlTextOrTags::Variants::unknown );
+	assert( hn.tags.currentVariant() == mtest::structures::HtmlTextOrTags::Variants::unknown );
 
 	auto g4s_hn = htmlTagWrapper.get4set_tag();
 	auto g4s_hn_tags = g4s_hn.get4set_tags();
-	g4s_hn_tags.set_currentVariant( mtest::HtmlTextOrTags::Variants::text );
+	g4s_hn_tags.set_currentVariant( mtest::structures::HtmlTextOrTags::Variants::text );
 	g4s_hn_tags.set_str( "abc" );
 
 	mp.postAllUpdates();
@@ -922,10 +922,10 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave1.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
 	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
 
-	g4s_hn_tags.set_currentVariant( mtest::HtmlTextOrTags::Variants::taglists );
-	mtest::HtmlTag newTag;
+	g4s_hn_tags.set_currentVariant( mtest::structures::HtmlTextOrTags::Variants::taglists );
+	mtest::structures::HtmlTag newTag;
 	newTag.properties.push_back( { "some_key", "some_value" } );
-	newTag.tags.initAs( mtest::HtmlTextOrTags::Variants::text );
+	newTag.tags.initAs( mtest::structures::HtmlTextOrTags::Variants::text );
 	newTag.tags.str() = "def";
 	g4s_hn_tags.get4set_tags().insert_before( 0, newTag );
 
@@ -940,7 +940,7 @@ void publishableTestTwo()
 	assert( htmlTagWrapper.get_tag().tags.currentVariant() == htmlTagWrapperSlave1.get_tag().tags.currentVariant() );
 	assert( htmlTagWrapperSlave1.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
 	assert( htmlTagWrapperSlave2.get_tag().tags.currentVariant() == htmlTagWrapperSlave3.get_tag().tags.currentVariant() );
-	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == mtest::HtmlTextOrTags::Variants::taglists );
+	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == mtest::structures::HtmlTextOrTags::Variants::taglists );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags().size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].name == "some_key" );

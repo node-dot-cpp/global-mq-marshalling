@@ -663,7 +663,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
 		assert( obj_1->type == CompositeType::Type::publishable );
 		fprintf( header, "\t\t\tcase %lld:\n", obj_1->numID );
-		fprintf( header, "\t\t\t\treturn new %s_WrapperForConcentrator<%s, InputBufferT, ComposerT>;\n", obj_1->name.c_str(), obj_1->name.c_str() );
+		fprintf( header, "\t\t\t\treturn new %s_WrapperForConcentrator<structures::%s, InputBufferT, ComposerT>;\n", obj_1->name.c_str(), obj_1->name.c_str() );
 	}
 	fprintf( header, "\t\t\tdefault:\n" );
 	fprintf( header, "\t\t\t\treturn nullptr;\n" );
@@ -731,6 +731,9 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 	if ( !checked )
 		throw std::exception();
 
+	if ( ducs.type == CompositeType::Type::message )
+		fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
+
 	fprintf( header, "%sstruct %s%s\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
 	fprintf( header, "%s{\n", offset );
 	for ( auto& mbit: ducs.getMembers() )
@@ -742,7 +745,12 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 		if ( m.type.kind != MessageParameterType::KIND::EXTENSION )
 			fprintf( header, "%s\t%s %s;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
 	}
-	fprintf( header, "%s};\n\n", offset );
+	fprintf( header, "%s};\n", offset );
+
+	if ( ducs.type == CompositeType::Type::message )
+		fprintf( header, "} // namespace %s\n", ducs.scopeName.c_str() );
+
+	fprintf( header, "\n" );
 }
 
 void processDiscriminatedUnionCaseParams( Root& s )
@@ -1034,7 +1042,10 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	orderStructsByDependency( s.structs, structsOrderedByDependency );
 
 	fprintf( header, "//===============================================================================\n" );
-	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs and PUBLISHABLEs\n" );
+	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs, MESSAGEs and PUBLISHABLEs\n" );
+	fprintf( header, "\n" );
+	fprintf( header, "namespace structures {\n" );
+	fprintf( header, "\n" );
 	generateStructOrDiscriminatedUnionForwardDeclaration( header, s );
 	fprintf( header, "\n" );
 	for ( auto it : structsOrderedByDependency )
@@ -1063,6 +1074,9 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( it->type == CompositeType::Type::publishable );
 		generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
 	}
+
+	fprintf( header, "\n" );
+	fprintf( header, "} // namespace structures\n" );
 	fprintf( header, "\n//===============================================================================\n\n" );
 
 	for ( auto& it : s.structs )
