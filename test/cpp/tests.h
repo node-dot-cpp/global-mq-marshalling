@@ -6,6 +6,7 @@ void runJsonSample();
 void testParsingJsonFile();
 void testMessageAliases();
 void testScopedMessageComposingAndParsing();
+void testScopedMessageComposingAndParsing2();
 
 void quickTestForGmqParts();
 void publishableTestOne();

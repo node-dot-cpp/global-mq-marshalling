@@ -3988,6 +3988,14 @@ void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
 	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
 }
 
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+template<class ParserT>
+point3D_alias MESSAGE_point3D_alias_parse(ParserT& p)
+{
+	return STRUCT_point3D_parse(p);
+}
+
 //**********************************************************************
 // MESSAGE "point_alias" Targets: JSON (Alias of point)
 
@@ -4003,6 +4011,14 @@ template<class ParserT, typename ... Args>
 void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
 {
 	STRUCT_point_parse(p, std::forward<Args>( args )...);
+}
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+template<class ParserT>
+point_alias MESSAGE_point_alias_parse(ParserT& p)
+{
+	return STRUCT_point_parse(p);
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4149,6 +4165,16 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 	}
 }
 
+template<class ParserT>
+structures::level_trace::MESSAGE_LevelTraceData MESSAGE_LevelTraceData_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::level_trace::MESSAGE_LevelTraceData tmp;
+	return tmp;
+}
+
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args )
 {
@@ -4283,6 +4309,16 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
 }
 
+template<class ParserT>
+structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::infrastructural::MESSAGE_PolygonSt tmp;
+	return tmp;
+}
+
 //**********************************************************************
 // MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
 //  1. STRUCT point point (REQUIRED)
@@ -4321,6 +4357,16 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::infrastructural::MESSAGE_point MESSAGE_point_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::infrastructural::MESSAGE_point tmp;
+	return tmp;
 }
 
 //**********************************************************************
@@ -4368,6 +4414,16 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::infrastructural::MESSAGE_point3D MESSAGE_point3D_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::infrastructural::MESSAGE_point3D tmp;
+	return tmp;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4526,6 +4582,16 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_8_type, false>(p, arg_8_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_9_type, false>(p, arg_9_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_10_type, false>(p, arg_10_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::test_gmq::MESSAGE_message_one tmp;
+	return tmp;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4736,6 +4802,16 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 		}
 		throw std::exception(); // bad format
 	}
+}
+
+template<class ParserT>
+structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::test_json::MESSAGE_message_one tmp;
+	return tmp;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -7389,6 +7465,16 @@ void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
 	}
 }
 
+template<class ParserT>
+structures::CharacterParamStruct STRUCT_CharacterParamStruct_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::CharacterParamStruct tmp;
+	return tmp;
+}
+
 //**********************************************************************
 // STRUCT "SIZE" Targets: JSON (3 parameters)
 //  1. REAL X (REQUIRED)
@@ -7466,6 +7552,16 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 		}
 		throw std::exception(); // bad format
 	}
+}
+
+template<class ParserT>
+structures::SIZE STRUCT_SIZE_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::SIZE tmp;
+	return tmp;
 }
 
 //**********************************************************************
@@ -7547,6 +7643,16 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 	}
 }
 
+template<class ParserT>
+structures::POINT3DREAL STRUCT_POINT3DREAL_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::POINT3DREAL tmp;
+	return tmp;
+}
+
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT Line> LineMap (REQUIRED)
@@ -7585,6 +7691,16 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::LineMap STRUCT_LineMap_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::LineMap tmp;
+	return tmp;
 }
 
 //**********************************************************************
@@ -7634,6 +7750,16 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 }
 
+template<class ParserT>
+structures::Line STRUCT_Line_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::Line tmp;
+	return tmp;
+}
+
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
@@ -7674,6 +7800,16 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
+template<class ParserT>
+structures::ObstacleMap STRUCT_ObstacleMap_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::ObstacleMap tmp;
+	return tmp;
+}
+
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
 //  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
@@ -7712,6 +7848,16 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::PolygonMap STRUCT_PolygonMap_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::PolygonMap tmp;
+	return tmp;
 }
 
 //**********************************************************************
@@ -7766,6 +7912,16 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::Vertex STRUCT_Vertex_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::Vertex tmp;
+	return tmp;
 }
 
 //**********************************************************************
@@ -7853,6 +8009,16 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 			throw std::exception(); // bad format
 		}
 	}
+}
+
+template<class ParserT>
+structures::point STRUCT_point_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::point tmp({1,1});
+	return tmp;
 }
 
 //**********************************************************************
@@ -7953,6 +8119,16 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 	}
 }
 
+template<class ParserT>
+structures::point3D STRUCT_point3D_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::point3D tmp({1,1,1});
+	return tmp;
+}
+
 //**********************************************************************
 // DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
 //  CASE one (2 parameters)(2 parameters)
@@ -8014,6 +8190,16 @@ void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
+}
+
+template<class ParserT>
+structures::du_one DISCRIMINATED_UNION_du_one_parse2(ParserT& p)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+// ???????????????????????????????????????????????????
+	structures::du_one tmp;
+	return tmp;
 }
 
 

@@ -42,6 +42,14 @@ std::string impl_generateParseFunctionName( CompositeType& s )
 	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
 }
 
+std::string impl_generateParseFunctionRetType( CompositeType& s )
+{
+	if ( s.type == CompositeType::Type::message )
+	return fmt::format( "structures::{}::{}_{}", s.scopeName.c_str(), s.type2string(), s.name );
+//	if ( s.type == CompositeType::Type::structure )
+	return fmt::format( "structures::{}", s.name );
+}
+
 bool impl_processScopes( Root& r )
 {
 	bool ok = true;
@@ -1081,6 +1089,20 @@ void impl_generateParseFunction( FILE* header, CompositeType& s )
 	fprintf( header, "}\n\n" );
 }
 
+void impl_generateParseFunction2( FILE* header, CompositeType& s )
+{
+	fprintf( header, "template<class ParserT>\n" );
+	fprintf( header, "%s %s2(ParserT& p)\n", impl_generateParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
+	fprintf( header, "{\n" );
+	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
+
+	fprintf( header, "// ???????????????????????????????????????????????????\n" );
+	fprintf( header, "\t%s tmp;\n", impl_generateParseFunctionRetType(s).c_str() );
+	fprintf( header, "\treturn tmp;\n" );
+
+	fprintf( header, "}\n\n" );
+}
+
 void generateMessage( FILE* header, CompositeType& s )
 {
 	bool checked = impl_checkParamNameUniqueness(s);
@@ -1093,6 +1115,7 @@ void generateMessage( FILE* header, CompositeType& s )
 
 	impl_generateComposeFunction( header, s );
 	impl_generateParseFunction( header, s );
+	impl_generateParseFunction2( header, s );
 }
 
 void generateMessageAlias( FILE* header, CompositeType& s )
@@ -1116,15 +1139,23 @@ void generateMessageAlias( FILE* header, CompositeType& s )
 
 	// compose function
 	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
+	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n", s.type2string(), s.name.c_str() );
+	fprintf( header, "{\n" );
 	fprintf( header, "\t%s_%s_compose(composer, std::forward<Args>( args )...);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
 	fprintf( header, "}\n\n" );
 
-	// compose function
+	// parse-by-param function
 	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s_%s_parse(ParserT& p, Args&& ... args)\n"
-	"{\n", s.type2string(), s.name.c_str() );
+	"void %s_%s_parse(ParserT& p, Args&& ... args)\n", s.type2string(), s.name.c_str() );
+	fprintf( header, "{\n" );
 	fprintf( header, "\t%s_%s_parse(p, std::forward<Args>( args )...);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
+	fprintf( header, "}\n\n" );
+
+	// parse function
+	fprintf( header, "// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" );
+	fprintf( header, "template<class ParserT>\n" );
+	fprintf( header, "%s %s_%s_parse(ParserT& p)\n"/*, s.type2string()*/, s.name.c_str(), s.type2string(), s.name.c_str() );
+	fprintf( header, "{\n" );
+	fprintf( header, "\treturn %s_%s_parse(p);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
 	fprintf( header, "}\n\n" );
 }
