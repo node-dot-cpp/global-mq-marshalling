@@ -1111,7 +1111,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-		if ( it->isStruct4Publishing )
+//		if ( it->isStruct4Publishing )
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
@@ -1129,7 +1129,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 			assert( typeid( *(it) ) == typeid( CompositeType ) );
 			assert( it->type == CompositeType::Type::message );
 			if ( !it->isAlias )
-				generateMessage( header, *it );
+				generateMessage( header, s, *it );
 			else
 				generateMessageAlias( header, *it );
 		}
@@ -1172,7 +1172,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Messaging )
-			generateMessage( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			generateMessage( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 	}
 
 	fprintf( header, "\n"

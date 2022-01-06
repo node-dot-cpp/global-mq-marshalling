@@ -70,8 +70,10 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
 inline
 std::string impl_discriminatedUnionCaseMemberType( MessageParameter member ) { return fmt::format( "Case_{}_{}_T", member.caseName, member.name ); }
+
 inline
 std::string impl_memberOrAccessFunctionName( const MessageParameter& member ) { return fmt::format( member.duCaseParam ? "{}()" : "{}", member.name ); }
+
 inline
 std::string impl_templateMemberTypeName( std::string templateParentName, const MessageParameter& member, bool noTypeNameAppending = false ) {
 	if ( member.duCaseParam )
@@ -79,6 +81,96 @@ std::string impl_templateMemberTypeName( std::string templateParentName, const M
 	else
 		return fmt::format( "decltype({}::{})", templateParentName, member.name );
 }
+
+inline
+std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
+{
+	if ( s.type == CompositeType::Type::message )
+	return fmt::format( "structures::{}::{}_{}", s.scopeName.c_str(), s.type2string(), s.name );
+//	if ( s.type == CompositeType::Type::structure )
+	return fmt::format( "structures::{}", s.name );
+}
+
+inline
+const char* paramTypeToParser( MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "publishableParseInteger";
+		case MessageParameterType::KIND::UINTEGER: return "publishableParseUnsignedInteger";
+		case MessageParameterType::KIND::REAL: return "publishableParseReal";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseString";
+		default: return nullptr;
+	}
+}
+
+inline
+std::string impl_generatePublishableStructName( MessageParameter& s )
+{
+	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+	else
+	{
+		assert( false );
+		return "";
+	}
+}
+
+inline
+std::string impl_generateMessageStructName( MessageParameter& s )
+{
+	if ( s.type.kind == MessageParameterType::KIND::STRUCT || s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return fmt::format( "structures::{}", s.type.name );
+	else
+	{
+		assert( false );
+		return "";
+	}
+}
+
+inline
+string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	switch( type.vectorElemKind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: 
+			assert( type.messageIdx < root.structs.size() );
+			return fmt::format( "publishable_STRUCT_{}", root.structs[type.messageIdx]->name );
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+			assert( type.messageIdx < root.structs.size() );
+			return fmt::format( "publishable_DISCRIMINATED_UNION_{}", root.structs[type.messageIdx]->name );
+		default: 
+			assert( false );
+			return "";
+	}
+}
+
+inline
+string messageVectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	switch( type.vectorElemKind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: 
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+			assert( type.messageIdx < root.structs.size() );
+			return fmt::format( "structures::{}", root.structs[type.messageIdx]->name );
+		default: 
+			assert( false );
+			return "";
+	}
+}
+
+void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj );
 
 
 // printing global_mq tree
@@ -111,7 +203,7 @@ void printVariant( Variant& s );
 
 // code generation
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
-void generateMessage( FILE* header, CompositeType& s );
+void generateMessage( FILE* header, Root& root, CompositeType& s );
 void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
 void generateMessageAlias( FILE* header, CompositeType& s );
 void generateMessageParameter( FILE* header, MessageParameter& s );

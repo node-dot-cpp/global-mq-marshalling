@@ -286,7 +286,7 @@ void testMessageAliases()
 
 void testScopedMessageComposingAndParsing()
 {
-	Point pt = {444, 555};
+	/*Point pt = {444, 555};
 	Point3D pt3D = {123, 456, 789};
 	mtest::Buffer b;
 	mtest::scope_one::composeMessage<mtest::scope_one::point3D_alias>( b, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z );
@@ -306,7 +306,7 @@ void testScopedMessageComposingAndParsing()
 	mtest::scope_one::handleMessage( b, 
 		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ mtest::STRUCT_point_parse( parser, mtest::x = &(ptBack.x), mtest::y = &(ptBack.y) );}),
 		mtest::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
-	);
+	);*/
 
 }
 void testScopedMessageComposingAndParsing2()

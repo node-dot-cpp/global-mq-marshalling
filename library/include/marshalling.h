@@ -892,12 +892,13 @@ struct MessageName : public MessageNameBase
 using UnknownMessageName = MessageName<MessageNameBase::unknownMsgID>;
 
 template<typename msgID, class ParserT>
-void implHandleMessage( ParserT& parser )
+bool implHandleMessage( ParserT& parser )
 {
+	return false;
 }
 
 template<typename msgID, class ParserT, class HandlerT, class ... HandlersT >
-void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handlers )
+bool implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handlers )
 {
 	static_assert( std::is_base_of<MessageNameBase, msgID>::value, "(Default) message handler is expected" );
 	static_assert( std::is_base_of<MessageNameBase, msgID>::value );
@@ -906,13 +907,17 @@ void implHandleMessage( ParserT& parser, HandlerT handler, HandlersT ... handler
 		constexpr size_t remainingArgCount = sizeof ... (HandlersT);
 		static_assert ( remainingArgCount == 0, "Default handler, if present, must be the last argument" );
 		handler.handle( parser, msgID::id );
+		return false;
 	}
 	else
 	{
 		if constexpr ( HandlerT::msgID == msgID::id )
+		{
 			handler.handle( parser );
+			return true;
+		}
 		else
-			implHandleMessage<msgID, ParserT, HandlersT...>( parser, handlers... );
+			return implHandleMessage<msgID, ParserT, HandlersT...>( parser, handlers... );
 	}
 }
 

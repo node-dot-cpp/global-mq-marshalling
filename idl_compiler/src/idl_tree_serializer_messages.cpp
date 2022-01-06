@@ -42,14 +42,6 @@ std::string impl_generateParseFunctionName( CompositeType& s )
 	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
 }
 
-std::string impl_generateParseFunctionRetType( CompositeType& s )
-{
-	if ( s.type == CompositeType::Type::message )
-	return fmt::format( "structures::{}::{}_{}", s.scopeName.c_str(), s.type2string(), s.name );
-//	if ( s.type == CompositeType::Type::structure )
-	return fmt::format( "structures::{}", s.name );
-}
-
 bool impl_processScopes( Root& r )
 {
 	bool ok = true;
@@ -142,23 +134,25 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		default:
 			assert( false );
 	}
-	fprintf( header, 
-		"\tswitch ( msgID )\n"
-		"\t{\n"
-	);
+
+	fprintf( header, "\tbool ok = false;\n" );
+	fprintf( header, "\n" );
+
+	fprintf( header, "\tswitch ( msgID )\n" );
+	fprintf( header, "\t{\n" );
+	
 	for ( auto msg : scope.objectList )
-		fprintf( header, "\t\tcase %s::id: ::globalmq::marshalling::impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
+		fprintf( header, "\t\tcase %s::id: ok = ::globalmq::marshalling::impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
 	fprintf( header, "\t\tdefault: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;\n" );
 	fprintf( header, "\t}\n\n" );
 	switch ( scope.proto )
 	{
 		case Proto::gmq: break;
 		case Proto::json:
-			fprintf( header, 
-				"\tif (!parser.isDelimiter(\'}\'))\n"
-				"\t\tthrow std::exception(); // bad format\n"
-				"\tparser.skipDelimiter(\'}\');\n"
-			);
+			fprintf( header, "\t/*if (!ok) return;\n" );
+			fprintf( header, "\tif (!parser.isDelimiter(\'}\'))\n" );
+			fprintf( header, "\t\tthrow std::exception(); // bad format\n" );
+			fprintf( header, "\tparser.skipDelimiter(\'}\');*/\n" );
 			break;
 		default:
 			assert( false );
@@ -1089,21 +1083,30 @@ void impl_generateParseFunction( FILE* header, CompositeType& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunction2( FILE* header, CompositeType& s )
+void impl_generateParseFunction3( FILE* header, Root& root, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT>\n" );
-	fprintf( header, "%s %s2(ParserT& p)\n", impl_generateParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
+	fprintf( header, "%s %s2(ParserT& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
+	fprintf( header, "\tusing T = %s;\n", impl_generateMessageParseFunctionRetType(s).c_str() );
+	fprintf( header, "\tT t;\n" );
 	fprintf( header, "// ???????????????????????????????????????????????????\n" );
-	fprintf( header, "\t%s tmp;\n", impl_generateParseFunctionRetType(s).c_str() );
-	fprintf( header, "\treturn tmp;\n" );
+
+	fprintf( header, "\t::globalmq::marshalling::impl::parseStructBegin( parser );\n" );
+	fprintf( header, "\n" );
+
+	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, s );
+
+	fprintf( header, "\t::globalmq::marshalling::impl::parseStructEnd( parser );\n" );
+
+	fprintf( header, "\treturn t;\n" );
 
 	fprintf( header, "}\n\n" );
 }
 
-void generateMessage( FILE* header, CompositeType& s )
+void generateMessage( FILE* header, Root& root, CompositeType& s )
 {
 	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
@@ -1115,7 +1118,8 @@ void generateMessage( FILE* header, CompositeType& s )
 
 	impl_generateComposeFunction( header, s );
 	impl_generateParseFunction( header, s );
-	impl_generateParseFunction2( header, s );
+//	impl_generateParseFunction2( header, root, s );
+	impl_generateParseFunction3( header, root, s );
 }
 
 void generateMessageAlias( FILE* header, CompositeType& s )

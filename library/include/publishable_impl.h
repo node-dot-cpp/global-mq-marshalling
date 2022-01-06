@@ -287,7 +287,7 @@ public:
 				{
 					impl::parseStructBegin( parser );
 					if constexpr( suppressNotifications )
-						ElemTypeT::parseForStateSync( parser, what );
+						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
 					else
 						ElemTypeT::parse( parser, what );
 					impl::parseStructEnd( parser );
@@ -323,7 +323,7 @@ public:
 				{
 					impl::parseStructBegin( parser );
 					if constexpr( suppressNotifications )
-						ElemTypeT::parseForStateSync( parser, what );
+						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
 					else
 						ElemTypeT::parse( parser, what );
 					impl::parseStructEnd( parser );

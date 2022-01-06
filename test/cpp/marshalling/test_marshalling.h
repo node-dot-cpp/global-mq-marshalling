@@ -829,6 +829,36 @@ template<class T, class RootT> class HtmlTag_RefWrapper4Set;
 
 struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		t.initAs( (typename T::Variants)(caseId) );
+		if ( caseId != T::Variants::unknown )
+		{
+			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+			switch ( caseId )
+			{
+				case 21: // IDL CASE text
+				{
+					::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
+
+				}
+				case 22: // IDL CASE taglists
+				{
+					::globalmq::marshalling::impl::parseKey( parser, "tags" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_taglists_tags_T, publishable_STRUCT_HtmlTag, true>( parser, t.tags() );
+
+				}
+				default:
+					throw std::exception(); // unexpected
+			}
+			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		}
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -940,36 +970,6 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
-		t.initAs( (typename T::Variants)(caseId) );
-		if ( caseId != T::Variants::unknown )
-		{
-			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
-			switch ( caseId )
-			{
-				case 21: // IDL CASE text
-				{
-					::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
-
-				}
-				case 22: // IDL CASE taglists
-				{
-					::globalmq::marshalling::impl::parseKey( parser, "tags" );
-					PublishableVectorProcessor::parse<ParserT, typename T::Case_taglists_tags_T, publishable_STRUCT_HtmlTag, true>( parser, t.tags() );
-
-				}
-				default:
-					throw std::exception(); // unexpected
-			}
-			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-		}
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -1290,6 +1290,18 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 
 struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -1376,18 +1388,6 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -1504,6 +1504,18 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 
 struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -1590,18 +1602,6 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -1718,6 +1718,19 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 
 struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "properties" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property, true>( parser, t.properties );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "tags" );
+		publishable_DISCRIMINATED_UNION_HtmlTextOrTags::parseForStateSyncOrMessageInDepth( parser, t.tags );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -1802,19 +1815,6 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::parseKey( parser, "properties" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property, true>( parser, t.properties );
-
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "tags" );
-		publishable_DISCRIMINATED_UNION_HtmlTextOrTags::parseForStateSync( parser, t.tags );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -2108,6 +2108,16 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 
 struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -2171,16 +2181,6 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
-
-		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -2269,6 +2269,42 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 
 struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		t.initAs( (typename T::Variants)(caseId) );
+		if ( caseId != T::Variants::unknown )
+		{
+			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+			switch ( caseId )
+			{
+				case 1: // IDL CASE one
+				{
+					::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
+					publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.pt3d_1() );
+					::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
+
+				}
+				case 2: // IDL CASE two
+				{
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
+
+					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
+
+				}
+				default:
+					throw std::exception(); // unexpected
+			}
+			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		}
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -2440,42 +2476,6 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
-		t.initAs( (typename T::Variants)(caseId) );
-		if ( caseId != T::Variants::unknown )
-		{
-			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
-			switch ( caseId )
-			{
-				case 1: // IDL CASE one
-				{
-					::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
-					publishable_STRUCT_point3D::parseForStateSync( parser, t.pt3d_1() );
-					::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
-
-				}
-				case 2: // IDL CASE two
-				{
-					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
-
-					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
-					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
-
-				}
-				default:
-					throw std::exception(); // unexpected
-			}
-			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-		}
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -2862,8 +2862,105 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	}
 };
 
+struct publishable_STRUCT_point : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+	}
+
+};
+
+struct publishable_STRUCT_Vertex : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+
+	}
+
+};
+
+struct publishable_STRUCT_PolygonMap : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "_PolygonMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::_PolygonMap), publishable_STRUCT_Vertex, true>( parser, t._PolygonMap );
+
+	}
+
+};
+
+struct publishable_STRUCT_ObstacleMap : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "_ObstacleMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::_ObstacleMap), publishable_STRUCT_PolygonMap, true>( parser, t._ObstacleMap );
+
+	}
+
+};
+
+struct publishable_STRUCT_Line : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "a" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::a), publishable_STRUCT_Vertex, true>( parser, t.a );
+
+		::globalmq::marshalling::impl::parseKey( parser, "b" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::b), publishable_STRUCT_Vertex, true>( parser, t.b );
+
+	}
+
+};
+
+struct publishable_STRUCT_LineMap : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "LineMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::LineMap), publishable_STRUCT_Line, true>( parser, t.LineMap );
+
+	}
+
+};
+
 struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -2950,18 +3047,6 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -3078,6 +3163,18 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 
 struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
+		publishable_STRUCT_SIZE::parseForStateSyncOrMessageInDepth( parser, t.Size );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -3155,18 +3252,6 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
-		publishable_STRUCT_SIZE::parseForStateSync( parser, t.Size );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -3304,6 +3389,17 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 
 struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::parseKey( parser, "sizes" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, true>( parser, t.sizes );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -3374,17 +3470,6 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::parseKey( parser, "sizes" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, true>( parser, t.sizes );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::NN)>( parser, &(t.NN), "NN" );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -3629,6 +3714,17 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 
 struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling::impl::StructType
 {
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	{
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		::globalmq::marshalling::impl::parseKey( parser, "signedInts" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, true>( parser, t.signedInts );
+
+	}
+
 	template<class ComposerT, class T>
 	static
 	void compose( ComposerT& composer, const T& t )
@@ -3699,17 +3795,6 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 
 		if constexpr ( reportChanges )
 			return changed;
-	}
-
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parseForStateSync( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-
-		::globalmq::marshalling::impl::parseKey( parser, "signedInts" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, true>( parser, t.signedInts );
-
 	}
 
 	template<class ParserT, class T, class RetT = void>
@@ -3941,13 +4026,16 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		throw std::exception(); // bad format
 	JsonParser p( parser );
 
+	bool ok = false;
+
 	switch ( msgID )
 	{
-		case point3D_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
-		case point_alias::id: ::globalmq::marshalling::impl::implHandleMessage<point_alias>( parser, handlers... ); break;
+		case point3D_alias::id: ok = ::globalmq::marshalling::impl::implHandleMessage<point3D_alias>( parser, handlers... ); break;
+		case point_alias::id: ok = ::globalmq::marshalling::impl::implHandleMessage<point_alias>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
+	if (!ok) return;
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
 	parser.skipDelimiter('}');
@@ -4066,12 +4154,15 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		throw std::exception(); // bad format
 	JsonParser p( parser );
 
+	bool ok = false;
+
 	switch ( msgID )
 	{
-		case LevelTraceData::id: ::globalmq::marshalling::impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
+		case LevelTraceData::id: ok = ::globalmq::marshalling::impl::implHandleMessage<LevelTraceData>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
+	if (!ok) return;
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
 	parser.skipDelimiter('}');
@@ -4166,13 +4257,24 @@ void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::level_trace::MESSAGE_LevelTraceData MESSAGE_LevelTraceData_parse2(ParserT& p)
+structures::level_trace::MESSAGE_LevelTraceData MESSAGE_LevelTraceData_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::level_trace::MESSAGE_LevelTraceData;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::level_trace::MESSAGE_LevelTraceData tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "CharacterParam" );
+		publishable_STRUCT_CharacterParamStruct::parseForStateSyncOrMessageInDepth( parser, t.CharacterParam );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "Points" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::Points), publishable_STRUCT_POINT3DREAL, true>( parser, t.Points );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4206,11 +4308,13 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 
 	static_assert( ParserT::proto == Proto::GMQ, "According to IDL GMQ parser is expected" );
 	parser.parseUnsignedInteger( &msgID );
+	bool ok = false;
+
 	switch ( msgID )
 	{
-		case PolygonSt::id: ::globalmq::marshalling::impl::implHandleMessage<PolygonSt>( parser, handlers... ); break;
-		case point::id: ::globalmq::marshalling::impl::implHandleMessage<point>( parser, handlers... ); break;
-		case point3D::id: ::globalmq::marshalling::impl::implHandleMessage<point3D>( parser, handlers... ); break;
+		case PolygonSt::id: ok = ::globalmq::marshalling::impl::implHandleMessage<PolygonSt>( parser, handlers... ); break;
+		case point::id: ok = ::globalmq::marshalling::impl::implHandleMessage<point>( parser, handlers... ); break;
+		case point3D::id: ok = ::globalmq::marshalling::impl::implHandleMessage<point3D>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
@@ -4310,13 +4414,34 @@ void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse2(ParserT& p)
+structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::infrastructural::MESSAGE_PolygonSt;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::infrastructural::MESSAGE_PolygonSt tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "polygonMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::polygonMap), publishable_STRUCT_PolygonMap, true>( parser, t.polygonMap );
+
+		::globalmq::marshalling::impl::parseKey( parser, "concaveMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::concaveMap), publishable_STRUCT_PolygonMap, true>( parser, t.concaveMap );
+
+		::globalmq::marshalling::impl::parseKey( parser, "obstacleMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::obstacleMap), publishable_STRUCT_ObstacleMap, true>( parser, t.obstacleMap );
+
+		::globalmq::marshalling::impl::parseKey( parser, "portalMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::portalMap), publishable_STRUCT_LineMap, true>( parser, t.portalMap );
+
+		::globalmq::marshalling::impl::parseKey( parser, "jumpMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::jumpMap), publishable_STRUCT_LineMap, true>( parser, t.jumpMap );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::polygonSpeed)>( parser, &(t.polygonSpeed), "polygonSpeed" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -4360,13 +4485,21 @@ void MESSAGE_point_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::infrastructural::MESSAGE_point MESSAGE_point_parse2(ParserT& p)
+structures::infrastructural::MESSAGE_point MESSAGE_point_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::infrastructural::MESSAGE_point;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::infrastructural::MESSAGE_point tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "point" );
+		publishable_STRUCT_point::parseForStateSyncOrMessageInDepth( parser, t.point );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -4417,13 +4550,25 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::infrastructural::MESSAGE_point3D MESSAGE_point3D_parse2(ParserT& p)
+structures::infrastructural::MESSAGE_point3D MESSAGE_point3D_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::infrastructural::MESSAGE_point3D;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::infrastructural::MESSAGE_point3D tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt" );
+		publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.pt );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "du_one_instance" );
+		publishable_DISCRIMINATED_UNION_du_one::parseForStateSyncOrMessageInDepth( parser, t.du_one_instance );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4455,9 +4600,11 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 
 	static_assert( ParserT::proto == Proto::GMQ, "According to IDL GMQ parser is expected" );
 	parser.parseUnsignedInteger( &msgID );
+	bool ok = false;
+
 	switch ( msgID )
 	{
-		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		case message_one::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
@@ -4585,13 +4732,45 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& p)
+structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::test_gmq::MESSAGE_message_one;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::test_gmq::MESSAGE_message_one tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::firstParam)>( parser, &(t.firstParam), "firstParam" );
+
+		::globalmq::marshalling::impl::parseKey( parser, "secondParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::secondParam), ::globalmq::marshalling::impl::SignedIntegralType, true>( parser, t.secondParam );
+
+		::globalmq::marshalling::impl::parseKey( parser, "thirdParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::thirdParam), publishable_STRUCT_point3D, true>( parser, t.thirdParam );
+
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, decltype(T::forthParam)>( parser, &(t.forthParam), "forthParam" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::fifthParam)>( parser, &(t.fifthParam), "fifthParam" );
+
+		::globalmq::marshalling::impl::parseKey( parser, "sixthParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::sixthParam), publishable_STRUCT_point, true>( parser, t.sixthParam );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::seventhParam)>( parser, &(t.seventhParam), "seventhParam" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "eighthParam" );
+		publishable_STRUCT_point::parseForStateSyncOrMessageInDepth( parser, t.eighthParam );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "ninethParam" );
+		publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.ninethParam );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "tenthParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::tenthParam), ::globalmq::marshalling::impl::RealType, true>( parser, t.tenthParam );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4633,12 +4812,15 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		throw std::exception(); // bad format
 	JsonParser p( parser );
 
+	bool ok = false;
+
 	switch ( msgID )
 	{
-		case message_one::id: ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		case message_one::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
+	if (!ok) return;
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
 	parser.skipDelimiter('}');
@@ -4805,13 +4987,45 @@ void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& p)
+structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::test_json::MESSAGE_message_one;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::test_json::MESSAGE_message_one tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::firstParam)>( parser, &(t.firstParam), "firstParam" );
+
+		::globalmq::marshalling::impl::parseKey( parser, "secondParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::secondParam), ::globalmq::marshalling::impl::SignedIntegralType, true>( parser, t.secondParam );
+
+		::globalmq::marshalling::impl::parseKey( parser, "thirdParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::thirdParam), publishable_STRUCT_point3D, true>( parser, t.thirdParam );
+
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, decltype(T::forthParam)>( parser, &(t.forthParam), "forthParam" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::fifthParam)>( parser, &(t.fifthParam), "fifthParam" );
+
+		::globalmq::marshalling::impl::parseKey( parser, "sixthParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::sixthParam), publishable_STRUCT_point, true>( parser, t.sixthParam );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::seventhParam)>( parser, &(t.seventhParam), "seventhParam" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "eighthParam" );
+		publishable_STRUCT_point::parseForStateSyncOrMessageInDepth( parser, t.eighthParam );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "ninethParam" );
+		publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.ninethParam );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "tenthParam" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::tenthParam), ::globalmq::marshalling::impl::RealType, true>( parser, t.tenthParam );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -7466,13 +7680,23 @@ void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::CharacterParamStruct STRUCT_CharacterParamStruct_parse2(ParserT& p)
+structures::CharacterParamStruct STRUCT_CharacterParamStruct_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::CharacterParamStruct;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::CharacterParamStruct tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
+		publishable_STRUCT_SIZE::parseForStateSyncOrMessageInDepth( parser, t.Size );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7555,13 +7779,23 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::SIZE STRUCT_SIZE_parse2(ParserT& p)
+structures::SIZE STRUCT_SIZE_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::SIZE;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::SIZE tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7644,13 +7878,23 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::POINT3DREAL STRUCT_POINT3DREAL_parse2(ParserT& p)
+structures::POINT3DREAL STRUCT_POINT3DREAL_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::POINT3DREAL;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::POINT3DREAL tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7694,13 +7938,20 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::LineMap STRUCT_LineMap_parse2(ParserT& p)
+structures::LineMap STRUCT_LineMap_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::LineMap;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::LineMap tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "LineMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::LineMap), publishable_STRUCT_Line, true>( parser, t.LineMap );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7751,13 +8002,23 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::Line STRUCT_Line_parse2(ParserT& p)
+structures::Line STRUCT_Line_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::Line;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::Line tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "a" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::a), publishable_STRUCT_Vertex, true>( parser, t.a );
+
+		::globalmq::marshalling::impl::parseKey( parser, "b" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::b), publishable_STRUCT_Vertex, true>( parser, t.b );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7801,13 +8062,20 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::ObstacleMap STRUCT_ObstacleMap_parse2(ParserT& p)
+structures::ObstacleMap STRUCT_ObstacleMap_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::ObstacleMap;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::ObstacleMap tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "_ObstacleMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::_ObstacleMap), publishable_STRUCT_PolygonMap, true>( parser, t._ObstacleMap );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7851,13 +8119,20 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::PolygonMap STRUCT_PolygonMap_parse2(ParserT& p)
+structures::PolygonMap STRUCT_PolygonMap_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::PolygonMap;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::PolygonMap tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parseKey( parser, "_PolygonMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::_PolygonMap), publishable_STRUCT_Vertex, true>( parser, t._PolygonMap );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -7915,13 +8190,23 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::Vertex STRUCT_Vertex_parse2(ParserT& p)
+structures::Vertex STRUCT_Vertex_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::Vertex;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::Vertex tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -8012,13 +8297,21 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::point STRUCT_point_parse2(ParserT& p)
+structures::point STRUCT_point_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::point;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::point tmp({1,1});
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -8120,13 +8413,23 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::point3D STRUCT_point3D_parse2(ParserT& p)
+structures::point3D STRUCT_point3D_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::point3D;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::point3D tmp({1,1,1});
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 //**********************************************************************
@@ -8193,13 +8496,47 @@ void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 }
 
 template<class ParserT>
-structures::du_one DISCRIMINATED_UNION_du_one_parse2(ParserT& p)
+structures::du_one DISCRIMINATED_UNION_du_one_parse2(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
+	using T = structures::du_one;
+	T t;
 // ???????????????????????????????????????????????????
-	structures::du_one tmp;
-	return tmp;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		uint64_t caseId;
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		t.initAs( (typename T::Variants)(caseId) );
+		if ( caseId != T::Variants::unknown )
+		{
+			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
+			switch ( caseId )
+			{
+				case 1: // IDL CASE one
+				{
+					::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
+					publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.pt3d_1() );
+					::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
+
+				}
+				case 2: // IDL CASE two
+				{
+					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
+
+					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
+					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
+
+				}
+				default:
+					throw std::exception(); // unexpected
+			}
+			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		}
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
 }
 
 
