@@ -27,20 +27,34 @@
 
 #include "idl_tree_serializer.h"
 
-const char* paramTypeToLibType( MessageParameterType::KIND kind )
+inline
+const char* paramTypeToParser( MessageParameterType::KIND kind )
 {
 	switch( kind )
 	{
-		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
-		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
-		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
-		case MessageParameterType::KIND::STRUCT: return "::globalmq::marshalling::impl::StructType";
-		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "::globalmq::marshalling::impl::DiscriminatedUnionType";
+		case MessageParameterType::KIND::INTEGER: return "publishableParseInteger";
+		case MessageParameterType::KIND::UINTEGER: return "publishableParseUnsignedInteger";
+		case MessageParameterType::KIND::REAL: return "publishableParseReal";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseString";
 		default: return nullptr;
 	}
 }
 
+inline
+std::string impl_generatePublishableStructName( MessageParameter& s )
+{
+	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+	else
+	{
+		assert( false );
+		return "";
+	}
+}
+
+inline
 string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
 {
 	switch( type.vectorElemKind )
@@ -58,6 +72,20 @@ string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& ty
 		default: 
 			assert( false );
 			return "";
+	}
+}
+
+const char* paramTypeToLibType( MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: return "::globalmq::marshalling::impl::StructType";
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "::globalmq::marshalling::impl::DiscriminatedUnionType";
+		default: return nullptr;
 	}
 }
 
@@ -113,18 +141,6 @@ const char* paramTypeToLeafeParser( MessageParameterType::KIND kind )
 	}
 }
 
-const char* paramTypeToParser( MessageParameterType::KIND kind )
-{
-	switch( kind )
-	{
-		case MessageParameterType::KIND::INTEGER: return "publishableParseInteger";
-		case MessageParameterType::KIND::UINTEGER: return "publishableParseUnsignedInteger";
-		case MessageParameterType::KIND::REAL: return "publishableParseReal";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseString";
-		default: return nullptr;
-	}
-}
-
 std::string impl_generateComposeFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
 {
 	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
@@ -167,19 +183,6 @@ std::string impl_generatePublishableStructName( CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 	return fmt::format( "publishable_{}_{}", s.type2string(), s.name );
-}
-
-std::string impl_generatePublishableStructName( MessageParameter& s )
-{
-	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
-		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
-	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-		return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
-	else
-	{
-		assert( false );
-		return "";
-	}
 }
 
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
@@ -1291,7 +1294,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 			case  MessageParameterType::KIND::STRUCT:
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
-				fprintf( header, "%s%s::parseForStateSync( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s%s::parseForStateSyncOrMessageInDepth( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n", offset.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
@@ -1306,13 +1309,9 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 	}
 }
 
-void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root& root, CompositeType& obj )
+void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj )
 {
-	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
-	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
-	fprintf( header, "\tstatic\n" );
-	fprintf( header, "\tRetT parseForStateSync( ParserT& parser, T& t )\n" );
-	fprintf( header, "\t{\n" );
+	assert( obj.type == CompositeType::Type::message || obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
 
 	if ( obj.isDiscriminatedUnion() )
 	{
@@ -1348,6 +1347,19 @@ void impl_generateParseFunctionForPublishableStructStateSync( FILE* header, Root
 	}
 	else
 		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, obj, "\t\t" );
+}
+
+void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
+//	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
+	fprintf( header, "\ttemplate<class ParserT, class T>\n" );
+	fprintf( header, "\tstatic\n" );
+//	fprintf( header, "\tRetT parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n" );
+	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n" );
+	fprintf( header, "\t{\n" );
+
+	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
 
 	fprintf( header, "\t}\n" );
 }
@@ -1560,17 +1572,21 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	fprintf( header, "struct %s : public ::globalmq::marshalling::impl::StructType\n", impl_generatePublishableStructName( obj ).c_str() );
 	fprintf( header, "{\n" );
 
-	impl_generateComposeFunctionForPublishableStruct( header, root, obj );
+	impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
 	fprintf( header, "\n" );
-	impl_generateParseFunctionForPublishableStruct( header, root, obj );
-	fprintf( header, "\n" );
-	impl_generateParseFunctionForPublishableStructStateSync( header, root, obj );
-	fprintf( header, "\n" );
-	impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
-	fprintf( header, "\n" );
-	impl_GeneratePublishableStructCopyFn( header, root, obj );
-	fprintf( header, "\n" );
-	impl_GeneratePublishableStructIsSameFn( header, root, obj );
+
+	if ( obj.isStruct4Publishing )
+	{
+		impl_generateComposeFunctionForPublishableStruct( header, root, obj );
+		fprintf( header, "\n" );
+		impl_generateParseFunctionForPublishableStruct( header, root, obj );
+		fprintf( header, "\n" );
+		impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
+		fprintf( header, "\n" );
+		impl_GeneratePublishableStructCopyFn( header, root, obj );
+		fprintf( header, "\n" );
+		impl_GeneratePublishableStructIsSameFn( header, root, obj );
+	}
 
 	fprintf( header, "};\n\n" );
 }

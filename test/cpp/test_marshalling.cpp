@@ -319,8 +319,8 @@ void testScopedMessageComposingAndParsing2()
 	mtest::structures::point ptBack = {0, 0};
 	Point3D pt3DBack = {0, 0, 0};
 	mtest::scope_one::handleMessage( b, 
-		mtest::makeMessageHandler<mtest::scope_one::point3D_alias>([&](auto& parser){ auto back = mtest::STRUCT_point3D_parse2( parser ); pt3DBack.x = back.x; pt3DBack.y = back.y; pt3DBack.z = back.z;}),
-		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ ptBack = mtest::STRUCT_point_parse2( parser );}),
+		mtest::makeMessageHandler<mtest::scope_one::point3D_alias>([&](auto& parser){ auto back = mtest::infrastructural::MESSAGE_point3D_parse2( parser ); pt3DBack.x = back.pt.x; pt3DBack.y = back.pt.y; pt3DBack.z = back.pt.z;}),
+		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ ptBack = mtest::infrastructural::MESSAGE_point_parse2( parser ).point;}),
 		mtest::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
 	);
 
@@ -330,7 +330,7 @@ void testScopedMessageComposingAndParsing2()
 
 	mtest::structures::point pb;
 	mtest::scope_one::handleMessage( b, 
-		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ pb = mtest::STRUCT_point_parse2( parser );}),
+		mtest::makeMessageHandler<mtest::scope_one::point_alias>([&](auto& parser){ pb = mtest::infrastructural::MESSAGE_point_parse2( parser ).point;}),
 		mtest::makeDefaultMessageHandler([&](auto& parser, uint64_t msgID){ fmt::print( "Unhandled message {}\n", msgID ); })
 	);
 

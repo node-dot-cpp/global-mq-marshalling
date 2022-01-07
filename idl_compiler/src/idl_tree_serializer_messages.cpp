@@ -42,6 +42,16 @@ std::string impl_generateParseFunctionName( CompositeType& s )
 	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
 }
 
+std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
+{
+	if ( s.type == CompositeType::Type::message )
+		return fmt::format( "structures::{}::{}_{}", s.scopeName.c_str(), s.type2string(), s.name );
+	
+	assert( false );
+//	if ( s.type == CompositeType::Type::structure )
+	return fmt::format( "structures::{}", s.name );
+}
+
 bool impl_processScopes( Root& r )
 {
 	bool ok = true;
@@ -1092,7 +1102,6 @@ void impl_generateParseFunction3( FILE* header, Root& root, CompositeType& s )
 
 	fprintf( header, "\tusing T = %s;\n", impl_generateMessageParseFunctionRetType(s).c_str() );
 	fprintf( header, "\tT t;\n" );
-	fprintf( header, "// ???????????????????????????????????????????????????\n" );
 
 	fprintf( header, "\t::globalmq::marshalling::impl::parseStructBegin( parser );\n" );
 	fprintf( header, "\n" );
@@ -1118,8 +1127,8 @@ void generateMessage( FILE* header, Root& root, CompositeType& s )
 
 	impl_generateComposeFunction( header, s );
 	impl_generateParseFunction( header, s );
-//	impl_generateParseFunction2( header, root, s );
-	impl_generateParseFunction3( header, root, s );
+	if ( s.type == CompositeType::Type::message )
+		impl_generateParseFunction3( header, root, s );
 }
 
 void generateMessageAlias( FILE* header, CompositeType& s )
