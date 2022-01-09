@@ -506,7 +506,7 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 				for ( size_t i=0; i<collSz; ++i )
 					coll.template compose_next_to_gmq<typename TypeToPick::Type>(composer);
 			}
-			else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
+			else if constexpr ( (std::is_base_of<VectorOfNonextMessageTypesBase, typename TypeToPick::Type>::value || std::is_base_of<VectorOfNonextDiscriminatedUnionTypesBase, typename TypeToPick::Type>::value) && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
 			{
 				auto& coll = arg0.get();
 				size_t collSz = coll.size();
@@ -514,7 +514,7 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 				for ( size_t i=0; i<collSz; ++i )
 					coll.compose_next(composer, i);
 			}
-			else if constexpr ( std::is_base_of<VectorOfMessageType, typename TypeToPick::Type>::value && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
+			else if constexpr ( (std::is_base_of<VectorOfMessageType, typename TypeToPick::Type>::value || std::is_base_of<VectorOfDiscriminatedUnionType, typename TypeToPick::Type>::value) && std::is_base_of<CollectionWrapperBase, typename Agr0Type::Type>::value )
 			{
 				static_assert( checkers::has_set_size<typename ComposerT::BufferType>, "not properly implemented for certain kind of underlying buffers" );
 				// TODO: ...
@@ -545,6 +545,20 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 				msg.compose(composer);
 			}
 			else if constexpr ( std::is_base_of<MessageType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				auto& msg = arg0.get();
+				msg.compose( composer );
+				// TODO: anything else?
+			}
+		}
+		else if constexpr ( std::is_base_of<impl::DiscriminatedUnionType, typename TypeToPick::Type>::value )
+		{
+			if constexpr ( std::is_base_of<NonextDiscriminatedUnionType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
+			{
+				auto& msg = arg0.get();
+				msg.compose(composer);
+			}
+			else if constexpr ( std::is_base_of<DiscriminatedUnionType, typename TypeToPick::Type>::value && std::is_base_of<MessageWrapperBase, typename Agr0Type::Type>::value )
 			{
 				auto& msg = arg0.get();
 				msg.compose( composer );
@@ -602,7 +616,7 @@ void parseJsonEntry( ParserT& p, ArgT& arg)
 			else
 				p.skipDelimiter( ']' );
 		}
-		else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
+		else if constexpr ( (std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value || std::is_base_of<VectorOfNonextDiscriminatedUnionTypesBase, ParamTypeClassifier>::value)/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
 		{
 			p.skipDelimiter( '[' );
 			if ( !p.isDelimiter( ']' ) ) // there are some items there
@@ -625,7 +639,7 @@ void parseJsonEntry( ParserT& p, ArgT& arg)
 			else
 				p.skipDelimiter( ']' );
 		}
-		else if constexpr ( std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
+		else if constexpr ( (std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value || std::is_base_of<VectorOfDiscriminatedUnionType, ParamTypeClassifier>::value)/* && std::is_base_of<CollectionWrapperBase, ArgT>::value*/ )
 		{
 			p.skipDelimiter( '[' );
 			if ( !p.isDelimiter( ']' ) ) // there are some items there
@@ -667,6 +681,22 @@ void parseJsonEntry( ParserT& p, ArgT& arg)
 		else
 			static_assert( std::is_same<ArgT, AllowedDataType>::value, "unsupported type" );
 	}
+	else if constexpr ( std::is_base_of<impl::DiscriminatedUnionType, ParamTypeClassifier>::value )
+	{
+		auto& msg = arg.get();
+		if constexpr ( std::is_same<NonextDiscriminatedUnionType, ParamTypeClassifier>::value/* && std::is_base_of<MessageWrapperBase, ArgT>::value*/ )
+		{
+			// TODO: check whether there is any difference between ext and non-ext cases
+			msg.parse( p );
+		}
+		else if constexpr ( std::is_same<DiscriminatedUnionType, ParamTypeClassifier>::value/* && std::is_base_of<MessageWrapperBase, ArgT>::value*/ )
+		{
+			// TODO: check whether there is any difference between ext and non-ext cases
+			msg.parse( p );
+		}
+		else
+			static_assert( std::is_same<ArgT, AllowedDataType>::value, "unsupported type" );
+	}
 	else
 		static_assert( std::is_same<ArgT, AllowedDataType>::value, "unsupported type" );
 }
@@ -701,7 +731,7 @@ void composeEntryToJson(ComposerT& composer, GMQ_COLL string name, ArgT& arg)
 				}
 				composer.buff.appendUint8( ']' );
 			}
-			else if constexpr ( std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value && std::is_base_of<CollectionWrapperBase, AgrType>::value )
+			else if constexpr ( (std::is_base_of<VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value || std::is_base_of<VectorOfNonextDiscriminatedUnionTypesBase, ParamTypeClassifier>::value) && std::is_base_of<CollectionWrapperBase, AgrType>::value )
 			{
 				json::addNamePart( composer, name );
 				composer.buff.appendUint8( '[' );
@@ -715,7 +745,7 @@ void composeEntryToJson(ComposerT& composer, GMQ_COLL string name, ArgT& arg)
 				}
 				composer.buff.appendUint8( ']' );
 			}
-			else if constexpr ( std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value && std::is_base_of<CollectionWrapperBase, AgrType>::value )
+			else if constexpr ( (std::is_base_of<VectorOfMessageType, ParamTypeClassifier>::value || std::is_base_of<VectorOfDiscriminatedUnionType, ParamTypeClassifier>::value) && std::is_base_of<CollectionWrapperBase, AgrType>::value )
 			{
 				json::addNamePart( composer, name );
 				composer.buff.appendUint8( '[' );
@@ -747,6 +777,23 @@ void composeEntryToJson(ComposerT& composer, GMQ_COLL string name, ArgT& arg)
 				msg.compose(composer);
 			}
 		}
+		else if constexpr ( std::is_base_of<impl::DiscriminatedUnionType, ParamTypeClassifier>::value )
+		{
+			if constexpr ( std::is_base_of<NonextDiscriminatedUnionType, ParamTypeClassifier>::value && std::is_base_of<MessageWrapperBase, AgrType>::value )
+			{
+				// TODO: check whether there are any difference between ext and non-ext case
+				json::addNamePart( composer, name );
+				auto& msg = arg.get();
+				msg.compose(composer);
+			}
+			else if constexpr ( std::is_base_of<DiscriminatedUnionType, ParamTypeClassifier>::value && std::is_base_of<MessageWrapperBase, AgrType>::value )
+			{
+				// TODO: check whether there are any difference between ext and non-ext case
+				json::addNamePart( composer, name );
+				auto& msg = arg.get();
+				msg.compose(composer);
+			}
+		}
 		else
 			static_assert( std::is_same<AgrType, AllowedDataType>::value, "unsupported type" );
 	}
@@ -766,6 +813,8 @@ void parseJsonParam(const typename TypeToPick::NameAndTypeID expected, ParserT& 
 	else if constexpr ( std::is_base_of<impl::VectorType, typename TypeToPick::Type>::value )
 		p.skipVectorFromJson();
 	else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		p.skipMessageFromJson();
+	else if constexpr ( std::is_base_of<impl::DiscriminatedUnionType, typename TypeToPick::Type>::value )
 		p.skipMessageFromJson();
 	else
 		static_assert( std::is_same<typename TypeToPick::Type, AllowedDataType>::value, "unsupported type" );
@@ -812,6 +861,12 @@ void composeParamToJson(ComposerT& composer, GMQ_COLL string name, const typenam
 			composer.buff.appendUint8( ']' );
 		}
 		else if constexpr ( std::is_base_of<impl::MessageType, typename TypeToPick::Type>::value )
+		{
+			json::addNamePart( composer, name );
+			composer.buff.appendUint8( '{' );
+			composer.buff.appendUint8( '}' );
+		}
+		else if constexpr ( std::is_base_of<impl::DiscriminatedUnionType, typename TypeToPick::Type>::value )
 		{
 			json::addNamePart( composer, name );
 			composer.buff.appendUint8( '{' );

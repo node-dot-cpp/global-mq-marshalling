@@ -117,7 +117,7 @@ void printVariant( Variant& s );
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
 void generateMessage( FILE* header, Root& root, CompositeType& s );
 void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
-void generateMessageAlias( FILE* header, CompositeType& s );
+void generateMessageAlias( FILE* header, Root& root, CompositeType& s );
 void generateMessageParameter( FILE* header, MessageParameter& s );
 void generateMessageMembers( FILE* header, CompositeType& s );
 void generateLimit( FILE* header, Limit& s );

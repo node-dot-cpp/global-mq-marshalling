@@ -47,7 +47,7 @@ std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
 	if ( s.type == CompositeType::Type::message )
 		return fmt::format( "structures::{}::{}_{}", s.scopeName.c_str(), s.type2string(), s.name );
 	
-	assert( false );
+//	assert( false );
 //	if ( s.type == CompositeType::Type::structure )
 	return fmt::format( "structures::{}", s.name );
 }
@@ -1131,8 +1131,12 @@ void generateMessage( FILE* header, Root& root, CompositeType& s )
 		impl_generateParseFunction3( header, root, s );
 }
 
-void generateMessageAlias( FILE* header, CompositeType& s )
+void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 {
+	assert( s.aliasIdx < root.structs.size() );
+	CompositeType& alias = *(root.structs[s.aliasIdx]);
+	assert( s.aliasOf == alias.name );
+
 	bool checked = impl_checkFollowingExtensionRules(s);
 	if ( !checked )
 		throw std::exception();
@@ -1166,9 +1170,11 @@ void generateMessageAlias( FILE* header, CompositeType& s )
 
 	// parse function
 	fprintf( header, "// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" );
+	impl_generateParseFunction3( header, root, alias );
 	fprintf( header, "template<class ParserT>\n" );
-	fprintf( header, "%s %s_%s_parse(ParserT& p)\n"/*, s.type2string()*/, s.name.c_str(), s.type2string(), s.name.c_str() );
+	fprintf( header, "structures::%s::%s_%s %s_%s_parse2(ParserT& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str() );
 	fprintf( header, "{\n" );
-	fprintf( header, "\treturn %s_%s_parse(p);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
+//	fprintf( header, "\treturn %s_parse2(p);\n", s.aliasOf.c_str() );
+	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s2(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
 	fprintf( header, "}\n\n" );
 }

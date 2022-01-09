@@ -166,6 +166,7 @@ public:
 	bool isNonExtendable = false;
 	bool isAlias = false;
 	string aliasOf;
+	uint64_t aliasIdx = invalid_num_id; // set at time of code generation
 	
 	bool isDiscriminatedUnion() const { assert( ( type == Type::discriminated_union && structMembers.empty() ) || ( type != Type::discriminated_union && discriminatedUnionCases.empty() ) ); return type == Type::discriminated_union; }
 	vector<unique_ptr<MessageParameter>>& getMembers() { assert( type != Type::discriminated_union ); assert( discriminatedUnionCases.empty() ); return structMembers; }

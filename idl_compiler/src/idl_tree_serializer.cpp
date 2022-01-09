@@ -466,6 +466,7 @@ bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeT
 			fprintf( stderr, "%s, line %d: %s \"%s\" not found\n", ct.location.fileName.c_str(), ct.location.lineNumber, ct.type2string(), ct.name.c_str() );
 			ok = false;
 		}
+		ct.aliasIdx = structIdx;
 		return ok;
 	}
 	else
@@ -1131,7 +1132,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 			if ( !it->isAlias )
 				generateMessage( header, s, *it );
 			else
-				generateMessageAlias( header, *it );
+				generateMessageAlias( header, s, *it );
 		}
 
 		impl_generateScopeComposer( header, *scope );

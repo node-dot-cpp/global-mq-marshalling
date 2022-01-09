@@ -4035,10 +4035,10 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
-	if (!ok) return;
+	/*if (!ok) return;
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
-	parser.skipDelimiter('}');
+	parser.skipDelimiter('}');*/
 }
 
 template<class BufferT, class ... HandlersT >
@@ -4079,9 +4079,28 @@ void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 template<class ParserT>
-point3D_alias MESSAGE_point3D_alias_parse(ParserT& p)
+structures::point3D STRUCT_point3D_parse2(ParserT& parser)
 {
-	return STRUCT_point3D_parse(p);
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using T = structures::point3D;
+	T t;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
+}
+
+template<class ParserT>
+structures::scope_one::MESSAGE_point3D_alias MESSAGE_point3D_alias_parse2(ParserT& p)
+{
+	return static_cast<structures::scope_one::MESSAGE_point3D_alias>(STRUCT_point3D_parse2(p));
 }
 
 //**********************************************************************
@@ -4104,9 +4123,26 @@ void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 template<class ParserT>
-point_alias MESSAGE_point_alias_parse(ParserT& p)
+structures::point STRUCT_point_parse2(ParserT& parser)
 {
-	return STRUCT_point_parse(p);
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using T = structures::point;
+	T t;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
+}
+
+template<class ParserT>
+structures::scope_one::MESSAGE_point_alias MESSAGE_point_alias_parse2(ParserT& p)
+{
+	return static_cast<structures::scope_one::MESSAGE_point_alias>(STRUCT_point_parse2(p));
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4162,10 +4198,10 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
-	if (!ok) return;
+	/*if (!ok) return;
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
-	parser.skipDelimiter('}');
+	parser.skipDelimiter('}');*/
 }
 
 template<class BufferT, class ... HandlersT >
@@ -4263,7 +4299,6 @@ structures::level_trace::MESSAGE_LevelTraceData MESSAGE_LevelTraceData_parse2(Pa
 
 	using T = structures::level_trace::MESSAGE_LevelTraceData;
 	T t;
-// ???????????????????????????????????????????????????
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "CharacterParam" );
@@ -4420,7 +4455,6 @@ structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse2(ParserT&
 
 	using T = structures::infrastructural::MESSAGE_PolygonSt;
 	T t;
-// ???????????????????????????????????????????????????
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
 		::globalmq::marshalling::impl::parseKey( parser, "polygonMap" );
@@ -4491,7 +4525,6 @@ structures::infrastructural::MESSAGE_point MESSAGE_point_parse2(ParserT& parser)
 
 	using T = structures::infrastructural::MESSAGE_point;
 	T t;
-// ???????????????????????????????????????????????????
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "point" );
@@ -4556,7 +4589,6 @@ structures::infrastructural::MESSAGE_point3D MESSAGE_point3D_parse2(ParserT& par
 
 	using T = structures::infrastructural::MESSAGE_point3D;
 	T t;
-// ???????????????????????????????????????????????????
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt" );
@@ -4738,7 +4770,6 @@ structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& pa
 
 	using T = structures::test_gmq::MESSAGE_message_one;
 	T t;
-// ???????????????????????????????????????????????????
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::firstParam)>( parser, &(t.firstParam), "firstParam" );
@@ -4820,10 +4851,10 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
-	if (!ok) return;
+	/*if (!ok) return;
 	if (!parser.isDelimiter('}'))
 		throw std::exception(); // bad format
-	parser.skipDelimiter('}');
+	parser.skipDelimiter('}');*/
 }
 
 template<class BufferT, class ... HandlersT >
@@ -4993,7 +5024,6 @@ structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& p
 
 	using T = structures::test_json::MESSAGE_message_one;
 	T t;
-// ???????????????????????????????????????????????????
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::firstParam)>( parser, &(t.firstParam), "firstParam" );
@@ -7679,26 +7709,6 @@ void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
 	}
 }
 
-template<class ParserT>
-structures::CharacterParamStruct STRUCT_CharacterParamStruct_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::CharacterParamStruct;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
-
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "Size" );
-		publishable_STRUCT_SIZE::parseForStateSyncOrMessageInDepth( parser, t.Size );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
-}
-
 //**********************************************************************
 // STRUCT "SIZE" Targets: JSON (3 parameters)
 //  1. REAL X (REQUIRED)
@@ -7776,26 +7786,6 @@ void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
 		}
 		throw std::exception(); // bad format
 	}
-}
-
-template<class ParserT>
-structures::SIZE STRUCT_SIZE_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::SIZE;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 //**********************************************************************
@@ -7877,26 +7867,6 @@ void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
 	}
 }
 
-template<class ParserT>
-structures::POINT3DREAL STRUCT_POINT3DREAL_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::POINT3DREAL;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Y)>( parser, &(t.Y), "Y" );
-
-		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::Z)>( parser, &(t.Z), "Z" );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
-}
-
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT Line> LineMap (REQUIRED)
@@ -7935,23 +7905,6 @@ void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-}
-
-template<class ParserT>
-structures::LineMap STRUCT_LineMap_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::LineMap;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::parseKey( parser, "LineMap" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::LineMap), publishable_STRUCT_Line, true>( parser, t.LineMap );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 //**********************************************************************
@@ -8001,26 +7954,6 @@ void STRUCT_Line_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 }
 
-template<class ParserT>
-structures::Line STRUCT_Line_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::Line;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::parseKey( parser, "a" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::a), publishable_STRUCT_Vertex, true>( parser, t.a );
-
-		::globalmq::marshalling::impl::parseKey( parser, "b" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::b), publishable_STRUCT_Vertex, true>( parser, t.b );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
-}
-
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
@@ -8061,23 +7994,6 @@ void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
-template<class ParserT>
-structures::ObstacleMap STRUCT_ObstacleMap_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::ObstacleMap;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::parseKey( parser, "_ObstacleMap" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::_ObstacleMap), publishable_STRUCT_PolygonMap, true>( parser, t._ObstacleMap );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
-}
-
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
 //  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
@@ -8116,23 +8032,6 @@ void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
 
 	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-}
-
-template<class ParserT>
-structures::PolygonMap STRUCT_PolygonMap_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::PolygonMap;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::parseKey( parser, "_PolygonMap" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::_PolygonMap), publishable_STRUCT_Vertex, true>( parser, t._PolygonMap );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 //**********************************************************************
@@ -8187,26 +8086,6 @@ void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-}
-
-template<class ParserT>
-structures::Vertex STRUCT_Vertex_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::Vertex;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 //**********************************************************************
@@ -8294,24 +8173,6 @@ void STRUCT_point_parse(ParserT& p, Args&& ... args)
 			throw std::exception(); // bad format
 		}
 	}
-}
-
-template<class ParserT>
-structures::point STRUCT_point_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::point;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 //**********************************************************************
@@ -8412,26 +8273,6 @@ void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
 	}
 }
 
-template<class ParserT>
-structures::point3D STRUCT_point3D_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::point3D;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
-}
-
 //**********************************************************************
 // DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
 //  CASE one (2 parameters)(2 parameters)
@@ -8493,50 +8334,6 @@ void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
-}
-
-template<class ParserT>
-structures::du_one DISCRIMINATED_UNION_du_one_parse2(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::du_one;
-	T t;
-// ???????????????????????????????????????????????????
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
-		t.initAs( (typename T::Variants)(caseId) );
-		if ( caseId != T::Variants::unknown )
-		{
-			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
-			switch ( caseId )
-			{
-				case 1: // IDL CASE one
-				{
-					::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt3d_1" );
-					publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.pt3d_1() );
-					::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
-
-				}
-				case 2: // IDL CASE two
-				{
-					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_two_i_2_T>( parser, &(t.i_2()), "i_2" );
-
-					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
-					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
-
-				}
-				default:
-					throw std::exception(); // unexpected
-			}
-			::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-		}
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 
