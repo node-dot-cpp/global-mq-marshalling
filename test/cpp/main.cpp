@@ -6,15 +6,10 @@
 int main()
 {
 	runGmqSample();
-	runGmqSample2();
 	runJsonSample();
-	runJsonSample2();
 	testParsingJsonFile();
-	testParsingJsonFile2();
 	testMessageAliases();
-	testMessageAliases2();
 	testScopedMessageComposingAndParsing();
-	testScopedMessageComposingAndParsing2();
 	// publishableTestOne();
 	publishableTestTwo();
 	//quickTestForGmqParts();

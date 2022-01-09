@@ -600,76 +600,6 @@ void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s,
 
 }
 
-void impl_generateParamCallBlockForParsingGmq_MemberIterationBlock( FILE* header, CompositeType& s, int& count, const char* offset )
-{
-	assert( s.type != CompositeType::Type::discriminated_union );
-	for ( auto& it : s.getMembers() )
-	{
-		assert( it != nullptr );
-
-		MessageParameter& param = *it;
-		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		++count;
-
-		switch ( param.type.kind )
-		{
-			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			case MessageParameterType::KIND::REAL:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				break;
-			case MessageParameterType::KIND::BLOB:
-				break;
-			case MessageParameterType::KIND::ENUM:
-				break;
-			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			case MessageParameterType::KIND::EXTENSION:
-				break; // TODO: treatment
-			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break; // TODO: ...
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_%d_type, false>(p, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			default:
-			{
-				assert( false ); // unexpected
-				break;
-			}
-		}
-	}
-}
-
-void impl_generateParamCallBlockForParsingGmq( FILE* header, CompositeType& s, const char* offset )
-{
-	int count = 0;
-	if ( s.isDiscriminatedUnion() )
-	{
-		for ( auto& it: s.getDiscriminatedUnionCases() )
-		{
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParamCallBlockForParsingGmq_MemberIterationBlock( header, cs, count, offset );
-		}
-	}
-	else
-		impl_generateParamCallBlockForParsingGmq_MemberIterationBlock( header, s, count, offset );
-
-}
-
 void impl_generateMatchCountBlock_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
@@ -873,44 +803,6 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 	fprintf( header, "%scomposer.buff.append( \"\\n}\", 2 );\n", offset );
 }
 
-void impl_generateParamCallBlockForParsingJson( FILE* header, CompositeType& s, const char* offset )
-{
-	fprintf( header, "%sp.skipDelimiter( \'{\' );\n", offset );
-	fprintf( header, "%sfor ( ;; )\n", offset );
-	fprintf( header, "%s{\n", offset );
-	fprintf( header, "%s\tstd::string key;\n", offset );
-	fprintf( header, "%s\tp.readKey( &key );\n", offset );
-
-	int count = 0;
-	for ( auto& it : s.getMembers() )
-	{
-		assert( it != nullptr );
-
-		MessageParameter& param = *it;
-		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		++count;
-
-		fprintf( header, "%s\t%s( key == \"%s\" )\n", offset, count == 1 ? "if " : "else if ", param.name.c_str() );
-		fprintf( header, "%s\t\t::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_%d_type, false>(arg_%d_type::nameAndTypeID, p, args...);\n", offset, count, count );
-	}
-
-	fprintf( header, "%s\tp.skipSpacesEtc();\n", offset );
-	fprintf( header, "%s\tif ( p.isDelimiter( \',\' ) )\n", offset );
-	fprintf( header, "%s\t{\n", offset );
-	fprintf( header, "%s\t\tp.skipDelimiter( \',\' );\n", offset );
-	fprintf( header, "%s\t\tcontinue;\n", offset );
-	fprintf( header, "%s\t}\n", offset );
-	fprintf( header, "%s\tif ( p.isDelimiter( \'}\' ) )\n", offset );
-	fprintf( header, "%s\t{\n", offset );
-	fprintf( header, "%s\t\tp.skipDelimiter( \'}\' );\n", offset );
-	fprintf( header, "%s\t\tbreak;\n", offset );
-	fprintf( header, "%s\t}\n", offset );
-	fprintf( header, "%s\tthrow std::exception(); // bad format\n", offset );
-
-	fprintf( header, "%s}\n", offset );
-}
-
 void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 {
 	size_t protoCount = s.protoList.size();
@@ -987,82 +879,6 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
 	}
 }
 
-void impl_generateParamCallBlockForParsing( FILE* header, CompositeType& s )
-{
-	size_t protoCount = s.protoList.size();
-	if ( protoCount == 1 )
-	{
-		switch ( *(s.protoList.begin()) )
-		{
-			case Proto::gmq:
-			{
-				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
-				impl_generateParamCallBlockForParsingGmq( header, s, "\t" );
-				break;
-			}
-			case Proto::json:
-			{
-				fprintf( header, "\tstatic_assert( ParserT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
-				impl_generateParamCallBlockForParsingJson( header, s, "\t" );
-				break;
-			}
-			default:
-				assert( false );
-		}
-	}
-	else
-	{
-		size_t processedProtoCount = 0;
-		// if present, keep GMQ first!
-		if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
-		{
-			++processedProtoCount;
-			fprintf( header, 
-				"\tif constexpr( ParserT::proto == Proto::GMQ )\n"
-				"\t{\n" );
-			impl_generateParamCallBlockForParsingGmq( header, s, "\t\t" );
-			fprintf( header, "\t}\n" );
-		}
-		// then add the rest
-		for ( auto it:s.protoList )
-		{
-			++processedProtoCount;
-			switch ( it )
-			{
-				case Proto::gmq:
-					break; // already done
-				case Proto::json:
-				{
-					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
-					if ( processedProtoCount == 0 )
-					{
-						fprintf( header, 
-							"\tif constexpr ( ParserT::proto == Proto::JSON )\n"
-							"\t{\n" );
-					}
-					else
-					{
-						if ( processedProtoCount == protoCount )
-							fprintf( header, 
-								"\telse\n"
-								"\t{\n"
-								"\t\tstatic_assert( ParserT::proto == Proto::JSON );\n" );
-						else
-							fprintf( header, 
-								"\telse if constexpr ( ParserT::proto == Proto::JSON )\n"
-								"\t{\n" );
-					}
-					impl_generateParamCallBlockForParsingJson( header, s, "\t\t" );
-					fprintf( header, "\t}\n" );
-					break;
-				}
-				default:
-					assert( false );
-			}
-		}
-	}
-}
-
 void impl_generateComposeFunction( FILE* header, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
@@ -1079,24 +895,10 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunction( FILE* header, CompositeType& s )
-{
-	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s(ParserT& p, Args&& ... args)\n"
-	"{\n", impl_generateParseFunctionName( s ).c_str() );
-	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
-
-	impl_generateParamTypeLIst( header, s );
-	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForParsing( header, s );
-
-	fprintf( header, "}\n\n" );
-}
-
-void impl_generateParseFunction3( FILE* header, Root& root, CompositeType& s )
+void impl_generateParseFunction( FILE* header, Root& root, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT>\n" );
-	fprintf( header, "%s %s2(ParserT& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
+	fprintf( header, "%s %s(ParserT& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
 	fprintf( header, "{\n" );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
@@ -1126,9 +928,8 @@ void generateMessage( FILE* header, Root& root, CompositeType& s )
 	impl_GenerateMessageDefaults( header, s );
 
 	impl_generateComposeFunction( header, s );
-	impl_generateParseFunction( header, s );
 	if ( s.type == CompositeType::Type::message )
-		impl_generateParseFunction3( header, root, s );
+		impl_generateParseFunction( header, root, s );
 }
 
 void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
@@ -1169,12 +970,10 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "}\n\n" );
 
 	// parse function
-	fprintf( header, "// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" );
-	impl_generateParseFunction3( header, root, alias );
+	impl_generateParseFunction( header, root, alias );
 	fprintf( header, "template<class ParserT>\n" );
-	fprintf( header, "structures::%s::%s_%s %s_%s_parse2(ParserT& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str() );
+	fprintf( header, "structures::%s::%s_%s %s_%s_parse(ParserT& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str() );
 	fprintf( header, "{\n" );
-//	fprintf( header, "\treturn %s_parse2(p);\n", s.aliasOf.c_str() );
-	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s2(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
+	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
 	fprintf( header, "}\n\n" );
 }

@@ -31,8 +31,6 @@ template<class LambdaCompose>
 class MessageWrapperForComposing : public globalmq::marshalling::MessageWrapperForComposing<LambdaCompose> { public: MessageWrapperForComposing(LambdaCompose &&lcompose) : globalmq::marshalling::MessageWrapperForComposing<LambdaCompose>( std::forward<LambdaCompose>(lcompose) ) {} };
 template<class LambdaSize, class LambdaNext>
 class CollectionWrapperForParsing : public globalmq::marshalling::CollectionWrapperForParsing<LambdaSize, LambdaNext> { public: CollectionWrapperForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) : globalmq::marshalling::CollectionWrapperForParsing<LambdaSize, LambdaNext>(std::forward<LambdaSize>(lsizeHint), std::forward<LambdaNext>(lnext)) {} };
-template<class LambdaParse>
-class MessageWrapperForParsing : public globalmq::marshalling::MessageWrapperForParsing<LambdaParse> { public: MessageWrapperForParsing(LambdaParse &&lparse) : globalmq::marshalling::MessageWrapperForParsing<LambdaParse>(std::forward<LambdaParse>(lparse)) {} };
 template<typename msgID_, class LambdaHandler>
 MessageHandler<msgID_, LambdaHandler> makeMessageHandler( LambdaHandler &&lhandler ) { return globalmq::marshalling::makeMessageHandler<msgID_, LambdaHandler>(std::forward<LambdaHandler>(lhandler)); }
 template<class LambdaHandler>
@@ -4076,10 +4074,8 @@ void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
 	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 template<class ParserT>
-structures::point3D STRUCT_point3D_parse2(ParserT& parser)
+structures::point3D STRUCT_point3D_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4098,9 +4094,9 @@ structures::point3D STRUCT_point3D_parse2(ParserT& parser)
 }
 
 template<class ParserT>
-structures::scope_one::MESSAGE_point3D_alias MESSAGE_point3D_alias_parse2(ParserT& p)
+structures::scope_one::MESSAGE_point3D_alias MESSAGE_point3D_alias_parse(ParserT& p)
 {
-	return static_cast<structures::scope_one::MESSAGE_point3D_alias>(STRUCT_point3D_parse2(p));
+	return static_cast<structures::scope_one::MESSAGE_point3D_alias>(STRUCT_point3D_parse(p));
 }
 
 //**********************************************************************
@@ -4120,10 +4116,8 @@ void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
 	STRUCT_point_parse(p, std::forward<Args>( args )...);
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 template<class ParserT>
-structures::point STRUCT_point_parse2(ParserT& parser)
+structures::point STRUCT_point_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4140,9 +4134,9 @@ structures::point STRUCT_point_parse2(ParserT& parser)
 }
 
 template<class ParserT>
-structures::scope_one::MESSAGE_point_alias MESSAGE_point_alias_parse2(ParserT& p)
+structures::scope_one::MESSAGE_point_alias MESSAGE_point_alias_parse(ParserT& p)
 {
-	return static_cast<structures::scope_one::MESSAGE_point_alias>(STRUCT_point_parse2(p));
+	return static_cast<structures::scope_one::MESSAGE_point_alias>(STRUCT_point_parse(p));
 }
 
 template<typename msgID, class BufferT, typename ... Args>
@@ -4252,48 +4246,8 @@ void MESSAGE_LevelTraceData_compose(ComposerT& composer, Args&& ... args)
 	composer.buff.append( "\n}", 2 );
 }
 
-template<class ParserT, typename ... Args>
-void MESSAGE_LevelTraceData_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, CharacterParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, Points_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::JSON, "this MESSAGE assumes only JSON protocol" );
-	p.skipDelimiter( '{' );
-	for ( ;; )
-	{
-		std::string key;
-		p.readKey( &key );
-		if ( key == "CharacterParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-		else if ( key == "Points" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-		p.skipSpacesEtc();
-		if ( p.isDelimiter( ',' ) )
-		{
-			p.skipDelimiter( ',' );
-			continue;
-		}
-		if ( p.isDelimiter( '}' ) )
-		{
-			p.skipDelimiter( '}' );
-			break;
-		}
-		throw std::exception(); // bad format
-	}
-}
-
 template<class ParserT>
-structures::level_trace::MESSAGE_LevelTraceData MESSAGE_LevelTraceData_parse2(ParserT& parser)
+structures::level_trace::MESSAGE_LevelTraceData MESSAGE_LevelTraceData_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4416,40 +4370,8 @@ void MESSAGE_PolygonSt_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_6_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, arg_6_type::nameAndTypeID, args...);
 }
 
-template<class ParserT, typename ... Args>
-void MESSAGE_PolygonSt_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, polygonMap_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, concaveMap_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, obstacleMap_Type::Name>;
-	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, portalMap_Type::Name>;
-	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, jumpMap_Type::Name>;
-	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, polygonSpeed_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
-}
-
 template<class ParserT>
-structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse2(ParserT& parser)
+structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4501,25 +4423,8 @@ void MESSAGE_point_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
-template<class ParserT, typename ... Args>
-void MESSAGE_point_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, point_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-}
-
 template<class ParserT>
-structures::infrastructural::MESSAGE_point MESSAGE_point_parse2(ParserT& parser)
+structures::infrastructural::MESSAGE_point MESSAGE_point_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4562,28 +4467,8 @@ void MESSAGE_point3D_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 }
 
-template<class ParserT, typename ... Args>
-void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, du_one_instance_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-}
-
 template<class ParserT>
-structures::infrastructural::MESSAGE_point3D MESSAGE_point3D_parse2(ParserT& parser)
+structures::infrastructural::MESSAGE_point3D MESSAGE_point3D_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4719,52 +4604,8 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_10_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_10_type::nameAndTypeID, args...);
 }
 
-template<class ParserT, typename ... Args>
-void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, firstParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, secondParam_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, thirdParam_Type::Name>;
-	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, forthParam_Type::Name>;
-	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, fifthParam_Type::Name>;
-	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
-	using arg_7_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, seventhParam_Type::Name>;
-	using arg_8_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, eighthParam_Type::Name>;
-	using arg_9_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, ninethParam_Type::Name>;
-	using arg_10_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, tenthParam_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_8_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_10_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this MESSAGE assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_5_type, false>(p, arg_5_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_6_type, false>(p, arg_6_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_7_type, false>(p, arg_7_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_8_type, false>(p, arg_8_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_9_type, false>(p, arg_9_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_10_type, false>(p, arg_10_type::nameAndTypeID, args...);
-}
-
 template<class ParserT>
-structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& parser)
+structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -4945,80 +4786,8 @@ void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
 	composer.buff.append( "\n}", 2 );
 }
 
-template<class ParserT, typename ... Args>
-void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, firstParam_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, secondParam_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, thirdParam_Type::Name>;
-	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, forthParam_Type::Name>;
-	using arg_5_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, fifthParam_Type::Name>;
-	using arg_6_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, sixthParam_Type::Name>;
-	using arg_7_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, seventhParam_Type::Name>;
-	using arg_8_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, eighthParam_Type::Name>;
-	using arg_9_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, ninethParam_Type::Name>;
-	using arg_10_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, tenthParam_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_5_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_6_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_7_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_8_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_9_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_10_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::JSON, "this MESSAGE assumes only JSON protocol" );
-	p.skipDelimiter( '{' );
-	for ( ;; )
-	{
-		std::string key;
-		p.readKey( &key );
-		if ( key == "firstParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-		else if ( key == "secondParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-		else if ( key == "thirdParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-		else if ( key == "forthParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_4_type, false>(arg_4_type::nameAndTypeID, p, args...);
-		else if ( key == "fifthParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_5_type, false>(arg_5_type::nameAndTypeID, p, args...);
-		else if ( key == "sixthParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_6_type, false>(arg_6_type::nameAndTypeID, p, args...);
-		else if ( key == "seventhParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_7_type, false>(arg_7_type::nameAndTypeID, p, args...);
-		else if ( key == "eighthParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_8_type, false>(arg_8_type::nameAndTypeID, p, args...);
-		else if ( key == "ninethParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_9_type, false>(arg_9_type::nameAndTypeID, p, args...);
-		else if ( key == "tenthParam" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_10_type, false>(arg_10_type::nameAndTypeID, p, args...);
-		p.skipSpacesEtc();
-		if ( p.isDelimiter( ',' ) )
-		{
-			p.skipDelimiter( ',' );
-			continue;
-		}
-		if ( p.isDelimiter( '}' ) )
-		{
-			p.skipDelimiter( '}' );
-			break;
-		}
-		throw std::exception(); // bad format
-	}
-}
-
 template<class ParserT>
-structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse2(ParserT& parser)
+structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
@@ -7669,46 +7438,6 @@ void STRUCT_CharacterParamStruct_compose(ComposerT& composer, Args&& ... args)
 	composer.buff.append( "\n}", 2 );
 }
 
-template<class ParserT, typename ... Args>
-void STRUCT_CharacterParamStruct_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, ID_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, Size_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
-	p.skipDelimiter( '{' );
-	for ( ;; )
-	{
-		std::string key;
-		p.readKey( &key );
-		if ( key == "ID" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-		else if ( key == "Size" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-		p.skipSpacesEtc();
-		if ( p.isDelimiter( ',' ) )
-		{
-			p.skipDelimiter( ',' );
-			continue;
-		}
-		if ( p.isDelimiter( '}' ) )
-		{
-			p.skipDelimiter( '}' );
-			break;
-		}
-		throw std::exception(); // bad format
-	}
-}
-
 //**********************************************************************
 // STRUCT "SIZE" Targets: JSON (3 parameters)
 //  1. REAL X (REQUIRED)
@@ -7742,50 +7471,6 @@ void STRUCT_SIZE_compose(ComposerT& composer, Args&& ... args)
 	composer.buff.append( ",\n  ", 4 );
 	::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_3_type, true, FloatingDefault<0ll,-1023ll>, int, 0>(composer, "Z", arg_3_type::nameAndTypeID, args...);
 	composer.buff.append( "\n}", 2 );
-}
-
-template<class ParserT, typename ... Args>
-void STRUCT_SIZE_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, X_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Z_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
-	p.skipDelimiter( '{' );
-	for ( ;; )
-	{
-		std::string key;
-		p.readKey( &key );
-		if ( key == "X" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-		else if ( key == "Y" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-		else if ( key == "Z" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-		p.skipSpacesEtc();
-		if ( p.isDelimiter( ',' ) )
-		{
-			p.skipDelimiter( ',' );
-			continue;
-		}
-		if ( p.isDelimiter( '}' ) )
-		{
-			p.skipDelimiter( '}' );
-			break;
-		}
-		throw std::exception(); // bad format
-	}
 }
 
 //**********************************************************************
@@ -7823,50 +7508,6 @@ void STRUCT_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
 	composer.buff.append( "\n}", 2 );
 }
 
-template<class ParserT, typename ... Args>
-void STRUCT_POINT3DREAL_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, X_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, Z_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::JSON, "this STRUCT assumes only JSON protocol" );
-	p.skipDelimiter( '{' );
-	for ( ;; )
-	{
-		std::string key;
-		p.readKey( &key );
-		if ( key == "X" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-		else if ( key == "Y" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-		else if ( key == "Z" )
-			::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-		p.skipSpacesEtc();
-		if ( p.isDelimiter( ',' ) )
-		{
-			p.skipDelimiter( ',' );
-			continue;
-		}
-		if ( p.isDelimiter( '}' ) )
-		{
-			p.skipDelimiter( '}' );
-			break;
-		}
-		throw std::exception(); // bad format
-	}
-}
-
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT Line> LineMap (REQUIRED)
@@ -7888,23 +7529,6 @@ void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-}
-
-template<class ParserT, typename ... Args>
-void STRUCT_LineMap_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, LineMap_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -7934,26 +7558,6 @@ void STRUCT_Line_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 }
 
-template<class ParserT, typename ... Args>
-void STRUCT_Line_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, a_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, b_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-}
-
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
@@ -7977,23 +7581,6 @@ void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 }
 
-template<class ParserT, typename ... Args>
-void STRUCT_ObstacleMap_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, _ObstacleMap_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-}
-
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
 //  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
@@ -8015,23 +7602,6 @@ void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 
 	static_assert( ComposerT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
-}
-
-template<class ParserT, typename ... Args>
-void STRUCT_PolygonMap_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, _PolygonMap_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -8063,29 +7633,6 @@ void STRUCT_Vertex_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_1_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_1_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
-}
-
-template<class ParserT, typename ... Args>
-void STRUCT_Vertex_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, z_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this STRUCT assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
 }
 
 //**********************************************************************
@@ -8124,54 +7671,6 @@ void STRUCT_point_compose(ComposerT& composer, Args&& ... args)
 		::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, "y", arg_2_type::nameAndTypeID, args...);
 		composer.buff.append( "\n}", 2 );
 
-	}
-}
-
-template<class ParserT, typename ... Args>
-void STRUCT_point_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	if constexpr( ParserT::proto == Proto::GMQ )
-	{
-		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	}
-	else
-	{
-		static_assert( ParserT::proto == Proto::JSON );
-		p.skipDelimiter( '{' );
-		for ( ;; )
-		{
-			std::string key;
-			p.readKey( &key );
-			if ( key == "x" )
-				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-			else if ( key == "y" )
-				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-			p.skipSpacesEtc();
-			if ( p.isDelimiter( ',' ) )
-			{
-				p.skipDelimiter( ',' );
-				continue;
-			}
-			if ( p.isDelimiter( '}' ) )
-			{
-				p.skipDelimiter( '}' );
-				break;
-			}
-			throw std::exception(); // bad format
-		}
 	}
 }
 
@@ -8220,59 +7719,6 @@ void STRUCT_point3D_compose(ComposerT& composer, Args&& ... args)
 	}
 }
 
-template<class ParserT, typename ... Args>
-void STRUCT_point3D_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, x_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, y_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, z_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	if constexpr( ParserT::proto == Proto::GMQ )
-	{
-		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-		::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-	}
-	else
-	{
-		static_assert( ParserT::proto == Proto::JSON );
-		p.skipDelimiter( '{' );
-		for ( ;; )
-		{
-			std::string key;
-			p.readKey( &key );
-			if ( key == "x" )
-				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_1_type, false>(arg_1_type::nameAndTypeID, p, args...);
-			else if ( key == "y" )
-				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_2_type, false>(arg_2_type::nameAndTypeID, p, args...);
-			else if ( key == "z" )
-				::globalmq::marshalling::impl::json::parseJsonParam<ParserT, arg_3_type, false>(arg_3_type::nameAndTypeID, p, args...);
-			p.skipSpacesEtc();
-			if ( p.isDelimiter( ',' ) )
-			{
-				p.skipDelimiter( ',' );
-				continue;
-			}
-			if ( p.isDelimiter( '}' ) )
-			{
-				p.skipDelimiter( '}' );
-				break;
-			}
-			throw std::exception(); // bad format
-		}
-	}
-}
-
 //**********************************************************************
 // DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
 //  CASE one (2 parameters)(2 parameters)
@@ -8308,32 +7754,6 @@ void DISCRIMINATED_UNION_du_one_compose(ComposerT& composer, Args&& ... args)
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_2_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_2_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_3_type, true, int64_t, int64_t, (int64_t)(0)>(composer, arg_3_type::nameAndTypeID, args...);
 	::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_4_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_4_type::nameAndTypeID, args...);
-}
-
-template<class ParserT, typename ... Args>
-void DISCRIMINATED_UNION_du_one_parse(ParserT& p, Args&& ... args)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt3d_1_Type::Name>;
-	using arg_2_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, i_1_Type::Name>;
-	using arg_3_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, i_2_Type::Name>;
-	using arg_4_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, vp_2_Type::Name>;
-
-	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_2_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_3_type::nameAndTypeID, Args::nameAndTypeID...) + 
-		isMatched(arg_4_type::nameAndTypeID, Args::nameAndTypeID...);
-	constexpr size_t argCount = sizeof ... (Args);
-	if constexpr ( argCount != 0 )
-		ensureUniqueness(args.nameAndTypeID...);
-	static_assert( argCount == matchCount, "unexpected arguments found" );
-
-	static_assert( ParserT::proto == Proto::GMQ, "this DISCRIMINATED_UNION assumes only GMQ protocol" );
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_1_type, false>(p, arg_1_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_2_type, false>(p, arg_2_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_3_type, false>(p, arg_3_type::nameAndTypeID, args...);
-	::globalmq::marshalling::impl::gmq::parseGmqParam<ParserT, arg_4_type, false>(p, arg_4_type::nameAndTypeID, args...);
 }
 
 
