@@ -406,8 +406,9 @@ void parseGmqParam(ParserT& p, const typename TypeToPick::NameAndTypeID expected
 				coll.size_hint( collSz );
 				for ( size_t i=0; i<collSz; ++i )
 				{
-					size_t itemSz = 0;
-					p.parseUnsignedInteger( &itemSz );
+					// TODO: revise
+					/*size_t itemSz = 0;
+					p.parseUnsignedInteger( &itemSz );*/
 					// ParserT itemParser( p );
 					coll.parse_next( p, i );
 					// p.adjustParsingPos( itemSz );
@@ -523,7 +524,8 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 				composeUnsignedInteger( composer, collSz );
 				if ( collSz )
 				{
-					size_t pos = composer.buff.size();
+					// TODO: revise around adding item size (also while parsing)
+					/*size_t pos = composer.buff.size();
 					composer.buff.set_size( composer.buff.size() + integer_max_size ); // TODO: revise toward lowest estimation of 1 with move if longer
 					for ( size_t i=0; i<collSz; ++i )
 					{
@@ -533,7 +535,9 @@ void composeParamToGmq(ComposerT& composer, const typename TypeToPick::NameAndTy
 						pos = composer.buff.size();
 						if ( i != collSz - 1 )
 							composer.buff.set_size( composer.buff.size() + integer_max_size ); // TODO: revise toward lowest estimation of 1 with move if longer
-					}
+					}*/
+					for ( size_t i=0; i<collSz; ++i )
+						coll.compose_next(composer, i);
 				}
 			}
 		}
