@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\library\global-mq-dotnet.csproj" />
+    <ProjectReference Include="..\..\library-csharp\global-mq-csharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

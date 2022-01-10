@@ -16,9 +16,9 @@ namespace mtest
 
 //**********************************************************************
 // STRUCT "SIZE" Targets: JSON (3 parameters)
-// 1. REAL X (REQUIRED)
-// 2. REAL Y (REQUIRED)
-// 3. REAL Z (REQUIRED)
+//  1. REAL X (REQUIRED)
+//  2. REAL Y (REQUIRED)
+//  3. REAL Z (REQUIRED)
 //**********************************************************************
 
 public class SIZE : IEquatable<SIZE>
@@ -144,9 +144,9 @@ public class SIZE : IEquatable<SIZE>
 
 //**********************************************************************
 // STRUCT "point3D" Targets: JSON GMQ (3 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
-// 3. INTEGER z (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
+//  3. INTEGER z (REQUIRED)
 //**********************************************************************
 
 public class point3D : IEquatable<point3D>
@@ -272,8 +272,8 @@ public class point3D : IEquatable<point3D>
 
 //**********************************************************************
 // STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
 //**********************************************************************
 
 public class point : IEquatable<point>
@@ -388,9 +388,9 @@ public class point : IEquatable<point>
 
 //**********************************************************************
 // STRUCT "Vertex" NONEXTENDABLE Targets: GMQ (3 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
-// 3. INTEGER z (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
+//  3. INTEGER z (REQUIRED)
 //**********************************************************************
 
 public class Vertex : IEquatable<Vertex>
@@ -516,12 +516,12 @@ public class Vertex : IEquatable<Vertex>
 
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
-// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> polygonMap (REQUIRED)
+//  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
 //**********************************************************************
 
 public class PolygonMap : IEquatable<PolygonMap>
 {
-	public IList<Vertex> polygonMap;
+	public IList<Vertex> _PolygonMap;
 
 	public override bool Equals(object obj)
 	{
@@ -543,46 +543,46 @@ public class PolygonMap : IEquatable<PolygonMap>
 	public bool Equals(PolygonMap other)
 	{
 		return
-			Enumerable.SequenceEqual(this.polygonMap, other.polygonMap);
+			Enumerable.SequenceEqual(this._PolygonMap, other._PolygonMap);
 	}
-	public static void compose(ComposerBase composer, ICollectionCompose polygonMap)
+	public static void compose(ComposerBase composer, ICollectionCompose _PolygonMap)
 	{
 		if (composer is GmqComposer gmqC)
-			compose(gmqC, polygonMap);
+			compose(gmqC, _PolygonMap);
 		else if (composer is JsonComposer jsonC)
-			compose(jsonC, polygonMap);
+			compose(jsonC, _PolygonMap);
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICollectionCompose polygonMap)
+	public static void compose(JsonComposer composer, ICollectionCompose _PolygonMap)
 	{
 		composer.append( "{\n  ");
-		composer.addNamePart("polygonMap");
-		polygonMap.composeJson(composer);
+		composer.addNamePart("_PolygonMap");
+		_PolygonMap.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICollectionCompose polygonMap)
+	public static void compose(GmqComposer composer, ICollectionCompose _PolygonMap)
 	{
-		polygonMap.composeGmq(composer);
+		_PolygonMap.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, ICollectionParse polygonMap)
+	public static void parse(ParserBase parser, ICollectionParse _PolygonMap)
 	{
 		if (parser is GmqParser gmqP)
-			parse(gmqP, polygonMap);
+			parse(gmqP, _PolygonMap);
 		else if (parser is JsonParser jsonP)
-			parse(jsonP, polygonMap);
+			parse(jsonP, _PolygonMap);
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ICollectionParse polygonMap)
+	public static void parse(JsonParser parser, ICollectionParse _PolygonMap)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
 			string key;
 			parser.readKeyFromJson( out key );
-			if ( key == "polygonMap" )
-				polygonMap.parseJson(parser);
+			if ( key == "_PolygonMap" )
+				_PolygonMap.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -598,25 +598,25 @@ public class PolygonMap : IEquatable<PolygonMap>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ICollectionParse polygonMap)
+	public static void parse(GmqParser parser, ICollectionParse _PolygonMap)
 	{
-		polygonMap.parseGmq(parser);
+		_PolygonMap.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, PolygonMap msg)
 	{
 		compose(composer,
-			polygonMap: new CollectionWrapperForComposing(
-				() => { return msg.polygonMap.Count; },
-				(ComposerBase composer, int ordinal) => { Vertex.compose(composer, msg.polygonMap[ordinal]); })
+			_PolygonMap: new CollectionWrapperForComposing(
+				() => { return msg._PolygonMap.Count; },
+				(ComposerBase composer, int ordinal) => { Vertex.compose(composer, msg._PolygonMap[ordinal]); })
 		);
 	}
 	public static void parse(ParserBase parser, out PolygonMap msg)
 	{
 		PolygonMap tmp = new PolygonMap();
 		parse(parser,
-			polygonMap: new CollectionWrapperForParsing(
-				() => { tmp.polygonMap = new List<Vertex>(); },
-				(ParserBase parser, int ordinal) => { Vertex val; Vertex.parse(parser, out val); tmp.polygonMap.Add(val); })
+			_PolygonMap: new CollectionWrapperForParsing(
+				() => { tmp._PolygonMap = new List<Vertex>(); },
+				(ParserBase parser, int ordinal) => { Vertex val; Vertex.parse(parser, out val); tmp._PolygonMap.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -624,12 +624,12 @@ public class PolygonMap : IEquatable<PolygonMap>
 
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT PolygonMap> obstacleMap (REQUIRED)
+//  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
 //**********************************************************************
 
 public class ObstacleMap : IEquatable<ObstacleMap>
 {
-	public IList<PolygonMap> obstacleMap;
+	public IList<PolygonMap> _ObstacleMap;
 
 	public override bool Equals(object obj)
 	{
@@ -651,46 +651,46 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 	public bool Equals(ObstacleMap other)
 	{
 		return
-			Enumerable.SequenceEqual(this.obstacleMap, other.obstacleMap);
+			Enumerable.SequenceEqual(this._ObstacleMap, other._ObstacleMap);
 	}
-	public static void compose(ComposerBase composer, ICollectionCompose obstacleMap)
+	public static void compose(ComposerBase composer, ICollectionCompose _ObstacleMap)
 	{
 		if (composer is GmqComposer gmqC)
-			compose(gmqC, obstacleMap);
+			compose(gmqC, _ObstacleMap);
 		else if (composer is JsonComposer jsonC)
-			compose(jsonC, obstacleMap);
+			compose(jsonC, _ObstacleMap);
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICollectionCompose obstacleMap)
+	public static void compose(JsonComposer composer, ICollectionCompose _ObstacleMap)
 	{
 		composer.append( "{\n  ");
-		composer.addNamePart("obstacleMap");
-		obstacleMap.composeJson(composer);
+		composer.addNamePart("_ObstacleMap");
+		_ObstacleMap.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICollectionCompose obstacleMap)
+	public static void compose(GmqComposer composer, ICollectionCompose _ObstacleMap)
 	{
-		obstacleMap.composeGmq(composer);
+		_ObstacleMap.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, ICollectionParse obstacleMap)
+	public static void parse(ParserBase parser, ICollectionParse _ObstacleMap)
 	{
 		if (parser is GmqParser gmqP)
-			parse(gmqP, obstacleMap);
+			parse(gmqP, _ObstacleMap);
 		else if (parser is JsonParser jsonP)
-			parse(jsonP, obstacleMap);
+			parse(jsonP, _ObstacleMap);
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ICollectionParse obstacleMap)
+	public static void parse(JsonParser parser, ICollectionParse _ObstacleMap)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
 			string key;
 			parser.readKeyFromJson( out key );
-			if ( key == "obstacleMap" )
-				obstacleMap.parseJson(parser);
+			if ( key == "_ObstacleMap" )
+				_ObstacleMap.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -706,25 +706,25 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ICollectionParse obstacleMap)
+	public static void parse(GmqParser parser, ICollectionParse _ObstacleMap)
 	{
-		obstacleMap.parseGmq(parser);
+		_ObstacleMap.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, ObstacleMap msg)
 	{
 		compose(composer,
-			obstacleMap: new CollectionWrapperForComposing(
-				() => { return msg.obstacleMap.Count; },
-				(ComposerBase composer, int ordinal) => { PolygonMap.compose(composer, msg.obstacleMap[ordinal]); })
+			_ObstacleMap: new CollectionWrapperForComposing(
+				() => { return msg._ObstacleMap.Count; },
+				(ComposerBase composer, int ordinal) => { PolygonMap.compose(composer, msg._ObstacleMap[ordinal]); })
 		);
 	}
 	public static void parse(ParserBase parser, out ObstacleMap msg)
 	{
 		ObstacleMap tmp = new ObstacleMap();
 		parse(parser,
-			obstacleMap: new CollectionWrapperForParsing(
-				() => { tmp.obstacleMap = new List<PolygonMap>(); },
-				(ParserBase parser, int ordinal) => { PolygonMap val; PolygonMap.parse(parser, out val); tmp.obstacleMap.Add(val); })
+			_ObstacleMap: new CollectionWrapperForParsing(
+				() => { tmp._ObstacleMap = new List<PolygonMap>(); },
+				(ParserBase parser, int ordinal) => { PolygonMap val; PolygonMap.parse(parser, out val); tmp._ObstacleMap.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -732,8 +732,8 @@ public class ObstacleMap : IEquatable<ObstacleMap>
 
 //**********************************************************************
 // STRUCT "Line" Targets: GMQ (2 parameters)
-// 1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
-// 2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
+//  1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
+//  2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
 //**********************************************************************
 
 public class Line : IEquatable<Line>
@@ -856,12 +856,12 @@ public class Line : IEquatable<Line>
 
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
-// 1. VECTOR< STRUCT Line> lineMap (REQUIRED)
+//  1. VECTOR< STRUCT Line> aLineMap (REQUIRED)
 //**********************************************************************
 
 public class LineMap : IEquatable<LineMap>
 {
-	public IList<Line> lineMap;
+	public IList<Line> aLineMap;
 
 	public override bool Equals(object obj)
 	{
@@ -883,46 +883,46 @@ public class LineMap : IEquatable<LineMap>
 	public bool Equals(LineMap other)
 	{
 		return
-			Enumerable.SequenceEqual(this.lineMap, other.lineMap);
+			Enumerable.SequenceEqual(this.aLineMap, other.aLineMap);
 	}
-	public static void compose(ComposerBase composer, ICollectionCompose lineMap)
+	public static void compose(ComposerBase composer, ICollectionCompose aLineMap)
 	{
 		if (composer is GmqComposer gmqC)
-			compose(gmqC, lineMap);
+			compose(gmqC, aLineMap);
 		else if (composer is JsonComposer jsonC)
-			compose(jsonC, lineMap);
+			compose(jsonC, aLineMap);
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, ICollectionCompose lineMap)
+	public static void compose(JsonComposer composer, ICollectionCompose aLineMap)
 	{
 		composer.append( "{\n  ");
-		composer.addNamePart("lineMap");
-		lineMap.composeJson(composer);
+		composer.addNamePart("aLineMap");
+		aLineMap.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, ICollectionCompose lineMap)
+	public static void compose(GmqComposer composer, ICollectionCompose aLineMap)
 	{
-		lineMap.composeGmq(composer);
+		aLineMap.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, ICollectionParse lineMap)
+	public static void parse(ParserBase parser, ICollectionParse aLineMap)
 	{
 		if (parser is GmqParser gmqP)
-			parse(gmqP, lineMap);
+			parse(gmqP, aLineMap);
 		else if (parser is JsonParser jsonP)
-			parse(jsonP, lineMap);
+			parse(jsonP, aLineMap);
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ICollectionParse lineMap)
+	public static void parse(JsonParser parser, ICollectionParse aLineMap)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
 			string key;
 			parser.readKeyFromJson( out key );
-			if ( key == "lineMap" )
-				lineMap.parseJson(parser);
+			if ( key == "aLineMap" )
+				aLineMap.parseJson(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -938,25 +938,25 @@ public class LineMap : IEquatable<LineMap>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ICollectionParse lineMap)
+	public static void parse(GmqParser parser, ICollectionParse aLineMap)
 	{
-		lineMap.parseGmq(parser);
+		aLineMap.parseGmq(parser);
 	}
 	public static void compose(ComposerBase composer, LineMap msg)
 	{
 		compose(composer,
-			lineMap: new CollectionWrapperForComposing(
-				() => { return msg.lineMap.Count; },
-				(ComposerBase composer, int ordinal) => { Line.compose(composer, msg.lineMap[ordinal]); })
+			aLineMap: new CollectionWrapperForComposing(
+				() => { return msg.aLineMap.Count; },
+				(ComposerBase composer, int ordinal) => { Line.compose(composer, msg.aLineMap[ordinal]); })
 		);
 	}
 	public static void parse(ParserBase parser, out LineMap msg)
 	{
 		LineMap tmp = new LineMap();
 		parse(parser,
-			lineMap: new CollectionWrapperForParsing(
-				() => { tmp.lineMap = new List<Line>(); },
-				(ParserBase parser, int ordinal) => { Line val; Line.parse(parser, out val); tmp.lineMap.Add(val); })
+			aLineMap: new CollectionWrapperForParsing(
+				() => { tmp.aLineMap = new List<Line>(); },
+				(ParserBase parser, int ordinal) => { Line val; Line.parse(parser, out val); tmp.aLineMap.Add(val); })
 		);
 		msg = tmp;
 	}
@@ -964,9 +964,9 @@ public class LineMap : IEquatable<LineMap>
 
 //**********************************************************************
 // STRUCT "POINT3DREAL" Targets: JSON (3 parameters)
-// 1. REAL X (REQUIRED)
-// 2. REAL Y (REQUIRED)
-// 3. REAL Z (REQUIRED)
+//  1. REAL X (REQUIRED)
+//  2. REAL Y (REQUIRED)
+//  3. REAL Z (REQUIRED)
 //**********************************************************************
 
 public class POINT3DREAL : IEquatable<POINT3DREAL>
@@ -1092,8 +1092,8 @@ public class POINT3DREAL : IEquatable<POINT3DREAL>
 
 //**********************************************************************
 // STRUCT "CharacterParamStruct" Targets: JSON (2 parameters)
-// 1. INTEGER ID (REQUIRED)
-// 2. STRUCT SIZE Size (REQUIRED)
+//  1. INTEGER ID (REQUIRED)
+//  2. STRUCT SIZE Size (REQUIRED)
 //**********************************************************************
 
 public class CharacterParamStruct : IEquatable<CharacterParamStruct>
@@ -1256,7 +1256,7 @@ public class scope_one
 	}
 
 //**********************************************************************
-// MESSAGE "point3D_alias" Targets: JSON (Alias of point3D)
+// MESSAGE "point3D_alias" Targets: JSON (0 parameters)
 //**********************************************************************
 
 public class point3D_alias : point3D
@@ -1309,7 +1309,7 @@ public static UInt64 MsgId = 1;
 } // class point3D_alias
 
 //**********************************************************************
-// MESSAGE "point_alias" Targets: JSON (Alias of point)
+// MESSAGE "point_alias" Targets: JSON (0 parameters)
 //**********************************************************************
 
 public class point_alias : point
@@ -1378,8 +1378,8 @@ public class level_trace
 
 //**********************************************************************
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
-// 1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
-// 2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
+//  1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
+//  2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
 //**********************************************************************
 
 public class LevelTraceData : IEquatable<LevelTraceData>
@@ -1537,12 +1537,12 @@ public class infrastructural
 
 //**********************************************************************
 // MESSAGE "PolygonSt" Targets: GMQ (6 parameters)
-// 1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
-// 2. VECTOR< STRUCT PolygonMap> concaveMap (REQUIRED)
-// 3. VECTOR< STRUCT ObstacleMap> obstacleMap (REQUIRED)
-// 4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
-// 5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
-// 6. REAL polygonSpeed (REQUIRED)
+//  1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
+//  2. VECTOR< STRUCT PolygonMap> concaveMap (REQUIRED)
+//  3. VECTOR< STRUCT ObstacleMap> obstacleMap (REQUIRED)
+//  4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
+//  5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
+//  6. REAL polygonSpeed (REQUIRED)
 //**********************************************************************
 
 public class PolygonSt : IEquatable<PolygonSt>
@@ -1743,14 +1743,14 @@ public class PolygonSt : IEquatable<PolygonSt>
 
 //**********************************************************************
 // MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
-// 1. STRUCT point pt (REQUIRED)
+//  1. STRUCT point aPoint (REQUIRED)
 //**********************************************************************
 
 public class point : IEquatable<point>
 {
 	public static UInt64 MsgId = 4;
 
-	public point pt;
+	public point aPoint;
 
 	public override bool Equals(object obj)
 	{
@@ -1772,46 +1772,46 @@ public class point : IEquatable<point>
 	public bool Equals(point other)
 	{
 		return
-			this.pt.Equals(other.pt);
+			this.aPoint.Equals(other.aPoint);
 	}
-	public static void compose(ComposerBase composer, IMessageCompose pt)
+	public static void compose(ComposerBase composer, IMessageCompose aPoint)
 	{
 		if (composer is GmqComposer gmqC)
-			compose(gmqC, pt);
+			compose(gmqC, aPoint);
 		else if (composer is JsonComposer jsonC)
-			compose(jsonC, pt);
+			compose(jsonC, aPoint);
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, IMessageCompose pt)
+	public static void compose(JsonComposer composer, IMessageCompose aPoint)
 	{
 		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		pt.compose(composer);
+		composer.addNamePart("aPoint");
+		aPoint.compose(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, IMessageCompose pt)
+	public static void compose(GmqComposer composer, IMessageCompose aPoint)
 	{
-		pt.compose(composer);
+		aPoint.compose(composer);
 	}
-	public static void parse(ParserBase parser, IMessageParse pt)
+	public static void parse(ParserBase parser, IMessageParse aPoint)
 	{
 		if (parser is GmqParser gmqP)
-			parse(gmqP, pt);
+			parse(gmqP, aPoint);
 		else if (parser is JsonParser jsonP)
-			parse(jsonP, pt);
+			parse(jsonP, aPoint);
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, IMessageParse pt)
+	public static void parse(JsonParser parser, IMessageParse aPoint)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
 			string key;
 			parser.readKeyFromJson( out key );
-			if ( key == "pt" )
-				pt.parse(parser);
+			if ( key == "aPoint" )
+				aPoint.parse(parser);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -1827,32 +1827,32 @@ public class point : IEquatable<point>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, IMessageParse pt)
+	public static void parse(GmqParser parser, IMessageParse aPoint)
 	{
-		pt.parse(parser);
+		aPoint.parse(parser);
 	}
 	public static void compose(ComposerBase composer, point msg)
 	{
 		compose(composer,
-			pt: new MessageWrapperForComposing(
-				(ComposerBase composer) => { point.compose(composer, msg.pt); })
+			aPoint: new MessageWrapperForComposing(
+				(ComposerBase composer) => { point.compose(composer, msg.aPoint); })
 		);
 	}
 	public static void parse(ParserBase parser, out point msg)
 	{
 		point tmp = new point();
 		parse(parser,
-			pt: new MessageWrapperForParsing(
-				(ParserBase parser) => { point.parse(parser, out tmp.pt); })
+			aPoint: new MessageWrapperForParsing(
+				(ParserBase parser) => { point.parse(parser, out tmp.aPoint); })
 		);
 		msg = tmp;
 	}
-	public static void composeMessage(ComposerBase composer, IMessageCompose pt)
+	public static void composeMessage(ComposerBase composer, IMessageCompose aPoint)
 	{
 		if (composer is GmqComposer gmqC)
 		{
 			gmqC.composeUnsignedInteger(MsgId);
-			compose(gmqC, pt);
+			compose(gmqC, aPoint);
 		}
 		else if (composer is JsonComposer jsonC)
 		{
@@ -1861,7 +1861,7 @@ public class point : IEquatable<point>
 			jsonC.composeUnsignedInteger(MsgId);
 			jsonC.append(",\n  ");
 			jsonC.addNamePart("msgbody");
-			compose(jsonC, pt);
+			compose(jsonC, aPoint);
 			jsonC.append("\n}");
 		}
 		else
@@ -1871,7 +1871,7 @@ public class point : IEquatable<point>
 
 //**********************************************************************
 // MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (1 parameters)
-// 1. STRUCT point3D pt (REQUIRED)
+//  1. STRUCT point3D pt (REQUIRED)
 //**********************************************************************
 
 public class point3D : IEquatable<point3D>
@@ -2014,16 +2014,16 @@ public class test_gmq
 
 //**********************************************************************
 // MESSAGE "message_one" Targets: GMQ (10 parameters)
-// 1. INTEGER firstParam (REQUIRED)
-// 2. VECTOR<INTEGER> secondParam (REQUIRED)
-// 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
-// 4. UINTEGER forthParam (REQUIRED)
-// 5. CHARACTER_STRING fifthParam (REQUIRED)
-// 6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
-// 7. REAL seventhParam (REQUIRED)
-// 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
-// 9. STRUCT point3D ninethParam (REQUIRED)
-// 10. VECTOR<REAL> tenthParam (REQUIRED)
+//  1. INTEGER firstParam (REQUIRED)
+//  2. VECTOR<INTEGER> secondParam (REQUIRED)
+//  3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
+//  4. UINTEGER forthParam (REQUIRED)
+//  5. CHARACTER_STRING fifthParam (REQUIRED)
+//  6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
+//  7. REAL seventhParam (REQUIRED)
+//  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
+//  9. STRUCT point3D ninethParam (REQUIRED)
+//  10. VECTOR<REAL> tenthParam (REQUIRED)
 //**********************************************************************
 
 public class message_one : IEquatable<message_one>
@@ -2279,16 +2279,16 @@ public class test_json
 
 //**********************************************************************
 // MESSAGE "message_one" Targets: JSON (10 parameters)
-// 1. INTEGER firstParam (REQUIRED)
-// 2. VECTOR<INTEGER> secondParam (REQUIRED)
-// 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
-// 4. UINTEGER forthParam (REQUIRED)
-// 5. CHARACTER_STRING fifthParam (REQUIRED)
-// 6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
-// 7. REAL seventhParam (REQUIRED)
-// 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
-// 9. STRUCT point3D ninethParam (REQUIRED)
-// 10. VECTOR<REAL> tenthParam (REQUIRED)
+//  1. INTEGER firstParam (REQUIRED)
+//  2. VECTOR<INTEGER> secondParam (REQUIRED)
+//  3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
+//  4. UINTEGER forthParam (REQUIRED)
+//  5. CHARACTER_STRING fifthParam (REQUIRED)
+//  6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
+//  7. REAL seventhParam (REQUIRED)
+//  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
+//  9. STRUCT point3D ninethParam (REQUIRED)
+//  10. VECTOR<REAL> tenthParam (REQUIRED)
 //**********************************************************************
 
 public class message_one : IEquatable<message_one>

@@ -3,13 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "global-mq-dotnet", "library\global-mq-dotnet.csproj", "{09328FF1-DD23-44B6-A9F5-0B016710C86B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "global-mq-csharp", "global-mq-csharp.csproj", "{09328FF1-DD23-44B6-A9F5-0B016710C86B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test", "test\test.csproj", "{2373B1B8-6530-426B-8869-B764878662C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test", "..\test\cs\test.csproj", "{2373B1B8-6530-426B-8869-B764878662C3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{09328FF1-DD23-44B6-A9F5-0B016710C86B} = {09328FF1-DD23-44B6-A9F5-0B016710C86B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "idl_compiler", "..\idl_compiler\build\idl_compiler.vcxproj", "{915EA1CB-AE4F-45C1-9411-B065A7C466C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "csharp-message", "..\test\message\csharp-message.csproj", "{E5B152E6-D90C-4924-8EEB-0DB8085A28B3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{09328FF1-DD23-44B6-A9F5-0B016710C86B} = {09328FF1-DD23-44B6-A9F5-0B016710C86B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
