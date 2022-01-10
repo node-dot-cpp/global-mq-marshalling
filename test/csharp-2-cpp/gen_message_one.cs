@@ -79,7 +79,17 @@ public class point3D : IEquatable<point3D>
 		composer.composeSignedInteger(y);
 		composer.composeSignedInteger(z);
 	}
-	public static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	public static point3D parse(ParserBase parser)
+	{
+		point3D tmp = new point3D();
+		parse(parser,
+			x: ref tmp.x,
+			y: ref tmp.y,
+			z: ref tmp.z
+		);
+		return tmp;
+	}
+	private static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref x, ref y, ref z);
@@ -88,7 +98,7 @@ public class point3D : IEquatable<point3D>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	private static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -116,29 +126,11 @@ public class point3D : IEquatable<point3D>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	private static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		parser.parseSignedInteger(out x);
 		parser.parseSignedInteger(out y);
 		parser.parseSignedInteger(out z);
-	}
-	public static void compose(ComposerBase composer, point3D msg)
-	{
-		compose(composer,
-			x: msg.x,
-			y: msg.y,
-			z: msg.z
-		);
-	}
-	public static void parse(ParserBase parser, out point3D msg)
-	{
-		point3D tmp = new point3D();
-		parse(parser,
-			x: ref tmp.x,
-			y: ref tmp.y,
-			z: ref tmp.z
-		);
-		msg = tmp;
 	}
 } // class point3D
 
@@ -200,7 +192,16 @@ public class point : IEquatable<point>
 		composer.composeSignedInteger(x);
 		composer.composeSignedInteger(y);
 	}
-	public static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
+	public static point parse(ParserBase parser)
+	{
+		point tmp = new point();
+		parse(parser,
+			x: ref tmp.x,
+			y: ref tmp.y
+		);
+		return tmp;
+	}
+	private static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref x, ref y);
@@ -209,7 +210,7 @@ public class point : IEquatable<point>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
+	private static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -235,26 +236,10 @@ public class point : IEquatable<point>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
+	private static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
 	{
 		parser.parseSignedInteger(out x);
 		parser.parseSignedInteger(out y);
-	}
-	public static void compose(ComposerBase composer, point msg)
-	{
-		compose(composer,
-			x: msg.x,
-			y: msg.y
-		);
-	}
-	public static void parse(ParserBase parser, out point msg)
-	{
-		point tmp = new point();
-		parse(parser,
-			x: ref tmp.x,
-			y: ref tmp.y
-		);
-		msg = tmp;
 	}
 } // class point
 
@@ -372,7 +357,34 @@ public class message_one : IEquatable<message_one>
 		ninethParam.compose(composer);
 		tenthParam.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	public static message_one parse(ParserBase parser)
+	{
+		message_one tmp = new message_one();
+		parse(parser,
+			firstParam: ref tmp.firstParam,
+			secondParam: new CollectionWrapperForParsing(
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
+			thirdParam: new CollectionWrapperForParsing(
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val = point3D.parse(parser); tmp.thirdParam.Add(val); }),
+			forthParam: ref tmp.forthParam,
+			fifthParam: ref tmp.fifthParam,
+			sixthParam: new CollectionWrapperForParsing(
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val = point.parse(parser); tmp.sixthParam.Add(val); }),
+			seventhParam: ref tmp.seventhParam,
+			eighthParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { point.parse(parser, out tmp.eighthParam); }),
+			ninethParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { point3D.parse(parser, out tmp.ninethParam); }),
+			tenthParam: new CollectionWrapperForParsing(
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
+		);
+		return tmp;
+	}
+	private static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
@@ -381,7 +393,7 @@ public class message_one : IEquatable<message_one>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	private static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -423,7 +435,7 @@ public class message_one : IEquatable<message_one>
 			throw new FormatException(); // bad format
 		}
 	}
-	public static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	private static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.parseSignedInteger(out firstParam);
 		secondParam.parseGmq(parser);
@@ -435,54 +447,6 @@ public class message_one : IEquatable<message_one>
 		eighthParam.parse(parser);
 		ninethParam.parse(parser);
 		tenthParam.parseGmq(parser);
-	}
-	public static void compose(ComposerBase composer, message_one msg)
-	{
-		compose(composer,
-			firstParam: msg.firstParam,
-			secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
-			thirdParam: new CollectionWrapperForComposing(
-				() => { return msg.thirdParam.Count; },
-				(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
-			forthParam: msg.forthParam,
-			fifthParam: msg.fifthParam,
-			sixthParam: new CollectionWrapperForComposing(
-				() => { return msg.sixthParam.Count; },
-				(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
-			seventhParam: msg.seventhParam,
-			eighthParam: new MessageWrapperForComposing(
-				(ComposerBase composer) => { point.compose(composer, msg.eighthParam); }),
-			ninethParam: new MessageWrapperForComposing(
-				(ComposerBase composer) => { point3D.compose(composer, msg.ninethParam); }),
-			tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
-		);
-	}
-	public static void parse(ParserBase parser, out message_one msg)
-	{
-		message_one tmp = new message_one();
-		parse(parser,
-			firstParam: ref tmp.firstParam,
-			secondParam: new CollectionWrapperForParsing(
-				() => { tmp.secondParam = new List<Int64>(); },
-				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
-			thirdParam: new CollectionWrapperForParsing(
-				() => { tmp.thirdParam = new List<point3D>(); },
-				(ParserBase parser, int ordinal) => { point3D val; point3D.parse(parser, out val); tmp.thirdParam.Add(val); }),
-			forthParam: ref tmp.forthParam,
-			fifthParam: ref tmp.fifthParam,
-			sixthParam: new CollectionWrapperForParsing(
-				() => { tmp.sixthParam = new List<point>(); },
-				(ParserBase parser, int ordinal) => { point val; point.parse(parser, out val); tmp.sixthParam.Add(val); }),
-			seventhParam: ref tmp.seventhParam,
-			eighthParam: new MessageWrapperForParsing(
-				(ParserBase parser) => { point.parse(parser, out tmp.eighthParam); }),
-			ninethParam: new MessageWrapperForParsing(
-				(ParserBase parser) => { point3D.parse(parser, out tmp.ninethParam); }),
-			tenthParam: new CollectionWrapperForParsing(
-				() => { tmp.tenthParam = new List<Double>(); },
-				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
-		);
-		msg = tmp;
 	}
 } // class message_one
 

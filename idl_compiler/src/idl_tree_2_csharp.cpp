@@ -265,7 +265,7 @@ namespace {
 	void csharpMsg_generateGmqParseMethod(FILE* header, CompositeType& s)
 	{
 
-		fprintf(header, "\tpublic static void parse(GmqParser parser, ");
+		fprintf(header, "\tprotected static void parse(GmqParser parser, ");
 
 		csharpMsg_generateParseParamTypeLIst(header, s);
 
@@ -389,7 +389,7 @@ namespace {
 
 	void csharpMsg_generateJsonParseMethod(FILE* header, CompositeType& s)
 	{
-		fprintf(header, "\tpublic static void parse(JsonParser parser, ");
+		fprintf(header, "\tprotected static void parse(JsonParser parser, ");
 
 		csharpMsg_generateParseParamTypeLIst(header, s);
 
@@ -470,85 +470,10 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateComposeMethod2(FILE* header, CompositeType& s)
-	{
-		fprintf(header, "\tpublic static void compose(ComposerBase composer, %s msg)\n", s.name.c_str());
-
-		fprintf(header,
-			"\t{\n"
-			"\t\tcompose(composer,\n");
-		//csharpMsg_generateParamCallBlockForComposingGmq(header, s, "\t");
-
-		int count = 0;
-		auto& mem = s.getMembers();
-		for (auto it = mem.begin(); it != mem.end(); ++it)
-		{
-			assert(*it != nullptr);
-
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
-				continue;
-			++count;
-
-			if(it != mem.begin())
-				fprintf(header, ",\n");
-
-			switch (param.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\t\t%s: msg.%s", param.name.c_str(), param.name.c_str());
-				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//case MessageParameterType::KIND::BLOB:
-			//case MessageParameterType::KIND::ENUM:
-				//break;
-			case MessageParameterType::KIND::VECTOR:
-				switch (param.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-				case MessageParameterType::KIND::UINTEGER:
-				case MessageParameterType::KIND::REAL:
-				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\t\t%s: SimpleTypeCollection.makeComposer(msg.%s)", param.name.c_str(), param.name.c_str());
-					break;
-				//case MessageParameterType::KIND::BYTE_ARRAY:
-				//case MessageParameterType::KIND::BLOB:
-				//case MessageParameterType::KIND::ENUM:
-				case MessageParameterType::KIND::STRUCT:
-					//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
-					fprintf(header, "\t\t\t%s: new CollectionWrapperForComposing(\n"
-						"\t\t\t\t() => { return msg.%s.Count; },\n", param.name.c_str(), param.name.c_str());
-					fprintf(header, "\t\t\t\t(ComposerBase composer, int ordinal) => "
-						"{ %s.compose(composer, msg.%s[ordinal]); })", param.type.name.c_str(), param.name.c_str());
-					break;
-				default:
-					assert(false); // unexpected
-					break;
-				}
-				break;
-			case MessageParameterType::KIND::STRUCT:
-				//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
-				fprintf(header, "\t\t\t%s: new MessageWrapperForComposing(\n", param.name.c_str());
-				fprintf(header, "\t\t\t\t(ComposerBase composer) => "
-					"{ %s.compose(composer, msg.%s); })", param.type.name.c_str(), param.name.c_str());
-				break;
-			default:
-				assert(false); // unexpected
-				break;
-			}
-		}
-		fprintf(header, "\n\t\t);\n\t}\n");
-	}
-
 	void csharpMsg_generateParseMethod2(FILE* header, CompositeType& s)
 	{
-		fprintf(header, "\tpublic static void parse(ParserBase parser, out %s msg)\n", s.name.c_str());
+		fprintf(header, "\tpublic static %s parse(ParserBase parser)\n", s.name.c_str());
 
-		//mb: C# has a rule about ref/out params and lambas, so we need to create a tmp here
-		// and assign to msg later
 		fprintf(header,
 			"\t{\n"
 			"\t\t%s tmp = new %s();\n"
@@ -615,7 +540,7 @@ namespace {
 					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
 						"\t\t\t\t() => { tmp.%s = new List<%s>(); },\n", param.name.c_str(), param.name.c_str(), param.type.name.c_str());
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ %s val; %s.parse(parser, out val); tmp.%s.Add(val); })", param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+						"{ %s val = %s.parse(parser); tmp.%s.Add(val); })", param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
@@ -624,7 +549,7 @@ namespace {
 				break;
 			case MessageParameterType::KIND::STRUCT:
 				fprintf(header, "\t\t\t%s: new MessageWrapperForParsing(\n", param.name.c_str());
-				fprintf(header, "\t\t\t\t(ParserBase parser) => { %s.parse(parser, out tmp.%s); })", param.type.name.c_str(), param.name.c_str());
+				fprintf(header, "\t\t\t\t(ParserBase parser) => { tmp.%s = %s.parse(parser); })", param.name.c_str(), param.type.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
@@ -633,7 +558,7 @@ namespace {
 		}
 		fprintf(header, 
 			"\n\t\t);\n"
-			"\t\tmsg = tmp;\n"
+			"\t\treturn tmp;\n"
 			"\t}\n");
 	}
 
@@ -675,7 +600,7 @@ namespace {
 		//std::string funcName = csharpMsg_generateParseFunctionName(s);
 
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure);
-		fprintf(header, "\tpublic static void parse(ParserBase parser, ");
+		fprintf(header, "\tprotected static void parse(ParserBase parser, ");
 
 		csharpMsg_generateParseParamTypeLIst(header, s);
 
@@ -899,12 +824,10 @@ namespace {
 		csharpMsg_generateJsonComposeMethod(header, s);
 		csharpMsg_generateGmqComposeMethod(header, s);
 
+		csharpMsg_generateParseMethod2(header, s);
 		csharpMsg_generateParseFunction(header, s);
 		csharpMsg_generateJsonParseMethod(header, s);
 		csharpMsg_generateGmqParseMethod(header, s);
-
-		csharpMsg_generateComposeMethod2(header, s);
-		csharpMsg_generateParseMethod2(header, s);
 
 		if(s.type == CompositeType::Type::message)
 			csharpMsg_generateComposeMessageMethod(header, s);
@@ -931,7 +854,7 @@ namespace {
 
 		// parse function
 		//std::string parseName = csharpMsg_generateParseFunctionName(s);
-		fprintf(header, "\tpublic new static void parse(%s parser, ", parserType);
+		fprintf(header, "\tprotected new static void parse(%s parser, ", parserType);
 		csharpMsg_generateParseParamTypeLIst(header, target);
 		fprintf(header, ")\n\t{\n");
 

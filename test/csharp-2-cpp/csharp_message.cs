@@ -44,7 +44,24 @@ namespace csharp_message
 			SimpleBuffer buffer2 = new SimpleBuffer();
 			GmqComposer composer = new GmqComposer(buffer2);
 
-			mtest.message_one.compose(composer, msg);
+			mtest.message_one.compose(composer,
+				firstParam: msg.firstParam,
+				secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
+				thirdParam: new CollectionWrapperForComposing(
+					() => { return msg.thirdParam.Count; },
+					(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
+				forthParam: msg.forthParam,
+				fifthParam: msg.fifthParam,
+				sixthParam: new CollectionWrapperForComposing(
+					() => { return msg.sixthParam.Count; },
+					(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
+				seventhParam: msg.seventhParam,
+				eighthParam: new MessageWrapperForComposing(
+					(ComposerBase composer) => { point.compose(composer, msg.eighthParam); }),
+				ninethParam: new MessageWrapperForComposing(
+					(ComposerBase composer) => { point3D.compose(composer, msg.ninethParam); }),
+				tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
+			);
 
 			buffer2.writeToFile(output);
 		}
@@ -61,10 +78,29 @@ namespace csharp_message
 			SimpleBuffer buffer2 = new SimpleBuffer();
 			JsonComposer composer = new JsonComposer(buffer2);
 
-			mtest.message_one.compose(composer, msg);
+			mtest.message_one.compose(composer,
+				firstParam: msg.firstParam,
+				secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
+				thirdParam: new CollectionWrapperForComposing(
+					() => { return msg.thirdParam.Count; },
+					(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
+				forthParam: msg.forthParam,
+				fifthParam: msg.fifthParam,
+				sixthParam: new CollectionWrapperForComposing(
+					() => { return msg.sixthParam.Count; },
+					(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
+				seventhParam: msg.seventhParam,
+				eighthParam: new MessageWrapperForComposing(
+					(ComposerBase composer) => { point.compose(composer, msg.eighthParam); }),
+				ninethParam: new MessageWrapperForComposing(
+					(ComposerBase composer) => { point3D.compose(composer, msg.ninethParam); }),
+				tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
+			);
 
 			buffer2.writeToFile(output);
 		}
+
+
 
 		static void printUsage()
 		{
