@@ -26,7 +26,7 @@ endif()
 
 if(GLOBAL_MQ_TEST)
   # only when not a subproject
-  # add_subdirectory(test/message)
   add_subdirectory(test/cpp)
   add_subdirectory(test/cs)
+  add_subdirectory(test/csharp-2-cpp)
 endif()

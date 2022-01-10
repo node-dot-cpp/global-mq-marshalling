@@ -1,0 +1,36 @@
+{
+  "firstParam":1,
+  "secondParam":[0, 1, 2, 3, 4, 5],
+  "thirdParam":[{
+  "x":0,
+  "y":1,
+  "z":2
+}, {
+  "x":3,
+  "y":4,
+  "z":5
+}],
+  "forthParam":3,
+  "fifthParam":"def",
+  "sixthParam":[{
+  "x":0,
+  "y":1
+}, {
+  "x":2,
+  "y":3
+}, {
+  "x":4,
+  "y":5
+}],
+  "seventhParam":3.1416,
+  "eighthParam":{
+  "x":175,
+  "y":186
+},
+  "ninethParam":{
+  "x":123,
+  "y":456,
+  "z":789
+},
+  "tenthParam":[0.1, 1.2, 2.3]
+}
