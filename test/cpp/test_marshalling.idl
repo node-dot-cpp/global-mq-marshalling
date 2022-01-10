@@ -28,6 +28,7 @@ PUBLISHABLE publishable_sample=2 {
 	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
 	STRUCT StructWithVectorOfInt structWithVectorOfInt;
 	STRUCT StructWithVectorOfSize structWithVectorOfSize;
+	DISCRIMINATED_UNION du_one du_one_instance;
 };
 
 SCOPE scope_one PROTO = JSON;
@@ -91,11 +92,11 @@ STRUCT Line{
 };
 
 STRUCT ObstacleMap{
-	VECTOR<STRUCT PolygonMap> obstacleMap;
+	VECTOR<STRUCT PolygonMap> _ObstacleMap;
 };
 
 STRUCT PolygonMap{
-	VECTOR<STRUCT NONEXTENDABLE Vertex> polygonMap;
+	VECTOR<STRUCT NONEXTENDABLE Vertex> _PolygonMap;
 };
 
 STRUCT NONEXTENDABLE Vertex{
@@ -148,8 +149,43 @@ MESSAGE NONEXTENDABLE infrastructural:point=4 {
   STRUCT point pt;
 };
 
-MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
-  STRUCT point3D pt;
+DISCRIMINATED_UNION du_one {
+	CASE one=1: { 
+		STRUCT point3D pt3d_1;
+		INTEGER i_1;
+	}
+	CASE two=2: { 
+		INTEGER i_2;
+		VECTOR<REAL> vp_2;
+	}
 };
 
+MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
+  STRUCT point3D pt;
+  DISCRIMINATED_UNION du_one du_one_instance;
+};
+
+
+PUBLISHABLE publishable_html_tag=3 {
+	STRUCT HtmlTag tag;
+};
+
+STRUCT Property {
+  CHARACTER-STRING name;
+  CHARACTER-STRING value;
+};
+
+STRUCT HtmlTag {
+	VECTOR<STRUCT Property> properties;
+	DISCRIMINATED_UNION HtmlTextOrTags tags;
+};
+
+DISCRIMINATED_UNION HtmlTextOrTags {
+	CASE text=21: { 
+		CHARACTER-STRING str;
+	}
+	CASE taglists=22: { 
+		VECTOR<STRUCT HtmlTag> tags;
+	}
+};
 

@@ -78,6 +78,8 @@ int createToken(int token)
 	"MESSAGE" { return createToken( KW_MESSAGE ); }
 	"PUBLISHABLE" { return createToken( KW_PUBLISHABLE ); }
 	"STRUCT" { return createToken( KW_STRUCT ); }
+	"DISCRIMINATED_UNION" { return createToken( KW_DISCRIMINATED_UNION ); }
+	"CASE" { return createToken( KW_CASE ); }
 	"EXTENSION" { return createToken( KW_EXTENSION ); }
 	"NONEXTENDABLE" { return createToken( KW_NONEXTENDABLE ); }
 	"enum" { return createToken( KW_ENUM ); }

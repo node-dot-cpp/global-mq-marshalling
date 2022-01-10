@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 #include "../include/idl_tree_serializer.h"
 
 #include "global_mq_parser_helper.h"
-#include "../include/parser.h"
+#include "../include/idl_parser.h"
 #include "lex.h"
 
 #include <climits>
@@ -495,6 +495,17 @@ YYSTYPE addStructToFile(YYSTYPE file, YYSTYPE item)
 	return 0;
 }
 
+YYSTYPE addDiscriminatedUnionToFile(YYSTYPE file, YYSTYPE item)
+{
+	GLOBALMQASSERT(!file);
+	unique_ptr<YyBase> d0(item);
+
+	CompositeType* s = releasePointedFromYyPtr<CompositeType>(item);
+	currentRoot->structs.push_back(unique_ptr<CompositeType>(s));
+
+	return 0;
+}
+
 void processLineDirective(YYSTYPE line_number, YYSTYPE file_name)
 {
 	unique_ptr<YyBase> d0(line_number);
@@ -522,14 +533,32 @@ YYSTYPE addToCompositeType(YYSTYPE decl, YYSTYPE attr)
 
 	MessageParameter* a = releasePointedFromYyPtr<MessageParameter>(attr);
 
-	yy->members.push_back(unique_ptr<MessageParameter>(a));
+	yy->getMembers().push_back(unique_ptr<MessageParameter>(a));
 
 	return d0.release();
 }
 
+
+// these have members
 YYSTYPE addToMessage(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
 YYSTYPE addToPublishable(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
 YYSTYPE addToStruct(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
+YYSTYPE addToDiscriminatedUnionCase(YYSTYPE decl, YYSTYPE attr) { return addToCompositeType(decl, attr); }
+
+// this one hase cases
+YYSTYPE addToDiscriminatedUnion(YYSTYPE decl, YYSTYPE attr)
+{
+	unique_ptr<YyBase> d0(decl);
+	unique_ptr<YyBase> d1(attr);
+
+	CompositeType* yy = getPointedFromYyPtr<CompositeType>(decl);
+
+	CompositeType* a = releasePointedFromYyPtr<CompositeType>(attr);
+
+	yy->getDiscriminatedUnionCases().push_back(unique_ptr<CompositeType>(a));
+
+	return d0.release();
+}
 
 
 static
@@ -563,7 +592,7 @@ YYSTYPE insertExtensionMarker(YYSTYPE decl)
 	CompositeType* yy = getPointedFromYyPtr<CompositeType>(decl);
 	MessageParameter* extension = new MessageParameter();
 	extension->type.kind = MessageParameterType::KIND::EXTENSION;
-	yy->members.push_back(unique_ptr<MessageParameter>(extension));
+	yy->getMembers().push_back(unique_ptr<MessageParameter>(extension));
 
 	return d0.release();
 }
@@ -607,7 +636,7 @@ YYSTYPE impl_createStructOrMessageOrPublishable(YYSTYPE token, CompositeType::Ty
 	return new YyPtr<CompositeType>(yy);
 }
 
-YYSTYPE impl_createMessageOrPublishable(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
+YYSTYPE impl_createMessageOrPublishableOrDUCase(YYSTYPE token, CompositeType::Type type, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
 	unique_ptr<YyBase> d0(numID);
 
@@ -630,7 +659,7 @@ YYSTYPE impl_createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeNam
 {
 	unique_ptr<YyBase> d0(scopeName);
 
-	auto ret = impl_createMessageOrPublishable(token, CompositeType::Type::message, isNonExtendable, id, numID);
+	auto ret = impl_createMessageOrPublishableOrDUCase(token, CompositeType::Type::message, isNonExtendable, id, numID);
 
 	CompositeType* msg = getPointedFromYyPtr<CompositeType>(ret);
 	msg->scopeName = nameFromYyIdentifier( scopeName );
@@ -645,12 +674,22 @@ YYSTYPE createMessage(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YY
 
 YYSTYPE createPublishable(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
 {
-	return impl_createMessageOrPublishable(token, CompositeType::Type::publishable, isNonExtendable, id, numID);
+	return impl_createMessageOrPublishableOrDUCase(token, CompositeType::Type::publishable, isNonExtendable, id, numID);
 }
 
 YYSTYPE createStruct(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
 {
 	return impl_createStructOrMessageOrPublishable(token, CompositeType::Type::structure, isNonExtendable, id);
+}
+
+YYSTYPE createDiscriminatedUnionCase(YYSTYPE token, bool isNonExtendable, YYSTYPE id, YYSTYPE numID)
+{
+	return impl_createMessageOrPublishableOrDUCase(token, CompositeType::Type::discriminated_union_case, isNonExtendable, id, numID);
+}
+
+YYSTYPE createDiscriminatedUnion(YYSTYPE token, bool isNonExtendable, YYSTYPE id)
+{
+	return impl_createStructOrMessageOrPublishable(token, CompositeType::Type::discriminated_union, isNonExtendable, id);
 }
 
 YYSTYPE createMessageAlias(YYSTYPE token, bool isNonExtendable, YYSTYPE scopeName, YYSTYPE id, YYSTYPE numID, YYSTYPE structId)
@@ -964,6 +1003,11 @@ YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE structName, bool nonext
 	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::STRUCT);
 }
 
+YYSTYPE createVectorOfDiscriminatedUnionsType(YYSTYPE token, YYSTYPE structName, bool nonext, bool hasDefault)
+{
+	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::DISCRIMINATED_UNION);
+}
+
 YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
 {
 	unique_ptr<YyBase> d0(token);
@@ -981,6 +1025,11 @@ YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE composi
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName)
 {
 	return createCompositeType(token, isNonExtendable, structName, MessageParameterType::STRUCT);
+}
+
+YYSTYPE createDiscriminatedUnionType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName)
+{
+	return createCompositeType(token, isNonExtendable, structName, MessageParameterType::DISCRIMINATED_UNION);
 }
 
 YYSTYPE createInlineEnum(YYSTYPE token, YYSTYPE opt_id, YYSTYPE values)

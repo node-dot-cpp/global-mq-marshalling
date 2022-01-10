@@ -79,7 +79,8 @@ namespace {
 	void csharpMsg_generateComposeParamTypeLIst(FILE* header, CompositeType& s)
 	{
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -88,7 +89,7 @@ namespace {
 				continue;
 			++count;
 
-			if (it != s.members.begin())
+			if (it != mem.begin())
 				fprintf(header, ", ");
 
 			switch (param.type.kind)
@@ -124,7 +125,8 @@ namespace {
 	void csharpMsg_generateParseParamTypeLIst(FILE* header, CompositeType& s)
 	{
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -133,7 +135,7 @@ namespace {
 				continue;
 			++count;
 
-			if (it != s.members.begin())
+			if (it != mem.begin())
 				fprintf(header, ", ");
 
 
@@ -170,7 +172,8 @@ namespace {
 	void csharpMsg_generateCallerParamTypeLIst(FILE* header, CompositeType& s, bool useRef)
 	{
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -179,7 +182,7 @@ namespace {
 				continue;
 			++count;
 
-			if (it != s.members.begin())
+			if (it != mem.begin())
 				fprintf(header, ", ");
 
 			using KIND = MessageParameterType::KIND;
@@ -211,7 +214,8 @@ namespace {
 		fprintf(header, ")\n\t{\n");
 
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -268,7 +272,7 @@ namespace {
 		fprintf(header, ")\n\t{\n");
 
 		int count = 0;
-		for (auto& it : s.members)
+		for (auto& it : s.getMembers())
 		{
 			assert(it != nullptr);
 
@@ -324,7 +328,8 @@ namespace {
 
 		fprintf(header, "\t\tcomposer.append( \"{\\n  \");\n");
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -333,7 +338,7 @@ namespace {
 				continue;
 			++count;
 
-			if(it != s.members.begin())
+			if(it != mem.begin())
 				fprintf(header, "\t\tcomposer.append( \",\\n  \" );\n");
 
 
@@ -398,7 +403,8 @@ namespace {
 		fprintf(header, "\t\t\tparser.readKeyFromJson( out key );\n");
 
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -474,7 +480,8 @@ namespace {
 		//csharpMsg_generateParamCallBlockForComposingGmq(header, s, "\t");
 
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -483,7 +490,7 @@ namespace {
 				continue;
 			++count;
 
-			if(it != s.members.begin())
+			if(it != mem.begin())
 				fprintf(header, ",\n");
 
 			switch (param.type.kind)
@@ -548,7 +555,8 @@ namespace {
 			"\t\tparse(parser,\n", s.name.c_str(), s.name.c_str());
 
 		int count = 0;
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			assert(*it != nullptr);
 
@@ -557,7 +565,7 @@ namespace {
 				continue;
 			++count;
 
-			if (it != s.members.begin())
+			if (it != mem.begin())
 				fprintf(header, ",\n");
 
 			switch (param.type.kind)
@@ -701,9 +709,10 @@ namespace {
 		//fprintf(header, "struct %s\n", s.name.c_str());
 		//fprintf(header, "{\n");
 
-		for (size_t i = 0; i < s.members.size(); ++i)
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
 		{
-			auto& it = s.members[i];
+			auto& it = mem[i];
 			assert(it != nullptr);
 			auto& member = *it;
 			switch (member.type.kind)
@@ -785,13 +794,14 @@ namespace {
 			"\t{\n"
 			"\t\treturn\n", s.name.c_str());
 
-		for (auto it = s.members.begin(); it != s.members.end(); ++it)
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
 		{
 			//auto& it = s.members[i];
 			assert(*it != nullptr);
 			auto& member = **it;
 
-			if(it != s.members.begin())
+			if(it != mem.begin())
 				fprintf(header, " &&\n");
 
 
@@ -999,7 +1009,7 @@ namespace {
 		{
 			for (auto& s : structs)
 				if (s->dependsOnCnt != -1)
-					for (auto& member : s->members)
+					for (auto& member : s->getMembers())
 						if (member->type.kind == MessageParameterType::KIND::STRUCT)
 							structs[member->type.messageIdx]->dependsOnCnt = 1;
 			for (auto& s : structs)

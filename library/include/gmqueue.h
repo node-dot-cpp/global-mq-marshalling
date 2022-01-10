@@ -282,6 +282,16 @@ void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& 
 
 struct GmqPathHelper
 {
+	/*
+		(global)
+		globalmq://example.com/node23?sp=pub1
+		sp stands for State Publisher 
+		or (another global, with different - future - resolution)
+		globalmq://ourname!gmq:4567/somenode?sp=somepub 
+		!gmq is a non-standard extension which means we'll resolve the name using our own means
+		or (local)
+		globalmq:/lobbynode?sp=worldlist
+	*/
 	struct PathComponents
 	{
 		PublishableStateMessageHeader::MsgType type = PublishableStateMessageHeader::MsgType::undefined;
@@ -355,7 +365,7 @@ struct GmqPathHelper
 				size_t port = strtol( components.authority.c_str() + pos1 + 1, &end, 10 );
 				if ( components.authority.c_str() + pos1 + 1 == end )
 					return false;
-				if ( end - components.authority.c_str() < components.authority.size() ) // there are remaining chars
+				if ( end < components.authority.c_str() + components.authority.size() ) // there are remaining chars
 					return false;
 				if ( port >= UINT16_MAX )
 					return false;
@@ -474,8 +484,8 @@ struct SlotIdx
 	size_t idx = invalid_idx;
 	uint64_t reincarnation = invalid_reincarnation;
 	bool isInitialized() { return idx != invalid_idx && reincarnation != invalid_reincarnation; }
-	bool operator == ( const SlotIdx& other ) { return idx == other.idx && reincarnation == other.reincarnation; }
-	bool operator != ( const SlotIdx& other ) { return idx != other.idx || reincarnation != other.reincarnation; }
+	bool operator == ( const SlotIdx& other ) const { return idx == other.idx && reincarnation == other.reincarnation; }
+	bool operator != ( const SlotIdx& other ) const { return idx != other.idx || reincarnation != other.reincarnation; }
 	void invalidate() { idx = invalid_idx; reincarnation = invalid_reincarnation; }
 };
 

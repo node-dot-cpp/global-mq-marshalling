@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include <parser.h>
+#include <idl_parser.h>
 #include <idl_tree_serializer.h>
 #include "idl_tree_2_csharp.h"
 
@@ -120,7 +120,7 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	try
+//	try
 	{
 		uint32_t chksm = idlFileChecksum( idlPath );
 		Root* root = parseSourceFile(idlPath, false);
@@ -137,10 +137,10 @@ int main( int argc, char *argv[] )
 			generateCsharp(csharpFile.c_str(), chksm, cs_file, metascope.c_str(), platformPrefix, classNotifierName, *root);
 		}
 	}
-	catch ( std::exception& x )
+	/*catch ( std::exception& x )
 	{
 		fmt::print( "Exception happened: {}\n", x.what() );
-	}
+	}*/
  
 
 	return 0;

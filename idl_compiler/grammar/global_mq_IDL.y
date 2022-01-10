@@ -30,6 +30,8 @@
 %token KW_MESSAGE
 %token KW_PUBLISHABLE
 %token KW_STRUCT
+%token KW_DISCRIMINATED_UNION
+%token KW_CASE
 %token KW_NONEXTENDABLE
 %token KW_EXTENSION
 %token KW_HASH_LINE
@@ -65,6 +67,7 @@ file : { $$ = 0; }
 	| file message_alias { $$ = addMessageToFile($1, $2); }
 	| file publishable { $$ = addPublishableToFile($1, $2); }
 	| file struct { $$ = addStructToFile($1, $2); }
+	| file discriminated_union { $$ = addDiscriminatedUnionToFile($1, $2); }
 	| file scope { $$ = addScopeToFile($1, $2); }
 ;
 
@@ -121,6 +124,26 @@ struct
 	: struct_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
 ;
 
+discriminated_union_case_begin
+	: KW_CASE IDENTIFIER '=' INTEGER_LITERAL ':' '{' { $$ = createDiscriminatedUnionCase($1, false, $2, $4); releaseYys3($3, $5, $6); }
+	| KW_CASE KW_NONEXTENDABLE IDENTIFIER '=' INTEGER_LITERAL ':' '{' { $$ = createDiscriminatedUnionCase($1, true, $3, $5); releaseYys4($2, $4, $6, $7); }
+	| discriminated_union_case_begin data_type IDENTIFIER ';' { $$ = addToDiscriminatedUnionCase($1, createAttribute($2, $3)); releaseYys($4); }
+;
+
+discriminated_union_case
+	: discriminated_union_case_begin '}' { $$ = $1; releaseYys($2); }
+;
+
+discriminated_union_begin
+	: KW_DISCRIMINATED_UNION IDENTIFIER '{' { $$ = createDiscriminatedUnion($1, false, $2); releaseYys($3); }
+	| KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER '{' { $$ = createDiscriminatedUnion($1, true, $3); releaseYys2($2, $4); }
+	| discriminated_union_begin discriminated_union_case { $$ = addToDiscriminatedUnion($1, $2); }
+;
+
+discriminated_union
+	: discriminated_union_begin '}' ';' { $$ = $1; releaseYys2($2, $3); }
+;
+
 data_type
 	: integer_type
 	| unsigned_integer_type
@@ -131,6 +154,7 @@ data_type
 	| blob_type
 	| vector_type
 	| struct_type
+	| discriminated_union_type
 ;
 
 integer_type
@@ -246,6 +270,8 @@ vector_type
 	| KW_VECTOR '<' KW_BYTE_ARRAY '>' { $$ = createVectorOfByteArrayType($1, false); releaseYys3($2, $3, $4); }
 	| KW_VECTOR '<' KW_STRUCT IDENTIFIER '>' { $$ = createVectorOfStructsType($1, $4, false, false); releaseYys3($2, $3, $5); }
 	| KW_VECTOR '<' KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfStructsType($1, $5, true, false); releaseYys4($2, $3, $4, $6); }
+	| KW_VECTOR '<' KW_DISCRIMINATED_UNION IDENTIFIER '>' { $$ = createVectorOfDiscriminatedUnionsType($1, $4, false, false); releaseYys3($2, $3, $5); }
+	| KW_VECTOR '<' KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createVectorOfDiscriminatedUnionsType($1, $5, true, false); releaseYys4($2, $3, $4, $6); }
 	| KW_VECTOR '<' KW_INTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfIntegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_UINTEGER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfUintegerType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
 	| KW_VECTOR '<' KW_REAL '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfRealType($1, true); releaseYys6($2, $3, $4, $5, $6, $7); }
@@ -255,12 +281,20 @@ vector_type
 	| KW_VECTOR '<' KW_STRUCT IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfStructsType($1, $4, false, true); releaseYys6($2, $3, $5, $6, $7, $8); }
 	| KW_VECTOR '<' KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfStructsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
 	| KW_VECTOR '<' KW_NONEXTENDABLE KW_STRUCT IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfStructsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_DISCRIMINATED_UNION IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfDiscriminatedUnionsType($1, $4, false, true); releaseYys6($2, $3, $5, $6, $7, $8); }
+	| KW_VECTOR '<' KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfDiscriminatedUnionsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
+	| KW_VECTOR '<' KW_NONEXTENDABLE KW_DISCRIMINATED_UNION IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfDiscriminatedUnionsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
 ;
 
 struct_type
 	: KW_STRUCT IDENTIFIER { $$ = createStructType($1, false, $2); }
 	| KW_STRUCT KW_NONEXTENDABLE IDENTIFIER { $$ = createStructType($1, true, $3); releaseYys( $2 );}
 	| KW_NONEXTENDABLE KW_STRUCT IDENTIFIER { $$ = createStructType($2, true, $3); releaseYys( $1 ); }
+
+discriminated_union_type
+	: KW_DISCRIMINATED_UNION IDENTIFIER { $$ = createDiscriminatedUnionType($1, false, $2); }
+	| KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER { $$ = createDiscriminatedUnionType($1, true, $3); releaseYys( $2 );}
+	| KW_NONEXTENDABLE KW_DISCRIMINATED_UNION IDENTIFIER { $$ = createDiscriminatedUnionType($2, true, $3); releaseYys( $1 ); }
 
 blob_type
 	: KW_BLOB { $$ = createBlobType($1); }

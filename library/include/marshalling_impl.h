@@ -125,12 +125,15 @@ template<class value_type_>
 struct VectorOfSympleTypes : public VectorOfSympleTypesBase {static constexpr bool dummy = false; using value_type = value_type_;};
 struct VectorOfMessageType : public VectorType {static constexpr bool dummy = false;};
 struct VectorOfNonextMessageTypesBase : public VectorType {static constexpr bool dummy = false;};
-//template<class value_type_>
-//struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {static constexpr bool dummy = false; using value_type = value_type_;};
 struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {static constexpr bool dummy = false;};
+struct VectorOfDiscriminatedUnionType : public VectorType {static constexpr bool dummy = false;};
+struct VectorOfNonextDiscriminatedUnionTypesBase : public VectorType {static constexpr bool dummy = false;};
+struct VectorOfNonextDiscriminatedUnionTypes : public VectorOfNonextDiscriminatedUnionTypesBase {static constexpr bool dummy = false;};
 struct StructType {static constexpr bool dummy = false;};
 struct MessageType {static constexpr bool dummy = false;};
 struct NonextMessageType : public MessageType {static constexpr bool dummy = false;};
+struct DiscriminatedUnionType {static constexpr bool dummy = false;};
+struct NonextDiscriminatedUnionType : public MessageType {static constexpr bool dummy = false;};
 
 struct NoDefaultValueType {static constexpr bool dummy = false;};
 // helper types

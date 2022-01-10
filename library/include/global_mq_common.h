@@ -74,7 +74,7 @@ namespace globalmq::marshalling {
 			size_t directlyAvailableSize() { return begin != nullptr ? end - begin : 0; }
 			const uint8_t* directRead( size_t sz ) { 
 				if ( begin != nullptr ) { 
-					assert( sz <= end - begin ); 
+					assert( end >= begin && sz <= static_cast<size_t>(end - begin) ); 
 					auto ret = begin; 
 					begin += sz; 
 					currentOffset += sz;
@@ -97,7 +97,8 @@ namespace globalmq::marshalling {
 			{
 				if ( begin )
 				{
-					size = size <= (end - begin ) ? size : end - begin;
+					assert( end >= begin ); 
+					size = size <= static_cast<size_t>(end - begin) ? size : static_cast<size_t>(end - begin);
 					memcpy( buff, begin, size );
 					begin += size;
 				}
@@ -109,7 +110,8 @@ namespace globalmq::marshalling {
 			{
 				if ( begin )
 				{
-					size = size <= (end - begin ) ? size : end - begin;
+					assert( end >= begin ); 
+					size = size <= static_cast<size_t>(end - begin) ? size : static_cast<size_t>(end - begin);
 					begin += size;
 					currentOffset += size;
 				}

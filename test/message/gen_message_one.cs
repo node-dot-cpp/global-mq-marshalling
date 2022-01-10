@@ -16,9 +16,9 @@ namespace mtest
 
 //**********************************************************************
 // STRUCT "point3D" Targets: JSON GMQ (3 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
-// 3. INTEGER z (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
+//  3. INTEGER z (REQUIRED)
 //**********************************************************************
 
 public class point3D : IEquatable<point3D>
@@ -144,8 +144,8 @@ public class point3D : IEquatable<point3D>
 
 //**********************************************************************
 // STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
-// 1. INTEGER x (REQUIRED)
-// 2. INTEGER y (REQUIRED)
+//  1. INTEGER x (REQUIRED)
+//  2. INTEGER y (REQUIRED)
 //**********************************************************************
 
 public class point : IEquatable<point>
@@ -260,16 +260,16 @@ public class point : IEquatable<point>
 
 //**********************************************************************
 // STRUCT "message_one" Targets: JSON GMQ (10 parameters)
-// 1. INTEGER firstParam (REQUIRED)
-// 2. VECTOR<INTEGER> secondParam (REQUIRED)
-// 3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
-// 4. UINTEGER forthParam (REQUIRED)
-// 5. CHARACTER_STRING fifthParam (REQUIRED)
-// 6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
-// 7. REAL seventhParam (REQUIRED)
-// 8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
-// 9. STRUCT point3D ninethParam (REQUIRED)
-// 10. VECTOR<REAL> tenthParam (REQUIRED)
+//  1. INTEGER firstParam (REQUIRED)
+//  2. VECTOR<INTEGER> secondParam (REQUIRED)
+//  3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
+//  4. UINTEGER forthParam (REQUIRED)
+//  5. CHARACTER_STRING fifthParam (REQUIRED)
+//  6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
+//  7. REAL seventhParam (REQUIRED)
+//  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
+//  9. STRUCT point3D ninethParam (REQUIRED)
+//  10. VECTOR<REAL> tenthParam (REQUIRED)
 //**********************************************************************
 
 public class message_one : IEquatable<message_one>
@@ -518,7 +518,7 @@ public class test_gmq
 	}
 
 //**********************************************************************
-// MESSAGE "point3D_alias" Targets: GMQ (Alias of point3D)
+// MESSAGE "point3D_alias" Targets: GMQ (0 parameters)
 //**********************************************************************
 
 public class point3D_alias : point3D
@@ -571,7 +571,7 @@ public static UInt64 MsgId = 1;
 } // class point3D_alias
 
 //**********************************************************************
-// MESSAGE "message_one_gmq" Targets: GMQ (Alias of message_one)
+// MESSAGE "message_one_gmq" Targets: GMQ (0 parameters)
 //**********************************************************************
 
 public class message_one_gmq : message_one
@@ -639,7 +639,7 @@ public class test_json
 	}
 
 //**********************************************************************
-// MESSAGE "point_alias" Targets: JSON (Alias of point)
+// MESSAGE "point_alias" Targets: JSON (0 parameters)
 //**********************************************************************
 
 public class point_alias : point
@@ -692,7 +692,7 @@ public static UInt64 MsgId = 2;
 } // class point_alias
 
 //**********************************************************************
-// MESSAGE "message_one_json" Targets: JSON (Alias of message_one)
+// MESSAGE "message_one_json" Targets: JSON (0 parameters)
 //**********************************************************************
 
 public class message_one_json : message_one

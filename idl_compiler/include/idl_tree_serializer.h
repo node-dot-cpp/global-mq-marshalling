@@ -53,12 +53,12 @@ struct FloatingParts
 const char* impl_kindToString( MessageParameterType::KIND kind );
 bool impl_checkParamNameUniqueness(CompositeType& s);
 bool impl_checkFollowingExtensionRules(CompositeType& s);
-void impl_CollectParamNamesFromMessage( std::set<string>& params, CompositeType& s );
+void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
 bool impl_processScopes( Root& r );
 void impl_generateScopeHandler( FILE* header, Scope& scope );
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope );
 void impl_generateScopeComposer( FILE* header, Scope& scope );
-bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack );
+bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack, bool isCollectionElementType = false );
 string paramNameToNameTagType( string name );
 void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj );
 void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj );
@@ -71,6 +71,22 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 //mb exported to be used from C#
 void impl_insertScopeList(FILE* header, Root& r);
 void impl_generateMessageCommentBlock(FILE* header, CompositeType& s);
+inline
+std::string impl_discriminatedUnionCaseMemberType( MessageParameter member ) { return fmt::format( "Case_{}_{}_T", member.caseName, member.name ); }
+
+inline
+std::string impl_memberOrAccessFunctionName( const MessageParameter& member ) { return fmt::format( member.duCaseParam ? "{}()" : "{}", member.name ); }
+
+inline
+std::string impl_templateMemberTypeName( std::string templateParentName, const MessageParameter& member, bool noTypeNameAppending = false ) {
+	if ( member.duCaseParam )
+		return fmt::format( "{}{}::{}", noTypeNameAppending ? "" : "typename ", templateParentName, impl_discriminatedUnionCaseMemberType( member ) );
+	else
+		return fmt::format( "decltype({}::{})", templateParentName, member.name );
+}
+
+void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj );
+
 
 // printing global_mq tree
 void printRoot( Root& s );
@@ -79,11 +95,13 @@ void printScope( Scope& s, size_t offset );
 void printMessage( CompositeType& s, size_t offset );
 void printPublishable( CompositeType& s, size_t offset );
 void printStruct( CompositeType& s, size_t offset );
+void printDiscriminatedUnionCase( CompositeType& s, size_t offset );
 
 void printMessageParameter( MessageParameter& s, size_t offset );
 void printMessageMembers( CompositeType& s, size_t offset );
 void printPublishableMembers( CompositeType& s, size_t offset );
 void printStructMembers( CompositeType& s, size_t offset );
+void printDiscriminatedUnionCases( CompositeType& s, size_t offset );
 void printLimit( Limit& s, size_t offset );
 void printLocation( Location& s, size_t offset );
 void printDataType( MessageParameterType& s, size_t offset );
@@ -92,6 +110,7 @@ void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_MessageParameter( unique_ptr<MessageParameter>& s, size_t offset );
+void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, size_t offset );
 
 void printDataType( MessageParameterType& s );
 void printLimit( Limit& s );
@@ -100,10 +119,9 @@ void printVariant( Variant& s );
 // code generation
 void preprocessRoot(Root& s);
 void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
-void generateMessage( FILE* header, CompositeType& s );
+void generateMessage( FILE* header, Root& root, CompositeType& s );
 void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
-void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s );
-void generateMessageAlias( FILE* header, CompositeType& s );
+void generateMessageAlias( FILE* header, Root& root, CompositeType& s );
 void generateMessageParameter( FILE* header, MessageParameter& s );
 void generateMessageMembers( FILE* header, CompositeType& s );
 void generateLimit( FILE* header, Limit& s );

@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -100,7 +100,7 @@ void printMessage( CompositeType& s, size_t offset )
 			case Proto::json: printf( "JSON " ); break;
 			default: assert( false );
 		}
-	printf( "(%zd parameters) {\n", s.members.size() );
+	printf( "(%zd parameters) {\n", s.getMembers().size() );
 	printMessageMembers( s, offset + 4 );
 	printf( "%s}\n", offsetch );
 }
@@ -113,7 +113,7 @@ void printPublishable( CompositeType& s, size_t offset )
 	offsetch[ offset ] = 0;
 
 	printf( "%sPublishabe: name = \"%s\"(%lld)", offsetch, s.name.c_str(), s.numID );
-	printf( "(%zd members) {\n", s.members.size() );
+	printf( "(%zd members) {\n", s.getMembers().size() );
 	printPublishableMembers( s, offset + 4 );
 	printf( "%s}\n", offsetch );
 }
@@ -125,8 +125,31 @@ void printStruct( CompositeType& s, size_t offset )
 	memset( offsetch, ' ', offset );
 	offsetch[ offset ] = 0;
 
-	printf( "%sStruct: name = \"%s\"", offsetch, s.name.c_str() );
-	printf( "(%zd members) {\n", s.members.size() );
+	if ( s.isDiscriminatedUnion() )
+	{
+		printf( "%sDiscriminatedUnion: name = \"%s\"", offsetch, s.name.c_str() );
+		printf( "(%zd cases) {\n", s.getDiscriminatedUnionCases().size() );
+		printDiscriminatedUnionCases( s, offset + 4 );
+		printf( "%s}\n", offsetch );
+	}
+	else
+	{
+		printf( "%sStruct: name = \"%s\"", offsetch, s.name.c_str() );
+		printf( "(%zd members) {\n", s.getMembers().size() );
+		printStructMembers( s, offset + 4 );
+		printf( "%s}\n", offsetch );
+	}
+}
+
+
+void printDiscriminatedUnionCase( CompositeType& s, size_t offset )
+{
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
+
+	printf( "%sDU_Case: name = \"%s\"(%lld)", offsetch, s.name.c_str(), s.numID );
+	printf( "(%zd members) {\n", s.getMembers().size() );
 	printStructMembers( s, offset + 4 );
 	printf( "%s}\n", offsetch );
 }
@@ -134,7 +157,7 @@ void printStruct( CompositeType& s, size_t offset )
 
 void printMessageMembers( CompositeType& s, size_t offset )
 {
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		auto& obj_1 = it;
 		print__unique_ptr_MessageParameter( obj_1, offset + 4 );
@@ -144,7 +167,7 @@ void printMessageMembers( CompositeType& s, size_t offset )
 
 void printPublishableMembers( CompositeType& s, size_t offset )
 {
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		auto& obj_1 = it;
 		print__unique_ptr_MessageParameter( obj_1, offset + 4 );
@@ -154,7 +177,7 @@ void printPublishableMembers( CompositeType& s, size_t offset )
 
 void printStructMembers( CompositeType& s, size_t offset )
 {
-	for ( auto& it : s.members )
+	for ( auto& it : s.getMembers() )
 	{
 		auto& obj_1 = it;
 		print__unique_ptr_MessageParameter( obj_1, offset + 4 );
@@ -200,10 +223,34 @@ void printMessageParameter( MessageParameter& s, size_t offset )
 	else
 		assert( s.defaultValue.kind == Variant::KIND::NONE );
 
-	if ( s.whenDiscriminant.size() )
+	/*if ( s.whenDiscriminant.size() )
 		printf( "\" whenDiscriminant: %zd\n", s.whenDiscriminant.size() );
-	else
+	else*/
 		printf( "\"\n" );
+}
+
+
+void printDiscriminatedUnionCases( CompositeType& s, size_t offset )
+{
+	for ( auto& it : s.getDiscriminatedUnionCases() )
+	{
+		auto& obj_1 = it;
+		print__unique_ptr_DiscriminatedUnionCase( obj_1, offset + 4 );
+	}
+}
+
+
+void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, size_t offset )
+{
+	char offsetch[1024];
+	memset( offsetch, ' ', offset );
+	offsetch[ offset ] = 0;
+	if ( s == nullptr ) 
+	{
+		printf( "%sCase <null> {}\n", offsetch );
+		return;
+	}
+	printDiscriminatedUnionCase( *(dynamic_cast<CompositeType*>(&(*(s)))), offset + 4 );
 }
 
 void printDataType( MessageParameterType& s )
@@ -215,7 +262,7 @@ void printDataType( MessageParameterType& s )
 		else
 			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
-	else if ( s.kind == MessageParameterType::KIND::STRUCT )
+	else if ( s.kind == MessageParameterType::KIND::STRUCT || s.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
 		printf( "%s %s %s", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", s.name.c_str() );
 	}

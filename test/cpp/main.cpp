@@ -5,11 +5,12 @@
 
 int main()
 {
-	runJsonSample();
 	runGmqSample();
+	runJsonSample();
 	testParsingJsonFile();
 	testMessageAliases();
-	//testScopedMessageComposingAndParsing();
+	testScopedMessageComposingAndParsing();
 	// publishableTestOne();
+	publishableTestTwo();
 	//quickTestForGmqParts();
 }
