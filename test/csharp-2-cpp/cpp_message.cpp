@@ -51,39 +51,19 @@ void json2gmq(FILE* input, FILE* output)
 	auto riter = b.getReadIter();
 	mtest::JsonParser<mtest::Buffer> parser(riter);
 
-	int firstParam = -1;
-	int forthParam = -1;
-	std::string fifthParam;
-	std::vector<int> vectorOfNumbers;
-	std::vector<double> vectorOfRealNumbers;
-	std::vector<Point> vectorOfPoints;
-	std::vector<Point3D> vectorOfPoints3D;
-	Point pt = { 0, 0 };
-	Point3D pt3D = { 0, 0, 0 };
-	double seventhParam = 0;
-	mtest::STRUCT_message_one_parse(parser,
-		mtest::firstParam = &firstParam, mtest::forthParam = &forthParam,
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(vectorOfNumbers),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(vectorOfRealNumbers),
-		mtest::thirdParam = mtest::CollectionWrapperForParsing(nullptr, [&](auto& p, size_t ordinal) { Point3D pt; mtest::STRUCT_point3D_parse(p, mtest::x = &(pt.x), mtest::y = &(pt.y), mtest::z = &(pt.z)); vectorOfPoints3D.push_back(pt); }),
-		mtest::sixthParam = mtest::CollectionWrapperForParsing([&](size_t sz) {vectorOfPoints.reserve(sz); }, [&](auto& p, size_t ordinal) { Point pt; mtest::STRUCT_point_parse(p, mtest::x = &(pt.x), mtest::y = &(pt.y)); vectorOfPoints.push_back(pt); }),
-		mtest::eighthParam = mtest::MessageWrapperForParsing([&](auto& parser) { mtest::STRUCT_point_parse(parser, mtest::x = &(pt.x), mtest::y = &(pt.y)); }),
-		mtest::ninethParam = mtest::MessageWrapperForParsing([&](auto& parser) { mtest::STRUCT_point3D_parse(parser, mtest::x = &(pt3D.x), mtest::y = &(pt3D.y), mtest::z = &(pt3D.z)); }),
-		mtest::fifthParam = &fifthParam, mtest::seventhParam = &seventhParam);
-
-
+	auto msg = mtest::test_json::MESSAGE_message_one_json_parse(parser);
 
 	mtest::Buffer bOut;
 	mtest::GmqComposer composer(bOut);
 
 	mtest::STRUCT_message_one_compose(composer,
-		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = vectorOfPoints3D[ordinal].x, mtest::y = vectorOfPoints3D[ordinal].y, mtest::z = vectorOfPoints3D[ordinal].z); }),
-		mtest::firstParam = 1, mtest::fifthParam = "def", mtest::forthParam = 3, mtest::seventhParam = 3.1416,
-		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = pt.x, mtest::y = pt.y); }),
-		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z); }),
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(vectorOfNumbers),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(vectorOfRealNumbers),
-		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y); })
+		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
+		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
+		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
+		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
+		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
 	);
 
 	bOut.write_file(output);
@@ -99,39 +79,19 @@ void gmq2json(FILE* input, FILE* output)
 	auto riter = b.getReadIter();
 	mtest::GmqParser<mtest::Buffer> parser(riter);
 
-	int firstParam = -1;
-	int forthParam = -1;
-	std::string fifthParam;
-	std::vector<int> vectorOfNumbers;
-	std::vector<double> vectorOfRealNumbers;
-	std::vector<Point> vectorOfPoints;
-	std::vector<Point3D> vectorOfPoints3D;
-	Point pt = { 0, 0 };
-	Point3D pt3D = { 0, 0, 0 };
-	double seventhParam = 0;
-	mtest::STRUCT_message_one_parse(parser,
-		mtest::firstParam = &firstParam, mtest::forthParam = &forthParam,
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(vectorOfNumbers),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(vectorOfRealNumbers),
-		mtest::thirdParam = mtest::CollectionWrapperForParsing(nullptr, [&](auto& p, size_t ordinal) { Point3D pt; mtest::STRUCT_point3D_parse(p, mtest::x = &(pt.x), mtest::y = &(pt.y), mtest::z = &(pt.z)); vectorOfPoints3D.push_back(pt); }),
-		mtest::sixthParam = mtest::CollectionWrapperForParsing([&](size_t sz) {vectorOfPoints.reserve(sz); }, [&](auto& p, size_t ordinal) { Point pt; mtest::STRUCT_point_parse(p, mtest::x = &(pt.x), mtest::y = &(pt.y)); vectorOfPoints.push_back(pt); }),
-		mtest::eighthParam = mtest::MessageWrapperForParsing([&](auto& parser) { mtest::STRUCT_point_parse(parser, mtest::x = &(pt.x), mtest::y = &(pt.y)); }),
-		mtest::ninethParam = mtest::MessageWrapperForParsing([&](auto& parser) { mtest::STRUCT_point3D_parse(parser, mtest::x = &(pt3D.x), mtest::y = &(pt3D.y), mtest::z = &(pt3D.z)); }),
-		mtest::fifthParam = &fifthParam, mtest::seventhParam = &seventhParam);
-
-
+	auto msg = mtest::test_gmq::MESSAGE_message_one_gmq_parse(parser);
 
 	mtest::Buffer bOut;
 	mtest::JsonComposer composer(bOut);
 
 	mtest::STRUCT_message_one_compose(composer,
-		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return vectorOfPoints3D.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = vectorOfPoints3D[ordinal].x, mtest::y = vectorOfPoints3D[ordinal].y, mtest::z = vectorOfPoints3D[ordinal].z); }),
-		mtest::firstParam = 1, mtest::fifthParam = "def", mtest::forthParam = 3, mtest::seventhParam = 3.1416,
-		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = pt.x, mtest::y = pt.y); }),
-		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = pt3D.x, mtest::y = pt3D.y, mtest::z = pt3D.z); }),
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(vectorOfNumbers),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(vectorOfRealNumbers),
-		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return vectorOfPoints.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = vectorOfPoints[ordinal].x, mtest::y = vectorOfPoints[ordinal].y); })
+		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
+		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
+		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
+		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
+		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
 	);
 
 	bOut.write_file(output);
