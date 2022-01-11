@@ -886,15 +886,34 @@ void publishableTestTwo()
 
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT> htmlTagWrapperSlave1( mp );
 	htmlTagWrapperSlave1.subscribe( path );
+
+	constexpr size_t maxMsg = 1000;
+	ThreadQueueItem<StatePublisherSubscriberPoolInfo::BufferT> messages[maxMsg];
+
+	mp.postAllUpdates();
+	size_t msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
+
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave2( mp, node );
 	htmlTagWrapperSlave2.subscribe( path );
+
+	mp.postAllUpdates();
+	msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
+
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave3( mp, node );
 	htmlTagWrapperSlave3.subscribe( path );
 
 	mp.postAllUpdates();
-	constexpr size_t maxMsg = 1000;
-	ThreadQueueItem<StatePublisherSubscriberPoolInfo::BufferT> messages[maxMsg];
-	size_t msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	msgCnt = queue.pop_front( messages, maxMsg, 0 );
 	for ( size_t i=0; i<msgCnt; ++i )
 	{
 //		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
@@ -926,7 +945,8 @@ void publishableTestTwo()
 	mtest::structures::HtmlTag newTag;
 	newTag.properties.push_back( { "some_key", "some_value" } );
 	newTag.tags.initAs( mtest::structures::HtmlTextOrTags::Variants::text );
-	newTag.tags.str() = "def";
+//	newTag.tags.str() = "def";
+	newTag.tags.str() = "\"\t\"\r\n\\\\";
 	g4s_hn_tags.get4set_tags().insert_before( 0, newTag );
 
 	mp.postAllUpdates();

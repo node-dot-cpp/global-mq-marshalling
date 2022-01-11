@@ -9,10 +9,10 @@ public:
 	using BufferT = globalmq::marshalling::Buffer;
 	using ParserT = globalmq::marshalling::JsonParser<BufferT>;
 	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
-	template<class T>
-	using OwningPtrT = ::std::unique_ptr<T>;
 //	using ParserT = globalmq::marshalling::GmqParser<BufferT>;
 //	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
+	template<class T>
+	using OwningPtrT = ::std::unique_ptr<T>;
 //	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
 //	using StatePublisherT = globalmq::marshalling::StatePublisherBase<ComposerT>;
 };
