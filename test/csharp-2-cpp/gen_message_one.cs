@@ -89,7 +89,7 @@ public class point3D : IEquatable<point3D>
 		);
 		return tmp;
 	}
-	private static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	protected static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref x, ref y, ref z);
@@ -98,7 +98,7 @@ public class point3D : IEquatable<point3D>
 		else
 			throw new ArgumentException();
 	}
-	private static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	protected static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -126,7 +126,7 @@ public class point3D : IEquatable<point3D>
 			throw new FormatException(); // bad format
 		}
 	}
-	private static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	protected static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		parser.parseSignedInteger(out x);
 		parser.parseSignedInteger(out y);
@@ -201,7 +201,7 @@ public class point : IEquatable<point>
 		);
 		return tmp;
 	}
-	private static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
+	protected static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref x, ref y);
@@ -210,7 +210,7 @@ public class point : IEquatable<point>
 		else
 			throw new ArgumentException();
 	}
-	private static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
+	protected static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -236,7 +236,7 @@ public class point : IEquatable<point>
 			throw new FormatException(); // bad format
 		}
 	}
-	private static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
+	protected static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
 	{
 		parser.parseSignedInteger(out x);
 		parser.parseSignedInteger(out y);
@@ -375,16 +375,16 @@ public class message_one : IEquatable<message_one>
 				(ParserBase parser, int ordinal) => { point val = point.parse(parser); tmp.sixthParam.Add(val); }),
 			seventhParam: ref tmp.seventhParam,
 			eighthParam: new MessageWrapperForParsing(
-				(ParserBase parser) => { point.parse(parser, out tmp.eighthParam); }),
+				(ParserBase parser) => { tmp.eighthParam = point.parse(parser); }),
 			ninethParam: new MessageWrapperForParsing(
-				(ParserBase parser) => { point3D.parse(parser, out tmp.ninethParam); }),
+				(ParserBase parser) => { tmp.ninethParam = point3D.parse(parser); }),
 			tenthParam: new CollectionWrapperForParsing(
 				() => { tmp.tenthParam = new List<Double>(); },
 				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
 		);
 		return tmp;
 	}
-	private static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
@@ -393,7 +393,7 @@ public class message_one : IEquatable<message_one>
 		else
 			throw new ArgumentException();
 	}
-	private static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
@@ -435,7 +435,7 @@ public class message_one : IEquatable<message_one>
 			throw new FormatException(); // bad format
 		}
 	}
-	private static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		parser.parseSignedInteger(out firstParam);
 		secondParam.parseGmq(parser);
@@ -492,7 +492,7 @@ public static UInt64 MsgId = 1;
 	{
 		point3D.compose(composer, x, y, z);
 	}
-	public new static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	protected new static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		point3D.parse(parser, ref x, ref y, ref z);
 	}
@@ -500,7 +500,7 @@ public static UInt64 MsgId = 1;
 	{
 		point3D.compose(composer, x, y, z);
 	}
-	public new static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	protected new static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		point3D.parse(parser, ref x, ref y, ref z);
 	}
@@ -508,7 +508,7 @@ public static UInt64 MsgId = 1;
 	{
 		point3D.compose(composer, x, y, z);
 	}
-	public new static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
+	protected new static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
 	{
 		point3D.parse(parser, ref x, ref y, ref z);
 	}
@@ -545,7 +545,7 @@ public static UInt64 MsgId = 1;
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected new static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		message_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
@@ -553,7 +553,7 @@ public static UInt64 MsgId = 1;
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected new static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		message_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
@@ -561,7 +561,7 @@ public static UInt64 MsgId = 1;
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected new static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		message_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
@@ -613,7 +613,7 @@ public static UInt64 MsgId = 2;
 	{
 		point.compose(composer, x, y);
 	}
-	public new static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
+	protected new static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
 	{
 		point.parse(parser, ref x, ref y);
 	}
@@ -621,7 +621,7 @@ public static UInt64 MsgId = 2;
 	{
 		point.compose(composer, x, y);
 	}
-	public new static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
+	protected new static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
 	{
 		point.parse(parser, ref x, ref y);
 	}
@@ -629,7 +629,7 @@ public static UInt64 MsgId = 2;
 	{
 		point.compose(composer, x, y);
 	}
-	public new static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
+	protected new static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
 	{
 		point.parse(parser, ref x, ref y);
 	}
@@ -666,7 +666,7 @@ public static UInt64 MsgId = 2;
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected new static void parse(ParserBase parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		message_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
@@ -674,7 +674,7 @@ public static UInt64 MsgId = 2;
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected new static void parse(GmqParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		message_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
@@ -682,7 +682,7 @@ public static UInt64 MsgId = 2;
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
+	protected new static void parse(JsonParser parser, ref Int64 firstParam, ICollectionParse secondParam, ICollectionParse thirdParam, ref UInt64 forthParam, ref String fifthParam, ICollectionParse sixthParam, ref Double seventhParam, IMessageParse eighthParam, IMessageParse ninethParam, ICollectionParse tenthParam)
 	{
 		message_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}

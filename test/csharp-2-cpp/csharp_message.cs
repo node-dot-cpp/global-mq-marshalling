@@ -37,9 +37,7 @@ namespace csharp_message
 			SimpleBuffer buffer = SimpleBuffer.readFromFile(input);
 			JsonParser parser = new JsonParser(buffer.getReadIterator());
 
-			mtest.message_one msg;
-
-			mtest.message_one.parse(parser, out msg);
+			mtest.message_one msg = mtest.message_one.parse(parser);
 
 			SimpleBuffer buffer2 = new SimpleBuffer();
 			GmqComposer composer = new GmqComposer(buffer2);
@@ -49,17 +47,17 @@ namespace csharp_message
 				secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
 				thirdParam: new CollectionWrapperForComposing(
 					() => { return msg.thirdParam.Count; },
-					(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
+					(ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, msg.thirdParam[ordinal].x, msg.thirdParam[ordinal].y, msg.thirdParam[ordinal].z); }),
 				forthParam: msg.forthParam,
 				fifthParam: msg.fifthParam,
 				sixthParam: new CollectionWrapperForComposing(
 					() => { return msg.sixthParam.Count; },
-					(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
+					(ComposerBase composer, int ordinal) => { mtest.point.compose(composer, msg.sixthParam[ordinal].x, msg.sixthParam[ordinal].y); }),
 				seventhParam: msg.seventhParam,
 				eighthParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { point.compose(composer, msg.eighthParam); }),
+					(ComposerBase composer) => { mtest.point.compose(composer, msg.eighthParam.x, msg.eighthParam.y); }),
 				ninethParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { point3D.compose(composer, msg.ninethParam); }),
+					(ComposerBase composer) => { mtest.point3D.compose(composer, msg.ninethParam.x, msg.ninethParam.y, msg.ninethParam.z); }),
 				tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
 			);
 
@@ -71,9 +69,7 @@ namespace csharp_message
 			SimpleBuffer buffer = SimpleBuffer.readFromFile(input);
 			GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-			mtest.message_one msg;
-
-			mtest.message_one.parse(parser, out msg);
+			mtest.message_one msg = mtest.message_one.parse(parser);
 
 			SimpleBuffer buffer2 = new SimpleBuffer();
 			JsonComposer composer = new JsonComposer(buffer2);
@@ -83,17 +79,17 @@ namespace csharp_message
 				secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
 				thirdParam: new CollectionWrapperForComposing(
 					() => { return msg.thirdParam.Count; },
-					(ComposerBase composer, int ordinal) => { point3D.compose(composer, msg.thirdParam[ordinal]); }),
+					(ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, msg.thirdParam[ordinal].x, msg.thirdParam[ordinal].y, msg.thirdParam[ordinal].z); }),
 				forthParam: msg.forthParam,
 				fifthParam: msg.fifthParam,
 				sixthParam: new CollectionWrapperForComposing(
 					() => { return msg.sixthParam.Count; },
-					(ComposerBase composer, int ordinal) => { point.compose(composer, msg.sixthParam[ordinal]); }),
+					(ComposerBase composer, int ordinal) => { mtest.point.compose(composer, msg.sixthParam[ordinal].x, msg.sixthParam[ordinal].y); }),
 				seventhParam: msg.seventhParam,
 				eighthParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { point.compose(composer, msg.eighthParam); }),
+					(ComposerBase composer) => { mtest.point.compose(composer, msg.eighthParam.x, msg.eighthParam.y); }),
 				ninethParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { point3D.compose(composer, msg.ninethParam); }),
+					(ComposerBase composer) => { mtest.point3D.compose(composer, msg.ninethParam.x, msg.ninethParam.y, msg.ninethParam.z); }),
 				tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
 			);
 
