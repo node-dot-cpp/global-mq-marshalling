@@ -101,6 +101,7 @@ namespace globalmq::marshalling {
 					size = size <= static_cast<size_t>(end - begin) ? size : static_cast<size_t>(end - begin);
 					memcpy( buff, begin, size );
 					begin += size;
+					currentOffset += size;
 				}
 				else
 					size = 0;
