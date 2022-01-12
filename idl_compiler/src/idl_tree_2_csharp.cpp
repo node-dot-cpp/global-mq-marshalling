@@ -1395,7 +1395,7 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 		"namespace %s\n"
 		"{\n"
 		"\n"
-		, metascope);
+		, metascope.c_str());
 
 	//addLibAliasingBlock( header );
 
@@ -1538,6 +1538,6 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 	//	}
 	//}
 
-	fprintf( header, "\n} // namespace %s\n\n",	metascope );
+	fprintf( header, "\n} // namespace %s\n\n",	metascope.c_str() );
 }
 
