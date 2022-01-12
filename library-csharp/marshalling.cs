@@ -257,50 +257,50 @@ namespace globalmq.marshalling
 
 
         // mb: delegate can't use ref params, so only IList and not array for parse
-        public static CollectionWrapperForParsing makeParser(IList<sbyte> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { sbyte value; parser.parseSignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<short> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { short value; parser.parseSignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<int> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { int value; parser.parseSignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<long> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { long value; parser.parseSignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<byte> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<ushort> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { ushort value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<uint> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { uint value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<ulong> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { ulong value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<float> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { float value; parser.parseReal(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<double> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { double value; parser.parseReal(out value); coll.Add(value); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<string> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { string value; parser.parseString(out value); coll.Add(value); });
-        }
+        // public static CollectionWrapperForParsing makeParser(IList<sbyte> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { sbyte value; parser.parseSignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<short> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { short value; parser.parseSignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<int> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { int value; parser.parseSignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<long> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { long value; parser.parseSignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<byte> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<ushort> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { ushort value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<uint> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { uint value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<ulong> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { ulong value; parser.parseUnsignedInteger(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<float> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { float value; parser.parseReal(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<double> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { double value; parser.parseReal(out value); coll.Add(value); });
+        // }
+        // public static CollectionWrapperForParsing makeParser(IList<string> coll)
+        // {
+        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { string value; parser.parseString(out value); coll.Add(value); });
+        // }
     };
 
     public interface IMessageCompose

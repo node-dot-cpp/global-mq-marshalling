@@ -1,0 +1,86 @@
+using globalmq.marshalling;
+using System;
+using System.Collections.Generic;
+using Xunit;
+
+namespace TestProject1
+{
+
+    public class TestMessageDu
+    {
+        public static void CreateGmq1()
+        {
+            SimpleBuffer buffer = new SimpleBuffer();
+            GmqComposer composer = new GmqComposer(buffer);
+
+            mtest.test_gmq.message_du.compose(composer,
+                pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: 5, y: 6, z: 7); }),
+                disc_union: new MessageWrapperForComposing((ComposerBase composer) => { mtest.du_one.compose_one(composer, D1: 2.3, D2: 4.5, D3: 6.7); })
+                );
+
+
+            buffer.writeToFile("message_du_1.gmq");
+        }
+
+        public static void CreateGmq2()
+        {
+            SimpleBuffer buffer = new SimpleBuffer();
+            GmqComposer composer = new GmqComposer(buffer);
+
+            mtest.test_gmq.message_du.compose(composer,
+                pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: 5, y: 6, z: 7); }),
+                disc_union: new MessageWrapperForComposing((ComposerBase composer) =>
+                {
+                    mtest.du_one.compose_two(composer,
+Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
+);
+                })
+                );
+
+
+            buffer.writeToFile("message_du_2.gmq");
+        }
+
+
+        private static void TestGmqFile(string fileName)
+        {
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
+            GmqParser parser = new GmqParser(buffer.getReadIterator());
+
+            mtest.test_gmq.message_du msg = mtest.test_gmq.message_du.parse(parser);
+
+            SimpleBuffer buffer2 = new SimpleBuffer();
+            GmqComposer composer = new GmqComposer(buffer2);
+
+
+            mtest.test_gmq.message_du.compose(composer,
+            pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.pt.x, y: msg.pt.y, z: msg.pt.z); }),
+            disc_union: new MessageWrapperForComposing((ComposerBase composer) =>
+            {
+                if (msg.disc_union.currentVariant() == mtest.du_one.Variants.one)
+                    mtest.du_one.compose_one(composer, D1: msg.disc_union.D1, D2: msg.disc_union.D2, D3: msg.disc_union.D3);
+                else if (msg.disc_union.currentVariant() == mtest.du_one.Variants.two)
+                    mtest.du_one.compose_two(composer,
+                        Data: SimpleTypeCollection.makeComposer(msg.disc_union.Data));
+            })
+            );
+ 
+            Assert.Equal(buffer, buffer2);
+        }
+
+        [Fact]
+        public static void TestGmqFile1()
+        {
+            TestGmqFile("message_du_1.gmq");
+        }
+
+        [Fact]
+        public static void TestGmqFile2()
+        {
+            TestGmqFile("message_du_1.gmq");
+        }
+
+
+    }
+
+}

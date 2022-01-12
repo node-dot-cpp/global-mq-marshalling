@@ -15,27 +15,35 @@ namespace mtest
 
 
 //**********************************************************************
-// STRUCT "SIZE" Targets: JSON (3 parameters)
-//  1. REAL X (REQUIRED)
-//  2. REAL Y (REQUIRED)
-//  3. REAL Z (REQUIRED)
+// DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
+//  CASE one (3 parameters)(3 parameters)
+//    1. REAL D1 (REQUIRED)
+//    2. REAL D2 (REQUIRED)
+//    3. REAL D3 (REQUIRED)
+//  CASE two (1 parameters)(1 parameters)
+//    1. VECTOR<REAL> Data (REQUIRED)
 //**********************************************************************
 
-public class SIZE : IEquatable<SIZE>
+public class du_one : IEquatable<du_one>
 {
-	public Double X;
-	public Double Y;
-	public Double Z;
+	public enum Variants { one = 1, two = 2, unknown };
+	Object mem;
+
+public class CASE_one : IEquatable<CASE_one>
+{
+	public Double D1;
+	public Double D2;
+	public Double D3;
 
 	public override bool Equals(object obj)
 	{
-		return obj is SIZE d && Equals(d);
+		return obj is CASE_one d && Equals(d);
 	}
-	public static bool operator ==(SIZE left, SIZE right)
+	public static bool operator ==(CASE_one left, CASE_one right)
 	{
 		return left.Equals(right);
 	}
-	public static bool operator !=(SIZE left, SIZE right)
+	public static bool operator !=(CASE_one left, CASE_one right)
 	{
 		return !(left == right);
 	}
@@ -44,73 +52,73 @@ public class SIZE : IEquatable<SIZE>
 		// TODO
 		throw new InvalidOperationException();
 	}
-	public bool Equals(SIZE other)
+	public bool Equals(CASE_one other)
 	{
-		return
-			this.X == other.X &&
-			this.Y == other.Y &&
-			this.Z == other.Z;
+		return other != null  &&
+			this.D1 == other.D1 &&
+			this.D2 == other.D2 &&
+			this.D3 == other.D3;
 	}
-	public static void compose(ComposerBase composer, Double X, Double Y, Double Z)
+	public static void compose(ComposerBase composer, Double D1, Double D2, Double D3)
 	{
 		if (composer is GmqComposer gmqC)
-			compose(gmqC, X, Y, Z);
+			compose(gmqC, D1, D2, D3);
 		else if (composer is JsonComposer jsonC)
-			compose(jsonC, X, Y, Z);
+			compose(jsonC, D1, D2, D3);
 		else
 			throw new ArgumentException();
 	}
-	public static void compose(JsonComposer composer, Double X, Double Y, Double Z)
+	public static void compose(JsonComposer composer, Double D1, Double D2, Double D3)
 	{
 		composer.append( "{\n  ");
-		composer.addNamePart("X");
-		composer.composeReal(X);
+		composer.addNamePart("D1");
+		composer.composeReal(D1);
 		composer.append( ",\n  " );
-		composer.addNamePart("Y");
-		composer.composeReal(Y);
+		composer.addNamePart("D2");
+		composer.composeReal(D2);
 		composer.append( ",\n  " );
-		composer.addNamePart("Z");
-		composer.composeReal(Z);
+		composer.addNamePart("D3");
+		composer.composeReal(D3);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, Double X, Double Y, Double Z)
+	public static void compose(GmqComposer composer, Double D1, Double D2, Double D3)
 	{
-		composer.composeReal(X);
-		composer.composeReal(Y);
-		composer.composeReal(Z);
+		composer.composeReal(D1);
+		composer.composeReal(D2);
+		composer.composeReal(D3);
 	}
-	public static SIZE parse(ParserBase parser)
+	public static CASE_one parse(ParserBase parser)
 	{
-		SIZE tmp = new SIZE();
+		CASE_one tmp = new CASE_one();
 		parse(parser,
-			X: ref tmp.X,
-			Y: ref tmp.Y,
-			Z: ref tmp.Z
+			D1: ref tmp.D1,
+			D2: ref tmp.D2,
+			D3: ref tmp.D3
 		);
 		return tmp;
 	}
-	protected static void parse(ParserBase parser, ref Double X, ref Double Y, ref Double Z)
+	protected static void parse(ParserBase parser, ref Double D1, ref Double D2, ref Double D3)
 	{
 		if (parser is GmqParser gmqP)
-			parse(gmqP, ref X, ref Y, ref Z);
+			parse(gmqP, ref D1, ref D2, ref D3);
 		else if (parser is JsonParser jsonP)
-			parse(jsonP, ref X, ref Y, ref Z);
+			parse(jsonP, ref D1, ref D2, ref D3);
 		else
 			throw new ArgumentException();
 	}
-	protected static void parse(JsonParser parser, ref Double X, ref Double Y, ref Double Z)
+	protected static void parse(JsonParser parser, ref Double D1, ref Double D2, ref Double D3)
 	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
 			string key;
 			parser.readKeyFromJson( out key );
-			if ( key == "X" )
-				parser.parseReal(out X);
-			else if ( key == "Y" )
-				parser.parseReal(out Y);
-			else if ( key == "Z" )
-				parser.parseReal(out Z);
+			if ( key == "D1" )
+				parser.parseReal(out D1);
+			else if ( key == "D2" )
+				parser.parseReal(out D2);
+			else if ( key == "D3" )
+				parser.parseReal(out D3);
 
 			parser.skipSpacesEtc();
 			if ( parser.isDelimiter( ',' ) )
@@ -126,13 +134,271 @@ public class SIZE : IEquatable<SIZE>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, ref Double X, ref Double Y, ref Double Z)
+	protected static void parse(GmqParser parser, ref Double D1, ref Double D2, ref Double D3)
 	{
-		parser.parseReal(out X);
-		parser.parseReal(out Y);
-		parser.parseReal(out Z);
+		parser.parseReal(out D1);
+		parser.parseReal(out D2);
+		parser.parseReal(out D3);
 	}
-} // class SIZE
+} // class CASE_one
+
+public class CASE_two : IEquatable<CASE_two>
+{
+	public List<Double> Data;
+
+	public override bool Equals(object obj)
+	{
+		return obj is CASE_two d && Equals(d);
+	}
+	public static bool operator ==(CASE_two left, CASE_two right)
+	{
+		return left.Equals(right);
+	}
+	public static bool operator !=(CASE_two left, CASE_two right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(CASE_two other)
+	{
+		return other != null  &&
+			Enumerable.SequenceEqual(this.Data, other.Data);
+	}
+	public static void compose(ComposerBase composer, ICollectionCompose Data)
+	{
+		if (composer is GmqComposer gmqC)
+			compose(gmqC, Data);
+		else if (composer is JsonComposer jsonC)
+			compose(jsonC, Data);
+		else
+			throw new ArgumentException();
+	}
+	public static void compose(JsonComposer composer, ICollectionCompose Data)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("Data");
+		Data.composeJson(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose(GmqComposer composer, ICollectionCompose Data)
+	{
+		Data.composeGmq(composer);
+	}
+	public static CASE_two parse(ParserBase parser)
+	{
+		CASE_two tmp = new CASE_two();
+		parse(parser,
+			Data: new CollectionWrapperForParsing(
+				() => { tmp.Data = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.Data.Add(val); })
+		);
+		return tmp;
+	}
+	protected static void parse(ParserBase parser, ICollectionParse Data)
+	{
+		if (parser is GmqParser gmqP)
+			parse(gmqP, Data);
+		else if (parser is JsonParser jsonP)
+			parse(jsonP, Data);
+		else
+			throw new ArgumentException();
+	}
+	protected static void parse(JsonParser parser, ICollectionParse Data)
+	{
+		parser.skipDelimiter( '{' );
+		while (true)
+		{
+			string key;
+			parser.readKeyFromJson( out key );
+			if ( key == "Data" )
+				Data.parseJson(parser);
+
+			parser.skipSpacesEtc();
+			if ( parser.isDelimiter( ',' ) )
+			{
+				parser.skipDelimiter( ',' );
+				continue;
+			}
+			if ( parser.isDelimiter( '}' ) )
+			{
+				parser.skipDelimiter( '}' );
+				break;
+			}
+			throw new FormatException(); // bad format
+		}
+	}
+	protected static void parse(GmqParser parser, ICollectionParse Data)
+	{
+		Data.parseGmq(parser);
+	}
+} // class CASE_two
+
+	public override bool Equals(object obj)
+	{
+		return obj is du_one d && Equals(d);
+	}
+	public static bool operator ==(du_one left, du_one right)
+	{
+		return left.Equals(right);
+	}
+	public static bool operator !=(du_one left, du_one right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(du_one other)
+	{
+		return other != null && this.mem.Equals(other.mem);
+	}
+	public Variants currentVariant()
+	{
+		if(this.mem == null)
+			return Variants.unknown;
+		else if(this.mem is CASE_one)
+			return Variants.one;
+		else if(this.mem is CASE_two)
+			return Variants.two;
+		else
+			return Variants.unknown;
+	}
+
+	// IDL CASE one:
+	public Double D1
+	{
+		get { return ((CASE_one)this.mem).D1; }
+		set { ((CASE_one)this.mem).D1 = value; }
+	}
+	public Double D2
+	{
+		get { return ((CASE_one)this.mem).D2; }
+		set { ((CASE_one)this.mem).D2 = value; }
+	}
+	public Double D3
+	{
+		get { return ((CASE_one)this.mem).D3; }
+		set { ((CASE_one)this.mem).D3 = value; }
+	}
+
+	// IDL CASE two:
+	public List<Double> Data
+	{
+		get { return ((CASE_two)this.mem).Data; }
+		set { ((CASE_two)this.mem).Data = value; }
+	}
+	public static du_one parse(ParserBase parser)
+	{
+		if (parser is GmqParser gmqP)
+			return parse(gmqP);
+		else if (parser is JsonParser jsonP)
+			return parse(jsonP);
+		else
+			throw new ArgumentException();
+	}
+	protected static du_one parse(JsonParser parser)
+	{
+		du_one val = new du_one();
+
+		parser.skipDelimiter('{');
+		string key;
+		parser.readKeyFromJson( out key );
+		if (key != "caseid")
+			throw new FormatException();
+		Int64 caseID;
+		parser.parseSignedInteger(out caseID);
+		parser.skipSpacesEtc();
+		parser.skipDelimiter(',');
+		parser.readKeyFromJson(out key);
+		if (key != "caseData")
+			throw new FormatException();
+
+		switch ((Variants)caseID)
+		{
+			case Variants.one: val.mem = CASE_one.parse(parser); break;
+			case Variants.two: val.mem = CASE_two.parse(parser); break;
+			default: throw new System.Exception();
+		}
+
+		parser.skipDelimiter('}');
+
+		return val;
+	}
+	protected static du_one parse(GmqParser parser)
+	{
+		du_one val = new du_one();
+
+		Int64 caseID;
+		parser.parseSignedInteger(out caseID);
+
+		switch ((Variants)caseID)
+		{
+			case Variants.one: val.mem = CASE_one.parse(parser); break;
+			case Variants.two: val.mem = CASE_two.parse(parser); break;
+			default: throw new System.Exception();
+		}
+
+		return val;
+	}
+
+	// IDL CASE one:
+	public static void compose_one(ComposerBase composer, Double D1, Double D2, Double D3)
+	{
+		if (composer is GmqComposer gmqC)
+			compose_one(gmqC, D1, D2, D3);
+		else if (composer is JsonComposer jsonC)
+			compose_one(jsonC, D1, D2, D3);
+		else
+			throw new ArgumentException();
+	}
+	public static void compose_one(JsonComposer composer, Double D1, Double D2, Double D3)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("caseid");
+		composer.composeSignedInteger((Int64)Variants.one);
+		composer.append( ",\n  " );
+		composer.addNamePart("caseData");
+		CASE_one.compose(composer, D1, D2, D3);
+		composer.append( "\n}" );
+	}
+	public static void compose_one(GmqComposer composer, Double D1, Double D2, Double D3)
+	{
+		composer.composeSignedInteger((Int64)Variants.one);
+		CASE_one.compose(composer, D1, D2, D3);
+	}
+
+	// IDL CASE two:
+	public static void compose_two(ComposerBase composer, ICollectionCompose Data)
+	{
+		if (composer is GmqComposer gmqC)
+			compose_two(gmqC, Data);
+		else if (composer is JsonComposer jsonC)
+			compose_two(jsonC, Data);
+		else
+			throw new ArgumentException();
+	}
+	public static void compose_two(JsonComposer composer, ICollectionCompose Data)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("caseid");
+		composer.composeSignedInteger((Int64)Variants.two);
+		composer.append( ",\n  " );
+		composer.addNamePart("caseData");
+		CASE_two.compose(composer, Data);
+		composer.append( "\n}" );
+	}
+	public static void compose_two(GmqComposer composer, ICollectionCompose Data)
+	{
+		composer.composeSignedInteger((Int64)Variants.two);
+		CASE_two.compose(composer, Data);
+	}
+} // class du_one
 
 //**********************************************************************
 // STRUCT "point3D" Targets: JSON GMQ (3 parameters)
@@ -166,7 +432,7 @@ public class point3D : IEquatable<point3D>
 	}
 	public bool Equals(point3D other)
 	{
-		return
+		return other != null  &&
 			this.x == other.x &&
 			this.y == other.y &&
 			this.z == other.z;
@@ -284,7 +550,7 @@ public class point : IEquatable<point>
 	}
 	public bool Equals(point other)
 	{
-		return
+		return other != null  &&
 			this.x == other.x &&
 			this.y == other.y;
 	}
@@ -363,804 +629,26 @@ public class point : IEquatable<point>
 	}
 } // class point
 
-//**********************************************************************
-// STRUCT "Vertex" NONEXTENDABLE Targets: GMQ (3 parameters)
-//  1. INTEGER x (REQUIRED)
-//  2. INTEGER y (REQUIRED)
-//  3. INTEGER z (REQUIRED)
-//**********************************************************************
-
-public class Vertex : IEquatable<Vertex>
-{
-	public Int64 x;
-	public Int64 y;
-	public Int64 z;
-
-	public override bool Equals(object obj)
-	{
-		return obj is Vertex d && Equals(d);
-	}
-	public static bool operator ==(Vertex left, Vertex right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(Vertex left, Vertex right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(Vertex other)
-	{
-		return
-			this.x == other.x &&
-			this.y == other.y &&
-			this.z == other.z;
-	}
-	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, x, y, z);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, x, y, z);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, Int64 x, Int64 y, Int64 z)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(y);
-		composer.append( ",\n  " );
-		composer.addNamePart("z");
-		composer.composeSignedInteger(z);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, Int64 x, Int64 y, Int64 z)
-	{
-		composer.composeSignedInteger(x);
-		composer.composeSignedInteger(y);
-		composer.composeSignedInteger(z);
-	}
-	public static Vertex parse(ParserBase parser)
-	{
-		Vertex tmp = new Vertex();
-		parse(parser,
-			x: ref tmp.x,
-			y: ref tmp.y,
-			z: ref tmp.z
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ref Int64 x, ref Int64 y, ref Int64 z)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, ref x, ref y, ref z);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, ref x, ref y, ref z);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "x" )
-				parser.parseSignedInteger(out x);
-			else if ( key == "y" )
-				parser.parseSignedInteger(out y);
-			else if ( key == "z" )
-				parser.parseSignedInteger(out z);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ref Int64 x, ref Int64 y, ref Int64 z)
-	{
-		parser.parseSignedInteger(out x);
-		parser.parseSignedInteger(out y);
-		parser.parseSignedInteger(out z);
-	}
-} // class Vertex
-
-//**********************************************************************
-// STRUCT "PolygonMap" Targets: GMQ (1 parameters)
-//  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
-//**********************************************************************
-
-public class PolygonMap : IEquatable<PolygonMap>
-{
-	public IList<Vertex> _PolygonMap;
-
-	public override bool Equals(object obj)
-	{
-		return obj is PolygonMap d && Equals(d);
-	}
-	public static bool operator ==(PolygonMap left, PolygonMap right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(PolygonMap left, PolygonMap right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(PolygonMap other)
-	{
-		return
-			Enumerable.SequenceEqual(this._PolygonMap, other._PolygonMap);
-	}
-	public static void compose(ComposerBase composer, ICollectionCompose _PolygonMap)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, _PolygonMap);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, _PolygonMap);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, ICollectionCompose _PolygonMap)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("_PolygonMap");
-		_PolygonMap.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, ICollectionCompose _PolygonMap)
-	{
-		_PolygonMap.composeGmq(composer);
-	}
-	public static PolygonMap parse(ParserBase parser)
-	{
-		PolygonMap tmp = new PolygonMap();
-		parse(parser,
-			_PolygonMap: new CollectionWrapperForParsing(
-				() => { tmp._PolygonMap = new List<Vertex>(); },
-				(ParserBase parser, int ordinal) => { Vertex val = Vertex.parse(parser); tmp._PolygonMap.Add(val); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ICollectionParse _PolygonMap)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, _PolygonMap);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, _PolygonMap);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ICollectionParse _PolygonMap)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "_PolygonMap" )
-				_PolygonMap.parseJson(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ICollectionParse _PolygonMap)
-	{
-		_PolygonMap.parseGmq(parser);
-	}
-} // class PolygonMap
-
-//**********************************************************************
-// STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
-//  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
-//**********************************************************************
-
-public class ObstacleMap : IEquatable<ObstacleMap>
-{
-	public IList<PolygonMap> _ObstacleMap;
-
-	public override bool Equals(object obj)
-	{
-		return obj is ObstacleMap d && Equals(d);
-	}
-	public static bool operator ==(ObstacleMap left, ObstacleMap right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(ObstacleMap left, ObstacleMap right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(ObstacleMap other)
-	{
-		return
-			Enumerable.SequenceEqual(this._ObstacleMap, other._ObstacleMap);
-	}
-	public static void compose(ComposerBase composer, ICollectionCompose _ObstacleMap)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, _ObstacleMap);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, _ObstacleMap);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, ICollectionCompose _ObstacleMap)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("_ObstacleMap");
-		_ObstacleMap.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, ICollectionCompose _ObstacleMap)
-	{
-		_ObstacleMap.composeGmq(composer);
-	}
-	public static ObstacleMap parse(ParserBase parser)
-	{
-		ObstacleMap tmp = new ObstacleMap();
-		parse(parser,
-			_ObstacleMap: new CollectionWrapperForParsing(
-				() => { tmp._ObstacleMap = new List<PolygonMap>(); },
-				(ParserBase parser, int ordinal) => { PolygonMap val = PolygonMap.parse(parser); tmp._ObstacleMap.Add(val); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ICollectionParse _ObstacleMap)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, _ObstacleMap);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, _ObstacleMap);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ICollectionParse _ObstacleMap)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "_ObstacleMap" )
-				_ObstacleMap.parseJson(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ICollectionParse _ObstacleMap)
-	{
-		_ObstacleMap.parseGmq(parser);
-	}
-} // class ObstacleMap
-
-//**********************************************************************
-// STRUCT "Line" Targets: GMQ (2 parameters)
-//  1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
-//  2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
-//**********************************************************************
-
-public class Line : IEquatable<Line>
-{
-	public IList<Vertex> a;
-	public IList<Vertex> b;
-
-	public override bool Equals(object obj)
-	{
-		return obj is Line d && Equals(d);
-	}
-	public static bool operator ==(Line left, Line right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(Line left, Line right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(Line other)
-	{
-		return
-			Enumerable.SequenceEqual(this.a, other.a) &&
-			Enumerable.SequenceEqual(this.b, other.b);
-	}
-	public static void compose(ComposerBase composer, ICollectionCompose a, ICollectionCompose b)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, a, b);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, a, b);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, ICollectionCompose a, ICollectionCompose b)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("a");
-		a.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("b");
-		b.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, ICollectionCompose a, ICollectionCompose b)
-	{
-		a.composeGmq(composer);
-		b.composeGmq(composer);
-	}
-	public static Line parse(ParserBase parser)
-	{
-		Line tmp = new Line();
-		parse(parser,
-			a: new CollectionWrapperForParsing(
-				() => { tmp.a = new List<Vertex>(); },
-				(ParserBase parser, int ordinal) => { Vertex val = Vertex.parse(parser); tmp.a.Add(val); }),
-			b: new CollectionWrapperForParsing(
-				() => { tmp.b = new List<Vertex>(); },
-				(ParserBase parser, int ordinal) => { Vertex val = Vertex.parse(parser); tmp.b.Add(val); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ICollectionParse a, ICollectionParse b)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, a, b);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, a, b);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ICollectionParse a, ICollectionParse b)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "a" )
-				a.parseJson(parser);
-			else if ( key == "b" )
-				b.parseJson(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ICollectionParse a, ICollectionParse b)
-	{
-		a.parseGmq(parser);
-		b.parseGmq(parser);
-	}
-} // class Line
-
-//**********************************************************************
-// STRUCT "LineMap" Targets: GMQ (1 parameters)
-//  1. VECTOR< STRUCT Line> aLineMap (REQUIRED)
-//**********************************************************************
-
-public class LineMap : IEquatable<LineMap>
-{
-	public IList<Line> aLineMap;
-
-	public override bool Equals(object obj)
-	{
-		return obj is LineMap d && Equals(d);
-	}
-	public static bool operator ==(LineMap left, LineMap right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(LineMap left, LineMap right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(LineMap other)
-	{
-		return
-			Enumerable.SequenceEqual(this.aLineMap, other.aLineMap);
-	}
-	public static void compose(ComposerBase composer, ICollectionCompose aLineMap)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, aLineMap);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, aLineMap);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, ICollectionCompose aLineMap)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("aLineMap");
-		aLineMap.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, ICollectionCompose aLineMap)
-	{
-		aLineMap.composeGmq(composer);
-	}
-	public static LineMap parse(ParserBase parser)
-	{
-		LineMap tmp = new LineMap();
-		parse(parser,
-			aLineMap: new CollectionWrapperForParsing(
-				() => { tmp.aLineMap = new List<Line>(); },
-				(ParserBase parser, int ordinal) => { Line val = Line.parse(parser); tmp.aLineMap.Add(val); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ICollectionParse aLineMap)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, aLineMap);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, aLineMap);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ICollectionParse aLineMap)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "aLineMap" )
-				aLineMap.parseJson(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ICollectionParse aLineMap)
-	{
-		aLineMap.parseGmq(parser);
-	}
-} // class LineMap
-
-//**********************************************************************
-// STRUCT "POINT3DREAL" Targets: JSON (3 parameters)
-//  1. REAL X (REQUIRED)
-//  2. REAL Y (REQUIRED)
-//  3. REAL Z (REQUIRED)
-//**********************************************************************
-
-public class POINT3DREAL : IEquatable<POINT3DREAL>
-{
-	public Double X;
-	public Double Y;
-	public Double Z;
-
-	public override bool Equals(object obj)
-	{
-		return obj is POINT3DREAL d && Equals(d);
-	}
-	public static bool operator ==(POINT3DREAL left, POINT3DREAL right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(POINT3DREAL left, POINT3DREAL right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(POINT3DREAL other)
-	{
-		return
-			this.X == other.X &&
-			this.Y == other.Y &&
-			this.Z == other.Z;
-	}
-	public static void compose(ComposerBase composer, Double X, Double Y, Double Z)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, X, Y, Z);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, X, Y, Z);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, Double X, Double Y, Double Z)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("X");
-		composer.composeReal(X);
-		composer.append( ",\n  " );
-		composer.addNamePart("Y");
-		composer.composeReal(Y);
-		composer.append( ",\n  " );
-		composer.addNamePart("Z");
-		composer.composeReal(Z);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, Double X, Double Y, Double Z)
-	{
-		composer.composeReal(X);
-		composer.composeReal(Y);
-		composer.composeReal(Z);
-	}
-	public static POINT3DREAL parse(ParserBase parser)
-	{
-		POINT3DREAL tmp = new POINT3DREAL();
-		parse(parser,
-			X: ref tmp.X,
-			Y: ref tmp.Y,
-			Z: ref tmp.Z
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ref Double X, ref Double Y, ref Double Z)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, ref X, ref Y, ref Z);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, ref X, ref Y, ref Z);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ref Double X, ref Double Y, ref Double Z)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "X" )
-				parser.parseReal(out X);
-			else if ( key == "Y" )
-				parser.parseReal(out Y);
-			else if ( key == "Z" )
-				parser.parseReal(out Z);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ref Double X, ref Double Y, ref Double Z)
-	{
-		parser.parseReal(out X);
-		parser.parseReal(out Y);
-		parser.parseReal(out Z);
-	}
-} // class POINT3DREAL
-
-//**********************************************************************
-// STRUCT "CharacterParamStruct" Targets: JSON (2 parameters)
-//  1. INTEGER ID (REQUIRED)
-//  2. STRUCT SIZE Size (REQUIRED)
-//**********************************************************************
-
-public class CharacterParamStruct : IEquatable<CharacterParamStruct>
-{
-	public Int64 ID;
-	public SIZE Size;
-
-	public override bool Equals(object obj)
-	{
-		return obj is CharacterParamStruct d && Equals(d);
-	}
-	public static bool operator ==(CharacterParamStruct left, CharacterParamStruct right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(CharacterParamStruct left, CharacterParamStruct right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(CharacterParamStruct other)
-	{
-		return
-			this.ID == other.ID &&
-			this.Size.Equals(other.Size);
-	}
-	public static void compose(ComposerBase composer, Int64 ID, IMessageCompose Size)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, ID, Size);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, ID, Size);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, Int64 ID, IMessageCompose Size)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("ID");
-		composer.composeSignedInteger(ID);
-		composer.append( ",\n  " );
-		composer.addNamePart("Size");
-		Size.compose(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, Int64 ID, IMessageCompose Size)
-	{
-		composer.composeSignedInteger(ID);
-		Size.compose(composer);
-	}
-	public static CharacterParamStruct parse(ParserBase parser)
-	{
-		CharacterParamStruct tmp = new CharacterParamStruct();
-		parse(parser,
-			ID: ref tmp.ID,
-			Size: new MessageWrapperForParsing(
-				(ParserBase parser) => { tmp.Size = SIZE.parse(parser); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ref Int64 ID, IMessageParse Size)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, ref ID, Size);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, ref ID, Size);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ref Int64 ID, IMessageParse Size)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "ID" )
-				parser.parseSignedInteger(out ID);
-			else if ( key == "Size" )
-				Size.parse(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ref Int64 ID, IMessageParse Size)
-	{
-		parser.parseSignedInteger(out ID);
-		Size.parse(parser);
-	}
-} // class CharacterParamStruct
-
 //////////////////////////////////////////////////////////////
 //
 //  Scopes:
 //
-//  scope_one
-//  {
-//    point3D_alias
-//    point_alias
-//  }
-//
-//  level_trace
-//  {
-//    LevelTraceData
-//  }
-//
-//  infrastructural
-//  {
-//    PolygonSt
-//    point
-//    point3D
-//  }
-//
 //  test_gmq
 //  {
+//    point3D_alias
 //    message_one
+//    message_du
 //  }
 //
 //  test_json
 //  {
+//    point_alias
 //    message_one
 //  }
 //
 //////////////////////////////////////////////////////////////
 
-public class scope_one
+public class test_gmq
 {
 	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
 	{
@@ -1169,12 +657,12 @@ public class scope_one
 	}
 	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
 	{
-		JsonParser parser = new JsonParser( riter );
-		handlers.handleJson(parser);
+		GmqParser parser = new GmqParser( riter );
+		handlers.handleGmq(parser);
 	}
 
 //**********************************************************************
-// MESSAGE "point3D_alias" Targets: JSON (0 parameters)
+// MESSAGE "point3D_alias" Targets: GMQ (0 parameters)
 //**********************************************************************
 
 public class point3D_alias : point3D
@@ -1227,665 +715,6 @@ public static UInt64 MsgId = 1;
 } // class point3D_alias
 
 //**********************************************************************
-// MESSAGE "point_alias" Targets: JSON (0 parameters)
-//**********************************************************************
-
-public class point_alias : point
-{
-public static UInt64 MsgId = 2;
-	public new static void compose(ComposerBase composer, Int64 x, Int64 y)
-	{
-		point.compose(composer, x, y);
-	}
-	protected new static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
-	{
-		point.parse(parser, ref x, ref y);
-	}
-	public new static void compose(GmqComposer composer, Int64 x, Int64 y)
-	{
-		point.compose(composer, x, y);
-	}
-	protected new static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
-	{
-		point.parse(parser, ref x, ref y);
-	}
-	public new static void compose(JsonComposer composer, Int64 x, Int64 y)
-	{
-		point.compose(composer, x, y);
-	}
-	protected new static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
-	{
-		point.parse(parser, ref x, ref y);
-	}
-	public static void composeMessage(ComposerBase composer, Int64 x, Int64 y)
-	{
-		if (composer is GmqComposer gmqC)
-		{
-			gmqC.composeUnsignedInteger(MsgId);
-			compose(gmqC, x, y);
-		}
-		else if (composer is JsonComposer jsonC)
-		{
-			jsonC.append("{\n  ");
-			jsonC.addNamePart("msgid");
-			jsonC.composeUnsignedInteger(MsgId);
-			jsonC.append(",\n  ");
-			jsonC.addNamePart("msgbody");
-			compose(jsonC, x, y);
-			jsonC.append("\n}");
-		}
-		else
-			throw new ArgumentException();
-	}
-} // class point_alias
-
-} // class scope_one
-
-public class level_trace
-{
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
-	{
-		ReadIteratorT riter = buffer.getReadIterator();
-		handleMessage(riter, handlers);
-	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-	{
-		JsonParser parser = new JsonParser( riter );
-		handlers.handleJson(parser);
-	}
-
-//**********************************************************************
-// MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
-//  1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
-//  2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
-//**********************************************************************
-
-public class LevelTraceData : IEquatable<LevelTraceData>
-{
-	public static UInt64 MsgId = 1;
-
-	public CharacterParamStruct CharacterParam;
-	public IList<POINT3DREAL> Points;
-
-	public override bool Equals(object obj)
-	{
-		return obj is LevelTraceData d && Equals(d);
-	}
-	public static bool operator ==(LevelTraceData left, LevelTraceData right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(LevelTraceData left, LevelTraceData right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(LevelTraceData other)
-	{
-		return
-			this.CharacterParam.Equals(other.CharacterParam) &&
-			Enumerable.SequenceEqual(this.Points, other.Points);
-	}
-	public static void compose(ComposerBase composer, IMessageCompose CharacterParam, ICollectionCompose Points)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, CharacterParam, Points);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, CharacterParam, Points);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, IMessageCompose CharacterParam, ICollectionCompose Points)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("CharacterParam");
-		CharacterParam.compose(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("Points");
-		Points.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, IMessageCompose CharacterParam, ICollectionCompose Points)
-	{
-		CharacterParam.compose(composer);
-		Points.composeGmq(composer);
-	}
-	public static LevelTraceData parse(ParserBase parser)
-	{
-		LevelTraceData tmp = new LevelTraceData();
-		parse(parser,
-			CharacterParam: new MessageWrapperForParsing(
-				(ParserBase parser) => { tmp.CharacterParam = CharacterParamStruct.parse(parser); }),
-			Points: new CollectionWrapperForParsing(
-				() => { tmp.Points = new List<POINT3DREAL>(); },
-				(ParserBase parser, int ordinal) => { POINT3DREAL val = POINT3DREAL.parse(parser); tmp.Points.Add(val); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, IMessageParse CharacterParam, ICollectionParse Points)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, CharacterParam, Points);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, CharacterParam, Points);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, IMessageParse CharacterParam, ICollectionParse Points)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "CharacterParam" )
-				CharacterParam.parse(parser);
-			else if ( key == "Points" )
-				Points.parseJson(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, IMessageParse CharacterParam, ICollectionParse Points)
-	{
-		CharacterParam.parse(parser);
-		Points.parseGmq(parser);
-	}
-	public static void composeMessage(ComposerBase composer, IMessageCompose CharacterParam, ICollectionCompose Points)
-	{
-		if (composer is GmqComposer gmqC)
-		{
-			gmqC.composeUnsignedInteger(MsgId);
-			compose(gmqC, CharacterParam, Points);
-		}
-		else if (composer is JsonComposer jsonC)
-		{
-			jsonC.append("{\n  ");
-			jsonC.addNamePart("msgid");
-			jsonC.composeUnsignedInteger(MsgId);
-			jsonC.append(",\n  ");
-			jsonC.addNamePart("msgbody");
-			compose(jsonC, CharacterParam, Points);
-			jsonC.append("\n}");
-		}
-		else
-			throw new ArgumentException();
-	}
-} // class LevelTraceData
-
-} // class level_trace
-
-public class infrastructural
-{
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
-	{
-		ReadIteratorT riter = buffer.getReadIterator();
-		handleMessage(riter, handlers);
-	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-	{
-		GmqParser parser = new GmqParser( riter );
-		handlers.handleGmq(parser);
-	}
-
-//**********************************************************************
-// MESSAGE "PolygonSt" Targets: GMQ (6 parameters)
-//  1. VECTOR< STRUCT PolygonMap> polygonMap (REQUIRED)
-//  2. VECTOR< STRUCT PolygonMap> concaveMap (REQUIRED)
-//  3. VECTOR< STRUCT ObstacleMap> obstacleMap (REQUIRED)
-//  4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
-//  5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
-//  6. REAL polygonSpeed (REQUIRED)
-//**********************************************************************
-
-public class PolygonSt : IEquatable<PolygonSt>
-{
-	public static UInt64 MsgId = 2;
-
-	public IList<PolygonMap> polygonMap;
-	public IList<PolygonMap> concaveMap;
-	public IList<ObstacleMap> obstacleMap;
-	public IList<LineMap> portalMap;
-	public IList<LineMap> jumpMap;
-	public Double polygonSpeed;
-
-	public override bool Equals(object obj)
-	{
-		return obj is PolygonSt d && Equals(d);
-	}
-	public static bool operator ==(PolygonSt left, PolygonSt right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(PolygonSt left, PolygonSt right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(PolygonSt other)
-	{
-		return
-			Enumerable.SequenceEqual(this.polygonMap, other.polygonMap) &&
-			Enumerable.SequenceEqual(this.concaveMap, other.concaveMap) &&
-			Enumerable.SequenceEqual(this.obstacleMap, other.obstacleMap) &&
-			Enumerable.SequenceEqual(this.portalMap, other.portalMap) &&
-			Enumerable.SequenceEqual(this.jumpMap, other.jumpMap) &&
-			this.polygonSpeed == other.polygonSpeed;
-	}
-	public static void compose(ComposerBase composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, polygonSpeed);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, polygonSpeed);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("polygonMap");
-		polygonMap.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("concaveMap");
-		concaveMap.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("obstacleMap");
-		obstacleMap.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("portalMap");
-		portalMap.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("jumpMap");
-		jumpMap.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("polygonSpeed");
-		composer.composeReal(polygonSpeed);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
-	{
-		polygonMap.composeGmq(composer);
-		concaveMap.composeGmq(composer);
-		obstacleMap.composeGmq(composer);
-		portalMap.composeGmq(composer);
-		jumpMap.composeGmq(composer);
-		composer.composeReal(polygonSpeed);
-	}
-	public static PolygonSt parse(ParserBase parser)
-	{
-		PolygonSt tmp = new PolygonSt();
-		parse(parser,
-			polygonMap: new CollectionWrapperForParsing(
-				() => { tmp.polygonMap = new List<PolygonMap>(); },
-				(ParserBase parser, int ordinal) => { PolygonMap val = PolygonMap.parse(parser); tmp.polygonMap.Add(val); }),
-			concaveMap: new CollectionWrapperForParsing(
-				() => { tmp.concaveMap = new List<PolygonMap>(); },
-				(ParserBase parser, int ordinal) => { PolygonMap val = PolygonMap.parse(parser); tmp.concaveMap.Add(val); }),
-			obstacleMap: new CollectionWrapperForParsing(
-				() => { tmp.obstacleMap = new List<ObstacleMap>(); },
-				(ParserBase parser, int ordinal) => { ObstacleMap val = ObstacleMap.parse(parser); tmp.obstacleMap.Add(val); }),
-			portalMap: new CollectionWrapperForParsing(
-				() => { tmp.portalMap = new List<LineMap>(); },
-				(ParserBase parser, int ordinal) => { LineMap val = LineMap.parse(parser); tmp.portalMap.Add(val); }),
-			jumpMap: new CollectionWrapperForParsing(
-				() => { tmp.jumpMap = new List<LineMap>(); },
-				(ParserBase parser, int ordinal) => { LineMap val = LineMap.parse(parser); tmp.jumpMap.Add(val); }),
-			polygonSpeed: ref tmp.polygonSpeed
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, ICollectionParse polygonMap, ICollectionParse concaveMap, ICollectionParse obstacleMap, ICollectionParse portalMap, ICollectionParse jumpMap, ref Double polygonSpeed)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, ref polygonSpeed);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, ref polygonSpeed);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, ICollectionParse polygonMap, ICollectionParse concaveMap, ICollectionParse obstacleMap, ICollectionParse portalMap, ICollectionParse jumpMap, ref Double polygonSpeed)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "polygonMap" )
-				polygonMap.parseJson(parser);
-			else if ( key == "concaveMap" )
-				concaveMap.parseJson(parser);
-			else if ( key == "obstacleMap" )
-				obstacleMap.parseJson(parser);
-			else if ( key == "portalMap" )
-				portalMap.parseJson(parser);
-			else if ( key == "jumpMap" )
-				jumpMap.parseJson(parser);
-			else if ( key == "polygonSpeed" )
-				parser.parseReal(out polygonSpeed);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, ICollectionParse polygonMap, ICollectionParse concaveMap, ICollectionParse obstacleMap, ICollectionParse portalMap, ICollectionParse jumpMap, ref Double polygonSpeed)
-	{
-		polygonMap.parseGmq(parser);
-		concaveMap.parseGmq(parser);
-		obstacleMap.parseGmq(parser);
-		portalMap.parseGmq(parser);
-		jumpMap.parseGmq(parser);
-		parser.parseReal(out polygonSpeed);
-	}
-	public static void composeMessage(ComposerBase composer, ICollectionCompose polygonMap, ICollectionCompose concaveMap, ICollectionCompose obstacleMap, ICollectionCompose portalMap, ICollectionCompose jumpMap, Double polygonSpeed)
-	{
-		if (composer is GmqComposer gmqC)
-		{
-			gmqC.composeUnsignedInteger(MsgId);
-			compose(gmqC, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, polygonSpeed);
-		}
-		else if (composer is JsonComposer jsonC)
-		{
-			jsonC.append("{\n  ");
-			jsonC.addNamePart("msgid");
-			jsonC.composeUnsignedInteger(MsgId);
-			jsonC.append(",\n  ");
-			jsonC.addNamePart("msgbody");
-			compose(jsonC, polygonMap, concaveMap, obstacleMap, portalMap, jumpMap, polygonSpeed);
-			jsonC.append("\n}");
-		}
-		else
-			throw new ArgumentException();
-	}
-} // class PolygonSt
-
-//**********************************************************************
-// MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
-//  1. STRUCT point aPoint (REQUIRED)
-//**********************************************************************
-
-public class point : IEquatable<point>
-{
-	public static UInt64 MsgId = 4;
-
-	public point aPoint;
-
-	public override bool Equals(object obj)
-	{
-		return obj is point d && Equals(d);
-	}
-	public static bool operator ==(point left, point right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(point left, point right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(point other)
-	{
-		return
-			this.aPoint.Equals(other.aPoint);
-	}
-	public static void compose(ComposerBase composer, IMessageCompose aPoint)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, aPoint);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, aPoint);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, IMessageCompose aPoint)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("aPoint");
-		aPoint.compose(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, IMessageCompose aPoint)
-	{
-		aPoint.compose(composer);
-	}
-	public static point parse(ParserBase parser)
-	{
-		point tmp = new point();
-		parse(parser,
-			aPoint: new MessageWrapperForParsing(
-				(ParserBase parser) => { tmp.aPoint = point.parse(parser); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, IMessageParse aPoint)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, aPoint);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, aPoint);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, IMessageParse aPoint)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "aPoint" )
-				aPoint.parse(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, IMessageParse aPoint)
-	{
-		aPoint.parse(parser);
-	}
-	public static void composeMessage(ComposerBase composer, IMessageCompose aPoint)
-	{
-		if (composer is GmqComposer gmqC)
-		{
-			gmqC.composeUnsignedInteger(MsgId);
-			compose(gmqC, aPoint);
-		}
-		else if (composer is JsonComposer jsonC)
-		{
-			jsonC.append("{\n  ");
-			jsonC.addNamePart("msgid");
-			jsonC.composeUnsignedInteger(MsgId);
-			jsonC.append(",\n  ");
-			jsonC.addNamePart("msgbody");
-			compose(jsonC, aPoint);
-			jsonC.append("\n}");
-		}
-		else
-			throw new ArgumentException();
-	}
-} // class point
-
-//**********************************************************************
-// MESSAGE "point3D" NONEXTENDABLE Targets: GMQ (1 parameters)
-//  1. STRUCT point3D pt (REQUIRED)
-//**********************************************************************
-
-public class point3D : IEquatable<point3D>
-{
-	public static UInt64 MsgId = 5;
-
-	public point3D pt;
-
-	public override bool Equals(object obj)
-	{
-		return obj is point3D d && Equals(d);
-	}
-	public static bool operator ==(point3D left, point3D right)
-	{
-		return left.Equals(right);
-	}
-	public static bool operator !=(point3D left, point3D right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(point3D other)
-	{
-		return
-			this.pt.Equals(other.pt);
-	}
-	public static void compose(ComposerBase composer, IMessageCompose pt)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, pt);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, pt);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, IMessageCompose pt)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		pt.compose(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, IMessageCompose pt)
-	{
-		pt.compose(composer);
-	}
-	public static point3D parse(ParserBase parser)
-	{
-		point3D tmp = new point3D();
-		parse(parser,
-			pt: new MessageWrapperForParsing(
-				(ParserBase parser) => { tmp.pt = point3D.parse(parser); })
-		);
-		return tmp;
-	}
-	protected static void parse(ParserBase parser, IMessageParse pt)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, pt);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, pt);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, IMessageParse pt)
-	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "pt" )
-				pt.parse(parser);
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, IMessageParse pt)
-	{
-		pt.parse(parser);
-	}
-	public static void composeMessage(ComposerBase composer, IMessageCompose pt)
-	{
-		if (composer is GmqComposer gmqC)
-		{
-			gmqC.composeUnsignedInteger(MsgId);
-			compose(gmqC, pt);
-		}
-		else if (composer is JsonComposer jsonC)
-		{
-			jsonC.append("{\n  ");
-			jsonC.addNamePart("msgid");
-			jsonC.composeUnsignedInteger(MsgId);
-			jsonC.append(",\n  ");
-			jsonC.addNamePart("msgbody");
-			compose(jsonC, pt);
-			jsonC.append("\n}");
-		}
-		else
-			throw new ArgumentException();
-	}
-} // class point3D
-
-} // class infrastructural
-
-public class test_gmq
-{
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
-	{
-		ReadIteratorT riter = buffer.getReadIterator();
-		handleMessage(riter, handlers);
-	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
-	{
-		GmqParser parser = new GmqParser( riter );
-		handlers.handleGmq(parser);
-	}
-
-//**********************************************************************
 // MESSAGE "message_one" Targets: GMQ (10 parameters)
 //  1. INTEGER firstParam (REQUIRED)
 //  2. VECTOR<INTEGER> secondParam (REQUIRED)
@@ -1904,15 +733,15 @@ public class message_one : IEquatable<message_one>
 	public static UInt64 MsgId = 3;
 
 	public Int64 firstParam;
-	public IList<Int64> secondParam;
-	public IList<point3D> thirdParam;
+	public List<Int64> secondParam;
+	public List<point3D> thirdParam;
 	public UInt64 forthParam;
 	public String fifthParam;
-	public IList<point> sixthParam;
+	public List<point> sixthParam;
 	public Double seventhParam;
 	public point eighthParam;
 	public point3D ninethParam;
-	public IList<Double> tenthParam;
+	public List<Double> tenthParam;
 
 	public override bool Equals(object obj)
 	{
@@ -1933,7 +762,7 @@ public class message_one : IEquatable<message_one>
 	}
 	public bool Equals(message_one other)
 	{
-		return
+		return other != null  &&
 			this.firstParam == other.firstParam &&
 			Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
 			Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
@@ -2114,6 +943,139 @@ public class message_one : IEquatable<message_one>
 	}
 } // class message_one
 
+//**********************************************************************
+// MESSAGE "message_du" NONEXTENDABLE Targets: GMQ (2 parameters)
+//  1. STRUCT point3D pt (REQUIRED)
+//  2. DISCRIMINATED_UNION du_one disc_union (REQUIRED)
+//**********************************************************************
+
+public class message_du : IEquatable<message_du>
+{
+	public static UInt64 MsgId = 5;
+
+	public point3D pt;
+	public du_one disc_union;
+
+	public override bool Equals(object obj)
+	{
+		return obj is message_du d && Equals(d);
+	}
+	public static bool operator ==(message_du left, message_du right)
+	{
+		return left.Equals(right);
+	}
+	public static bool operator !=(message_du left, message_du right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(message_du other)
+	{
+		return other != null  &&
+			this.pt.Equals(other.pt) &&
+			this.disc_union.Equals(other.disc_union);
+	}
+	public static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
+	{
+		if (composer is GmqComposer gmqC)
+			compose(gmqC, pt, disc_union);
+		else if (composer is JsonComposer jsonC)
+			compose(jsonC, pt, disc_union);
+		else
+			throw new ArgumentException();
+	}
+	public static void compose(JsonComposer composer, IMessageCompose pt, IMessageCompose disc_union)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("pt");
+		pt.compose(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("disc_union");
+		disc_union.compose(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose(GmqComposer composer, IMessageCompose pt, IMessageCompose disc_union)
+	{
+		pt.compose(composer);
+		disc_union.compose(composer);
+	}
+	public static message_du parse(ParserBase parser)
+	{
+		message_du tmp = new message_du();
+		parse(parser,
+			pt: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.pt = point3D.parse(parser); }),
+			disc_union: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.disc_union = du_one.parse(parser); })
+		);
+		return tmp;
+	}
+	protected static void parse(ParserBase parser, IMessageParse pt, IMessageParse disc_union)
+	{
+		if (parser is GmqParser gmqP)
+			parse(gmqP, pt, disc_union);
+		else if (parser is JsonParser jsonP)
+			parse(jsonP, pt, disc_union);
+		else
+			throw new ArgumentException();
+	}
+	protected static void parse(JsonParser parser, IMessageParse pt, IMessageParse disc_union)
+	{
+		parser.skipDelimiter( '{' );
+		while (true)
+		{
+			string key;
+			parser.readKeyFromJson( out key );
+			if ( key == "pt" )
+				pt.parse(parser);
+			else if ( key == "disc_union" )
+				disc_union.parse(parser);
+
+			parser.skipSpacesEtc();
+			if ( parser.isDelimiter( ',' ) )
+			{
+				parser.skipDelimiter( ',' );
+				continue;
+			}
+			if ( parser.isDelimiter( '}' ) )
+			{
+				parser.skipDelimiter( '}' );
+				break;
+			}
+			throw new FormatException(); // bad format
+		}
+	}
+	protected static void parse(GmqParser parser, IMessageParse pt, IMessageParse disc_union)
+	{
+		pt.parse(parser);
+		disc_union.parse(parser);
+	}
+	public static void composeMessage(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
+	{
+		if (composer is GmqComposer gmqC)
+		{
+			gmqC.composeUnsignedInteger(MsgId);
+			compose(gmqC, pt, disc_union);
+		}
+		else if (composer is JsonComposer jsonC)
+		{
+			jsonC.append("{\n  ");
+			jsonC.addNamePart("msgid");
+			jsonC.composeUnsignedInteger(MsgId);
+			jsonC.append(",\n  ");
+			jsonC.addNamePart("msgbody");
+			compose(jsonC, pt, disc_union);
+			jsonC.append("\n}");
+		}
+		else
+			throw new ArgumentException();
+	}
+} // class message_du
+
 } // class test_gmq
 
 public class test_json
@@ -2128,6 +1090,59 @@ public class test_json
 		JsonParser parser = new JsonParser( riter );
 		handlers.handleJson(parser);
 	}
+
+//**********************************************************************
+// MESSAGE "point_alias" Targets: JSON (0 parameters)
+//**********************************************************************
+
+public class point_alias : point
+{
+public static UInt64 MsgId = 2;
+	public new static void compose(ComposerBase composer, Int64 x, Int64 y)
+	{
+		point.compose(composer, x, y);
+	}
+	protected new static void parse(ParserBase parser, ref Int64 x, ref Int64 y)
+	{
+		point.parse(parser, ref x, ref y);
+	}
+	public new static void compose(GmqComposer composer, Int64 x, Int64 y)
+	{
+		point.compose(composer, x, y);
+	}
+	protected new static void parse(GmqParser parser, ref Int64 x, ref Int64 y)
+	{
+		point.parse(parser, ref x, ref y);
+	}
+	public new static void compose(JsonComposer composer, Int64 x, Int64 y)
+	{
+		point.compose(composer, x, y);
+	}
+	protected new static void parse(JsonParser parser, ref Int64 x, ref Int64 y)
+	{
+		point.parse(parser, ref x, ref y);
+	}
+	public static void composeMessage(ComposerBase composer, Int64 x, Int64 y)
+	{
+		if (composer is GmqComposer gmqC)
+		{
+			gmqC.composeUnsignedInteger(MsgId);
+			compose(gmqC, x, y);
+		}
+		else if (composer is JsonComposer jsonC)
+		{
+			jsonC.append("{\n  ");
+			jsonC.addNamePart("msgid");
+			jsonC.composeUnsignedInteger(MsgId);
+			jsonC.append(",\n  ");
+			jsonC.addNamePart("msgbody");
+			compose(jsonC, x, y);
+			jsonC.append("\n}");
+		}
+		else
+			throw new ArgumentException();
+	}
+} // class point_alias
 
 //**********************************************************************
 // MESSAGE "message_one" Targets: JSON (10 parameters)
@@ -2148,15 +1163,15 @@ public class message_one : IEquatable<message_one>
 	public static UInt64 MsgId = 3;
 
 	public Int64 firstParam;
-	public IList<Int64> secondParam;
-	public IList<point3D> thirdParam;
+	public List<Int64> secondParam;
+	public List<point3D> thirdParam;
 	public UInt64 forthParam;
 	public String fifthParam;
-	public IList<point> sixthParam;
+	public List<point> sixthParam;
 	public Double seventhParam;
 	public point eighthParam;
 	public point3D ninethParam;
-	public IList<Double> tenthParam;
+	public List<Double> tenthParam;
 
 	public override bool Equals(object obj)
 	{
@@ -2177,7 +1192,7 @@ public class message_one : IEquatable<message_one>
 	}
 	public bool Equals(message_one other)
 	{
-		return
+		return other != null  &&
 			this.firstParam == other.firstParam &&
 			Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
 			Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&

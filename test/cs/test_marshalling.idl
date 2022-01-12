@@ -1,110 +1,10 @@
-/*/////////////////////////////////////
-// Error case: cyclic dependency
 
-MESSAGE SCOPE:ID=123 PROTO=JSON,GMQ NONEXTENDABLE base {
-  STRUCT cyclic_1 c;
-};
 
-STRUCT cyclic_1 {
-	STRUCT cyclic_2 d;
-};
-
-STRUCT cyclic_2 {
-	STRUCT cyclic_1 e;
-};
-///////////////////////////////////*/
-
-PUBLISHABLE publishable_short_sample=1 {
-	INTEGER ID;
-	CHARACTER-STRING name;
-};
-
-PUBLISHABLE publishable_sample=2 {
-	INTEGER ID;
-	CHARACTER-STRING name;
-	STRUCT SIZE size;
-	STRUCT CharacterParamStruct chp;
-	VECTOR<INTEGER> vector_of_int;
-	VECTOR<STRUCT POINT3DREAL> vector_struct_point3dreal;
-	STRUCT StructWithVectorOfInt structWithVectorOfInt;
-	STRUCT StructWithVectorOfSize structWithVectorOfSize;
-//	DISCRIMINATED_UNION du_one du_one_instance;
-};
-
-SCOPE scope_one PROTO = JSON;
-SCOPE level_trace PROTO = JSON;
-SCOPE infrastructural PROTO = GMQ;
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 
-MESSAGE scope_one:point3D_alias=1 = STRUCT point3D;
-MESSAGE scope_one:point_alias=2 = STRUCT point;
-
-
-MESSAGE level_trace:LevelTraceData=1{
-	STRUCT CharacterParamStruct CharacterParam;
-	VECTOR<STRUCT POINT3DREAL> Points;
-};
-
-STRUCT StructWithVectorOfInt{
-	INTEGER ID;
-	VECTOR<INTEGER> signedInts;
-};
-
-STRUCT StructWithVectorOfSize{
-	VECTOR<STRUCT SIZE> sizes;
-	INTEGER NN;
-};
-
-STRUCT CharacterParamStruct{
-	INTEGER ID;
-	STRUCT SIZE Size;
-};
-
-STRUCT SIZE{
-  REAL X;
-  REAL Y;
-  REAL Z;
-};
-
-STRUCT POINT3DREAL{
-  REAL X;
-  REAL Y;
-  REAL Z;
-};
-
-MESSAGE infrastructural:PolygonSt=2{
-	VECTOR<STRUCT PolygonMap> polygonMap;
-	VECTOR<STRUCT PolygonMap> concaveMap;
-	VECTOR<STRUCT ObstacleMap> obstacleMap;
-	VECTOR<STRUCT LineMap> portalMap;
-	VECTOR<STRUCT LineMap> jumpMap;
-	REAL polygonSpeed;
-};
-
-STRUCT LineMap{
-	VECTOR<STRUCT Line> aLineMap;
-};
-
-STRUCT Line{
-	VECTOR<STRUCT NONEXTENDABLE Vertex> a;
-	VECTOR<STRUCT NONEXTENDABLE Vertex> b;
-};
-
-STRUCT ObstacleMap{
-	VECTOR<STRUCT PolygonMap> _ObstacleMap;
-};
-
-STRUCT PolygonMap{
-	VECTOR<STRUCT NONEXTENDABLE Vertex> _PolygonMap;
-};
-
-STRUCT NONEXTENDABLE Vertex{
-  INTEGER x;
-  INTEGER y;
-  INTEGER z;
-};
-
+MESSAGE test_gmq :point3D_alias=1 = STRUCT point3D;
+MESSAGE test_json :point_alias=2 = STRUCT point;
 
 
 STRUCT NONEXTENDABLE point {
@@ -145,51 +45,20 @@ MESSAGE test_json:message_one=3 {
   VECTOR<REAL> tenthParam;
 };
 
-MESSAGE NONEXTENDABLE infrastructural:point=4 {
-  STRUCT point aPoint;
-};
 
-/*
-DISCRIMINATED_UNION du_one {
+DISCRIMINATED_UNION du_one{
 	CASE one=1: { 
-		STRUCT point3D pt3d_1;
-		INTEGER i_1;
+		REAL D1;
+		REAL D2;
+		REAL D3;
 	}
 	CASE two=2: { 
-		INTEGER i_2;
-		VECTOR<REAL> vp_2;
+		VECTOR<REAL> Data;
 	}
 };
-*/
 
-MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
-  STRUCT point3D pt;
-//  DISCRIMINATED_UNION du_one du_one_instance;
+MESSAGE NONEXTENDABLE test_gmq : message_du = 5 {
+	STRUCT point3D pt;
+	DISCRIMINATED_UNION du_one disc_union;
 };
-
-
-PUBLISHABLE publishable_html_tag=3 {
-	STRUCT HtmlTag tag;
-};
-
-STRUCT Property {
-  CHARACTER-STRING name;
-  CHARACTER-STRING value;
-};
-
-STRUCT HtmlTag {
-	VECTOR<STRUCT Property> properties;
-//	DISCRIMINATED_UNION HtmlTextOrTags tags;
-};
-
-/*
-DISCRIMINATED_UNION HtmlTextOrTags {
-	CASE text=21: { 
-		CHARACTER-STRING str;
-	}
-	CASE taglists=22: { 
-		VECTOR<STRUCT HtmlTag> tags;
-	}
-};
-*/
 
