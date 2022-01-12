@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
+#include "idl_tree_2_csharp.h"
 #include "idl_tree_serializer.h"
-#include "raiistdiofile.h"
 
 #include <set>
 
@@ -40,20 +40,6 @@ namespace {
 			return fmt::format("{}_{}", s.type2string(), s.name);
 		else
 			return s.name;
-	}
-
-	CompositeType* csharpMsg_findByName(const std::vector<unique_ptr<CompositeType>>& objectList, const std::string& name)
-	{
-		for (const auto& it : objectList)
-		{
-			assert(it);
-			if (it->name == name)
-			{
-				return it.get();
-			}
-		}
-		assert(false);
-		return nullptr;
 	}
 
 	void csharpMsg_generateScopeEnum(FILE* header, Scope& scope)
@@ -1109,6 +1095,10 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
+		//mb: we use this function to create base classes and inner union_case classes.
+		// Inner union_case classes should be indented inside their discriminated_union class,
+		// but that goes bad in readability of this function, so I prefer to leave it as it is.
+
 		bool checked = impl_checkParamNameUniqueness(s);
 		checked = impl_checkFollowingExtensionRules(s) && checked;
 		if (!checked)
@@ -1381,7 +1371,7 @@ namespace {
 
 
 
-void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
+void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
 {
 	//std::set<string> msgParams;
 	//impl_CollectMessageParamNamesFromRoot( msgParams, s );
@@ -1430,7 +1420,12 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 	//	}
 	//}
 
-	fprintf( header, "\n" );
+
+	fprintf(header, "//////////////////////////////////////////////////////////////\n");
+	fprintf(header, "//\n");
+	fprintf(header, "//                 Messages\n");
+	fprintf(header, "//\n");
+	fprintf(header, "//////////////////////////////////////////////////////////////\n\n");
 
 	//for ( auto it : structsOrderedByDependency )
 	//{
@@ -1473,20 +1468,27 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 		for ( auto it : scope->objectList )
 		{
 			assert( it != nullptr );
-			assert( typeid( *(it) ) == typeid( CompositeType ) );
 			assert( it->type == CompositeType::Type::message );
 			if ( !it->isAlias )
 				csharpMsg_generateStruct( header, s, *it );
 			else
 			{
-				auto target = csharpMsg_findByName(s.structs, it->aliasOf);
-				csharpMsg_generateMessageAlias(header, *it, *target);
+				assert(it->aliasIdx < s.structs.size());
+				csharpMsg_generateMessageAlias(header, *it, *(s.structs[it->aliasIdx]));
 			}
 		}
 
 		fprintf(header, "} // class %s\n\n", scope->name.c_str());
 	}
 
+
+	fprintf(header, "//////////////////////////////////////////////////////////////\n");
+	fprintf(header, "//\n");
+	fprintf(header, "//                 Publishables\n");
+	fprintf(header, "//\n");
+	fprintf(header, "//////////////////////////////////////////////////////////////\n\n");
+
+	generateCsharpPublishables(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
 	//for ( auto& it : s.publishables )
 	//{
 	//	auto& obj_1 = it;

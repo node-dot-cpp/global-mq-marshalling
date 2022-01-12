@@ -32,7 +32,8 @@
 #include "idl_tree_serializer.h"
 
 // code generation
-void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
+void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );
+void generateCsharpPublishables(const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s);
 //void generateMessage( FILE* header, CompositeType& s );
 //void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
 //void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s );

@@ -72,6 +72,8 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 void impl_insertScopeList(FILE* header, Root& r);
 void impl_generateMessageCommentBlock(FILE* header, CompositeType& s);
 void orderStructsByDependency(std::vector<unique_ptr<CompositeType>>& structs, std::vector<CompositeType*>& out);
+void impl_generatePublishableCommentBlock(FILE* header, CompositeType& s);
+//
 
 inline
 std::string impl_discriminatedUnionCaseMemberType( MessageParameter member ) { return fmt::format( "Case_{}_{}_T", member.caseName, member.name ); }

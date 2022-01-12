@@ -378,30 +378,39 @@ namespace globalmq.marshalling
                 throw new Exception(); //TODO
         }
 
-        public static void publishableComposeLeafeInteger(ComposerBase composer, long value)
+        public static void publishableComposeLeafe(ComposerBase composer, Int64 value)
         {
             if (composer is GmqComposer gmqComposer)
-                gmq.publishableComposeLeafeInteger(gmqComposer, value);
+                gmq.publishableComposeLeafe(gmqComposer, value);
             else if (composer is JsonComposer jsonComposer)
-                json.publishableComposeLeafeInteger(jsonComposer, value);
+                json.publishableComposeLeafe(jsonComposer, value);
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableComposeLeafeReal(ComposerBase composer, double value)
+        public static void publishableComposeLeafe(ComposerBase composer, UInt64 value)
         {
             if (composer is GmqComposer gmqComposer)
-                gmq.publishableComposeLeafeReal(gmqComposer, value);
+                gmq.publishableComposeLeafe(gmqComposer, value);
             else if (composer is JsonComposer jsonComposer)
-                json.publishableComposeLeafeReal(jsonComposer, value);
+                json.publishableComposeLeafe(jsonComposer, value);
             else
                 throw new Exception(); //TODO
         }
-        public static void publishableComposeLeafeString(ComposerBase composer, string value)
+        public static void publishableComposeLeafe(ComposerBase composer, Double value)
         {
             if (composer is GmqComposer gmqComposer)
-                gmq.publishableComposeLeafeString(gmqComposer, value);
+                gmq.publishableComposeLeafe(gmqComposer, value);
             else if (composer is JsonComposer jsonComposer)
-                json.publishableComposeLeafeString(jsonComposer, value);
+                json.publishableComposeLeafe(jsonComposer, value);
+            else
+                throw new Exception(); //TODO
+        }
+        public static void publishableComposeLeafe(ComposerBase composer, String value)
+        {
+            if (composer is GmqComposer gmqComposer)
+                gmq.publishableComposeLeafe(gmqComposer, value);
+            else if (composer is JsonComposer jsonComposer)
+                json.publishableComposeLeafe(jsonComposer, value);
             else
                 throw new Exception(); //TODO
         }
@@ -525,16 +534,20 @@ namespace globalmq.marshalling.impl
                 composer.composeUnsignedInteger(addr[i]);
             composer.composeUnsignedInteger(last);
         }
-        public static void publishableComposeLeafeInteger(GmqComposer composer, long value)
+        public static void publishableComposeLeafe(GmqComposer composer, Int64 value)
         {
             composer.composeSignedInteger(value);
         }
-        public static void publishableComposeLeafeReal(GmqComposer composer, double value)
+        public static void publishableComposeLeafe(GmqComposer composer, UInt64 value)
+        {
+            composer.composeUnsignedInteger(value);
+        }
+        public static void publishableComposeLeafe(GmqComposer composer, Double value)
         {
             composer.composeReal(value);
         }
 
-        public static void publishableComposeLeafeString(GmqComposer composer, string value)
+        public static void publishableComposeLeafe(GmqComposer composer, String value)
         {
             composer.composeString(value);
         }
@@ -614,7 +627,7 @@ namespace globalmq.marshalling.impl
             composer.append(',');
         }
 
-        public static void publishableComposeLeafeInteger(JsonComposer composer, long value)
+        public static void publishableComposeLeafe(JsonComposer composer, Int64 value)
         {
             composer.addNamePart("value");
             composer.composeSignedInteger(value);
@@ -622,7 +635,15 @@ namespace globalmq.marshalling.impl
             composer.append("}");
             composer.append(",");
         }
-        public static void publishableComposeLeafeReal(JsonComposer composer, double value)
+        public static void publishableComposeLeafe(JsonComposer composer, UInt64 value)
+        {
+            composer.addNamePart("value");
+            composer.composeUnsignedInteger(value);
+
+            composer.append("}");
+            composer.append(",");
+        }
+        public static void publishableComposeLeafe(JsonComposer composer, Double value)
         {
             composer.addNamePart("value");
             composer.composeReal(value);
@@ -631,7 +652,7 @@ namespace globalmq.marshalling.impl
             composer.append(",");
         }
 
-        public static void publishableComposeLeafeString(JsonComposer composer, string value)
+        public static void publishableComposeLeafe(JsonComposer composer, String value)
         {
             composer.addNamePart("value");
             composer.composeString(value);

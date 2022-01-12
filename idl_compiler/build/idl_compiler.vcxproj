@@ -24,6 +24,7 @@
     <ClCompile Include="..\grammar\generated\lex.yy.cpp" />
     <ClCompile Include="..\src\global_mq_parser_helper.cpp" />
     <ClCompile Include="..\src\idl_tree_2_csharp.cpp" />
+    <ClCompile Include="..\src\idl_tree_2_csharp_publishables.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer_messages.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer_publishables.cpp" />
