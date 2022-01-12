@@ -54,41 +54,6 @@ std::string impl_generatePublishableStructName( MessageParameter& s )
 	}
 }
 
-inline
-string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
-{
-	switch( type.vectorElemKind )
-	{
-		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
-		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
-		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
-		case MessageParameterType::KIND::STRUCT: 
-			assert( type.messageIdx < root.structs.size() );
-			return fmt::format( "publishable_STRUCT_{}", root.structs[type.messageIdx]->name );
-		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
-			assert( type.messageIdx < root.structs.size() );
-			return fmt::format( "publishable_DISCRIMINATED_UNION_{}", root.structs[type.messageIdx]->name );
-		default: 
-			assert( false );
-			return "";
-	}
-}
-
-const char* paramTypeToLibType( MessageParameterType::KIND kind )
-{
-	switch( kind )
-	{
-		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
-		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
-		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
-		case MessageParameterType::KIND::STRUCT: return "::globalmq::marshalling::impl::StructType";
-		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "::globalmq::marshalling::impl::DiscriminatedUnionType";
-		default: return nullptr;
-	}
-}
-
 string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterType& type )
 {
 	switch ( type.kind )
@@ -101,21 +66,21 @@ string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterTyp
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 
 		case MessageParameterType::KIND::STRUCT: 
-			assert( type.messageIdx <= s.structs.size() );
-			return fmt::format( "STRUCT {}", s.structs[type.messageIdx]->name );
+			assert( type.structIdx <= s.structs.size() );
+			return fmt::format( "STRUCT {}", s.structs[type.structIdx]->name );
 		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
-			assert( type.messageIdx <= s.structs.size() );
-			return fmt::format( "DISCRIMINATED_UNION {}", s.structs[type.messageIdx]->name );
+			assert( type.structIdx <= s.structs.size() );
+			return fmt::format( "DISCRIMINATED_UNION {}", s.structs[type.structIdx]->name );
 		case MessageParameterType::KIND::VECTOR: 
 			if ( type.vectorElemKind == MessageParameterType::KIND::STRUCT )
 			{
-				assert( type.messageIdx <= s.structs.size() );
-				return fmt::format( "VECTOR<STRUCT {}>", s.structs[type.messageIdx]->name );
+				assert( type.structIdx <= s.structs.size() );
+				return fmt::format( "VECTOR<STRUCT {}>", s.structs[type.structIdx]->name );
 			}
 			else if ( type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 			{
-				assert( type.messageIdx <= s.structs.size() );
-				return fmt::format( "VECTOR<DISCRIMINATED_UNION {}>", s.structs[type.messageIdx]->name );
+				assert( type.structIdx <= s.structs.size() );
+				return fmt::format( "VECTOR<DISCRIMINATED_UNION {}>", s.structs[type.structIdx]->name );
 			}
 			else if ( type.vectorElemKind == MessageParameterType::KIND::ENUM )
 				return fmt::format( "VECTOR<ENUM {}>", type.name );
@@ -463,7 +428,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 //fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n", offset.c_str() );
 
 	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-	assert( member.type.messageIdx < root.structs.size() );
+	assert( member.type.structIdx < root.structs.size() );
 	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s{\n", offset.c_str() );
 	fprintf( header, "%s\tsize_t pos = addr[%s1];\n", offset.c_str(), offsetPlusStr );
@@ -490,13 +455,13 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf( header, "%s\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
+				fprintf( header, "%s\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str() );
 				break;
 			default:
 				fprintf( header, "%s\t\t\t\tstatic_assert(false);\n", offset.c_str() );
 				break;
 		}
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
 		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", offset.c_str(), member.name.c_str() );
@@ -509,7 +474,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 
 		fprintf( header, "%s\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
 		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t\tt.notifyElementUpdated_%s( pos );\n", offset.c_str(), member.name.c_str() );
@@ -520,7 +485,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 
 		fprintf( header, "%s\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
 		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
 		fprintf( header, "%s\t\t}\n", offset.c_str() );
@@ -528,9 +493,9 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 		fprintf( header, "%s\t\telse\n", offset.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
 		fprintf( header, "%s\t\t\telse\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\t%s::parse<ParserT, typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\t\t%s::parse<ParserT, typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
 		fprintf( header, "%s\t\t}\n", offset.c_str() );
 	}
 	else
@@ -582,7 +547,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			fprintf( header, "%s\t\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str() );
+			fprintf( header, "%s\t\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str() );
 			break;
 		default:
 			fprintf( header, "%s\t\t\t\tstatic_assert(false);\n", offset.c_str() );
@@ -702,7 +667,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* head
 	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
 	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-	assert( member.type.messageIdx < root.structs.size() );
+	assert( member.type.structIdx < root.structs.size() );
 	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s{\n", offset.c_str() );
 	fprintf( header, "%s\tsize_t pos = addr[%s1];\n", offset.c_str(), offsetPlusStr );
@@ -715,7 +680,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* head
 	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT || member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
 		fprintf( header, "%s\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-		fprintf( header, "%s\t\t%s::parse<ParserT, typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t%s::parse<ParserT, typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
 	}
 	else
 		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
@@ -776,9 +741,9 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 	{
 		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 		{
-			assert( root.structs.size() > param.type.messageIdx );
+			assert( root.structs.size() > param.type.structIdx );
 			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::VectorOfStructRefWrapper<%s_RefWrapper<typename %s::value_type>, %s>(t.%s); }\n", 
-				param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param, true ).c_str(), impl_templateMemberTypeName( "T", param).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+				param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param, true ).c_str(), impl_templateMemberTypeName( "T", param).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 		}
 		else
 			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.%s); }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
@@ -806,17 +771,17 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	}
 	if ( param.type.kind == MessageParameterType::KIND::STRUCT )
 	{
-		assert( param.type.messageIdx < root.structs.size() );
+		assert( param.type.structIdx < root.structs.size() );
 //		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*aaa*/%s, %s>(t.%s, *this, %s, %zd); }\n", 
-//			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), addr.c_str(), idx );
+//			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), addr.c_str(), idx );
 		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*aaa*/%s, %s>(t.%s, %s, %s, %zd); }\n", 
-			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
+			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // TODO: revise DU
 	{
-		assert( param.type.messageIdx < root.structs.size() );
+		assert( param.type.structIdx < root.structs.size() );
 		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*bbb*/%s, %s>(t.%s, %s, %s, %zd); }\n", 
-			param.name.c_str(), root.structs[param.type.messageIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
+			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
@@ -833,14 +798,14 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION: // TODO: revise DU (lib kw: VectorOfStructRefWrapper4Set and around)
-				assert( param.type.messageIdx < root.structs.size() );
+				assert( param.type.structIdx < root.structs.size() );
 				fprintf( header, 
 					"\tauto get4set_%s() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::value_type, %s>>"
 					"(t.%s, %s, %s, %zd); }\n", 
 					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(),
-					impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), 
+					impl_generatePublishableStructName( *(root.structs[param.type.structIdx]) ).c_str(), 
 					rootType.c_str(), 
-					root.structs[param.type.messageIdx]->name.c_str(), 
+					root.structs[param.type.structIdx]->name.c_str(), 
 					impl_templateMemberTypeName( "T", param, true ).c_str(),
 					rootType.c_str(), 
 					impl_memberOrAccessFunctionName( param ).c_str(), 
@@ -914,8 +879,8 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 						break;
 					case MessageParameterType::KIND::STRUCT:
 					case MessageParameterType::KIND::DISCRIMINATED_UNION:
-						assert( member.type.messageIdx < root.structs.size() );
-						fprintf( header, "%sPublishableVectorProcessor::compose<ComposerT, %s, %s>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), impl_generatePublishableStructName( *(root.structs[member.type.messageIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
+						assert( member.type.structIdx < root.structs.size() );
+						fprintf( header, "%sPublishableVectorProcessor::compose<ComposerT, %s, %s>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					default:
 						assert( false ); // not implemented (yet)
@@ -1193,7 +1158,7 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert( member.type.messageIdx < root.structs.size() );
+				assert( member.type.structIdx < root.structs.size() );
 				
 				fprintf( header, "%sif constexpr( reportChanges )\n", offset.c_str() );
 				fprintf( header, "%s{\n", offset.c_str() );
@@ -1298,9 +1263,14 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n", offset.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				assert( member.type.messageIdx < root.structs.size() );				
+				assert( member.type.structIdx < root.structs.size() );				
 				fprintf( header, "%s::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
 				fprintf( header, "%sPublishableVectorProcessor::parse<ParserT, %s, %s, true>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				break;
+			case MessageParameterType::KIND::DICTIONARY:
+				assert( member.type.structIdx < root.structs.size() );				
+				fprintf( header, "%s::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
+				fprintf( header, "%sPublishableDictionaryProcessor::parse<ParserT, %s, %s, true>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			default:
 				assert( false );
@@ -1399,7 +1369,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert( member.type.messageIdx < root.structs.size() );
+				assert( member.type.structIdx < root.structs.size() );
 				
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
 				fprintf( header, "\t\tPublishableVectorProcessor::parse<ParserT, %s, %s>( parser, t.%s );\n", impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -1639,9 +1609,9 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					assert( param.type.messageIdx < root.structs.size() );
+					assert( param.type.structIdx < root.structs.size() );
 //					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-//					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.messageIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
+//					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.structIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
 //					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
 					fprintf( header, "\t\tPublishableVectorProcessor::compose<%s, %s, %s>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( param.type, root ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
 					break;

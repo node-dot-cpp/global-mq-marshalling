@@ -35,6 +35,8 @@
 
 namespace globalmq::marshalling {
 
+// VECTOR support
+
 enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
 
 template<class VectorT>
@@ -408,6 +410,391 @@ namespace impl {
 		return true;
 	}
 } // namespace impl
+
+
+
+// DICTIONARY support
+
+enum ActionOnDictionary { update_value = 1, insert = 2, remove = 3 };
+
+template<class DictionaryT>
+class DictionaryOfSimpleTypeRefWrapper
+{
+	DictionaryT& b;
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::value_type;
+public:
+	DictionaryOfSimpleTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+};
+
+template<class DictionaryT>
+class DictionaryOfCompositeTypeRefWrapper
+{
+	DictionaryT& b;
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::value_type;
+public:
+	DictionaryOfCompositeTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+};
+
+template<class RefWrapperT, class DictionaryT>
+class DictionaryOfStructRefWrapper
+{
+	DictionaryT& b;
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::value_type;
+public:
+	DictionaryOfStructRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+};
+
+template<class DictionaryT, class ElemTypeT, class RootT>
+class DictionaryRefWrapper4Set
+{
+	void finalizeInsertOrUpdateAt( size_t idx ) { 
+		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			impl::publishableComposeLeafeInteger( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			impl::publishableComposeLeafeReal( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			impl::publishableComposeLeafeString( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+		{
+			impl::publishableComposeLeafeStructBegin( root.getComposer() );
+			ElemTypeT::compose( root.getComposer(), b[idx] );
+			impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		}
+		else
+			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+	}
+
+protected:
+	DictionaryT& b;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+
+public:
+	DictionaryRefWrapper4Set( DictionaryT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+
+	void remove( size_t idx ) { 
+		GMQ_ASSERT( idx < b.size()); 
+		b.erase( b.begin() + idx );
+		impl::composeAddressInPublishable( root.getComposer(), address, idx );
+		impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::remove_at, true );
+	}
+
+	void insert_before( size_t idx, typename DictionaryT::value_type& what ) { 
+		GMQ_ASSERT( idx <= b.size());
+		b.insert( b.begin() + idx, what );
+		impl::composeAddressInPublishable( root.getComposer(), address, idx );
+		impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::insert_single_before, false );
+		finalizeInsertOrUpdateAt( idx );
+	}
+
+	void set_at( typename DictionaryT::value_type what, size_t idx ) {
+		GMQ_ASSERT( idx < b.size());
+		b[idx] = what;
+		impl::composeAddressInPublishable( root.getComposer(), address, idx );
+		impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::update_at, false );
+		finalizeInsertOrUpdateAt( idx );
+	}
+};
+
+template<class DictionaryT, class ElemTypeT, class RootT, class RefWrapper4SetT>
+class DictionaryOfStructRefWrapper4Set : public DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>
+{
+public:
+	DictionaryOfStructRefWrapper4Set( DictionaryT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : 
+		DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>( actual, root_, address_, idx ) {}
+	auto get4set_at( size_t idx ) { return RefWrapper4SetT(DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::b[idx], DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::root, DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::address, idx); }
+};
+
+class PublishableDictionaryProcessor
+{
+public:
+	template<class ParserT, class DictionaryT, class ProcType>
+	static
+	void parseSingleValue( ParserT& parser, typename DictionaryT::value_type& value ) { 
+		if constexpr ( std::is_same<ProcType, impl::SignedIntegralType>::value )
+			impl::IntegerProcessor::parse<ParserT, typename DictionaryT::value_type>( parser, &value );
+		else if constexpr ( std::is_same<ProcType, impl::UnsignedIntegralType>::value )
+			impl::UnsignedIntegerProcessor::parse( parser, &value );
+		else if constexpr ( std::is_same<ProcType, impl::RealType>::value )
+			impl::RealProcessor::parse( parser, &value );
+		else if constexpr ( std::is_same<ProcType, impl::StringType>::value )
+			impl::StringProcessor::parse( parser, &value );
+		else if constexpr ( std::is_base_of<impl::StructType, ProcType>::value )
+		{
+			impl::parseStructBegin( parser );
+			ProcType::parse( parser, value );
+			impl::parseStructEnd( parser );
+		}
+		else
+			static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
+	}
+
+	template<class ParserT, class DictionaryT, class ProcType>
+	static
+	bool parseSingleValueAndCompare( ParserT& parser, typename DictionaryT::value_type& value, const typename DictionaryT::value_type& oldValue ) { 
+		if constexpr ( std::is_base_of<impl::StructType, ProcType>::value )
+		{
+			impl::parseStructBegin( parser );
+			ProcType::parse( parser, value );
+			impl::parseStructEnd( parser );
+			return !ProcType::isSame( value, oldValue );
+		}
+		else 
+		{
+			if constexpr ( std::is_same<ProcType, impl::SignedIntegralType>::value )
+				impl::IntegerProcessor::parse<ParserT, typename DictionaryT::value_type>( parser, &value );
+			else if constexpr ( std::is_same<ProcType, impl::UnsignedIntegralType>::value )
+				impl::UnsignedIntegerProcessor::parse( parser, &value );
+			else if constexpr ( std::is_same<ProcType, impl::RealType>::value )
+				impl::RealProcessor::parse( parser, &value );
+			else if constexpr ( std::is_same<ProcType, impl::StringType>::value )
+				impl::StringProcessor::parse( parser, &value );
+			else
+				static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
+			return value != oldValue;
+		}
+	}
+
+	template<class ComposerTT, class DictionaryT, class ElemTypeT>
+	static
+	void compose( ComposerTT& composer, const DictionaryT& what ) { 
+		using ComposerT = typename std::remove_reference<ComposerTT>::type;
+		size_t collSz = what.size();
+		if constexpr ( ComposerT::proto == Proto::GMQ )
+		{
+			impl::composeUnsignedInteger( composer, collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					impl::composeSignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					impl::composeUnsignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					impl::composeReal( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					impl::composeString( composer, what[i] );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::composeStructBegin( composer );
+					ElemTypeT::compose( composer, what[i] );
+					impl::composeStructEnd( composer );
+				}
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+			}
+		}
+		else
+		{
+			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			composer.buff.append( "[", 1 );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					impl::json::composeSignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					impl::json::composeUnsignedInteger( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					impl::json::composeReal( composer, what[i] );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					impl::json::composeString( composer, what[i] );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::composeStructBegin( composer );
+					ElemTypeT::compose( composer, what[i] );
+					impl::composeStructEnd( composer );
+				}
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				if ( i + 1 < collSz ) 
+					composer.buff.append( ", ", 2 );
+			}
+			composer.buff.append( "]", 1 );
+		}
+	}
+
+	template<class ComposerT, class DictionaryT, class ElemTypeT, typename NameT>
+	static
+	void compose( ComposerT& composer, const DictionaryT& what, NameT name, bool addListSeparator ) { 
+		if constexpr ( ComposerT::proto == Proto::GMQ )
+			compose<ComposerT, DictionaryT, ElemTypeT>( composer, what );
+		else
+		{
+			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
+			impl::json::addNamePart( composer, name );
+			compose<ComposerT, DictionaryT, ElemTypeT>( composer, what );
+			if ( addListSeparator )
+				composer.buff.append( ",", 1 );
+		}
+	}
+
+	template<class ParserT, class DictionaryT, class ElemTypeT, bool suppressNotifications = false>
+	static
+	void parse( ParserT& parser, DictionaryT& dest ) { 
+		dest.clear();
+		if constexpr ( ParserT::proto == Proto::GMQ )
+		{
+			size_t collSz;
+			parser.parseUnsignedInteger( &collSz );
+			dest.reserve( collSz );
+			for ( size_t i=0; i<collSz; ++i )
+			{
+				typename DictionaryT::value_type what;
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					parser.parseSignedInteger( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					parser.parseUnsignedInteger( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					parser.parseReal( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					parser.parseString( &what );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::parseStructBegin( parser );
+					if constexpr( suppressNotifications )
+						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+					else
+						ElemTypeT::parse( parser, what );
+					impl::parseStructEnd( parser );
+				}
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				dest.push_back( what );
+			}
+		}
+		else
+		{
+			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+			parser.skipDelimiter( '[' );
+			if ( parser.isDelimiter( ']' ) )
+			{
+				parser.skipDelimiter( ']' );
+				if ( parser.isDelimiter( ',' ) )
+					parser.skipDelimiter( ',' );
+				return;
+			}
+			for( ;; )
+			{
+				typename DictionaryT::value_type what;
+				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+					parser.readSignedIntegerFromJson( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+					parser.readUnsignedIntegerFromJson( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+					parser.readRealFromJson( &what );
+				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+					parser.readStringFromJson( &what );
+				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				{
+					impl::parseStructBegin( parser );
+					if constexpr( suppressNotifications )
+						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+					else
+						ElemTypeT::parse( parser, what );
+					impl::parseStructEnd( parser );
+				}
+				else
+					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				dest.push_back( what );
+				if ( parser.isDelimiter( ',' ) )
+				{
+					parser.skipDelimiter( ',' );
+					continue;
+				}
+				if ( parser.isDelimiter( ']' ) )
+				{
+					parser.skipDelimiter( ']' );
+					break;
+				}
+			}
+			if ( parser.isDelimiter( ',' ) )
+				parser.skipDelimiter( ',' );
+		}
+	}
+};
+
+namespace impl {
+	template<class DictionaryT, class ValueTypeT>
+	void copyDictionary( const DictionaryT& src, DictionaryT& dst )
+	{
+		for ( const auto it: src )
+		{
+			if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
+				dst.insert( std::make_pair( it->first, it->second ) );
+			else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
+				dst.insert( std::make_pair( it->first, it->second ) );
+			else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
+				dst.insert( std::make_pair( it->first, it->second ) );
+			else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
+				dst.insert( std::make_pair( it->first, it->second ) );
+			else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
+			{
+				//ElemTypeT::copy( src[i], dst[i] );
+				dst.insert( std::make_pair( it->first, it->second ) ); // TODO
+			}
+			else
+				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+		}
+	}
+
+	template<class DictionaryT, class ValueTypeT>
+	bool isSameDictionary( const DictionaryT& v1, const DictionaryT& v2 )
+	{
+		if ( v1.size() != v2.size() )
+			return false;
+		auto it1 = v1.begin();
+		auto it2 = v2.begin();
+		while ( it1 != v1.end(); ++i1, ++it2 )
+		{
+			if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			{
+				if ( it1->first != it2->first || it1->second != it2->second ) 
+					return false;
+			}
+			else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			{
+				if ( it1->first != it2->first || it1->second != it2->second ) 
+					return false;
+			}
+			else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			{
+				if ( it1->first != it2->first || it1->second != it2->second ) 
+					return false;
+			}
+			else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			{
+				if ( it1->first != it2->first || it1->second != it2->second ) 
+					return false;
+			}
+			else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+			{
+				if ( it1->first != it2->first || !ValueTypeT::isSame( it1->second, it2->second ) ) 
+					return false;
+			}
+			else
+				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+		}
+		return true;
+	}
+} // namespace impl
+
+
+
+
+
 
 template<class PlatformSupportT>
 struct StateSubscriberData

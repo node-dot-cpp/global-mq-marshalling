@@ -42,6 +42,7 @@ const char* impl_kindToString( MessageParameterType::KIND kind )
 		case MessageParameterType::KIND::BYTE_ARRAY: return "BYTE_ARRAY";
 		case MessageParameterType::KIND::BLOB: return "BLOB";
 		case MessageParameterType::KIND::VECTOR: return "VECTOR";
+		case MessageParameterType::KIND::DICTIONARY: return "DICTIONARY";
 		case MessageParameterType::KIND::STRUCT: return "STRUCT";
 		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "DISCRIMINATED_UNION";
 		case MessageParameterType::KIND::EXTENSION: return "EXTENSION";
@@ -340,11 +341,11 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 	{
 		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // existance and extentability
 		{
-			param.type.messageIdx = (size_t)(-1);
+			param.type.structIdx = (size_t)(-1);
 			for ( size_t i=0; i<s.structs.size(); ++i )
 				if ( param.type.name == s.structs[i]->name )
 				{
-					param.type.messageIdx = i;
+					param.type.structIdx = i;
 					if ( param.type.isNonExtendable && !s.structs[i]->isNonExtendable )
 					{
 						fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( param.type.kind ), param.type.name.c_str(), parent.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber );
@@ -354,7 +355,7 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 //					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack, true );
 					break;
 				}
-			if ( param.type.messageIdx == (size_t)(-1) )
+			if ( param.type.structIdx == (size_t)(-1) )
 			{
 				fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( MessageParameterType::KIND::STRUCT ), param.type.name.c_str() );
 				ok = false;
@@ -363,11 +364,11 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::STRUCT || param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // extentability only
 	{
-		param.type.messageIdx = (size_t)(-1);
+		param.type.structIdx = (size_t)(-1);
 		for ( size_t i=0; i<s.structs.size(); ++i )
 			if ( param.type.name == s.structs[i]->name )
 			{
-				param.type.messageIdx = i;
+				param.type.structIdx = i;
 				if ( param.type.isNonExtendable && !s.structs[i]->isNonExtendable )
 				{
 					fprintf( stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( param.type.kind ), param.type.name.c_str(), parent.type2string(), s.structs[i]->location.fileName.c_str(), s.structs[i]->location.lineNumber );
@@ -377,7 +378,7 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 				impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack );
 				break;
 			}
-		if ( param.type.messageIdx == (size_t)(-1) )
+		if ( param.type.structIdx == (size_t)(-1) )
 		{
 			fprintf( stderr, "%s, line %d: %s name \"%s\" not found\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString( param.type.kind ), param.type.name.c_str() );
 			ok = false;
@@ -586,18 +587,18 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 				for ( auto& member : s->getMembers() )
 				{
 					if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-						structs[member->type.messageIdx]->dependsOnCnt = 1;
+						structs[member->type.structIdx]->dependsOnCnt = 1;
 //					else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-//						structs[member->type.messageIdx]->dependsOnCnt = 1;
+//						structs[member->type.structIdx]->dependsOnCnt = 1;
 				}
 			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 )
 				for ( auto& cs : s->getDiscriminatedUnionCases() )
 					for ( auto& member : cs->getMembers() )
 					{
 						if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-							structs[member->type.messageIdx]->dependsOnCnt = 1;
+							structs[member->type.structIdx]->dependsOnCnt = 1;
 //						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-//							structs[member->type.messageIdx]->dependsOnCnt = 1;
+//							structs[member->type.structIdx]->dependsOnCnt = 1;
 					}
 		for ( auto& s : structs )
 			if ( ( s->type == CompositeType::Type::structure || s->type == CompositeType::Type::discriminated_union ) && s->dependsOnCnt == 0 )
@@ -709,6 +710,36 @@ std::string impl_generateStandardCppTypeName( MessageParameterType& s )
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 					return fmt::format( "GMQ_COLL vector<{}>", s.name );
+				default: assert( false ); return ""; // unexpected or not implemented
+			}
+		}
+		case MessageParameterType::KIND::DICTIONARY: 
+		{
+			std::string ret;
+			switch ( s.dictionaryKeyKind )
+			{
+				case MessageParameterType::KIND::INTEGER:
+					ret = "GMQ_COLL unordered_map<int64_t,";
+					break;
+				case MessageParameterType::KIND::UINTEGER:
+					ret = "GMQ_COLL unordered_map<uint64_t,";
+					break;
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					ret = "GMQ_COLL unordered_map<GMQ_COLL string,";
+					break;
+				default: assert( false ); return ""; // unexpected or not implemented
+					break;
+			}
+			switch( s.dictionaryValueKind )
+			{
+				case MessageParameterType::KIND::INTEGER: return ret + "int64_t>";
+				case MessageParameterType::KIND::UINTEGER: return ret + "uint64_t>";
+				case MessageParameterType::KIND::REAL: return ret + "double>";
+				case MessageParameterType::KIND::CHARACTER_STRING: return ret + "GMQ_COLL string>";
+				case MessageParameterType::KIND::ENUM:
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+					return ret + fmt::format( "{}>", s.name );
 				default: assert( false ); return ""; // unexpected or not implemented
 			}
 		}

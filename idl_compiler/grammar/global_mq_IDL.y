@@ -47,6 +47,7 @@
 %token KW_CHARACTER_STRING
 %token KW_BLOB
 %token KW_VECTOR
+%token KW_DICTIONARY
 %token KW_PROTO
 %token KW_SCOPE
 
@@ -153,6 +154,7 @@ data_type
 	| inline_enum_type
 	| blob_type
 	| vector_type
+	| dictionary_type
 	| struct_type
 	| discriminated_union_type
 ;
@@ -285,6 +287,22 @@ vector_type
 	| KW_VECTOR '<' KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfDiscriminatedUnionsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
 	| KW_VECTOR '<' KW_NONEXTENDABLE KW_DISCRIMINATED_UNION IDENTIFIER '>' KW_DEFAULT '=' KW_EMPTY { $$ = createVectorOfDiscriminatedUnionsType($1, $5, true, true); releaseYys7($2, $3, $4, $6, $7, $8, $9); }
 ;
+
+dictionary_type_begin
+	: KW_DICTIONARY '<' KW_INTEGER { $$ = createDictionaryBeginWithIntegerKey($1); releaseYys2($2, $3); }
+	| KW_DICTIONARY '<' KW_UINTEGER { $$ = createDictionaryBeginWithUintegerKey($1); releaseYys2($2, $3); }
+	| KW_DICTIONARY '<' KW_CHARACTER_STRING { $$ = createDictionaryBeginWithCharStringKey($1); releaseYys2($2, $3); }
+;
+
+dictionary_type
+	: dictionary_type_begin ',' KW_INTEGER '>' { $$ = createDictionaryWithIntegerValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_UINTEGER '>' { $$ = createDictionaryWithUintegerValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_CHARACTER_STRING  '>' { $$ = createDictionaryWithUintegerValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_REAL '>' { $$ = createDictionaryWithRealValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_BLOB '>' { $$ = createDictionaryWithBLOBValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_BYTE_ARRAY '>' { $$ = createDictionaryWithByteArrayValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_STRUCT IDENTIFIER '>' { $$ = createDictionaryWithStructValue($1,$4); releaseYys3($2, $3, $5); }
+	| dictionary_type_begin ',' KW_DISCRIMINATED_UNION IDENTIFIER '>' { $$ = createDictionaryWithDiscriminatedUnionValue($1,$4); releaseYys3($2, $3, $5); }
 
 struct_type
 	: KW_STRUCT IDENTIFIER { $$ = createStructType($1, false, $2); }
