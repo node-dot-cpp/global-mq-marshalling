@@ -24,16 +24,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="message_one.gmq">
+    <None Update="struct_one.gmq">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="message_one.json">
+    <None Update="struct_one.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="message_du_1.gmq">
+    <None Update="struct_du_1.gmq">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="message_du_2.gmq">
+    <None Update="struct_du_2.gmq">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

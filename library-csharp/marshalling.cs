@@ -783,13 +783,15 @@ namespace globalmq.marshalling
 
             return false;
         }
-        public void handleGmq(GmqParser parser)
+        public void gmq_handle(GmqParser parser)
         {
             ulong msgID;
             parser.parseUnsignedInteger(out msgID);
-            handle(parser, msgID);
+            bool handled = handle(parser, msgID);
+            if (!handled)
+                throw new Exception();
         }
-        public void handleJson(JsonParser parser)
+        public void json_handle(JsonParser parser)
         {
             parser.skipDelimiter('{');
             string key;
@@ -806,9 +808,10 @@ namespace globalmq.marshalling
 
             bool handled = handle(parser, msgID);
 
-            //TODO what to do if not handled???
             if (handled)
                 parser.skipDelimiter('}');
+            else
+                throw new Exception();
         }
 
 

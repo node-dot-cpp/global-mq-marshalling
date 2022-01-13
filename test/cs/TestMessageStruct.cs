@@ -6,7 +6,7 @@ using Xunit;
 namespace TestProject1
 {
 
-    public class TestMessage
+    public class TestMessageStruct
     {
         public struct Point
         {
@@ -61,7 +61,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            mtest.test_gmq.message_one.compose(composer,
+            mtest.struct_one.compose(composer,
                 thirdParam: new CollectionWrapperForComposing(() => { return msg.three.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.three[ordinal].x, y: msg.three[ordinal].y, z: msg.three[ordinal].z); }),
                 firstParam: msg.one, fifthParam: msg.five, forthParam: msg.four, seventhParam: msg.seven,
                 eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eight.x, y: msg.eight.y); }),
@@ -71,7 +71,7 @@ namespace TestProject1
                 sixthParam: new CollectionWrapperForComposing(() => { return msg.six.Count; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.six[ordinal].x, y: msg.six[ordinal].y); })
             );
 
-            buffer.writeToFile("message_one.gmq");
+            buffer.writeToFile("struct_one.gmq");
         }
 
         public static void CreateJson()
@@ -82,7 +82,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer);
 
-            mtest.test_gmq.message_one.compose(composer,
+            mtest.struct_one.compose(composer,
                 thirdParam: new CollectionWrapperForComposing(() => { return msg.three.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.three[ordinal].x, y: msg.three[ordinal].y, z: msg.three[ordinal].z); }),
                 firstParam: msg.one, fifthParam: msg.five, forthParam: msg.four, seventhParam: msg.seven,
                 eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eight.x, y: msg.eight.y); }),
@@ -92,21 +92,21 @@ namespace TestProject1
                 sixthParam: new CollectionWrapperForComposing(() => { return msg.six.Count; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.six[ordinal].x, y: msg.six[ordinal].y); })
             );
 
-            buffer.writeToFile("message_one.json");
+            buffer.writeToFile("struct_one.json");
         }
 
         [Fact]
         public static void TestGmqFile()
         {
-            SimpleBuffer buffer = SimpleBuffer.readFromFile("message_one.gmq");
+            SimpleBuffer buffer = SimpleBuffer.readFromFile("struct_one.gmq");
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-            mtest.test_gmq.message_one msg = mtest.test_gmq.message_one.parse(parser);
+            mtest.struct_one msg = mtest.struct_one.parse(parser);
 
             SimpleBuffer buffer2 = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer2);
 
-            mtest.test_gmq.message_one.compose(composer,
+            mtest.struct_one.compose(composer,
                 thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
                 firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
                 eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
@@ -122,15 +122,15 @@ namespace TestProject1
         [Fact]
         public static void TestJsonFile()
         {
-            SimpleBuffer buffer = SimpleBuffer.readFromFile("message_one.json");
+            SimpleBuffer buffer = SimpleBuffer.readFromFile("struct_one.json");
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
-            mtest.test_gmq.message_one msg = mtest.test_gmq.message_one.parse(parser);
+            mtest.struct_one msg = mtest.struct_one.parse(parser);
 
             SimpleBuffer buffer2 = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer2);
 
-            mtest.test_gmq.message_one.compose(composer,
+            mtest.struct_one.compose(composer,
                 thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
                 firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
                 eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),

@@ -13,13 +13,12 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            mtest.test_gmq.message_du.compose(composer,
+            mtest.struct_du.compose(composer,
                 pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: 5, y: 6, z: 7); }),
                 disc_union: new MessageWrapperForComposing((ComposerBase composer) => { mtest.du_one.compose_one(composer, D1: 2.3, D2: 4.5, D3: 6.7); })
                 );
 
-
-            buffer.writeToFile("message_du_1.gmq");
+            buffer.writeToFile("struct_du_1.gmq");
         }
 
         public static void CreateGmq2()
@@ -27,7 +26,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            mtest.test_gmq.message_du.compose(composer,
+            mtest.struct_du.compose(composer,
                 pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: 5, y: 6, z: 7); }),
                 disc_union: new MessageWrapperForComposing((ComposerBase composer) =>
                 {
@@ -37,8 +36,7 @@ Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
                 })
                 );
 
-
-            buffer.writeToFile("message_du_2.gmq");
+            buffer.writeToFile("struct_du_2.gmq");
         }
 
 
@@ -47,13 +45,13 @@ Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-            mtest.test_gmq.message_du msg = mtest.test_gmq.message_du.parse(parser);
+            mtest.struct_du msg = mtest.struct_du.parse(parser);
 
             SimpleBuffer buffer2 = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer2);
 
 
-            mtest.test_gmq.message_du.compose(composer,
+            mtest.struct_du.compose(composer,
             pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.pt.x, y: msg.pt.y, z: msg.pt.z); }),
             disc_union: new MessageWrapperForComposing((ComposerBase composer) =>
             {
@@ -71,13 +69,13 @@ Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
         [Fact]
         public static void TestGmqFile1()
         {
-            TestGmqFile("message_du_1.gmq");
+            TestGmqFile("struct_du_1.gmq");
         }
 
         [Fact]
         public static void TestGmqFile2()
         {
-            TestGmqFile("message_du_1.gmq");
+            TestGmqFile("struct_du_1.gmq");
         }
 
 

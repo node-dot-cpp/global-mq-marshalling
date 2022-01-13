@@ -44,7 +44,7 @@ namespace {
 
 	void csharpMsg_generateScopeEnum(FILE* header, Scope& scope)
 	{
-		fprintf(header, "public enum MessageName  { ");
+		fprintf(header, "public enum MsgIds { ");
 		for (auto msg = scope.objectList.begin(); msg != scope.objectList.end(); ++msg)
 		{
 			if(msg != scope.objectList.begin())
@@ -224,12 +224,12 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\t\tcomposer.composeString(%s);\n", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				break;
-			case MessageParameterType::KIND::BLOB:
-				break;
-			case MessageParameterType::KIND::ENUM:
-				break;
+			//case MessageParameterType::KIND::BYTE_ARRAY:
+			//	break;
+			//case MessageParameterType::KIND::BLOB:
+			//	break;
+			//case MessageParameterType::KIND::ENUM:
+			//	break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t%s.composeGmq(composer);\n", param.name.c_str());
 				break;
@@ -281,12 +281,12 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\t\tparser.parseString(out %s);\n", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				break;
-			case MessageParameterType::KIND::BLOB:
-				break;
-			case MessageParameterType::KIND::ENUM:
-				break;
+			//case MessageParameterType::KIND::BYTE_ARRAY:
+			//	break;
+			//case MessageParameterType::KIND::BLOB:
+			//	break;
+			//case MessageParameterType::KIND::ENUM:
+			//	break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t%s.parseGmq(parser);\n", param.name.c_str());
 				break;
@@ -348,12 +348,12 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\t\tcomposer.composeString(%s);\n", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				break;
-			case MessageParameterType::KIND::BLOB:
-				break;
-			case MessageParameterType::KIND::ENUM:
-				break;
+			//case MessageParameterType::KIND::BYTE_ARRAY:
+			//	break;
+			//case MessageParameterType::KIND::BLOB:
+			//	break;
+			//case MessageParameterType::KIND::ENUM:
+			//	break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t%s.composeJson(composer);\n", param.name.c_str());
 				break;
@@ -469,12 +469,12 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\t\t\t\tparser.parseString(out %s);\n", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				break;
-			case MessageParameterType::KIND::BLOB:
-				break;
-			case MessageParameterType::KIND::ENUM:
-				break;
+			//case MessageParameterType::KIND::BYTE_ARRAY:
+			//	break;
+			//case MessageParameterType::KIND::BLOB:
+			//	break;
+			//case MessageParameterType::KIND::ENUM:
+			//	break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t\t\t%s.parseJson(parser);\n", param.name.c_str());
 				break;
@@ -951,41 +951,6 @@ namespace {
 			"\t\tthrow new InvalidOperationException();\n"
 			"\t}\n");
 
-		//fprintf(header, "\tpublic bool Equals(%s other)\n"
-		//	"\t{\n"
-		//	"\t\treturn\n", name.c_str());
-
-		//auto& mem = s.getMembers();
-		//for (auto it = mem.begin(); it != mem.end(); ++it)
-		//{
-		//	//auto& it = s.members[i];
-		//	assert(*it != nullptr);
-		//	auto& member = **it;
-
-		//	if(it != mem.begin())
-		//		fprintf(header, " &&\n");
-
-
-		//	switch (member.type.kind)
-		//	{
-		//	case MessageParameterType::KIND::INTEGER:
-		//	case MessageParameterType::KIND::UINTEGER:
-		//	case MessageParameterType::KIND::REAL:
-		//	case MessageParameterType::KIND::CHARACTER_STRING:
-		//		fprintf(header, "\t\t\tthis.%s == other.%s", member.name.c_str(), member.name.c_str());
-		//		break;
-		//	case MessageParameterType::KIND::STRUCT:
-		//	case MessageParameterType::KIND::DISCRIMINATED_UNION:
-		//		fprintf(header, "\t\t\tthis.%s.Equals(other.%s)", member.name.c_str(), member.name.c_str());
-		//		break;
-		//	case MessageParameterType::KIND::VECTOR:
-		//		fprintf(header, "\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
-		//		break;
-		//	default:
-		//		assert(false); // not implemented (yet)
-		//	}
-		//}
-		//fprintf(header, ";\n\t}\n");
 	}
 
 	void csharpMsg_generateStructEqualsMethod(FILE* header, CompositeType& s)
@@ -1044,60 +1009,60 @@ namespace {
 			"\t}\n");
 	}
 
-	void csharpMsg_generateComposeMessageMethod(FILE* header, CompositeType& s)
+	void csharpMsg_generateComposeMessageMethod(FILE* header, const std::string& msgName, CompositeType& s, Proto proto)
 	{
-		//mb: here we process messages and struct alias only
+		// when message is an alias we feed structure here
+		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure);
 
-		fprintf(header, "\tpublic static void composeMessage(ComposerBase composer, ");
+		fprintf(header, "\tpublic static void composeMessage_%s(BufferT buffer, ", msgName.c_str());
 
 		csharpMsg_generateComposeParamTypeLIst(header, s);
 
 		fprintf(header, ")\n\t{\n");
 
-		fprintf(header,
-			"\t\tif (composer is GmqComposer gmqC)\n"
-			"\t\t{\n"
-			"\t\t\tgmqC.composeUnsignedInteger(MsgId);\n"
-			"\t\t\tcompose(gmqC, ");
+		if (proto == Proto::gmq)
+		{
+			fprintf(header,
+				"\t\tGmqComposer composer = new GmqComposer(buffer);\n\n"
+				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgIds.%s);\n"
+				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
 
 
-		csharpMsg_generateCallerParamTypeLIst(header, s, false);
-		fprintf(header,
-			");\n"
-			"\t\t}\n");
+			csharpMsg_generateCallerParamTypeLIst(header, s, false);
+			fprintf(header,");\n");
+		}
+		else if (proto == Proto::json)
+		{
+			fprintf(header,
+				"\t\tJsonComposer composer = new JsonComposer(buffer);\n\n"
+				"\t\tcomposer.append(\"{\\n  \");\n"
+				"\t\tcomposer.addNamePart(\"msgid\");\n"
+				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgIds.%s);\n"
+				"\t\tcomposer.append(\",\\n  \");\n"
+				"\t\tcomposer.addNamePart(\"msgbody\");\n"
+				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
 
+			csharpMsg_generateCallerParamTypeLIst(header, s, false);
+			fprintf(header,	");\n"
+				"\t\tcomposer.append(\"\\n}\");\n");
+		}
+		else
+		{
+			assert(false);
+		}
 
-		fprintf(header,
-			"\t\telse if (composer is JsonComposer jsonC)\n"
-			"\t\t{\n"
-			"\t\t\tjsonC.append(\"{\\n  \");\n"
-			"\t\t\tjsonC.addNamePart(\"msgid\");\n"
-			"\t\t\tjsonC.composeUnsignedInteger(MsgId);\n"
-			"\t\t\tjsonC.append(\",\\n  \");\n"
-			"\t\t\tjsonC.addNamePart(\"msgbody\");\n"
-			"\t\t\tcompose(jsonC, ");
-
-		csharpMsg_generateCallerParamTypeLIst(header, s, false);
-		fprintf(header,
-			");\n"
-			"\t\t\tjsonC.append(\"\\n}\");\n"
-			"\t\t}\n");
-
-		fprintf(header,
-			"\t\telse\n"
-			"\t\t\tthrow new ArgumentException();\n");
-
-		fprintf(header, "\t}\n");
+		fprintf(header, "\t}\n\n");
 	}
-
 
 	void csharpMsg_generateStruct(FILE* header, Root& root, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		//mb: we use this function to create base classes and inner union_case classes.
-		// Inner union_case classes should be indented inside their discriminated_union class,
-		// but that goes bad in readability of this function, so I prefer to leave it as it is.
+		//mb: we use this function to create outer and inner classes.
+		// i.e. scope class has inner messages classes and
+		// discriminated_union class has inner union_cases classes.
+		// Inner classes should be indented inside their outer class,
+		// but that goes bad in readability of this function, so I prefer to leave it as it is for now.
 
 		bool checked = impl_checkParamNameUniqueness(s);
 		checked = impl_checkFollowingExtensionRules(s) && checked;
@@ -1109,12 +1074,8 @@ namespace {
 		if(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure)
 			impl_generateMessageCommentBlock(header, s);
 
-		// TODO generate structs also
 		fprintf(header, "public class %s : IEquatable<%s>\n"
 			"{\n", name.c_str(), name.c_str());
-
-		if (s.type == CompositeType::Type::message)
-			fprintf(header, "\tpublic static UInt64 MsgId = %lld;\n\n", s.numID);
 
 		csharpMsg_generateStructMembers(header, root, s);
 
@@ -1131,10 +1092,6 @@ namespace {
 		csharpMsg_generateStructParseBase(header, s);
 		csharpMsg_generateStructParseJson(header, s);
 		csharpMsg_generateStructParseGmq(header, s);
-
-		if(s.type == CompositeType::Type::message)
-			csharpMsg_generateComposeMessageMethod(header, s);
-
 
 		fprintf(header, "} // class %s\n\n", name.c_str());
 	}
@@ -1174,12 +1131,8 @@ namespace {
 
 		fprintf(header, "unknown };\n");
 
-//		std::string memName = concatenatedNames + "mem";
-
 		fprintf(header, "\tObject mem;\n");
 
-
-		//csharpMsg_generateMembers(header, root, s);
 
 		fprintf(header, "\n");
 
@@ -1250,13 +1203,11 @@ namespace {
 
 	void csharpMsg_generateMessageAliasMethods(FILE* header, CompositeType& s, CompositeType& target, const char* composerType, const char* parserType)
 	{
-		// compose function
-		//std::string compName = csharpMsg_generateComposeFunctionName(s);
+
 		fprintf(header, "\tpublic new static void compose(%s composer, ", composerType);
 		csharpMsg_generateComposeParamTypeLIst(header, target);
 		fprintf(header, ")\n\t{\n");
 
-		//std::string targetCompName = csharpMsg_generateComposeFunctionName(target);
 		fprintf(header, "\t\t%s.compose(composer, ", target.name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, target, false);
 		fprintf(header, ");\n");
@@ -1265,13 +1216,11 @@ namespace {
 		fprintf(header, "\t}\n");
 
 		// parse function
-		//std::string parseName = csharpMsg_generateParseFunctionName(s);
 		fprintf(header, "\tprotected new static void parse(%s parser, ", parserType);
 		csharpMsg_generateParseParamTypeLIst(header, target);
 		fprintf(header, ")\n\t{\n");
 
 
-		//std::string targetParseName = csharpMsg_generateParseFunctionName(target);
 		fprintf(header, "\t\t%s.parse(parser, ", target.name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, target, true);
 		fprintf(header, ");\n");
@@ -1290,13 +1239,9 @@ namespace {
 		fprintf(header, "public class %s : %s\n"
 			"{\n", s.name.c_str(), target.name.c_str());
 
-		fprintf(header, "public static UInt64 MsgId = %lld;\n", s.numID);
-
 		csharpMsg_generateMessageAliasMethods(header, s, target, "ComposerBase", "ParserBase");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "GmqComposer", "GmqParser");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "JsonComposer", "JsonParser");
-
-		csharpMsg_generateComposeMessageMethod(header, target);
 
 		fprintf(header, "} // class %s\n\n", s.name.c_str());
 	}
@@ -1305,6 +1250,40 @@ namespace {
 	{
 		fprintf(header,
 			"\tpublic static void handleMessage( BufferT buffer, MessageHandlerArray handlers )\n"
+			"\t{\n"
+			"\t\thandleMessage(buffer.getReadIterator(), handlers);\n"
+			"\t}\n");
+
+
+		fprintf(header,
+			"\tpublic static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n"
+			"\t{\n"
+		);
+		switch (scope.proto)
+		{
+		case Proto::gmq:
+			fprintf(header,
+				"\t\tGmqParser parser = new GmqParser( riter );\n"
+				"\t\thandlers.gmq_handle(parser);\n"
+			);
+			break;
+		case Proto::json:
+			fprintf(header,
+				"\t\tJsonParser parser = new JsonParser( riter );\n"
+				"\t\thandlers.json_handle(parser);\n"
+			);
+			break;
+		default:
+			assert(false);
+		}
+		fprintf(header, "\t}\n");
+	}
+
+	
+	void csharpMsg_generateScopeComposer(FILE* header, Scope& scope)
+	{
+		fprintf(header,
+			"\tpublic static void composeMessage( BufferT buffer, MessageHandlerArray handlers )\n"
 			"\t{\n"
 			"\t\tReadIteratorT riter = buffer.getReadIterator();\n"
 			"\t\thandleMessage(riter, handlers);\n"
@@ -1320,13 +1299,13 @@ namespace {
 		case Proto::gmq:
 			fprintf(header,
 				"\t\tGmqParser parser = new GmqParser( riter );\n"
-				"\t\thandlers.handleGmq(parser);\n"
+				"\t\thandlers.gmq_handle(parser);\n"
 			);
 			break;
 		case Proto::json:
 			fprintf(header,
 				"\t\tJsonParser parser = new JsonParser( riter );\n"
-				"\t\thandlers.handleJson(parser);\n"
+				"\t\thandlers.json_handle(parser);\n"
 			);
 			break;
 		default:
@@ -1334,51 +1313,11 @@ namespace {
 		}
 		fprintf(header, "\t}\n");
 	}
-
-
-	//void csharpMsg_orderStructsByDependency(vector<unique_ptr<CompositeType>>& structs, vector<CompositeType*>& out)
-	//{
-	//	size_t processed = 0;
-	//	vector<CompositeType*> tmpStructs;
-	//	while (processed < structs.size())
-	//	{
-	//		for (auto& s : structs)
-	//			if (s->dependsOnCnt != -1)
-	//				for (auto& member : s->getMembers())
-	//					if (member->type.kind == MessageParameterType::KIND::STRUCT)
-	//						structs[member->type.messageIdx]->dependsOnCnt = 1;
-	//		for (auto& s : structs)
-	//			if (s->dependsOnCnt == 0)
-	//			{
-	//				tmpStructs.push_back(s.get());
-	//				s->dependsOnCnt = -1;
-	//				++processed;
-	//			}
-	//		for (auto& s : structs)
-	//			if (s->dependsOnCnt != -1)
-	//				s->dependsOnCnt = 0;
-	//	}
-	//	for (size_t i = 0; i < tmpStructs.size(); ++i)
-	//		out.push_back(tmpStructs[tmpStructs.size() - 1 - i]);
-	//	assert(out.size() == structs.size());
-	//
-	//	for (auto& s : structs)
-	//		s->dependsOnCnt = 0;
-	//}
-
 }
-
-
 
 
 void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
 {
-	//std::set<string> msgParams;
-	//impl_CollectMessageParamNamesFromRoot( msgParams, s );
-
-	//std::set<string> publishableMembers;
-	//impl_CollectPublishableMemberNamesFromRoot( publishableMembers, s );
-
 	fprintf(header, "//////////////////////////////////////////////////////////////\n");
 	fprintf(header, "//\n");
 	fprintf(header, "//  Do not edit! file automatically generated by idl_compiler\n");
@@ -1397,29 +1336,9 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 		"\n"
 		, metascope.c_str());
 
-	//addLibAliasingBlock( header );
-
-	//generateMessageParamNameBlock( header, msgParams );
-	//generatePublishableMemberNameBlock( header, publishableMembers );
-	//generateNotifierPresenceTesterBlock( header, s );
 
 	vector<CompositeType*> structsOrderedByDependency;
 	orderStructsByDependency( s.structs, structsOrderedByDependency );
-
-	//for ( auto& it : s.structs )
-	//{
-	//	assert( it != nullptr );
-	//	assert( typeid( *(it) ) == typeid( CompositeType ) );
-	//	assert( it->type == CompositeType::Type::structure );
-	//	if ( it->isStruct4Publishing )
-	//	{
-	//		impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//		impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//		impl_GeneratePublishableStructWrapper4SetForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//		fprintf( header, "\n" );
-	//	}
-	//}
-
 
 	fprintf(header, "//////////////////////////////////////////////////////////////\n");
 	fprintf(header, "//\n");
@@ -1427,14 +1346,6 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 	fprintf(header, "//\n");
 	fprintf(header, "//////////////////////////////////////////////////////////////\n\n");
 
-	//for ( auto it : structsOrderedByDependency )
-	//{
-	//	assert( it != nullptr );
-	//	assert( typeid( *(it) ) == typeid( CompositeType ) );
-	//	assert( it->type == CompositeType::Type::structure );
-	//	if ( it->isStruct4Publishing )
-	//		impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//}
 	for (auto& it : structsOrderedByDependency)
 	{
 		assert(it != nullptr);
@@ -1458,85 +1369,35 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 	{
 		fprintf( header, "public class %s\n{\n", scope->name.c_str() );
 
-		//impl_generateScopeEnum( header, *scope );
+		csharpMsg_generateScopeEnum(header, *scope);
+		fprintf(header, "\n");
 		csharpMsg_generateScopeHandler( header, *scope );
-		//impl_generateScopeComposerForwardDeclaration( header, *scope );
-		//csharpMsg_generateScopeComposer(header, *scope);
-		
 		fprintf(header, "\n");
 
 		for ( auto it : scope->objectList )
 		{
 			assert( it != nullptr );
 			assert( it->type == CompositeType::Type::message );
-			if ( !it->isAlias )
-				csharpMsg_generateStruct( header, s, *it );
+			if (!it->isAlias)
+			{
+				csharpMsg_generateStruct(header, s, *it);
+				csharpMsg_generateComposeMessageMethod(header, it->name, *it, scope->proto);
+			}
 			else
 			{
 				assert(it->aliasIdx < s.structs.size());
-				csharpMsg_generateMessageAlias(header, *it, *(s.structs[it->aliasIdx]));
+				auto& alias = s.structs[it->aliasIdx];
+				csharpMsg_generateMessageAlias(header, *it, *alias);
+				csharpMsg_generateComposeMessageMethod(header, it->name, *alias, scope->proto);
 			}
+
 		}
 
 		fprintf(header, "} // class %s\n\n", scope->name.c_str());
 	}
 
 
-	fprintf(header, "//////////////////////////////////////////////////////////////\n");
-	fprintf(header, "//\n");
-	fprintf(header, "//                 Publishables\n");
-	fprintf(header, "//\n");
-	fprintf(header, "//////////////////////////////////////////////////////////////\n\n");
-
 	generateCsharpPublishables(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
-	//for ( auto& it : s.publishables )
-	//{
-	//	auto& obj_1 = it;
-	//	assert( obj_1 != nullptr );
-	//	assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-	//	assert( obj_1->type == CompositeType::Type::publishable );
-	//	generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), platformPrefix, classNotifierName );
-	//}
-
-	//fprintf( header, "//===============================================================================\n" );
-	//fprintf( header, "// Publishable c-structures\n" );
-	//fprintf( header, "// Use them as-is or copy and edit member types as necessary\n\n" );
-	//for ( auto it : structsOrderedByDependency )
-	//{
-	//	assert( it != nullptr );
-	//	assert( typeid( *(it) ) == typeid( CompositeType ) );
-	//	assert( it->type == CompositeType::Type::structure );
-	//	if ( it->isStruct4Publishing )
-	//		generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//}
-
-	//for ( auto& it : s.publishables )
-	//{
-	//	auto& obj_1 = it;
-	//	assert( obj_1 != nullptr );
-	//	assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-	//	assert( obj_1->type == CompositeType::Type::publishable );
-	//	generatePublishableAsCStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//}
-	//fprintf( header, "\n//===============================================================================\n\n" );
-
-	//if ( !s.publishables.empty() )
-	//{
-	//	generateStateConcentratorFactory( header, s );
-	//	fprintf( header, "\n//===============================================================================\n\n" );
-	//}
-
-	//for ( auto& it : structsOrderedByDependency )
-	//{
-	//	assert( it != nullptr );
-	//	assert( typeid( *(it) ) == typeid( CompositeType ) );
-	//	assert( it->type == CompositeType::Type::structure );
-	//	if ( it->isStruct4Publishing )
-	//	{
-	//		impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//		impl_GeneratePublishableStructWrapper4Set( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//	}
-	//}
 
 	fprintf( header, "\n} // namespace %s\n\n",	metascope.c_str() );
 }

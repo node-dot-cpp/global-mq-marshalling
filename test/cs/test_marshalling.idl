@@ -3,9 +3,18 @@
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 
-MESSAGE test_gmq :point3D_alias=1 = STRUCT point3D;
-MESSAGE test_json :point_alias=2 = STRUCT point;
+MESSAGE test_gmq : message_one = 1 = STRUCT struct_one;
+MESSAGE test_json : message_one = 1 = STRUCT struct_one;
 
+MESSAGE NONEXTENDABLE test_gmq : message_four = 2 {
+	STRUCT point pt;
+	VECTOR<STRUCT point3D> pts3d;
+};
+
+MESSAGE NONEXTENDABLE test_json : message_four = 2 {
+	STRUCT point pt;
+	VECTOR<STRUCT point3D> pts3d;
+};
 
 STRUCT NONEXTENDABLE point {
   INTEGER x;
@@ -18,8 +27,7 @@ STRUCT point3D {
   INTEGER z;
 };
 
-
-MESSAGE test_gmq:message_one=3 {
+STRUCT struct_one {
   INTEGER firstParam;
   VECTOR<INTEGER> secondParam;
   VECTOR<STRUCT point3D> thirdParam;
@@ -32,18 +40,6 @@ MESSAGE test_gmq:message_one=3 {
   VECTOR<REAL> tenthParam;
 };
 
-MESSAGE test_json:message_one=3 {
-  INTEGER firstParam;
-  VECTOR<INTEGER> secondParam;
-  VECTOR<STRUCT point3D> thirdParam;
-  UINTEGER forthParam;
-  CHARACTER-STRING fifthParam;
-  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
-  REAL seventhParam;
-  STRUCT NONEXTENDABLE point eighthParam;
-  STRUCT point3D ninethParam;
-  VECTOR<REAL> tenthParam;
-};
 
 
 DISCRIMINATED_UNION du_one{
@@ -57,8 +53,34 @@ DISCRIMINATED_UNION du_one{
 	}
 };
 
-MESSAGE NONEXTENDABLE test_gmq : message_du = 5 {
+STRUCT struct_du {
 	STRUCT point3D pt;
 	DISCRIMINATED_UNION du_one disc_union;
 };
 
+MESSAGE test_gmq : message_du = 5 = STRUCT struct_du;
+
+
+PUBLISHABLE html_data = 3 {
+	STRUCT HtmlTag tag;
+};
+
+STRUCT Property{
+  CHARACTER-STRING name;
+  CHARACTER-STRING value;
+};
+
+
+STRUCT HtmlTag{
+	STRUCT Property p1;
+	STRUCT Property p2;
+	
+
+	INTEGER i1;
+};
+
+STRUCT HtmlSubData{
+	CHARACTER-STRING name;
+	CHARACTER-STRING value;
+
+};

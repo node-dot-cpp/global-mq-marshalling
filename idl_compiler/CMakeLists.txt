@@ -11,6 +11,7 @@ add_executable(idl_compiler
     src/idl_tree_serializer_publishables.cpp
     src/idl_tree_serializer_publishables_print_tree.cpp
     src/idl_tree_2_csharp.cpp
+    src/idl_tree_2_csharp_publishables.cpp
     src/main.cpp
 )
 
