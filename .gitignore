@@ -25,6 +25,6 @@ obj/
 /.vscode
 *.user
 /idl_compiler/build/Debug
-/dotnet/Debug
+/library-csharp/Debug
 /test/csharp-2-cpp/build/cpp-2-csharp.vcxproj.filters
 /test/csharp-2-cpp/build/Debug
