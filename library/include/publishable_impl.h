@@ -746,7 +746,7 @@ namespace impl {
 				dst.insert( std::make_pair( it->first, it->second ) ); // TODO
 			}
 			else
-				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
 		}
 	}
 
@@ -757,35 +757,38 @@ namespace impl {
 			return false;
 		auto it1 = v1.begin();
 		auto it2 = v2.begin();
-		while ( it1 != v1.end(); ++i1, ++it2 )
+		while ( it1 != v1.end() )
 		{
-			if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
 			{
 				if ( it1->first != it2->first || it1->second != it2->second ) 
 					return false;
 			}
-			else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
 			{
 				if ( it1->first != it2->first || it1->second != it2->second ) 
 					return false;
 			}
-			else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
 			{
 				if ( it1->first != it2->first || it1->second != it2->second ) 
 					return false;
 			}
-			else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
 			{
 				if ( it1->first != it2->first || it1->second != it2->second ) 
 					return false;
 			}
-			else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+			else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 			{
 				if ( it1->first != it2->first || !ValueTypeT::isSame( it1->second, it2->second ) ) 
 					return false;
 			}
 			else
-				static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+				static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
+			
+			++it1;
+			++it2;
 		}
 		return true;
 	}
