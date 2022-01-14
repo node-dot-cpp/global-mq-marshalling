@@ -1,5 +1,5 @@
-#ifndef test_marshalling_h_17e3991f_guard
-#define test_marshalling_h_17e3991f_guard
+#ifndef _test_marshalling_h_17e3991f_guard
+#define _test_marshalling_h_17e3991f_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -564,7 +564,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
 			switch ( caseId )
 			{
-				case 1: // IDL CASE (null)
+				case 1: // IDL CASE one
 				{
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D1_T>( parser, &(t.D1()), "D1" );
 
@@ -573,7 +573,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D3_T>( parser, &(t.D3()), "D3" );
 
 				}
-				case 2: // IDL CASE (null)
+				case 2: // IDL CASE two
 				{
 					::globalmq::marshalling::impl::parseKey( parser, "Data" );
 					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_Data_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.Data() );
@@ -1491,30 +1491,6 @@ public:
 	}
 };
 
-template<class T, class RegistrarT>
-class html_data_NodecppWrapperForPublisher : public html_data_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
-{
-	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
-	RegistrarT& registrar;
-public:
-	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
-	template<class ... ArgsT>
-	html_data_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : html_data_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
-	{ 
-		registrar.add( this );
-	}
-
-	virtual ~html_data_NodecppWrapperForPublisher()
-	{ 
-		registrar.remove( this );
-	}
-
-	virtual void startTick( BufferT&& buff ) { html_data_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
-	virtual BufferT&& endTick() { return  html_data_WrapperForPublisher<T, ComposerT>::endTick(); }
-	virtual void generateStateSyncMessage(ComposerT& composer) { html_data_WrapperForPublisher<T, ComposerT>::compose(composer); }
-	virtual const char* name() { return html_data_WrapperForPublisher<T, ComposerT>::name(); }
-};
-
 template<class T, class BufferT>
 class html_data_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
 {
@@ -1633,51 +1609,6 @@ public:
 			t.notifyFullyUpdated();
 	}
 	const auto& get_tag() { return t.tag; }
-};
-
-template<class T, class RegistrarT>
-class html_data_NodecppWrapperForSubscriber : public html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
-{
-	RegistrarT& registrar;
-public:
-	template<class ... ArgsT>
-	html_data_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
-	{ 
-		registrar.add( this );
-	}
-
-	virtual ~html_data_NodecppWrapperForSubscriber()
-	{ 
-		registrar.remove( this );
-	}
-
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
-	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
-	}
-
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
-	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
-	}
-
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
-	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
-	}
-
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
-	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
-	}
-	virtual const char* name()
-	{
-		return html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
-	}
-	void subscribe(GMQ_COLL string path)
-	{
-		registrar.subscribe( this, path );
-	}
 };
 
 template<class T, class InputBufferT, class ComposerT>
@@ -2124,4 +2055,4 @@ void STRUCT_struct_du_compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // test_marshalling_h_17e3991f_guard
+#endif // _test_marshalling_h_17e3991f_guard

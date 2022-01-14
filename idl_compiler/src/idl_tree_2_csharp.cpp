@@ -1397,7 +1397,8 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 	}
 
 
-	generateCsharpPublishables(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
+	// temporary remove
+	//generateCsharpPublishables(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
 
 	fprintf( header, "\n} // namespace %s\n\n",	metascope.c_str() );
 }

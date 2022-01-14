@@ -675,18 +675,6 @@ public class message_one_json : message_one
 
 } // class test_json
 
-//////////////////////////////////////////////////////////////
-//
-//                 Publishables
-//
-//////////////////////////////////////////////////////////////
-
-namespace publishable
-{
-
-
-} // namespace publishable
-
 
 } // namespace mtest
 
