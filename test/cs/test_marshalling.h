@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_17e3991f_guard
-#define _test_marshalling_h_17e3991f_guard
+#ifndef test_marshalling_h_d3979a03_guard
+#define test_marshalling_h_d3979a03_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -42,15 +42,15 @@ DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&
 //
 //  test_gmq
 //  {
-//    message_one
+//    message_two
 //    message_four
 //    message_du
 //  }
 //
 //  test_json
 //  {
-//    message_one
-//    message_four
+//    message_three
+//    message_five
 //  }
 //
 //////////////////////////////////////////////////////////////
@@ -343,11 +343,11 @@ struct struct_one
 };
 
 namespace test_gmq {
-struct MESSAGE_message_one : public struct_one {};
+struct MESSAGE_message_two : public struct_one {};
 } // namespace test_gmq
 
 namespace test_json {
-struct MESSAGE_message_one : public struct_one {};
+struct MESSAGE_message_three : public struct_one {};
 } // namespace test_json
 
 namespace test_gmq {
@@ -359,7 +359,7 @@ struct MESSAGE_message_four
 } // namespace test_gmq
 
 namespace test_json {
-struct MESSAGE_message_four
+struct MESSAGE_message_five
 {
 	point pt;
 	GMQ_COLL vector<point3D> pts3d;
@@ -564,7 +564,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
 			switch ( caseId )
 			{
-				case 1: // IDL CASE one
+				case 1: // IDL CASE (null)
 				{
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D1_T>( parser, &(t.D1()), "D1" );
 
@@ -573,7 +573,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D3_T>( parser, &(t.D3()), "D3" );
 
 				}
-				case 2: // IDL CASE two
+				case 2: // IDL CASE (null)
 				{
 					::globalmq::marshalling::impl::parseKey( parser, "Data" );
 					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_Data_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.Data() );
@@ -1034,8 +1034,8 @@ struct publishable_STRUCT_struct_one : public ::globalmq::marshalling::impl::Str
 
 namespace test_gmq {
 
-using message_one = ::globalmq::marshalling::impl::MessageName<1>;
-using message_four = ::globalmq::marshalling::impl::MessageName<2>;
+using message_two = ::globalmq::marshalling::impl::MessageName<2>;
+using message_four = ::globalmq::marshalling::impl::MessageName<4>;
 using message_du = ::globalmq::marshalling::impl::MessageName<5>;
 
 template<class ParserT, class ... HandlersT >
@@ -1049,7 +1049,7 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 
 	switch ( msgID )
 	{
-		case message_one::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
+		case message_two::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_two>( parser, handlers... ); break;
 		case message_four::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_four>( parser, handlers... ); break;
 		case message_du::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_du>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
@@ -1076,18 +1076,18 @@ template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
-// MESSAGE "message_one" Targets: GMQ (Alias of struct_one)
+// MESSAGE "message_two" Targets: GMQ (Alias of struct_one)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
+void MESSAGE_message_two_compose(ComposerT& composer, Args&& ... args)
 {
 	STRUCT_struct_one_compose(composer, std::forward<Args>( args )...);
 }
 
 template<class ParserT, typename ... Args>
-void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
+void MESSAGE_message_two_parse(ParserT& p, Args&& ... args)
 {
 	STRUCT_struct_one_parse(p, std::forward<Args>( args )...);
 }
@@ -1134,9 +1134,9 @@ structures::struct_one STRUCT_struct_one_parse(ParserT& parser)
 }
 
 template<class ParserT>
-structures::test_gmq::MESSAGE_message_one MESSAGE_message_one_parse(ParserT& p)
+structures::test_gmq::MESSAGE_message_two MESSAGE_message_two_parse(ParserT& p)
 {
-	return static_cast<structures::test_gmq::MESSAGE_message_one>(STRUCT_struct_one_parse(p));
+	return static_cast<structures::test_gmq::MESSAGE_message_two>(STRUCT_struct_one_parse(p));
 }
 
 //**********************************************************************
@@ -1235,8 +1235,8 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 	static_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );
 	globalmq::marshalling::GmqComposer composer( buffer );
 	::globalmq::marshalling::impl::composeUnsignedInteger( composer, msgID::id );
-	if constexpr ( msgID::id == message_one::id )
-		MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
+	if constexpr ( msgID::id == message_two::id )
+		MESSAGE_message_two_compose( composer, std::forward<Args>( args )... );
 	else if constexpr ( msgID::id == message_four::id )
 		MESSAGE_message_four_compose( composer, std::forward<Args>( args )... );
 	else if constexpr ( msgID::id == message_du::id )
@@ -1249,8 +1249,8 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 
 namespace test_json {
 
-using message_one = ::globalmq::marshalling::impl::MessageName<1>;
-using message_four = ::globalmq::marshalling::impl::MessageName<2>;
+using message_three = ::globalmq::marshalling::impl::MessageName<3>;
+using message_five = ::globalmq::marshalling::impl::MessageName<5>;
 
 template<class ParserT, class ... HandlersT >
 void implHandleMessage( ParserT& parser, HandlersT ... handlers )
@@ -1277,8 +1277,8 @@ void implHandleMessage( ParserT& parser, HandlersT ... handlers )
 
 	switch ( msgID )
 	{
-		case message_one::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_one>( parser, handlers... ); break;
-		case message_four::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_four>( parser, handlers... ); break;
+		case message_three::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_three>( parser, handlers... ); break;
+		case message_five::id: ok = ::globalmq::marshalling::impl::implHandleMessage<message_five>( parser, handlers... ); break;
 		default: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;
 	}
 
@@ -1307,18 +1307,18 @@ template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
 //**********************************************************************
-// MESSAGE "message_one" Targets: JSON (Alias of struct_one)
+// MESSAGE "message_three" Targets: JSON (Alias of struct_one)
 
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void MESSAGE_message_one_compose(ComposerT& composer, Args&& ... args)
+void MESSAGE_message_three_compose(ComposerT& composer, Args&& ... args)
 {
 	STRUCT_struct_one_compose(composer, std::forward<Args>( args )...);
 }
 
 template<class ParserT, typename ... Args>
-void MESSAGE_message_one_parse(ParserT& p, Args&& ... args)
+void MESSAGE_message_three_parse(ParserT& p, Args&& ... args)
 {
 	STRUCT_struct_one_parse(p, std::forward<Args>( args )...);
 }
@@ -1365,19 +1365,19 @@ structures::struct_one STRUCT_struct_one_parse(ParserT& parser)
 }
 
 template<class ParserT>
-structures::test_json::MESSAGE_message_one MESSAGE_message_one_parse(ParserT& p)
+structures::test_json::MESSAGE_message_three MESSAGE_message_three_parse(ParserT& p)
 {
-	return static_cast<structures::test_json::MESSAGE_message_one>(STRUCT_struct_one_parse(p));
+	return static_cast<structures::test_json::MESSAGE_message_three>(STRUCT_struct_one_parse(p));
 }
 
 //**********************************************************************
-// MESSAGE "message_four" NONEXTENDABLE Targets: JSON (2 parameters)
+// MESSAGE "message_five" NONEXTENDABLE Targets: JSON (2 parameters)
 //  1. STRUCT point pt (REQUIRED)
 //  2. VECTOR< STRUCT point3D> pts3d (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
-void MESSAGE_message_four_compose(ComposerT& composer, Args&& ... args)
+void MESSAGE_message_five_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
@@ -1400,11 +1400,11 @@ void MESSAGE_message_four_compose(ComposerT& composer, Args&& ... args)
 }
 
 template<class ParserT>
-structures::test_json::MESSAGE_message_four MESSAGE_message_four_parse(ParserT& parser)
+structures::test_json::MESSAGE_message_five MESSAGE_message_five_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
 
-	using T = structures::test_json::MESSAGE_message_four;
+	using T = structures::test_json::MESSAGE_message_five;
 	T t;
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
@@ -1428,10 +1428,10 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 	::globalmq::marshalling::impl::json::composeNamedSignedInteger( composer, "msgid", msgID::id);
 	composer.buff.append( ",\n  ", sizeof(",\n  ") - 1 );
 	::globalmq::marshalling::impl::json::addNamePart( composer, "msgbody" );
-	if constexpr ( msgID::id == message_one::id )
-		MESSAGE_message_one_compose( composer, std::forward<Args>( args )... );
-	else if constexpr ( msgID::id == message_four::id )
-		MESSAGE_message_four_compose( composer, std::forward<Args>( args )... );
+	if constexpr ( msgID::id == message_three::id )
+		MESSAGE_message_three_compose( composer, std::forward<Args>( args )... );
+	else if constexpr ( msgID::id == message_five::id )
+		MESSAGE_message_five_compose( composer, std::forward<Args>( args )... );
 	else
 		static_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, "unexpected value of msgID" ); // note: should be just static_assert(false,"..."); but it seems that in this case clang asserts yet before looking at constexpr conditions
 	composer.buff.append( "\n}", 2 );
@@ -1489,6 +1489,30 @@ public:
 
 		::globalmq::marshalling::impl::composeStructEnd( composer );
 	}
+};
+
+template<class T, class RegistrarT>
+class html_data_NodecppWrapperForPublisher : public html_data_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
+{
+	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
+	RegistrarT& registrar;
+public:
+	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
+	template<class ... ArgsT>
+	html_data_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : html_data_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	{ 
+		registrar.add( this );
+	}
+
+	virtual ~html_data_NodecppWrapperForPublisher()
+	{ 
+		registrar.remove( this );
+	}
+
+	virtual void startTick( BufferT&& buff ) { html_data_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
+	virtual BufferT&& endTick() { return  html_data_WrapperForPublisher<T, ComposerT>::endTick(); }
+	virtual void generateStateSyncMessage(ComposerT& composer) { html_data_WrapperForPublisher<T, ComposerT>::compose(composer); }
+	virtual const char* name() { return html_data_WrapperForPublisher<T, ComposerT>::name(); }
 };
 
 template<class T, class BufferT>
@@ -1609,6 +1633,51 @@ public:
 			t.notifyFullyUpdated();
 	}
 	const auto& get_tag() { return t.tag; }
+};
+
+template<class T, class RegistrarT>
+class html_data_NodecppWrapperForSubscriber : public html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
+{
+	RegistrarT& registrar;
+public:
+	template<class ... ArgsT>
+	html_data_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	{ 
+		registrar.add( this );
+	}
+
+	virtual ~html_data_NodecppWrapperForSubscriber()
+	{ 
+		registrar.remove( this );
+	}
+
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
+	{
+		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
+	}
+
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
+	{
+		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
+	}
+
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
+	{
+		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
+	}
+
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
+	{
+		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
+	}
+	virtual const char* name()
+	{
+		return html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
+	}
+	void subscribe(GMQ_COLL string path)
+	{
+		registrar.subscribe( this, path );
+	}
 };
 
 template<class T, class InputBufferT, class ComposerT>
@@ -2055,4 +2124,4 @@ void STRUCT_struct_du_compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_17e3991f_guard
+#endif // test_marshalling_h_d3979a03_guard

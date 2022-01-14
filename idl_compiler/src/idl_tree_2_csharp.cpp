@@ -933,13 +933,22 @@ namespace {
 
 		fprintf(header, "\tpublic override bool Equals(object obj)\n"
 			"\t{\n"
-			"\t\treturn obj is %s d && Equals(d);\n"
+			"\t\treturn Equals(obj as %s);\n"
 			"\t}\n", name.c_str());
 
-		fprintf(header, "\tpublic static bool operator ==(%s left, %s right)\n"
+		fprintf(header, "\tpublic static bool operator ==(%s left, %s right)\n", name.c_str(), name.c_str());
+		fprintf(header, 
 			"\t{\n"
-			"\t\treturn left.Equals(right);\n"
-			"\t}\n", name.c_str(), name.c_str());
+			"\t\tif (ReferenceEquals(left, right))\n"
+			"\t\t\treturn true;\n"
+			"\t\telse if (ReferenceEquals(left, null))\n"
+			"\t\t\treturn false;\n"
+			"\t\telse if (ReferenceEquals(null, right))\n"
+			"\t\t\treturn false;\n"
+			"\t\telse\n"
+			"\t\t\treturn left.Equals(right);\n"
+			"\t}\n");
+
 		fprintf(header, "\tpublic static bool operator !=(%s left, %s right)\n"
 			"\t{\n"
 			"\t\treturn !(left == right);\n"
@@ -960,9 +969,15 @@ namespace {
 
 		std::string name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tpublic bool Equals(%s other)\n"
+		fprintf(header, "\tpublic bool Equals(%s other)\n", name.c_str());
+		fprintf(header, 
 			"\t{\n"
-			"\t\treturn other != null ", name.c_str());
+			"\t\tif (ReferenceEquals(this, other))\n"
+			"\t\t\treturn true;\n"
+			"\t\telse if (ReferenceEquals(null, other))\n"
+			"\t\t\treturn false;\n"
+			"\t\telse\n"
+			"\t\t\treturn\n");
 
 		auto& mem = s.getMembers();
 		for (auto it = mem.begin(); it != mem.end(); ++it)
@@ -971,7 +986,8 @@ namespace {
 			assert(*it != nullptr);
 			auto& member = **it;
 
-			fprintf(header, " &&\n");
+			if(it != mem.begin())
+				fprintf(header, " &&\n");
 
 
 			switch (member.type.kind)
@@ -980,14 +996,14 @@ namespace {
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\t\tthis.%s == other.%s", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\tthis.%s == other.%s", member.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\tthis.%s.Equals(other.%s)", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\tthis.%s.Equals(other.%s)", member.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
 				break;
 			default:
 				assert(false); // not implemented (yet)
@@ -1005,8 +1021,14 @@ namespace {
 		fprintf(header, "\tpublic bool Equals(%s other)\n", name.c_str());
 		fprintf(header,
 			"\t{\n"
-			"\t\treturn other != null && this.mem.Equals(other.mem);\n"
-			"\t}\n");
+			"\t\tif (ReferenceEquals(this, other))\n"
+			"\t\t\treturn true;\n"
+			"\t\telse if (ReferenceEquals(null, other))\n"
+			"\t\t\treturn false;\n"
+			"\t\telse\n"
+			"\t\t\treturn this.mem.Equals(other.mem);\n"
+			"\t}\n"
+		);
 	}
 
 	void csharpMsg_generateComposeMessageMethod(FILE* header, const std::string& msgName, CompositeType& s, Proto proto)
@@ -1081,8 +1103,8 @@ namespace {
 
 		fprintf(header, "\n");
 
-		csharpMsg_generateStandardMethods(header, s);
 		csharpMsg_generateStructEqualsMethod(header, s);
+		csharpMsg_generateStandardMethods(header, s);
 		
 		csharpMsg_generateStructComposeBase(header, s);
 		csharpMsg_generateStructComposeJson(header, s);

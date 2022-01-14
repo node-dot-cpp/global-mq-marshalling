@@ -40,13 +40,32 @@ public class CASE_one : IEquatable<CASE_one>
 	public Double D2;
 	public Double D3;
 
+	public bool Equals(CASE_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.D1 == other.D1 &&
+				this.D2 == other.D2 &&
+				this.D3 == other.D3;
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is CASE_one d && Equals(d);
+		return Equals(obj as CASE_one);
 	}
 	public static bool operator ==(CASE_one left, CASE_one right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(CASE_one left, CASE_one right)
 	{
@@ -56,13 +75,6 @@ public class CASE_one : IEquatable<CASE_one>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(CASE_one other)
-	{
-		return other != null  &&
-			this.D1 == other.D1 &&
-			this.D2 == other.D2 &&
-			this.D3 == other.D3;
 	}
 	public static void compose(ComposerBase composer, Double D1, Double D2, Double D3)
 	{
@@ -151,13 +163,30 @@ public class CASE_two : IEquatable<CASE_two>
 {
 	public List<Double> Data;
 
+	public bool Equals(CASE_two other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				Enumerable.SequenceEqual(this.Data, other.Data);
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is CASE_two d && Equals(d);
+		return Equals(obj as CASE_two);
 	}
 	public static bool operator ==(CASE_two left, CASE_two right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(CASE_two left, CASE_two right)
 	{
@@ -167,11 +196,6 @@ public class CASE_two : IEquatable<CASE_two>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(CASE_two other)
-	{
-		return other != null  &&
-			Enumerable.SequenceEqual(this.Data, other.Data);
 	}
 	public static void compose(ComposerBase composer, ICollectionCompose Data)
 	{
@@ -244,11 +268,18 @@ public class CASE_two : IEquatable<CASE_two>
 
 	public override bool Equals(object obj)
 	{
-		return obj is du_one d && Equals(d);
+		return Equals(obj as du_one);
 	}
 	public static bool operator ==(du_one left, du_one right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(du_one left, du_one right)
 	{
@@ -261,7 +292,12 @@ public class CASE_two : IEquatable<CASE_two>
 	}
 	public bool Equals(du_one other)
 	{
-		return other != null && this.mem.Equals(other.mem);
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return this.mem.Equals(other.mem);
 	}
 	public Variants currentVariant()
 	{
@@ -418,13 +454,32 @@ public class point3D : IEquatable<point3D>
 	public Int64 y;
 	public Int64 z;
 
+	public bool Equals(point3D other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is point3D d && Equals(d);
+		return Equals(obj as point3D);
 	}
 	public static bool operator ==(point3D left, point3D right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(point3D left, point3D right)
 	{
@@ -434,13 +489,6 @@ public class point3D : IEquatable<point3D>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(point3D other)
-	{
-		return other != null  &&
-			this.x == other.x &&
-			this.y == other.y &&
-			this.z == other.z;
 	}
 	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
 	{
@@ -536,13 +584,31 @@ public class point : IEquatable<point>
 	public Int64 x;
 	public Int64 y;
 
+	public bool Equals(point other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y;
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is point d && Equals(d);
+		return Equals(obj as point);
 	}
 	public static bool operator ==(point left, point right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(point left, point right)
 	{
@@ -552,12 +618,6 @@ public class point : IEquatable<point>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(point other)
-	{
-		return other != null  &&
-			this.x == other.x &&
-			this.y == other.y;
 	}
 	public static void compose(ComposerBase composer, Int64 x, Int64 y)
 	{
@@ -645,13 +705,31 @@ public class struct_du : IEquatable<struct_du>
 	public point3D pt;
 	public du_one disc_union;
 
+	public bool Equals(struct_du other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				this.disc_union.Equals(other.disc_union);
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is struct_du d && Equals(d);
+		return Equals(obj as struct_du);
 	}
 	public static bool operator ==(struct_du left, struct_du right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(struct_du left, struct_du right)
 	{
@@ -661,12 +739,6 @@ public class struct_du : IEquatable<struct_du>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(struct_du other)
-	{
-		return other != null  &&
-			this.pt.Equals(other.pt) &&
-			this.disc_union.Equals(other.disc_union);
 	}
 	public static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
@@ -772,13 +844,39 @@ public class struct_one : IEquatable<struct_one>
 	public point3D ninethParam;
 	public List<Double> tenthParam;
 
+	public bool Equals(struct_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.firstParam == other.firstParam &&
+				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
+				Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
+				this.forthParam == other.forthParam &&
+				this.fifthParam == other.fifthParam &&
+				Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
+				this.seventhParam == other.seventhParam &&
+				this.eighthParam.Equals(other.eighthParam) &&
+				this.ninethParam.Equals(other.ninethParam) &&
+				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is struct_one d && Equals(d);
+		return Equals(obj as struct_one);
 	}
 	public static bool operator ==(struct_one left, struct_one right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(struct_one left, struct_one right)
 	{
@@ -788,20 +886,6 @@ public class struct_one : IEquatable<struct_one>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(struct_one other)
-	{
-		return other != null  &&
-			this.firstParam == other.firstParam &&
-			Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
-			Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
-			this.forthParam == other.forthParam &&
-			this.fifthParam == other.fifthParam &&
-			Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
-			this.seventhParam == other.seventhParam &&
-			this.eighthParam.Equals(other.eighthParam) &&
-			this.ninethParam.Equals(other.ninethParam) &&
-			Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
 	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
@@ -958,22 +1042,22 @@ public class struct_one : IEquatable<struct_one>
 //
 //  test_gmq
 //  {
-//    message_one
+//    message_two
 //    message_four
 //    message_du
 //  }
 //
 //  test_json
 //  {
-//    message_one
-//    message_four
+//    message_three
+//    message_five
 //  }
 //
 //////////////////////////////////////////////////////////////
 
 public class test_gmq
 {
-public enum MsgIds { message_one = 1, message_four = 2, message_du = 5 }
+public enum MsgIds { message_two = 2, message_four = 4, message_du = 5 }
 
 	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
 	{
@@ -986,10 +1070,10 @@ public enum MsgIds { message_one = 1, message_four = 2, message_du = 5 }
 	}
 
 //**********************************************************************
-// MESSAGE "message_one" Targets: GMQ (0 parameters)
+// MESSAGE "message_two" Targets: GMQ (0 parameters)
 //**********************************************************************
 
-public class message_one : struct_one
+public class message_two : struct_one
 {
 	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
@@ -1015,14 +1099,14 @@ public class message_one : struct_one
 	{
 		struct_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-} // class message_one
+} // class message_two
 
-	public static void composeMessage_message_one(BufferT buffer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void composeMessage_message_two(BufferT buffer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_one);
-		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		composer.composeUnsignedInteger((UInt64)MsgIds.message_two);
+		message_two.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 
 //**********************************************************************
@@ -1036,13 +1120,31 @@ public class message_four : IEquatable<message_four>
 	public point pt;
 	public List<point3D> pts3d;
 
+	public bool Equals(message_four other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is message_four d && Equals(d);
+		return Equals(obj as message_four);
 	}
 	public static bool operator ==(message_four left, message_four right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(message_four left, message_four right)
 	{
@@ -1052,12 +1154,6 @@ public class message_four : IEquatable<message_four>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(message_four other)
-	{
-		return other != null  &&
-			this.pt.Equals(other.pt) &&
-			Enumerable.SequenceEqual(this.pts3d, other.pts3d);
 	}
 	public static void compose(ComposerBase composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
@@ -1189,7 +1285,7 @@ public class message_du : struct_du
 
 public class test_json
 {
-public enum MsgIds { message_one = 1, message_four = 2 }
+public enum MsgIds { message_three = 3, message_five = 5 }
 
 	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
 	{
@@ -1202,10 +1298,10 @@ public enum MsgIds { message_one = 1, message_four = 2 }
 	}
 
 //**********************************************************************
-// MESSAGE "message_one" Targets: JSON (0 parameters)
+// MESSAGE "message_three" Targets: JSON (0 parameters)
 //**********************************************************************
 
-public class message_one : struct_one
+public class message_three : struct_one
 {
 	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
@@ -1231,41 +1327,59 @@ public class message_one : struct_one
 	{
 		struct_one.parse(parser, ref firstParam, secondParam, thirdParam, ref forthParam, ref fifthParam, sixthParam, ref seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-} // class message_one
+} // class message_three
 
-	public static void composeMessage_message_one(BufferT buffer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void composeMessage_message_three(BufferT buffer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		JsonComposer composer = new JsonComposer(buffer);
 
 		composer.append("{\n  ");
 		composer.addNamePart("msgid");
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_one);
+		composer.composeUnsignedInteger((UInt64)MsgIds.message_three);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
-		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		message_three.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 		composer.append("\n}");
 	}
 
 //**********************************************************************
-// MESSAGE "message_four" NONEXTENDABLE Targets: JSON (2 parameters)
+// MESSAGE "message_five" NONEXTENDABLE Targets: JSON (2 parameters)
 //  1. STRUCT point pt (REQUIRED)
 //  2. VECTOR< STRUCT point3D> pts3d (REQUIRED)
 //**********************************************************************
 
-public class message_four : IEquatable<message_four>
+public class message_five : IEquatable<message_five>
 {
 	public point pt;
 	public List<point3D> pts3d;
 
+	public bool Equals(message_five other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is message_four d && Equals(d);
+		return Equals(obj as message_five);
 	}
-	public static bool operator ==(message_four left, message_four right)
+	public static bool operator ==(message_five left, message_five right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
-	public static bool operator !=(message_four left, message_four right)
+	public static bool operator !=(message_five left, message_five right)
 	{
 		return !(left == right);
 	}
@@ -1273,12 +1387,6 @@ public class message_four : IEquatable<message_four>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(message_four other)
-	{
-		return other != null  &&
-			this.pt.Equals(other.pt) &&
-			Enumerable.SequenceEqual(this.pts3d, other.pts3d);
 	}
 	public static void compose(ComposerBase composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
@@ -1304,9 +1412,9 @@ public class message_four : IEquatable<message_four>
 		pt.compose(composer);
 		pts3d.composeGmq(composer);
 	}
-	public static message_four parse(ParserBase parser)
+	public static message_five parse(ParserBase parser)
 	{
-		message_four tmp = new message_four();
+		message_five tmp = new message_five();
 		parse(parser,
 			pt: new MessageWrapperForParsing(
 				(ParserBase parser) => { tmp.pt = point.parse(parser); }),
@@ -1356,18 +1464,18 @@ public class message_four : IEquatable<message_four>
 		pt.parse(parser);
 		pts3d.parseGmq(parser);
 	}
-} // class message_four
+} // class message_five
 
-	public static void composeMessage_message_four(BufferT buffer, IMessageCompose pt, ICollectionCompose pts3d)
+	public static void composeMessage_message_five(BufferT buffer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
 		JsonComposer composer = new JsonComposer(buffer);
 
 		composer.append("{\n  ");
 		composer.addNamePart("msgid");
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_four);
+		composer.composeUnsignedInteger((UInt64)MsgIds.message_five);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
-		message_four.compose(composer, pt, pts3d);
+		message_five.compose(composer, pt, pts3d);
 		composer.append("\n}");
 	}
 

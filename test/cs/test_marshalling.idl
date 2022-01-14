@@ -3,15 +3,15 @@
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 
-MESSAGE test_gmq : message_one = 1 = STRUCT struct_one;
-MESSAGE test_json : message_one = 1 = STRUCT struct_one;
+MESSAGE test_gmq : message_two = 2 = STRUCT struct_one;
+MESSAGE test_json : message_three = 3 = STRUCT struct_one;
 
-MESSAGE NONEXTENDABLE test_gmq : message_four = 2 {
+MESSAGE NONEXTENDABLE test_gmq : message_four = 4 {
 	STRUCT point pt;
 	VECTOR<STRUCT point3D> pts3d;
 };
 
-MESSAGE NONEXTENDABLE test_json : message_four = 2 {
+MESSAGE NONEXTENDABLE test_json : message_five = 5 {
 	STRUCT point pt;
 	VECTOR<STRUCT point3D> pts3d;
 };
