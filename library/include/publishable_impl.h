@@ -576,7 +576,8 @@ public:
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
-			impl::composeUnsignedInteger( composer, collSz );
+			assert( false ); // not yet implemented
+			/*impl::composeUnsignedInteger( composer, collSz );
 			for ( size_t i=0; i<collSz; ++i )
 			{
 				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
@@ -595,12 +596,13 @@ public:
 				}
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-			}
+			}*/
 		}
 		else
 		{
 			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-			composer.buff.append( "[", 1 );
+			assert( false ); // not yet implemented
+			/*composer.buff.append( "[", 1 );
 			for ( size_t i=0; i<collSz; ++i )
 			{
 				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
@@ -622,7 +624,7 @@ public:
 				if ( i + 1 < collSz ) 
 					composer.buff.append( ", ", 2 );
 			}
-			composer.buff.append( "]", 1 );
+			composer.buff.append( "]", 1 );*/
 		}
 	}
 
@@ -649,7 +651,8 @@ public:
 		{
 			size_t collSz;
 			parser.parseUnsignedInteger( &collSz );
-			dest.reserve( collSz );
+			assert( false ); // not yet implemented
+			/*dest.reserve( collSz );
 			for ( size_t i=0; i<collSz; ++i )
 			{
 				typename DictionaryT::value_type what;
@@ -673,12 +676,13 @@ public:
 				else
 					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
 				dest.push_back( what );
-			}
+			}*/
 		}
 		else
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-			parser.skipDelimiter( '[' );
+			assert( false ); // not yet implemented
+			/*parser.skipDelimiter( '[' );
 			if ( parser.isDelimiter( ']' ) )
 			{
 				parser.skipDelimiter( ']' );
@@ -721,7 +725,7 @@ public:
 				}
 			}
 			if ( parser.isDelimiter( ',' ) )
-				parser.skipDelimiter( ',' );
+				parser.skipDelimiter( ',' );*/
 		}
 	}
 };
@@ -730,20 +734,20 @@ namespace impl {
 	template<class DictionaryT, class ValueTypeT>
 	void copyDictionary( const DictionaryT& src, DictionaryT& dst )
 	{
-		for ( const auto it: src )
+		for ( const auto& it: src )
 		{
 			if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
-				dst.insert( std::make_pair( it->first, it->second ) );
+				dst.insert( std::make_pair( it.first, it.second ) );
 			else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
-				dst.insert( std::make_pair( it->first, it->second ) );
+				dst.insert( std::make_pair( it.first, it.second ) );
 			else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
-				dst.insert( std::make_pair( it->first, it->second ) );
+				dst.insert( std::make_pair( it.first, it.second ) );
 			else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
-				dst.insert( std::make_pair( it->first, it->second ) );
+				dst.insert( std::make_pair( it.first, it.second ) );
 			else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 			{
 				//ElemTypeT::copy( src[i], dst[i] );
-				dst.insert( std::make_pair( it->first, it->second ) ); // TODO
+				dst.insert( std::make_pair( it.first, it.second ) ); // TODO
 			}
 			else
 				static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
