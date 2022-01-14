@@ -818,24 +818,32 @@ struct Property
 	GMQ_COLL string name = "ini_name";
 	GMQ_COLL string value = "ini_value";
 
-	void notifyUpdated_name() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_name()\n" ); }
-	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "Property::notifyUpdated_value()\n" ); }
+	void notifyUpdated_name() const { assert( getCurrentNode() != nullptr ); fmt::print( "Property::notifyUpdated_name()\n" ); }
+	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); fmt::print( "Property::notifyUpdated_value()\n" ); }
 };
 
 class HtmlTextOrTags : public mtest::structures::HtmlTextOrTags
 {
 public:
-	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_currentVariant()\n" ); }
-	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_str()\n" ); }
-	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTextOrTags::notifyUpdated_tags()\n" ); }
+	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_currentVariant()\n" ); }
+	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_str(), new str = \"{}\"\n", str() ); }
+	void notifyUpdated_str(GMQ_COLL string oldStr) const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_str(), old str = \"{}\", new str = \"{}\"\n", oldStr, str() ); }
+	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_tags()\n" ); }
 };
 
 struct HtmlTag
 {
+	GMQ_COLL string name;
 	GMQ_COLL vector<Property> properties;
 	HtmlTextOrTags tags;
-	void notifyUpdated_properties() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTag::notifyUpdated_properties()\n" ); }
-	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); /*getCurrentNode()->addPreAccess();*/ fmt::print( "HtmlTag::notifyUpdated_tags()\n" ); }
+	void notifyUpdated_properties() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTag::notifyUpdated_properties()\n" ); }
+	void notifyUpdated_tags() const { 
+		assert( getCurrentNode() != nullptr ); 
+		if ( tags.currentVariant() == HtmlTextOrTags::Variants::text )
+			fmt::print( "HtmlTag::notifyUpdated_tags(), type: string, \"{}\"\n", tags.str() );
+		else
+			fmt::print( "HtmlTag::notifyUpdated_tags(), {} tags in taglist\n", tags.tags().size() );
+	}
 	// TODO: add other notifiers here, if necessary
 };
 

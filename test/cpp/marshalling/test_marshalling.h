@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_85ce4599_guard
-#define _test_marshalling_h_85ce4599_guard
+#ifndef _test_marshalling_h_f46053fe_guard
+#define _test_marshalling_h_f46053fe_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -468,6 +468,7 @@ struct SIZE
 
 struct HtmlTag
 {
+	GMQ_COLL string name;
 	GMQ_COLL vector<Property> properties;
 	HtmlTextOrTags tags;
 };
@@ -1720,6 +1721,8 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 	static
 	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
 		::globalmq::marshalling::impl::parseKey( parser, "properties" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::properties), publishable_STRUCT_Property, true>( parser, t.properties );
 
@@ -1733,6 +1736,8 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::properties), publishable_STRUCT_Property>( composer, t.properties, "properties", true );
 
 		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "tags" );
@@ -1748,6 +1753,9 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
 		static constexpr bool has_void_update_notifier_for_properties = has_void_update_notifier_call_for_properties<T>;
 		static constexpr bool has_update_notifier_for_properties = has_update_notifier_call_for_properties<T, decltype(T::properties)>;
 		static constexpr bool has_any_notifier_for_properties = has_void_update_notifier_for_properties || has_update_notifier_for_properties;
@@ -1765,6 +1773,24 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static constexpr bool has_update_notifier_for_tags = has_update_notifier_call_for_tags<T, decltype(T::tags)>;
 		static constexpr bool has_any_notifier_for_tags = has_void_update_notifier_for_tags || has_update_notifier_for_tags;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+		if constexpr( has_any_notifier_for_name || reportChanges )
+		{
+			decltype(T::name) oldVal = t.name;
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+			bool currentChanged = oldVal != t.name;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_name )
+					t.notifyUpdated_name();
+				if constexpr ( has_update_notifier_for_name )
+					t.notifyUpdated_name( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
 		if constexpr( reportChanges )
 		{
 			decltype(T::properties) oldVectorVal;
@@ -1822,6 +1848,9 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
+		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
 		static constexpr bool has_void_update_notifier_for_properties = has_void_update_notifier_call_for_properties<T>;
 		static constexpr bool has_update_notifier_for_properties = has_update_notifier_call_for_properties<T, decltype(T::properties)>;
 		static constexpr bool has_any_notifier_for_properties = has_void_update_notifier_for_properties || has_update_notifier_for_properties;
@@ -1843,6 +1872,29 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		switch ( addr[offset] )
 		{
 			case 0:
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_name || reportChanges )
+				{
+					decltype(T::name) oldVal = t.name;
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					bool currentChanged = oldVal != t.name;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_name )
+							t.notifyUpdated_name();
+						if constexpr ( has_update_notifier_for_name )
+							t.notifyUpdated_name( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+				break;
+			}
+			case 1:
 			{
 				{
 					decltype(T::properties) oldVectorVal;
@@ -2011,7 +2063,7 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 				}
 				break;
 			}
-			case 1:
+			case 2:
 			{
 				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 				{
@@ -2092,12 +2144,14 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
+		dst.name = src.name;
 		::globalmq::marshalling::impl::copyVector<decltype(UserT::properties), publishable_STRUCT_Property>( src.properties, dst.properties );
 		publishable_DISCRIMINATED_UNION_HtmlTextOrTags::copy( src.tags, dst.tags );
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
+		if ( s1.name != s2.name ) return false;
 		if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::properties), publishable_STRUCT_Property>( s1.properties, s2.properties ) ) return false;
 		if( ! publishable_DISCRIMINATED_UNION_HtmlTextOrTags::isSame( s1.tags, s2.tags ) ) return false;
 		return true;
@@ -7038,6 +7092,8 @@ template<class T>
 class HtmlTag_RefWrapper
 {
 	T& t;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
 	static constexpr bool has_properties = has_properties_member<T>;
 	static_assert( has_properties, "type T must have member T::properties of a type corresponding to IDL type VECTOR<STRUCT Property>" );
 	static constexpr bool has_tags = has_tags_member<T>;
@@ -7046,6 +7102,7 @@ class HtmlTag_RefWrapper
 
 public:
 	HtmlTag_RefWrapper( T& actual ) : t( actual ) {}
+	const auto& get_name() { return t.name; }
 	auto get_properties() { return globalmq::marshalling::VectorOfStructRefWrapper<Property_RefWrapper<typename decltype(T::properties)::value_type>, decltype(T::properties)>(t.properties); }
 	const auto& get_tags() { return t.tags; }
 };
@@ -7056,6 +7113,8 @@ class HtmlTag_RefWrapper4Set
 	T& t;
 	RootT& root;
 	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
 	static constexpr bool has_properties = has_properties_member<T>;
 	static_assert( has_properties, "type T must have member T::properties of a type corresponding to IDL type VECTOR<STRUCT Property>" );
 	static constexpr bool has_tags = has_tags_member<T>;
@@ -7067,24 +7126,30 @@ public:
 		address = address_;
 		address.push_back (idx );
 	}
+	const auto& get_name() { return t.name; }
+	void set_name( decltype(T::name) val) { 
+		t.name = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.name );
+	}
 	auto get_properties() { return globalmq::marshalling::VectorOfStructRefWrapper<Property_RefWrapper<typename decltype(T::properties)::value_type>, decltype(T::properties)>(t.properties); }
 	void set_properties( decltype(T::properties) val) { 
 		t.properties = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		::globalmq::marshalling::impl::publishableComposeLeafeValueBegin( root.getComposer() );
 		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::properties), publishable_STRUCT_Property>( root.getComposer(), t.properties );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
-	auto get4set_properties() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::properties), publishable_STRUCT_Property, RootT, Property_RefWrapper4Set<typename decltype(T::properties)::value_type, RootT>>(t.properties, root, address, 0); }
+	auto get4set_properties() { return globalmq::marshalling::VectorOfStructRefWrapper4Set<decltype(T::properties), publishable_STRUCT_Property, RootT, Property_RefWrapper4Set<typename decltype(T::properties)::value_type, RootT>>(t.properties, root, address, 1); }
 	const auto& get_tags() { return t.tags; }
 	void set_tags( decltype(T::tags) val) { 
 		t.tags = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
 		publishable_DISCRIMINATED_UNION_HtmlTextOrTags::compose( root.getComposer(), t.tags );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
-	auto get4set_tags() { return HtmlTextOrTags_RefWrapper4Set</*bbb*/decltype(T::tags), RootT>(t.tags, root, address, 1); }
+	auto get4set_tags() { return HtmlTextOrTags_RefWrapper4Set</*bbb*/decltype(T::tags), RootT>(t.tags, root, address, 2); }
 };
 
 template<class T>
@@ -7759,4 +7824,4 @@ void DISCRIMINATED_UNION_du_one_compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_85ce4599_guard
+#endif // _test_marshalling_h_f46053fe_guard

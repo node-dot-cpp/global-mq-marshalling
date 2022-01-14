@@ -166,6 +166,8 @@ MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
 };
 
 
+// html tag sample idl
+
 PUBLISHABLE publishable_html_tag=3 {
 	STRUCT HtmlTag tag;
 };
@@ -176,6 +178,7 @@ STRUCT Property {
 };
 
 STRUCT HtmlTag {
+	CHARACTER-STRING name;
 	VECTOR<STRUCT Property> properties;
 	DISCRIMINATED_UNION HtmlTextOrTags tags;
 };
