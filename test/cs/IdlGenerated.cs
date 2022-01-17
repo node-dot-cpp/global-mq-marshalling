@@ -1057,16 +1057,24 @@ public class struct_one : IEquatable<struct_one>
 
 public class test_gmq
 {
-public enum MsgIds { message_two = 2, message_four = 4, message_du = 5 }
+	public enum MsgId { message_two = 2, message_four = 4, message_du = 5 }
 
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
+	public static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )
+	{
+		return new MessageHandler((ulong)id, handler);
+	}
+	public static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)
+	{
+		return new MessageHandler(MessageHandler.DefaultHandler, handler);
+	}
+	public static void handleMessage( BufferT buffer, params MessageHandler[] handlers )
 	{
 		handleMessage(buffer.getReadIterator(), handlers);
 	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	public static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )
 	{
 		GmqParser parser = new GmqParser( riter );
-		handlers.gmq_handle(parser);
+		MessageHandler.gmq_handle( parser, handlers );
 	}
 
 //**********************************************************************
@@ -1105,7 +1113,7 @@ public class message_two : struct_one
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_two);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_two);
 		message_two.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 
@@ -1237,7 +1245,7 @@ public class message_four : IEquatable<message_four>
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_four);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_four);
 		message_four.compose(composer, pt, pts3d);
 	}
 
@@ -1277,7 +1285,7 @@ public class message_du : struct_du
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_du);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_du);
 		message_du.compose(composer, pt, disc_union);
 	}
 
@@ -1285,16 +1293,24 @@ public class message_du : struct_du
 
 public class test_json
 {
-public enum MsgIds { message_three = 3, message_five = 5 }
+	public enum MsgId { message_three = 3, message_five = 5 }
 
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
+	public static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )
+	{
+		return new MessageHandler((ulong)id, handler);
+	}
+	public static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)
+	{
+		return new MessageHandler(MessageHandler.DefaultHandler, handler);
+	}
+	public static void handleMessage( BufferT buffer, params MessageHandler[] handlers )
 	{
 		handleMessage(buffer.getReadIterator(), handlers);
 	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	public static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )
 	{
 		JsonParser parser = new JsonParser( riter );
-		handlers.json_handle(parser);
+		MessageHandler.json_handle( parser, handlers );
 	}
 
 //**********************************************************************
@@ -1335,7 +1351,7 @@ public class message_three : struct_one
 
 		composer.append("{\n  ");
 		composer.addNamePart("msgid");
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_three);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_three);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
 		message_three.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
@@ -1472,7 +1488,7 @@ public class message_five : IEquatable<message_five>
 
 		composer.append("{\n  ");
 		composer.addNamePart("msgid");
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_five);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_five);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
 		message_five.compose(composer, pt, pts3d);

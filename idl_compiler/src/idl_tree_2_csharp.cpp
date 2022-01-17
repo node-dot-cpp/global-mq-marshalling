@@ -44,7 +44,7 @@ namespace {
 
 	void csharpMsg_generateScopeEnum(FILE* header, Scope& scope)
 	{
-		fprintf(header, "public enum MsgIds { ");
+		fprintf(header, "\tpublic enum MsgId { ");
 		for (auto msg = scope.objectList.begin(); msg != scope.objectList.end(); ++msg)
 		{
 			if(msg != scope.objectList.begin())
@@ -1046,7 +1046,7 @@ namespace {
 		{
 			fprintf(header,
 				"\t\tGmqComposer composer = new GmqComposer(buffer);\n\n"
-				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgIds.%s);\n"
+				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
 				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
 
 
@@ -1059,7 +1059,7 @@ namespace {
 				"\t\tJsonComposer composer = new JsonComposer(buffer);\n\n"
 				"\t\tcomposer.append(\"{\\n  \");\n"
 				"\t\tcomposer.addNamePart(\"msgid\");\n"
-				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgIds.%s);\n"
+				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
 				"\t\tcomposer.append(\",\\n  \");\n"
 				"\t\tcomposer.addNamePart(\"msgbody\");\n"
 				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
@@ -1271,14 +1271,25 @@ namespace {
 	void csharpMsg_generateScopeHandler(FILE* header, Scope& scope)
 	{
 		fprintf(header,
-			"\tpublic static void handleMessage( BufferT buffer, MessageHandlerArray handlers )\n"
+			"\tpublic static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )\n"
+			"\t{\n"
+			"\t\treturn new MessageHandler((ulong)id, handler);\n"
+			"\t}\n");
+		fprintf(header,
+			"\tpublic static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)\n"
+			"\t{\n"
+			"\t\treturn new MessageHandler(MessageHandler.DefaultHandler, handler);\n"
+			"\t}\n");
+
+		fprintf(header,
+			"\tpublic static void handleMessage( BufferT buffer, params MessageHandler[] handlers )\n"
 			"\t{\n"
 			"\t\thandleMessage(buffer.getReadIterator(), handlers);\n"
 			"\t}\n");
 
 
 		fprintf(header,
-			"\tpublic static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n"
+			"\tpublic static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )\n"
 			"\t{\n"
 		);
 		switch (scope.proto)
@@ -1286,13 +1297,13 @@ namespace {
 		case Proto::gmq:
 			fprintf(header,
 				"\t\tGmqParser parser = new GmqParser( riter );\n"
-				"\t\thandlers.gmq_handle(parser);\n"
+				"\t\tMessageHandler.gmq_handle( parser, handlers );\n"
 			);
 			break;
 		case Proto::json:
 			fprintf(header,
 				"\t\tJsonParser parser = new JsonParser( riter );\n"
-				"\t\thandlers.json_handle(parser);\n"
+				"\t\tMessageHandler.json_handle( parser, handlers );\n"
 			);
 			break;
 		default:

@@ -32,13 +32,32 @@ public class point3D : IEquatable<point3D>
 	public Int64 y;
 	public Int64 z;
 
+	public bool Equals(point3D other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is point3D d && Equals(d);
+		return Equals(obj as point3D);
 	}
 	public static bool operator ==(point3D left, point3D right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(point3D left, point3D right)
 	{
@@ -48,13 +67,6 @@ public class point3D : IEquatable<point3D>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(point3D other)
-	{
-		return other != null  &&
-			this.x == other.x &&
-			this.y == other.y &&
-			this.z == other.z;
 	}
 	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
 	{
@@ -150,13 +162,31 @@ public class point : IEquatable<point>
 	public Int64 x;
 	public Int64 y;
 
+	public bool Equals(point other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y;
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is point d && Equals(d);
+		return Equals(obj as point);
 	}
 	public static bool operator ==(point left, point right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(point left, point right)
 	{
@@ -166,12 +196,6 @@ public class point : IEquatable<point>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(point other)
-	{
-		return other != null  &&
-			this.x == other.x &&
-			this.y == other.y;
 	}
 	public static void compose(ComposerBase composer, Int64 x, Int64 y)
 	{
@@ -275,13 +299,39 @@ public class message_one : IEquatable<message_one>
 	public point3D ninethParam;
 	public List<Double> tenthParam;
 
+	public bool Equals(message_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.firstParam == other.firstParam &&
+				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
+				Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
+				this.forthParam == other.forthParam &&
+				this.fifthParam == other.fifthParam &&
+				Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
+				this.seventhParam == other.seventhParam &&
+				this.eighthParam.Equals(other.eighthParam) &&
+				this.ninethParam.Equals(other.ninethParam) &&
+				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
+	}
 	public override bool Equals(object obj)
 	{
-		return obj is message_one d && Equals(d);
+		return Equals(obj as message_one);
 	}
 	public static bool operator ==(message_one left, message_one right)
 	{
-		return left.Equals(right);
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
 	public static bool operator !=(message_one left, message_one right)
 	{
@@ -291,20 +341,6 @@ public class message_one : IEquatable<message_one>
 	{
 		// TODO
 		throw new InvalidOperationException();
-	}
-	public bool Equals(message_one other)
-	{
-		return other != null  &&
-			this.firstParam == other.firstParam &&
-			Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
-			Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
-			this.forthParam == other.forthParam &&
-			this.fifthParam == other.fifthParam &&
-			Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
-			this.seventhParam == other.seventhParam &&
-			this.eighthParam.Equals(other.eighthParam) &&
-			this.ninethParam.Equals(other.ninethParam) &&
-			Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
 	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
@@ -475,16 +511,24 @@ public class message_one : IEquatable<message_one>
 
 public class test_gmq
 {
-public enum MsgIds { point3D_alias = 1, message_one_gmq = 1 }
+	public enum MsgId { point3D_alias = 1, message_one_gmq = 1 }
 
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
+	public static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )
+	{
+		return new MessageHandler((ulong)id, handler);
+	}
+	public static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)
+	{
+		return new MessageHandler(MessageHandler.DefaultHandler, handler);
+	}
+	public static void handleMessage( BufferT buffer, params MessageHandler[] handlers )
 	{
 		handleMessage(buffer.getReadIterator(), handlers);
 	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	public static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )
 	{
 		GmqParser parser = new GmqParser( riter );
-		handlers.gmq_handle(parser);
+		MessageHandler.gmq_handle( parser, handlers );
 	}
 
 //**********************************************************************
@@ -523,7 +567,7 @@ public class point3D_alias : point3D
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
-		composer.composeUnsignedInteger((UInt64)MsgIds.point3D_alias);
+		composer.composeUnsignedInteger((UInt64)MsgId.point3D_alias);
 		point3D_alias.compose(composer, x, y, z);
 	}
 
@@ -563,7 +607,7 @@ public class message_one_gmq : message_one
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_one_gmq);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_one_gmq);
 		message_one_gmq.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 
@@ -571,16 +615,24 @@ public class message_one_gmq : message_one
 
 public class test_json
 {
-public enum MsgIds { point_alias = 2, message_one_json = 2 }
+	public enum MsgId { point_alias = 2, message_one_json = 2 }
 
-	public static void handleMessage( BufferT buffer, MessageHandlerArray handlers )
+	public static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )
+	{
+		return new MessageHandler((ulong)id, handler);
+	}
+	public static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)
+	{
+		return new MessageHandler(MessageHandler.DefaultHandler, handler);
+	}
+	public static void handleMessage( BufferT buffer, params MessageHandler[] handlers )
 	{
 		handleMessage(buffer.getReadIterator(), handlers);
 	}
-	public static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )
+	public static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )
 	{
 		JsonParser parser = new JsonParser( riter );
-		handlers.json_handle(parser);
+		MessageHandler.json_handle( parser, handlers );
 	}
 
 //**********************************************************************
@@ -621,7 +673,7 @@ public class point_alias : point
 
 		composer.append("{\n  ");
 		composer.addNamePart("msgid");
-		composer.composeUnsignedInteger((UInt64)MsgIds.point_alias);
+		composer.composeUnsignedInteger((UInt64)MsgId.point_alias);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
 		point_alias.compose(composer, x, y);
@@ -666,7 +718,7 @@ public class message_one_json : message_one
 
 		composer.append("{\n  ");
 		composer.addNamePart("msgid");
-		composer.composeUnsignedInteger((UInt64)MsgIds.message_one_json);
+		composer.composeUnsignedInteger((UInt64)MsgId.message_one_json);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
 		message_one_json.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);

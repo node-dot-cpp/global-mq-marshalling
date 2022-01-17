@@ -48,16 +48,14 @@ namespace TestProject1
 
             bool condition = false;
 
-            MessageHandlerArray handlers = MessageHandlerArray.make(new MessageHandler[] {
-                new MessageHandler((UInt64)mtest.test_gmq.MsgIds.message_two, (ParserBase parser) => {
+            mtest.test_gmq.handleMessage(buffer,
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_two, (ParserBase parser) => {
                     mtest.struct_one msg = mtest.struct_one.parse(parser);
                     condition = msg.Equals(TestStructOne.GetSampleData());
                 }),
-                new MessageHandler((UInt64)mtest.test_gmq.MsgIds.message_four, (ParserBase parser) => { /* nothing */ }),
-                new MessageHandler(MessageHandler.DefaultHandler, (ParserBase parser) => { /* nothing */ })
-            });
-
-            mtest.test_gmq.handleMessage(buffer, handlers);
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (ParserBase parser) => { Assert.True(false); }),
+                mtest.test_gmq.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
+            );
 
             Assert.True(condition);
         }
@@ -73,16 +71,15 @@ namespace TestProject1
 
             bool condition = false;
 
-            MessageHandlerArray handlers = MessageHandlerArray.make(new MessageHandler[] {
-                new MessageHandler((UInt64)mtest.test_gmq.MsgIds.message_four, (ParserBase parser) => { /* nothing */ }),
-                new MessageHandler(MessageHandler.DefaultHandler, (ParserBase parser) => {
+            mtest.test_gmq.handleMessage(buffer,
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (ParserBase parser) => { Assert.True(false); }),
+                mtest.test_gmq.makeDefaultMessageHandler((ParserBase parser) => {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
+                    // TODO see what we should really do in that case
                     mtest.struct_one.parse(parser);
                     condition = true;
                 })
-            });
-
-            mtest.test_gmq.handleMessage(buffer, handlers);
+            );
 
             Assert.True(condition);
         }

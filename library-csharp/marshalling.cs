@@ -743,21 +743,7 @@ namespace globalmq.marshalling
             lhandler_(parser);
         }
 
-    }
-
-    // TODO: mb this class is to keep array out of user sight,
-    // so we can refactor how we handle this without breaking user code
-    // because I want to delay performance tunning until better measurements
-    // can be made
-    public class MessageHandlerArray
-    {
-        MessageHandler[] handlers;
-
-        MessageHandlerArray(MessageHandler[] handlers)
-        {
-            this.handlers = handlers;
-        }
-        public bool handle(ParserBase parser, ulong msgID)
+        public static MessageHandler find_handler(ulong msgID, MessageHandler[] handlers)
         {
             // TODO improve
             MessageHandler defaultHandler = null;
@@ -766,8 +752,7 @@ namespace globalmq.marshalling
             {
                 if (msgID == handlers[i].msgID)
                 {
-                    handlers[i].handle(parser);
-                    return true;
+                    return handlers[i];
                 }
                 else if (handlers[i].msgID == MessageHandler.DefaultHandler)
                 {
@@ -775,23 +760,20 @@ namespace globalmq.marshalling
                 }
             }
 
-            if (defaultHandler != null)
-            {
-                defaultHandler.handle(parser);
-                return true;
-            }
-
-            return false;
+            return defaultHandler;
         }
-        public void gmq_handle(GmqParser parser)
+        public static void gmq_handle(GmqParser parser, MessageHandler[] handlers)
         {
             ulong msgID;
             parser.parseUnsignedInteger(out msgID);
-            bool handled = handle(parser, msgID);
-            if (!handled)
+            MessageHandler handler = find_handler(msgID, handlers);
+
+            if(handler != null)
+                handler.handle(parser);
+            else
                 throw new Exception();
         }
-        public void json_handle(JsonParser parser)
+        public static void json_handle(JsonParser parser, MessageHandler[] handlers)
         {
             parser.skipDelimiter('{');
             string key;
@@ -806,18 +788,15 @@ namespace globalmq.marshalling
             if (key != "msgbody")
                 throw new Exception(); // bad format
 
-            bool handled = handle(parser, msgID);
+            MessageHandler handler = find_handler(msgID, handlers);
 
-            if (handled)
+            if(handler != null)
+            {
+                handler.handle(parser);
                 parser.skipDelimiter('}');
+            }
             else
                 throw new Exception();
-        }
-
-
-        public static MessageHandlerArray make(MessageHandler[] handlers)
-        {
-            return new MessageHandlerArray(handlers);
         }
     }
 }

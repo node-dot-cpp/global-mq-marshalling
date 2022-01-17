@@ -48,16 +48,14 @@ namespace TestProject1
 
             bool condition = false;
 
-            MessageHandlerArray handlers = MessageHandlerArray.make(new MessageHandler[] {
-                new MessageHandler((UInt64)mtest.test_json.MsgIds.message_three, (ParserBase parser) => {
+            mtest.test_json.handleMessage(buffer,
+                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (ParserBase parser) => {
                     mtest.struct_one msg = mtest.struct_one.parse(parser);
                     condition = msg.Equals(TestStructOne.GetSampleData());
                 }),
-                new MessageHandler((UInt64)mtest.test_json.MsgIds.message_five, (ParserBase parser) => { Assert.True(false); }),
-                new MessageHandler(MessageHandler.DefaultHandler, (ParserBase parser) => { Assert.True(false); })  
-            });
-
-            mtest.test_json.handleMessage(buffer, handlers);
+                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
+                mtest.test_json.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
+            );
 
             Assert.True(condition);
         }
@@ -73,20 +71,18 @@ namespace TestProject1
 
             bool condition = false;
 
-            MessageHandlerArray handlers = MessageHandlerArray.make(new MessageHandler[] {
-                new MessageHandler((UInt64)mtest.test_json.MsgIds.message_five, (ParserBase parser) => { Assert.True(false); }),
-                new MessageHandler(MessageHandler.DefaultHandler, (ParserBase parser) => {
+            mtest.test_json.handleMessage(buffer,
+                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
+                mtest.test_json.makeDefaultMessageHandler((ParserBase parser) =>
+                {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
+                    // TODO see what we should really do in that case
                     mtest.struct_one.parse(parser);
                     condition = true;
                 })
-            });
-
-            mtest.test_json.handleMessage(buffer, handlers);
+            );
 
             Assert.True(condition);
         }
-
     }
-
 }
