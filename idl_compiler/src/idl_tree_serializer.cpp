@@ -1122,6 +1122,23 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		impl_generateScopeHandler( header, *scope );
 		impl_generateScopeComposerForwardDeclaration( header, *scope );
 
+		std::unordered_set<size_t> aliassedStructIds;
+		for ( auto it : scope->objectList )
+		{
+			assert( it != nullptr );
+			assert( typeid( *(it) ) == typeid( CompositeType ) );
+			assert( it->type == CompositeType::Type::message );
+			if ( it->isAlias )
+				aliassedStructIds.insert( it->aliasIdx );
+		}
+
+		for ( size_t idx: aliassedStructIds )
+		{
+			assert( idx < s.structs.size() );
+			CompositeType& alias = *(s.structs[idx]);
+			impl_generateParseFunctionForMessagesAndAliasingStructs( header, s, alias );
+		}
+
 		for ( auto it : scope->objectList )
 		{
 			assert( it != nullptr );
