@@ -3488,7 +3488,7 @@ yyreduce:
 
 /* Line 1455 of yacc.c  */
 #line 300 "global_mq_IDL.y"
-    { (yyval) = createDictionaryWithUintegerValue((yyvsp[(1) - (4)])); releaseYys3((yyvsp[(2) - (4)]), (yyvsp[(3) - (4)]), (yyvsp[(4) - (4)])); ;}
+    { (yyval) = createDictionaryWithCharStringValue((yyvsp[(1) - (4)])); releaseYys3((yyvsp[(2) - (4)]), (yyvsp[(3) - (4)]), (yyvsp[(4) - (4)])); ;}
     break;
 
   case 164:

@@ -297,7 +297,7 @@ dictionary_type_begin
 dictionary_type
 	: dictionary_type_begin ',' KW_INTEGER '>' { $$ = createDictionaryWithIntegerValue($1); releaseYys3($2, $3, $4); }
 	| dictionary_type_begin ',' KW_UINTEGER '>' { $$ = createDictionaryWithUintegerValue($1); releaseYys3($2, $3, $4); }
-	| dictionary_type_begin ',' KW_CHARACTER_STRING  '>' { $$ = createDictionaryWithUintegerValue($1); releaseYys3($2, $3, $4); }
+	| dictionary_type_begin ',' KW_CHARACTER_STRING  '>' { $$ = createDictionaryWithCharStringValue($1); releaseYys3($2, $3, $4); }
 	| dictionary_type_begin ',' KW_REAL '>' { $$ = createDictionaryWithRealValue($1); releaseYys3($2, $3, $4); }
 	| dictionary_type_begin ',' KW_BLOB '>' { $$ = createDictionaryWithBLOBValue($1); releaseYys3($2, $3, $4); }
 	| dictionary_type_begin ',' KW_BYTE_ARRAY '>' { $$ = createDictionaryWithByteArrayValue($1); releaseYys3($2, $3, $4); }
