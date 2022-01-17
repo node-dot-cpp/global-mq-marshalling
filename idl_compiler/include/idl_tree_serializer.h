@@ -96,6 +96,12 @@ string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& ty
 }
 
 inline
+string dictionaryKeyTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	return impl_typeToLibTypeOrTypeProcessor( type, type.dictionaryKeyKind, root );
+}
+
+inline
 string dictionaryValueTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
 {
 	return impl_typeToLibTypeOrTypeProcessor( type, type.dictionaryValueKind, root );

@@ -569,83 +569,119 @@ public:
 		}
 	}
 
-	template<class ComposerTT, class DictionaryT, class ElemTypeT>
+	template<class ComposerTT, class DictionaryT, class KeyTypeT, class ValueTypeT>
 	static
 	void compose( ComposerTT& composer, const DictionaryT& what ) { 
 		using ComposerT = typename std::remove_reference<ComposerTT>::type;
+		using key_type = typename DictionaryT::key_type;
+		using value_type = typename DictionaryT::value_type;
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
-			assert( false ); // not yet implemented
-			/*impl::composeUnsignedInteger( composer, collSz );
-			for ( size_t i=0; i<collSz; ++i )
+			impl::composeUnsignedInteger( composer, collSz );
+			for ( const auto& it: what )
 			{
-				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-					impl::composeSignedInteger( composer, what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-					impl::composeUnsignedInteger( composer, what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-					impl::composeReal( composer, what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-					impl::composeString( composer, what[i] );
-				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				// key
+				if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
+					impl::composeSignedInteger( composer, it.first );
+				else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
+					impl::composeUnsignedInteger( composer, it.first );
+				else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
+					impl::composeString( composer, it.first );
+				else
+					static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
+
+				// value
+				if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
+					impl::composeSignedInteger( composer, it.second );
+				else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
+					impl::composeUnsignedInteger( composer, it.second );
+				else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
+					impl::composeReal( composer, it.second );
+				else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
+					impl::composeString( composer, it.second );
+				else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 				{
 					impl::composeStructBegin( composer );
-					ElemTypeT::compose( composer, what[i] );
+					ValueTypeT::compose( composer, it.second );
 					impl::composeStructEnd( composer );
 				}
 				else
-					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-			}*/
+					static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
+			}
 		}
 		else
 		{
 			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-			assert( false ); // not yet implemented
-			/*composer.buff.append( "[", 1 );
-			for ( size_t i=0; i<collSz; ++i )
+			composer.buff.append( "{", 1 );
+			size_t commaCtr = 0;
+			for ( const auto& it: what )
 			{
-				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-					impl::json::composeSignedInteger( composer, what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-					impl::json::composeUnsignedInteger( composer, what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-					impl::json::composeReal( composer, what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-					impl::json::composeString( composer, what[i] );
-				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				composer.buff.append( "{", 1 );
+
+				// key
+				if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
+					impl::json::composeSignedInteger( composer, it.first );
+				else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
+					impl::json::composeUnsignedInteger( composer, it.first );
+				else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
+					impl::json::composeString( composer, it.first );
+				else
+					static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
+
+				composer.buff.append( ",", 1 );
+
+				// value
+				if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
+					impl::json::composeSignedInteger( composer, it.second );
+				else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
+					impl::json::composeUnsignedInteger( composer, it.second );
+				else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
+					impl::json::composeReal( composer, it.second );
+				else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
+					impl::json::composeString( composer, it.second );
+				else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 				{
 					impl::composeStructBegin( composer );
-					ElemTypeT::compose( composer, what[i] );
+					ValueTypeT::compose( composer, it.second );
 					impl::composeStructEnd( composer );
 				}
 				else
-					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-				if ( i + 1 < collSz ) 
-					composer.buff.append( ", ", 2 );
+					static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
+
+				composer.buff.append( "}", 1 );
+
+				if ( commaCtr + 1 < collSz )
+				{
+					composer.buff.append( ",", 1 );
+					++commaCtr;
+				}
 			}
-			composer.buff.append( "]", 1 );*/
+			assert( commaCtr + 1 == collSz );
+			composer.buff.append( "}", 1 );
 		}
 	}
 
-	template<class ComposerT, class DictionaryT, class ElemTypeT, typename NameT>
+	template<class ComposerT, class DictionaryT, class KeyTypeT, class ValueTypeT, typename NameT>
 	static
 	void compose( ComposerT& composer, const DictionaryT& what, NameT name, bool addListSeparator ) { 
 		if constexpr ( ComposerT::proto == Proto::GMQ )
-			compose<ComposerT, DictionaryT, ElemTypeT>( composer, what );
+			compose<ComposerT, DictionaryT, KeyTypeT, ValueTypeT>( composer, what );
 		else
 		{
 			static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
 			impl::json::addNamePart( composer, name );
-			compose<ComposerT, DictionaryT, ElemTypeT>( composer, what );
+			compose<ComposerT, DictionaryT, KeyTypeT, ValueTypeT>( composer, what );
 			if ( addListSeparator )
 				composer.buff.append( ",", 1 );
 		}
 	}
 
-	template<class ParserT, class DictionaryT, class ElemTypeT, bool suppressNotifications = false>
+	template<class ParserT, class DictionaryT, class KeyTypeT, class ValueTypeT, bool suppressNotifications = false>
 	static
 	void parse( ParserT& parser, DictionaryT& dest ) { 
+		using key_type = typename DictionaryT::key_type;
+		using value_type = typename DictionaryT::value_type;
 		dest.clear();
 		if constexpr ( ParserT::proto == Proto::GMQ )
 		{
@@ -656,25 +692,25 @@ public:
 			for ( size_t i=0; i<collSz; ++i )
 			{
 				typename DictionaryT::value_type what;
-				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+				if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
 					parser.parseSignedInteger( &what );
-				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+				else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
 					parser.parseUnsignedInteger( &what );
-				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+				else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
 					parser.parseReal( &what );
-				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+				else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
 					parser.parseString( &what );
-				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 				{
 					impl::parseStructBegin( parser );
 					if constexpr( suppressNotifications )
-						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, what );
 					else
-						ElemTypeT::parse( parser, what );
+						ValueTypeT::parse( parser, what );
 					impl::parseStructEnd( parser );
 				}
 				else
-					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+					static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
 				dest.push_back( what );
 			}*/
 		}
@@ -693,25 +729,25 @@ public:
 			for( ;; )
 			{
 				typename DictionaryT::value_type what;
-				if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+				if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
 					parser.readSignedIntegerFromJson( &what );
-				else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+				else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
 					parser.readUnsignedIntegerFromJson( &what );
-				else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+				else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
 					parser.readRealFromJson( &what );
-				else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+				else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
 					parser.readStringFromJson( &what );
-				else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+				else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 				{
 					impl::parseStructBegin( parser );
 					if constexpr( suppressNotifications )
-						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, what );
 					else
-						ElemTypeT::parse( parser, what );
+						ValueTypeT::parse( parser, what );
 					impl::parseStructEnd( parser );
 				}
 				else
-					static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+					static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
 				dest.push_back( what );
 				if ( parser.isDelimiter( ',' ) )
 				{
@@ -746,7 +782,7 @@ namespace impl {
 				dst.insert( std::make_pair( it.first, it.second ) );
 			else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 			{
-				//ElemTypeT::copy( src[i], dst[i] );
+				//ValueTypeT::copy( src[i], dst[i] );
 				dst.insert( std::make_pair( it.first, it.second ) ); // TODO
 			}
 			else

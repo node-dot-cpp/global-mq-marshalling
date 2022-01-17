@@ -659,11 +659,11 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary( FILE* header, Roo
 	fprintf( header, "\n" );
 	fprintf( header, "%s\tif constexpr( alwaysCollectChanges )\n", offset.c_str() );
 	fprintf( header, "%s\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\tPublishableDictionaryProcessor::parse<ParserT, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\tPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\tcurrentChanged = !::globalmq::marshalling::impl::isSameDictionary<%s, %s>( oldDictionaryVal, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t}\n", offset.c_str() );
 	fprintf( header, "%s\telse\n", offset.c_str() );
-	fprintf( header, "%s\t\tPublishableDictionaryProcessor::parse<ParserT, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\tPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\n" );
 	fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n", offset.c_str() );
 	fprintf( header, "%s}\n", offset.c_str() );
@@ -1257,16 +1257,10 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 				switch ( member.type.dictionaryValueKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
-						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::SignedIntegralType>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
-						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::UnsignedIntegralType>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
-						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::RealType>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
-						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, ::globalmq::marshalling::impl::StringType>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, %s, %s>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					case MessageParameterType::KIND::VECTOR:
 					case MessageParameterType::KIND::DICTIONARY:
@@ -1275,7 +1269,7 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 					case MessageParameterType::KIND::STRUCT:
 					case MessageParameterType::KIND::DISCRIMINATED_UNION:
 						assert( member.type.structIdx < root.structs.size() );
-						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, %s>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
+						fprintf( header, "%sPublishableDictionaryProcessor::compose<ComposerT, %s, %s, %s>( %s, t.%s, \"%s\", %s );\n", offset, impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str(), addSepar );
 						break;
 					default:
 						assert( false ); // not implemented (yet)
@@ -1681,7 +1675,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 			case MessageParameterType::KIND::DICTIONARY:
 				assert( member.type.structIdx < root.structs.size() );				
 				fprintf( header, "%s::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
-				fprintf( header, "%sPublishableDictionaryProcessor::parse<ParserT, %s, %s, true>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%sPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s, true>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			default:
 				assert( false );
@@ -1793,7 +1787,7 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 				assert( member.type.structIdx < root.structs.size() );
 				
 				fprintf( header, "\t\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", member.name.c_str() );
-				fprintf( header, "\t\tPublishableDictionaryProcessor::parse<ParserT, %s, %s>( parser, t.%s );\n", impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "\t\tPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s>( parser, t.%s );\n", impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "\n" );
 
 				break;
@@ -2059,32 +2053,20 @@ void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool f
 			switch ( param.type.dictionaryValueKind )
 			{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf( header, "\t\tPublishableDictionaryProcessor::compose<%s, %s, ::globalmq::marshalling::impl::SignedIntegralType>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
-					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf( header, "\t\tPublishableDictionaryProcessor::compose<%s, %s, ::globalmq::marshalling::impl::UnsignedIntegralType>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
-					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf( header, "\t\tPublishableDictionaryProcessor::compose<%s, %s, ::globalmq::marshalling::impl::RealType>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
-					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf( header, "\t\tPublishableDictionaryProcessor::compose<%s, %s, ::globalmq::marshalling::impl::StringType>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 					break;
 				case MessageParameterType::KIND::VECTOR:
 				case MessageParameterType::KIND::DICTIONARY:
 					assert( false ); // unexpected
 					break;
-				case MessageParameterType::KIND::STRUCT:
-				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					assert( param.type.structIdx < root.structs.size() );
-//					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( %s );\n", composer );
-//					fprintf( header, "\t\t%s::compose( %s, t.%s );\n", impl_generatePublishableStructName( *(root.structs[param.type.structIdx]) ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
-//					fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( %s );\n", composer );
-					fprintf( header, "\t\tPublishableDictionaryProcessor::compose<%s, %s, %s>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( param.type, root ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
-					break;
 				default:
 					assert( false ); // not implemented (yet)
 			}
+			fprintf( header, "\t\tPublishableDictionaryProcessor::compose<%s, %s, %s, %s>( %s, t.%s );\n", composerType, impl_templateMemberTypeName( "T", param).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( param.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( param.type, root ).c_str(), composer, impl_memberOrAccessFunctionName( param ).c_str() );
 			fprintf( header, "\t\t::globalmq::marshalling::impl::composeStateUpdateBlockEnd( %s );\n", composer );
 			break;
 		}

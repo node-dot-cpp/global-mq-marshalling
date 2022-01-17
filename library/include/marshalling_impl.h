@@ -303,15 +303,6 @@ void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 }
 
 template<typename ComposerT>
-void composeString(ComposerT& composer, GMQ_COLL string str )
-{
-	composer.buff.appendUint8( '\"' );
-	auto str1 = string2JsonString( str );
-	composer.buff.append( str1.c_str(), str1.size() );
-	composer.buff.appendUint8( '\"' );
-}
-
-template<typename ComposerT>
 void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
