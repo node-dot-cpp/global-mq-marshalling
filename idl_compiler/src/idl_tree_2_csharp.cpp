@@ -598,13 +598,11 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructParseBase2(FILE* header, CompositeType& s)
+	void csharpMsg_generateStructParseBase2(FILE* header, CompositeType& s, const std::string& name, bool needsNew)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		std::string name = csharpMsg_getTypeName(s);
-
-		fprintf(header, "\tpublic static %s parse(ParserBase parser)\n", name.c_str());
+		fprintf(header, "\tpublic %sstatic %s parse(ParserBase parser)\n", needsNew ? "new " : "", name.c_str());
 
 		fprintf(header,
 			"\t{\n"
@@ -1110,7 +1108,8 @@ namespace {
 		csharpMsg_generateStructComposeJson(header, s);
 		csharpMsg_generateStructComposeGmq(header, s);
 
-		csharpMsg_generateStructParseBase2(header, s);
+		std::string type_name = csharpMsg_getTypeName(s);
+		csharpMsg_generateStructParseBase2(header, s, type_name, false);
 		csharpMsg_generateStructParseBase(header, s);
 		csharpMsg_generateStructParseJson(header, s);
 		csharpMsg_generateStructParseGmq(header, s);
@@ -1261,6 +1260,8 @@ namespace {
 		fprintf(header, "public class %s : %s\n"
 			"{\n", s.name.c_str(), target.name.c_str());
 
+		std::string type_name = csharpMsg_getTypeName(s);
+		csharpMsg_generateStructParseBase2(header, target, type_name, true);
 		csharpMsg_generateMessageAliasMethods(header, s, target, "ComposerBase", "ParserBase");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "GmqComposer", "GmqParser");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "JsonComposer", "JsonParser");

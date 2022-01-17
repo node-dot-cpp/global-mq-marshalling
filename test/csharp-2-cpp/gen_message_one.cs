@@ -537,6 +537,16 @@ public class test_gmq
 
 public class point3D_alias : point3D
 {
+	public new static point3D_alias parse(ParserBase parser)
+	{
+		point3D_alias tmp = new point3D_alias();
+		parse(parser,
+			x: ref tmp.x,
+			y: ref tmp.y,
+			z: ref tmp.z
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
 	{
 		point3D.compose(composer, x, y, z);
@@ -577,6 +587,33 @@ public class point3D_alias : point3D
 
 public class message_one_gmq : message_one
 {
+	public new static message_one_gmq parse(ParserBase parser)
+	{
+		message_one_gmq tmp = new message_one_gmq();
+		parse(parser,
+			firstParam: ref tmp.firstParam,
+			secondParam: new CollectionWrapperForParsing(
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
+			thirdParam: new CollectionWrapperForParsing(
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val = point3D.parse(parser); tmp.thirdParam.Add(val); }),
+			forthParam: ref tmp.forthParam,
+			fifthParam: ref tmp.fifthParam,
+			sixthParam: new CollectionWrapperForParsing(
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val = point.parse(parser); tmp.sixthParam.Add(val); }),
+			seventhParam: ref tmp.seventhParam,
+			eighthParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.eighthParam = point.parse(parser); }),
+			ninethParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.ninethParam = point3D.parse(parser); }),
+			tenthParam: new CollectionWrapperForParsing(
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
@@ -641,6 +678,15 @@ public class test_json
 
 public class point_alias : point
 {
+	public new static point_alias parse(ParserBase parser)
+	{
+		point_alias tmp = new point_alias();
+		parse(parser,
+			x: ref tmp.x,
+			y: ref tmp.y
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, Int64 x, Int64 y)
 	{
 		point.compose(composer, x, y);
@@ -686,6 +732,33 @@ public class point_alias : point
 
 public class message_one_json : message_one
 {
+	public new static message_one_json parse(ParserBase parser)
+	{
+		message_one_json tmp = new message_one_json();
+		parse(parser,
+			firstParam: ref tmp.firstParam,
+			secondParam: new CollectionWrapperForParsing(
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
+			thirdParam: new CollectionWrapperForParsing(
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val = point3D.parse(parser); tmp.thirdParam.Add(val); }),
+			forthParam: ref tmp.forthParam,
+			fifthParam: ref tmp.fifthParam,
+			sixthParam: new CollectionWrapperForParsing(
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val = point.parse(parser); tmp.sixthParam.Add(val); }),
+			seventhParam: ref tmp.seventhParam,
+			eighthParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.eighthParam = point.parse(parser); }),
+			ninethParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.ninethParam = point3D.parse(parser); }),
+			tenthParam: new CollectionWrapperForParsing(
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		message_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);

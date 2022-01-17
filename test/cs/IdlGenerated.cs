@@ -1083,6 +1083,33 @@ public class test_gmq
 
 public class message_two : struct_one
 {
+	public new static message_two parse(ParserBase parser)
+	{
+		message_two tmp = new message_two();
+		parse(parser,
+			firstParam: ref tmp.firstParam,
+			secondParam: new CollectionWrapperForParsing(
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
+			thirdParam: new CollectionWrapperForParsing(
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val = point3D.parse(parser); tmp.thirdParam.Add(val); }),
+			forthParam: ref tmp.forthParam,
+			fifthParam: ref tmp.fifthParam,
+			sixthParam: new CollectionWrapperForParsing(
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val = point.parse(parser); tmp.sixthParam.Add(val); }),
+			seventhParam: ref tmp.seventhParam,
+			eighthParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.eighthParam = point.parse(parser); }),
+			ninethParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.ninethParam = point3D.parse(parser); }),
+			tenthParam: new CollectionWrapperForParsing(
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
@@ -1255,6 +1282,17 @@ public class message_four : IEquatable<message_four>
 
 public class message_du : struct_du
 {
+	public new static message_du parse(ParserBase parser)
+	{
+		message_du tmp = new message_du();
+		parse(parser,
+			pt: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.pt = point3D.parse(parser); }),
+			disc_union: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.disc_union = du_one.parse(parser); })
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
 		struct_du.compose(composer, pt, disc_union);
@@ -1319,6 +1357,33 @@ public class test_json
 
 public class message_three : struct_one
 {
+	public new static message_three parse(ParserBase parser)
+	{
+		message_three tmp = new message_three();
+		parse(parser,
+			firstParam: ref tmp.firstParam,
+			secondParam: new CollectionWrapperForParsing(
+				() => { tmp.secondParam = new List<Int64>(); },
+				(ParserBase parser, int ordinal) => { Int64 val; parser.parseSignedInteger(out val); tmp.secondParam.Add(val); }),
+			thirdParam: new CollectionWrapperForParsing(
+				() => { tmp.thirdParam = new List<point3D>(); },
+				(ParserBase parser, int ordinal) => { point3D val = point3D.parse(parser); tmp.thirdParam.Add(val); }),
+			forthParam: ref tmp.forthParam,
+			fifthParam: ref tmp.fifthParam,
+			sixthParam: new CollectionWrapperForParsing(
+				() => { tmp.sixthParam = new List<point>(); },
+				(ParserBase parser, int ordinal) => { point val = point.parse(parser); tmp.sixthParam.Add(val); }),
+			seventhParam: ref tmp.seventhParam,
+			eighthParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.eighthParam = point.parse(parser); }),
+			ninethParam: new MessageWrapperForParsing(
+				(ParserBase parser) => { tmp.ninethParam = point3D.parse(parser); }),
+			tenthParam: new CollectionWrapperForParsing(
+				() => { tmp.tenthParam = new List<Double>(); },
+				(ParserBase parser, int ordinal) => { Double val; parser.parseReal(out val); tmp.tenthParam.Add(val); })
+		);
+		return tmp;
+	}
 	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);

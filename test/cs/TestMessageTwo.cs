@@ -50,7 +50,7 @@ namespace TestProject1
 
             mtest.test_gmq.handleMessage(buffer,
                 mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_two, (ParserBase parser) => {
-                    mtest.struct_one msg = mtest.struct_one.parse(parser);
+                    mtest.test_gmq.message_two msg = mtest.test_gmq.message_two.parse(parser);
                     condition = msg.Equals(TestStructOne.GetSampleData());
                 }),
                 mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (ParserBase parser) => { Assert.True(false); }),
