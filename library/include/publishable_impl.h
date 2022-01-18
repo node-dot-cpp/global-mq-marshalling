@@ -847,7 +847,7 @@ public:
 };
 
 namespace impl {
-	template<class DictionaryT, class ValueTypeT>
+	template<class DictionaryT, class KeyTypeT, class ValueTypeT>
 	void copyDictionary( const DictionaryT& src, DictionaryT& dst )
 	{
 		for ( const auto& it: src )
@@ -862,8 +862,8 @@ namespace impl {
 				dst.insert( std::make_pair( it.first, it.second ) );
 			else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 			{
-				//ValueTypeT::copy( src[i], dst[i] );
-				dst.insert( std::make_pair( it.first, it.second ) ); // TODO
+				//ValueTypeT::copy( src[i], obj );
+				dst.insert( std::make_pair( it.first, it.second ) ); // TODO: revise
 			}
 			else
 				static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );

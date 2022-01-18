@@ -813,14 +813,14 @@ struct HtmlTagSample
 
 // version with notifiers: we have to add them
 
-struct Property
+/*struct Property
 {
 	GMQ_COLL string name = "ini_name";
 	GMQ_COLL string value = "ini_value";
 
 	void notifyUpdated_name() const { assert( getCurrentNode() != nullptr ); fmt::print( "Property::notifyUpdated_name()\n" ); }
 	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); fmt::print( "Property::notifyUpdated_value()\n" ); }
-};
+};*/
 
 class HtmlTextOrTags : public mtest::structures::HtmlTextOrTags
 {
@@ -834,7 +834,7 @@ public:
 struct HtmlTag
 {
 	GMQ_COLL string name;
-	GMQ_COLL vector<Property> properties;
+	GMQ_COLL unordered_map<GMQ_COLL string, GMQ_COLL string> properties;
 	HtmlTextOrTags tags;
 	void notifyUpdated_properties() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTag::notifyUpdated_properties()\n" ); }
 	void notifyUpdated_tags() const { 
@@ -951,7 +951,7 @@ void publishableTestTwo()
 
 	g4s_hn_tags.set_currentVariant( mtest::structures::HtmlTextOrTags::Variants::taglists );
 	mtest::structures::HtmlTag newTag;
-	newTag.properties.push_back( { "some_key", "some_value" } );
+	newTag.properties.insert( { "some_key", "some_value" } );
 	newTag.tags.initAs( mtest::structures::HtmlTextOrTags::Variants::text );
 //	newTag.tags.str() = "def";
 	newTag.tags.str() = "\"\t\"\r\n\\\\";
@@ -971,6 +971,6 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == mtest::structures::HtmlTextOrTags::Variants::taglists );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags().size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
-	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].name == "some_key" );
-	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].value == "some_value" );
+//	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].name == "some_key" );
+//	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].value == "some_value" );
 }

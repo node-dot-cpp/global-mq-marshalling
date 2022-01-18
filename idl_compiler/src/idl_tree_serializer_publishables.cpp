@@ -443,7 +443,7 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary( FILE* header, Roo
 	fprintf( header, "%sbool currentChanged = false;\n", offset.c_str() );
 	fprintf( header, "%sconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
-	fprintf( header, "%s\t::globalmq::marshalling::impl::copyDictionary<%s, %s>( t.%s, oldDictionaryVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
 //fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n", offset.c_str() );
 
@@ -1175,7 +1175,7 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 	{
 		std::string libKeyType = dictionaryKeyTypeToLibTypeOrTypeProcessor( param.type, root );
 		std::string libValueType = dictionaryValueTypeToLibTypeOrTypeProcessor( param.type, root );
-		switch( param.type.vectorElemKind )
+		switch( param.type.dictionaryValueKind )
 		{
 			case MessageParameterType::KIND::INTEGER:
 			case MessageParameterType::KIND::UINTEGER:
@@ -1591,6 +1591,21 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 				assert( member.type.structIdx < root.structs.size() );
 				
 				fprintf( header, "//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!\n" );
+				fprintf( header, "%sif constexpr( reportChanges )\n", offset.c_str() );
+				fprintf( header, "%s{\n", offset.c_str() );
+				fprintf( header, "%s\t%s oldDictionaryVal;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+				fprintf( header, "%s\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
+				fprintf( header, "%s\tPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\tbool currentChanged = !::globalmq::marshalling::impl::isSameDictionary<%s, %s, %s>( oldDictionaryVal, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\tchanged = changed || currentChanged;\n", offset.c_str() );
+				fprintf( header, "%s}\n", offset.c_str() );
+				fprintf( header, "%selse\n", offset.c_str() );
+				fprintf( header, "%s{\n", offset.c_str() );
+				fprintf( header, "%s\t::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
+				fprintf( header, "%s\tPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s}\n", offset.c_str() );
+				fprintf( header, "\n" );
 
 				break;
 			}
@@ -1853,7 +1868,7 @@ void impl_GeneratePublishableStructCopyFn_MemberIterationBlock( FILE* header, Ro
 			}
 			case MessageParameterType::KIND::DICTIONARY:
 			{
-				fprintf( header, "%s::globalmq::marshalling::impl::copyDictionary<%s, %s>( src.%s, dst.%s );\n", offset.c_str(), impl_templateMemberTypeName( "UserT", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( src.%s, dst.%s );\n", offset.c_str(), impl_templateMemberTypeName( "UserT", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			}
 			default:
