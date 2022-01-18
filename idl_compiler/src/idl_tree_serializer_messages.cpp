@@ -934,7 +934,7 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s )
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunction( FILE* header, Root& root, CompositeType& s )
+void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s )
 {
 	fprintf( header, "template<class ParserT>\n" );
 	fprintf( header, "%s %s(ParserT& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
@@ -968,7 +968,7 @@ void generateMessage( FILE* header, Root& root, CompositeType& s )
 
 	impl_generateComposeFunction( header, s );
 	if ( s.type == CompositeType::Type::message )
-		impl_generateParseFunction( header, root, s );
+		impl_generateParseFunctionForMessagesAndAliasingStructs( header, root, s );
 }
 
 void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
@@ -1009,7 +1009,6 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "}\n\n" );
 
 	// parse function
-	impl_generateParseFunction( header, root, alias );
 	fprintf( header, "template<class ParserT>\n" );
 	fprintf( header, "structures::%s::%s_%s %s_%s_parse(ParserT& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str() );
 	fprintf( header, "{\n" );

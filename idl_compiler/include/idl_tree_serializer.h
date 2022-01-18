@@ -165,6 +165,8 @@ void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset );
 void print__unique_ptr_MessageParameter( unique_ptr<MessageParameter>& s, size_t offset );
 void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, size_t offset );
 
+void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s );
+
 void printDataType( MessageParameterType& s );
 void printLimit( Limit& s );
 void printVariant( Variant& s );
