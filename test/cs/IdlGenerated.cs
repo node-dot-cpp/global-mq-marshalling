@@ -1562,6 +1562,524 @@ public class message_five : IEquatable<message_five>
 
 } // class test_json
 
+//////////////////////////////////////////////////////////////
+//
+//                 Publishables
+//
+//////////////////////////////////////////////////////////////
+
+namespace publishable
+{
+
+public interface Property
+{
+	String name { get; set; }
+	String value { get; set; }
+} // interface Property
+
+public class Property_impl : Property
+{
+	public String name { get; set; }
+	public String value { get; set; }
+} // class Property_impl
+
+public class Property_subs : Property
+{
+	Property t;
+	enum Address { name = 0, value = 1 };
+	public Property_subs(Property t)
+	{
+		this.t = t;
+	}
+	public String name
+	{
+		get { return t.name; }
+		set { throw new InvalidOperationException(); }
+	}
+	public String value
+	{
+		get { return t.value; }
+		set { throw new InvalidOperationException(); }
+	}
+	public static void parseForStateSync(IPublishableParser parser, Property t)
+	{
+		t.name = parser.parseString("name");
+		t.value = parser.parseString("value");
+	}
+	public static bool parse(IPublishableParser parser, Property t)
+	{
+		bool changed = false;
+		{
+			String newVal = parser.parseString("name");
+			if(newVal != t.name)
+			{
+				t.name = newVal;
+				changed = true;
+			}
+		}
+		{
+			String newVal = parser.parseString("value");
+			if(newVal != t.value)
+			{
+				t.value = newVal;
+				changed = true;
+			}
+		}
+		return changed;
+	}
+	public static bool parse(IPublishableParser parser, Property t, UInt64[] addr, int offset)
+	{
+		bool changed = false;
+		switch ((Address)addr[offset])
+		{
+			case Address.name:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			String newVal = parser.parseString("name");
+			if(newVal != t.name)
+			{
+				t.name = newVal;
+				changed = true;
+			}
+			}
+			break;
+			case Address.value:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			String newVal = parser.parseString("value");
+			if(newVal != t.value)
+			{
+				t.value = newVal;
+				changed = true;
+			}
+			}
+			break;
+			default:
+				throw new Exception();
+		}
+	return changed;
+	}
+} // class Property_subs
+
+public class Property_publ : Property
+{
+	Property t;
+	IPublishableComposer composer;
+	UInt64[] address;
+	enum Address { name = 0, value = 1 };
+	public Property_publ(Property t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)
+	{
+		this.t = t;
+		this.composer = composer;
+		this.address = Publishable.makeAddress(baseAddr, id);
+	}
+	public String name
+	{
+		get { return t.name; }
+		set
+		{
+			if (value != t.name)
+			{
+				t.name = value;
+				composer.composeAddress(address, (UInt64)Address.name);
+				composer.composeString("value", value, false);
+				composer.composeStructEnd(false);
+			}
+		}
+	}
+	public String value
+	{
+		get { return t.value; }
+		set
+		{
+			if (value != t.value)
+			{
+				t.value = value;
+				composer.composeAddress(address, (UInt64)Address.value);
+				composer.composeString("value", value, false);
+				composer.composeStructEnd(false);
+			}
+		}
+	}
+	public static void compose(IPublishableComposer composer, Property t)
+	{
+		composer.composeString("name", t.name, true);
+		composer.composeString("value", t.value, false);
+	}
+} // class Property_publ
+
+
+public interface HtmlTag
+{
+	Property p1 { get; set; }
+	Property make_p1();
+	Property p2 { get; set; }
+	Property make_p2();
+	Int64 i1 { get; set; }
+} // interface HtmlTag
+
+public class HtmlTag_impl : HtmlTag
+{
+	public Property p1 { get; set; }
+	public Property make_p1() { return new Property_impl(); }
+	public Property p2 { get; set; }
+	public Property make_p2() { return new Property_impl(); }
+	public Int64 i1 { get; set; }
+} // class HtmlTag_impl
+
+public class HtmlTag_subs : HtmlTag
+{
+	HtmlTag t;
+	enum Address { p1 = 0, p2 = 1, i1 = 2 };
+	public HtmlTag_subs(HtmlTag t)
+	{
+		this.t = t;
+	}
+	public Property p1
+	{
+		get { return new Property_subs(t.p1); }
+		set { throw new InvalidOperationException(); }
+	}
+	public Property make_p1() { throw new InvalidOperationException(); }
+	public Property p2
+	{
+		get { return new Property_subs(t.p2); }
+		set { throw new InvalidOperationException(); }
+	}
+	public Property make_p2() { throw new InvalidOperationException(); }
+	public Int64 i1
+	{
+		get { return t.i1; }
+		set { throw new InvalidOperationException(); }
+	}
+	public static void parseForStateSync(IPublishableParser parser, HtmlTag t)
+	{
+		parser.parseStructBegin("p1");
+		Property_subs.parseForStateSync(parser, t.p1);
+		parser.parseStructEnd();
+		parser.parseStructBegin("p2");
+		Property_subs.parseForStateSync(parser, t.p2);
+		parser.parseStructEnd();
+		t.i1 = parser.parseInteger("i1");
+	}
+	public static bool parse(IPublishableParser parser, HtmlTag t)
+	{
+		bool changed = false;
+		{
+			parser.parseStructBegin("p1");
+			bool currentChanged = Property_subs.parse(parser, t.p1);
+			parser.parseStructEnd();
+			if(currentChanged)
+			{
+					changed = true;
+					// TODO
+			}
+		}
+		{
+			parser.parseStructBegin("p2");
+			bool currentChanged = Property_subs.parse(parser, t.p2);
+			parser.parseStructEnd();
+			if(currentChanged)
+			{
+					changed = true;
+					// TODO
+			}
+		}
+		{
+			Int64 newVal = parser.parseInteger("i1");
+			if(newVal != t.i1)
+			{
+				t.i1 = newVal;
+				changed = true;
+			}
+		}
+		return changed;
+	}
+	public static bool parse(IPublishableParser parser, HtmlTag t, UInt64[] addr, int offset)
+	{
+		bool changed = false;
+		switch ((Address)addr[offset])
+		{
+			case Address.p1:
+			{
+				bool currentChanged = false;
+				if(addr.Length == offset + 1)
+				{
+					parser.parseStructBegin("p1");
+					currentChanged = Property_subs.parse(parser, t.p1);
+					parser.parseStructEnd();
+				}
+				else if(addr.Length > offset + 1)
+				{
+					currentChanged = Property_subs.parse(parser, t.p1, addr, offset + 1);
+				}
+				else
+					throw new Exception();
+
+				if(currentChanged)
+				{
+					changed = true;
+					// TODO
+				}
+			}
+			break;
+			case Address.p2:
+			{
+				bool currentChanged = false;
+				if(addr.Length == offset + 1)
+				{
+					parser.parseStructBegin("p2");
+					currentChanged = Property_subs.parse(parser, t.p2);
+					parser.parseStructEnd();
+				}
+				else if(addr.Length > offset + 1)
+				{
+					currentChanged = Property_subs.parse(parser, t.p2, addr, offset + 1);
+				}
+				else
+					throw new Exception();
+
+				if(currentChanged)
+				{
+					changed = true;
+					// TODO
+				}
+			}
+			break;
+			case Address.i1:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			Int64 newVal = parser.parseInteger("i1");
+			if(newVal != t.i1)
+			{
+				t.i1 = newVal;
+				changed = true;
+			}
+			}
+			break;
+			default:
+				throw new Exception();
+		}
+	return changed;
+	}
+} // class HtmlTag_subs
+
+public class HtmlTag_publ : HtmlTag
+{
+	HtmlTag t;
+	IPublishableComposer composer;
+	UInt64[] address;
+	enum Address { p1 = 0, p2 = 1, i1 = 2 };
+	public HtmlTag_publ(HtmlTag t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)
+	{
+		this.t = t;
+		this.composer = composer;
+		this.address = Publishable.makeAddress(baseAddr, id);
+	}
+	public Property p1
+	{
+		get { return new Property_subs(t.p1); }
+		set
+		{
+			if (value != t.p1)
+			{
+				t.p1 = value;
+				composer.composeAddress(address, (UInt64)Address.p1);
+				composer.composeStructBegin("value");
+				Property_publ.compose(composer, value);
+				composer.composeStructEnd(false);
+				composer.composeStructEnd(false);
+			}
+		}
+	}
+	public Property make_p1() { return t.make_p1(); }
+	public Property p2
+	{
+		get { return new Property_subs(t.p2); }
+		set
+		{
+			if (value != t.p2)
+			{
+				t.p2 = value;
+				composer.composeAddress(address, (UInt64)Address.p2);
+				composer.composeStructBegin("value");
+				Property_publ.compose(composer, value);
+				composer.composeStructEnd(false);
+				composer.composeStructEnd(false);
+			}
+		}
+	}
+	public Property make_p2() { return t.make_p2(); }
+	public Int64 i1
+	{
+		get { return t.i1; }
+		set
+		{
+			if (value != t.i1)
+			{
+				t.i1 = value;
+				composer.composeAddress(address, (UInt64)Address.i1);
+				composer.composeInteger("value", value, false);
+				composer.composeStructEnd(false);
+			}
+		}
+	}
+	public static void compose(IPublishableComposer composer, HtmlTag t)
+	{
+		composer.composeStructBegin("p1");
+		Property_publ.compose(composer, t.p1);
+		composer.composeStructEnd(true);
+		composer.composeStructBegin("p2");
+		Property_publ.compose(composer, t.p2);
+		composer.composeStructEnd(true);
+		composer.composeInteger("i1", t.i1, false);
+	}
+} // class HtmlTag_publ
+
+
+//**********************************************************************
+// PUBLISHABLE html_data (1 parameters)
+// 1. STRUCT HtmlTag tag
+//**********************************************************************
+
+public interface html_data
+{
+	HtmlTag tag { get; set; }
+	HtmlTag make_tag();
+} // interface html_data
+
+public class html_data_impl : html_data
+{
+	public HtmlTag tag { get; set; }
+	public HtmlTag make_tag() { return new HtmlTag_impl(); }
+} // class html_data_impl
+
+public class html_data_subs : html_data, StateSubscriberBase
+{
+	html_data t;
+	enum Address { tag = 0 };
+	public html_data_subs(html_data t)
+	{
+		this.t = t;
+	}
+	public HtmlTag tag
+	{
+		get { return new HtmlTag_subs(t.tag); }
+		set { throw new InvalidOperationException(); }
+	}
+	public HtmlTag make_tag() { throw new InvalidOperationException(); }
+	public static void parseForStateSync(IPublishableParser parser, html_data t)
+	{
+		parser.parseStructBegin("tag");
+		HtmlTag_subs.parseForStateSync(parser, t.tag);
+		parser.parseStructEnd();
+	}
+	public static bool parse(IPublishableParser parser, html_data t)
+	{
+		bool changed = false;
+		{
+			parser.parseStructBegin("tag");
+			bool currentChanged = HtmlTag_subs.parse(parser, t.tag);
+			parser.parseStructEnd();
+			if(currentChanged)
+			{
+					changed = true;
+					// TODO
+			}
+		}
+		return changed;
+	}
+	public static bool parse(IPublishableParser parser, html_data t, UInt64[] addr, int offset)
+	{
+		bool changed = false;
+		switch ((Address)addr[offset])
+		{
+			case Address.tag:
+			{
+				bool currentChanged = false;
+				if(addr.Length == offset + 1)
+				{
+					parser.parseStructBegin("tag");
+					currentChanged = HtmlTag_subs.parse(parser, t.tag);
+					parser.parseStructEnd();
+				}
+				else if(addr.Length > offset + 1)
+				{
+					currentChanged = HtmlTag_subs.parse(parser, t.tag, addr, offset + 1);
+				}
+				else
+					throw new Exception();
+
+				if(currentChanged)
+				{
+					changed = true;
+					// TODO
+				}
+			}
+			break;
+			default:
+				throw new Exception();
+		}
+	return changed;
+	}
+	public void applyGmqMessageWithUpdates(IPublishableParser parser) {}
+	public void applyJsonMessageWithUpdates(IPublishableParser parser) {}
+	public void applyGmqStateSyncMessage(IPublishableParser parser) {}
+	public void applyJsonStateSyncMessage(IPublishableParser parser) {}
+	public String name() { return "html_data"; }
+	public UInt64 stateTypeID() { return 3; }
+} // class html_data_subs
+
+public class html_data_publ : html_data, StatePublisherBase
+{
+	html_data t;
+	IPublishableComposer composer;
+	UInt64[] address;
+	enum Address { tag = 0 };
+	public html_data_publ(html_data t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)
+	{
+		this.t = t;
+		this.composer = composer;
+		this.address = Publishable.makeAddress(baseAddr, id);
+	}
+	public HtmlTag tag
+	{
+		get { return new HtmlTag_subs(t.tag); }
+		set
+		{
+			if (value != t.tag)
+			{
+				t.tag = value;
+				composer.composeAddress(address, (UInt64)Address.tag);
+				composer.composeStructBegin("value");
+				HtmlTag_publ.compose(composer, value);
+				composer.composeStructEnd(false);
+				composer.composeStructEnd(false);
+			}
+		}
+	}
+	public HtmlTag make_tag() { return t.make_tag(); }
+	public static void compose(IPublishableComposer composer, html_data t)
+	{
+		composer.composeStructBegin("tag");
+		HtmlTag_publ.compose(composer, t.tag);
+		composer.composeStructEnd(false);
+	}
+	public UInt64 idx { get; set; }
+	public void generateStateSyncMessage(IPublishableComposer composer) {}
+	public void startTick(BufferT buff) {}
+	public BufferT endTick() { return null; }
+	public String name() { return "html_data"; }
+	public UInt64 stateTypeID() { return 3; }
+} // class html_data_publ
+
+
+
+} // namespace publishable
+
 
 } // namespace mtest
 

@@ -1420,7 +1420,7 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 			else
 			{
 				assert(it->aliasIdx < s.structs.size());
-				auto& alias = s.structs[it->aliasIdx];
+				auto& alias = s.structs[static_cast<decltype(s.structs)::size_type>(it->aliasIdx)];
 				csharpMsg_generateMessageAlias(header, *it, *alias);
 				csharpMsg_generateComposeMessageMethod(header, it->name, *alias, scope->proto);
 			}
@@ -1432,7 +1432,7 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 
 
 	// temporary remove
-	//generateCsharpPublishables(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
+	generateCsharpPublishables(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
 
 	fprintf( header, "\n} // namespace %s\n\n",	metascope.c_str() );
 }
