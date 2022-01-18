@@ -575,10 +575,10 @@ void generatePublishableMemberNameBlock( FILE* header, const std::set<string>& n
 	fprintf( header, "\n\n" );
 }*/
 
-void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vector<CompositeType*>& out )
+void orderStructsByDependency( std::vector<unique_ptr<CompositeType>> &structs, std::vector<CompositeType*>& out, std::unordered_set<size_t>& collElementTypes )
 {
 	size_t processed = 0;
-	vector<CompositeType*> tmpStructs;
+	std::vector<CompositeType*> tmpStructs;
 	while ( processed < structs.size() )
 	{
 		for ( auto& s : structs )
@@ -587,8 +587,16 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 				{
 					if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 						structs[member->type.messageIdx]->dependsOnCnt = 1;
-//					else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-//						structs[member->type.messageIdx]->dependsOnCnt = 1;
+					else if ( member->type.kind == MessageParameterType::KIND::VECTOR )
+					{
+						if ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+						{
+							assert( member->type.messageIdx < structs.size() );
+							collElementTypes.insert( member->type.messageIdx );
+							structs[member->type.messageIdx]->isStruct4Publishing = structs[member->type.messageIdx]->isStruct4Publishing || s->isStruct4Publishing;
+							structs[member->type.messageIdx]->isStruct4Messaging = structs[member->type.messageIdx]->isStruct4Messaging || s->isStruct4Messaging;
+						}
+					}
 				}
 			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 )
 				for ( auto& cs : s->getDiscriminatedUnionCases() )
@@ -596,6 +604,16 @@ void orderStructsByDependency( vector<unique_ptr<CompositeType>> &structs, vecto
 					{
 						if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 							structs[member->type.messageIdx]->dependsOnCnt = 1;
+						else if ( member->type.kind == MessageParameterType::KIND::VECTOR )
+						{
+							if ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+							{
+								assert( member->type.messageIdx < structs.size() );
+								collElementTypes.insert( member->type.messageIdx );
+								structs[member->type.messageIdx]->isStruct4Publishing = structs[member->type.messageIdx]->isStruct4Publishing || s->isStruct4Publishing;
+								structs[member->type.messageIdx]->isStruct4Messaging = structs[member->type.messageIdx]->isStruct4Messaging || s->isStruct4Messaging;
+							}
+						}
 //						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
 //							structs[member->type.messageIdx]->dependsOnCnt = 1;
 					}
@@ -1049,7 +1067,8 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	generateNotifierPresenceTesterBlock( header, s );
 
 	vector<CompositeType*> structsOrderedByDependency;
-	orderStructsByDependency( s.structs, structsOrderedByDependency );
+	std::unordered_set<size_t> collElementTypes;
+	orderStructsByDependency( s.structs, structsOrderedByDependency, collElementTypes );
 
 	fprintf( header, "//===============================================================================\n" );
 	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs, MESSAGEs and PUBLISHABLEs\n" );
@@ -1089,7 +1108,23 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	fprintf( header, "} // namespace structures\n" );
 	fprintf( header, "\n//===============================================================================\n\n" );
 
-	for ( auto& it : s.structs )
+	for ( size_t idx : collElementTypes )
+	{
+		assert( idx < s.structs.size() );
+		auto& it = s.structs[idx];
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+//		if ( it->type == CompositeType::Type::structure && it->isStruct4Publishing )
+		{
+			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapper4SetForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			fprintf( header, "\n" );
+		}
+	}
+
+	for ( auto& it : s.structs ) // TODO: avoid dulication of the above
 	{
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
