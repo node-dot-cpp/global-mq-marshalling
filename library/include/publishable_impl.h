@@ -417,114 +417,12 @@ namespace impl {
 
 enum ActionOnDictionary { update_value = 1, insert = 2, remove = 3 };
 
-template<class DictionaryT>
-class DictionaryOfSimpleTypeRefWrapper
-{
-	DictionaryT& b;
-public:
-	using key_type = typename DictionaryT::key_type;
-	using value_type = typename DictionaryT::value_type;
-public:
-	DictionaryOfSimpleTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
-	size_t size() { return b.size(); }
-};
-
-template<class DictionaryT>
-class DictionaryOfCompositeTypeRefWrapper
-{
-	DictionaryT& b;
-public:
-	using key_type = typename DictionaryT::key_type;
-	using value_type = typename DictionaryT::value_type;
-public:
-	DictionaryOfCompositeTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
-	size_t size() { return b.size(); }
-};
-
-template<class RefWrapperT, class DictionaryT>
-class DictionaryOfStructRefWrapper
-{
-	DictionaryT& b;
-public:
-	using key_type = typename DictionaryT::key_type;
-	using value_type = typename DictionaryT::value_type;
-public:
-	DictionaryOfStructRefWrapper( DictionaryT& actual ) : b( actual ) {}
-	size_t size() { return b.size(); }
-};
-
-template<class DictionaryT, class ElemTypeT, class RootT>
-class DictionaryRefWrapper4Set
-{
-	void finalizeInsertOrUpdateAt( size_t idx ) { 
-		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-			impl::publishableComposeLeafeInteger( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-			impl::publishableComposeLeafeReal( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-			impl::publishableComposeLeafeString( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
-		{
-			impl::publishableComposeLeafeStructBegin( root.getComposer() );
-			ElemTypeT::compose( root.getComposer(), b[idx] );
-			impl::publishableComposeLeafeStructEnd( root.getComposer() );
-		}
-		else
-			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-	}
-
-protected:
-	DictionaryT& b;
-	RootT& root;
-	GMQ_COLL vector<size_t> address;
-
-public:
-	DictionaryRefWrapper4Set( DictionaryT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
-	}
-
-	void remove( size_t idx ) { 
-		GMQ_ASSERT( idx < b.size()); 
-		b.erase( b.begin() + idx );
-		impl::composeAddressInPublishable( root.getComposer(), address, idx );
-		impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::remove_at, true );
-	}
-
-	void insert_before( size_t idx, typename DictionaryT::value_type& what ) { 
-		GMQ_ASSERT( idx <= b.size());
-		b.insert( b.begin() + idx, what );
-		impl::composeAddressInPublishable( root.getComposer(), address, idx );
-		impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::insert_single_before, false );
-		finalizeInsertOrUpdateAt( idx );
-	}
-
-	void set_at( typename DictionaryT::value_type what, size_t idx ) {
-		GMQ_ASSERT( idx < b.size());
-		b[idx] = what;
-		impl::composeAddressInPublishable( root.getComposer(), address, idx );
-		impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::update_at, false );
-		finalizeInsertOrUpdateAt( idx );
-	}
-};
-
-template<class DictionaryT, class ElemTypeT, class RootT, class RefWrapper4SetT>
-class DictionaryOfStructRefWrapper4Set : public DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>
-{
-public:
-	DictionaryOfStructRefWrapper4Set( DictionaryT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : 
-		DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>( actual, root_, address_, idx ) {}
-	auto get4set_at( size_t idx ) { return RefWrapper4SetT(DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::b[idx], DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::root, DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::address, idx); }
-};
-
 class PublishableDictionaryProcessor
 {
 public:
 	template<class ParserT, class DictionaryT, class ProcType>
 	static
-	void parseSingleValue( ParserT& parser, typename DictionaryT::value_type& value ) { 
+	void parseSingleValue( ParserT& parser, typename DictionaryT::mapped_type& value ) { 
 		if constexpr ( std::is_same<ProcType, impl::SignedIntegralType>::value )
 			impl::IntegerProcessor::parse<ParserT, typename DictionaryT::value_type>( parser, &value );
 		else if constexpr ( std::is_same<ProcType, impl::UnsignedIntegralType>::value )
@@ -545,7 +443,7 @@ public:
 
 	template<class ParserT, class DictionaryT, class ProcType>
 	static
-	bool parseSingleValueAndCompare( ParserT& parser, typename DictionaryT::value_type& value, const typename DictionaryT::value_type& oldValue ) { 
+	bool parseSingleValueAndCompare( ParserT& parser, typename DictionaryT::mapped_type& value, const typename DictionaryT::mapped_type& oldValue ) { 
 		if constexpr ( std::is_base_of<impl::StructType, ProcType>::value )
 		{
 			impl::parseStructBegin( parser );
@@ -574,7 +472,7 @@ public:
 	void compose( ComposerTT& composer, const DictionaryT& what ) { 
 		using ComposerT = typename std::remove_reference<ComposerTT>::type;
 		using key_type = typename DictionaryT::key_type;
-		using value_type = typename DictionaryT::value_type;
+		using value_type = typename DictionaryT::mapped_type;
 		size_t collSz = what.size();
 		if constexpr ( ComposerT::proto == Proto::GMQ )
 		{
@@ -657,7 +555,7 @@ public:
 					++commaCtr;
 				}
 			}
-			assert( commaCtr + 1 == collSz );
+			assert( collSz == 0 || commaCtr + 1 == collSz );
 			composer.buff.append( "}", 1 );
 		}
 	}
@@ -681,89 +579,271 @@ public:
 	static
 	void parse( ParserT& parser, DictionaryT& dest ) { 
 		using key_type = typename DictionaryT::key_type;
-		using value_type = typename DictionaryT::value_type;
+		using value_type = typename DictionaryT::mapped_type;
 		dest.clear();
 		if constexpr ( ParserT::proto == Proto::GMQ )
 		{
 			size_t collSz;
 			parser.parseUnsignedInteger( &collSz );
-			assert( false ); // not yet implemented
-			/*dest.reserve( collSz );
 			for ( size_t i=0; i<collSz; ++i )
 			{
-				typename DictionaryT::value_type what;
+				key_type key;
+				value_type value;
+
+				// key
+				if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
+					parser.parseSignedInteger( &key );
+				else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
+					parser.parseUnsignedInteger( &key );
+				else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
+					parser.parseString( &key );
+				else
+					static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
+
+				// value
 				if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
-					parser.parseSignedInteger( &what );
+					parser.parseSignedInteger( &value );
 				else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
-					parser.parseUnsignedInteger( &what );
+					parser.parseUnsignedInteger( &value );
 				else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
-					parser.parseReal( &what );
+					parser.parseReal( &value );
 				else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
-					parser.parseString( &what );
+					parser.parseString( &value );
 				else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 				{
 					impl::parseStructBegin( parser );
 					if constexpr( suppressNotifications )
-						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, value );
 					else
-						ValueTypeT::parse( parser, what );
+						ValueTypeT::parse( parser, value );
 					impl::parseStructEnd( parser );
 				}
 				else
 					static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
-				dest.push_back( what );
-			}*/
+
+				dest.insert( std::make_pair( key, value ) );
+			}
 		}
 		else
 		{
 			static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-			assert( false ); // not yet implemented
-			/*parser.skipDelimiter( '[' );
-			if ( parser.isDelimiter( ']' ) )
+			parser.skipDelimiter( '{' );
+			if ( parser.isDelimiter( '}' ) )
 			{
-				parser.skipDelimiter( ']' );
+				parser.skipDelimiter( '}' );
 				if ( parser.isDelimiter( ',' ) )
 					parser.skipDelimiter( ',' );
 				return;
 			}
 			for( ;; )
 			{
-				typename DictionaryT::value_type what;
+				key_type key;
+				value_type value;
+
+				parser.skipDelimiter( '{' );
+
+				// key
+				if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
+					parser.readSignedIntegerFromJson( &key );
+				else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
+					parser.readUnsignedIntegerFromJson( &key );
+				else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
+					parser.readStringFromJson( &key );
+				else
+					static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
+
+				parser.skipDelimiter( ',' );
+
+				// value
 				if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
-					parser.readSignedIntegerFromJson( &what );
+					parser.readSignedIntegerFromJson( &value );
 				else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
-					parser.readUnsignedIntegerFromJson( &what );
+					parser.readUnsignedIntegerFromJson( &value );
 				else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
-					parser.readRealFromJson( &what );
+					parser.readRealFromJson( &value );
 				else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
-					parser.readStringFromJson( &what );
+					parser.readStringFromJson( &value );
 				else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
 				{
 					impl::parseStructBegin( parser );
 					if constexpr( suppressNotifications )
-						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, value );
 					else
-						ValueTypeT::parse( parser, what );
+						ValueTypeT::parse( parser, value );
 					impl::parseStructEnd( parser );
 				}
 				else
 					static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
-				dest.push_back( what );
+
+				parser.skipDelimiter( '}' );
+				dest.insert( std::make_pair( key, value ) );
+
 				if ( parser.isDelimiter( ',' ) )
 				{
 					parser.skipDelimiter( ',' );
 					continue;
 				}
-				if ( parser.isDelimiter( ']' ) )
+				if ( parser.isDelimiter( '}' ) )
 				{
-					parser.skipDelimiter( ']' );
+					parser.skipDelimiter( '}' );
 					break;
 				}
 			}
 			if ( parser.isDelimiter( ',' ) )
-				parser.skipDelimiter( ',' );*/
+				parser.skipDelimiter( ',' );
 		}
 	}
+};
+
+template<class DictionaryT>
+class DictionaryOfSimpleTypeRefWrapper
+{
+	DictionaryT& b;
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::value_type;
+public:
+	DictionaryOfSimpleTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+	bool get_value( const key_type key, value_type& value )
+	{
+		auto f = b.find( key );
+		if ( f != b.end() )
+		{
+			value = f->second;
+			return true;
+		}
+		return false;
+	}
+};
+
+template<class DictionaryT>
+class DictionaryOfCompositeTypeRefWrapper
+{
+	DictionaryT& b;
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::value_type;
+public:
+	DictionaryOfCompositeTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+	bool get_value( const key_type key, value_type& value )
+	{
+		auto f = b.find( key );
+		if ( f != b.end() )
+		{
+			value = f->second;
+			return true;
+		}
+		return false;
+	}
+};
+
+template<class RefWrapperT, class DictionaryT>
+class DictionaryOfStructRefWrapper
+{
+	DictionaryT& b;
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::value_type;
+public:
+	DictionaryOfStructRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+};
+
+template<class DictionaryT, class KeyTypeT, class ValueTypeT, class RootT>
+class DictionaryRefWrapper4Set
+{
+public:
+	using key_type = typename DictionaryT::key_type;
+	using value_type = typename DictionaryT::mapped_type;
+
+protected:
+	DictionaryT& b;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+
+private:
+	/*void finalizeInsertOrUpdateOperation( KeyTypeT key, ValueTypeT value ) { 
+		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
+			impl::publishableComposeLeafeInteger( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
+			impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
+			impl::publishableComposeLeafeReal( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
+			impl::publishableComposeLeafeString( root.getComposer(), b[idx] );
+		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
+		{
+			impl::publishableComposeLeafeStructBegin( root.getComposer() );
+			ElemTypeT::compose( root.getComposer(), b[idx] );
+			impl::publishableComposeLeafeStructEnd( root.getComposer() );
+		}
+		else
+			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
+	}*/
+	void finalizeRemoveOperation( key_type key ) { 
+		if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
+			impl::publishableStructComposeInteger( root.getComposer(), "key", key, false );
+		else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
+			impl::publishableStructComposeUnsignedInteger( root.getComposer(), "key", key, false );
+		else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
+			impl::publishableStructComposeString( root.getComposer(), "key", key, false );
+		else
+			static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
+	}
+
+public:
+	DictionaryRefWrapper4Set( DictionaryT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : b( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+
+	size_t remove( const key_type& key ) { 
+		size_t ret = b.erase( key );
+		if ( ret )
+		{
+			impl::composeAddressInPublishable( root.getComposer(), address, ActionOnDictionary::remove );
+//			impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::remove, true );
+			finalizeRemoveOperation( key );
+		}
+		return ret;
+	}
+
+	bool insert( const key_type& key, value_type& value ) { 
+		auto insret = b.insert( std::make_pair( key, value ) );
+		if ( insret.second )
+		{
+			impl::composeAddressInPublishable( root.getComposer(), address, ActionOnDictionary::insert );
+//			impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::insert, false );
+//			finalizeInsertOrUpdateOperation( key, value );
+			PublishableDictionaryProcessor::compose<typename RootT::ComposerT, DictionaryT, KeyTypeT, ValueTypeT>( root.getComposer(), b, "data", true );
+		}
+		return insret.second;
+	}
+
+	bool update_value( const key_type& key, value_type newValue ) {
+		auto f = b.find( key );
+		if ( f != b.end() )
+		{
+			f->second = newValue;
+			impl::composeAddressInPublishable( root.getComposer(), address, ActionOnDictionary::update_value );
+//			impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::update_value, false );
+			finalizeInsertOrUpdateOperation( key, newValue );
+			PublishableDictionaryProcessor::compose<typename RootT::ComposerT, DictionaryT, KeyTypeT, ValueTypeT>( root.getComposer(), b, "data", true );
+			return true;
+		}
+		return false;
+	}
+};
+
+template<class DictionaryT, class KeyTypeT, class ValueTypeT, class RootT, class RefWrapper4SetT>
+class DictionaryOfStructRefWrapper4Set : public DictionaryRefWrapper4Set<DictionaryT, KeyTypeT, ValueTypeT, RootT>
+{
+public:
+	DictionaryOfStructRefWrapper4Set( DictionaryT& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : 
+		DictionaryRefWrapper4Set<DictionaryT, KeyTypeT, ValueTypeT, RootT>( actual, root_, address_, idx ) {}
+//	auto get4set_at( size_t idx ) { return RefWrapper4SetT(DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::b[idx], DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::root, DictionaryRefWrapper4Set<DictionaryT, ElemTypeT, RootT>::address, idx); }
 };
 
 namespace impl {
