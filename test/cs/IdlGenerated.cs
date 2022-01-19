@@ -1685,7 +1685,7 @@ public class Property_publ : Property
 				t.name = value;
 				composer.composeAddress(address, (UInt64)Address.name);
 				composer.composeString("value", value, false);
-				composer.composeStructEnd(false);
+				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
@@ -1699,7 +1699,7 @@ public class Property_publ : Property
 				t.value = value;
 				composer.composeAddress(address, (UInt64)Address.value);
 				composer.composeString("value", value, false);
-				composer.composeStructEnd(false);
+				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
@@ -1756,21 +1756,21 @@ public class HtmlTag_subs : HtmlTag
 	}
 	public static void parseForStateSync(IPublishableParser parser, HtmlTag t)
 	{
-		parser.parseStructBegin("p1");
+		parser.parsePublishableStructBegin("p1");
 		Property_subs.parseForStateSync(parser, t.p1);
-		parser.parseStructEnd();
-		parser.parseStructBegin("p2");
+		parser.parsePublishableStructEnd();
+		parser.parsePublishableStructBegin("p2");
 		Property_subs.parseForStateSync(parser, t.p2);
-		parser.parseStructEnd();
+		parser.parsePublishableStructEnd();
 		t.i1 = parser.parseInteger("i1");
 	}
 	public static bool parse(IPublishableParser parser, HtmlTag t)
 	{
 		bool changed = false;
 		{
-			parser.parseStructBegin("p1");
+			parser.parsePublishableStructBegin("p1");
 			bool currentChanged = Property_subs.parse(parser, t.p1);
-			parser.parseStructEnd();
+			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
 					changed = true;
@@ -1778,9 +1778,9 @@ public class HtmlTag_subs : HtmlTag
 			}
 		}
 		{
-			parser.parseStructBegin("p2");
+			parser.parsePublishableStructBegin("p2");
 			bool currentChanged = Property_subs.parse(parser, t.p2);
-			parser.parseStructEnd();
+			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
 					changed = true;
@@ -1807,9 +1807,9 @@ public class HtmlTag_subs : HtmlTag
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parseStructBegin("p1");
+					parser.parsePublishableStructBegin("p1");
 					currentChanged = Property_subs.parse(parser, t.p1);
-					parser.parseStructEnd();
+					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1)
 				{
@@ -1830,9 +1830,9 @@ public class HtmlTag_subs : HtmlTag
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parseStructBegin("p2");
+					parser.parsePublishableStructBegin("p2");
 					currentChanged = Property_subs.parse(parser, t.p2);
-					parser.parseStructEnd();
+					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1)
 				{
@@ -1888,10 +1888,10 @@ public class HtmlTag_publ : HtmlTag
 			{
 				t.p1 = value;
 				composer.composeAddress(address, (UInt64)Address.p1);
-				composer.composeStructBegin("value");
+				composer.composePublishableStructBegin("value");
 				Property_publ.compose(composer, value);
-				composer.composeStructEnd(false);
-				composer.composeStructEnd(false);
+				composer.composePublishableStructEnd(false);
+				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
@@ -1905,10 +1905,10 @@ public class HtmlTag_publ : HtmlTag
 			{
 				t.p2 = value;
 				composer.composeAddress(address, (UInt64)Address.p2);
-				composer.composeStructBegin("value");
+				composer.composePublishableStructBegin("value");
 				Property_publ.compose(composer, value);
-				composer.composeStructEnd(false);
-				composer.composeStructEnd(false);
+				composer.composePublishableStructEnd(false);
+				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
@@ -1923,18 +1923,18 @@ public class HtmlTag_publ : HtmlTag
 				t.i1 = value;
 				composer.composeAddress(address, (UInt64)Address.i1);
 				composer.composeInteger("value", value, false);
-				composer.composeStructEnd(false);
+				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
 	public static void compose(IPublishableComposer composer, HtmlTag t)
 	{
-		composer.composeStructBegin("p1");
+		composer.composePublishableStructBegin("p1");
 		Property_publ.compose(composer, t.p1);
-		composer.composeStructEnd(true);
-		composer.composeStructBegin("p2");
+		composer.composePublishableStructEnd(true);
+		composer.composePublishableStructBegin("p2");
 		Property_publ.compose(composer, t.p2);
-		composer.composeStructEnd(true);
+		composer.composePublishableStructEnd(true);
 		composer.composeInteger("i1", t.i1, false);
 	}
 } // class HtmlTag_publ
@@ -1973,17 +1973,17 @@ public class html_data_subs : html_data, StateSubscriberBase
 	public HtmlTag make_tag() { throw new InvalidOperationException(); }
 	public static void parseForStateSync(IPublishableParser parser, html_data t)
 	{
-		parser.parseStructBegin("tag");
+		parser.parsePublishableStructBegin("tag");
 		HtmlTag_subs.parseForStateSync(parser, t.tag);
-		parser.parseStructEnd();
+		parser.parsePublishableStructEnd();
 	}
 	public static bool parse(IPublishableParser parser, html_data t)
 	{
 		bool changed = false;
 		{
-			parser.parseStructBegin("tag");
+			parser.parsePublishableStructBegin("tag");
 			bool currentChanged = HtmlTag_subs.parse(parser, t.tag);
-			parser.parseStructEnd();
+			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
 					changed = true;
@@ -2002,9 +2002,9 @@ public class html_data_subs : html_data, StateSubscriberBase
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parseStructBegin("tag");
+					parser.parsePublishableStructBegin("tag");
 					currentChanged = HtmlTag_subs.parse(parser, t.tag);
-					parser.parseStructEnd();
+					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1)
 				{
@@ -2025,12 +2025,29 @@ public class html_data_subs : html_data, StateSubscriberBase
 		}
 	return changed;
 	}
-	public void applyGmqMessageWithUpdates(IPublishableParser parser) {}
-	public void applyJsonMessageWithUpdates(IPublishableParser parser) {}
-	public void applyGmqStateSyncMessage(IPublishableParser parser) {}
-	public void applyJsonStateSyncMessage(IPublishableParser parser) {}
 	public String name() { return "html_data"; }
 	public UInt64 stateTypeID() { return 3; }
+	public void applyGmqMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }
+	public void applyJsonMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }
+	public void applyGmqStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }
+	public void applyJsonStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }
+	public void applyMessageWithUpdates(IPublishableParser parser)
+	{
+		parser.parseStateUpdateMessageBegin();
+		UInt64[] addr = null;
+		while(parser.parseAddress(ref addr))
+		{
+			html_data_subs.parse(parser, this, addr, 0);
+			addr = null;
+		}
+		parser.parseStateUpdateMessageEnd();
+	}
+	public void applyStateSyncMessage(IPublishableParser parser)
+	{
+		parser.parseStructBegin();
+		html_data_subs.parseForStateSync(parser, this);
+		parser.parseStructEnd();
+	}
 } // class html_data_subs
 
 public class html_data_publ : html_data, StatePublisherBase
@@ -2054,26 +2071,38 @@ public class html_data_publ : html_data, StatePublisherBase
 			{
 				t.tag = value;
 				composer.composeAddress(address, (UInt64)Address.tag);
-				composer.composeStructBegin("value");
+				composer.composePublishableStructBegin("value");
 				HtmlTag_publ.compose(composer, value);
-				composer.composeStructEnd(false);
-				composer.composeStructEnd(false);
+				composer.composePublishableStructEnd(false);
+				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
 	public HtmlTag make_tag() { return t.make_tag(); }
 	public static void compose(IPublishableComposer composer, html_data t)
 	{
-		composer.composeStructBegin("tag");
+		composer.composePublishableStructBegin("tag");
 		HtmlTag_publ.compose(composer, t.tag);
-		composer.composeStructEnd(false);
+		composer.composePublishableStructEnd(false);
 	}
-	public UInt64 idx { get; set; }
-	public void generateStateSyncMessage(IPublishableComposer composer) {}
-	public void startTick(BufferT buff) {}
-	public BufferT endTick() { return null; }
 	public String name() { return "html_data"; }
 	public UInt64 stateTypeID() { return 3; }
+	public void generateStateSyncMessage(IPublishableComposer composer)
+	{
+		composer.composeStructBegin();
+		html_data_publ.compose(composer, this);
+		composer.composeStructEnd();
+	}
+	public void startTick(BufferT buff)
+	{
+		composer.startTick(buff);
+		composer.composeStateUpdateMessageBegin();
+	}
+	public BufferT endTick()
+	{
+		composer.composeStateUpdateMessageEnd();
+		return composer.endTick();
+	}
 } // class html_data_publ
 
 

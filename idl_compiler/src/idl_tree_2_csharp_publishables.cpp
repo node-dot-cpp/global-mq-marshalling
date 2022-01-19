@@ -243,9 +243,9 @@ namespace {
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\tparser.parseStructBegin(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
 				fprintf(header, "\t\t%s_subs.parseForStateSync(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\t\tparser.parseStructEnd();\n");
+				fprintf(header, "\t\tparser.parsePublishableStructEnd();\n");
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -339,9 +339,9 @@ namespace {
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\tparser.parseStructBegin(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
 				fprintf(header, "\t\t\tbool currentChanged = %s_subs.parse(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\t\t\tparser.parseStructEnd();\n");
+				fprintf(header, "\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\tif(currentChanged)\n");
 				fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\t\t\tchanged = true;\n");
@@ -458,9 +458,9 @@ namespace {
 				fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
 				fprintf(header, "\t\t\t\tif(addr.Length == offset + 1)\n");
 				fprintf(header, "\t\t\t\t{\n");
-				fprintf(header, "\t\t\t\t\tparser.parseStructBegin(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
 				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subs.parse(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\t\t\t\t\tparser.parseStructEnd();\n");
+				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\t\t}\n");
 				fprintf(header, "\t\t\t\telse if(addr.Length > offset + 1)\n");
 				fprintf(header, "\t\t\t\t{\n");
@@ -527,13 +527,32 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		fprintf(header, "\tpublic void applyGmqMessageWithUpdates(IPublishableParser parser) {}\n");
-		fprintf(header, "\tpublic void applyJsonMessageWithUpdates(IPublishableParser parser) {}\n");
-		fprintf(header, "\tpublic void applyGmqStateSyncMessage(IPublishableParser parser) {}\n");
-		fprintf(header, "\tpublic void applyJsonStateSyncMessage(IPublishableParser parser) {}\n");
-
 		fprintf(header, "\tpublic String name() { return \"%s\"; }\n", s.name.c_str());
 		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
+
+		fprintf(header, "\tpublic void applyGmqMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }\n");
+		fprintf(header, "\tpublic void applyJsonMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }\n");
+		fprintf(header, "\tpublic void applyGmqStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }\n");
+		fprintf(header, "\tpublic void applyJsonStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }\n");
+
+		fprintf(header, "\tpublic void applyMessageWithUpdates(IPublishableParser parser)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
+		fprintf(header, "\t\tUInt64[] addr = null;\n");
+		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
+		fprintf(header, "\t\t{\n");
+		fprintf(header, "\t\t\t%s_subs.parse(parser, this, addr, 0);\n", type_name.c_str());
+		fprintf(header, "\t\t\taddr = null;\n");
+		fprintf(header, "\t\t}\n");
+		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tparser.parseStructBegin();\n");
+		fprintf(header, "\t\t%s_subs.parseForStateSync(parser, this);\n", type_name.c_str());
+		fprintf(header, "\t\tparser.parseStructEnd();\n");
+		fprintf(header, "\t}\n");
 	}
 
 	void csharpPub_generateStructSubs(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
@@ -664,9 +683,9 @@ namespace {
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\tcomposer.composeStructBegin(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\tcomposer.composePublishableStructBegin(\"%s\");\n", member.name.c_str());
 				fprintf(header, "\t\t%s_publ.compose(composer, t.%s);\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\t\tcomposer.composeStructEnd(");
+				fprintf(header, "\t\tcomposer.composePublishableStructEnd(");
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -714,13 +733,28 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		fprintf(header, "\tpublic UInt64 idx { get; set; }\n");
-		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer) {}\n");
-		fprintf(header, "\tpublic void startTick(BufferT buff) {}\n");
-		fprintf(header, "\tpublic BufferT endTick() { return null; }\n");
-
+		//fprintf(header, "\tpublic UInt64 idx { get; set; }\n");
 		fprintf(header, "\tpublic String name() { return \"%s\"; }\n", s.name.c_str());
 		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
+
+		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tcomposer.composeStructBegin();\n");
+		fprintf(header, "\t\t%s_publ.compose(composer, this);\n", type_name.c_str());
+		fprintf(header, "\t\tcomposer.composeStructEnd();\n");
+		fprintf(header, "\t}\n");
+		
+		fprintf(header, "\tpublic void startTick(BufferT buff)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tcomposer.startTick(buff);\n");
+		fprintf(header, "\t\tcomposer.composeStateUpdateMessageBegin();\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic BufferT endTick()\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tcomposer.composeStateUpdateMessageEnd();\n");
+		fprintf(header, "\t\treturn composer.endTick();\n");
+		fprintf(header, "\t}\n");
 	}
 
 
@@ -771,7 +805,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeInteger(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composeStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -787,7 +821,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeUnsigned(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composeStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -803,7 +837,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeReal(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composeStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -819,7 +853,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeString(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composeStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -835,10 +869,10 @@ namespace {
 				fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-				fprintf(header, "\t\t\t\tcomposer.composeStructBegin(\"value\");\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
 				fprintf(header, "\t\t\t\t%s_publ.compose(composer, value);\n", member.type.name.c_str());
-				fprintf(header, "\t\t\t\tcomposer.composeStructEnd(false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composeStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");

@@ -25,7 +25,6 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-using globalmq.marshalling.impl;
 using System;
 using System.Collections.Generic;
 
@@ -43,14 +42,18 @@ namespace globalmq.marshalling
     }
     public interface IPublishableParser
     {
+        bool parseAddress(ref UInt64[] addr);
         Int64 parseInteger(String expectedName);
         UInt64 parseUnsigned(String expectedName);
         Double parseReal(String expectedName);
         String parseString(String expectedName);
-        void parseStructBegin(String expectedName);
+        void parsePublishableStructBegin(String expectedName);
+        void parsePublishableStructEnd();
+        void parseStructBegin();
         void parseStructEnd();
+        void parseStateUpdateMessageBegin();
+        void parseStateUpdateMessageEnd();
     }
-
     public class JsonPublishableParser : IPublishableParser
     {
         JsonParser p;
@@ -64,6 +67,62 @@ namespace globalmq.marshalling
             if (key != expectedName)
                 throw new Exception(); // bad format
         }
+        public bool parseAddress(ref UInt64[] addr)
+        {
+            if (p.isDelimiter('{'))
+            {
+                p.skipDelimiter('{');
+                if (p.isDelimiter('}'))
+                {
+                    p.skipDelimiter('}');
+                    p.skipDelimiter(']');
+                    p.skipDelimiter('}');
+                    return false;
+                }
+            }
+            else if (p.isDelimiter(']'))
+            {
+                p.skipDelimiter(']');
+                p.skipDelimiter('}');
+                return false;
+            }
+
+            parseKey("addr");
+
+            p.skipDelimiter('[');
+            List<UInt64> tmpAddr = new List<ulong>();
+            if (!p.isDelimiter(']')) // there are some items there
+            {
+                UInt64 tmp;
+                for (; ; )
+                {
+                    p.parseUnsignedInteger(out tmp);
+                    tmpAddr.Add(tmp);
+                    if (p.isDelimiter(','))
+                    {
+                        p.skipDelimiter(',');
+                        continue;
+                    }
+                    if (p.isDelimiter(']'))
+                    {
+                        p.skipDelimiter(']');
+                        break;
+                    }
+                }
+            }
+            else
+                p.skipDelimiter(']');
+
+            //if (p.isDelimiter(','))
+                p.skipDelimiter(',');
+            //else
+            //    throw new Exception(); // bad format
+
+            addr = tmpAddr.ToArray();
+            return true;
+
+        }
+
         public Int64 parseInteger(String expectedName)
         {
             parseKey(expectedName);
@@ -108,24 +167,38 @@ namespace globalmq.marshalling
 
             return val;
         }
-        public void parseStructBegin(String expectedName)
+        public void parsePublishableStructBegin(String expectedName)
         {
             parseKey(expectedName);
-            if (p.isDelimiter('{'))
-                p.skipDelimiter('{');
-            else
-                throw new Exception();
-
+            p.skipDelimiter('{');
         }
-        public void parseStructEnd()
+        public void parsePublishableStructEnd()
         {
-            if (p.isDelimiter('{'))
-                p.skipDelimiter('{');
-            else
-                throw new Exception();
+            p.skipDelimiter('}');
 
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
+        }
+
+        public void parseStructBegin()
+        {
+            p.skipDelimiter('{');
+        }
+        public void parseStructEnd()
+        {
+            p.skipDelimiter('}');
+        }
+
+        public void parseStateUpdateMessageBegin()
+        {
+            p.skipDelimiter('{');
+            parseKey("changes");
+            p.skipDelimiter('[');
+        }
+        public void parseStateUpdateMessageEnd()
+        {
+            p.skipDelimiter(']');
+            p.skipDelimiter('}');
         }
     }
 
@@ -134,6 +207,20 @@ namespace globalmq.marshalling
         GmqParser p;
 
         public GmqPublishableParser(ReadIteratorT riter) { p = new GmqParser(riter); }
+
+        public bool parseAddress(ref UInt64[] addr)
+        {
+            UInt64 cnt;
+            p.parseUnsignedInteger(out cnt);
+            if (cnt == 0)
+                return false;
+            UInt64[] tmp = new UInt64[cnt];
+            for (UInt64 i = 0; i < cnt; ++i)
+            {
+                p.parseUnsignedInteger(out tmp[i]);
+            }
+            return true;
+        }
 
         public Int64 parseInteger(String expectedName)
         {
@@ -161,38 +248,56 @@ namespace globalmq.marshalling
             return val;
         }
 
-        public void parseStructBegin(String expectedName) { }
+        public void parsePublishableStructBegin(String expectedName) { }
+        public void parsePublishableStructEnd() { }
+        public void parseStructBegin() { }
         public void parseStructEnd() { }
-
+        public void parseStateUpdateMessageBegin() { }
+        public void parseStateUpdateMessageEnd() { }
     }
 
 
     public interface IPublishableComposer
     {
-        void composeAddress(UInt64[] addr, UInt64 last);
+        void startTick(BufferT buffer);
+        BufferT endTick();
+        void composeAddress(UInt64[] baseAddr, UInt64 last);
         void composeInteger(String name, Int64 value, bool separator);
         void composeUnsigned(String name, UInt64 value, bool separator);
         void composeReal(String name, Double value, bool separator);
         void composeString(String name, String value, bool separator);
-        void composeStructBegin(String name);
-        void composeStructEnd(bool separator);
+        void composePublishableStructBegin(String name);
+        void composePublishableStructEnd(bool separator);
+        void composeStructBegin();
+        void composeStructEnd();
+        void composeStateUpdateMessageBegin();
+        void composeStateUpdateMessageEnd();
     }
 
     public class JsonPublishableComposer : IPublishableComposer
     {
         JsonComposer composer;
 
-        public JsonPublishableComposer(BufferT buff) { composer = new JsonComposer(buff); }
+        public JsonPublishableComposer() { composer = new JsonComposer(null); }
 
-        public void composeAddress(ulong[] addr, ulong last)
+        public void startTick(BufferT buffer)
+        {
+            composer.startTick(buffer);
+        }
+        public BufferT endTick()
+        {
+            return composer.endTick();
+        }
+
+        public void composeAddress(ulong[] baseAddr, ulong last)
         {
             composer.append('{');
             composer.addNamePart("addr");
             composer.append('[');
-            int collSz = addr.Length;
+            int collSz = baseAddr.Length;
             for (int i = 0; i < collSz; ++i)
             {
-                composer.composeUnsignedInteger(addr[i]);
+                composer.composeUnsignedInteger(baseAddr[i]);
                 composer.append(", ");
             }
             composer.composeUnsignedInteger(last);
@@ -227,16 +332,32 @@ namespace globalmq.marshalling
             if (separator)
                 composer.append(",");
         }
-        public void composeStructBegin(String name)
+        public void composePublishableStructBegin(String name)
         {
             composer.addNamePart(name);
             composer.append("{");
         }
-        public void composeStructEnd(bool separator)
+        public void composePublishableStructEnd(bool separator)
         {
             composer.append("}");
             if (separator)
                 composer.append(",");
+        }
+        public void composeStructBegin()
+        {
+            composer.append('{');
+        }
+        public void composeStructEnd()
+        {
+            composer.append('}');
+        }
+        public void composeStateUpdateMessageBegin()
+        {
+            composer.append("{\"changes\":[");
+        }
+        public void composeStateUpdateMessageEnd()
+        {
+            composer.append("{}]}");
         }
 
     }
@@ -245,14 +366,22 @@ namespace globalmq.marshalling
     {
         GmqComposer composer;
 
-        public GmqPublishableComposer(BufferT buff) { composer = new GmqComposer(buff); }
+        public GmqPublishableComposer() { composer = new GmqComposer(null); }
 
-        public void composeAddress(ulong[] addr, ulong last)
+        public void startTick(BufferT buffer)
         {
-            int collSz = addr.Length;
+            composer.startTick(buffer);
+        }
+        public BufferT endTick()
+        {
+            return composer.endTick();
+        }
+        public void composeAddress(ulong[] baseAddr, ulong last)
+        {
+            int collSz = baseAddr.Length;
             composer.composeUnsignedInteger((ulong)collSz + 1);
             for (int i = 0; i < collSz; ++i)
-                composer.composeUnsignedInteger(addr[i]);
+                composer.composeUnsignedInteger(baseAddr[i]);
             composer.composeUnsignedInteger(last);
         }
 
@@ -272,8 +401,16 @@ namespace globalmq.marshalling
         {
             composer.composeString(value);
         }
-        public void composeStructBegin(String name) { }
-        public void composeStructEnd(bool separator) { }
+        public void composePublishableStructBegin(String name) { }
+        public void composePublishableStructEnd(bool separator) { }
+
+        public void composeStructBegin() { }
+        public void composeStructEnd() { }
+        public void composeStateUpdateMessageBegin() { }
+        public void composeStateUpdateMessageEnd()
+        {
+            composer.composeUnsignedInteger(0);
+        }
     }
 
 } // namespace globalmq::marshalling

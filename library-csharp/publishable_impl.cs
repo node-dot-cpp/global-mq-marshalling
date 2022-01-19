@@ -36,7 +36,7 @@ namespace globalmq.marshalling
 
     public interface StatePublisherBase
     {
-        UInt64 idx { get; set; } // for use in pools, etc
+        //UInt64 idx { get; set; } // for use in pools, etc
         void generateStateSyncMessage(IPublishableComposer composer);
         void startTick(BufferT buff);
         BufferT endTick();

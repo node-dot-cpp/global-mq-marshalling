@@ -25,7 +25,6 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-using globalmq.marshalling.impl;
 using System;
 using System.Collections.Generic;
 
@@ -88,7 +87,7 @@ namespace globalmq.marshalling
     {
         MakeDelegate lmake;
         NextDelegate lnext;
-        bool newFormat = false;
+        //bool newFormat = false;
         public delegate void MakeDelegate();
         public delegate void NextDelegate(ParserBase parser, int ordinal);
 
@@ -114,32 +113,32 @@ namespace globalmq.marshalling
         {
             if (lmake != null)
                 lmake();
-            int sz = 0;
-            if (parser.isDelimiter('{'))
-            {
-                newFormat = true;
-                parser.skipDelimiter('{');
+            //int sz = 0;
+            //if (parser.isDelimiter('{'))
+            //{
+            //    newFormat = true;
+            //    parser.skipDelimiter('{');
 
-                string key;
-                parser.readKeyFromJson(out key);
-                if (key != "size")
-                    throw new Exception();
+            //    string key;
+            //    parser.readKeyFromJson(out key);
+            //    if (key != "size")
+            //        throw new Exception();
 
-                parser.parseUnsignedInteger(out sz);
+            //    parser.parseUnsignedInteger(out sz);
 
-                parser.skipSpacesEtc();
-                parser.skipDelimiter(',');
+            //    parser.skipSpacesEtc();
+            //    parser.skipDelimiter(',');
 
-                parser.readKeyFromJson(out key);
-                if (key != "data")
-                    throw new Exception();
-            }
+            //    parser.readKeyFromJson(out key);
+            //    if (key != "data")
+            //        throw new Exception();
+            //}
 
             parser.skipDelimiter('[');
 
             if (!parser.isDelimiter(']')) // there are some items there
             {
-                for (int i = 0; !newFormat || i < sz; ++i)
+                for (int i = 0; /*!newFormat || i < sz*/; ++i)
                 {
                     lnext(parser, i);
                     if (parser.isDelimiter(','))
@@ -157,8 +156,8 @@ namespace globalmq.marshalling
             else
                 parser.skipDelimiter(']');
 
-            if (newFormat)
-                parser.skipDelimiter('}');
+            //if (newFormat)
+            //    parser.skipDelimiter('}');
         }
     };
 
@@ -339,7 +338,7 @@ namespace globalmq.marshalling
             lparse_(parser);
         }
     };
-{
+
     public class MessageHandler
     {
         public static ulong DefaultHandler = ulong.MaxValue;

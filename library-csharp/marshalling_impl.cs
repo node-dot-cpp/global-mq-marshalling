@@ -26,6 +26,7 @@
 * -------------------------------------------------------------------------------*/
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -54,6 +55,22 @@ namespace globalmq.marshalling
 		// mb: this is needed to make float format independant of locale
 		NumberFormatInfo nfi = new NumberFormatInfo();
 		public JsonComposer(BufferT buff_) { buff = buff_; nfi.NumberDecimalSeparator = "."; }
+		public void startTick(BufferT buffer)
+		{
+			Debug.Assert(buff == null);
+			Debug.Assert(buffer != null);
+
+			this.buff = buffer;
+		}
+		public BufferT endTick()
+		{
+			Debug.Assert(buff != null);
+
+			BufferT res = this.buff;
+			this.buff = null;
+			return res;
+		}
+
 		public void composeSignedInteger(sbyte num)
 		{
 			buff.appendAscii(num.ToString());
@@ -127,6 +144,21 @@ namespace globalmq.marshalling
 		BufferT buff;
 
 		public GmqComposer(BufferT buff_) { buff = buff_; }
+		public void startTick(BufferT buffer)
+		{
+			Debug.Assert(buff == null);
+			Debug.Assert(buffer != null);
+
+			this.buff = buffer;
+		}
+		public BufferT endTick()
+		{
+			Debug.Assert(buff != null);
+
+			BufferT res = this.buff;
+			this.buff = null;
+			return res;
+		}
 
 		public void composeSignedInteger(sbyte num)
 		{
