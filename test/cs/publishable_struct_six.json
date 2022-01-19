@@ -1,0 +1,1 @@
+{"name":"TheName","basic":{"anInt":-100000,"anUInt":100000,"aReal":3.14,"aString":"basic string"},"aggregate":{"name":"aggregate name","theAggregate":{"anInt":-100,"anUInt":100,"aReal":100,"aString":"basic string inside aggregate"},"lastValue":0}}

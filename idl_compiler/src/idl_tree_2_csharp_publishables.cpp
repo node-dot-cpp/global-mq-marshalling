@@ -244,6 +244,7 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t%s_subs.parseForStateSync(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\tparser.parsePublishableStructEnd();\n");
 				break;
@@ -527,7 +528,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		fprintf(header, "\tpublic String name() { return \"%s\"; }\n", s.name.c_str());
+		fprintf(header, "\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
 		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
 
 		fprintf(header, "\tpublic void applyGmqMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }\n");
@@ -541,7 +542,7 @@ namespace {
 		fprintf(header, "\t\tUInt64[] addr = null;\n");
 		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
 		fprintf(header, "\t\t{\n");
-		fprintf(header, "\t\t\t%s_subs.parse(parser, this, addr, 0);\n", type_name.c_str());
+		fprintf(header, "\t\t\t%s_subs.parse(parser, this.t, addr, 0);\n", type_name.c_str());
 		fprintf(header, "\t\t\taddr = null;\n");
 		fprintf(header, "\t\t}\n");
 		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
@@ -550,7 +551,7 @@ namespace {
 		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tparser.parseStructBegin();\n");
-		fprintf(header, "\t\t%s_subs.parseForStateSync(parser, this);\n", type_name.c_str());
+		fprintf(header, "\t\t%s_subs.parseForStateSync(parser, this.t);\n", type_name.c_str());
 		fprintf(header, "\t\tparser.parseStructEnd();\n");
 		fprintf(header, "\t}\n");
 	}
@@ -734,7 +735,7 @@ namespace {
 		assert(s.type == CompositeType::Type::publishable);
 
 		//fprintf(header, "\tpublic UInt64 idx { get; set; }\n");
-		fprintf(header, "\tpublic String name() { return \"%s\"; }\n", s.name.c_str());
+		fprintf(header, "\tpublic String statePublisherName() { return \"%s\"; }\n", s.name.c_str());
 		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
 
 		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
@@ -778,11 +779,18 @@ namespace {
 
 		csharpPub_generateAddressEnum(header, s);
 
-		fprintf(header, "\tpublic %s_publ(%s t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "\tpublic %s_publ(%s t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "\t{\n");
+		//fprintf(header, "\t\tthis.t = t;\n");
+		//fprintf(header, "\t\tthis.composer = composer;\n");
+		//fprintf(header, "\t\tthis.address = Publishable.makeAddress(baseAddr, id);\n");
+		//fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic %s_publ(%s t, IPublishableComposer composer, UInt64[] address)\n", type_name.c_str(), type_name.c_str());
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tthis.t = t;\n");
 		fprintf(header, "\t\tthis.composer = composer;\n");
-		fprintf(header, "\t\tthis.address = Publishable.makeAddress(baseAddr, id);\n");
+		fprintf(header, "\t\tthis.address = address;\n");
 		fprintf(header, "\t}\n");
 
 		auto& mem = s.getMembers();
@@ -862,7 +870,7 @@ namespace {
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\tpublic %s %s\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return new %s_subs(t.%s); }\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\tget { return new %s_publ(t.%s, composer, Publishable.makeAddress(address, (UInt64)Address.%s)); }\n", member.type.name.c_str(), member.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\tset\n");
 				fprintf(header, "\t\t{\n");
 				fprintf(header, "\t\t\tif (value != t.%s)\n", member.name.c_str());

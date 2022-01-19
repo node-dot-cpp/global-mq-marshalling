@@ -40,7 +40,7 @@ namespace globalmq.marshalling
         void generateStateSyncMessage(IPublishableComposer composer);
         void startTick(BufferT buff);
         BufferT endTick();
-        String name();
+        String statePublisherName();
         UInt64 stateTypeID();
     };
 
@@ -50,7 +50,7 @@ namespace globalmq.marshalling
 		void applyJsonMessageWithUpdates(IPublishableParser parser);
 		void applyGmqStateSyncMessage(IPublishableParser parser);
 		void applyJsonStateSyncMessage(IPublishableParser parser);
-		String name();
+		String stateSubscriberName();
 		UInt64 stateTypeID();
 	};
 

@@ -1571,23 +1571,253 @@ public class message_five : IEquatable<message_five>
 namespace publishable
 {
 
-public interface Property
+public interface BasicTypes
+{
+	Int64 anInt { get; set; }
+	UInt64 anUInt { get; set; }
+	Double aReal { get; set; }
+	String aString { get; set; }
+} // interface BasicTypes
+
+public class BasicTypes_impl : BasicTypes
+{
+	public Int64 anInt { get; set; }
+	public UInt64 anUInt { get; set; }
+	public Double aReal { get; set; }
+	public String aString { get; set; }
+} // class BasicTypes_impl
+
+public class BasicTypes_subs : BasicTypes
+{
+	BasicTypes t;
+	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
+	public BasicTypes_subs(BasicTypes t)
+	{
+		this.t = t;
+	}
+	public Int64 anInt
+	{
+		get { return t.anInt; }
+		set { throw new InvalidOperationException(); }
+	}
+	public UInt64 anUInt
+	{
+		get { return t.anUInt; }
+		set { throw new InvalidOperationException(); }
+	}
+	public Double aReal
+	{
+		get { return t.aReal; }
+		set { throw new InvalidOperationException(); }
+	}
+	public String aString
+	{
+		get { return t.aString; }
+		set { throw new InvalidOperationException(); }
+	}
+	public static void parseForStateSync(IPublishableParser parser, BasicTypes t)
+	{
+		t.anInt = parser.parseInteger("anInt");
+		t.anUInt = parser.parseUnsigned("anUInt");
+		t.aReal = parser.parseReal("aReal");
+		t.aString = parser.parseString("aString");
+	}
+	public static bool parse(IPublishableParser parser, BasicTypes t)
+	{
+		bool changed = false;
+		{
+			Int64 newVal = parser.parseInteger("anInt");
+			if(newVal != t.anInt)
+			{
+				t.anInt = newVal;
+				changed = true;
+			}
+		}
+		{
+			UInt64 newVal = parser.parseUnsigned("anUInt");
+			if(newVal != t.anUInt)
+			{
+				t.anUInt = newVal;
+				changed = true;
+			}
+		}
+		{
+			Double newVal = parser.parseReal("aReal");
+			if(newVal != t.aReal)
+			{
+				t.aReal = newVal;
+				changed = true;
+			}
+		}
+		{
+			String newVal = parser.parseString("aString");
+			if(newVal != t.aString)
+			{
+				t.aString = newVal;
+				changed = true;
+			}
+		}
+		return changed;
+	}
+	public static bool parse(IPublishableParser parser, BasicTypes t, UInt64[] addr, int offset)
+	{
+		bool changed = false;
+		switch ((Address)addr[offset])
+		{
+			case Address.anInt:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			Int64 newVal = parser.parseInteger("anInt");
+			if(newVal != t.anInt)
+			{
+				t.anInt = newVal;
+				changed = true;
+			}
+			}
+			break;
+			case Address.anUInt:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			UInt64 newVal = parser.parseUnsigned("anUInt");
+			if(newVal != t.anUInt)
+			{
+				t.anUInt = newVal;
+				changed = true;
+			}
+			}
+			break;
+			case Address.aReal:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			Double newVal = parser.parseReal("aReal");
+			if(newVal != t.aReal)
+			{
+				t.aReal = newVal;
+				changed = true;
+			}
+			}
+			break;
+			case Address.aString:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			String newVal = parser.parseString("aString");
+			if(newVal != t.aString)
+			{
+				t.aString = newVal;
+				changed = true;
+			}
+			}
+			break;
+			default:
+				throw new Exception();
+		}
+	return changed;
+	}
+} // class BasicTypes_subs
+
+public class BasicTypes_publ : BasicTypes
+{
+	BasicTypes t;
+	IPublishableComposer composer;
+	UInt64[] address;
+	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
+	public BasicTypes_publ(BasicTypes t, IPublishableComposer composer, UInt64[] address)
+	{
+		this.t = t;
+		this.composer = composer;
+		this.address = address;
+	}
+	public Int64 anInt
+	{
+		get { return t.anInt; }
+		set
+		{
+			if (value != t.anInt)
+			{
+				t.anInt = value;
+				composer.composeAddress(address, (UInt64)Address.anInt);
+				composer.composeInteger("value", value, false);
+				composer.composePublishableStructEnd(false);
+			}
+		}
+	}
+	public UInt64 anUInt
+	{
+		get { return t.anUInt; }
+		set
+		{
+			if (value != t.anUInt)
+			{
+				t.anUInt = value;
+				composer.composeAddress(address, (UInt64)Address.anUInt);
+				composer.composeUnsigned("value", value, false);
+				composer.composePublishableStructEnd(false);
+			}
+		}
+	}
+	public Double aReal
+	{
+		get { return t.aReal; }
+		set
+		{
+			if (value != t.aReal)
+			{
+				t.aReal = value;
+				composer.composeAddress(address, (UInt64)Address.aReal);
+				composer.composeReal("value", value, false);
+				composer.composePublishableStructEnd(false);
+			}
+		}
+	}
+	public String aString
+	{
+		get { return t.aString; }
+		set
+		{
+			if (value != t.aString)
+			{
+				t.aString = value;
+				composer.composeAddress(address, (UInt64)Address.aString);
+				composer.composeString("value", value, false);
+				composer.composePublishableStructEnd(false);
+			}
+		}
+	}
+	public static void compose(IPublishableComposer composer, BasicTypes t)
+	{
+		composer.composeInteger("anInt", t.anInt, true);
+		composer.composeUnsigned("anUInt", t.anUInt, true);
+		composer.composeReal("aReal", t.aReal, true);
+		composer.composeString("aString", t.aString, false);
+	}
+} // class BasicTypes_publ
+
+
+public interface AggregateType
 {
 	String name { get; set; }
-	String value { get; set; }
-} // interface Property
+	BasicTypes theAggregate { get; set; }
+	BasicTypes make_theAggregate();
+	Int64 lastValue { get; set; }
+} // interface AggregateType
 
-public class Property_impl : Property
+public class AggregateType_impl : AggregateType
 {
 	public String name { get; set; }
-	public String value { get; set; }
-} // class Property_impl
+	public BasicTypes theAggregate { get; set; }
+	public BasicTypes make_theAggregate() { return new BasicTypes_impl(); }
+	public Int64 lastValue { get; set; }
+} // class AggregateType_impl
 
-public class Property_subs : Property
+public class AggregateType_subs : AggregateType
 {
-	Property t;
-	enum Address { name = 0, value = 1 };
-	public Property_subs(Property t)
+	AggregateType t;
+	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
+	public AggregateType_subs(AggregateType t)
 	{
 		this.t = t;
 	}
@@ -1596,17 +1826,27 @@ public class Property_subs : Property
 		get { return t.name; }
 		set { throw new InvalidOperationException(); }
 	}
-	public String value
+	public BasicTypes theAggregate
 	{
-		get { return t.value; }
+		get { return new BasicTypes_subs(t.theAggregate); }
 		set { throw new InvalidOperationException(); }
 	}
-	public static void parseForStateSync(IPublishableParser parser, Property t)
+	public BasicTypes make_theAggregate() { throw new InvalidOperationException(); }
+	public Int64 lastValue
+	{
+		get { return t.lastValue; }
+		set { throw new InvalidOperationException(); }
+	}
+	public static void parseForStateSync(IPublishableParser parser, AggregateType t)
 	{
 		t.name = parser.parseString("name");
-		t.value = parser.parseString("value");
+		parser.parsePublishableStructBegin("theAggregate");
+		t.theAggregate = t.make_theAggregate();
+		BasicTypes_subs.parseForStateSync(parser, t.theAggregate);
+		parser.parsePublishableStructEnd();
+		t.lastValue = parser.parseInteger("lastValue");
 	}
-	public static bool parse(IPublishableParser parser, Property t)
+	public static bool parse(IPublishableParser parser, AggregateType t)
 	{
 		bool changed = false;
 		{
@@ -1618,16 +1858,26 @@ public class Property_subs : Property
 			}
 		}
 		{
-			String newVal = parser.parseString("value");
-			if(newVal != t.value)
+			parser.parsePublishableStructBegin("theAggregate");
+			bool currentChanged = BasicTypes_subs.parse(parser, t.theAggregate);
+			parser.parsePublishableStructEnd();
+			if(currentChanged)
 			{
-				t.value = newVal;
+					changed = true;
+					// TODO
+			}
+		}
+		{
+			Int64 newVal = parser.parseInteger("lastValue");
+			if(newVal != t.lastValue)
+			{
+				t.lastValue = newVal;
 				changed = true;
 			}
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, Property t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, AggregateType t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -1644,14 +1894,37 @@ public class Property_subs : Property
 			}
 			}
 			break;
-			case Address.value:
+			case Address.theAggregate:
+			{
+				bool currentChanged = false;
+				if(addr.Length == offset + 1)
+				{
+					parser.parsePublishableStructBegin("theAggregate");
+					currentChanged = BasicTypes_subs.parse(parser, t.theAggregate);
+					parser.parsePublishableStructEnd();
+				}
+				else if(addr.Length > offset + 1)
+				{
+					currentChanged = BasicTypes_subs.parse(parser, t.theAggregate, addr, offset + 1);
+				}
+				else
+					throw new Exception();
+
+				if(currentChanged)
+				{
+					changed = true;
+					// TODO
+				}
+			}
+			break;
+			case Address.lastValue:
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			String newVal = parser.parseString("value");
-			if(newVal != t.value)
+			Int64 newVal = parser.parseInteger("lastValue");
+			if(newVal != t.lastValue)
 			{
-				t.value = newVal;
+				t.lastValue = newVal;
 				changed = true;
 			}
 			}
@@ -1661,19 +1934,19 @@ public class Property_subs : Property
 		}
 	return changed;
 	}
-} // class Property_subs
+} // class AggregateType_subs
 
-public class Property_publ : Property
+public class AggregateType_publ : AggregateType
 {
-	Property t;
+	AggregateType t;
 	IPublishableComposer composer;
 	UInt64[] address;
-	enum Address { name = 0, value = 1 };
-	public Property_publ(Property t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)
+	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
+	public AggregateType_publ(AggregateType t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
-		this.address = Publishable.makeAddress(baseAddr, id);
+		this.address = address;
 	}
 	public String name
 	{
@@ -1689,300 +1962,134 @@ public class Property_publ : Property
 			}
 		}
 	}
-	public String value
+	public BasicTypes theAggregate
 	{
-		get { return t.value; }
+		get { return new BasicTypes_publ(t.theAggregate, composer, Publishable.makeAddress(address, (UInt64)Address.theAggregate)); }
 		set
 		{
-			if (value != t.value)
+			if (value != t.theAggregate)
 			{
-				t.value = value;
-				composer.composeAddress(address, (UInt64)Address.value);
-				composer.composeString("value", value, false);
-				composer.composePublishableStructEnd(false);
-			}
-		}
-	}
-	public static void compose(IPublishableComposer composer, Property t)
-	{
-		composer.composeString("name", t.name, true);
-		composer.composeString("value", t.value, false);
-	}
-} // class Property_publ
-
-
-public interface HtmlTag
-{
-	Property p1 { get; set; }
-	Property make_p1();
-	Property p2 { get; set; }
-	Property make_p2();
-	Int64 i1 { get; set; }
-} // interface HtmlTag
-
-public class HtmlTag_impl : HtmlTag
-{
-	public Property p1 { get; set; }
-	public Property make_p1() { return new Property_impl(); }
-	public Property p2 { get; set; }
-	public Property make_p2() { return new Property_impl(); }
-	public Int64 i1 { get; set; }
-} // class HtmlTag_impl
-
-public class HtmlTag_subs : HtmlTag
-{
-	HtmlTag t;
-	enum Address { p1 = 0, p2 = 1, i1 = 2 };
-	public HtmlTag_subs(HtmlTag t)
-	{
-		this.t = t;
-	}
-	public Property p1
-	{
-		get { return new Property_subs(t.p1); }
-		set { throw new InvalidOperationException(); }
-	}
-	public Property make_p1() { throw new InvalidOperationException(); }
-	public Property p2
-	{
-		get { return new Property_subs(t.p2); }
-		set { throw new InvalidOperationException(); }
-	}
-	public Property make_p2() { throw new InvalidOperationException(); }
-	public Int64 i1
-	{
-		get { return t.i1; }
-		set { throw new InvalidOperationException(); }
-	}
-	public static void parseForStateSync(IPublishableParser parser, HtmlTag t)
-	{
-		parser.parsePublishableStructBegin("p1");
-		Property_subs.parseForStateSync(parser, t.p1);
-		parser.parsePublishableStructEnd();
-		parser.parsePublishableStructBegin("p2");
-		Property_subs.parseForStateSync(parser, t.p2);
-		parser.parsePublishableStructEnd();
-		t.i1 = parser.parseInteger("i1");
-	}
-	public static bool parse(IPublishableParser parser, HtmlTag t)
-	{
-		bool changed = false;
-		{
-			parser.parsePublishableStructBegin("p1");
-			bool currentChanged = Property_subs.parse(parser, t.p1);
-			parser.parsePublishableStructEnd();
-			if(currentChanged)
-			{
-					changed = true;
-					// TODO
-			}
-		}
-		{
-			parser.parsePublishableStructBegin("p2");
-			bool currentChanged = Property_subs.parse(parser, t.p2);
-			parser.parsePublishableStructEnd();
-			if(currentChanged)
-			{
-					changed = true;
-					// TODO
-			}
-		}
-		{
-			Int64 newVal = parser.parseInteger("i1");
-			if(newVal != t.i1)
-			{
-				t.i1 = newVal;
-				changed = true;
-			}
-		}
-		return changed;
-	}
-	public static bool parse(IPublishableParser parser, HtmlTag t, UInt64[] addr, int offset)
-	{
-		bool changed = false;
-		switch ((Address)addr[offset])
-		{
-			case Address.p1:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1)
-				{
-					parser.parsePublishableStructBegin("p1");
-					currentChanged = Property_subs.parse(parser, t.p1);
-					parser.parsePublishableStructEnd();
-				}
-				else if(addr.Length > offset + 1)
-				{
-					currentChanged = Property_subs.parse(parser, t.p1, addr, offset + 1);
-				}
-				else
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.p2:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1)
-				{
-					parser.parsePublishableStructBegin("p2");
-					currentChanged = Property_subs.parse(parser, t.p2);
-					parser.parsePublishableStructEnd();
-				}
-				else if(addr.Length > offset + 1)
-				{
-					currentChanged = Property_subs.parse(parser, t.p2, addr, offset + 1);
-				}
-				else
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.i1:
-			{
-				if(addr.Length != offset + 1)
-					throw new Exception();
-			Int64 newVal = parser.parseInteger("i1");
-			if(newVal != t.i1)
-			{
-				t.i1 = newVal;
-				changed = true;
-			}
-			}
-			break;
-			default:
-				throw new Exception();
-		}
-	return changed;
-	}
-} // class HtmlTag_subs
-
-public class HtmlTag_publ : HtmlTag
-{
-	HtmlTag t;
-	IPublishableComposer composer;
-	UInt64[] address;
-	enum Address { p1 = 0, p2 = 1, i1 = 2 };
-	public HtmlTag_publ(HtmlTag t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)
-	{
-		this.t = t;
-		this.composer = composer;
-		this.address = Publishable.makeAddress(baseAddr, id);
-	}
-	public Property p1
-	{
-		get { return new Property_subs(t.p1); }
-		set
-		{
-			if (value != t.p1)
-			{
-				t.p1 = value;
-				composer.composeAddress(address, (UInt64)Address.p1);
+				t.theAggregate = value;
+				composer.composeAddress(address, (UInt64)Address.theAggregate);
 				composer.composePublishableStructBegin("value");
-				Property_publ.compose(composer, value);
+				BasicTypes_publ.compose(composer, value);
 				composer.composePublishableStructEnd(false);
 				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
-	public Property make_p1() { return t.make_p1(); }
-	public Property p2
+	public BasicTypes make_theAggregate() { return t.make_theAggregate(); }
+	public Int64 lastValue
 	{
-		get { return new Property_subs(t.p2); }
+		get { return t.lastValue; }
 		set
 		{
-			if (value != t.p2)
+			if (value != t.lastValue)
 			{
-				t.p2 = value;
-				composer.composeAddress(address, (UInt64)Address.p2);
-				composer.composePublishableStructBegin("value");
-				Property_publ.compose(composer, value);
-				composer.composePublishableStructEnd(false);
-				composer.composePublishableStructEnd(false);
-			}
-		}
-	}
-	public Property make_p2() { return t.make_p2(); }
-	public Int64 i1
-	{
-		get { return t.i1; }
-		set
-		{
-			if (value != t.i1)
-			{
-				t.i1 = value;
-				composer.composeAddress(address, (UInt64)Address.i1);
+				t.lastValue = value;
+				composer.composeAddress(address, (UInt64)Address.lastValue);
 				composer.composeInteger("value", value, false);
 				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
-	public static void compose(IPublishableComposer composer, HtmlTag t)
+	public static void compose(IPublishableComposer composer, AggregateType t)
 	{
-		composer.composePublishableStructBegin("p1");
-		Property_publ.compose(composer, t.p1);
+		composer.composeString("name", t.name, true);
+		composer.composePublishableStructBegin("theAggregate");
+		BasicTypes_publ.compose(composer, t.theAggregate);
 		composer.composePublishableStructEnd(true);
-		composer.composePublishableStructBegin("p2");
-		Property_publ.compose(composer, t.p2);
-		composer.composePublishableStructEnd(true);
-		composer.composeInteger("i1", t.i1, false);
+		composer.composeInteger("lastValue", t.lastValue, false);
 	}
-} // class HtmlTag_publ
+} // class AggregateType_publ
 
 
 //**********************************************************************
-// PUBLISHABLE html_data (1 parameters)
-// 1. STRUCT HtmlTag tag
+// PUBLISHABLE StructSix (3 parameters)
+// 1. CHARACTER_STRING name
+// 2. STRUCT BasicTypes basic
+// 3. STRUCT AggregateType aggregate
 //**********************************************************************
 
-public interface html_data
+public interface StructSix
 {
-	HtmlTag tag { get; set; }
-	HtmlTag make_tag();
-} // interface html_data
+	String name { get; set; }
+	BasicTypes basic { get; set; }
+	BasicTypes make_basic();
+	AggregateType aggregate { get; set; }
+	AggregateType make_aggregate();
+} // interface StructSix
 
-public class html_data_impl : html_data
+public class StructSix_impl : StructSix
 {
-	public HtmlTag tag { get; set; }
-	public HtmlTag make_tag() { return new HtmlTag_impl(); }
-} // class html_data_impl
+	public String name { get; set; }
+	public BasicTypes basic { get; set; }
+	public BasicTypes make_basic() { return new BasicTypes_impl(); }
+	public AggregateType aggregate { get; set; }
+	public AggregateType make_aggregate() { return new AggregateType_impl(); }
+} // class StructSix_impl
 
-public class html_data_subs : html_data, StateSubscriberBase
+public class StructSix_subs : StructSix, StateSubscriberBase
 {
-	html_data t;
-	enum Address { tag = 0 };
-	public html_data_subs(html_data t)
+	StructSix t;
+	enum Address { name = 0, basic = 1, aggregate = 2 };
+	public StructSix_subs(StructSix t)
 	{
 		this.t = t;
 	}
-	public HtmlTag tag
+	public String name
 	{
-		get { return new HtmlTag_subs(t.tag); }
+		get { return t.name; }
 		set { throw new InvalidOperationException(); }
 	}
-	public HtmlTag make_tag() { throw new InvalidOperationException(); }
-	public static void parseForStateSync(IPublishableParser parser, html_data t)
+	public BasicTypes basic
 	{
-		parser.parsePublishableStructBegin("tag");
-		HtmlTag_subs.parseForStateSync(parser, t.tag);
+		get { return new BasicTypes_subs(t.basic); }
+		set { throw new InvalidOperationException(); }
+	}
+	public BasicTypes make_basic() { throw new InvalidOperationException(); }
+	public AggregateType aggregate
+	{
+		get { return new AggregateType_subs(t.aggregate); }
+		set { throw new InvalidOperationException(); }
+	}
+	public AggregateType make_aggregate() { throw new InvalidOperationException(); }
+	public static void parseForStateSync(IPublishableParser parser, StructSix t)
+	{
+		t.name = parser.parseString("name");
+		parser.parsePublishableStructBegin("basic");
+		t.basic = t.make_basic();
+		BasicTypes_subs.parseForStateSync(parser, t.basic);
+		parser.parsePublishableStructEnd();
+		parser.parsePublishableStructBegin("aggregate");
+		t.aggregate = t.make_aggregate();
+		AggregateType_subs.parseForStateSync(parser, t.aggregate);
 		parser.parsePublishableStructEnd();
 	}
-	public static bool parse(IPublishableParser parser, html_data t)
+	public static bool parse(IPublishableParser parser, StructSix t)
 	{
 		bool changed = false;
 		{
-			parser.parsePublishableStructBegin("tag");
-			bool currentChanged = HtmlTag_subs.parse(parser, t.tag);
+			String newVal = parser.parseString("name");
+			if(newVal != t.name)
+			{
+				t.name = newVal;
+				changed = true;
+			}
+		}
+		{
+			parser.parsePublishableStructBegin("basic");
+			bool currentChanged = BasicTypes_subs.parse(parser, t.basic);
+			parser.parsePublishableStructEnd();
+			if(currentChanged)
+			{
+					changed = true;
+					// TODO
+			}
+		}
+		{
+			parser.parsePublishableStructBegin("aggregate");
+			bool currentChanged = AggregateType_subs.parse(parser, t.aggregate);
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -1992,23 +2099,58 @@ public class html_data_subs : html_data, StateSubscriberBase
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, html_data t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, StructSix t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
 		{
-			case Address.tag:
+			case Address.name:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+			String newVal = parser.parseString("name");
+			if(newVal != t.name)
+			{
+				t.name = newVal;
+				changed = true;
+			}
+			}
+			break;
+			case Address.basic:
 			{
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parsePublishableStructBegin("tag");
-					currentChanged = HtmlTag_subs.parse(parser, t.tag);
+					parser.parsePublishableStructBegin("basic");
+					currentChanged = BasicTypes_subs.parse(parser, t.basic);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1)
 				{
-					currentChanged = HtmlTag_subs.parse(parser, t.tag, addr, offset + 1);
+					currentChanged = BasicTypes_subs.parse(parser, t.basic, addr, offset + 1);
+				}
+				else
+					throw new Exception();
+
+				if(currentChanged)
+				{
+					changed = true;
+					// TODO
+				}
+			}
+			break;
+			case Address.aggregate:
+			{
+				bool currentChanged = false;
+				if(addr.Length == offset + 1)
+				{
+					parser.parsePublishableStructBegin("aggregate");
+					currentChanged = AggregateType_subs.parse(parser, t.aggregate);
+					parser.parsePublishableStructEnd();
+				}
+				else if(addr.Length > offset + 1)
+				{
+					currentChanged = AggregateType_subs.parse(parser, t.aggregate, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2025,8 +2167,8 @@ public class html_data_subs : html_data, StateSubscriberBase
 		}
 	return changed;
 	}
-	public String name() { return "html_data"; }
-	public UInt64 stateTypeID() { return 3; }
+	public String stateSubscriberName() { return "StructSix"; }
+	public UInt64 stateTypeID() { return 6; }
 	public void applyGmqMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }
 	public void applyJsonMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }
 	public void applyGmqStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }
@@ -2037,7 +2179,7 @@ public class html_data_subs : html_data, StateSubscriberBase
 		UInt64[] addr = null;
 		while(parser.parseAddress(ref addr))
 		{
-			html_data_subs.parse(parser, this, addr, 0);
+			StructSix_subs.parse(parser, this.t, addr, 0);
 			addr = null;
 		}
 		parser.parseStateUpdateMessageEnd();
@@ -2045,52 +2187,87 @@ public class html_data_subs : html_data, StateSubscriberBase
 	public void applyStateSyncMessage(IPublishableParser parser)
 	{
 		parser.parseStructBegin();
-		html_data_subs.parseForStateSync(parser, this);
+		StructSix_subs.parseForStateSync(parser, this.t);
 		parser.parseStructEnd();
 	}
-} // class html_data_subs
+} // class StructSix_subs
 
-public class html_data_publ : html_data, StatePublisherBase
+public class StructSix_publ : StructSix, StatePublisherBase
 {
-	html_data t;
+	StructSix t;
 	IPublishableComposer composer;
 	UInt64[] address;
-	enum Address { tag = 0 };
-	public html_data_publ(html_data t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)
+	enum Address { name = 0, basic = 1, aggregate = 2 };
+	public StructSix_publ(StructSix t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
-		this.address = Publishable.makeAddress(baseAddr, id);
+		this.address = address;
 	}
-	public HtmlTag tag
+	public String name
 	{
-		get { return new HtmlTag_subs(t.tag); }
+		get { return t.name; }
 		set
 		{
-			if (value != t.tag)
+			if (value != t.name)
 			{
-				t.tag = value;
-				composer.composeAddress(address, (UInt64)Address.tag);
+				t.name = value;
+				composer.composeAddress(address, (UInt64)Address.name);
+				composer.composeString("value", value, false);
+				composer.composePublishableStructEnd(false);
+			}
+		}
+	}
+	public BasicTypes basic
+	{
+		get { return new BasicTypes_publ(t.basic, composer, Publishable.makeAddress(address, (UInt64)Address.basic)); }
+		set
+		{
+			if (value != t.basic)
+			{
+				t.basic = value;
+				composer.composeAddress(address, (UInt64)Address.basic);
 				composer.composePublishableStructBegin("value");
-				HtmlTag_publ.compose(composer, value);
+				BasicTypes_publ.compose(composer, value);
 				composer.composePublishableStructEnd(false);
 				composer.composePublishableStructEnd(false);
 			}
 		}
 	}
-	public HtmlTag make_tag() { return t.make_tag(); }
-	public static void compose(IPublishableComposer composer, html_data t)
+	public BasicTypes make_basic() { return t.make_basic(); }
+	public AggregateType aggregate
 	{
-		composer.composePublishableStructBegin("tag");
-		HtmlTag_publ.compose(composer, t.tag);
+		get { return new AggregateType_publ(t.aggregate, composer, Publishable.makeAddress(address, (UInt64)Address.aggregate)); }
+		set
+		{
+			if (value != t.aggregate)
+			{
+				t.aggregate = value;
+				composer.composeAddress(address, (UInt64)Address.aggregate);
+				composer.composePublishableStructBegin("value");
+				AggregateType_publ.compose(composer, value);
+				composer.composePublishableStructEnd(false);
+				composer.composePublishableStructEnd(false);
+			}
+		}
+	}
+	public AggregateType make_aggregate() { return t.make_aggregate(); }
+	public static void compose(IPublishableComposer composer, StructSix t)
+	{
+		composer.composeString("name", t.name, true);
+		composer.composePublishableStructBegin("basic");
+		BasicTypes_publ.compose(composer, t.basic);
+		composer.composePublishableStructEnd(true);
+		composer.composePublishableStructBegin("aggregate");
+		AggregateType_publ.compose(composer, t.aggregate);
 		composer.composePublishableStructEnd(false);
 	}
-	public String name() { return "html_data"; }
-	public UInt64 stateTypeID() { return 3; }
+	public String statePublisherName() { return "StructSix"; }
+	public UInt64 stateTypeID() { return 6; }
 	public void generateStateSyncMessage(IPublishableComposer composer)
 	{
 		composer.composeStructBegin();
-		html_data_publ.compose(composer, this);
+		StructSix_publ.compose(composer, this);
 		composer.composeStructEnd();
 	}
 	public void startTick(BufferT buff)
@@ -2103,7 +2280,7 @@ public class html_data_publ : html_data, StatePublisherBase
 		composer.composeStateUpdateMessageEnd();
 		return composer.endTick();
 	}
-} // class html_data_publ
+} // class StructSix_publ
 
 
 

@@ -61,26 +61,21 @@ STRUCT struct_du {
 MESSAGE test_gmq : message_du = 5 = STRUCT struct_du;
 
 
-PUBLISHABLE html_data = 3 {
-	STRUCT HtmlTag tag;
+STRUCT BasicTypes {
+  INTEGER anInt;
+  UINTEGER anUInt;
+  REAL aReal;
+  CHARACTER-STRING aString;
 };
 
-STRUCT Property{
+STRUCT AggregateType{
   CHARACTER-STRING name;
-  CHARACTER-STRING value;
+  STRUCT BasicTypes theAggregate;
+  INTEGER lastValue;
 };
 
-
-STRUCT HtmlTag{
-	STRUCT Property p1;
-	STRUCT Property p2;
-	
-
-	INTEGER i1;
-};
-
-STRUCT HtmlSubData{
+PUBLISHABLE StructSix = 6 {
 	CHARACTER-STRING name;
-	CHARACTER-STRING value;
-
+	STRUCT BasicTypes basic;
+	STRUCT AggregateType aggregate;
 };

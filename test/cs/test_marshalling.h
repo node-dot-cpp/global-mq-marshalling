@@ -1,5 +1,5 @@
-#ifndef test_marshalling_h_d3979a03_guard
-#define test_marshalling_h_d3979a03_guard
+#ifndef test_marshalling_h_71a7abdf_guard
+#define test_marshalling_h_71a7abdf_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -99,31 +99,40 @@ constexpr z_Type::TypeConverter z;
 
 
 // member name presence checkers
-template<typename T> concept has_i1_member = requires { { T::i1 }; };
+template<typename T> concept has_aReal_member = requires { { T::aReal }; };
+template<typename T> concept has_aString_member = requires { { T::aString }; };
+template<typename T> concept has_aggregate_member = requires { { T::aggregate }; };
+template<typename T> concept has_anInt_member = requires { { T::anInt }; };
+template<typename T> concept has_anUInt_member = requires { { T::anUInt }; };
+template<typename T> concept has_basic_member = requires { { T::basic }; };
+template<typename T> concept has_lastValue_member = requires { { T::lastValue }; };
 template<typename T> concept has_name_member = requires { { T::name }; };
-template<typename T> concept has_p1_member = requires { { T::p1 }; };
-template<typename T> concept has_p2_member = requires { { T::p2 }; };
-template<typename T> concept has_tag_member = requires { { T::tag }; };
-template<typename T> concept has_value_member = requires { { T::value }; };
+template<typename T> concept has_theAggregate_member = requires { { T::theAggregate }; };
 
 
 // member update notifier presence checks
 using index_type_for_array_notifiers = size_t&;
 template<typename T> concept has_full_update_notifier_call = requires(T t) { { t.notifyFullyUpdated() }; };
+template<typename T> concept has_void_update_notifier_call_for_aReal = requires(T t) { { t.notifyUpdated_aReal() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_aReal = requires { { std::declval<StateT>().notifyUpdated_aReal(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_aString = requires(T t) { { t.notifyUpdated_aString() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_aString = requires { { std::declval<StateT>().notifyUpdated_aString(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_aggregate = requires(T t) { { t.notifyUpdated_aggregate() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_aggregate = requires { { std::declval<StateT>().notifyUpdated_aggregate(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_anInt = requires(T t) { { t.notifyUpdated_anInt() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_anInt = requires { { std::declval<StateT>().notifyUpdated_anInt(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_anUInt = requires(T t) { { t.notifyUpdated_anUInt() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_anUInt = requires { { std::declval<StateT>().notifyUpdated_anUInt(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_basic = requires(T t) { { t.notifyUpdated_basic() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_basic = requires { { std::declval<StateT>().notifyUpdated_basic(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_currentVariant = requires(T t) { { t.notifyUpdated_currentVariant() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_currentVariant = requires { { std::declval<StateT>().notifyUpdated_currentVariant(std::declval<MemberT>()) }; };
-template<typename T> concept has_void_update_notifier_call_for_i1 = requires(T t) { { t.notifyUpdated_i1() }; };
-template<typename StateT, typename MemberT> concept has_update_notifier_call_for_i1 = requires { { std::declval<StateT>().notifyUpdated_i1(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_lastValue = requires(T t) { { t.notifyUpdated_lastValue() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_lastValue = requires { { std::declval<StateT>().notifyUpdated_lastValue(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_name = requires(T t) { { t.notifyUpdated_name() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_name = requires { { std::declval<StateT>().notifyUpdated_name(std::declval<MemberT>()) }; };
-template<typename T> concept has_void_update_notifier_call_for_p1 = requires(T t) { { t.notifyUpdated_p1() }; };
-template<typename StateT, typename MemberT> concept has_update_notifier_call_for_p1 = requires { { std::declval<StateT>().notifyUpdated_p1(std::declval<MemberT>()) }; };
-template<typename T> concept has_void_update_notifier_call_for_p2 = requires(T t) { { t.notifyUpdated_p2() }; };
-template<typename StateT, typename MemberT> concept has_update_notifier_call_for_p2 = requires { { std::declval<StateT>().notifyUpdated_p2(std::declval<MemberT>()) }; };
-template<typename T> concept has_void_update_notifier_call_for_tag = requires(T t) { { t.notifyUpdated_tag() }; };
-template<typename StateT, typename MemberT> concept has_update_notifier_call_for_tag = requires { { std::declval<StateT>().notifyUpdated_tag(std::declval<MemberT>()) }; };
-template<typename T> concept has_void_update_notifier_call_for_value = requires(T t) { { t.notifyUpdated_value() }; };
-template<typename StateT, typename MemberT> concept has_update_notifier_call_for_value = requires { { std::declval<StateT>().notifyUpdated_value(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_theAggregate = requires(T t) { { t.notifyUpdated_theAggregate() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_theAggregate = requires { { std::declval<StateT>().notifyUpdated_theAggregate(std::declval<MemberT>()) }; };
 
 //===============================================================================
 // C-structures for idl STRUCTs, DISCRIMINATED_UNIONs, MESSAGEs and PUBLISHABLEs
@@ -135,14 +144,15 @@ struct point3D;
 struct struct_one;
 class du_one;
 struct struct_du;
-struct Property;
-struct HtmlTag;
-struct HtmlSubData;
+struct BasicTypes;
+struct AggregateType;
 
-struct Property
+struct BasicTypes
 {
-	GMQ_COLL string name;
-	GMQ_COLL string value;
+	int64_t anInt;
+	uint64_t anUInt;
+	double aReal;
+	GMQ_COLL string aString;
 };
 
 class du_one : public ::globalmq::marshalling::impl::DiscriminatedUnionType
@@ -309,17 +319,11 @@ struct point
 	int64_t y;
 };
 
-struct HtmlSubData
+struct AggregateType
 {
 	GMQ_COLL string name;
-	GMQ_COLL string value;
-};
-
-struct HtmlTag
-{
-	Property p1;
-	Property p2;
-	int64_t i1;
+	BasicTypes theAggregate;
+	int64_t lastValue;
 };
 
 struct struct_du
@@ -370,9 +374,11 @@ namespace test_gmq {
 struct MESSAGE_message_du : public struct_du {};
 } // namespace test_gmq
 
-struct html_data
+struct StructSix
 {
-	HtmlTag tag;
+	GMQ_COLL string name;
+	BasicTypes basic;
+	AggregateType aggregate;
 };
 
 
@@ -380,24 +386,28 @@ struct html_data
 
 //===============================================================================
 
-struct publishable_STRUCT_Property;
-template<class T> class Property_RefWrapper;
-template<class T, class RootT> class Property_RefWrapper4Set;
+struct publishable_STRUCT_BasicTypes;
+template<class T> class BasicTypes_RefWrapper;
+template<class T, class RootT> class BasicTypes_RefWrapper4Set;
 
-struct publishable_STRUCT_HtmlTag;
-template<class T> class HtmlTag_RefWrapper;
-template<class T, class RootT> class HtmlTag_RefWrapper4Set;
+struct publishable_STRUCT_AggregateType;
+template<class T> class AggregateType_RefWrapper;
+template<class T, class RootT> class AggregateType_RefWrapper4Set;
 
 
-struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::StructType
+struct publishable_STRUCT_BasicTypes : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ParserT, class T>
 	static
 	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
-		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::anInt)>( parser, &(t.anInt), "anInt" );
 
-		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, decltype(T::anUInt)>( parser, &(t.anUInt), "anUInt" );
+
+		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::aReal)>( parser, &(t.aReal), "aReal" );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::aString)>( parser, &(t.aString), "aString" );
 
 	}
 
@@ -405,9 +415,13 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.anInt, "anInt", true );
 
-		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.value, "value", false );
+		::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, t.anUInt, "anUInt", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.aReal, "aReal", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.aString, "aString", false );
 
 	}
 
@@ -418,48 +432,90 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
-		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
-		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
-		static constexpr bool has_void_update_notifier_for_value = has_void_update_notifier_call_for_value<T>;
-		static constexpr bool has_update_notifier_for_value = has_update_notifier_call_for_value<T, decltype(T::value)>;
-		static constexpr bool has_any_notifier_for_value = has_void_update_notifier_for_value || has_update_notifier_for_value;
+		static constexpr bool has_void_update_notifier_for_anInt = has_void_update_notifier_call_for_anInt<T>;
+		static constexpr bool has_update_notifier_for_anInt = has_update_notifier_call_for_anInt<T, decltype(T::anInt)>;
+		static constexpr bool has_any_notifier_for_anInt = has_void_update_notifier_for_anInt || has_update_notifier_for_anInt;
+		static constexpr bool has_void_update_notifier_for_anUInt = has_void_update_notifier_call_for_anUInt<T>;
+		static constexpr bool has_update_notifier_for_anUInt = has_update_notifier_call_for_anUInt<T, decltype(T::anUInt)>;
+		static constexpr bool has_any_notifier_for_anUInt = has_void_update_notifier_for_anUInt || has_update_notifier_for_anUInt;
+		static constexpr bool has_void_update_notifier_for_aReal = has_void_update_notifier_call_for_aReal<T>;
+		static constexpr bool has_update_notifier_for_aReal = has_update_notifier_call_for_aReal<T, decltype(T::aReal)>;
+		static constexpr bool has_any_notifier_for_aReal = has_void_update_notifier_for_aReal || has_update_notifier_for_aReal;
+		static constexpr bool has_void_update_notifier_for_aString = has_void_update_notifier_call_for_aString<T>;
+		static constexpr bool has_update_notifier_for_aString = has_update_notifier_call_for_aString<T, decltype(T::aString)>;
+		static constexpr bool has_any_notifier_for_aString = has_void_update_notifier_for_aString || has_update_notifier_for_aString;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-		if constexpr( has_any_notifier_for_name || reportChanges )
+		if constexpr( has_any_notifier_for_anInt || reportChanges )
 		{
-			decltype(T::name) oldVal = t.name;
-			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
-			bool currentChanged = oldVal != t.name;
+			decltype(T::anInt) oldVal = t.anInt;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::anInt)>( parser, &(t.anInt), "anInt" );
+			bool currentChanged = oldVal != t.anInt;
 			if ( currentChanged )
 			{
 				if constexpr ( reportChanges )
 					changed = true;
-				if constexpr ( has_void_update_notifier_for_name )
-					t.notifyUpdated_name();
-				if constexpr ( has_update_notifier_for_name )
-					t.notifyUpdated_name( oldVal );
+				if constexpr ( has_void_update_notifier_for_anInt )
+					t.notifyUpdated_anInt();
+				if constexpr ( has_update_notifier_for_anInt )
+					t.notifyUpdated_anInt( oldVal );
 			}
 		}
 		else
-			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::anInt)>( parser, &(t.anInt), "anInt" );
 
-		if constexpr( has_any_notifier_for_value || reportChanges )
+		if constexpr( has_any_notifier_for_anUInt || reportChanges )
 		{
-			decltype(T::value) oldVal = t.value;
-			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
-			bool currentChanged = oldVal != t.value;
+			decltype(T::anUInt) oldVal = t.anUInt;
+			::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, decltype(T::anUInt)>( parser, &(t.anUInt), "anUInt" );
+			bool currentChanged = oldVal != t.anUInt;
 			if ( currentChanged )
 			{
 				if constexpr ( reportChanges )
 					changed = true;
-				if constexpr ( has_void_update_notifier_for_value )
-					t.notifyUpdated_value();
-				if constexpr ( has_update_notifier_for_value )
-					t.notifyUpdated_value( oldVal );
+				if constexpr ( has_void_update_notifier_for_anUInt )
+					t.notifyUpdated_anUInt();
+				if constexpr ( has_update_notifier_for_anUInt )
+					t.notifyUpdated_anUInt( oldVal );
 			}
 		}
 		else
-			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
+			::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, decltype(T::anUInt)>( parser, &(t.anUInt), "anUInt" );
+
+		if constexpr( has_any_notifier_for_aReal || reportChanges )
+		{
+			decltype(T::aReal) oldVal = t.aReal;
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::aReal)>( parser, &(t.aReal), "aReal" );
+			bool currentChanged = oldVal != t.aReal;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_aReal )
+					t.notifyUpdated_aReal();
+				if constexpr ( has_update_notifier_for_aReal )
+					t.notifyUpdated_aReal( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::aReal)>( parser, &(t.aReal), "aReal" );
+
+		if constexpr( has_any_notifier_for_aString || reportChanges )
+		{
+			decltype(T::aString) oldVal = t.aString;
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::aString)>( parser, &(t.aString), "aString" );
+			bool currentChanged = oldVal != t.aString;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_aString )
+					t.notifyUpdated_aString();
+				if constexpr ( has_update_notifier_for_aString )
+					t.notifyUpdated_aString( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::aString)>( parser, &(t.aString), "aString" );
 
 
 		if constexpr ( reportChanges )
@@ -473,12 +529,18 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
-		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
-		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
-		static constexpr bool has_void_update_notifier_for_value = has_void_update_notifier_call_for_value<T>;
-		static constexpr bool has_update_notifier_for_value = has_update_notifier_call_for_value<T, decltype(T::value)>;
-		static constexpr bool has_any_notifier_for_value = has_void_update_notifier_for_value || has_update_notifier_for_value;
+		static constexpr bool has_void_update_notifier_for_anInt = has_void_update_notifier_call_for_anInt<T>;
+		static constexpr bool has_update_notifier_for_anInt = has_update_notifier_call_for_anInt<T, decltype(T::anInt)>;
+		static constexpr bool has_any_notifier_for_anInt = has_void_update_notifier_for_anInt || has_update_notifier_for_anInt;
+		static constexpr bool has_void_update_notifier_for_anUInt = has_void_update_notifier_call_for_anUInt<T>;
+		static constexpr bool has_update_notifier_for_anUInt = has_update_notifier_call_for_anUInt<T, decltype(T::anUInt)>;
+		static constexpr bool has_any_notifier_for_anUInt = has_void_update_notifier_for_anUInt || has_update_notifier_for_anUInt;
+		static constexpr bool has_void_update_notifier_for_aReal = has_void_update_notifier_call_for_aReal<T>;
+		static constexpr bool has_update_notifier_for_aReal = has_update_notifier_call_for_aReal<T, decltype(T::aReal)>;
+		static constexpr bool has_any_notifier_for_aReal = has_void_update_notifier_for_aReal || has_update_notifier_for_aReal;
+		static constexpr bool has_void_update_notifier_for_aString = has_void_update_notifier_call_for_aString<T>;
+		static constexpr bool has_update_notifier_for_aString = has_update_notifier_call_for_aString<T, decltype(T::aString)>;
+		static constexpr bool has_any_notifier_for_aString = has_void_update_notifier_for_aString || has_update_notifier_for_aString;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
@@ -487,46 +549,92 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 			{
 				if ( addr.size() > offset + 1 )
 					throw std::exception(); // bad format, TODO: ...
-				if constexpr( has_any_notifier_for_name || reportChanges )
+				if constexpr( has_any_notifier_for_anInt || reportChanges )
 				{
-					decltype(T::name) oldVal = t.name;
-					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
-					bool currentChanged = oldVal != t.name;
+					decltype(T::anInt) oldVal = t.anInt;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::anInt)>( parser, &(t.anInt) );
+					bool currentChanged = oldVal != t.anInt;
 					if ( currentChanged )
 					{
 						if constexpr ( reportChanges )
 							changed = true;
-						if constexpr ( has_void_update_notifier_for_name )
-							t.notifyUpdated_name();
-						if constexpr ( has_update_notifier_for_name )
-							t.notifyUpdated_name( oldVal );
+						if constexpr ( has_void_update_notifier_for_anInt )
+							t.notifyUpdated_anInt();
+						if constexpr ( has_update_notifier_for_anInt )
+							t.notifyUpdated_anInt( oldVal );
 					}
 				}
 				else
-					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::anInt)>( parser, &(t.anInt) );
 				break;
 			}
 			case 1:
 			{
 				if ( addr.size() > offset + 1 )
 					throw std::exception(); // bad format, TODO: ...
-				if constexpr( has_any_notifier_for_value || reportChanges )
+				if constexpr( has_any_notifier_for_anUInt || reportChanges )
 				{
-					decltype(T::value) oldVal = t.value;
-					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::value)>( parser, &(t.value) );
-					bool currentChanged = oldVal != t.value;
+					decltype(T::anUInt) oldVal = t.anUInt;
+					::globalmq::marshalling::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::anUInt)>( parser, &(t.anUInt) );
+					bool currentChanged = oldVal != t.anUInt;
 					if ( currentChanged )
 					{
 						if constexpr ( reportChanges )
 							changed = true;
-						if constexpr ( has_void_update_notifier_for_value )
-							t.notifyUpdated_value();
-						if constexpr ( has_update_notifier_for_value )
-							t.notifyUpdated_value( oldVal );
+						if constexpr ( has_void_update_notifier_for_anUInt )
+							t.notifyUpdated_anUInt();
+						if constexpr ( has_update_notifier_for_anUInt )
+							t.notifyUpdated_anUInt( oldVal );
 					}
 				}
 				else
-					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::value)>( parser, &(t.value) );
+					::globalmq::marshalling::impl::publishableParseLeafeUnsignedInteger<ParserT, decltype(T::anUInt)>( parser, &(t.anUInt) );
+				break;
+			}
+			case 2:
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_aReal || reportChanges )
+				{
+					decltype(T::aReal) oldVal = t.aReal;
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::aReal)>( parser, &(t.aReal) );
+					bool currentChanged = oldVal != t.aReal;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_aReal )
+							t.notifyUpdated_aReal();
+						if constexpr ( has_update_notifier_for_aReal )
+							t.notifyUpdated_aReal( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeReal<ParserT, decltype(T::aReal)>( parser, &(t.aReal) );
+				break;
+			}
+			case 3:
+			{
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_aString || reportChanges )
+				{
+					decltype(T::aString) oldVal = t.aString;
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::aString)>( parser, &(t.aString) );
+					bool currentChanged = oldVal != t.aString;
+					if ( currentChanged )
+					{
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_aString )
+							t.notifyUpdated_aString();
+						if constexpr ( has_update_notifier_for_aString )
+							t.notifyUpdated_aString( oldVal );
+					}
+				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::aString)>( parser, &(t.aString) );
 				break;
 			}
 			default:
@@ -538,14 +646,18 @@ struct publishable_STRUCT_Property : public ::globalmq::marshalling::impl::Struc
 
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
-		dst.name = src.name;
-		dst.value = src.value;
+		dst.anInt = src.anInt;
+		dst.anUInt = src.anUInt;
+		dst.aReal = src.aReal;
+		dst.aString = src.aString;
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
-		if ( s1.name != s2.name ) return false;
-		if ( s1.value != s2.value ) return false;
+		if ( s1.anInt != s2.anInt ) return false;
+		if ( s1.anUInt != s2.anUInt ) return false;
+		if ( s1.aReal != s2.aReal ) return false;
+		if ( s1.aString != s2.aString ) return false;
 		return true;
 	}
 };
@@ -618,7 +730,7 @@ struct publishable_STRUCT_point : public ::globalmq::marshalling::impl::StructTy
 
 };
 
-struct publishable_STRUCT_HtmlSubData : public ::globalmq::marshalling::impl::StructType
+struct publishable_STRUCT_AggregateType : public ::globalmq::marshalling::impl::StructType
 {
 	template<class ParserT, class T>
 	static
@@ -626,27 +738,11 @@ struct publishable_STRUCT_HtmlSubData : public ::globalmq::marshalling::impl::St
 	{
 		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
 
-		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::value)>( parser, &(t.value), "value" );
-
-	}
-
-};
-
-struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::StructType
-{
-	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
-	{
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "p1" );
-		publishable_STRUCT_Property::parseForStateSyncOrMessageInDepth( parser, t.p1 );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "theAggregate" );
+		publishable_STRUCT_BasicTypes::parseForStateSyncOrMessageInDepth( parser, t.theAggregate );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "p2" );
-		publishable_STRUCT_Property::parseForStateSyncOrMessageInDepth( parser, t.p2 );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::i1)>( parser, &(t.i1), "i1" );
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::lastValue)>( parser, &(t.lastValue), "lastValue" );
 
 	}
 
@@ -654,15 +750,13 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 	static
 	void compose( ComposerT& composer, const T& t )
 	{
-		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "p1" );
-		publishable_STRUCT_Property::compose( composer, t.p1 );
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "theAggregate" );
+		publishable_STRUCT_BasicTypes::compose( composer, t.theAggregate );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
 
-		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "p2" );
-		publishable_STRUCT_Property::compose( composer, t.p2 );
-		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
-
-		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.i1, "i1", false );
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.lastValue, "lastValue", false );
 
 	}
 
@@ -673,93 +767,81 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_void_update_notifier_for_p1 = has_void_update_notifier_call_for_p1<T>;
-		static constexpr bool has_update_notifier_for_p1 = has_update_notifier_call_for_p1<T, decltype(T::p1)>;
-		static constexpr bool has_any_notifier_for_p1 = has_void_update_notifier_for_p1 || has_update_notifier_for_p1;
-		static constexpr bool has_void_update_notifier_for_p2 = has_void_update_notifier_call_for_p2<T>;
-		static constexpr bool has_update_notifier_for_p2 = has_update_notifier_call_for_p2<T, decltype(T::p2)>;
-		static constexpr bool has_any_notifier_for_p2 = has_void_update_notifier_for_p2 || has_update_notifier_for_p2;
-		static constexpr bool has_void_update_notifier_for_i1 = has_void_update_notifier_call_for_i1<T>;
-		static constexpr bool has_update_notifier_for_i1 = has_update_notifier_call_for_i1<T, decltype(T::i1)>;
-		static constexpr bool has_any_notifier_for_i1 = has_void_update_notifier_for_i1 || has_update_notifier_for_i1;
+		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
+		static constexpr bool has_void_update_notifier_for_theAggregate = has_void_update_notifier_call_for_theAggregate<T>;
+		static constexpr bool has_update_notifier_for_theAggregate = has_update_notifier_call_for_theAggregate<T, decltype(T::theAggregate)>;
+		static constexpr bool has_any_notifier_for_theAggregate = has_void_update_notifier_for_theAggregate || has_update_notifier_for_theAggregate;
+		static constexpr bool has_void_update_notifier_for_lastValue = has_void_update_notifier_call_for_lastValue<T>;
+		static constexpr bool has_update_notifier_for_lastValue = has_update_notifier_call_for_lastValue<T, decltype(T::lastValue)>;
+		static constexpr bool has_any_notifier_for_lastValue = has_void_update_notifier_for_lastValue || has_update_notifier_for_lastValue;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "p1" );
-		if constexpr( has_update_notifier_for_p1 )
+		if constexpr( has_any_notifier_for_name || reportChanges )
 		{
-			decltype(T::p1) temp_p1;
-			publishable_STRUCT_Property::copy<decltype(T::p1)>( t.p1, temp_p1 );
-			bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1 );
-			if ( changedCurrent )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr( has_void_update_notifier_for_p1 )
-					t.notifyUpdated_p1();
-				t.notifyUpdated_p1( temp_p1 );
-			}
-		}
-		else if constexpr( has_void_update_notifier_for_p1 )
-		{
-			bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1 );
-			if ( changedCurrent )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				t.notifyUpdated_p1();
-			}
-		}
-		else if constexpr ( reportChanges )
-			changed = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1 );
-		else
-			publishable_STRUCT_Property::parse( parser, t.p1 );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "p2" );
-		if constexpr( has_update_notifier_for_p2 )
-		{
-			decltype(T::p2) temp_p2;
-			publishable_STRUCT_Property::copy<decltype(T::p2)>( t.p2, temp_p2 );
-			bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2 );
-			if ( changedCurrent )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				if constexpr( has_void_update_notifier_for_p2 )
-					t.notifyUpdated_p2();
-				t.notifyUpdated_p2( temp_p2 );
-			}
-		}
-		else if constexpr( has_void_update_notifier_for_p2 )
-		{
-			bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2 );
-			if ( changedCurrent )
-			{
-				if constexpr ( reportChanges )
-					changed = true;
-				t.notifyUpdated_p2();
-			}
-		}
-		else if constexpr ( reportChanges )
-			changed = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2 );
-		else
-			publishable_STRUCT_Property::parse( parser, t.p2 );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-		if constexpr( has_any_notifier_for_i1 || reportChanges )
-		{
-			decltype(T::i1) oldVal = t.i1;
-			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::i1)>( parser, &(t.i1), "i1" );
-			bool currentChanged = oldVal != t.i1;
+			decltype(T::name) oldVal = t.name;
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+			bool currentChanged = oldVal != t.name;
 			if ( currentChanged )
 			{
 				if constexpr ( reportChanges )
 					changed = true;
-				if constexpr ( has_void_update_notifier_for_i1 )
-					t.notifyUpdated_i1();
-				if constexpr ( has_update_notifier_for_i1 )
-					t.notifyUpdated_i1( oldVal );
+				if constexpr ( has_void_update_notifier_for_name )
+					t.notifyUpdated_name();
+				if constexpr ( has_update_notifier_for_name )
+					t.notifyUpdated_name( oldVal );
 			}
 		}
 		else
-			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::i1)>( parser, &(t.i1), "i1" );
+			::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "theAggregate" );
+		if constexpr( has_update_notifier_for_theAggregate )
+		{
+			decltype(T::theAggregate) temp_theAggregate;
+			publishable_STRUCT_BasicTypes::copy<decltype(T::theAggregate)>( t.theAggregate, temp_theAggregate );
+			bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate );
+			if ( changedCurrent )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr( has_void_update_notifier_for_theAggregate )
+					t.notifyUpdated_theAggregate();
+				t.notifyUpdated_theAggregate( temp_theAggregate );
+			}
+		}
+		else if constexpr( has_void_update_notifier_for_theAggregate )
+		{
+			bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate );
+			if ( changedCurrent )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				t.notifyUpdated_theAggregate();
+			}
+		}
+		else if constexpr ( reportChanges )
+			changed = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate );
+		else
+			publishable_STRUCT_BasicTypes::parse( parser, t.theAggregate );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+		if constexpr( has_any_notifier_for_lastValue || reportChanges )
+		{
+			decltype(T::lastValue) oldVal = t.lastValue;
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::lastValue)>( parser, &(t.lastValue), "lastValue" );
+			bool currentChanged = oldVal != t.lastValue;
+			if ( currentChanged )
+			{
+				if constexpr ( reportChanges )
+					changed = true;
+				if constexpr ( has_void_update_notifier_for_lastValue )
+					t.notifyUpdated_lastValue();
+				if constexpr ( has_update_notifier_for_lastValue )
+					t.notifyUpdated_lastValue( oldVal );
+			}
+		}
+		else
+			::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::lastValue)>( parser, &(t.lastValue), "lastValue" );
 
 
 		if constexpr ( reportChanges )
@@ -773,89 +855,40 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
 		bool changed = false;
-		static constexpr bool has_void_update_notifier_for_p1 = has_void_update_notifier_call_for_p1<T>;
-		static constexpr bool has_update_notifier_for_p1 = has_update_notifier_call_for_p1<T, decltype(T::p1)>;
-		static constexpr bool has_any_notifier_for_p1 = has_void_update_notifier_for_p1 || has_update_notifier_for_p1;
-		static constexpr bool has_void_update_notifier_for_p2 = has_void_update_notifier_call_for_p2<T>;
-		static constexpr bool has_update_notifier_for_p2 = has_update_notifier_call_for_p2<T, decltype(T::p2)>;
-		static constexpr bool has_any_notifier_for_p2 = has_void_update_notifier_for_p2 || has_update_notifier_for_p2;
-		static constexpr bool has_void_update_notifier_for_i1 = has_void_update_notifier_call_for_i1<T>;
-		static constexpr bool has_update_notifier_for_i1 = has_update_notifier_call_for_i1<T, decltype(T::i1)>;
-		static constexpr bool has_any_notifier_for_i1 = has_void_update_notifier_for_i1 || has_update_notifier_for_i1;
+		static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+		static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+		static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
+		static constexpr bool has_void_update_notifier_for_theAggregate = has_void_update_notifier_call_for_theAggregate<T>;
+		static constexpr bool has_update_notifier_for_theAggregate = has_update_notifier_call_for_theAggregate<T, decltype(T::theAggregate)>;
+		static constexpr bool has_any_notifier_for_theAggregate = has_void_update_notifier_for_theAggregate || has_update_notifier_for_theAggregate;
+		static constexpr bool has_void_update_notifier_for_lastValue = has_void_update_notifier_call_for_lastValue<T>;
+		static constexpr bool has_update_notifier_for_lastValue = has_update_notifier_call_for_lastValue<T, decltype(T::lastValue)>;
+		static constexpr bool has_any_notifier_for_lastValue = has_void_update_notifier_for_lastValue || has_update_notifier_for_lastValue;
 		static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 		GMQ_ASSERT( addr.size() );
 		switch ( addr[offset] )
 		{
 			case 0:
 			{
-				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
+				if ( addr.size() > offset + 1 )
+					throw std::exception(); // bad format, TODO: ...
+				if constexpr( has_any_notifier_for_name || reportChanges )
 				{
-					::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
-					if constexpr( has_update_notifier_for_p1 )
+					decltype(T::name) oldVal = t.name;
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					bool currentChanged = oldVal != t.name;
+					if ( currentChanged )
 					{
-						decltype(T::p1) temp_p1;
-						publishable_STRUCT_Property::copy<decltype(T::p1)>( t.p1, temp_p1 );
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1 );
-						if ( changedCurrent )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr( has_void_update_notifier_for_p1 )
-								t.notifyUpdated_p1();
-							t.notifyUpdated_p1( temp_p1 );
-						}
+						if constexpr ( reportChanges )
+							changed = true;
+						if constexpr ( has_void_update_notifier_for_name )
+							t.notifyUpdated_name();
+						if constexpr ( has_update_notifier_for_name )
+							t.notifyUpdated_name( oldVal );
 					}
-					else if constexpr( has_void_update_notifier_for_p1 )
-					{
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1 );
-						if ( changedCurrent )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							t.notifyUpdated_p1();
-						}
-					}
-
-					else
-					{
-							if constexpr ( reportChanges )
-								changed = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1 );
-							else
-								publishable_STRUCT_Property::parse( parser, t.p1 );
-					}
-					::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 				}
-				else // let child continue parsing
-				{
-					if constexpr( has_update_notifier_for_p1 )
-					{
-						decltype(T::p1) temp_p1;
-						publishable_STRUCT_Property::copy<decltype(T::p1)>( t.p1, temp_p1 );
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1, addr, offset + 1 );
-						if ( changedCurrent )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							if constexpr( has_void_update_notifier_for_p1 )
-								t.notifyUpdated_p1();
-							t.notifyUpdated_p1( temp_p1 );
-						}
-					}
-					else if constexpr( has_void_update_notifier_for_p1 )
-					{
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1, addr, offset + 1 );
-						if ( changedCurrent )
-						{
-							if constexpr ( reportChanges )
-								changed = true;
-							t.notifyUpdated_p1();
-						}
-					}
-					else if constexpr ( reportChanges )
-						changed = publishable_STRUCT_Property::parse<ParserT, decltype(T::p1), bool>( parser, t.p1, addr, offset + 1 );
-					else
-						publishable_STRUCT_Property::parse( parser, t.p1, addr, offset + 1 );
-				}
+				else
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
 				break;
 			}
 			case 1:
@@ -863,70 +896,70 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 				if ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child
 				{
 					::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
-					if constexpr( has_update_notifier_for_p2 )
+					if constexpr( has_update_notifier_for_theAggregate )
 					{
-						decltype(T::p2) temp_p2;
-						publishable_STRUCT_Property::copy<decltype(T::p2)>( t.p2, temp_p2 );
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2 );
+						decltype(T::theAggregate) temp_theAggregate;
+						publishable_STRUCT_BasicTypes::copy<decltype(T::theAggregate)>( t.theAggregate, temp_theAggregate );
+						bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate );
 						if ( changedCurrent )
 						{
 							if constexpr ( reportChanges )
 								changed = true;
-							if constexpr( has_void_update_notifier_for_p2 )
-								t.notifyUpdated_p2();
-							t.notifyUpdated_p2( temp_p2 );
+							if constexpr( has_void_update_notifier_for_theAggregate )
+								t.notifyUpdated_theAggregate();
+							t.notifyUpdated_theAggregate( temp_theAggregate );
 						}
 					}
-					else if constexpr( has_void_update_notifier_for_p2 )
+					else if constexpr( has_void_update_notifier_for_theAggregate )
 					{
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2 );
+						bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate );
 						if ( changedCurrent )
 						{
 							if constexpr ( reportChanges )
 								changed = true;
-							t.notifyUpdated_p2();
+							t.notifyUpdated_theAggregate();
 						}
 					}
 
 					else
 					{
 							if constexpr ( reportChanges )
-								changed = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2 );
+								changed = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate );
 							else
-								publishable_STRUCT_Property::parse( parser, t.p2 );
+								publishable_STRUCT_BasicTypes::parse( parser, t.theAggregate );
 					}
 					::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 				}
 				else // let child continue parsing
 				{
-					if constexpr( has_update_notifier_for_p2 )
+					if constexpr( has_update_notifier_for_theAggregate )
 					{
-						decltype(T::p2) temp_p2;
-						publishable_STRUCT_Property::copy<decltype(T::p2)>( t.p2, temp_p2 );
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2, addr, offset + 1 );
+						decltype(T::theAggregate) temp_theAggregate;
+						publishable_STRUCT_BasicTypes::copy<decltype(T::theAggregate)>( t.theAggregate, temp_theAggregate );
+						bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate, addr, offset + 1 );
 						if ( changedCurrent )
 						{
 							if constexpr ( reportChanges )
 								changed = true;
-							if constexpr( has_void_update_notifier_for_p2 )
-								t.notifyUpdated_p2();
-							t.notifyUpdated_p2( temp_p2 );
+							if constexpr( has_void_update_notifier_for_theAggregate )
+								t.notifyUpdated_theAggregate();
+							t.notifyUpdated_theAggregate( temp_theAggregate );
 						}
 					}
-					else if constexpr( has_void_update_notifier_for_p2 )
+					else if constexpr( has_void_update_notifier_for_theAggregate )
 					{
-						bool changedCurrent = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2, addr, offset + 1 );
+						bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate, addr, offset + 1 );
 						if ( changedCurrent )
 						{
 							if constexpr ( reportChanges )
 								changed = true;
-							t.notifyUpdated_p2();
+							t.notifyUpdated_theAggregate();
 						}
 					}
 					else if constexpr ( reportChanges )
-						changed = publishable_STRUCT_Property::parse<ParserT, decltype(T::p2), bool>( parser, t.p2, addr, offset + 1 );
+						changed = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::theAggregate), bool>( parser, t.theAggregate, addr, offset + 1 );
 					else
-						publishable_STRUCT_Property::parse( parser, t.p2, addr, offset + 1 );
+						publishable_STRUCT_BasicTypes::parse( parser, t.theAggregate, addr, offset + 1 );
 				}
 				break;
 			}
@@ -934,23 +967,23 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 			{
 				if ( addr.size() > offset + 1 )
 					throw std::exception(); // bad format, TODO: ...
-				if constexpr( has_any_notifier_for_i1 || reportChanges )
+				if constexpr( has_any_notifier_for_lastValue || reportChanges )
 				{
-					decltype(T::i1) oldVal = t.i1;
-					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::i1)>( parser, &(t.i1) );
-					bool currentChanged = oldVal != t.i1;
+					decltype(T::lastValue) oldVal = t.lastValue;
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::lastValue)>( parser, &(t.lastValue) );
+					bool currentChanged = oldVal != t.lastValue;
 					if ( currentChanged )
 					{
 						if constexpr ( reportChanges )
 							changed = true;
-						if constexpr ( has_void_update_notifier_for_i1 )
-							t.notifyUpdated_i1();
-						if constexpr ( has_update_notifier_for_i1 )
-							t.notifyUpdated_i1( oldVal );
+						if constexpr ( has_void_update_notifier_for_lastValue )
+							t.notifyUpdated_lastValue();
+						if constexpr ( has_update_notifier_for_lastValue )
+							t.notifyUpdated_lastValue( oldVal );
 					}
 				}
 				else
-					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::i1)>( parser, &(t.i1) );
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::lastValue)>( parser, &(t.lastValue) );
 				break;
 			}
 			default:
@@ -962,16 +995,16 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 
 	template<typename UserT>
 	static void copy(const UserT& src, UserT& dst) {
-		publishable_STRUCT_Property::copy( src.p1, dst.p1 );
-		publishable_STRUCT_Property::copy( src.p2, dst.p2 );
-		dst.i1 = src.i1;
+		dst.name = src.name;
+		publishable_STRUCT_BasicTypes::copy( src.theAggregate, dst.theAggregate );
+		dst.lastValue = src.lastValue;
 	}
 
 	template<typename UserT>
 	static bool isSame(const UserT& s1, const UserT& s2) {
-		if( ! publishable_STRUCT_Property::isSame( s1.p1, s2.p1 ) ) return false;
-		if( ! publishable_STRUCT_Property::isSame( s1.p2, s2.p2 ) ) return false;
-		if ( s1.i1 != s2.i1 ) return false;
+		if ( s1.name != s2.name ) return false;
+		if( ! publishable_STRUCT_BasicTypes::isSame( s1.theAggregate, s2.theAggregate ) ) return false;
+		if ( s1.lastValue != s2.lastValue ) return false;
 		return true;
 	}
 };
@@ -1440,50 +1473,77 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 } // namespace test_json 
 
 //**********************************************************************
-// PUBLISHABLE html_data (1 parameters)
-// 1. STRUCT HtmlTag tag
+// PUBLISHABLE StructSix (3 parameters)
+// 1. CHARACTER_STRING name
+// 2. STRUCT BasicTypes basic
+// 3. STRUCT AggregateType aggregate
 //**********************************************************************
 
 template<class T, class ComposerT>
-class html_data_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>
+class StructSix_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>
 {
 	T t;
 	using BufferT = typename ComposerT::BufferType;
 	BufferT buffer;
 	ComposerT composer;
-	static constexpr bool has_tag = has_tag_member<T>;
-	static_assert( has_tag, "type T must have member T::tag of a type corresponding to IDL type STRUCT HtmlTag" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_basic = has_basic_member<T>;
+	static_assert( has_basic, "type T must have member T::basic of a type corresponding to IDL type STRUCT BasicTypes" );
+	static constexpr bool has_aggregate = has_aggregate_member<T>;
+	static_assert( has_aggregate, "type T must have member T::aggregate of a type corresponding to IDL type STRUCT AggregateType" );
 
 
 public:
-	static constexpr uint64_t numTypeID = 3;
-	static constexpr const char* stringTypeID = "html_data";
+	static constexpr uint64_t numTypeID = 6;
+	static constexpr const char* stringTypeID = "StructSix";
 
 	template<class ... ArgsT>
-	html_data_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
+	StructSix_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
 	const T& getState() { return t; }
 	ComposerT& getComposer() { return composer; }
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
-	const auto& get_tag() { return t.tag; }
-	void set_tag( decltype(T::tag) val) { 
-		t.tag = val; 
+	const auto& get_name() { return t.name; }
+	void set_name( decltype(T::name) val) { 
+		t.name = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( composer, t.name );
+	}
+	const auto& get_basic() { return t.basic; }
+	void set_basic( decltype(T::basic) val) { 
+		t.basic = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
-		publishable_STRUCT_HtmlTag::compose( composer, t.tag );
+		publishable_STRUCT_BasicTypes::compose( composer, t.basic );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_tag() { return HtmlTag_RefWrapper4Set</*aaa*/decltype(T::tag), html_data_WrapperForPublisher>(t.tag, *this, GMQ_COLL vector<size_t>(), 0); }
+	auto get4set_basic() { return BasicTypes_RefWrapper4Set</*aaa*/decltype(T::basic), StructSix_WrapperForPublisher>(t.basic, *this, GMQ_COLL vector<size_t>(), 1); }
+	const auto& get_aggregate() { return t.aggregate; }
+	void set_aggregate( decltype(T::aggregate) val) { 
+		t.aggregate = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 2 );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( composer );
+		publishable_STRUCT_AggregateType::compose( composer, t.aggregate );
+		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
+	}
+	auto get4set_aggregate() { return AggregateType_RefWrapper4Set</*aaa*/decltype(T::aggregate), StructSix_WrapperForPublisher>(t.aggregate, *this, GMQ_COLL vector<size_t>(), 2); }
 
 	template<class ComposerType>
 	void compose( ComposerType& composer )
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
-		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "tag" );
-		publishable_STRUCT_HtmlTag::compose( composer, t.tag );
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "basic" );
+		publishable_STRUCT_BasicTypes::compose( composer, t.basic );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "aggregate" );
+		publishable_STRUCT_AggregateType::compose( composer, t.aggregate );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
 
 
@@ -1492,47 +1552,57 @@ public:
 };
 
 template<class T, class RegistrarT>
-class html_data_NodecppWrapperForPublisher : public html_data_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
+class StructSix_NodecppWrapperForPublisher : public StructSix_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
 {
 	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
 	RegistrarT& registrar;
 public:
 	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
 	template<class ... ArgsT>
-	html_data_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : html_data_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	StructSix_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : StructSix_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
 
-	virtual ~html_data_NodecppWrapperForPublisher()
+	virtual ~StructSix_NodecppWrapperForPublisher()
 	{ 
 		registrar.remove( this );
 	}
 
-	virtual void startTick( BufferT&& buff ) { html_data_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
-	virtual BufferT&& endTick() { return  html_data_WrapperForPublisher<T, ComposerT>::endTick(); }
-	virtual void generateStateSyncMessage(ComposerT& composer) { html_data_WrapperForPublisher<T, ComposerT>::compose(composer); }
-	virtual const char* name() { return html_data_WrapperForPublisher<T, ComposerT>::name(); }
+	virtual void startTick( BufferT&& buff ) { StructSix_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
+	virtual BufferT&& endTick() { return  StructSix_WrapperForPublisher<T, ComposerT>::endTick(); }
+	virtual void generateStateSyncMessage(ComposerT& composer) { StructSix_WrapperForPublisher<T, ComposerT>::compose(composer); }
+	virtual const char* name() { return StructSix_WrapperForPublisher<T, ComposerT>::name(); }
 };
 
 template<class T, class BufferT>
-class html_data_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
+class StructSix_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
 {
 	T t;
-	static constexpr bool has_tag = has_tag_member<T>;
-	static_assert( has_tag, "type T must have member T::tag of a type corresponding to IDL type STRUCT HtmlTag" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_basic = has_basic_member<T>;
+	static_assert( has_basic, "type T must have member T::basic of a type corresponding to IDL type STRUCT BasicTypes" );
+	static constexpr bool has_aggregate = has_aggregate_member<T>;
+	static_assert( has_aggregate, "type T must have member T::aggregate of a type corresponding to IDL type STRUCT AggregateType" );
 
-	static constexpr bool has_void_update_notifier_for_tag = has_void_update_notifier_call_for_tag<T>;
-	static constexpr bool has_update_notifier_for_tag = has_update_notifier_call_for_tag<T, decltype(T::tag)>;
-	static constexpr bool has_any_notifier_for_tag = has_void_update_notifier_for_tag || has_update_notifier_for_tag;
+	static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+	static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+	static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
+	static constexpr bool has_void_update_notifier_for_basic = has_void_update_notifier_call_for_basic<T>;
+	static constexpr bool has_update_notifier_for_basic = has_update_notifier_call_for_basic<T, decltype(T::basic)>;
+	static constexpr bool has_any_notifier_for_basic = has_void_update_notifier_for_basic || has_update_notifier_for_basic;
+	static constexpr bool has_void_update_notifier_for_aggregate = has_void_update_notifier_call_for_aggregate<T>;
+	static constexpr bool has_update_notifier_for_aggregate = has_update_notifier_call_for_aggregate<T, decltype(T::aggregate)>;
+	static constexpr bool has_any_notifier_for_aggregate = has_void_update_notifier_for_aggregate || has_update_notifier_for_aggregate;
 	static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
 
 public:
-	static constexpr uint64_t numTypeID = 3;
-	static constexpr const char* stringTypeID = "html_data";
+	static constexpr uint64_t numTypeID = 6;
+	static constexpr const char* stringTypeID = "StructSix";
 
 	template<class ... ArgsT>
-	html_data_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	StructSix_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
 	const T& getState() { return t; }
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
@@ -1551,62 +1621,144 @@ public:
 			{
 				case 0:
 				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_name )
+					{
+						decltype(T::name) oldVal = t.name;
+						::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+						bool currentChanged = oldVal != t.name;
+						if ( currentChanged )
+						{
+							if constexpr ( has_void_update_notifier_for_name )
+								t.notifyUpdated_name();
+							if constexpr ( has_update_notifier_for_name )
+								t.notifyUpdated_name( oldVal );
+						}
+					}
+					else
+						::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				case 1:
+				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
-						if constexpr( has_update_notifier_for_tag )
+						if constexpr( has_update_notifier_for_basic )
 						{
-							decltype(T::tag) temp_tag;
-							publishable_STRUCT_HtmlTag::copy<decltype(T::tag)>( t.tag, temp_tag );
-							bool changedCurrent = publishable_STRUCT_HtmlTag::parse<ParserT, decltype(T::tag), bool>( parser, t.tag );
+							decltype(T::basic) temp_basic;
+							publishable_STRUCT_BasicTypes::copy<decltype(T::basic)>( t.basic, temp_basic );
+							bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::basic), bool>( parser, t.basic );
 							if ( changedCurrent )
 							{
-								if constexpr( has_void_update_notifier_for_tag )
-									t.notifyUpdated_tag();
-								t.notifyUpdated_tag( temp_tag );
+								if constexpr( has_void_update_notifier_for_basic )
+									t.notifyUpdated_basic();
+								t.notifyUpdated_basic( temp_basic );
 							}
 						}
-						else if constexpr( has_void_update_notifier_for_tag )
+						else if constexpr( has_void_update_notifier_for_basic )
 						{
-							bool changedCurrent = publishable_STRUCT_HtmlTag::parse<ParserT, decltype(T::tag), bool>( parser, t.tag );
+							bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::basic), bool>( parser, t.basic );
 							if ( changedCurrent )
 							{
-								t.notifyUpdated_tag();
+								t.notifyUpdated_basic();
 							}
 						}
 
 						else
 						{
-							publishable_STRUCT_HtmlTag::parse( parser, t.tag );
+							publishable_STRUCT_BasicTypes::parse( parser, t.basic );
 						}
 
 						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
-						if constexpr( has_update_notifier_for_tag )
+						if constexpr( has_update_notifier_for_basic )
 						{
-							decltype(T::tag) temp_tag;
-							publishable_STRUCT_HtmlTag::copy<decltype(T::tag)>( t.tag, temp_tag );
-							bool changedCurrent = publishable_STRUCT_HtmlTag::parse<ParserT, decltype(T::tag), bool>( parser, t.tag, addr, 1 );
+							decltype(T::basic) temp_basic;
+							publishable_STRUCT_BasicTypes::copy<decltype(T::basic)>( t.basic, temp_basic );
+							bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::basic), bool>( parser, t.basic, addr, 1 );
 							if ( changedCurrent )
 							{
-								if constexpr( has_void_update_notifier_for_tag )
-									t.notifyUpdated_tag();
-								t.notifyUpdated_tag( temp_tag );
+								if constexpr( has_void_update_notifier_for_basic )
+									t.notifyUpdated_basic();
+								t.notifyUpdated_basic( temp_basic );
 							}
 						}
-						else if constexpr( has_void_update_notifier_for_tag )
+						else if constexpr( has_void_update_notifier_for_basic )
 						{
-							bool changedCurrent = publishable_STRUCT_HtmlTag::parse<ParserT, decltype(T::tag), bool>( parser, t.tag, addr, 1 );
+							bool changedCurrent = publishable_STRUCT_BasicTypes::parse<ParserT, decltype(T::basic), bool>( parser, t.basic, addr, 1 );
 							if ( changedCurrent )
 							{
-								t.notifyUpdated_tag();
+								t.notifyUpdated_basic();
 							}
 						}
 						else
-							publishable_STRUCT_HtmlTag::parse( parser, t.tag, addr, 1 );
+							publishable_STRUCT_BasicTypes::parse( parser, t.basic, addr, 1 );
+					}
+					break;
+				}
+				case 2:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						if constexpr( has_update_notifier_for_aggregate )
+						{
+							decltype(T::aggregate) temp_aggregate;
+							publishable_STRUCT_AggregateType::copy<decltype(T::aggregate)>( t.aggregate, temp_aggregate );
+							bool changedCurrent = publishable_STRUCT_AggregateType::parse<ParserT, decltype(T::aggregate), bool>( parser, t.aggregate );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_aggregate )
+									t.notifyUpdated_aggregate();
+								t.notifyUpdated_aggregate( temp_aggregate );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_aggregate )
+						{
+							bool changedCurrent = publishable_STRUCT_AggregateType::parse<ParserT, decltype(T::aggregate), bool>( parser, t.aggregate );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_aggregate();
+							}
+						}
+
+						else
+						{
+							publishable_STRUCT_AggregateType::parse( parser, t.aggregate );
+						}
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						if constexpr( has_update_notifier_for_aggregate )
+						{
+							decltype(T::aggregate) temp_aggregate;
+							publishable_STRUCT_AggregateType::copy<decltype(T::aggregate)>( t.aggregate, temp_aggregate );
+							bool changedCurrent = publishable_STRUCT_AggregateType::parse<ParserT, decltype(T::aggregate), bool>( parser, t.aggregate, addr, 1 );
+							if ( changedCurrent )
+							{
+								if constexpr( has_void_update_notifier_for_aggregate )
+									t.notifyUpdated_aggregate();
+								t.notifyUpdated_aggregate( temp_aggregate );
+							}
+						}
+						else if constexpr( has_void_update_notifier_for_aggregate )
+						{
+							bool changedCurrent = publishable_STRUCT_AggregateType::parse<ParserT, decltype(T::aggregate), bool>( parser, t.aggregate, addr, 1 );
+							if ( changedCurrent )
+							{
+								t.notifyUpdated_aggregate();
+							}
+						}
+						else
+							publishable_STRUCT_AggregateType::parse( parser, t.aggregate, addr, 1 );
 					}
 					break;
 				}
@@ -1623,8 +1775,14 @@ public:
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "tag" );
-		publishable_STRUCT_HtmlTag::parse( parser, t.tag );
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "basic" );
+		publishable_STRUCT_BasicTypes::parse( parser, t.basic );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "aggregate" );
+		publishable_STRUCT_AggregateType::parse( parser, t.aggregate );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parseStructEnd( parser );
@@ -1632,47 +1790,49 @@ public:
 		if constexpr ( has_full_update_notifier )
 			t.notifyFullyUpdated();
 	}
-	const auto& get_tag() { return t.tag; }
+	const auto& get_name() { return t.name; }
+	const auto& get_basic() { return t.basic; }
+	const auto& get_aggregate() { return t.aggregate; }
 };
 
 template<class T, class RegistrarT>
-class html_data_NodecppWrapperForSubscriber : public html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
+class StructSix_NodecppWrapperForSubscriber : public StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
 {
 	RegistrarT& registrar;
 public:
 	template<class ... ArgsT>
-	html_data_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
+	StructSix_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
 	{ 
 		registrar.add( this );
 	}
 
-	virtual ~html_data_NodecppWrapperForSubscriber()
+	virtual ~StructSix_NodecppWrapperForSubscriber()
 	{ 
 		registrar.remove( this );
 	}
 
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
 	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
+		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
 	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
+		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
 	}
 
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
 	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
+		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
 	{
-		html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
+		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
 	}
 	virtual const char* name()
 	{
-		return html_data_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
+		return StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
 	}
 	void subscribe(GMQ_COLL string path)
 	{
@@ -1681,19 +1841,23 @@ public:
 };
 
 template<class T, class InputBufferT, class ComposerT>
-class html_data_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
+class StructSix_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
 {
 	T t;
 	using BufferT = typename ComposerT::BufferType;
-	static constexpr bool has_tag = has_tag_member<T>;
-	static_assert( has_tag, "type T must have member T::tag of a type corresponding to IDL type STRUCT HtmlTag" );
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_basic = has_basic_member<T>;
+	static_assert( has_basic, "type T must have member T::basic of a type corresponding to IDL type STRUCT BasicTypes" );
+	static constexpr bool has_aggregate = has_aggregate_member<T>;
+	static_assert( has_aggregate, "type T must have member T::aggregate of a type corresponding to IDL type STRUCT AggregateType" );
 
 
 public:
-	static constexpr uint64_t numTypeID = 3;
+	static constexpr uint64_t numTypeID = 6;
 
-	html_data_WrapperForConcentrator() {}
-	const char* name() {return "html_data";}
+	StructSix_WrapperForConcentrator() {}
+	const char* name() {return "StructSix";}
 	
 	// Acting as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
@@ -1702,8 +1866,14 @@ public:
 	{
 		::globalmq::marshalling::impl::composeStructBegin( composer );
 
-		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "tag" );
-		publishable_STRUCT_HtmlTag::compose( composer, t.tag );
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "basic" );
+		publishable_STRUCT_BasicTypes::compose( composer, t.basic );
+		::globalmq::marshalling::impl::composePublishableStructEnd( composer, true );
+
+		::globalmq::marshalling::impl::composePublishableStructBegin( composer, "aggregate" );
+		publishable_STRUCT_AggregateType::compose( composer, t.aggregate );
 		::globalmq::marshalling::impl::composePublishableStructEnd( composer, false );
 
 
@@ -1728,17 +1898,40 @@ public:
 			{
 				case 0:
 				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				case 1:
+				{
 					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
 					{
 						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
 
-						publishable_STRUCT_HtmlTag::parse( parser, t.tag );
+						publishable_STRUCT_BasicTypes::parse( parser, t.basic );
 
 						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
 					}
 					else // let child continue parsing
 					{
-						publishable_STRUCT_HtmlTag::parse( parser, t.tag, addr, 1 );
+						publishable_STRUCT_BasicTypes::parse( parser, t.basic, addr, 1 );
+					}
+					break;
+				}
+				case 2:
+				{
+					if ( addr.size() == 1 ) // we have to parse and apply changes of this child
+					{
+						::globalmq::marshalling::impl::publishableParseLeafeStructBegin( parser );
+
+						publishable_STRUCT_AggregateType::parse( parser, t.aggregate );
+
+						::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );
+					}
+					else // let child continue parsing
+					{
+						publishable_STRUCT_AggregateType::parse( parser, t.aggregate, addr, 1 );
 					}
 					break;
 				}
@@ -1754,8 +1947,14 @@ public:
 	{
 		::globalmq::marshalling::impl::parseStructBegin( parser );
 
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "tag" );
-		publishable_STRUCT_HtmlTag::parse( parser, t.tag );
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "basic" );
+		publishable_STRUCT_BasicTypes::parse( parser, t.basic );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "aggregate" );
+		publishable_STRUCT_AggregateType::parse( parser, t.aggregate );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 		::globalmq::marshalling::impl::parseStructEnd( parser );
@@ -1770,8 +1969,8 @@ public:
 	{
 		switch( typeID )
 		{
-			case 3:
-				return new html_data_WrapperForConcentrator<structures::html_data, InputBufferT, ComposerT>;
+			case 6:
+				return new StructSix_WrapperForConcentrator<structures::StructSix, InputBufferT, ComposerT>;
 			default:
 				return nullptr;
 		}
@@ -1781,35 +1980,109 @@ public:
 //===============================================================================
 
 template<class T>
-class Property_RefWrapper
+class BasicTypes_RefWrapper
+{
+	T& t;
+	static constexpr bool has_anInt = has_anInt_member<T>;
+	static_assert( has_anInt, "type T must have member T::anInt of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_anUInt = has_anUInt_member<T>;
+	static_assert( has_anUInt, "type T must have member T::anUInt of a type corresponding to IDL type UINTEGER" );
+	static constexpr bool has_aReal = has_aReal_member<T>;
+	static_assert( has_aReal, "type T must have member T::aReal of a type corresponding to IDL type REAL" );
+	static constexpr bool has_aString = has_aString_member<T>;
+	static_assert( has_aString, "type T must have member T::aString of a type corresponding to IDL type CHARACTER_STRING" );
+
+
+public:
+	BasicTypes_RefWrapper( T& actual ) : t( actual ) {}
+	auto get_anInt() { return t.anInt; }
+	auto get_anUInt() { return t.anUInt; }
+	auto get_aReal() { return t.aReal; }
+	const auto& get_aString() { return t.aString; }
+};
+
+template<class T, class RootT>
+class BasicTypes_RefWrapper4Set
+{
+	T& t;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+	static constexpr bool has_anInt = has_anInt_member<T>;
+	static_assert( has_anInt, "type T must have member T::anInt of a type corresponding to IDL type INTEGER" );
+	static constexpr bool has_anUInt = has_anUInt_member<T>;
+	static_assert( has_anUInt, "type T must have member T::anUInt of a type corresponding to IDL type UINTEGER" );
+	static constexpr bool has_aReal = has_aReal_member<T>;
+	static_assert( has_aReal, "type T must have member T::aReal of a type corresponding to IDL type REAL" );
+	static constexpr bool has_aString = has_aString_member<T>;
+	static_assert( has_aString, "type T must have member T::aString of a type corresponding to IDL type CHARACTER_STRING" );
+
+
+public:
+	BasicTypes_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+		address = address_;
+		address.push_back (idx );
+	}
+	auto get_anInt() { return t.anInt; }
+	void set_anInt( decltype(T::anInt) val) { 
+		t.anInt = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.anInt );
+	}
+	auto get_anUInt() { return t.anUInt; }
+	void set_anUInt( decltype(T::anUInt) val) { 
+		t.anUInt = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), t.anUInt );
+	}
+	auto get_aReal() { return t.aReal; }
+	void set_aReal( decltype(T::aReal) val) { 
+		t.aReal = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
+		::globalmq::marshalling::impl::publishableComposeLeafeReal( root.getComposer(), t.aReal );
+	}
+	const auto& get_aString() { return t.aString; }
+	void set_aString( decltype(T::aString) val) { 
+		t.aString = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 3 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.aString );
+	}
+};
+
+template<class T>
+class AggregateType_RefWrapper
 {
 	T& t;
 	static constexpr bool has_name = has_name_member<T>;
 	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
-	static constexpr bool has_value = has_value_member<T>;
-	static_assert( has_value, "type T must have member T::value of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_theAggregate = has_theAggregate_member<T>;
+	static_assert( has_theAggregate, "type T must have member T::theAggregate of a type corresponding to IDL type STRUCT BasicTypes" );
+	static constexpr bool has_lastValue = has_lastValue_member<T>;
+	static_assert( has_lastValue, "type T must have member T::lastValue of a type corresponding to IDL type INTEGER" );
 
 
 public:
-	Property_RefWrapper( T& actual ) : t( actual ) {}
+	AggregateType_RefWrapper( T& actual ) : t( actual ) {}
 	const auto& get_name() { return t.name; }
-	const auto& get_value() { return t.value; }
+	const auto& get_theAggregate() { return t.theAggregate; }
+	auto get_lastValue() { return t.lastValue; }
 };
 
 template<class T, class RootT>
-class Property_RefWrapper4Set
+class AggregateType_RefWrapper4Set
 {
 	T& t;
 	RootT& root;
 	GMQ_COLL vector<size_t> address;
 	static constexpr bool has_name = has_name_member<T>;
 	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
-	static constexpr bool has_value = has_value_member<T>;
-	static_assert( has_value, "type T must have member T::value of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_theAggregate = has_theAggregate_member<T>;
+	static_assert( has_theAggregate, "type T must have member T::theAggregate of a type corresponding to IDL type STRUCT BasicTypes" );
+	static constexpr bool has_lastValue = has_lastValue_member<T>;
+	static_assert( has_lastValue, "type T must have member T::lastValue of a type corresponding to IDL type INTEGER" );
 
 
 public:
-	Property_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
+	AggregateType_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
 		address = address_;
 		address.push_back (idx );
 	}
@@ -1819,75 +2092,20 @@ public:
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.name );
 	}
-	const auto& get_value() { return t.value; }
-	void set_value( decltype(T::value) val) { 
-		t.value = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
-		::globalmq::marshalling::impl::publishableComposeLeafeString( root.getComposer(), t.value );
-	}
-};
-
-template<class T>
-class HtmlTag_RefWrapper
-{
-	T& t;
-	static constexpr bool has_p1 = has_p1_member<T>;
-	static_assert( has_p1, "type T must have member T::p1 of a type corresponding to IDL type STRUCT Property" );
-	static constexpr bool has_p2 = has_p2_member<T>;
-	static_assert( has_p2, "type T must have member T::p2 of a type corresponding to IDL type STRUCT Property" );
-	static constexpr bool has_i1 = has_i1_member<T>;
-	static_assert( has_i1, "type T must have member T::i1 of a type corresponding to IDL type INTEGER" );
-
-
-public:
-	HtmlTag_RefWrapper( T& actual ) : t( actual ) {}
-	const auto& get_p1() { return t.p1; }
-	const auto& get_p2() { return t.p2; }
-	auto get_i1() { return t.i1; }
-};
-
-template<class T, class RootT>
-class HtmlTag_RefWrapper4Set
-{
-	T& t;
-	RootT& root;
-	GMQ_COLL vector<size_t> address;
-	static constexpr bool has_p1 = has_p1_member<T>;
-	static_assert( has_p1, "type T must have member T::p1 of a type corresponding to IDL type STRUCT Property" );
-	static constexpr bool has_p2 = has_p2_member<T>;
-	static_assert( has_p2, "type T must have member T::p2 of a type corresponding to IDL type STRUCT Property" );
-	static constexpr bool has_i1 = has_i1_member<T>;
-	static_assert( has_i1, "type T must have member T::i1 of a type corresponding to IDL type INTEGER" );
-
-
-public:
-	HtmlTag_RefWrapper4Set( T& actual, RootT& root_, const GMQ_COLL vector<size_t> address_, size_t idx ) : t( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
-	}
-	const auto& get_p1() { return t.p1; }
-	void set_p1( decltype(T::p1) val) { 
-		t.p1 = val; 
-		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
-		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		publishable_STRUCT_Property::compose( root.getComposer(), t.p1 );
-		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
-	}
-	auto get4set_p1() { return Property_RefWrapper4Set</*aaa*/decltype(T::p1), RootT>(t.p1, root, address, 0); }
-	const auto& get_p2() { return t.p2; }
-	void set_p2( decltype(T::p2) val) { 
-		t.p2 = val; 
+	const auto& get_theAggregate() { return t.theAggregate; }
+	void set_theAggregate( decltype(T::theAggregate) val) { 
+		t.theAggregate = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 1 );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructBegin( root.getComposer() );
-		publishable_STRUCT_Property::compose( root.getComposer(), t.p2 );
+		publishable_STRUCT_BasicTypes::compose( root.getComposer(), t.theAggregate );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
-	auto get4set_p2() { return Property_RefWrapper4Set</*aaa*/decltype(T::p2), RootT>(t.p2, root, address, 1); }
-	auto get_i1() { return t.i1; }
-	void set_i1( decltype(T::i1) val) { 
-		t.i1 = val; 
+	auto get4set_theAggregate() { return BasicTypes_RefWrapper4Set</*aaa*/decltype(T::theAggregate), RootT>(t.theAggregate, root, address, 1); }
+	auto get_lastValue() { return t.lastValue; }
+	void set_lastValue( decltype(T::lastValue) val) { 
+		t.lastValue = val; 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 2 );
-		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.i1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( root.getComposer(), t.lastValue );
 	}
 };
 
@@ -2124,4 +2342,4 @@ void STRUCT_struct_du_compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // test_marshalling_h_d3979a03_guard
+#endif // test_marshalling_h_71a7abdf_guard
