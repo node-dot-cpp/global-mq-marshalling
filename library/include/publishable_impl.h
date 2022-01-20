@@ -840,11 +840,12 @@ public:
 			impl::composeAddressInPublishable( root.getComposer(), address, ActionOnDictionary::remove );
 //			impl::composeActionInPublishable( root.getComposer(), ActionOnDictionary::remove, true );
 			composeKey( key, false );
+			impl::composeStateUpdateBlockEnd(root.getComposer());
 		}
 		return ret;
 	}
 
-	bool insert( const key_type& key, value_type& value ) { 
+	bool insert( const key_type& key, const value_type& value ) { 
 		auto insret = b.insert( std::make_pair( key, value ) );
 		if ( insret.second )
 		{
@@ -854,11 +855,12 @@ public:
 //			PublishableDictionaryProcessor::compose<decltype(root.getComposer()), DictionaryT, KeyTypeT, ValueTypeT>( root.getComposer(), b, "data", true );
 			composeKey( key, true );
 			composeValue( value );
+			impl::composeStateUpdateBlockEnd(root.getComposer());
 		}
 		return insret.second;
 	}
 
-	bool update_value( const key_type& key, value_type newValue ) {
+	bool update_value( const key_type& key, const value_type& newValue ) {
 		auto f = b.find( key );
 		if ( f != b.end() )
 		{

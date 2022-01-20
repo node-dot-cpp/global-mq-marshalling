@@ -626,9 +626,14 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #endif
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-#if 0 // TODO reimplement for dictionary
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::insert:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseKey<ParserT, %s, %s>( parser, key );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+#if 0 // TODO reimplement for dictionary
 	fprintf( header, "%s\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::value_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 	fprintf( header, "%s\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
@@ -649,11 +654,11 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				
 	fprintf( header, "%s\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				
+#endif
 	fprintf( header, "%s\t\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\tcurrentChanged = true;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-#endif
 	fprintf( header, "%s\t\t\tdefault:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\tthrow std::exception();\n", offset.c_str() );
 	fprintf( header, "%s\t\t}\n", offset.c_str() );

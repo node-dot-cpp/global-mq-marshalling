@@ -2051,6 +2051,17 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 										f->second = value;
 									break;
 								}
+								case ActionOnDictionary::insert:
+								{
+									typename decltype(T::properties)::key_type key;
+									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
+									typename decltype(T::properties)::mapped_type value;
+									PublishableDictionaryProcessor::parseValue<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value );
+									t.properties.insert( std::make_pair( key, value ) );
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
 								default:
 									throw std::exception();
 							}

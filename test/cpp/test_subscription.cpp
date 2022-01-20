@@ -987,4 +987,18 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_new_value" );
+
+	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().insert( "key_2", "value_2" );
+
+	mp.postAllUpdates();
+	msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
+
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 2 );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "key_2" ) );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "key_2" )->second == "value_2" );
 }
