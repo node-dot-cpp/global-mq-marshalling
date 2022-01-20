@@ -971,6 +971,20 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == mtest::structures::HtmlTextOrTags::Variants::taglists );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags().size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
-//	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].name == "some_key" );
-//	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties[0].value == "some_value" );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_value" );
+
+	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().update_value( "some_key", "some_new_value" );
+
+	mp.postAllUpdates();
+	msgCnt = queue.pop_front( messages, maxMsg, 0 );
+	for ( size_t i=0; i<msgCnt; ++i )
+	{
+//		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
+		mp.onMessage( messages[i].msg );
+	}
+
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_new_value" );
 }

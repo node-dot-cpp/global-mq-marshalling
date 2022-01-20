@@ -911,12 +911,14 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 				{
 					::globalmq::marshalling::impl::publishableParseString<ParserT, typename T::Case_text_str_T>( parser, &(t.str()), "str" );
 
+					break;
 				}
 				case 22: // IDL CASE taglists
 				{
 					::globalmq::marshalling::impl::parseKey( parser, "tags" );
 					PublishableVectorProcessor::parse<ParserT, typename T::Case_taglists_tags_T, publishable_STRUCT_HtmlTag, true>( parser, t.tags() );
 
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -1322,10 +1324,12 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 				case 21: // IDL CASE text
 				{
 					dst.str() = src.str();
+					break;
 				}
 				case 22: // IDL CASE taglists
 				{
 					::globalmq::marshalling::impl::copyVector<typename UserT::Case_taglists_tags_T, publishable_STRUCT_HtmlTag>( src.tags(), dst.tags() );
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -1342,10 +1346,12 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 				case 21: // IDL CASE text
 				{
 					if ( s1.str() != s2.str() ) return false;
+					break;
 				}
 				case 22: // IDL CASE taglists
 				{
 					if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_taglists_tags_T, publishable_STRUCT_HtmlTag>( s1.tags(), s2.tags() ) ) return false;
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -2005,19 +2011,49 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_properties;
 					if constexpr( alwaysCollectChanges )
 						::globalmq::marshalling::impl::copyDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( t.properties, oldDictionaryVal );
+					//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					if ( addr.size() > offset + 1 ) // one of actions over elements of the dictionary
 					{
-						size_t pos = addr[offset + 1];
-						if ( pos > t.properties.size() )
-							throw std::exception();
+						size_t action = addr[offset + 1];
 						if ( addr.size() > offset + 2 ) // update for a value of a particular dictionary element
 						{
-							throw std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.properties elements is UNDEFINED)
+							throw std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.properties elements is CHARACTER_STRING)
 						}
 						else // update of one or more elelments as a whole
 						{
-							size_t action;
-							::globalmq::marshalling::impl::parseActionInPublishable( parser, action );
+							switch ( action )
+							{
+								case ActionOnDictionary::remove:
+								{
+									decltype(T::properties) oldVal;
+									::globalmq::marshalling::impl::copyDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( t.properties, oldVal );
+									typename decltype(T::properties)::key_type key;
+									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
+									t.properties.erase( key );
+									/*if constexpr ( has_removed_notifier3_for_properties )
+										t.notifyRemoved_properties( pos, oldVal );
+									if constexpr ( has_removed_notifier2_for_properties )
+										t.notifyRemoved_properties( pos );
+									if constexpr ( has_void_removeed_notifier_for_properties )
+										t.notifyRemoved_properties();*/
+									if constexpr ( alwaysCollectChanges )
+										currentChanged = true;
+									break;
+								}
+								case ActionOnDictionary::update_value:
+								{
+									typename decltype(T::properties)::key_type key;
+									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
+									typename decltype(T::properties)::mapped_type value;
+									PublishableDictionaryProcessor::parseValue<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value );
+									auto f = t.properties.find( key );
+									if ( f != t.properties.end() )
+										f->second = value;
+									break;
+								}
+								default:
+									throw std::exception();
+							}
 							::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );
 						}
 					}
@@ -2163,6 +2199,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 
 					::globalmq::marshalling::impl::publishableParseInteger<ParserT, typename T::Case_one_i_1_T>( parser, &(t.i_1()), "i_1" );
 
+					break;
 				}
 				case 2: // IDL CASE two
 				{
@@ -2171,6 +2208,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 					::globalmq::marshalling::impl::parseKey( parser, "vp_2" );
 					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.vp_2() );
 
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -2701,11 +2739,13 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 				{
 					publishable_STRUCT_point3D::copy( src.pt3d_1(), dst.pt3d_1() );
 					dst.i_1() = src.i_1();
+					break;
 				}
 				case 2: // IDL CASE two
 				{
 					dst.i_2() = src.i_2();
 					::globalmq::marshalling::impl::copyVector<typename UserT::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( src.vp_2(), dst.vp_2() );
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -2723,11 +2763,13 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 				{
 					if( ! publishable_STRUCT_point3D::isSame( s1.pt3d_1(), s2.pt3d_1() ) ) return false;
 					if ( s1.i_1() != s2.i_1() ) return false;
+					break;
 				}
 				case 2: // IDL CASE two
 				{
 					if ( s1.i_2() != s2.i_2() ) return false;
 					if ( !::globalmq::marshalling::impl::isSameVector<typename UserT::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( s1.vp_2(), s2.vp_2() ) ) return false;
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -7096,7 +7138,7 @@ public:
 		PublishableDictionaryProcessor::compose<decltype(root.getComposer()), decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( root.getComposer(), t.properties );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
-	auto get4set_properties() { return globalmq::marshalling::DictionaryRefWrapper4Set<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType, RootT>(t.properties, *this, GMQ_COLL vector<size_t>(), 1); }
+	auto get4set_properties() { return globalmq::marshalling::DictionaryRefWrapper4Set<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType, RootT>(t.properties, root, address, 1); }
 	const auto& get_tags() { return t.tags; }
 	void set_tags( decltype(T::tags) val) { 
 		t.tags = val; 
