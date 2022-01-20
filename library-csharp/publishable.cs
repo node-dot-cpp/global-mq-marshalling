@@ -223,10 +223,10 @@ namespace globalmq.marshalling
             p.parseUnsignedInteger(out cnt);
             if (cnt == 0)
                 return false;
-            UInt64[] tmp = new UInt64[cnt];
+            addr = new UInt64[cnt];
             for (UInt64 i = 0; i < cnt; ++i)
             {
-                p.parseUnsignedInteger(out tmp[i]);
+                p.parseUnsignedInteger(out addr[i]);
             }
             return true;
         }

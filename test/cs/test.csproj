@@ -24,25 +24,37 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="message_three.json">
+    <None Update="test_message_three.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="message_two.gmq">
+    <None Update="test_message_two.gmq">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="publishable_six.json">
+    <None Update="test_publishable_six.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="publishable_six_update1.json">
+    <None Update="test_publishable_six2.gmq">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="test_publishable_six2_update1.gmq">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="test_publishable_six2_update2.gmq">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="test_publishable_six2_update3.gmq">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="test_publishable_six_update1.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="publishable_struct_six.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="struct_one.gmq">
+    <None Update="test_struct_one.gmq">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="struct_one.json">
+    <None Update="test_struct_one.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="struct_du_1.gmq">

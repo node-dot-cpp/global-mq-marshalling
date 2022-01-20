@@ -33,12 +33,12 @@ using Xunit;
 namespace TestProject1
 {
 
-    public class test_publishable_six
+    public class test_publishable_six2
     {
-        private const string Path = "test_publishable_six.json";
-        private const string Path1 = "test_publishable_six_update1.json";
-        private const string Path2 = "test_publishable_six_update2.json";
-        private const string Path3 = "test_publishable_six_update3.json";
+        private const string Path = "test_publishable_six2.gmq";
+        private const string Path1 = "test_publishable_six2_update1.gmq";
+        private const string Path2 = "test_publishable_six2_update2.gmq";
+        private const string Path3 = "test_publishable_six2_update3.gmq";
 
         public static mtest.publishable.StructSix_impl GetPublishableSix()
         {
@@ -67,14 +67,14 @@ namespace TestProject1
 
 
         [Fact]
-        public static void TestJsonComposeStateSync()
+        public static void TestGmqComposeStateSync()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
             mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            JsonPublishableComposer composer = new JsonPublishableComposer();
+            GmqPublishableComposer composer = new GmqPublishableComposer();
             
             composer.startTick(buffer);
             publ.generateStateSyncMessage(composer);
@@ -86,14 +86,14 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonParseStateSync()
+        public static void TestGmqParseStateSync()
         {
             mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
 
             mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
 
             subs.applyStateSyncMessage(parser);
 
@@ -101,14 +101,13 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonComposeUpdate1()
+        public static void TestGmqComposeUpdate1()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new GmqPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
 
             publ.startTick(buffer);
             publ.aggregate.theAggregate.anInt = -101;
@@ -121,13 +120,13 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonParseUpdate1()
+        public static void TestGmqParseUpdate1()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
             mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path1);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
@@ -140,14 +139,13 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonComposeUpdate2()
+        public static void TestGmqComposeUpdate2()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new GmqPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
 
             publ.startTick(buffer);
 
@@ -174,13 +172,13 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonParseUpdate2()
+        public static void TestGmqParseUpdate2()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
             mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path2);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
@@ -207,10 +205,9 @@ namespace TestProject1
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new GmqPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
 
             publ.startTick(buffer);
 
@@ -236,13 +233,13 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonParseNoChangeUpdate3()
+        public static void TestGmqParseNoChangeUpdate3()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
             mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path3);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
