@@ -39,7 +39,7 @@ namespace TestProject1
         public static void TestParseAddress1()
         {
             SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" \"addr\": [ 1, 2, 3],");
+            buffer.appendAscii(" { \"addr\": [ 1, 2, 3],");
 
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
@@ -52,7 +52,7 @@ namespace TestProject1
         public static void TestParseAddress2()
         {
             SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" { } ] }");
+            buffer.appendAscii(" { }");
 
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
@@ -63,25 +63,24 @@ namespace TestProject1
         public static void TestParseAddress3()
         {
             SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" ] }");
-
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
-
-            UInt64[] addr = null;
-            Assert.False(parser.parseAddress(ref addr));
-        }
-
-        [Fact]
-        public static void TestParseAddress4()
-        {
-            SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" \"addr\": [ ],");
+            buffer.appendAscii(" { \"addr\": [ ],");
 
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
             UInt64[] addr = null;
             Assert.True(parser.parseAddress(ref addr));
             Assert.Equal<UInt64>(addr, new UInt64[] { });
+        }
+        [Fact]
+        public static void TestParseFail()
+        {
+            SimpleBuffer buffer = new SimpleBuffer();
+            buffer.appendAscii(" ] }");
+
+            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+
+            UInt64[] addr = null;
+            Assert.Throws<Exception>(() => { parser.parseAddress(ref addr); });
         }
     }
 

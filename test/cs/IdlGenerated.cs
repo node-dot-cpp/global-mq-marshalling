@@ -40,18 +40,6 @@ public class CASE_one : IEquatable<CASE_one>
 	public Double D2;
 	public Double D3;
 
-	public bool Equals(CASE_one other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.D1 == other.D1 &&
-				this.D2 == other.D2 &&
-				this.D3 == other.D3;
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as CASE_one);
@@ -75,6 +63,18 @@ public class CASE_one : IEquatable<CASE_one>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(CASE_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.D1 == other.D1 &&
+				this.D2 == other.D2 &&
+				this.D3 == other.D3;
 	}
 	public static void compose(ComposerBase composer, Double D1, Double D2, Double D3)
 	{
@@ -163,16 +163,6 @@ public class CASE_two : IEquatable<CASE_two>
 {
 	public List<Double> Data;
 
-	public bool Equals(CASE_two other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				Enumerable.SequenceEqual(this.Data, other.Data);
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as CASE_two);
@@ -196,6 +186,16 @@ public class CASE_two : IEquatable<CASE_two>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(CASE_two other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				Enumerable.SequenceEqual(this.Data, other.Data);
 	}
 	public static void compose(ComposerBase composer, ICollectionCompose Data)
 	{
@@ -454,18 +454,6 @@ public class point3D : IEquatable<point3D>
 	public Int64 y;
 	public Int64 z;
 
-	public bool Equals(point3D other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.x == other.x &&
-				this.y == other.y &&
-				this.z == other.z;
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point3D);
@@ -489,6 +477,18 @@ public class point3D : IEquatable<point3D>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(point3D other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
 	}
 	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
 	{
@@ -584,17 +584,6 @@ public class point : IEquatable<point>
 	public Int64 x;
 	public Int64 y;
 
-	public bool Equals(point other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.x == other.x &&
-				this.y == other.y;
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point);
@@ -618,6 +607,17 @@ public class point : IEquatable<point>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(point other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y;
 	}
 	public static void compose(ComposerBase composer, Int64 x, Int64 y)
 	{
@@ -705,17 +705,6 @@ public class struct_du : IEquatable<struct_du>
 	public point3D pt;
 	public du_one disc_union;
 
-	public bool Equals(struct_du other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.pt.Equals(other.pt) &&
-				this.disc_union.Equals(other.disc_union);
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as struct_du);
@@ -739,6 +728,17 @@ public class struct_du : IEquatable<struct_du>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(struct_du other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				this.disc_union.Equals(other.disc_union);
 	}
 	public static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
@@ -844,25 +844,6 @@ public class struct_one : IEquatable<struct_one>
 	public point3D ninethParam;
 	public List<Double> tenthParam;
 
-	public bool Equals(struct_one other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.firstParam == other.firstParam &&
-				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
-				Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
-				this.forthParam == other.forthParam &&
-				this.fifthParam == other.fifthParam &&
-				Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
-				this.seventhParam == other.seventhParam &&
-				this.eighthParam.Equals(other.eighthParam) &&
-				this.ninethParam.Equals(other.ninethParam) &&
-				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as struct_one);
@@ -886,6 +867,25 @@ public class struct_one : IEquatable<struct_one>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(struct_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.firstParam == other.firstParam &&
+				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
+				Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
+				this.forthParam == other.forthParam &&
+				this.fifthParam == other.fifthParam &&
+				Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
+				this.seventhParam == other.seventhParam &&
+				this.eighthParam.Equals(other.eighthParam) &&
+				this.ninethParam.Equals(other.ninethParam) &&
+				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
 	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
@@ -1155,17 +1155,6 @@ public class message_four : IEquatable<message_four>
 	public point pt;
 	public List<point3D> pts3d;
 
-	public bool Equals(message_four other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.pt.Equals(other.pt) &&
-				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as message_four);
@@ -1189,6 +1178,17 @@ public class message_four : IEquatable<message_four>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(message_four other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
 	}
 	public static void compose(ComposerBase composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
@@ -1434,17 +1434,6 @@ public class message_five : IEquatable<message_five>
 	public point pt;
 	public List<point3D> pts3d;
 
-	public bool Equals(message_five other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.pt.Equals(other.pt) &&
-				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
-	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as message_five);
@@ -1468,6 +1457,17 @@ public class message_five : IEquatable<message_five>
 	{
 		// TODO
 		throw new InvalidOperationException();
+	}
+	public bool Equals(message_five other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
 	}
 	public static void compose(ComposerBase composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
@@ -1579,12 +1579,49 @@ public interface BasicTypes
 	String aString { get; set; }
 } // interface BasicTypes
 
-public class BasicTypes_impl : BasicTypes
+public class BasicTypes_impl : BasicTypes, IEquatable<BasicTypes_impl>
 {
 	public Int64 anInt { get; set; }
 	public UInt64 anUInt { get; set; }
 	public Double aReal { get; set; }
 	public String aString { get; set; }
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as BasicTypes_impl);
+	}
+	public static bool operator ==(BasicTypes_impl left, BasicTypes_impl right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(BasicTypes_impl left, BasicTypes_impl right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(BasicTypes_impl other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.anInt == other.anInt &&
+				this.anUInt == other.anUInt &&
+				this.aReal == other.aReal &&
+				this.aString == other.aString;
+	}
 } // class BasicTypes_impl
 
 public class BasicTypes_subs : BasicTypes
@@ -1668,7 +1705,7 @@ public class BasicTypes_subs : BasicTypes
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			Int64 newVal = parser.parseInteger("anInt");
+			Int64 newVal = parser.parseInteger("value");
 			if(newVal != t.anInt)
 			{
 				t.anInt = newVal;
@@ -1680,7 +1717,7 @@ public class BasicTypes_subs : BasicTypes
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			UInt64 newVal = parser.parseUnsigned("anUInt");
+			UInt64 newVal = parser.parseUnsigned("value");
 			if(newVal != t.anUInt)
 			{
 				t.anUInt = newVal;
@@ -1692,7 +1729,7 @@ public class BasicTypes_subs : BasicTypes
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			Double newVal = parser.parseReal("aReal");
+			Double newVal = parser.parseReal("value");
 			if(newVal != t.aReal)
 			{
 				t.aReal = newVal;
@@ -1704,7 +1741,7 @@ public class BasicTypes_subs : BasicTypes
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			String newVal = parser.parseString("aString");
+			String newVal = parser.parseString("value");
 			if(newVal != t.aString)
 			{
 				t.aString = newVal;
@@ -1741,7 +1778,7 @@ public class BasicTypes_publ : BasicTypes
 				t.anInt = value;
 				composer.composeAddress(address, (UInt64)Address.anInt);
 				composer.composeInteger("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -1755,7 +1792,7 @@ public class BasicTypes_publ : BasicTypes
 				t.anUInt = value;
 				composer.composeAddress(address, (UInt64)Address.anUInt);
 				composer.composeUnsigned("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -1769,7 +1806,7 @@ public class BasicTypes_publ : BasicTypes
 				t.aReal = value;
 				composer.composeAddress(address, (UInt64)Address.aReal);
 				composer.composeReal("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -1783,7 +1820,7 @@ public class BasicTypes_publ : BasicTypes
 				t.aString = value;
 				composer.composeAddress(address, (UInt64)Address.aString);
 				composer.composeString("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -1805,12 +1842,48 @@ public interface AggregateType
 	Int64 lastValue { get; set; }
 } // interface AggregateType
 
-public class AggregateType_impl : AggregateType
+public class AggregateType_impl : AggregateType, IEquatable<AggregateType_impl>
 {
 	public String name { get; set; }
 	public BasicTypes theAggregate { get; set; }
 	public BasicTypes make_theAggregate() { return new BasicTypes_impl(); }
 	public Int64 lastValue { get; set; }
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as AggregateType_impl);
+	}
+	public static bool operator ==(AggregateType_impl left, AggregateType_impl right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(AggregateType_impl left, AggregateType_impl right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(AggregateType_impl other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.name == other.name &&
+				this.theAggregate.Equals(other.theAggregate) &&
+				this.lastValue == other.lastValue;
+	}
 } // class AggregateType_impl
 
 public class AggregateType_subs : AggregateType
@@ -1886,7 +1959,7 @@ public class AggregateType_subs : AggregateType
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			String newVal = parser.parseString("name");
+			String newVal = parser.parseString("value");
 			if(newVal != t.name)
 			{
 				t.name = newVal;
@@ -1899,7 +1972,7 @@ public class AggregateType_subs : AggregateType
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parsePublishableStructBegin("theAggregate");
+					parser.parsePublishableStructBegin("value");
 					currentChanged = BasicTypes_subs.parse(parser, t.theAggregate);
 					parser.parsePublishableStructEnd();
 				}
@@ -1921,7 +1994,7 @@ public class AggregateType_subs : AggregateType
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			Int64 newVal = parser.parseInteger("lastValue");
+			Int64 newVal = parser.parseInteger("value");
 			if(newVal != t.lastValue)
 			{
 				t.lastValue = newVal;
@@ -1958,7 +2031,7 @@ public class AggregateType_publ : AggregateType
 				t.name = value;
 				composer.composeAddress(address, (UInt64)Address.name);
 				composer.composeString("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -1974,7 +2047,7 @@ public class AggregateType_publ : AggregateType
 				composer.composePublishableStructBegin("value");
 				BasicTypes_publ.compose(composer, value);
 				composer.composePublishableStructEnd(false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -1989,7 +2062,7 @@ public class AggregateType_publ : AggregateType
 				t.lastValue = value;
 				composer.composeAddress(address, (UInt64)Address.lastValue);
 				composer.composeInteger("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -2020,13 +2093,49 @@ public interface StructSix
 	AggregateType make_aggregate();
 } // interface StructSix
 
-public class StructSix_impl : StructSix
+public class StructSix_impl : StructSix, IEquatable<StructSix_impl>
 {
 	public String name { get; set; }
 	public BasicTypes basic { get; set; }
 	public BasicTypes make_basic() { return new BasicTypes_impl(); }
 	public AggregateType aggregate { get; set; }
 	public AggregateType make_aggregate() { return new AggregateType_impl(); }
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as StructSix_impl);
+	}
+	public static bool operator ==(StructSix_impl left, StructSix_impl right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(StructSix_impl left, StructSix_impl right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(StructSix_impl other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.name == other.name &&
+				this.basic.Equals(other.basic) &&
+				this.aggregate.Equals(other.aggregate);
+	}
 } // class StructSix_impl
 
 public class StructSix_subs : StructSix, StateSubscriberBase
@@ -2108,7 +2217,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 			{
 				if(addr.Length != offset + 1)
 					throw new Exception();
-			String newVal = parser.parseString("name");
+			String newVal = parser.parseString("value");
 			if(newVal != t.name)
 			{
 				t.name = newVal;
@@ -2121,7 +2230,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parsePublishableStructBegin("basic");
+					parser.parsePublishableStructBegin("value");
 					currentChanged = BasicTypes_subs.parse(parser, t.basic);
 					parser.parsePublishableStructEnd();
 				}
@@ -2144,7 +2253,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 				bool currentChanged = false;
 				if(addr.Length == offset + 1)
 				{
-					parser.parsePublishableStructBegin("aggregate");
+					parser.parsePublishableStructBegin("value");
 					currentChanged = AggregateType_subs.parse(parser, t.aggregate);
 					parser.parsePublishableStructEnd();
 				}
@@ -2180,6 +2289,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 		while(parser.parseAddress(ref addr))
 		{
 			StructSix_subs.parse(parser, this.t, addr, 0);
+			parser.parseAddressEnd();
 			addr = null;
 		}
 		parser.parseStateUpdateMessageEnd();
@@ -2214,7 +2324,7 @@ public class StructSix_publ : StructSix, StatePublisherBase
 				t.name = value;
 				composer.composeAddress(address, (UInt64)Address.name);
 				composer.composeString("value", value, false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -2230,7 +2340,7 @@ public class StructSix_publ : StructSix, StatePublisherBase
 				composer.composePublishableStructBegin("value");
 				BasicTypes_publ.compose(composer, value);
 				composer.composePublishableStructEnd(false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}
@@ -2247,7 +2357,7 @@ public class StructSix_publ : StructSix, StatePublisherBase
 				composer.composePublishableStructBegin("value");
 				AggregateType_publ.compose(composer, value);
 				composer.composePublishableStructEnd(false);
-				composer.composePublishableStructEnd(false);
+				composer.composeAddressEnd();
 			}
 		}
 	}

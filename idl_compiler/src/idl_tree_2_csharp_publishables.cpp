@@ -130,8 +130,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-
-		fprintf(header, "public class %s_impl : %s\n", type_name.c_str(), type_name.c_str());
+		fprintf(header, "public class %s_impl : %s, IEquatable<%s_impl>\n", type_name.c_str(), type_name.c_str(), type_name.c_str());
 		fprintf(header, "{\n");
 
 
@@ -189,6 +188,8 @@ namespace {
 				assert(false); // not implemented (yet)
 			}
 		}
+
+		generateCsharpStructEqualsMethod(header, s, type_name + "_impl");
 
 		fprintf(header, "} // class %s_impl\n\n", type_name.c_str());
 	}
@@ -417,7 +418,7 @@ namespace {
 			case MessageParameterType::KIND::INTEGER:
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tInt64 newVal = parser.parseInteger(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\tInt64 newVal = parser.parseInteger(\"value\");\n");
 				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
 				fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
@@ -427,7 +428,7 @@ namespace {
 			case MessageParameterType::KIND::UINTEGER:
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tUInt64 newVal = parser.parseUnsigned(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\tUInt64 newVal = parser.parseUnsigned(\"value\");\n");
 				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
 				fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
@@ -437,7 +438,7 @@ namespace {
 			case MessageParameterType::KIND::REAL:
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tDouble newVal = parser.parseReal(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\tDouble newVal = parser.parseReal(\"value\");\n");
 				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
 				fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
@@ -447,7 +448,7 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tString newVal = parser.parseString(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\tString newVal = parser.parseString(\"value\");\n");
 				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
 				fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
@@ -459,7 +460,7 @@ namespace {
 				fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
 				fprintf(header, "\t\t\t\tif(addr.Length == offset + 1)\n");
 				fprintf(header, "\t\t\t\t{\n");
-				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
+				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
 				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subs.parse(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\t\t}\n");
@@ -543,6 +544,7 @@ namespace {
 		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
 		fprintf(header, "\t\t{\n");
 		fprintf(header, "\t\t\t%s_subs.parse(parser, this.t, addr, 0);\n", type_name.c_str());
+		fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
 		fprintf(header, "\t\t\taddr = null;\n");
 		fprintf(header, "\t\t}\n");
 		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
@@ -813,7 +815,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeInteger(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composeAddressEnd();\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -829,7 +831,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeUnsigned(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composeAddressEnd();\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -845,7 +847,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeReal(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composeAddressEnd();\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -861,7 +863,7 @@ namespace {
 				fprintf(header, "\t\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composeString(\"value\", value, false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composeAddressEnd();\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
@@ -880,7 +882,7 @@ namespace {
 				fprintf(header, "\t\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
 				fprintf(header, "\t\t\t\t%s_publ.compose(composer, value);\n", member.type.name.c_str());
 				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
-				fprintf(header, "\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+				fprintf(header, "\t\t\t\tcomposer.composeAddressEnd();\n");
 				fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");

@@ -1,0 +1,1 @@
+{"changes":[{"addr":[2, 0],"value":"changed name"},{"addr":[1, 0],"value":-2},{"addr":[1, 1],"value":3},{"addr":[1, 2],"value":4},{"addr":[2, 1],"value":{"anInt":-200,"anUInt":300,"aReal":400,"aString":"new part"}},{}]}

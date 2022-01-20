@@ -43,6 +43,7 @@ namespace globalmq.marshalling
     public interface IPublishableParser
     {
         bool parseAddress(ref UInt64[] addr);
+        void parseAddressEnd();
         Int64 parseInteger(String expectedName);
         UInt64 parseUnsigned(String expectedName);
         Double parseReal(String expectedName);
@@ -69,23 +70,26 @@ namespace globalmq.marshalling
         }
         public bool parseAddress(ref UInt64[] addr)
         {
-            if (p.isDelimiter('{'))
-            {
+            //mb: I am commneting out code paths I don't
+            // know when can happend. Will uncomment as
+            // I learn their reasons to exist.
+            //if (p.isDelimiter('{'))
+            //{
                 p.skipDelimiter('{');
                 if (p.isDelimiter('}'))
                 {
                     p.skipDelimiter('}');
-                    p.skipDelimiter(']');
-                    p.skipDelimiter('}');
+                    //p.skipDelimiter(']');
+                    //p.skipDelimiter('}');
                     return false;
                 }
-            }
-            else if (p.isDelimiter(']'))
-            {
-                p.skipDelimiter(']');
-                p.skipDelimiter('}');
-                return false;
-            }
+            //}
+            //else if (p.isDelimiter(']'))
+            //{
+            //    p.skipDelimiter(']');
+            //    p.skipDelimiter('}');
+            //    return false;
+            //}
 
             parseKey("addr");
 
@@ -121,6 +125,11 @@ namespace globalmq.marshalling
             addr = tmpAddr.ToArray();
             return true;
 
+        }
+        public void parseAddressEnd()
+        {
+            p.skipDelimiter('}');
+            p.skipDelimiter(',');
         }
 
         public Int64 parseInteger(String expectedName)
@@ -221,7 +230,7 @@ namespace globalmq.marshalling
             }
             return true;
         }
-
+        public void parseAddressEnd() { }
         public Int64 parseInteger(String expectedName)
         {
             Int64 val;
@@ -262,6 +271,7 @@ namespace globalmq.marshalling
         void startTick(BufferT buffer);
         BufferT endTick();
         void composeAddress(UInt64[] baseAddr, UInt64 last);
+        void composeAddressEnd();
         void composeInteger(String name, Int64 value, bool separator);
         void composeUnsigned(String name, UInt64 value, bool separator);
         void composeReal(String name, Double value, bool separator);
@@ -304,6 +314,7 @@ namespace globalmq.marshalling
             composer.append(']');
             composer.append(',');
         }
+        public void composeAddressEnd() { composePublishableStructEnd(true); }
         public void composeInteger(String name, Int64 value, bool separator)
         {
             composer.addNamePart(name);
@@ -384,6 +395,7 @@ namespace globalmq.marshalling
                 composer.composeUnsignedInteger(baseAddr[i]);
             composer.composeUnsignedInteger(last);
         }
+        public void composeAddressEnd() { }
 
         public void composeInteger(String name, Int64 value, bool separator)
         {

@@ -30,6 +30,90 @@
 
 #include <set>
 
+void generateCsharpStandardMethods(FILE* header, const std::string& type_name)
+{
+
+	fprintf(header, "\tpublic override bool Equals(object obj)\n"
+		"\t{\n"
+		"\t\treturn Equals(obj as %s);\n"
+		"\t}\n", type_name.c_str());
+
+	fprintf(header, "\tpublic static bool operator ==(%s left, %s right)\n", type_name.c_str(), type_name.c_str());
+	fprintf(header,
+		"\t{\n"
+		"\t\tif (ReferenceEquals(left, right))\n"
+		"\t\t\treturn true;\n"
+		"\t\telse if (ReferenceEquals(left, null))\n"
+		"\t\t\treturn false;\n"
+		"\t\telse if (ReferenceEquals(null, right))\n"
+		"\t\t\treturn false;\n"
+		"\t\telse\n"
+		"\t\t\treturn left.Equals(right);\n"
+		"\t}\n");
+
+	fprintf(header, "\tpublic static bool operator !=(%s left, %s right)\n"
+		"\t{\n"
+		"\t\treturn !(left == right);\n"
+		"\t}\n", type_name.c_str(), type_name.c_str());
+
+	fprintf(header, "\tpublic override int GetHashCode()\n"
+		"\t{\n"
+		"\t\t// TODO\n"
+		"\t\tthrow new InvalidOperationException();\n"
+		"\t}\n");
+
+}
+
+void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std::string& type_name)
+{
+	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+		s.type == CompositeType::Type::discriminated_union_case ||
+		s.type == CompositeType::Type::publishable);
+
+	generateCsharpStandardMethods(header, type_name);
+
+	fprintf(header, "\tpublic bool Equals(%s other)\n", type_name.c_str());
+	fprintf(header,
+		"\t{\n"
+		"\t\tif (ReferenceEquals(this, other))\n"
+		"\t\t\treturn true;\n"
+		"\t\telse if (ReferenceEquals(null, other))\n"
+		"\t\t\treturn false;\n"
+		"\t\telse\n"
+		"\t\t\treturn\n");
+
+	auto& mem = s.getMembers();
+	for (auto it = mem.begin(); it != mem.end(); ++it)
+	{
+		//auto& it = s.members[i];
+		assert(*it != nullptr);
+		auto& member = **it;
+
+		if (it != mem.begin())
+			fprintf(header, " &&\n");
+
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			fprintf(header, "\t\t\t\tthis.%s == other.%s", member.name.c_str(), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			fprintf(header, "\t\t\t\tthis.%s.Equals(other.%s)", member.name.c_str(), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::VECTOR:
+			fprintf(header, "\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
+			break;
+		default:
+			assert(false); // not implemented (yet)
+		}
+	}
+	fprintf(header, ";\n\t}\n");
+}
 
 
 namespace {
@@ -922,101 +1006,14 @@ namespace {
 	}
 
 
-	void csharpMsg_generateStandardMethods(FILE* header, CompositeType& s)
-	{
-		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
-			s.type == CompositeType::Type::discriminated_union || s.type == CompositeType::Type::discriminated_union_case);
 
-		std::string name = csharpMsg_getTypeName(s);
-
-		fprintf(header, "\tpublic override bool Equals(object obj)\n"
-			"\t{\n"
-			"\t\treturn Equals(obj as %s);\n"
-			"\t}\n", name.c_str());
-
-		fprintf(header, "\tpublic static bool operator ==(%s left, %s right)\n", name.c_str(), name.c_str());
-		fprintf(header, 
-			"\t{\n"
-			"\t\tif (ReferenceEquals(left, right))\n"
-			"\t\t\treturn true;\n"
-			"\t\telse if (ReferenceEquals(left, null))\n"
-			"\t\t\treturn false;\n"
-			"\t\telse if (ReferenceEquals(null, right))\n"
-			"\t\t\treturn false;\n"
-			"\t\telse\n"
-			"\t\t\treturn left.Equals(right);\n"
-			"\t}\n");
-
-		fprintf(header, "\tpublic static bool operator !=(%s left, %s right)\n"
-			"\t{\n"
-			"\t\treturn !(left == right);\n"
-			"\t}\n", name.c_str(), name.c_str());
-
-		fprintf(header, "\tpublic override int GetHashCode()\n"
-			"\t{\n"
-			"\t\t// TODO\n"
-			"\t\tthrow new InvalidOperationException();\n"
-			"\t}\n");
-
-	}
-
-	void csharpMsg_generateStructEqualsMethod(FILE* header, CompositeType& s)
-	{
-		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
-			s.type == CompositeType::Type::discriminated_union_case);
-
-		std::string name = csharpMsg_getTypeName(s);
-
-		fprintf(header, "\tpublic bool Equals(%s other)\n", name.c_str());
-		fprintf(header, 
-			"\t{\n"
-			"\t\tif (ReferenceEquals(this, other))\n"
-			"\t\t\treturn true;\n"
-			"\t\telse if (ReferenceEquals(null, other))\n"
-			"\t\t\treturn false;\n"
-			"\t\telse\n"
-			"\t\t\treturn\n");
-
-		auto& mem = s.getMembers();
-		for (auto it = mem.begin(); it != mem.end(); ++it)
-		{
-			//auto& it = s.members[i];
-			assert(*it != nullptr);
-			auto& member = **it;
-
-			if(it != mem.begin())
-				fprintf(header, " &&\n");
-
-
-			switch (member.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\t\t\tthis.%s == other.%s", member.name.c_str(), member.name.c_str());
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\t\tthis.%s.Equals(other.%s)", member.name.c_str(), member.name.c_str());
-				break;
-			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
-				break;
-			default:
-				assert(false); // not implemented (yet)
-			}
-		}
-		fprintf(header, ";\n\t}\n");
-	}
-
-	void csharpMsg_generateUnionEqualsMethod(FILE* header, CompositeType& s)
+	void csharpMsg_generateUnionEqualsMethod(FILE* header, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
-		std::string name = csharpMsg_getTypeName(s);
+		generateCsharpStandardMethods(header, type_name);
 
-		fprintf(header, "\tpublic bool Equals(%s other)\n", name.c_str());
+		fprintf(header, "\tpublic bool Equals(%s other)\n", type_name.c_str());
 		fprintf(header,
 			"\t{\n"
 			"\t\tif (ReferenceEquals(this, other))\n"
@@ -1089,32 +1086,30 @@ namespace {
 		if (!checked)
 			throw std::exception();
 
-		std::string name = csharpMsg_getTypeName(s);
+		std::string type_name = csharpMsg_getTypeName(s);
 
 		if(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure)
 			impl_generateMessageCommentBlock(header, s);
 
 		fprintf(header, "public class %s : IEquatable<%s>\n"
-			"{\n", name.c_str(), name.c_str());
+			"{\n", type_name.c_str(), type_name.c_str());
 
 		csharpMsg_generateStructMembers(header, root, s);
 
 		fprintf(header, "\n");
 
-		csharpMsg_generateStructEqualsMethod(header, s);
-		csharpMsg_generateStandardMethods(header, s);
+		generateCsharpStructEqualsMethod(header, s, type_name);
 		
 		csharpMsg_generateStructComposeBase(header, s);
 		csharpMsg_generateStructComposeJson(header, s);
 		csharpMsg_generateStructComposeGmq(header, s);
 
-		std::string type_name = csharpMsg_getTypeName(s);
 		csharpMsg_generateStructParseBase2(header, s, type_name, false);
 		csharpMsg_generateStructParseBase(header, s);
 		csharpMsg_generateStructParseJson(header, s);
 		csharpMsg_generateStructParseGmq(header, s);
 
-		fprintf(header, "} // class %s\n\n", name.c_str());
+		fprintf(header, "} // class %s\n\n", type_name.c_str());
 	}
 
 
@@ -1131,9 +1126,10 @@ namespace {
 
 		impl_generateMessageCommentBlock(header, s);
 
-		// TODO generate structs also
+		std::string type_name = csharpMsg_getTypeName(s);
+
 		fprintf(header, "public class %s : IEquatable<%s>\n"
-			"{\n", s.name.c_str(), s.name.c_str());
+			"{\n", type_name.c_str(), type_name.c_str());
 
 		fprintf(header, "\tpublic enum Variants { ");
 
@@ -1165,8 +1161,7 @@ namespace {
 			csharpMsg_generateStruct(header, root, cs);
 		}
 
-		csharpMsg_generateStandardMethods(header, s);
-		csharpMsg_generateUnionEqualsMethod(header, s);
+		csharpMsg_generateUnionEqualsMethod(header, s, type_name);
 
 		// currentVariant()
 		fprintf(header,
