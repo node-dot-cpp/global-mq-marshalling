@@ -33,8 +33,10 @@ using Xunit;
 namespace TestProject1
 {
 
-    public class TestStructOne
+    public class test_struct_one
     {
+        private const string PathJson = "test_struct_one.json";
+        private const string PathGmq = "test_struct_one.gmq";
         public static mtest.struct_one GetSampleData()
         {
             //create some sample data to be written to message
@@ -80,9 +82,9 @@ namespace TestProject1
 
 
             // uncomment to update file
-            //buffer.writeToFile("struct_one.gmq");
+            //buffer.writeToFile(PathGmq);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile("struct_one.gmq"));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathGmq));
         }
 
         [Fact]
@@ -96,14 +98,14 @@ namespace TestProject1
             ComposeStructOne(composer, msg);
 
             // uncomment to update file
-            //buffer.writeToFile("struct_one.json");
+            //buffer.writeToFile(PathJson);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile("struct_one.json"));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
         }
         [Fact]
         public static void TestGmqParse()
         {
-            SimpleBuffer buffer = SimpleBuffer.readFromFile("struct_one.gmq");
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(PathGmq);
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
             mtest.struct_one msg = mtest.struct_one.parse(parser);
@@ -114,7 +116,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParse()
         {
-            SimpleBuffer buffer = SimpleBuffer.readFromFile("struct_one.json");
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
             mtest.struct_one msg = mtest.struct_one.parse(parser);

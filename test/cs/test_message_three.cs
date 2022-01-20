@@ -33,9 +33,9 @@ using Xunit;
 namespace TestProject1
 {
 
-    public class TestMessageThree
+    public class test_message_three
     {
-
+        private const string PathJson = "test_message_three.json";
         private static void ComposeMessageThree(BufferT buffer, mtest.struct_one msg)
         {
             mtest.test_json.composeMessage_message_three(buffer,
@@ -52,22 +52,22 @@ namespace TestProject1
         [Fact]
         public static void TestJsonCompose()
         {
-            mtest.struct_one msg = TestStructOne.GetSampleData();
+            mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
             ComposeMessageThree(buffer, msg);
 
             // uncomment to update file
-            //buffer.writeToFile("message_three.json");
+            //buffer.writeToFile(PathJson);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile("message_three.json"));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
         }
 
         [Fact]
         public static void TestJsonHandle()
         {
-            mtest.struct_one msg = TestStructOne.GetSampleData();
+            mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
@@ -78,7 +78,7 @@ namespace TestProject1
             mtest.test_json.handleMessage(buffer,
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (ParserBase parser) => {
                     mtest.test_gmq.message_two msg = mtest.test_gmq.message_two.parse(parser);
-                    condition = msg.Equals(TestStructOne.GetSampleData());
+                    condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
                 mtest.test_json.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
@@ -90,7 +90,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonHandleDefault()
         {
-            mtest.struct_one msg = TestStructOne.GetSampleData();
+            mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 

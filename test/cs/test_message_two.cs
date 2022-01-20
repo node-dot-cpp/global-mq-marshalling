@@ -33,8 +33,9 @@ using Xunit;
 namespace TestProject1
 {
 
-    public class TestMessageTwo
+    public class test_message_two
     {
+        private const string PathGmq = "test_message_two.gmq";
         private static void ComposeMessageTwo(BufferT buffer, mtest.struct_one msg)
         {
             mtest.test_gmq.composeMessage_message_two(buffer,
@@ -51,23 +52,23 @@ namespace TestProject1
         [Fact]
         public static void TestGmqCompose()
         {
-            mtest.struct_one msg = TestStructOne.GetSampleData();
+            mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
             ComposeMessageTwo(buffer, msg);
 
             // uncomment to update file
-            //buffer.writeToFile("message_two.gmq");
+            //buffer.writeToFile(PathGmq);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile("message_two.gmq"));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathGmq));
         }
 
 
         [Fact]
         public static void TestGmqHandle()
         {
-            mtest.struct_one msg = TestStructOne.GetSampleData();
+            mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
@@ -78,7 +79,7 @@ namespace TestProject1
             mtest.test_gmq.handleMessage(buffer,
                 mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_two, (ParserBase parser) => {
                     mtest.test_gmq.message_two msg = mtest.test_gmq.message_two.parse(parser);
-                    condition = msg.Equals(TestStructOne.GetSampleData());
+                    condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
                 mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (ParserBase parser) => { Assert.True(false); }),
                 mtest.test_gmq.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
@@ -90,7 +91,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqHandleDefault()
         {
-            mtest.struct_one msg = TestStructOne.GetSampleData();
+            mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 

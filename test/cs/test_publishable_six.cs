@@ -33,10 +33,10 @@ using Xunit;
 namespace TestProject1
 {
 
-    public class publishable_six_test
+    public class test_publishable_six
     {
-        private const string Path = "publishable_six.json";
-        private const string Path1 = "publishable_six_update1.json";
+        private const string Path = "test_publishable_six.json";
+        private const string Path1 = "test_publishable_six_update1.json";
         private const string Path2 = "test_publishable_six_update2.json";
         private const string Path3 = "test_publishable_six_update3.json";
 
