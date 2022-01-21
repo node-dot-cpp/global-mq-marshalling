@@ -1,5 +1,5 @@
-#ifndef test_marshalling_h_71a7abdf_guard
-#define test_marshalling_h_71a7abdf_guard
+#ifndef _idl_generated_h_71a7abdf_guard
+#define _idl_generated_h_71a7abdf_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -676,7 +676,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 			::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "caseData" );
 			switch ( caseId )
 			{
-				case 1: // IDL CASE (null)
+				case 1: // IDL CASE one
 				{
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D1_T>( parser, &(t.D1()), "D1" );
 
@@ -685,7 +685,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D3_T>( parser, &(t.D3()), "D3" );
 
 				}
-				case 2: // IDL CASE (null)
+				case 2: // IDL CASE two
 				{
 					::globalmq::marshalling::impl::parseKey( parser, "Data" );
 					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_Data_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.Data() );
@@ -1551,30 +1551,6 @@ public:
 	}
 };
 
-template<class T, class RegistrarT>
-class StructSix_NodecppWrapperForPublisher : public StructSix_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>
-{
-	using ComposerT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
-	RegistrarT& registrar;
-public:
-	using BufferT = typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT::BufferType;
-	template<class ... ArgsT>
-	StructSix_NodecppWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : StructSix_WrapperForPublisher<T, typename GMQueueStatePublisherSubscriberTypeInfo::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
-	{ 
-		registrar.add( this );
-	}
-
-	virtual ~StructSix_NodecppWrapperForPublisher()
-	{ 
-		registrar.remove( this );
-	}
-
-	virtual void startTick( BufferT&& buff ) { StructSix_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }
-	virtual BufferT&& endTick() { return  StructSix_WrapperForPublisher<T, ComposerT>::endTick(); }
-	virtual void generateStateSyncMessage(ComposerT& composer) { StructSix_WrapperForPublisher<T, ComposerT>::compose(composer); }
-	virtual const char* name() { return StructSix_WrapperForPublisher<T, ComposerT>::name(); }
-};
-
 template<class T, class BufferT>
 class StructSix_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
 {
@@ -1793,51 +1769,6 @@ public:
 	const auto& get_name() { return t.name; }
 	const auto& get_basic() { return t.basic; }
 	const auto& get_aggregate() { return t.aggregate; }
-};
-
-template<class T, class RegistrarT>
-class StructSix_NodecppWrapperForSubscriber : public StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>
-{
-	RegistrarT& registrar;
-public:
-	template<class ... ArgsT>
-	StructSix_NodecppWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )
-	{ 
-		registrar.add( this );
-	}
-
-	virtual ~StructSix_NodecppWrapperForSubscriber()
-	{ 
-		registrar.remove( this );
-	}
-
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
-	{
-		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
-	}
-
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
-	{
-		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::applyMessageWithUpdates(parser);
-	}
-
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser ) 
-	{
-		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
-	}
-
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>& parser )
-	{
-		StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::parseStateSyncMessage(parser);
-	}
-	virtual const char* name()
-	{
-		return StructSix_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
-	}
-	void subscribe(GMQ_COLL string path)
-	{
-		registrar.subscribe( this, path );
-	}
 };
 
 template<class T, class InputBufferT, class ComposerT>
@@ -2342,4 +2273,4 @@ void STRUCT_struct_du_compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // test_marshalling_h_71a7abdf_guard
+#endif // _idl_generated_h_71a7abdf_guard
