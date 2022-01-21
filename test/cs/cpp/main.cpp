@@ -25,14 +25,16 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "test_struct_one.h"
+#include "test_idl_common.h"
 
-
-int main()
+lest::tests& specification()
 {
-    int failures = 0;
-    failures += lest::run( test_struct_one );
+    static lest::tests specs;
+    return specs;
+}
 
 
-    return failures;
+int main(int argc, char * argv[])
+{
+    return lest::run( specification(), argc, argv);
 }

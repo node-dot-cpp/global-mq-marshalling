@@ -25,17 +25,29 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef TEST_STRUCT_ONE_H_INCLUDED
-#define TEST_STRUCT_ONE_H_INCLUDED
-
 #include "test_idl_common.h"
 
 std::string PathJson = "test_struct_one.json";
 std::string PathGmq = "test_struct_one.gmq";
 
+template<class ComposerT>
+void ComposeStructOne(ComposerT& composer, mtest::structures::struct_one& msg)
+{
+	mtest::STRUCT_struct_one_compose(composer,
+		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
+		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
+		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
+		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
+		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
+		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
+		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
+	);
+}
+
+
 const lest::test test_struct_one[] =
 {
-    CASE( "TestJsonCompose" )
+    lest_CASE( "TestJsonCompose" )
     {
         mtest::structures::struct_one msg = GetSampleStructOne();
 
@@ -44,12 +56,12 @@ const lest::test test_struct_one[] =
 
         ComposeStructOne(composer, msg);
 
-        auto b2 = makeBuffer(PathJson);
+        auto b2 = makeBuffer(PathJson, lest_env);
         EXPECT(b == b2);
     },
-    CASE( "TestJsonParse" )
+    lest_CASE( "TestJsonParse" )
     {
-        mtest::Buffer b = makeBuffer(PathJson);
+        mtest::Buffer b = makeBuffer(PathJson, lest_env);
         auto iter = b.getReadIter();
         mtest::JsonParser<mtest::Buffer> parser(iter);
 
@@ -59,7 +71,7 @@ const lest::test test_struct_one[] =
         EXPECT(msg == msg2);
     },
 
-    CASE( "TestGmqCompose" )
+    lest_CASE( "TestGmqCompose" )
     {
         mtest::structures::struct_one msg = GetSampleStructOne();
 
@@ -68,12 +80,12 @@ const lest::test test_struct_one[] =
 
         ComposeStructOne(composer, msg);
 
-        auto b2 = makeBuffer(PathGmq);
+        auto b2 = makeBuffer(PathGmq, lest_env);
         EXPECT(b == b2);
     },
-    CASE( "TestGmqParse" )
+    lest_CASE( "TestGmqParse" )
     {
-        mtest::Buffer b = makeBuffer(PathGmq);
+        mtest::Buffer b = makeBuffer(PathGmq, lest_env);
         auto iter = b.getReadIter();
         mtest::GmqParser<mtest::Buffer> parser(iter);
 
@@ -84,5 +96,4 @@ const lest::test test_struct_one[] =
     },
 };
 
-
-#endif
+lest_MODULE(specification(), test_struct_one);

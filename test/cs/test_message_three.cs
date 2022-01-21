@@ -67,13 +67,9 @@ namespace TestProject1
         [Fact]
         public static void TestJsonHandle()
         {
-            mtest.struct_one msg = test_struct_one.GetSampleData();
-
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            ComposeMessageThree(buffer, msg);
-
             bool condition = false;
+
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
 
             mtest.test_json.handleMessage(buffer,
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (ParserBase parser) => {
@@ -90,13 +86,9 @@ namespace TestProject1
         [Fact]
         public static void TestJsonHandleDefault()
         {
-            mtest.struct_one msg = test_struct_one.GetSampleData();
-
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            ComposeMessageThree(buffer, msg);
-
             bool condition = false;
+
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
 
             mtest.test_json.handleMessage(buffer,
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),

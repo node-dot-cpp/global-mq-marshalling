@@ -28,9 +28,14 @@
 #ifndef TEST_IDL_COMMON_H_INCLUDED
 #define TEST_IDL_COMMON_H_INCLUDED
 
-#include "../../3rdparty/lest/include/lest/lest_basic.hpp"
+
+#include "../../3rdparty/lest/include/lest/lest.hpp"
 #include "idl_generated.h"
 
+inline
+lest::tests& specification();
+
+inline
 mtest::structures::struct_one GetSampleStructOne()
 {
     //create some sample data to be written to message
@@ -73,24 +78,11 @@ mtest::structures::struct_one GetSampleStructOne()
     return msg;
 }
 
-template<class ComposerT>
-void ComposeStructOne(ComposerT& composer, mtest::structures::struct_one& msg)
-{
-	mtest::STRUCT_struct_one_compose(composer,
-		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
-		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
-		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
-		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
-		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
-	);
-}
-
-mtest::Buffer makeBuffer(const std::string& filename)
+inline
+mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 {
     FILE* input_file = fopen(filename.c_str(), "rb");
-    EXPECT(input_file);
+    lest_EXPECT(input_file);
 
     mtest::Buffer b;
     b.read_file(input_file);
@@ -99,11 +91,13 @@ mtest::Buffer makeBuffer(const std::string& filename)
     return b;
 }
 
+inline
 bool operator==(const mtest::structures::point3D& l, const mtest::structures::point3D& r)
 {
     return l.x == r.x && l.y == r.y && l.z == r.z;
 }
 
+inline
 bool operator==(const mtest::structures::point& l, const mtest::structures::point& r)
 {
     return l.x == r.x && l.y == r.y;
@@ -127,6 +121,7 @@ bool operator==(const std::vector<T>& l, const std::vector<T>& r)
     return it1 == l.end() && it2 == r.end();
 }
 
+inline
 bool operator==(const mtest::structures::struct_one& l, const mtest::structures::struct_one& r)
 {
     return (l.firstParam == r.firstParam) &&
@@ -141,10 +136,11 @@ bool operator==(const mtest::structures::struct_one& l, const mtest::structures:
             (l.tenthParam == r.tenthParam);
 }
 
-bool operator==(mtest::Buffer& l, mtest::Buffer& r)
+inline
+bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
 {
-    auto it1 = l.getReadIter();
-    auto it2 = r.getReadIter();
+    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
+    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
 
     while(it1.isData() && it2.isData()) {
         if(*it1 != *it2)
