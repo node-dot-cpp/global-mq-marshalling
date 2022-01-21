@@ -32,42 +32,6 @@ std::string Path1 = "test_publishable_six_update1.json";
 std::string Path2 = "test_publishable_six_update2.json";
 std::string Path3 = "test_publishable_six_update3.json";
 
-mtest::structures::StructSix GetPublishableSix()
-{
-    mtest::structures::StructSix data;
-
-    data.name = "TheName";
-            
-    // data.basic = data.make_basic();
-    data.basic.anInt = -100000;
-    data.basic.anUInt = 100000;
-    data.basic.aReal = 3.14;
-    data.basic.aString = "basic string";
-
-    // data.aggregate = data.make_aggregate();
-    data.aggregate.name = "aggregate name";
-
-    // data.aggregate.theAggregate = data.aggregate.make_theAggregate();
-    data.aggregate.theAggregate.anInt = -100;
-    data.aggregate.theAggregate.anUInt = 100;
-    data.aggregate.theAggregate.aReal = 100;
-    data.aggregate.theAggregate.aString = "basic string inside aggregate";
-    data.aggregate.lastValue = 0;
-
-    return data;
-}
-
-template<class T, class ComposerT>
-class publishable_six_for_test :
-    mtest::StructSix_WrapperForPublisher<T, ComposerT>
-{
-    public:
-    publishable_six_for_test(T& data) : 
-        mtest::StructSix_WrapperForPublisher<T, ComposerT>(data) {}
-
-	virtual void generateStateSyncMessage(ComposerT& composer) { mtest::StructSix_WrapperForPublisher<T, ComposerT>::compose(composer); }
-};
-
 
 const lest::test test_publishable_six[] =
 {
@@ -87,6 +51,22 @@ const lest::test test_publishable_six[] =
 
         auto b2 = makeBuffer(Path, lest_env);
         EXPECT(b == b2);
+    },
+    lest_CASE( "TestJsonParseStateSync" )
+    {
+        using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
+
+        mtest::structures::StructSix data;
+        SubscriberT subs(data);
+
+        mtest::Buffer b = makeBuffer(Path, lest_env);
+        auto it = b.getReadIter();
+        mtest::JsonParser<mtest::Buffer> parser(it);
+
+        subs.applyJsonStateSyncMessage(parser);
+
+        auto data2 = GetPublishableSix();
+        EXPECT(subs.getState() == data2);
     },
 };
 

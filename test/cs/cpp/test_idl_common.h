@@ -79,6 +79,65 @@ mtest::structures::struct_one GetSampleStructOne()
 }
 
 inline
+mtest::structures::StructSix GetPublishableSix()
+{
+    mtest::structures::StructSix data;
+
+    data.name = "TheName";
+            
+    // data.basic = data.make_basic();
+    data.basic.anInt = -100000;
+    data.basic.anUInt = 100000;
+    data.basic.aReal = 3.14;
+    data.basic.aString = "basic string";
+
+    // data.aggregate = data.make_aggregate();
+    data.aggregate.name = "aggregate name";
+
+    // data.aggregate.theAggregate = data.aggregate.make_theAggregate();
+    data.aggregate.theAggregate.anInt = -100;
+    data.aggregate.theAggregate.anUInt = 100;
+    data.aggregate.theAggregate.aReal = 100;
+    data.aggregate.theAggregate.aString = "basic string inside aggregate";
+    data.aggregate.lastValue = 0;
+
+    return data;
+}
+
+template<class T, class ComposerT>
+class publishable_six_for_test :
+    public mtest::StructSix_WrapperForPublisher<T, ComposerT>
+{
+    public:
+    publishable_six_for_test(T& data) : 
+        mtest::StructSix_WrapperForPublisher<T, ComposerT>(data) {}
+
+	virtual void generateStateSyncMessage(ComposerT& composer)
+    {
+        mtest::StructSix_WrapperForPublisher<T, ComposerT>::compose(composer);
+    }
+};
+
+template<class T, class BufferT>
+class subscriber_six_for_test :
+    public mtest::StructSix_WrapperForSubscriber<T, BufferT>
+{
+    public:
+    subscriber_six_for_test(T& data) : 
+        mtest::StructSix_WrapperForSubscriber<T, BufferT>(data) {}
+
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser )
+    {
+        mtest::StructSix_WrapperForSubscriber<T, BufferT>::parseStateSyncMessage(parser);
+    }
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
+    {
+        mtest::StructSix_WrapperForSubscriber<T, BufferT>::parseStateSyncMessage(parser);
+    }
+};
+
+
+inline
 mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 {
     FILE* input_file = fopen(filename.c_str(), "rb");
@@ -134,6 +193,22 @@ bool operator==(const mtest::structures::struct_one& l, const mtest::structures:
             (l.eighthParam == r.eighthParam) &&
             (l.ninethParam == r.ninethParam) &&
             (l.tenthParam == r.tenthParam);
+}
+
+inline
+bool operator==(const mtest::structures::StructSix& l, const mtest::structures::StructSix& r)
+{
+    return (l.name == r.name) &&
+            (l.basic.anInt == r.basic.anInt) &&
+            (l.basic.anUInt == r.basic.anUInt) &&
+            (l.basic.aReal == r.basic.aReal) &&
+            (l.basic.aString == r.basic.aString) &&
+            (l.aggregate.name == r.aggregate.name) &&
+            (l.aggregate.theAggregate.anInt == r.aggregate.theAggregate.anInt) &&
+            (l.aggregate.theAggregate.anUInt == r.aggregate.theAggregate.anUInt) &&
+            (l.aggregate.theAggregate.aReal == r.aggregate.theAggregate.aReal) &&
+            (l.aggregate.theAggregate.aString == r.aggregate.theAggregate.aString) &&
+            (l.aggregate.lastValue == r.aggregate.lastValue);
 }
 
 inline
