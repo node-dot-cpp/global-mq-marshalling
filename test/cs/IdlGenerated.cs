@@ -1773,13 +1773,10 @@ public class BasicTypes_publ : BasicTypes
 		get { return t.anInt; }
 		set
 		{
-			if (value != t.anInt)
-			{
-				t.anInt = value;
-				composer.composeAddress(address, (UInt64)Address.anInt);
-				composer.composeInteger("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.anInt = value;
+			composer.composeAddress(address, (UInt64)Address.anInt);
+			composer.composeInteger("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public UInt64 anUInt
@@ -1787,13 +1784,10 @@ public class BasicTypes_publ : BasicTypes
 		get { return t.anUInt; }
 		set
 		{
-			if (value != t.anUInt)
-			{
-				t.anUInt = value;
-				composer.composeAddress(address, (UInt64)Address.anUInt);
-				composer.composeUnsigned("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.anUInt = value;
+			composer.composeAddress(address, (UInt64)Address.anUInt);
+			composer.composeUnsigned("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public Double aReal
@@ -1801,13 +1795,10 @@ public class BasicTypes_publ : BasicTypes
 		get { return t.aReal; }
 		set
 		{
-			if (value != t.aReal)
-			{
-				t.aReal = value;
-				composer.composeAddress(address, (UInt64)Address.aReal);
-				composer.composeReal("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.aReal = value;
+			composer.composeAddress(address, (UInt64)Address.aReal);
+			composer.composeReal("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public String aString
@@ -1815,13 +1806,10 @@ public class BasicTypes_publ : BasicTypes
 		get { return t.aString; }
 		set
 		{
-			if (value != t.aString)
-			{
-				t.aString = value;
-				composer.composeAddress(address, (UInt64)Address.aString);
-				composer.composeString("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.aString = value;
+			composer.composeAddress(address, (UInt64)Address.aString);
+			composer.composeString("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public static void compose(IPublishableComposer composer, BasicTypes t)
@@ -2026,13 +2014,10 @@ public class AggregateType_publ : AggregateType
 		get { return t.name; }
 		set
 		{
-			if (value != t.name)
-			{
-				t.name = value;
-				composer.composeAddress(address, (UInt64)Address.name);
-				composer.composeString("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.name = value;
+			composer.composeAddress(address, (UInt64)Address.name);
+			composer.composeString("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public BasicTypes theAggregate
@@ -2040,15 +2025,12 @@ public class AggregateType_publ : AggregateType
 		get { return new BasicTypes_publ(t.theAggregate, composer, Publishable.makeAddress(address, (UInt64)Address.theAggregate)); }
 		set
 		{
-			if (value != t.theAggregate)
-			{
-				t.theAggregate = value;
-				composer.composeAddress(address, (UInt64)Address.theAggregate);
-				composer.composePublishableStructBegin("value");
-				BasicTypes_publ.compose(composer, value);
-				composer.composePublishableStructEnd(false);
-				composer.composeAddressEnd();
-			}
+			t.theAggregate = value;
+			composer.composeAddress(address, (UInt64)Address.theAggregate);
+			composer.composePublishableStructBegin("value");
+			BasicTypes_publ.compose(composer, value);
+			composer.composePublishableStructEnd(false);
+			composer.composeAddressEnd();
 		}
 	}
 	public BasicTypes make_theAggregate() { return t.make_theAggregate(); }
@@ -2057,13 +2039,10 @@ public class AggregateType_publ : AggregateType
 		get { return t.lastValue; }
 		set
 		{
-			if (value != t.lastValue)
-			{
-				t.lastValue = value;
-				composer.composeAddress(address, (UInt64)Address.lastValue);
-				composer.composeInteger("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.lastValue = value;
+			composer.composeAddress(address, (UInt64)Address.lastValue);
+			composer.composeInteger("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public static void compose(IPublishableComposer composer, AggregateType t)
@@ -2319,13 +2298,10 @@ public class StructSix_publ : StructSix, StatePublisherBase
 		get { return t.name; }
 		set
 		{
-			if (value != t.name)
-			{
-				t.name = value;
-				composer.composeAddress(address, (UInt64)Address.name);
-				composer.composeString("value", value, false);
-				composer.composeAddressEnd();
-			}
+			t.name = value;
+			composer.composeAddress(address, (UInt64)Address.name);
+			composer.composeString("value", value, false);
+			composer.composeAddressEnd();
 		}
 	}
 	public BasicTypes basic
@@ -2333,15 +2309,12 @@ public class StructSix_publ : StructSix, StatePublisherBase
 		get { return new BasicTypes_publ(t.basic, composer, Publishable.makeAddress(address, (UInt64)Address.basic)); }
 		set
 		{
-			if (value != t.basic)
-			{
-				t.basic = value;
-				composer.composeAddress(address, (UInt64)Address.basic);
-				composer.composePublishableStructBegin("value");
-				BasicTypes_publ.compose(composer, value);
-				composer.composePublishableStructEnd(false);
-				composer.composeAddressEnd();
-			}
+			t.basic = value;
+			composer.composeAddress(address, (UInt64)Address.basic);
+			composer.composePublishableStructBegin("value");
+			BasicTypes_publ.compose(composer, value);
+			composer.composePublishableStructEnd(false);
+			composer.composeAddressEnd();
 		}
 	}
 	public BasicTypes make_basic() { return t.make_basic(); }
@@ -2350,15 +2323,12 @@ public class StructSix_publ : StructSix, StatePublisherBase
 		get { return new AggregateType_publ(t.aggregate, composer, Publishable.makeAddress(address, (UInt64)Address.aggregate)); }
 		set
 		{
-			if (value != t.aggregate)
-			{
-				t.aggregate = value;
-				composer.composeAddress(address, (UInt64)Address.aggregate);
-				composer.composePublishableStructBegin("value");
-				AggregateType_publ.compose(composer, value);
-				composer.composePublishableStructEnd(false);
-				composer.composeAddressEnd();
-			}
+			t.aggregate = value;
+			composer.composeAddress(address, (UInt64)Address.aggregate);
+			composer.composePublishableStructBegin("value");
+			AggregateType_publ.compose(composer, value);
+			composer.composePublishableStructEnd(false);
+			composer.composeAddressEnd();
 		}
 	}
 	public AggregateType make_aggregate() { return t.make_aggregate(); }

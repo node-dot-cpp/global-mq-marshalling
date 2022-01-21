@@ -68,6 +68,139 @@ const lest::test test_publishable_six[] =
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);
     },
+
+    lest_CASE( "TestJsonComposeUpdate1" )
+    {
+        auto data = GetPublishableSix();
+
+        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
+
+        PublishableT publ(data);
+
+        publ.startTick(mtest::Buffer());
+        publ.get4set_aggregate().get4set_theAggregate().set_anInt(-101);
+        mtest::Buffer b = publ.endTick();
+
+
+        auto b2 = makeBuffer(Path1, lest_env);
+        EXPECT(b == b2);
+    },
+    lest_CASE( "TestJsonParseUpdate1" )
+    {
+        using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
+
+        auto data = GetPublishableSix();
+
+        SubscriberT subs(data);
+
+        mtest::Buffer b = makeBuffer(Path1, lest_env);
+        auto it = b.getReadIter();
+        mtest::JsonParser<mtest::Buffer> parser(it);
+
+        subs.applyJsonMessageWithUpdates(parser);
+
+        auto data2 = GetPublishableSix();
+        EXPECT_NOT(subs.getState() == data2);
+
+        data2.aggregate.theAggregate.anInt = -101;
+        EXPECT(subs.getState() == data2);
+    },
+    lest_CASE( "TestJsonComposeUpdate2" )
+    {
+        auto data = GetPublishableSix();
+
+        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
+
+        PublishableT publ(data);
+
+        publ.startTick(mtest::Buffer());
+
+        publ.get4set_aggregate().set_name("changed name");
+
+        publ.get4set_basic().set_anInt(-2);
+        publ.get4set_basic().set_anUInt(3);
+        publ.get4set_basic().set_aReal(4.0);
+
+        mtest::structures::BasicTypes  aggr;
+        aggr.anInt = -200;
+        aggr.anUInt = 300;
+        aggr.aReal = 400.0;
+        aggr.aString = "new part";
+        publ.get4set_aggregate().set_theAggregate(aggr);
+
+        mtest::Buffer b = publ.endTick();
+
+
+        auto b2 = makeBuffer(Path2, lest_env);
+        EXPECT(b == b2);
+    },
+    lest_CASE( "TestJsonParseUpdate2" )
+    {
+        using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
+
+        auto data = GetPublishableSix();
+
+        SubscriberT subs(data);
+
+        mtest::Buffer b = makeBuffer(Path2, lest_env);
+        auto it = b.getReadIter();
+        mtest::JsonParser<mtest::Buffer> parser(it);
+
+        subs.applyJsonMessageWithUpdates(parser);
+
+        auto data2 = GetPublishableSix();
+        EXPECT_NOT(subs.getState() == data2);
+
+        data2.aggregate.name = "changed name";
+
+        data2.basic.anInt = -2;
+        data2.basic.anUInt = 3;
+        data2.basic.aReal = 4.0;
+
+        data2.aggregate.theAggregate.anInt = -200;
+        data2.aggregate.theAggregate.anUInt = 300;
+        data2.aggregate.theAggregate.aReal = 400.0;
+        data2.aggregate.theAggregate.aString = "new part";
+
+        EXPECT(subs.getState() == data2);
+    },
+    lest_CASE( "TestComposeNoChangeUpdate3" )
+    {
+        auto data = GetPublishableSix();
+
+        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
+
+        PublishableT publ(data);
+
+        publ.startTick(mtest::Buffer());
+        // no changes
+        mtest::Buffer b = publ.endTick();
+
+
+        auto b2 = makeBuffer(Path3, lest_env);
+        EXPECT(b == b2);
+    },
+    lest_CASE( "TestJsonParseNoChangeUpdate3" )
+    {
+        using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
+
+        auto data = GetPublishableSix();
+
+        SubscriberT subs(data);
+
+        mtest::Buffer b = makeBuffer(Path3, lest_env);
+        auto it = b.getReadIter();
+        mtest::JsonParser<mtest::Buffer> parser(it);
+
+        subs.applyJsonMessageWithUpdates(parser);
+
+        auto data2 = GetPublishableSix();
+        EXPECT(subs.getState() == data2);
+    },
+
 };
 
 lest_MODULE(specification(), test_publishable_six);

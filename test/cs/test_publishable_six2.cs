@@ -210,20 +210,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
 
             publ.startTick(buffer);
-
-            // set with same value
-            Int64 tmp1 = publ.basic.anInt;
-            publ.basic.anInt = tmp1;
-
-            UInt64 tmp2 = publ.basic.anUInt;
-            publ.basic.anUInt = tmp2;
-
-            Double tmp3 = publ.basic.aReal;
-            publ.basic.aReal = tmp3;
-
-            String tmp4 = publ.basic.aString;
-            publ.basic.aString = tmp4;
-
+            // no change
             publ.endTick();
 
             // uncomment to update file
