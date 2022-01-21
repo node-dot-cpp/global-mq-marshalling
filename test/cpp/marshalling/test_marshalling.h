@@ -225,6 +225,15 @@ template<typename StateT, typename MemberT> concept has_update_notifier_call_for
 template<typename T> concept has_void_update_notifier_call_for_properties = requires(T t) { { t.notifyUpdated_properties() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_properties = requires { { std::declval<StateT>().notifyUpdated_properties(std::declval<MemberT>()) }; };
 	//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!
+template<typename T> concept has_value_updated_void_notifier_call_for_properties = requires(T t) { { t.notifyValueUpdated_properties() }; };
+template<typename StateT, typename KeyT> concept has_value_updated_notifier_call_for_properties = requires { { std::declval<StateT>().notifyValueUpdated_properties(std::declval<KeyT>()) }; };
+template<typename StateT, typename KeyT, typename ValueT> concept has_full_value_updated_notifier_call_for_properties = requires { { std::declval<StateT>().notifyValueUpdated_properties(std::declval<KeyT>(), std::declval<ValueT>()) }; };
+template<typename T> concept has_void_insert_notifier_call_for_properties = requires(T t) { { t.notifyInserted_properties() }; };
+template<typename StateT, typename KeyT> concept has_insert_notifier_call2_for_properties = requires { { std::declval<StateT>().notifyInserted_properties(std::declval<KeyT>()) }; };
+template<typename StateT, typename KeyT, typename ValueT> concept has_insert_notifier_call3_for_properties = requires { { std::declval<StateT>().notifyInserted_properties(std::declval<KeyT>(), std::declval<ValueT>()) }; };
+template<typename T> concept has_void_removed_notifier_call_for_properties = requires(T t) { { t.notifyRemoved_properties() }; };
+template<typename StateT, typename KeyT> concept has_removed_notifier_call2_for_properties = requires { { std::declval<StateT>().notifyErased_properties(std::declval<KeyT>()) }; };
+template<typename StateT, typename KeyT, typename ValueT> concept has_removed_notifier_call3_for_properties = requires { { std::declval<StateT>().notifyErased_properties(std::declval<KeyT>(), std::declval<ValueT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_pt3d_1 = requires(T t) { { t.notifyUpdated_pt3d_1() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_pt3d_1 = requires { { std::declval<StateT>().notifyUpdated_pt3d_1(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_signedInts = requires(T t) { { t.notifyUpdated_signedInts() }; };
@@ -1885,6 +1894,15 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static constexpr bool has_any_notifier_for_properties = has_void_update_notifier_for_properties || has_update_notifier_for_properties;
 		using propertiesT = decltype(T::properties);
 		//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!
+		static constexpr bool has_void_insert_notifier_for_properties = has_void_insert_notifier_call_for_properties<T>;
+		static constexpr bool has_insert_notifier2_for_properties = has_insert_notifier_call2_for_properties<T, typename propertiesT::key_type&>;
+		static constexpr bool has_insert_notifier3_for_properties = has_insert_notifier_call3_for_properties<T, typename propertiesT::key_type&, typename propertiesT::mapped_type&>;
+		static constexpr bool has_void_removed_notifier_for_properties = has_void_removed_notifier_call_for_properties<T>;
+		static constexpr bool has_removed_notifier2_for_properties = has_removed_notifier_call2_for_properties<T, typename propertiesT::key_type>;
+		static constexpr bool has_removed_notifier3_for_properties = has_removed_notifier_call3_for_properties<T, typename propertiesT::key_type, typename propertiesT::mapped_type&>;
+		static constexpr bool has_void_value_updated_notifier_for_properties = has_value_updated_void_notifier_call_for_properties<T>;
+		static constexpr bool has_value_updated_notifier_for_properties = has_value_updated_notifier_call_for_properties<T, typename propertiesT::key_type&>;
+		static constexpr bool has_full_value_updated_notifier_for_properties = has_full_value_updated_notifier_call_for_properties<T, typename propertiesT::key_type&, typename propertiesT::mapped_type&>;
 		static constexpr bool has_void_update_notifier_for_tags = has_void_update_notifier_call_for_tags<T>;
 		static constexpr bool has_update_notifier_for_tags = has_update_notifier_call_for_tags<T, decltype(T::tags)>;
 		static constexpr bool has_any_notifier_for_tags = has_void_update_notifier_for_tags || has_update_notifier_for_tags;
@@ -1973,6 +1991,15 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 		static constexpr bool has_any_notifier_for_properties = has_void_update_notifier_for_properties || has_update_notifier_for_properties;
 		using propertiesT = decltype(T::properties);
 		//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!
+		static constexpr bool has_void_insert_notifier_for_properties = has_void_insert_notifier_call_for_properties<T>;
+		static constexpr bool has_insert_notifier2_for_properties = has_insert_notifier_call2_for_properties<T, typename propertiesT::key_type&>;
+		static constexpr bool has_insert_notifier3_for_properties = has_insert_notifier_call3_for_properties<T, typename propertiesT::key_type&, typename propertiesT::mapped_type&>;
+		static constexpr bool has_void_removed_notifier_for_properties = has_void_removed_notifier_call_for_properties<T>;
+		static constexpr bool has_removed_notifier2_for_properties = has_removed_notifier_call2_for_properties<T, typename propertiesT::key_type>;
+		static constexpr bool has_removed_notifier3_for_properties = has_removed_notifier_call3_for_properties<T, typename propertiesT::key_type, typename propertiesT::mapped_type&>;
+		static constexpr bool has_void_value_updated_notifier_for_properties = has_value_updated_void_notifier_call_for_properties<T>;
+		static constexpr bool has_value_updated_notifier_for_properties = has_value_updated_notifier_call_for_properties<T, typename propertiesT::key_type&>;
+		static constexpr bool has_full_value_updated_notifier_for_properties = has_full_value_updated_notifier_call_for_properties<T, typename propertiesT::key_type&, typename propertiesT::mapped_type&>;
 		static constexpr bool has_void_update_notifier_for_tags = has_void_update_notifier_call_for_tags<T>;
 		static constexpr bool has_update_notifier_for_tags = has_update_notifier_call_for_tags<T, decltype(T::tags)>;
 		static constexpr bool has_any_notifier_for_tags = has_void_update_notifier_for_tags || has_update_notifier_for_tags;
@@ -2030,12 +2057,10 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 									typename decltype(T::properties)::key_type key;
 									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
 									t.properties.erase( key );
-									/*if constexpr ( has_removed_notifier3_for_properties )
-										t.notifyRemoved_properties( pos, oldVal );
 									if constexpr ( has_removed_notifier2_for_properties )
-										t.notifyRemoved_properties( pos );
-									if constexpr ( has_void_removeed_notifier_for_properties )
-										t.notifyRemoved_properties();*/
+										t.notifyRemoved_properties( key );
+									if constexpr ( has_void_removed_notifier_for_properties )
+										t.notifyRemoved_properties();
 									if constexpr ( alwaysCollectChanges )
 										currentChanged = true;
 									break;

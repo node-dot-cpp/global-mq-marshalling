@@ -227,6 +227,17 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock_MemberIte
 		{
 			fprintf( header, "%susing %sT = %s;\n", offset, member->name.c_str(), impl_templateMemberTypeName( "T", *member).c_str() );
 			fprintf( header, "%s//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!\n", offset );
+			fprintf( header, "%sstatic constexpr bool has_void_insert_notifier_for_%s = has_void_insert_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_insert_notifier2_for_%s = has_insert_notifier_call2_for_%s<T, typename %sT::key_type&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_insert_notifier3_for_%s = has_insert_notifier_call3_for_%s<T, typename %sT::key_type&, typename %sT::mapped_type&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str(), member->name.c_str() );
+
+			fprintf( header, "%sstatic constexpr bool has_void_removed_notifier_for_%s = has_void_removed_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_removed_notifier2_for_%s = has_removed_notifier_call2_for_%s<T, typename %sT::key_type>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_removed_notifier3_for_%s = has_removed_notifier_call3_for_%s<T, typename %sT::key_type, typename %sT::mapped_type&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str(), member->name.c_str() );
+
+			fprintf( header, "%sstatic constexpr bool has_void_value_updated_notifier_for_%s = has_value_updated_void_notifier_call_for_%s<T>;\n", offset, member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_value_updated_notifier_for_%s = has_value_updated_notifier_call_for_%s<T, typename %sT::key_type&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str() );
+			fprintf( header, "%sstatic constexpr bool has_full_value_updated_notifier_for_%s = has_full_value_updated_notifier_call_for_%s<T, typename %sT::key_type&, typename %sT::mapped_type&>;\n", offset, member->name.c_str(), member->name.c_str(), member->name.c_str(), member->name.c_str() );
 		}
 	}
 }
@@ -246,6 +257,15 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 	*	has_element_updated_void_notifier_call_for_%s   notifyElementUpdated_%s<T>()
 	*	has_element_updated_notifier_call_for_%s        notifyElementUpdated_%s<T>(index_type_for_array_notifiers)
 	*	has_full_element_updated_notifier_call_for_%s   notifyElementUpdated_%s<T, MemberT>(index_type_for_array_notifiers, MemberT)
+	*	// for dictionaries
+	*	has_void_insert_notifier_call_for_%s            notifyInserted_%s<T>()
+	*	has_insert_notifier_call_for_%s                 notifyInserted_%s<T>(index_type_for_array_notifiers, index_type_for_array_notifiers)
+	*	has_void_removed_notifier_call_for_%s           notifyRemoved_%s<T>()
+	*	has_removed_notifier_call2_for_%s               notifyRemoved_%s<T>(index_type_for_array_notifiers, index_type_for_array_notifiers)
+	*	has_removed_notifier_call3_for_%s               notifyRemoved_%s<T, MemberT>(index_type_for_array_notifiers, index_type_for_array_notifiers, MemberT>()	
+	*	has_value_updated_void_notifier_call_for_%s     notifyValueUpdated_%s<T>()
+	*	has_value_updated_notifier_call_for_%s          notifyValueUpdated_%s<T>(index_type_for_array_notifiers)
+	*	has_full_value_updated_notifier_call_for_%s     notifyValueUpdated_%s<T, MemberT>(index_type_for_array_notifiers, MemberT)
 	*/
 	assert( s.type == CompositeType::Type::publishable || ( ( s.type == CompositeType::Type::structure || s.isDiscriminatedUnion() ) && s.isStruct4Publishing ) ); // TODO: revise DU
 	if ( s.isDiscriminatedUnion() )
@@ -533,20 +553,12 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseKey<ParserT, %s, %s>( parser, key );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 	fprintf( header, "%s\t\t\t\tt.%s.erase( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\t/*if constexpr ( has_removed_notifier3_for_%s )\n", offset.c_str(), member.name.c_str() );
-//	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\tt.notifyRemoved_%s( pos, oldVal );\n", offset.c_str(), member.name.c_str() );
-//	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
+//	fprintf( header, "%s\t\t\t\tif constexpr ( has_removed_notifier3_for_%s )\n", offset.c_str(), member.name.c_str() );
+//	fprintf( header, "%s\t\t\t\t\tt.notifyRemoved_%s( pos, oldVal );\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\tif constexpr ( has_removed_notifier2_for_%s )\n", offset.c_str(), member.name.c_str() );
-//	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-//	fprintf( header, "%s\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\t\tt.notifyRemoved_%s( pos );\n", offset.c_str(), member.name.c_str() );
-//	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tif constexpr ( has_void_removeed_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-//	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-//	fprintf( header, "%s\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\t\tt.notifyRemoved_%s();*/\n", offset.c_str(), member.name.c_str() );
-//	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\t\tt.notifyRemoved_%s( key );\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\tif constexpr ( has_void_removed_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\tt.notifyRemoved_%s();\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\tcurrentChanged = true;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
@@ -2713,6 +2725,44 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 		if ( namesOfDictionaries.find( name ) != namesOfDictionaries.end() )
 		{
 			fprintf( header, "\t//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!\n" );
+			fprintf( header, 
+				"template<typename T> concept has_value_updated_void_notifier_call_for_%s = requires(T t) { { t.notifyValueUpdated_%s() }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename KeyT> concept has_value_updated_notifier_call_for_%s = requires { { std::declval<StateT>().notifyValueUpdated_%s(std::declval<KeyT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename KeyT, typename ValueT> concept has_full_value_updated_notifier_call_for_%s = requires { { std::declval<StateT>().notifyValueUpdated_%s(std::declval<KeyT>(), std::declval<ValueT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+
+			fprintf( header, 
+				"template<typename T> concept has_void_insert_notifier_call_for_%s = requires(T t) { { t.notifyInserted_%s() }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename KeyT> concept has_insert_notifier_call2_for_%s = requires { { std::declval<StateT>().notifyInserted_%s(std::declval<KeyT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename KeyT, typename ValueT> concept has_insert_notifier_call3_for_%s = requires { { std::declval<StateT>().notifyInserted_%s(std::declval<KeyT>(), std::declval<ValueT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+
+			fprintf( header, 
+				"template<typename T> concept has_void_removed_notifier_call_for_%s = requires(T t) { { t.notifyRemoved_%s() }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename KeyT> concept has_removed_notifier_call2_for_%s = requires { { std::declval<StateT>().notifyErased_%s(std::declval<KeyT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
+			fprintf( header, 
+				"template<typename StateT, typename KeyT, typename ValueT> concept has_removed_notifier_call3_for_%s = requires { { std::declval<StateT>().notifyErased_%s(std::declval<KeyT>(), std::declval<ValueT>()) }; };\n",
+				name.c_str(), name.c_str()
+			);
 		}
 	}
 	fprintf( header, "\n" );
