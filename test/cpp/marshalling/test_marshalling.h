@@ -1229,7 +1229,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 													{
 														t.notifyElementUpdated_tags( pos, oldValue );
 														if constexpr ( has_element_updated_notifier_for_tags )
-															t.notifyElementUpdated_tags();
+															t.notifyElementUpdated_tags( pos );
 														if constexpr ( has_void_element_updated_notifier_for_tags )
 															t.notifyElementUpdated_tags();
 													}
@@ -2052,11 +2052,16 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 							{
 								case ActionOnDictionary::remove:
 								{
-									decltype(T::properties) oldVal;
-									::globalmq::marshalling::impl::copyDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( t.properties, oldVal );
 									typename decltype(T::properties)::key_type key;
 									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
+									auto f = t.properties.find( key );
+									if ( f == t.properties.end() )
+										throw std::exception();
+									typename decltype(T::properties)::key_type oldVal;
+									oldVal = f->second;
 									t.properties.erase( key );
+									if constexpr ( has_removed_notifier3_for_properties )
+										t.notifyRemoved_properties( key, oldVal );
 									if constexpr ( has_removed_notifier2_for_properties )
 										t.notifyRemoved_properties( key );
 									if constexpr ( has_void_removed_notifier_for_properties )
@@ -2069,11 +2074,47 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 								{
 									typename decltype(T::properties)::key_type key;
 									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
-									typename decltype(T::properties)::mapped_type value;
-									PublishableDictionaryProcessor::parseValue<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value );
 									auto f = t.properties.find( key );
-									if ( f != t.properties.end() )
-										f->second = value;
+									if ( f == t.properties.end() )
+										throw std::exception();
+									typename decltype(T::properties)::mapped_type& value = f->second;
+									typename decltype(T::properties)::mapped_type oldValue;
+									oldValue = value;
+									if constexpr ( has_full_value_updated_notifier_for_properties )
+									{
+										currentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_properties( key, oldValue );
+											if constexpr ( has_value_updated_notifier_for_properties )
+												t.notifyElementUpdated_properties( key );
+											if constexpr ( has_void_value_updated_notifier_for_properties )
+												t.notifyElementUpdated_properties();
+										}
+									}
+									else if constexpr ( has_value_updated_notifier_for_properties )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
+										if ( currentChanged )
+										{
+											t.notifyElementUpdated_properties( key );
+											if constexpr ( has_void_value_updated_notifier_for_properties )
+												t.notifyElementUpdated_properties();
+										}
+									}
+									else if constexpr ( has_void_value_updated_notifier_for_properties )
+									{
+										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
+										if ( currentChanged )
+											t.notifyElementUpdated_properties();
+									}
+									else
+									{
+										if constexpr ( alwaysCollectChanges )
+											currentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
+										else
+											PublishableDictionaryProcessor::parseValue<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value );
+									}
 									break;
 								}
 								case ActionOnDictionary::insert:
@@ -2082,7 +2123,25 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 									PublishableDictionaryProcessor::parseKey<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, key );
 									typename decltype(T::properties)::mapped_type value;
 									PublishableDictionaryProcessor::parseValue<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value );
-									t.properties.insert( std::make_pair( key, value ) );
+									if constexpr ( has_insert_notifier3_for_properties )
+									{
+										decltype(T::properties) oldVal;
+										::globalmq::marshalling::impl::copyDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( t.properties, oldVal );
+										t.properties.insert( std::make_pair( key, value ) );
+										t.notifyInserted_properties( key, oldVal );
+										if constexpr ( has_insert_notifier2_for_properties )
+											t.notifyInserted_properties( key );
+										if constexpr ( has_void_insert_notifier_for_properties )
+											t.notifyInserted_properties();
+									}
+									else
+									{
+										t.properties.insert( std::make_pair( key, value ) );
+										if constexpr ( has_insert_notifier2_for_properties )
+											t.notifyInserted_properties( key );
+										if constexpr ( has_void_insert_notifier_for_properties )
+											t.notifyInserted_properties();
+									}
 									if constexpr ( alwaysCollectChanges )
 										currentChanged = true;
 									break;
@@ -2670,7 +2729,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 													{
 														t.notifyElementUpdated_vp_2( pos, oldValue );
 														if constexpr ( has_element_updated_notifier_for_vp_2 )
-															t.notifyElementUpdated_vp_2();
+															t.notifyElementUpdated_vp_2( pos );
 														if constexpr ( has_void_element_updated_notifier_for_vp_2 )
 															t.notifyElementUpdated_vp_2();
 													}
@@ -3523,7 +3582,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 										{
 											t.notifyElementUpdated_sizes( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_sizes )
-												t.notifyElementUpdated_sizes();
+												t.notifyElementUpdated_sizes( pos );
 											if constexpr ( has_void_element_updated_notifier_for_sizes )
 												t.notifyElementUpdated_sizes();
 										}
@@ -3834,7 +3893,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 										{
 											t.notifyElementUpdated_signedInts( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_signedInts )
-												t.notifyElementUpdated_signedInts();
+												t.notifyElementUpdated_signedInts( pos );
 											if constexpr ( has_void_element_updated_notifier_for_signedInts )
 												t.notifyElementUpdated_signedInts();
 										}
@@ -5747,7 +5806,7 @@ public:
 										{
 											t.notifyElementUpdated_vector_of_int( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_vector_of_int )
-												t.notifyElementUpdated_vector_of_int();
+												t.notifyElementUpdated_vector_of_int( pos );
 											if constexpr ( has_void_element_updated_notifier_for_vector_of_int )
 												t.notifyElementUpdated_vector_of_int();
 										}
@@ -5914,7 +5973,7 @@ public:
 										{
 											t.notifyElementUpdated_vector_struct_point3dreal( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_vector_struct_point3dreal )
-												t.notifyElementUpdated_vector_struct_point3dreal();
+												t.notifyElementUpdated_vector_struct_point3dreal( pos );
 											if constexpr ( has_void_element_updated_notifier_for_vector_struct_point3dreal )
 												t.notifyElementUpdated_vector_struct_point3dreal();
 										}

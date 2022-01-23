@@ -456,14 +456,14 @@ public:
 			static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 	}
 
-	/*template<class ParserT, class DictionaryT, class ProcType>
+	template<class ParserT, class DictionaryT, class ProcType>
 	static
-	bool parseSingleValueAndCompare( ParserT& parser, typename DictionaryT::mapped_type& value, const typename DictionaryT::mapped_type& oldValue ) { 
+	bool parseValueAndCompare( ParserT& parser, typename DictionaryT::mapped_type& value, const typename DictionaryT::mapped_type& oldValue ) { 
 		if constexpr ( std::is_base_of<impl::StructType, ProcType>::value )
 		{
-			impl::parseStructBegin( parser );
+			impl::parsePublishableStructBegin( parser, "value" );
 			ProcType::parse( parser, value );
-			impl::parseStructEnd( parser );
+			impl::parsePublishableStructEnd( parser );
 			return !ProcType::isSame( value, oldValue );
 		}
 		else 
@@ -480,7 +480,7 @@ public:
 				static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 			return value != oldValue;
 		}
-	}*/
+	}
 
 	template<class ComposerTT, class DictionaryT, class KeyTypeT, class ValueTypeT>
 	static
