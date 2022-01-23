@@ -462,8 +462,8 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary( FILE* header, Roo
 	fprintf( header, "%s%s oldDictionaryVal;\n", offset.c_str(),  impl_templateMemberTypeName( "T", member).c_str() );
 	fprintf( header, "%sbool currentChanged = false;\n", offset.c_str() );
 	fprintf( header, "%sconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
-	fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
-	fprintf( header, "%s\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+//	fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
+//	fprintf( header, "%s\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
 fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n", offset.c_str() );
 
@@ -654,7 +654,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseKey<ParserT, %s, %s>( parser, key );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 
 	fprintf( header, "%s\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
@@ -975,71 +975,76 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* 
 //	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
 	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
-	const char* libType = paramTypeToLibType( member.type.dictionaryValueKind );
+	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
 	assert( member.type.structIdx < root.structs.size() );
-	fprintf( header, "%sif ( addr.size() >= %s1 ) // one of actions over elements of the dictionary\n", offset.c_str(), offsetPlusStr );
+	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the dictionary\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s{\n", offset.c_str() );
-
-	fprintf( header, "%s\tif ( addr.size() > %s2 )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\tthrow std::exception();\n", offset.c_str() );
 	fprintf( header, "%s\tsize_t action = addr[%s1];\n", offset.c_str(), offsetPlusStr );
 
-#if 0 // TODO: revise for dictionary
 	fprintf( header, "%s\tif ( addr.size() > %s2 ) // update for a value of a particular dictionary element\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s\t{\n", offset.c_str() );
 
-	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT || member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+	if ( member.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
-		fprintf( header, "%s\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-		fprintf( header, "%s\t\t%s::parse<ParserT, typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\tthrow std::exception(); // so far unsupported and, therefore, unexpected\n", offset.c_str() );
 	}
 	else
-		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
+		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
+				
 	fprintf( header, "%s\t}\n", offset.c_str() );
-	fprintf( header, "%s\telse // update of one or more values as a whole\n", offset.c_str() );
-#endif				
+	fprintf( header, "%s\telse // update of one or more elelments as a whole\n", offset.c_str() );
 	fprintf( header, "%s\t{\n", offset.c_str() );
-//	fprintf( header, "%s\t\tsize_t action;\n", offset.c_str() );
-//	fprintf( header, "%s\t\t::globalmq::marshalling::impl::parseActionInPublishable( parser, action );\n", offset.c_str() );
-#if 0 // TODO: revise for dictionary
 	fprintf( header, "%s\t\tswitch ( action )\n", offset.c_str() );
 	fprintf( header, "%s\t\t{\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::remove:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseKey<ParserT, %s, %s>( parser, key );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\tif ( f == t.%s.end() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tthrow std::exception();\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tt.%s.erase( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::update_value:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseKey<ParserT, %s, %s>( parser, key );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\tif ( f == t.%s.end() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tthrow std::exception();\n", offset.c_str() );
+
+	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type& value = f->second;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::insert:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::value_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-	fprintf( header, "%s\t\t\t\tPublishableVectorProcessor::parseSingleValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
-				
-	fprintf( header, "%s\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseKey<ParserT, %s, %s>( parser, key );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
+	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
+	
 	fprintf( header, "%s\t\t\tdefault:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\tthrow std::exception();\n", offset.c_str() );
 	fprintf( header, "%s\t\t}\n", offset.c_str() );
-#endif
 	fprintf( header, "%s\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n", offset.c_str() );
 	fprintf( header, "%s\t}\n", offset.c_str() );
 			
 	fprintf( header, "%s}\n", offset.c_str() );
+	
 	fprintf( header, "%selse // replacement of the whole dictionary\n", offset.c_str() );
 	fprintf( header, "%s{\n", offset.c_str() );
 	fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryBegin( parser );\n", offset.c_str() );
-	fprintf( header, "%s\tPublishableDictionaryProcessor::parse<ParserT, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "\n" );
+	fprintf( header, "%s\tPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "\n" );
 	fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n", offset.c_str() );
 	fprintf( header, "%s}\n", offset.c_str() );
 	fprintf( header, "\n" );

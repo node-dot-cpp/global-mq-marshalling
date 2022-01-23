@@ -2036,8 +2036,6 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 					decltype(T::properties) oldDictionaryVal;
 					bool currentChanged = false;
 					constexpr bool alwaysCollectChanges = has_any_notifier_for_properties;
-					if constexpr( alwaysCollectChanges )
-						::globalmq::marshalling::impl::copyDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( t.properties, oldDictionaryVal );
 					//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 					if ( addr.size() > offset + 1 ) // one of actions over elements of the dictionary
 					{
