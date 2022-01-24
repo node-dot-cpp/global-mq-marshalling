@@ -95,7 +95,7 @@ namespace TestProject1
             publ.generateStateSyncMessage(composer);
 
             // uncomment to update file
-            buffer.writeToFile(Path);
+            //buffer.writeToFile(Path);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(Path));
         }
@@ -131,7 +131,7 @@ namespace TestProject1
             publ.endTick();
 
             // uncomment to update file
-            buffer.writeToFile(Path1);
+            //buffer.writeToFile(Path1);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(Path1));
         }
@@ -182,7 +182,7 @@ namespace TestProject1
             publ.endTick();
 
             //uncomment to update file
-            buffer.writeToFile(Path2);
+            //buffer.writeToFile(Path2);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(Path2));
         }

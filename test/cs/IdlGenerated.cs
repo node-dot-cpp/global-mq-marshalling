@@ -1752,7 +1752,7 @@ public class BasicTypes_subs : BasicTypes
 			default:
 				throw new Exception();
 		}
-	return changed;
+		return changed;
 	}
 } // class BasicTypes_subs
 
@@ -1974,7 +1974,7 @@ public class point3D_subs : point3D
 			default:
 				throw new Exception();
 		}
-	return changed;
+		return changed;
 	}
 } // class point3D_subs
 
@@ -2203,7 +2203,7 @@ public class AggregateType_subs : AggregateType
 			default:
 				throw new Exception();
 		}
-	return changed;
+		return changed;
 	}
 } // class AggregateType_subs
 
@@ -2463,7 +2463,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 			default:
 				throw new Exception();
 		}
-	return changed;
+		return changed;
 	}
 	public String stateSubscriberName() { return "StructSix"; }
 	public UInt64 stateTypeID() { return 6; }
@@ -2702,9 +2702,11 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		t.structVec = t.make_structVec();
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
+				parser.parseStructBegin();
 				point3D val = t.make_structVec_element();
 				point3D_subs.parseForStateSync(parser, val);
 				t.structVec.Add(val);
+				parser.parseStructEnd();
 			}
 		);
 	}
@@ -2751,9 +2753,11 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		IList<point3D> newVal = t.make_structVec();
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
+				parser.parseStructBegin();
 				point3D val = t.make_structVec_element();
 				point3D_subs.parseForStateSync(parser, val);
 				t.structVec.Add(val);
+				parser.parseStructEnd();
 			}
 		);
 		if(!Enumerable.SequenceEqual(newVal, t.structVec))
@@ -2894,9 +2898,11 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 					parser.parseVector("structVec",
 						(IPublishableParser parser, int index) =>
 						{
+							parser.parseStructBegin();
 							point3D val = t.make_structVec_element();
 							point3D_subs.parseForStateSync(parser, val);
 							t.structVec.Add(val);
+							parser.parseStructEnd();
 						}
 					);
 					if(!Enumerable.SequenceEqual(newVal, t.structVec))
@@ -2937,7 +2943,7 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 			default:
 				throw new Exception();
 		}
-	return changed;
+		return changed;
 	}
 	public String stateSubscriberName() { return "publishable_seven"; }
 	public UInt64 stateTypeID() { return 7; }

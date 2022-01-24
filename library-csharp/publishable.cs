@@ -86,8 +86,8 @@ namespace globalmq.marshalling
         String parseString(String expectedName);
         void parsePublishableStructBegin(String expectedName);
         void parsePublishableStructEnd();
-        void parseVector(String name, Action<IPublishableParser, int> parseDelegate);
-        void parseSimpleVector(String name, CollectionWrapperForParsing simpleWrapper);
+        void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate);
+        void parseSimpleVector(String expectedName, CollectionWrapperForParsing simpleWrapper);
         void parseStructBegin();
         void parseStructEnd();
         void parseStateUpdateMessageBegin();
@@ -228,9 +228,9 @@ namespace globalmq.marshalling
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
         }
-        public void parseVector(String name, Action<IPublishableParser, int> parseDelegate)
+        public void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate)
         {
-            parsePublishableStructBegin(name);
+            parseKey(expectedName);
             p.skipDelimiter('[');
 
             if (!p.isDelimiter(']')) // there are some items there
@@ -253,13 +253,16 @@ namespace globalmq.marshalling
             else
                 p.skipDelimiter(']');
 
-            parsePublishableStructEnd();
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
         }
-        public void parseSimpleVector(String name, CollectionWrapperForParsing simpleWrapper)
+        public void parseSimpleVector(String expectedName, CollectionWrapperForParsing simpleWrapper)
         {
-            parsePublishableStructBegin(name);
+            parseKey(expectedName);
             simpleWrapper.parseJson(p);
-            parsePublishableStructEnd();
+
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
         }
 
         public void parseStructBegin()
@@ -337,7 +340,7 @@ namespace globalmq.marshalling
         public void parsePublishableStructBegin(String expectedName) { }
         public void parsePublishableStructEnd() { }
 
-        public void parseVector(String name, Action<IPublishableParser, int> parseDelegate)
+        public void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate)
         {
             int sz;
             p.parseUnsignedInteger(out sz);
@@ -345,7 +348,7 @@ namespace globalmq.marshalling
                 parseDelegate(this, i);
 
         }
-        public void parseSimpleVector(String name, CollectionWrapperForParsing simpleWrapper)
+        public void parseSimpleVector(String expectedName, CollectionWrapperForParsing simpleWrapper)
         {
             simpleWrapper.parseGmq(p);
         }
@@ -468,22 +471,27 @@ namespace globalmq.marshalling
         }
         public void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator)
         {
-            composePublishableStructBegin(name);
+            composer.addNamePart(name);
             composer.append('[');
             for (int i = 0; i < size; ++i)
             {
                 if (i != 0)
                     composer.append(", ");
+
+                composer.append("{");
                 composeDelegate(this, i);
+                composer.append("}");
             }
             composer.append(']');
-            composePublishableStructEnd(separator);
+            if (separator)
+                composer.append(",");
         }
         public void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator)
         {
-            composePublishableStructBegin(name);
+            composer.addNamePart(name);
             simpleWrapper.composeJson(composer);
-            composePublishableStructEnd(separator);
+            if (separator)
+                composer.append(",");
         }
 
 
@@ -703,7 +711,6 @@ namespace globalmq.marshalling
                     throw new Exception();
             }
 
-            parser.parsePublishableStructEnd();
             return changed;
         }
     }

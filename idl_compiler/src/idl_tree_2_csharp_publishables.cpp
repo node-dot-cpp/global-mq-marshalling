@@ -298,9 +298,11 @@ namespace {
 					fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
 					fprintf(header, "\t\t\t{\n");
+					fprintf(header, "\t\t\t\tparser.parseStructBegin();\n");
 					fprintf(header, "\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t}\n");
 					fprintf(header, "\t\t);\n");
 					break;
@@ -410,9 +412,11 @@ namespace {
 					fprintf(header, "\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
 					fprintf(header, "\t\t\t{\n");
+					fprintf(header, "\t\t\t\tparser.parseStructBegin();\n");
 					fprintf(header, "\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t}\n");
 					fprintf(header, "\t\t);\n");
 					fprintf(header, "\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
@@ -556,9 +560,11 @@ namespace {
 					fprintf(header, "\t\t\t\t\tparser.parseVector(\"%s\",\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
 					fprintf(header, "\t\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructBegin();\n");
 					fprintf(header, "\t\t\t\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\t\t);\n");
 
@@ -617,7 +623,7 @@ namespace {
 		fprintf(header, "\t\t\t\tthrow new Exception();\n");
 
 		fprintf(header, "\t\t}\n");
-		fprintf(header, "\treturn changed;\n");
+		fprintf(header, "\t\treturn changed;\n");
 		fprintf(header, "\t}\n");
 	}
 

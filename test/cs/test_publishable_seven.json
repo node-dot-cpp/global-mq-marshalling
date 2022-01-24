@@ -1,1 +1,1 @@
-{"intVec":{[1, 2, 3]},"uintVec":{[4, 5, 6]},"realVec":{[7, 8, 9]},"strVec":{["one", "two", "three"]},"structVec":{["x":303,"y":0,"z":0, "x":0,"y":0,"z":0]}}
+{"intVec":[1, 2, 3],"uintVec":[4, 5, 6],"realVec":[7, 8, 9],"strVec":["one", "two", "three"],"structVec":[{"x":303,"y":0,"z":0}, {"x":0,"y":0,"z":0}]}
