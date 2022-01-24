@@ -27,20 +27,18 @@
 
 #include "test_idl_common.h"
 
+std::string PathPubGmq = "test_publishable_six2.gmq";
+std::string PathPubGmq1 = "test_publishable_six2_update1.gmq";
+std::string PathPubGmq2 = "test_publishable_six2_update2.gmq";
+std::string PathPubGmq3 = "test_publishable_six2_update3.gmq";
 
-std::string PathPubJson = "test_publishable_six.json";
-std::string PathPubJson1 = "test_publishable_six_update1.json";
-std::string PathPubJson2 = "test_publishable_six_update2.json";
-std::string PathPubJson3 = "test_publishable_six_update3.json";
-
-
-const lest::test test_publishable_six[] =
+const lest::test test_publishable_six2[] =
 {
-    lest_CASE( "TestJsonComposeStateSync" )
+    lest_CASE( "TestGmqComposeStateSync" )
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -50,31 +48,31 @@ const lest::test test_publishable_six[] =
 
         publ.generateStateSyncMessage(composer);
 
-        auto b2 = makeBuffer(PathPubJson, lest_env);
+        auto b2 = makeBuffer(PathPubGmq, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestJsonParseStateSync" )
+    lest_CASE( "TestGmqParseStateSync" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
         mtest::structures::StructSix data;
         SubscriberT subs(data);
 
-        mtest::Buffer b = makeBuffer(PathPubJson, lest_env);
+        mtest::Buffer b = makeBuffer(PathPubGmq, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::GmqParser<mtest::Buffer> parser(it);
 
-        subs.applyJsonStateSyncMessage(parser);
+        subs.applyGmqStateSyncMessage(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);
     },
 
-    lest_CASE( "TestJsonComposeUpdate1" )
+    lest_CASE( "TestGmqComposeUpdate1" )
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -84,10 +82,10 @@ const lest::test test_publishable_six[] =
         mtest::Buffer b = publ.endTick();
 
 
-        auto b2 = makeBuffer(PathPubJson1, lest_env);
+        auto b2 = makeBuffer(PathPubGmq1, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestJsonParseUpdate1" )
+    lest_CASE( "TestGmqParseUpdate1" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
@@ -95,11 +93,11 @@ const lest::test test_publishable_six[] =
 
         SubscriberT subs(data);
 
-        mtest::Buffer b = makeBuffer(PathPubJson1, lest_env);
+        mtest::Buffer b = makeBuffer(PathPubGmq1, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::GmqParser<mtest::Buffer> parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyGmqMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT_NOT(subs.getState() == data2);
@@ -107,11 +105,11 @@ const lest::test test_publishable_six[] =
         data2.aggregate.theAggregate.anInt = -101;
         EXPECT(subs.getState() == data2);
     },
-    lest_CASE( "TestJsonComposeUpdate2" )
+    lest_CASE( "TestGmqComposeUpdate2" )
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -134,10 +132,10 @@ const lest::test test_publishable_six[] =
         mtest::Buffer b = publ.endTick();
 
 
-        auto b2 = makeBuffer(PathPubJson2, lest_env);
+        auto b2 = makeBuffer(PathPubGmq2, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestJsonParseUpdate2" )
+    lest_CASE( "TestGmqParseUpdate2" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
@@ -145,11 +143,11 @@ const lest::test test_publishable_six[] =
 
         SubscriberT subs(data);
 
-        mtest::Buffer b = makeBuffer(PathPubJson2, lest_env);
+        mtest::Buffer b = makeBuffer(PathPubGmq2, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::GmqParser<mtest::Buffer> parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyGmqMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT_NOT(subs.getState() == data2);
@@ -171,7 +169,7 @@ const lest::test test_publishable_six[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -181,10 +179,10 @@ const lest::test test_publishable_six[] =
         mtest::Buffer b = publ.endTick();
 
 
-        auto b2 = makeBuffer(PathPubJson3, lest_env);
+        auto b2 = makeBuffer(PathPubGmq3, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestJsonParseNoChangeUpdate3" )
+    lest_CASE( "TestGmqParseNoChangeUpdate3" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
@@ -192,11 +190,11 @@ const lest::test test_publishable_six[] =
 
         SubscriberT subs(data);
 
-        mtest::Buffer b = makeBuffer(PathPubJson3, lest_env);
+        mtest::Buffer b = makeBuffer(PathPubGmq3, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::GmqParser<mtest::Buffer> parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyGmqMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);
@@ -204,4 +202,4 @@ const lest::test test_publishable_six[] =
 
 };
 
-lest_MODULE(specification(), test_publishable_six);
+lest_MODULE(specification(), test_publishable_six2);

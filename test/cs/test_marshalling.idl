@@ -79,3 +79,12 @@ PUBLISHABLE StructSix = 6 {
 	STRUCT BasicTypes basic;
 	STRUCT AggregateType aggregate;
 };
+
+
+PUBLISHABLE publishable_seven = 7 {
+	VECTOR<INTEGER> intVec;
+	VECTOR<UINTEGER> uintVec;
+	VECTOR<REAL> realVec;
+	VECTOR<CHARACTER-STRING> strVec;
+	VECTOR<STRUCT point3D> structVec;
+};

@@ -26,18 +26,54 @@
 * -------------------------------------------------------------------------------*/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace globalmq.marshalling
 {
     public class Publishable
     {
-        public static ulong[] makeAddress(ulong[] baseAddress, ulong last)
+        public enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
+
+        public static UInt64[] makeAddress(UInt64[] baseAddress, ulong last)
         {
-            ulong[] address = new ulong[baseAddress.Length + 1];
+            UInt64[] address = new UInt64[baseAddress.Length + 1];
             baseAddress.CopyTo(address, 0);
             address[baseAddress.Length] = last;
             return address;
+        }
+        public static CollectionWrapperForComposing makeComposer(IList<Int64> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+        }
+        public static CollectionWrapperForComposing makeComposer(IList<UInt64> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+        }
+        public static CollectionWrapperForComposing makeComposer(IList<Double> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+        }
+        public static CollectionWrapperForComposing makeComposer(IList<String> coll)
+        {
+            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
+        }
+
+        public static CollectionWrapperForParsing makeParser(IList<Int64> coll)
+        {
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { Int64 val; parser.parseSignedInteger(out val); coll.Add(val); });
+        }
+        public static CollectionWrapperForParsing makeParser(IList<UInt64> coll)
+        {
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { UInt64 val; parser.parseUnsignedInteger(out val); coll.Add(val); });
+        }
+        public static CollectionWrapperForParsing makeParser(IList<Double> coll)
+        {
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { Double val; parser.parseReal(out val); coll.Add(val); });
+        }
+        public static CollectionWrapperForParsing makeParser(IList<String> coll)
+        {
+            return new CollectionWrapperForParsing(null, (parser, ordinal) => { String val; parser.parseString(out val); coll.Add(val); });
         }
     }
     public interface IPublishableParser
@@ -50,10 +86,14 @@ namespace globalmq.marshalling
         String parseString(String expectedName);
         void parsePublishableStructBegin(String expectedName);
         void parsePublishableStructEnd();
+        void parseVector(String name, Action<IPublishableParser, int> parseDelegate);
+        void parseSimpleVector(String name, CollectionWrapperForParsing simpleWrapper);
         void parseStructBegin();
         void parseStructEnd();
         void parseStateUpdateMessageBegin();
         void parseStateUpdateMessageEnd();
+        UInt64 parseActionInPublishable();
+
     }
     public class JsonPublishableParser : IPublishableParser
     {
@@ -188,6 +228,39 @@ namespace globalmq.marshalling
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
         }
+        public void parseVector(String name, Action<IPublishableParser, int> parseDelegate)
+        {
+            parsePublishableStructBegin(name);
+            p.skipDelimiter('[');
+
+            if (!p.isDelimiter(']')) // there are some items there
+            {
+                for (int i = 0; /*!newFormat || i < sz*/; ++i)
+                {
+                    parseDelegate(this, i);
+                    if (p.isDelimiter(','))
+                    {
+                        p.skipDelimiter(',');
+                        continue;
+                    }
+                    if (p.isDelimiter(']'))
+                    {
+                        p.skipDelimiter(']');
+                        break;
+                    }
+                }
+            }
+            else
+                p.skipDelimiter(']');
+
+            parsePublishableStructEnd();
+        }
+        public void parseSimpleVector(String name, CollectionWrapperForParsing simpleWrapper)
+        {
+            parsePublishableStructBegin(name);
+            simpleWrapper.parseJson(p);
+            parsePublishableStructEnd();
+        }
 
         public void parseStructBegin()
         {
@@ -197,7 +270,6 @@ namespace globalmq.marshalling
         {
             p.skipDelimiter('}');
         }
-
         public void parseStateUpdateMessageBegin()
         {
             p.skipDelimiter('{');
@@ -209,6 +281,11 @@ namespace globalmq.marshalling
             p.skipDelimiter(']');
             p.skipDelimiter('}');
         }
+        public UInt64 parseActionInPublishable()
+        {
+            return parseUnsigned("action");
+        }
+
     }
 
     public class GmqPublishableParser : IPublishableParser
@@ -259,10 +336,29 @@ namespace globalmq.marshalling
 
         public void parsePublishableStructBegin(String expectedName) { }
         public void parsePublishableStructEnd() { }
+
+        public void parseVector(String name, Action<IPublishableParser, int> parseDelegate)
+        {
+            int sz;
+            p.parseUnsignedInteger(out sz);
+            for (int i = 0; i < sz; ++i)
+                parseDelegate(this, i);
+
+        }
+        public void parseSimpleVector(String name, CollectionWrapperForParsing simpleWrapper)
+        {
+            simpleWrapper.parseGmq(p);
+        }
+
         public void parseStructBegin() { }
         public void parseStructEnd() { }
         public void parseStateUpdateMessageBegin() { }
         public void parseStateUpdateMessageEnd() { }
+
+        public UInt64 parseActionInPublishable()
+        {
+            return parseUnsigned("action");
+        }
     }
 
 
@@ -272,12 +368,16 @@ namespace globalmq.marshalling
         BufferT endTick();
         void composeAddress(UInt64[] baseAddr, UInt64 last);
         void composeAddressEnd();
+        void composeAction(UInt64 actionId, bool emptyData);
         void composeInteger(String name, Int64 value, bool separator);
         void composeUnsigned(String name, UInt64 value, bool separator);
         void composeReal(String name, Double value, bool separator);
         void composeString(String name, String value, bool separator);
         void composePublishableStructBegin(String name);
         void composePublishableStructEnd(bool separator);
+        void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator);
+        void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator);
+
         void composeStructBegin();
         void composeStructEnd();
         void composeStateUpdateMessageBegin();
@@ -315,6 +415,18 @@ namespace globalmq.marshalling
             composer.append(',');
         }
         public void composeAddressEnd() { composePublishableStructEnd(true); }
+        public void composeAction(UInt64 actionId, bool emptyData)
+        {
+            composer.addNamePart("action");
+            composer.composeUnsignedInteger(actionId);
+            if (emptyData)
+            {
+                composer.append("},");
+            }
+            else
+                composer.append(',');
+        }
+
         public void composeInteger(String name, Int64 value, bool separator)
         {
             composer.addNamePart(name);
@@ -354,6 +466,27 @@ namespace globalmq.marshalling
             if (separator)
                 composer.append(",");
         }
+        public void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator)
+        {
+            composePublishableStructBegin(name);
+            composer.append('[');
+            for (int i = 0; i < size; ++i)
+            {
+                if (i != 0)
+                    composer.append(", ");
+                composeDelegate(this, i);
+            }
+            composer.append(']');
+            composePublishableStructEnd(separator);
+        }
+        public void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator)
+        {
+            composePublishableStructBegin(name);
+            simpleWrapper.composeJson(composer);
+            composePublishableStructEnd(separator);
+        }
+
+
         public void composeStructBegin()
         {
             composer.append('{');
@@ -396,6 +529,10 @@ namespace globalmq.marshalling
             composer.composeUnsignedInteger(last);
         }
         public void composeAddressEnd() { }
+        public void composeAction(UInt64 actionId, bool emptyData)
+        {
+            composer.composeUnsignedInteger(actionId);
+        }
 
         public void composeInteger(String name, Int64 value, bool separator)
         {
@@ -415,6 +552,16 @@ namespace globalmq.marshalling
         }
         public void composePublishableStructBegin(String name) { }
         public void composePublishableStructEnd(bool separator) { }
+        public void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator)
+        {
+            composer.composeUnsignedInteger((UInt64)size);
+            for (int i = 0; i < size; ++i)
+                composeDelegate(this, i);
+        }
+        public void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator)
+        {
+            simpleWrapper.composeGmq(composer);
+        }
 
         public void composeStructBegin() { }
         public void composeStructEnd() { }
@@ -425,4 +572,204 @@ namespace globalmq.marshalling
         }
     }
 
+    public class PublisherVectorWrapper<T> : IList<T>
+    {
+        //public delegate void ComposeDelegate(IPublishableComposer composer, T val);
+        //public delegate T ElementWrapperDelegate(T val, IPublishableComposer composer, UInt64[] address);
+
+        IList<T> t;
+        IPublishableComposer composer;
+        UInt64[] address;
+        Action<IPublishableComposer, T> composeDelegate;
+        Func<T, IPublishableComposer, UInt64[], T> elementWrapperDelegate;
+
+
+        public PublisherVectorWrapper(IList<T> t, IPublishableComposer composer, UInt64[] address,
+            Action<IPublishableComposer, T> composeDelegate, Func<T, IPublishableComposer, UInt64[], T> elementWrapperDelegate)
+        {
+            this.t = t;
+            this.composer = composer;
+            this.address = address;
+            this.composeDelegate = composeDelegate;
+            this.elementWrapperDelegate = elementWrapperDelegate;
+        }
+        public T this[int index]
+        {
+            get
+            {
+                if (elementWrapperDelegate != null)
+                    return elementWrapperDelegate(t[index], composer, Publishable.makeAddress(address, (UInt64)index));
+                else
+                    return t[index];
+            }
+            set
+            {
+                t[index] = value;
+                composer.composeAddress(address, (UInt64)index);
+                composer.composeAction((UInt64)Publishable.ActionOnVector.update_at, false);
+                composeDelegate(composer, value);
+                composer.composeAddressEnd();
+            }
+        }
+        public int Count => t.Count;
+
+        public bool IsReadOnly => false;
+
+        public void Add(T item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(T item)
+        {
+            return t.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            t.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int IndexOf(T item)
+        {
+            return t.IndexOf(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            t.Insert(index, item);
+            composer.composeAddress(address, (UInt64)index);
+            composer.composeAction((UInt64)Publishable.ActionOnVector.insert_single_before, false);
+            composeDelegate(composer, item);
+            composer.composeAddressEnd();
+        }
+
+        public bool Remove(T item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            t.RemoveAt(index);
+            composer.composeAddress(address, (UInt64)index);
+            composer.composeAction((UInt64)Publishable.ActionOnVector.remove_at, true);
+            composer.composeAddressEnd();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool parseVectorActionSimple(IPublishableParser parser, IList<T> data, int index, Func<IPublishableParser, T> elementParser)
+        {
+            bool changed = false;
+            Publishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();
+            switch (action)
+            {
+                case Publishable.ActionOnVector.remove_at:
+                    {
+                        data.RemoveAt(index);
+                        changed = true;
+                        break;
+                    }
+                case Publishable.ActionOnVector.update_at:
+                    {
+                        
+                        T elem = elementParser(parser);
+                        data[index] = elem;
+                        changed = true;
+                        break;
+                    }
+                case Publishable.ActionOnVector.insert_single_before:
+                    {
+                        T elem = elementParser(parser);
+                        data.Insert(index, elem);
+                        changed = true;
+                        break;
+                    }
+                default:
+                    throw new Exception();
+            }
+
+            parser.parsePublishableStructEnd();
+            return changed;
+        }
+    }
+
+    public class SubscriberVectorWrapper<T> : IList<T>
+    {
+        IList<T> t;
+
+        public SubscriberVectorWrapper(IList<T> t)
+        {
+            this.t = t;
+        }
+        public T this[int index] { get => t[index]; set => throw new InvalidOperationException(); }
+
+        public int Count => t.Count;
+
+        public bool IsReadOnly => true;
+
+        public void Add(T item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public void Clear()
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool Contains(T item)
+        {
+            return t.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            t.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int IndexOf(T item)
+        {
+            return t.IndexOf(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool Remove(T item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new InvalidOperationException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+    }
 } // namespace globalmq::marshalling

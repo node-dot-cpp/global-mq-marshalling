@@ -60,6 +60,42 @@ namespace {
 		return nullptr;
 	}
 
+	const char* csharpPub_getComposeMethod(MessageParameterType::KIND kind)
+	{
+		switch (kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+			return "composeInteger";
+		case MessageParameterType::KIND::UINTEGER:
+			return "composeUnsigned";
+		case MessageParameterType::KIND::REAL:
+			return "composeReal";
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return "composeString";
+		default:
+			assert(false);
+		}
+		return nullptr;
+	}
+
+	const char* csharpPub_getParseMethod(MessageParameterType::KIND kind)
+	{
+		switch (kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+			return "Integer";
+		case MessageParameterType::KIND::UINTEGER:
+			return "Unsigned";
+		case MessageParameterType::KIND::REAL:
+			return "Real";
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return "String";
+		default:
+			assert(false);
+		}
+		return nullptr;
+	}
+
 	void csharpPub_generateStructInterface(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
@@ -89,34 +125,29 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						fprintf(header, "\tIList<%s> %s { get; set; }\n", csharpPub_getCSharpType(member.type.vectorElemKind), member.name.c_str());
+						fprintf(header, "\tIList<%s> make_%s();\n", csharpPub_getCSharpType(member.type.vectorElemKind), member.name.c_str());
+						break;
+					case MessageParameterType::KIND::STRUCT:
+					case MessageParameterType::KIND::DISCRIMINATED_UNION:
+					{
+						assert(member.type.messageIdx < root.structs.size());
+						const std::string type_name = root.structs[member.type.messageIdx]->name;
+						fprintf(header, "\tIList<%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\tIList<%s> make_%s();\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\t%s make_%s_element();\n", type_name.c_str(), member.name.c_str());
+						break;
+					}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
@@ -155,34 +186,32 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+					fprintf(header, "\tpublic IList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic IList<%s> make_%s() { return new List<%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					fprintf(header, "\tpublic IList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic IList<%s> make_%s() { return new List<%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic %s make_%s_element() { return new %s_impl(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
@@ -213,7 +242,7 @@ namespace {
 		fprintf(header, " };\n");
 	}
 
-	void csharpPub_generateParseStateSync(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParseStateSync(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -251,34 +280,35 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", Publishable.makeParser(t.%s));\n", member.name.c_str(), member.name.c_str());
+					break;
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+
+					fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
+					fprintf(header, "\t\t\t{\n");
+					fprintf(header, "\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
+					fprintf(header, "\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t}\n");
+					fprintf(header, "\t\t);\n");
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
@@ -287,7 +317,7 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpPub_generateParse1(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse1(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -352,34 +382,50 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+
+					fprintf(header, "\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", Publishable.makeParser(newVal));\n", member.name.c_str());
+					fprintf(header, "\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tt.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\tchanged = true;\n");
+					fprintf(header, "\t\t}\n");
+
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+
+					fprintf(header, "\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
+					fprintf(header, "\t\t\t{\n");
+					fprintf(header, "\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
+					fprintf(header, "\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t}\n");
+					fprintf(header, "\t\t);\n");
+					fprintf(header, "\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tt.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\tchanged = true;\n");
+					fprintf(header, "\t\t}\n");
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
@@ -391,7 +437,7 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpPub_generateParse2(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse2(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -416,55 +462,33 @@ namespace {
 			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
-				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tInt64 newVal = parser.parseInteger(\"value\");\n");
-				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
-				fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
-				fprintf(header, "\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t}\n");
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
-				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tUInt64 newVal = parser.parseUnsigned(\"value\");\n");
-				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
-				fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
-				fprintf(header, "\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t}\n");
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
-				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tDouble newVal = parser.parseReal(\"value\");\n");
-				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
-				fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
-				fprintf(header, "\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t}\n");
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* type_name = csharpPub_getCSharpType(member.type.kind);
+				const char* parse_method = csharpPub_getParseMethod(member.type.kind);
+
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
-				fprintf(header, "\t\t\tString newVal = parser.parseString(\"value\");\n");
-				fprintf(header, "\t\t\tif(newVal != t.%s)\n", member.name.c_str());
-				fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\t\tt.%s = newVal;\n", member.name.c_str());
-				fprintf(header, "\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t}\n");
+				fprintf(header, "\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", type_name, parse_method);
+				fprintf(header, "\t\t\t\tif(newVal != t.%s)\n", member.name.c_str());
+				fprintf(header, "\t\t\t\t{\n");
+				fprintf(header, "\t\t\t\t\tt.%s = newVal;\n", member.name.c_str());
+				fprintf(header, "\t\t\t\t\tchanged = true;\n");
+				fprintf(header, "\t\t\t\t}\n");
 				break;
+			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
-				fprintf(header, "\t\t\t\tif(addr.Length == offset + 1)\n");
+				fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full element replace\n");
 				fprintf(header, "\t\t\t\t{\n");
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
 				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subs.parse(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\t\t}\n");
-				fprintf(header, "\t\t\t\telse if(addr.Length > offset + 1)\n");
+				fprintf(header, "\t\t\t\telse if(addr.Length > offset + 1) // let child continue parsing\n");
 				fprintf(header, "\t\t\t\t{\n");
 				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subs.parse(parser, t.%s, addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t}\n");
@@ -480,34 +504,106 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+					const char* parse_method = csharpPub_getParseMethod(member.type.vectorElemKind);
+
+					fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
+					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\tparser.parseSimpleVector(\"value\", Publishable.makeParser(newVal));\n");
+					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\tt.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
+					fprintf(header, "\t\t\t\t\t}\n");
+
+					fprintf(header, "\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
+					fprintf(header, "\t\t\t\t\tcurrentChanged = PublisherVectorWrapper<%s>.parseVectorActionSimple(parser, t.%s, index,\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser) => { return parser.parse%s(\"value\"); });\n", parse_method);
+					fprintf(header, "\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\telse // simple type can't handle deeper address\n");
+					fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
+
+					fprintf(header, "\t\t\t\tif(currentChanged)\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tchanged = true;\n");
+					fprintf(header, "\t\t\t\t\t// TODO\n");
+					fprintf(header, "\t\t\t\t}\n");
+
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+
+					fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
+					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\tparser.parseVector(\"%s\",\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
+					fprintf(header, "\t\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
+					fprintf(header, "\t\t\t\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\t\t);\n");
+
+					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\tt.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
+					fprintf(header, "\t\t\t\t\t}\n");
+
+					fprintf(header, "\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
+					fprintf(header, "\t\t\t\t\tcurrentChanged = PublisherVectorWrapper<%s>.parseVectorActionSimple(parser, t.%s, index,\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser) =>\n");
+					fprintf(header, "\t\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\t\t%s newVal = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
+					fprintf(header, "\t\t\t\t\t\t\t%s_subs.parseForStateSync(parser, newVal);\n", member.type.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+					fprintf(header, "\t\t\t\t\t\t\treturn newVal;\n");
+					fprintf(header, "\t\t\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\t\t);\n");
+					fprintf(header, "\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\telse if(addr.Length > offset + 2) // let child continue parsing\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
+					fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subs.parse(parser, t.%s[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\telse\n");
+					fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
+
+					fprintf(header, "\t\t\t\tif(currentChanged)\n");
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tchanged = true;\n");
+					fprintf(header, "\t\t\t\t\t// TODO\n");
+					fprintf(header, "\t\t\t\t}\n");
+
+
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
@@ -608,43 +704,49 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t{\n");
+					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<%s>(t.%s); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
+					fprintf(header, "\t}\n");
+					fprintf(header, "\tpublic IList<%s> make_%s() { throw new InvalidOperationException(); }\n", elem_type_name, member.name.c_str());
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t{\n");
+					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<%s>(t.%s); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
+					fprintf(header, "\t}\n");
+					fprintf(header, "\tpublic IList<%s> make_%s() { throw new InvalidOperationException(); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic %s make_%s_element() { throw new InvalidOperationException(); }\n", elem_type_name, member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
 			}
 		}
 
-		csharpPub_generateParseStateSync(header, s, type_name);
-		csharpPub_generateParse1(header, s, type_name);
-		csharpPub_generateParse2(header, s, type_name);
+		csharpPub_generateParseStateSync(header, root, s, type_name);
+		csharpPub_generateParse1(header, root, s, type_name);
+		csharpPub_generateParse2(header, root, s, type_name);
 
 		if (s.type == CompositeType::Type::publishable)
 			csharpPub_generateStateSubscriberBase(header, s, type_name);
@@ -652,7 +754,7 @@ namespace {
 		fprintf(header, "} // class %s_subs\n\n", type_name.c_str());
 	}
 
-	void csharpPub_generateCompose(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateCompose(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -673,16 +775,10 @@ namespace {
 			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\tcomposer.composeInteger(\"%s\", t.%s, ", member.name.c_str(), member.name.c_str());
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\tcomposer.composeUnsigned(\"%s\", t.%s, ", member.name.c_str(), member.name.c_str());
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\t\tcomposer.composeReal(\"%s\", t.%s, ", member.name.c_str(), member.name.c_str());
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\tcomposer.composeString(\"%s\", t.%s, ", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\tcomposer.%s(\"%s\", t.%s, ", csharpPub_getComposeMethod(member.type.kind), member.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
@@ -692,11 +788,24 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					fprintf(header, "\t\tcomposer.composeSimpleVector(\"%s\", Publishable.makeComposer(t.%s), ", member.name.c_str(), member.name.c_str());
+					break;
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					fprintf(header, "\t\tcomposer.composeVector(\"%s\", t.%s.Count,\n", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\t\t(IPublishableComposer composer, int ordinal) => { %s_publ.compose(composer, t.%s[ordinal]); }, ", elem_type_name, member.name.c_str());
+					break;
+				}
+					//case MessageParameterType::KIND::INTEGER:
 				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
 				//	break;
 				//case MessageParameterType::KIND::UINTEGER:
@@ -716,10 +825,10 @@ namespace {
 				//	assert(member.type.messageIdx < root.structs.size());
 				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
 				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
@@ -781,13 +890,6 @@ namespace {
 
 		csharpPub_generateAddressEnum(header, s);
 
-		//fprintf(header, "\tpublic %s_publ(%s t, IPublishableComposer composer, UInt64[] baseAddr, UInt64 id)\n", type_name.c_str(), type_name.c_str());
-		//fprintf(header, "\t{\n");
-		//fprintf(header, "\t\tthis.t = t;\n");
-		//fprintf(header, "\t\tthis.composer = composer;\n");
-		//fprintf(header, "\t\tthis.address = Publishable.makeAddress(baseAddr, id);\n");
-		//fprintf(header, "\t}\n");
-
 		fprintf(header, "\tpublic %s_publ(%s t, IPublishableComposer composer, UInt64[] address)\n", type_name.c_str(), type_name.c_str());
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tthis.t = t;\n");
@@ -805,55 +907,10 @@ namespace {
 			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\tpublic Int64 %s\n", member.name.c_str());
-				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return t.%s; }\n", member.name.c_str());
-				fprintf(header, "\t\tset\n");
-				fprintf(header, "\t\t{\n");
-				//fprintf(header, "\t\t\tif (value != t.%s)\n", member.name.c_str());
-				//fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeInteger(\"value\", value, false);\n");
-				fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
-				//fprintf(header, "\t\t\t}\n");
-				fprintf(header, "\t\t}\n");
-				fprintf(header, "\t}\n");
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\tpublic UInt64 %s\n", member.name.c_str());
-				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return t.%s; }\n", member.name.c_str());
-				fprintf(header, "\t\tset\n");
-				fprintf(header, "\t\t{\n");
-				//fprintf(header, "\t\t\tif (value != t.%s)\n", member.name.c_str());
-				//fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeUnsigned(\"value\", value, false);\n");
-				fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
-				//fprintf(header, "\t\t\t}\n");
-				fprintf(header, "\t\t}\n");
-				fprintf(header, "\t}\n");
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\tpublic Double %s\n", member.name.c_str());
-				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return t.%s; }\n", member.name.c_str());
-				fprintf(header, "\t\tset\n");
-				fprintf(header, "\t\t{\n");
-				//fprintf(header, "\t\t\tif (value != t.%s)\n", member.name.c_str());
-				//fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeReal(\"value\", value, false);\n");
-				fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
-				//fprintf(header, "\t\t\t}\n");
-				fprintf(header, "\t\t}\n");
-				fprintf(header, "\t}\n");
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\tpublic String %s\n", member.name.c_str());
+				fprintf(header, "\tpublic %s %s\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
 				fprintf(header, "\t{\n");
 				fprintf(header, "\t\tget { return t.%s; }\n", member.name.c_str());
 				fprintf(header, "\t\tset\n");
@@ -862,7 +919,7 @@ namespace {
 				//fprintf(header, "\t\t\t{\n");
 				fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
 				fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-				fprintf(header, "\t\t\tcomposer.composeString(\"value\", value, false);\n");
+				fprintf(header, "\t\t\tcomposer.%s(\"value\", value, false);\n", csharpPub_getComposeMethod(member.type.kind));
 				fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
 				//fprintf(header, "\t\t\t}\n");
 				fprintf(header, "\t\t}\n");
@@ -891,41 +948,86 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
-				assert(false); // not implemented (yet)
-				//TODO
-				//switch (member.type.vectorElemKind)
-				//{
-				//case MessageParameterType::KIND::INTEGER:
-				//	fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::UINTEGER:
-				//	fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::REAL:
-				//	fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::CHARACTER_STRING:
-				//	fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
-				//	break;
-				//case MessageParameterType::KIND::VECTOR:
-				//	assert(false); // unexpected
-				//	break;
-				//case MessageParameterType::KIND::STRUCT:
-				//case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				//	assert(member.type.messageIdx < root.structs.size());
-				//	fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
-				//	break;
-				//default:
-				//	assert(false); // not implemented (yet)
-				//}
-				//break;
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+					const char* compose_method = csharpPub_getComposeMethod(member.type.vectorElemKind);
+
+
+					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t{\n");
+					fprintf(header, "\t\tget\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\treturn new PublisherVectorWrapper<%s>(t.%s, composer,\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t(IPublishableComposer composer, %s val) => { composer.%s(\"value\", val, false); },\n", elem_type_name, compose_method);
+					fprintf(header, "\t\t\t\tnull\n");
+					fprintf(header, "\t\t\t);\n");
+					fprintf(header, "\t\t}\n");
+					fprintf(header, "\t\tset\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
+					fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
+					fprintf(header, "\t\t\tcomposer.composeSimpleVector(\"value\", Publishable.makeComposer(value), false);\n");
+					fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
+					fprintf(header, "\t\t}\n");
+					fprintf(header, "\t}\n");
+					fprintf(header, "\tpublic IList<%s> make_%s() { return t.make_%s(); }\n", elem_type_name, member.name.c_str(), member.name.c_str());
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.messageIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+
+					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t{\n");
+					fprintf(header, "\t\tget\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\treturn new PublisherVectorWrapper<%s>(t.%s, composer,\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t(IPublishableComposer composer, %s val) =>\n", elem_type_name);
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
+					fprintf(header, "\t\t\t\t\t%s_publ.compose(composer, val);\n", elem_type_name);
+					fprintf(header, "\t\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
+					fprintf(header, "\t\t\t\t},\n");
+					fprintf(header, "\t\t\t\t(%s val, IPublishableComposer composer, UInt64[] addr) =>\n", elem_type_name);
+					fprintf(header, "\t\t\t\t{ return new %s_publ(val, composer, addr); }\n", elem_type_name);
+					fprintf(header, "\t\t\t);\n");
+					fprintf(header, "\t\t}\n");
+					fprintf(header, "\t\tset\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
+					fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
+					fprintf(header, "\t\t\tcomposer.composeVector(\"value\", value.Count,\n");
+					fprintf(header, "\t\t\t\t(IPublishableComposer composer, int ordinal) => { %s_publ.compose(composer, value[ordinal]); },\n", elem_type_name);
+					fprintf(header, "\t\t\t\tfalse);\n");
+					fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
+					fprintf(header, "\t\t}\n");
+					fprintf(header, "\t}\n");
+
+					fprintf(header, "\tpublic IList<%s> make_%s() { return t.make_%s(); }\n", elem_type_name, member.name.c_str(), member.name.c_str());
+					fprintf(header, "\tpublic %s make_%s_element() { return t.make_%s_element(); }\n", elem_type_name, member.name.c_str(), member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
 			}
 			default:
 				assert(false); // not implemented (yet)
 			}
 		}
 
-		csharpPub_generateCompose(header, s, type_name);
+		csharpPub_generateCompose(header, root, s, type_name);
 
 		if (s.type == CompositeType::Type::publishable)
 			csharpPub_generateStatePublishableBase(header, s, type_name);
