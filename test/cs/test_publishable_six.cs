@@ -71,7 +71,7 @@ namespace TestProject1
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, null, new UInt64[] { });
+            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             JsonPublishableComposer composer = new JsonPublishableComposer();
@@ -90,7 +90,7 @@ namespace TestProject1
         {
             mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
 
-            mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
+            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
@@ -105,7 +105,7 @@ namespace TestProject1
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             //JsonPublishableComposer composer = new JsonPublishableComposer();
@@ -124,7 +124,7 @@ namespace TestProject1
         public static void TestJsonParseUpdate1()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
+            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path1);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
@@ -144,7 +144,7 @@ namespace TestProject1
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             //JsonPublishableComposer composer = new JsonPublishableComposer();
@@ -157,7 +157,7 @@ namespace TestProject1
             publ.basic.anUInt = 3;
             publ.basic.aReal = 4.0;
 
-            mtest.publishable.BasicTypes aggr = publ.aggregate.make_theAggregate();
+            mtest.publishable.IBasicTypes aggr = publ.aggregate.make_theAggregate();
             aggr.anInt = -200;
             aggr.anUInt = 300;
             aggr.aReal = 400.0;
@@ -177,7 +177,7 @@ namespace TestProject1
         public static void TestJsonParseUpdate2()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
+            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path2);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
@@ -207,7 +207,7 @@ namespace TestProject1
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publ publ = new mtest.publishable.StructSix_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             //JsonPublishableComposer composer = new JsonPublishableComposer();
@@ -226,7 +226,7 @@ namespace TestProject1
         public static void TestJsonParseNoChangeUpdate3()
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subs subs = new mtest.publishable.StructSix_subs(data);
+            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(Path3);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());

@@ -1571,7 +1571,7 @@ public class message_five : IEquatable<message_five>
 namespace publishable
 {
 
-public interface BasicTypes
+public interface IBasicTypes
 {
 	Int64 anInt { get; set; }
 	UInt64 anUInt { get; set; }
@@ -1579,7 +1579,7 @@ public interface BasicTypes
 	String aString { get; set; }
 } // interface BasicTypes
 
-public class BasicTypes_impl : BasicTypes, IEquatable<BasicTypes_impl>
+public class BasicTypes_impl : IBasicTypes, IEquatable<BasicTypes_impl>
 {
 	public Int64 anInt { get; set; }
 	public UInt64 anUInt { get; set; }
@@ -1624,11 +1624,11 @@ public class BasicTypes_impl : BasicTypes, IEquatable<BasicTypes_impl>
 	}
 } // class BasicTypes_impl
 
-public class BasicTypes_subs : BasicTypes
+public class BasicTypes_subscriber : IBasicTypes
 {
-	BasicTypes t;
+	IBasicTypes t;
 	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
-	public BasicTypes_subs(BasicTypes t)
+	public BasicTypes_subscriber(IBasicTypes t)
 	{
 		this.t = t;
 	}
@@ -1652,14 +1652,14 @@ public class BasicTypes_subs : BasicTypes
 		get { return t.aString; }
 		set { throw new InvalidOperationException(); }
 	}
-	public static void parseForStateSync(IPublishableParser parser, BasicTypes t)
+	public static void parseForStateSync(IPublishableParser parser, IBasicTypes t)
 	{
 		t.anInt = parser.parseInteger("anInt");
 		t.anUInt = parser.parseUnsigned("anUInt");
 		t.aReal = parser.parseReal("aReal");
 		t.aString = parser.parseString("aString");
 	}
-	public static bool parse(IPublishableParser parser, BasicTypes t)
+	public static bool parse(IPublishableParser parser, IBasicTypes t)
 	{
 		bool changed = false;
 		{
@@ -1696,7 +1696,7 @@ public class BasicTypes_subs : BasicTypes
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, BasicTypes t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, IBasicTypes t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -1754,15 +1754,15 @@ public class BasicTypes_subs : BasicTypes
 		}
 		return changed;
 	}
-} // class BasicTypes_subs
+} // class BasicTypes_subscriber
 
-public class BasicTypes_publ : BasicTypes
+public class BasicTypes_publisher : IBasicTypes
 {
-	BasicTypes t;
+	IBasicTypes t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
-	public BasicTypes_publ(BasicTypes t, IPublishableComposer composer, UInt64[] address)
+	public BasicTypes_publisher(IBasicTypes t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
@@ -1812,24 +1812,24 @@ public class BasicTypes_publ : BasicTypes
 			composer.composeAddressEnd();
 		}
 	}
-	public static void compose(IPublishableComposer composer, BasicTypes t)
+	public static void compose(IPublishableComposer composer, IBasicTypes t)
 	{
 		composer.composeInteger("anInt", t.anInt, true);
 		composer.composeUnsigned("anUInt", t.anUInt, true);
 		composer.composeReal("aReal", t.aReal, true);
 		composer.composeString("aString", t.aString, false);
 	}
-} // class BasicTypes_publ
+} // class BasicTypes_publisher
 
 
-public interface point3D
+public interface Ipoint3D
 {
 	Int64 x { get; set; }
 	Int64 y { get; set; }
 	Int64 z { get; set; }
 } // interface point3D
 
-public class point3D_impl : point3D, IEquatable<point3D_impl>
+public class point3D_impl : Ipoint3D, IEquatable<point3D_impl>
 {
 	public Int64 x { get; set; }
 	public Int64 y { get; set; }
@@ -1872,11 +1872,11 @@ public class point3D_impl : point3D, IEquatable<point3D_impl>
 	}
 } // class point3D_impl
 
-public class point3D_subs : point3D
+public class point3D_subscriber : Ipoint3D
 {
-	point3D t;
+	Ipoint3D t;
 	enum Address { x = 0, y = 1, z = 2 };
-	public point3D_subs(point3D t)
+	public point3D_subscriber(Ipoint3D t)
 	{
 		this.t = t;
 	}
@@ -1895,13 +1895,13 @@ public class point3D_subs : point3D
 		get { return t.z; }
 		set { throw new InvalidOperationException(); }
 	}
-	public static void parseForStateSync(IPublishableParser parser, point3D t)
+	public static void parseForStateSync(IPublishableParser parser, Ipoint3D t)
 	{
 		t.x = parser.parseInteger("x");
 		t.y = parser.parseInteger("y");
 		t.z = parser.parseInteger("z");
 	}
-	public static bool parse(IPublishableParser parser, point3D t)
+	public static bool parse(IPublishableParser parser, Ipoint3D t)
 	{
 		bool changed = false;
 		{
@@ -1930,7 +1930,7 @@ public class point3D_subs : point3D
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, point3D t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, Ipoint3D t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -1976,15 +1976,15 @@ public class point3D_subs : point3D
 		}
 		return changed;
 	}
-} // class point3D_subs
+} // class point3D_subscriber
 
-public class point3D_publ : point3D
+public class point3D_publisher : Ipoint3D
 {
-	point3D t;
+	Ipoint3D t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { x = 0, y = 1, z = 2 };
-	public point3D_publ(point3D t, IPublishableComposer composer, UInt64[] address)
+	public point3D_publisher(Ipoint3D t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
@@ -2023,28 +2023,28 @@ public class point3D_publ : point3D
 			composer.composeAddressEnd();
 		}
 	}
-	public static void compose(IPublishableComposer composer, point3D t)
+	public static void compose(IPublishableComposer composer, Ipoint3D t)
 	{
 		composer.composeInteger("x", t.x, true);
 		composer.composeInteger("y", t.y, true);
 		composer.composeInteger("z", t.z, false);
 	}
-} // class point3D_publ
+} // class point3D_publisher
 
 
-public interface AggregateType
+public interface IAggregateType
 {
 	String name { get; set; }
-	BasicTypes theAggregate { get; set; }
-	BasicTypes make_theAggregate();
+	IBasicTypes theAggregate { get; set; }
+	IBasicTypes make_theAggregate();
 	Int64 lastValue { get; set; }
 } // interface AggregateType
 
-public class AggregateType_impl : AggregateType, IEquatable<AggregateType_impl>
+public class AggregateType_impl : IAggregateType, IEquatable<AggregateType_impl>
 {
 	public String name { get; set; }
-	public BasicTypes theAggregate { get; set; }
-	public BasicTypes make_theAggregate() { return new BasicTypes_impl(); }
+	public IBasicTypes theAggregate { get; set; }
+	public IBasicTypes make_theAggregate() { return new BasicTypes_impl(); }
 	public Int64 lastValue { get; set; }
 	public override bool Equals(object obj)
 	{
@@ -2084,11 +2084,11 @@ public class AggregateType_impl : AggregateType, IEquatable<AggregateType_impl>
 	}
 } // class AggregateType_impl
 
-public class AggregateType_subs : AggregateType
+public class AggregateType_subscriber : IAggregateType
 {
-	AggregateType t;
+	IAggregateType t;
 	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
-	public AggregateType_subs(AggregateType t)
+	public AggregateType_subscriber(IAggregateType t)
 	{
 		this.t = t;
 	}
@@ -2097,27 +2097,27 @@ public class AggregateType_subs : AggregateType
 		get { return t.name; }
 		set { throw new InvalidOperationException(); }
 	}
-	public BasicTypes theAggregate
+	public IBasicTypes theAggregate
 	{
-		get { return new BasicTypes_subs(t.theAggregate); }
+		get { return new BasicTypes_subscriber(t.theAggregate); }
 		set { throw new InvalidOperationException(); }
 	}
-	public BasicTypes make_theAggregate() { throw new InvalidOperationException(); }
+	public IBasicTypes make_theAggregate() { throw new InvalidOperationException(); }
 	public Int64 lastValue
 	{
 		get { return t.lastValue; }
 		set { throw new InvalidOperationException(); }
 	}
-	public static void parseForStateSync(IPublishableParser parser, AggregateType t)
+	public static void parseForStateSync(IPublishableParser parser, IAggregateType t)
 	{
 		t.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("theAggregate");
 		t.theAggregate = t.make_theAggregate();
-		BasicTypes_subs.parseForStateSync(parser, t.theAggregate);
+		BasicTypes_subscriber.parseForStateSync(parser, t.theAggregate);
 		parser.parsePublishableStructEnd();
 		t.lastValue = parser.parseInteger("lastValue");
 	}
-	public static bool parse(IPublishableParser parser, AggregateType t)
+	public static bool parse(IPublishableParser parser, IAggregateType t)
 	{
 		bool changed = false;
 		{
@@ -2130,7 +2130,7 @@ public class AggregateType_subs : AggregateType
 		}
 		{
 			parser.parsePublishableStructBegin("theAggregate");
-			bool currentChanged = BasicTypes_subs.parse(parser, t.theAggregate);
+			bool currentChanged = BasicTypes_subscriber.parse(parser, t.theAggregate);
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -2148,7 +2148,7 @@ public class AggregateType_subs : AggregateType
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, AggregateType t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, IAggregateType t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -2171,12 +2171,12 @@ public class AggregateType_subs : AggregateType
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subs.parse(parser, t.theAggregate);
+					currentChanged = BasicTypes_subscriber.parse(parser, t.theAggregate);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subs.parse(parser, t.theAggregate, addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, t.theAggregate, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2205,15 +2205,15 @@ public class AggregateType_subs : AggregateType
 		}
 		return changed;
 	}
-} // class AggregateType_subs
+} // class AggregateType_subscriber
 
-public class AggregateType_publ : AggregateType
+public class AggregateType_publisher : IAggregateType
 {
-	AggregateType t;
+	IAggregateType t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
-	public AggregateType_publ(AggregateType t, IPublishableComposer composer, UInt64[] address)
+	public AggregateType_publisher(IAggregateType t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
@@ -2230,20 +2230,20 @@ public class AggregateType_publ : AggregateType
 			composer.composeAddressEnd();
 		}
 	}
-	public BasicTypes theAggregate
+	public IBasicTypes theAggregate
 	{
-		get { return new BasicTypes_publ(t.theAggregate, composer, Publishable.makeAddress(address, (UInt64)Address.theAggregate)); }
+		get { return new BasicTypes_publisher(t.theAggregate, composer, Publishable.makeAddress(address, (UInt64)Address.theAggregate)); }
 		set
 		{
 			t.theAggregate = value;
 			composer.composeAddress(address, (UInt64)Address.theAggregate);
 			composer.composePublishableStructBegin("value");
-			BasicTypes_publ.compose(composer, value);
+			BasicTypes_publisher.compose(composer, value);
 			composer.composePublishableStructEnd(false);
 			composer.composeAddressEnd();
 		}
 	}
-	public BasicTypes make_theAggregate() { return t.make_theAggregate(); }
+	public IBasicTypes make_theAggregate() { return t.make_theAggregate(); }
 	public Int64 lastValue
 	{
 		get { return t.lastValue; }
@@ -2255,15 +2255,15 @@ public class AggregateType_publ : AggregateType
 			composer.composeAddressEnd();
 		}
 	}
-	public static void compose(IPublishableComposer composer, AggregateType t)
+	public static void compose(IPublishableComposer composer, IAggregateType t)
 	{
 		composer.composeString("name", t.name, true);
 		composer.composePublishableStructBegin("theAggregate");
-		BasicTypes_publ.compose(composer, t.theAggregate);
+		BasicTypes_publisher.compose(composer, t.theAggregate);
 		composer.composePublishableStructEnd(true);
 		composer.composeInteger("lastValue", t.lastValue, false);
 	}
-} // class AggregateType_publ
+} // class AggregateType_publisher
 
 
 //**********************************************************************
@@ -2273,22 +2273,22 @@ public class AggregateType_publ : AggregateType
 // 3. STRUCT AggregateType aggregate
 //**********************************************************************
 
-public interface StructSix
+public interface IStructSix
 {
 	String name { get; set; }
-	BasicTypes basic { get; set; }
-	BasicTypes make_basic();
-	AggregateType aggregate { get; set; }
-	AggregateType make_aggregate();
+	IBasicTypes basic { get; set; }
+	IBasicTypes make_basic();
+	IAggregateType aggregate { get; set; }
+	IAggregateType make_aggregate();
 } // interface StructSix
 
-public class StructSix_impl : StructSix, IEquatable<StructSix_impl>
+public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 {
 	public String name { get; set; }
-	public BasicTypes basic { get; set; }
-	public BasicTypes make_basic() { return new BasicTypes_impl(); }
-	public AggregateType aggregate { get; set; }
-	public AggregateType make_aggregate() { return new AggregateType_impl(); }
+	public IBasicTypes basic { get; set; }
+	public IBasicTypes make_basic() { return new BasicTypes_impl(); }
+	public IAggregateType aggregate { get; set; }
+	public IAggregateType make_aggregate() { return new AggregateType_impl(); }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as StructSix_impl);
@@ -2327,11 +2327,11 @@ public class StructSix_impl : StructSix, IEquatable<StructSix_impl>
 	}
 } // class StructSix_impl
 
-public class StructSix_subs : StructSix, StateSubscriberBase
+public class StructSix_subscriber : IStructSix, StateSubscriberBase
 {
-	StructSix t;
+	IStructSix t;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_subs(StructSix t)
+	public StructSix_subscriber(IStructSix t)
 	{
 		this.t = t;
 	}
@@ -2340,31 +2340,31 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 		get { return t.name; }
 		set { throw new InvalidOperationException(); }
 	}
-	public BasicTypes basic
+	public IBasicTypes basic
 	{
-		get { return new BasicTypes_subs(t.basic); }
+		get { return new BasicTypes_subscriber(t.basic); }
 		set { throw new InvalidOperationException(); }
 	}
-	public BasicTypes make_basic() { throw new InvalidOperationException(); }
-	public AggregateType aggregate
+	public IBasicTypes make_basic() { throw new InvalidOperationException(); }
+	public IAggregateType aggregate
 	{
-		get { return new AggregateType_subs(t.aggregate); }
+		get { return new AggregateType_subscriber(t.aggregate); }
 		set { throw new InvalidOperationException(); }
 	}
-	public AggregateType make_aggregate() { throw new InvalidOperationException(); }
-	public static void parseForStateSync(IPublishableParser parser, StructSix t)
+	public IAggregateType make_aggregate() { throw new InvalidOperationException(); }
+	public static void parseForStateSync(IPublishableParser parser, IStructSix t)
 	{
 		t.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("basic");
 		t.basic = t.make_basic();
-		BasicTypes_subs.parseForStateSync(parser, t.basic);
+		BasicTypes_subscriber.parseForStateSync(parser, t.basic);
 		parser.parsePublishableStructEnd();
 		parser.parsePublishableStructBegin("aggregate");
 		t.aggregate = t.make_aggregate();
-		AggregateType_subs.parseForStateSync(parser, t.aggregate);
+		AggregateType_subscriber.parseForStateSync(parser, t.aggregate);
 		parser.parsePublishableStructEnd();
 	}
-	public static bool parse(IPublishableParser parser, StructSix t)
+	public static bool parse(IPublishableParser parser, IStructSix t)
 	{
 		bool changed = false;
 		{
@@ -2377,7 +2377,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 		}
 		{
 			parser.parsePublishableStructBegin("basic");
-			bool currentChanged = BasicTypes_subs.parse(parser, t.basic);
+			bool currentChanged = BasicTypes_subscriber.parse(parser, t.basic);
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -2387,7 +2387,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 		}
 		{
 			parser.parsePublishableStructBegin("aggregate");
-			bool currentChanged = AggregateType_subs.parse(parser, t.aggregate);
+			bool currentChanged = AggregateType_subscriber.parse(parser, t.aggregate);
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -2397,7 +2397,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, StructSix t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, IStructSix t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -2420,12 +2420,12 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subs.parse(parser, t.basic);
+					currentChanged = BasicTypes_subscriber.parse(parser, t.basic);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subs.parse(parser, t.basic, addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, t.basic, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2443,12 +2443,12 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = AggregateType_subs.parse(parser, t.aggregate);
+					currentChanged = AggregateType_subscriber.parse(parser, t.aggregate);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = AggregateType_subs.parse(parser, t.aggregate, addr, offset + 1);
+					currentChanged = AggregateType_subscriber.parse(parser, t.aggregate, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2477,7 +2477,7 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 		UInt64[] addr = null;
 		while(parser.parseAddress(ref addr))
 		{
-			StructSix_subs.parse(parser, this.t, addr, 0);
+			StructSix_subscriber.parse(parser, this.t, addr, 0);
 			parser.parseAddressEnd();
 			addr = null;
 		}
@@ -2486,18 +2486,18 @@ public class StructSix_subs : StructSix, StateSubscriberBase
 	public void applyStateSyncMessage(IPublishableParser parser)
 	{
 		parser.parseStructBegin();
-		StructSix_subs.parseForStateSync(parser, this.t);
+		StructSix_subscriber.parseForStateSync(parser, this.t);
 		parser.parseStructEnd();
 	}
-} // class StructSix_subs
+} // class StructSix_subscriber
 
-public class StructSix_publ : StructSix, StatePublisherBase
+public class StructSix_publisher : IStructSix, StatePublisherBase
 {
-	StructSix t;
+	IStructSix t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_publ(StructSix t, IPublishableComposer composer, UInt64[] address)
+	public StructSix_publisher(IStructSix t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
@@ -2514,42 +2514,42 @@ public class StructSix_publ : StructSix, StatePublisherBase
 			composer.composeAddressEnd();
 		}
 	}
-	public BasicTypes basic
+	public IBasicTypes basic
 	{
-		get { return new BasicTypes_publ(t.basic, composer, Publishable.makeAddress(address, (UInt64)Address.basic)); }
+		get { return new BasicTypes_publisher(t.basic, composer, Publishable.makeAddress(address, (UInt64)Address.basic)); }
 		set
 		{
 			t.basic = value;
 			composer.composeAddress(address, (UInt64)Address.basic);
 			composer.composePublishableStructBegin("value");
-			BasicTypes_publ.compose(composer, value);
+			BasicTypes_publisher.compose(composer, value);
 			composer.composePublishableStructEnd(false);
 			composer.composeAddressEnd();
 		}
 	}
-	public BasicTypes make_basic() { return t.make_basic(); }
-	public AggregateType aggregate
+	public IBasicTypes make_basic() { return t.make_basic(); }
+	public IAggregateType aggregate
 	{
-		get { return new AggregateType_publ(t.aggregate, composer, Publishable.makeAddress(address, (UInt64)Address.aggregate)); }
+		get { return new AggregateType_publisher(t.aggregate, composer, Publishable.makeAddress(address, (UInt64)Address.aggregate)); }
 		set
 		{
 			t.aggregate = value;
 			composer.composeAddress(address, (UInt64)Address.aggregate);
 			composer.composePublishableStructBegin("value");
-			AggregateType_publ.compose(composer, value);
+			AggregateType_publisher.compose(composer, value);
 			composer.composePublishableStructEnd(false);
 			composer.composeAddressEnd();
 		}
 	}
-	public AggregateType make_aggregate() { return t.make_aggregate(); }
-	public static void compose(IPublishableComposer composer, StructSix t)
+	public IAggregateType make_aggregate() { return t.make_aggregate(); }
+	public static void compose(IPublishableComposer composer, IStructSix t)
 	{
 		composer.composeString("name", t.name, true);
 		composer.composePublishableStructBegin("basic");
-		BasicTypes_publ.compose(composer, t.basic);
+		BasicTypes_publisher.compose(composer, t.basic);
 		composer.composePublishableStructEnd(true);
 		composer.composePublishableStructBegin("aggregate");
-		AggregateType_publ.compose(composer, t.aggregate);
+		AggregateType_publisher.compose(composer, t.aggregate);
 		composer.composePublishableStructEnd(false);
 	}
 	public String statePublisherName() { return "StructSix"; }
@@ -2557,7 +2557,7 @@ public class StructSix_publ : StructSix, StatePublisherBase
 	public void generateStateSyncMessage(IPublishableComposer composer)
 	{
 		composer.composeStructBegin();
-		StructSix_publ.compose(composer, this);
+		StructSix_publisher.compose(composer, this);
 		composer.composeStructEnd();
 	}
 	public void startTick(BufferT buff)
@@ -2570,7 +2570,7 @@ public class StructSix_publ : StructSix, StatePublisherBase
 		composer.composeStateUpdateMessageEnd();
 		return composer.endTick();
 	}
-} // class StructSix_publ
+} // class StructSix_publisher
 
 
 //**********************************************************************
@@ -2582,7 +2582,7 @@ public class StructSix_publ : StructSix, StatePublisherBase
 // 5. VECTOR< STRUCT point3D> structVec
 //**********************************************************************
 
-public interface publishable_seven
+public interface Ipublishable_seven
 {
 	IList<Int64> intVec { get; set; }
 	IList<Int64> make_intVec();
@@ -2592,12 +2592,12 @@ public interface publishable_seven
 	IList<Double> make_realVec();
 	IList<String> strVec { get; set; }
 	IList<String> make_strVec();
-	IList<point3D> structVec { get; set; }
-	IList<point3D> make_structVec();
-	point3D make_structVec_element();
+	IList<Ipoint3D> structVec { get; set; }
+	IList<Ipoint3D> make_structVec();
+	Ipoint3D make_structVec_element();
 } // interface publishable_seven
 
-public class publishable_seven_impl : publishable_seven, IEquatable<publishable_seven_impl>
+public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable_seven_impl>
 {
 	public IList<Int64> intVec { get; set; }
 	public IList<Int64> make_intVec() { return new List<Int64>(); }
@@ -2607,9 +2607,9 @@ public class publishable_seven_impl : publishable_seven, IEquatable<publishable_
 	public IList<Double> make_realVec() { return new List<Double>(); }
 	public IList<String> strVec { get; set; }
 	public IList<String> make_strVec() { return new List<String>(); }
-	public IList<point3D> structVec { get; set; }
-	public IList<point3D> make_structVec() { return new List<point3D>(); }
-	public point3D make_structVec_element() { return new point3D_impl(); }
+	public IList<Ipoint3D> structVec { get; set; }
+	public IList<Ipoint3D> make_structVec() { return new List<Ipoint3D>(); }
+	public Ipoint3D make_structVec_element() { return new point3D_impl(); }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as publishable_seven_impl);
@@ -2650,11 +2650,11 @@ public class publishable_seven_impl : publishable_seven, IEquatable<publishable_
 	}
 } // class publishable_seven_impl
 
-public class publishable_seven_subs : publishable_seven, StateSubscriberBase
+public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberBase
 {
-	publishable_seven t;
+	Ipublishable_seven t;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_subs(publishable_seven t)
+	public publishable_seven_subscriber(Ipublishable_seven t)
 	{
 		this.t = t;
 	}
@@ -2682,14 +2682,14 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		set { throw new InvalidOperationException(); }
 	}
 	public IList<String> make_strVec() { throw new InvalidOperationException(); }
-	public IList<point3D> structVec
+	public IList<Ipoint3D> structVec
 	{
-		get { return new SubscriberVectorWrapper<point3D>(t.structVec); }
+		get { return new SubscriberVectorWrapper<Ipoint3D>(t.structVec); }
 		set { throw new InvalidOperationException(); }
 	}
-	public IList<point3D> make_structVec() { throw new InvalidOperationException(); }
-	public point3D make_structVec_element() { throw new InvalidOperationException(); }
-	public static void parseForStateSync(IPublishableParser parser, publishable_seven t)
+	public IList<Ipoint3D> make_structVec() { throw new InvalidOperationException(); }
+	public Ipoint3D make_structVec_element() { throw new InvalidOperationException(); }
+	public static void parseForStateSync(IPublishableParser parser, Ipublishable_seven t)
 	{
 		t.intVec = t.make_intVec();
 		parser.parseSimpleVector("intVec", Publishable.makeParser(t.intVec));
@@ -2703,14 +2703,14 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
-				point3D val = t.make_structVec_element();
-				point3D_subs.parseForStateSync(parser, val);
+				Ipoint3D val = t.make_structVec_element();
+				point3D_subscriber.parseForStateSync(parser, val);
 				t.structVec.Add(val);
 				parser.parseStructEnd();
 			}
 		);
 	}
-	public static bool parse(IPublishableParser parser, publishable_seven t)
+	public static bool parse(IPublishableParser parser, Ipublishable_seven t)
 	{
 		bool changed = false;
 		{
@@ -2750,12 +2750,12 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		}
 		}
 		{
-		IList<point3D> newVal = t.make_structVec();
+		IList<Ipoint3D> newVal = t.make_structVec();
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
-				point3D val = t.make_structVec_element();
-				point3D_subs.parseForStateSync(parser, val);
+				Ipoint3D val = t.make_structVec_element();
+				point3D_subscriber.parseForStateSync(parser, val);
 				t.structVec.Add(val);
 				parser.parseStructEnd();
 			}
@@ -2768,7 +2768,7 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, publishable_seven t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, Ipublishable_seven t, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -2894,13 +2894,13 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 				bool currentChanged = false;
 				if(addr.Length == offset + 1) // full vector replace
 				{
-					IList<point3D> newVal = t.make_structVec();
+					IList<Ipoint3D> newVal = t.make_structVec();
 					parser.parseVector("value",
 						(IPublishableParser parser, int index) =>
 						{
 							parser.parseStructBegin();
-							point3D val = t.make_structVec_element();
-							point3D_subs.parseForStateSync(parser, val);
+							Ipoint3D val = t.make_structVec_element();
+							point3D_subscriber.parseForStateSync(parser, val);
 							newVal.Add(val);
 							parser.parseStructEnd();
 						}
@@ -2914,12 +2914,12 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 				else if(addr.Length == offset + 2) // action over one of the elements
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<point3D>.parseVectorActionSimple(parser, t.structVec, index,
+					currentChanged = PublisherVectorWrapper<Ipoint3D>.parseVectorActionSimple(parser, t.structVec, index,
 						(IPublishableParser parser) =>
 						{
-							point3D newVal = t.make_structVec_element();
+							Ipoint3D newVal = t.make_structVec_element();
 							parser.parsePublishableStructBegin("value");
-							point3D_subs.parseForStateSync(parser, newVal);
+							point3D_subscriber.parseForStateSync(parser, newVal);
 							parser.parsePublishableStructEnd();
 							return newVal;
 						}
@@ -2928,7 +2928,7 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 				else if(addr.Length > offset + 2) // let child continue parsing
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = point3D_subs.parse(parser, t.structVec[index], addr, offset + 2);
+					currentChanged = point3D_subscriber.parse(parser, t.structVec[index], addr, offset + 2);
 				}
 				else
 					throw new Exception();
@@ -2957,7 +2957,7 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 		UInt64[] addr = null;
 		while(parser.parseAddress(ref addr))
 		{
-			publishable_seven_subs.parse(parser, this.t, addr, 0);
+			publishable_seven_subscriber.parse(parser, this.t, addr, 0);
 			parser.parseAddressEnd();
 			addr = null;
 		}
@@ -2966,18 +2966,18 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 	public void applyStateSyncMessage(IPublishableParser parser)
 	{
 		parser.parseStructBegin();
-		publishable_seven_subs.parseForStateSync(parser, this.t);
+		publishable_seven_subscriber.parseForStateSync(parser, this.t);
 		parser.parseStructEnd();
 	}
-} // class publishable_seven_subs
+} // class publishable_seven_subscriber
 
-public class publishable_seven_publ : publishable_seven, StatePublisherBase
+public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBase
 {
-	publishable_seven t;
+	Ipublishable_seven t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_publ(publishable_seven t, IPublishableComposer composer, UInt64[] address)
+	public publishable_seven_publisher(Ipublishable_seven t, IPublishableComposer composer, UInt64[] address)
 	{
 		this.t = t;
 		this.composer = composer;
@@ -3059,20 +3059,20 @@ public class publishable_seven_publ : publishable_seven, StatePublisherBase
 		}
 	}
 	public IList<String> make_strVec() { return t.make_strVec(); }
-	public IList<point3D> structVec
+	public IList<Ipoint3D> structVec
 	{
 		get
 		{
-			return new PublisherVectorWrapper<point3D>(t.structVec, composer,
+			return new PublisherVectorWrapper<Ipoint3D>(t.structVec, composer,
 				Publishable.makeAddress(address, (UInt64)Address.structVec),
-				(IPublishableComposer composer, point3D val) =>
+				(IPublishableComposer composer, Ipoint3D val) =>
 				{
 					composer.composePublishableStructBegin("value");
-					point3D_publ.compose(composer, val);
+					point3D_publisher.compose(composer, val);
 					composer.composePublishableStructEnd(false);
 				},
-				(point3D val, IPublishableComposer composer, UInt64[] addr) =>
-				{ return new point3D_publ(val, composer, addr); }
+				(Ipoint3D val, IPublishableComposer composer, UInt64[] addr) =>
+				{ return new point3D_publisher(val, composer, addr); }
 			);
 		}
 		set
@@ -3080,28 +3080,28 @@ public class publishable_seven_publ : publishable_seven, StatePublisherBase
 			t.structVec = value;
 			composer.composeAddress(address, (UInt64)Address.structVec);
 			composer.composeVector("value", value.Count,
-				(IPublishableComposer composer, int ordinal) => { point3D_publ.compose(composer, value[ordinal]); },
+				(IPublishableComposer composer, int ordinal) => { point3D_publisher.compose(composer, value[ordinal]); },
 				false);
 			composer.composeAddressEnd();
 		}
 	}
-	public IList<point3D> make_structVec() { return t.make_structVec(); }
-	public point3D make_structVec_element() { return t.make_structVec_element(); }
-	public static void compose(IPublishableComposer composer, publishable_seven t)
+	public IList<Ipoint3D> make_structVec() { return t.make_structVec(); }
+	public Ipoint3D make_structVec_element() { return t.make_structVec_element(); }
+	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
 		composer.composeSimpleVector("intVec", Publishable.makeComposer(t.intVec), true);
 		composer.composeSimpleVector("uintVec", Publishable.makeComposer(t.uintVec), true);
 		composer.composeSimpleVector("realVec", Publishable.makeComposer(t.realVec), true);
 		composer.composeSimpleVector("strVec", Publishable.makeComposer(t.strVec), true);
 		composer.composeVector("structVec", t.structVec.Count,
-			(IPublishableComposer composer, int ordinal) => { point3D_publ.compose(composer, t.structVec[ordinal]); }, false);
+			(IPublishableComposer composer, int ordinal) => { point3D_publisher.compose(composer, t.structVec[ordinal]); }, false);
 	}
 	public String statePublisherName() { return "publishable_seven"; }
 	public UInt64 stateTypeID() { return 7; }
 	public void generateStateSyncMessage(IPublishableComposer composer)
 	{
 		composer.composeStructBegin();
-		publishable_seven_publ.compose(composer, this);
+		publishable_seven_publisher.compose(composer, this);
 		composer.composeStructEnd();
 	}
 	public void startTick(BufferT buff)
@@ -3114,7 +3114,7 @@ public class publishable_seven_publ : publishable_seven, StatePublisherBase
 		composer.composeStateUpdateMessageEnd();
 		return composer.endTick();
 	}
-} // class publishable_seven_publ
+} // class publishable_seven_publisher
 
 
 

@@ -75,13 +75,13 @@ namespace TestProject1
 
             data.structVec = data.make_structVec();
 
-            mtest.publishable.point3D e1 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
             e1.x = 101;
             e1.y = 102;
             e1.z = 103;
             data.structVec.Add(e1);
 
-            mtest.publishable.point3D e2 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e2 = data.make_structVec_element();
             e2.x = 201;
             e2.y = 202;
             e2.z = 203;
@@ -95,7 +95,7 @@ namespace TestProject1
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
-            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, null, new UInt64[] { });
+            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             JsonPublishableComposer composer = new JsonPublishableComposer();
@@ -114,7 +114,7 @@ namespace TestProject1
         {
             mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
 
-            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(JsonPath);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
@@ -123,11 +123,11 @@ namespace TestProject1
 
             Assert.Equal(data, GetPublishableSeven());
         }
-        static void TestJsonComposeUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
+        static void TestJsonComposeUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
-            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
 
@@ -142,10 +142,10 @@ namespace TestProject1
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-        static void TestJsonParseUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
+        static void TestJsonParseUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
@@ -161,7 +161,7 @@ namespace TestProject1
             Assert.Equal(data, data2);
         }
 
-        static void doUpdate1(mtest.publishable.publishable_seven data)
+        static void doUpdate1(mtest.publishable.Ipublishable_seven data)
         {
             //modify substructure inside vector
             data.structVec[0].y = 505;
@@ -179,7 +179,7 @@ namespace TestProject1
             TestJsonParseUpdate(JsonPath1, doUpdate1);
         }
 
-        static void doUpdate2(mtest.publishable.publishable_seven data)
+        static void doUpdate2(mtest.publishable.Ipublishable_seven data)
         {
             //modify existing elements
             data.intVec[0] = 303;
@@ -187,7 +187,7 @@ namespace TestProject1
             data.realVec[2] = 505;
             data.strVec[1] = "four";
 
-            mtest.publishable.point3D e1 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
             e1.x = 901;
             e1.y = 902;
             e1.z = 903;
@@ -206,7 +206,7 @@ namespace TestProject1
             TestJsonParseUpdate(JsonPath2, doUpdate2);
         }
 
-        static void doUpdate3(mtest.publishable.publishable_seven data)
+        static void doUpdate3(mtest.publishable.Ipublishable_seven data)
         {
             //replace complete vector
             IList<String> strVec = data.make_strVec();
@@ -216,8 +216,8 @@ namespace TestProject1
 
             data.realVec = data.make_realVec();
 
-            IList<mtest.publishable.point3D> vec = data.make_structVec();
-            mtest.publishable.point3D e1 = data.make_structVec_element();
+            IList<mtest.publishable.Ipoint3D> vec = data.make_structVec();
+            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
             e1.x = 301;
             e1.y = 302;
             e1.z = 303;
@@ -235,7 +235,7 @@ namespace TestProject1
         {
             TestJsonParseUpdate(JsonPath3, doUpdate3);
         }
-        static void doUpdate4(mtest.publishable.publishable_seven data)
+        static void doUpdate4(mtest.publishable.Ipublishable_seven data)
         {
             //erase elements in vector
             data.intVec.RemoveAt(0);
@@ -254,7 +254,7 @@ namespace TestProject1
         {
             TestJsonParseUpdate(JsonPath4, doUpdate4);
         }
-        static void doUpdate5(mtest.publishable.publishable_seven data)
+        static void doUpdate5(mtest.publishable.Ipublishable_seven data)
         {
             //insert elements in vector
             data.intVec.Insert(0, 77);
@@ -262,7 +262,7 @@ namespace TestProject1
             data.realVec.Insert(2, 99);
             data.strVec.Insert(3, "last");
 
-            mtest.publishable.point3D e1 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
             e1.x = 301;
             e1.y = 302;
             e1.z = 303;
@@ -287,7 +287,7 @@ namespace TestProject1
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
-            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, null, new UInt64[] { });
+            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             GmqPublishableComposer composer = new GmqPublishableComposer();
@@ -306,7 +306,7 @@ namespace TestProject1
         {
             mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
 
-            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(GmqPath);
             GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
@@ -315,11 +315,11 @@ namespace TestProject1
 
             Assert.Equal(data, GetPublishableSeven());
         }
-        static void TestGmqComposeUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
+        static void TestGmqComposeUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
-            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, new GmqPublishableComposer(), new UInt64[] { });
+            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, new GmqPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
 
@@ -334,10 +334,10 @@ namespace TestProject1
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-        static void TestGmqParseUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
+        static void TestGmqParseUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
