@@ -2083,28 +2083,28 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 										currentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
 										if ( currentChanged )
 										{
-											t.notifyElementUpdated_properties( key, oldValue );
+											t.notifyValueUpdated_properties( key, oldValue );
 											if constexpr ( has_value_updated_notifier_for_properties )
-												t.notifyElementUpdated_properties( key );
+												t.notifyValueUpdated_properties( key );
 											if constexpr ( has_void_value_updated_notifier_for_properties )
-												t.notifyElementUpdated_properties();
+												t.notifyValueUpdated_properties();
 										}
 									}
 									else if constexpr ( has_value_updated_notifier_for_properties )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
+										currentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
 										if ( currentChanged )
 										{
-											t.notifyElementUpdated_properties( key );
+											t.notifyValueUpdated_properties( key );
 											if constexpr ( has_void_value_updated_notifier_for_properties )
-												t.notifyElementUpdated_properties();
+												t.notifyValueUpdated_properties();
 										}
 									}
 									else if constexpr ( has_void_value_updated_notifier_for_properties )
 									{
-										currentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
+										currentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType>( parser, value, oldValue );
 										if ( currentChanged )
-											t.notifyElementUpdated_properties();
+											t.notifyValueUpdated_properties();
 									}
 									else
 									{

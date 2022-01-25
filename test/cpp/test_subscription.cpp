@@ -804,6 +804,8 @@ void publishableTestOne()
 	setCurrentNode( nullptr );
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // no notifiers
 
 struct HtmlTagSample
@@ -813,22 +815,136 @@ struct HtmlTagSample
 
 // version with notifiers: we have to add them
 
-/*struct Property
-{
-	GMQ_COLL string name = "ini_name";
-	GMQ_COLL string value = "ini_value";
+struct HtmlTag;
 
-	void notifyUpdated_name() const { assert( getCurrentNode() != nullptr ); fmt::print( "Property::notifyUpdated_name()\n" ); }
-	void notifyUpdated_value() const { assert( getCurrentNode() != nullptr ); fmt::print( "Property::notifyUpdated_value()\n" ); }
-};*/
-
-class HtmlTextOrTags : public mtest::structures::HtmlTextOrTags
+class HtmlTextOrTags : public ::globalmq::marshalling::impl::DiscriminatedUnionType
 {
 public:
 	void notifyUpdated_currentVariant() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_currentVariant()\n" ); }
 	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_str(), new str = \"{}\"\n", str() ); }
 	void notifyUpdated_str(GMQ_COLL string oldStr) const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_str(), old str = \"{}\", new str = \"{}\"\n", oldStr, str() ); }
 	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_tags()\n" ); }
+public:
+	enum Variants { text=21, taglists=22, unknown };
+private:
+	Variants v = Variants::unknown;
+	struct Case_text
+	{
+		GMQ_COLL string str;
+	};
+
+	struct Case_taglists
+	{
+		GMQ_COLL vector<HtmlTag> tags;
+	};
+
+public:
+	using Case_text_str_T = decltype( Case_text::str );
+	using Case_taglists_tags_T = decltype( Case_taglists::tags );
+
+private:
+	static constexpr size_t text_taglists_memsz = sizeof( Case_taglists ) > ( sizeof( Case_text ) ) ? sizeof( Case_taglists ) : ( sizeof( Case_text ) );
+	uint8_t text_taglists_mem[text_taglists_memsz];
+	void implDeinit() {
+		if ( v != Variants::unknown ) // then destruct existing value
+		{
+			switch ( v )
+			{
+				case Variants::text: reinterpret_cast<Case_text*>( text_taglists_mem ) -> ~Case_text(); break;
+				case Variants::taglists: reinterpret_cast<Case_taglists*>( text_taglists_mem ) -> ~Case_taglists(); break;
+			}
+			v = Variants::unknown;
+		}
+	}
+
+	void implCopyFrom( const HtmlTextOrTags& other ) {
+		if ( v != other.v )
+			implDeinit();
+		switch ( other.v )
+		{
+			case Variants::text:
+				new ( text_taglists_mem ) Case_text( *reinterpret_cast<const Case_text*>( other.text_taglists_mem ) );
+				break;
+			case Variants::taglists:
+				new ( text_taglists_mem ) Case_taglists( *reinterpret_cast<const Case_taglists*>( other.text_taglists_mem ) );
+				break;
+			case Variants::unknown: break;
+		}
+		v = other.v;
+	}
+
+	void implMoveFrom( HtmlTextOrTags&& other ) {
+		if ( v != other.v )
+			implDeinit();
+		switch ( other.v )
+		{
+			case Variants::text:
+				new ( text_taglists_mem ) Case_text( std::move( *reinterpret_cast<Case_text*>( other.text_taglists_mem ) ) );
+				break;
+			case Variants::taglists:
+				new ( text_taglists_mem ) Case_taglists( std::move( *reinterpret_cast<Case_taglists*>( other.text_taglists_mem ) ) );
+				break;
+			case Variants::unknown: break;
+		}
+		v = other.v;
+		other.v = Variants::unknown;
+	}
+
+public:
+	HtmlTextOrTags() {}
+	HtmlTextOrTags( const HtmlTextOrTags &other ) {
+		implCopyFrom( other );
+	}
+	HtmlTextOrTags& operator = ( const HtmlTextOrTags &other) {
+		implCopyFrom( other );
+		return *this;
+	}
+	HtmlTextOrTags( HtmlTextOrTags&& other) noexcept {
+		implMoveFrom( std::move( other ) );
+	}
+	HtmlTextOrTags& operator = ( HtmlTextOrTags&& other) noexcept {
+		implMoveFrom( std::move( other ) );
+		return *this;
+	}
+	virtual ~HtmlTextOrTags() {
+		implDeinit();
+	}
+	Variants currentVariant() const { return v; }
+	void initAs( Variants v_ ) {
+		implDeinit();
+		switch ( v_ ) // init for a new type
+		{
+			case Variants::text: new ( text_taglists_mem ) Case_text; break;
+			case Variants::taglists: new ( text_taglists_mem ) Case_taglists; break;
+		}
+		v = v_;
+	}
+
+	// IDL CASE text:
+	Case_text_str_T& str() {
+		if ( v != Variants::text )
+			throw std::exception();
+		return reinterpret_cast<Case_text*>( text_taglists_mem )->str;
+	}
+	const Case_text_str_T& str() const {
+		if ( v != Variants::text )
+			throw std::exception();
+		return reinterpret_cast<const Case_text*>( text_taglists_mem )->str;
+	}
+	
+
+	// IDL CASE taglists:
+	Case_taglists_tags_T& tags() {
+		if ( v != Variants::taglists )
+			throw std::exception();
+		return reinterpret_cast<Case_taglists*>( text_taglists_mem )->tags;
+	}
+	const Case_taglists_tags_T& tags() const {
+		if ( v != Variants::taglists )
+			throw std::exception();
+		return reinterpret_cast<const Case_taglists*>( text_taglists_mem )->tags;
+	}
+	
 };
 
 struct HtmlTag
@@ -836,7 +952,15 @@ struct HtmlTag
 	GMQ_COLL string name;
 	GMQ_COLL unordered_map<GMQ_COLL string, GMQ_COLL string> properties;
 	HtmlTextOrTags tags;
+
+	void notifyUpdated_name() const { assert( getCurrentNode() != nullptr ); fmt::print( "^^^^^+++++++++---> HtmlTag::notifyInserted_name()\n" ); }
+	void notifyUpdated_name(GMQ_COLL string name_) const { assert( getCurrentNode() != nullptr ); fmt::print( "^^^^^+++++++++---> HtmlTag::notifyInserted_name(), old name = {}, new name: {}\n", name_, name ); }
+
 	void notifyUpdated_properties() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTag::notifyUpdated_properties()\n" ); }
+	void notifyValueUpdated_properties() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTag::notifyValueUpdated_properties()\n" ); }
+	void notifyRemoved_properties() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTag::notifyRemoved_properties()\n" ); }
+	void notifyInserted_properties() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTag::notifyInserted_properties()\n" ); }
+
 	void notifyUpdated_tags() const { 
 		assert( getCurrentNode() != nullptr ); 
 		if ( tags.currentVariant() == HtmlTextOrTags::Variants::text )
@@ -846,6 +970,8 @@ struct HtmlTag
 	}
 	// TODO: add other notifiers here, if necessary
 };
+static constexpr bool has_void_update_notifier_for_name = mtest::has_void_update_notifier_call_for_name<HtmlTag>;
+static_assert( has_void_update_notifier_for_name );
 
 struct HtmlTagSampleWithNotifiers
 {
@@ -892,7 +1018,7 @@ void publishableTestTwo()
 	pc.statePublisherOrConnectionType = mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT>::stringTypeID;
 	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
-	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT> htmlTagWrapperSlave1( mp );
+	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave1( mp, node );
 	htmlTagWrapperSlave1.subscribe( path );
 
 	constexpr size_t maxMsg = 1000;
@@ -975,6 +1101,7 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_value" );
 
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().update_value( "some_key", "some_new_value" );
+	g4s_hn_tags.get4set_tags().get4set_at(0).set_name( "html" );
 
 	mp.postAllUpdates();
 	msgCnt = queue.pop_front( messages, maxMsg, 0 );
@@ -984,6 +1111,7 @@ void publishableTestTwo()
 		mp.onMessage( messages[i].msg );
 	}
 
+	assert( htmlTagWrapperSlave2.get_tag().tags.tags()[0].name == "html" );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_new_value" );
@@ -991,6 +1119,7 @@ void publishableTestTwo()
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().insert( "key_2", "value_2" );
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().update_value( "key_2", "value_2_2" );
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().remove( "some_key" );
+	g4s_hn_tags.get4set_tags().get4set_at(0).set_name( "body" );
 
 	mp.postAllUpdates();
 	msgCnt = queue.pop_front( messages, maxMsg, 0 );
@@ -1000,6 +1129,9 @@ void publishableTestTwo()
 		mp.onMessage( messages[i].msg );
 	}
 
+	assert( htmlTagWrapperSlave1.get_tag().tags.tags()[0].name == "body" );
+	assert( htmlTagWrapperSlave2.get_tag().tags.tags()[0].name == "body" );
+	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].name == "body" );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
 	assert( !htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "key_2" ) );

@@ -469,13 +469,13 @@ public:
 		else 
 		{
 			if constexpr ( std::is_same<ProcType, impl::SignedIntegralType>::value )
-				impl::IntegerProcessor::parse<ParserT, typename DictionaryT::value_type>( parser, &value );
+				impl::publishableParseInteger( parser, &value, "value" );
 			else if constexpr ( std::is_same<ProcType, impl::UnsignedIntegralType>::value )
-				impl::UnsignedIntegerProcessor::parse( parser, &value );
+				impl::publishableParseUnsignedInteger( parser, &value, "value" );
 			else if constexpr ( std::is_same<ProcType, impl::RealType>::value )
-				impl::RealProcessor::parse( parser, &value );
+				impl::publishableParseReal( parser, &value, "value" );
 			else if constexpr ( std::is_same<ProcType, impl::StringType>::value )
-				impl::StringProcessor::parse( parser, &value );
+				impl::publishableParseString( parser, &value, "value" );
 			else
 				static_assert( std::is_same<ProcType, AllowedDataType>::value, "unsupported type" );
 			return value != oldValue;

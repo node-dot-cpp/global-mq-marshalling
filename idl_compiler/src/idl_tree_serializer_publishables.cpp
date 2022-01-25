@@ -467,7 +467,7 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary( FILE* header, Roo
 
 fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n", offset.c_str() );
 
-	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
+	const char* libType = paramTypeToLibType( member.type.dictionaryValueKind );
 	assert( member.type.structIdx < root.structs.size() );
 	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the dictionary\n", offset.c_str(), offsetPlusStr );
 	fprintf( header, "%s{\n", offset.c_str() );
@@ -483,7 +483,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		fprintf( header, "%s\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\ttypename %s::value_type oldValue;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		switch ( member.type.vectorElemKind )
+		switch ( member.type.dictionaryValueKind )
 		{
 			case MessageParameterType::KIND::INTEGER:
 			case MessageParameterType::KIND::UINTEGER:
@@ -612,30 +612,30 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "%s\t\t\t\t\tcurrentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, %s, %s>( parser, value, oldValue );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tif ( currentChanged )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\tt.notifyElementUpdated_%s( key, oldValue );\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\t\tt.notifyElementUpdated_%s( key );\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t\t}\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t}\n", offset.c_str()  );
 				
 	fprintf( header, "%s\t\t\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\tcurrentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, %s, %s>( parser, value, oldValue );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tcurrentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, %s, %s>( parser, value, oldValue );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tif ( currentChanged )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\tt.notifyElementUpdated_%s( key );\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t\t}\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\tcurrentChanged = PublishableVectorProcessor::parseSingleValueAndCompare<ParserT, %s, %s>( parser, value, oldValue );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tcurrentChanged = PublishableDictionaryProcessor::parseValueAndCompare<ParserT, %s, %s>( parser, value, oldValue );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tif ( currentChanged )\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%s\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\t\telse\n", offset.c_str() );
