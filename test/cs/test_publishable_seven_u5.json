@@ -1,1 +1,1 @@
-{"changes":[{"addr":[0, 0],"action":2,"value":77},{"addr":[1, 1],"action":2,"value":88},{"addr":[2, 2],"action":2,"value":99},{"addr":[3, 3],"action":2,"value":"last"},{"addr":[4, 1],"action":2,"value":{"x":303,"y":0,"z":0}},{}]}
+{"changes":[{"addr":[0, 0],"action":2,"value":77},{"addr":[1, 1],"action":2,"value":88},{"addr":[2, 2],"action":2,"value":99},{"addr":[3, 3],"action":2,"value":"last"},{"addr":[4, 1],"action":2,"value":{"x":301,"y":302,"z":303}},{}]}

@@ -77,14 +77,14 @@ namespace TestProject1
 
             mtest.publishable.point3D e1 = data.make_structVec_element();
             e1.x = 101;
-            e1.x = 102;
-            e1.x = 103;
+            e1.y = 102;
+            e1.z = 103;
             data.structVec.Add(e1);
 
             mtest.publishable.point3D e2 = data.make_structVec_element();
-            e1.x = 201;
-            e1.x = 202;
-            e1.x = 303;
+            e2.x = 201;
+            e2.y = 202;
+            e2.z = 203;
             data.structVec.Add(e2);
 
             return data;
@@ -104,7 +104,7 @@ namespace TestProject1
             publ.generateStateSyncMessage(composer);
 
             // uncomment to update file
-            //buffer.writeToFile(Path);
+            //buffer.writeToFile(JsonPath);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(JsonPath));
         }
@@ -189,8 +189,8 @@ namespace TestProject1
 
             mtest.publishable.point3D e1 = data.make_structVec_element();
             e1.x = 901;
-            e1.x = 902;
-            e1.x = 903;
+            e1.y = 902;
+            e1.z = 903;
             data.structVec[0] = e1;
         }
 
@@ -219,8 +219,8 @@ namespace TestProject1
             IList<mtest.publishable.point3D> vec = data.make_structVec();
             mtest.publishable.point3D e1 = data.make_structVec_element();
             e1.x = 301;
-            e1.x = 302;
-            e1.x = 303;
+            e1.y = 302;
+            e1.z = 303;
             vec.Add(e1);
             data.structVec = vec;
         }
@@ -256,7 +256,7 @@ namespace TestProject1
         }
         static void doUpdate5(mtest.publishable.publishable_seven data)
         {
-            //erase elements in vector
+            //insert elements in vector
             data.intVec.Insert(0, 77);
             data.uintVec.Insert(1, 88);
             data.realVec.Insert(2, 99);
@@ -264,8 +264,8 @@ namespace TestProject1
 
             mtest.publishable.point3D e1 = data.make_structVec_element();
             e1.x = 301;
-            e1.x = 302;
-            e1.x = 303;
+            e1.y = 302;
+            e1.z = 303;
             data.structVec.Insert(1, e1);
         }
         [Fact]
@@ -296,7 +296,7 @@ namespace TestProject1
             publ.generateStateSyncMessage(composer);
 
             // uncomment to update file
-                //buffer.writeToFile(GmqPath);
+            //buffer.writeToFile(GmqPath);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(GmqPath));
         }
@@ -315,7 +315,7 @@ namespace TestProject1
 
             Assert.Equal(data, GetPublishableSeven());
         }
-        static void TestGmqComposeUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate, bool updateFile)
+        static void TestGmqComposeUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
@@ -329,8 +329,8 @@ namespace TestProject1
 
             publ.endTick();
 
-            if (updateFile)
-                buffer.writeToFile(fileName);
+            // uncomment to update file
+            //buffer.writeToFile(fileName);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
@@ -357,59 +357,59 @@ namespace TestProject1
         [Fact]
         public static void TestGmqComposeUpdate1()
         {
-            TestJsonComposeUpdate(GmqPath1, doUpdate1);
+            TestGmqComposeUpdate(GmqPath1, doUpdate1);
         }
 
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            TestJsonParseUpdate(GmqPath1, doUpdate1);
+            TestGmqParseUpdate(GmqPath1, doUpdate1);
         }
 
         [Fact]
         public static void TestGmqComposeUpdate2()
         {
-            TestJsonComposeUpdate(GmqPath2, doUpdate2);
+            TestGmqComposeUpdate(GmqPath2, doUpdate2);
         }
 
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            TestJsonParseUpdate(GmqPath2, doUpdate2);
+            TestGmqParseUpdate(GmqPath2, doUpdate2);
         }
         [Fact]
         public static void TestGmqComposeUpdate3()
         {
-            TestJsonComposeUpdate(GmqPath3, doUpdate3);
+            TestGmqComposeUpdate(GmqPath3, doUpdate3);
         }
 
         [Fact]
         public static void TestGmqParseUpdate3()
         {
-            TestJsonParseUpdate(GmqPath3, doUpdate3);
+            TestGmqParseUpdate(GmqPath3, doUpdate3);
         }
 
         [Fact]
         public static void TestGmqComposeUpdate4()
         {
-            TestJsonComposeUpdate(GmqPath4, doUpdate4);
+            TestGmqComposeUpdate(GmqPath4, doUpdate4);
         }
 
         [Fact]
         public static void TestGmqParseUpdate4()
         {
-            TestJsonParseUpdate(GmqPath4, doUpdate4);
+            TestGmqParseUpdate(GmqPath4, doUpdate4);
         }
         [Fact]
         public static void TestGmqComposeUpdate5()
         {
-            TestJsonComposeUpdate(GmqPath5, doUpdate5);
+            TestGmqComposeUpdate(GmqPath5, doUpdate5);
         }
 
         [Fact]
         public static void TestGmqParseUpdate5()
         {
-            TestJsonParseUpdate(GmqPath5, doUpdate5);
+            TestGmqParseUpdate(GmqPath5, doUpdate5);
         }
 
     }

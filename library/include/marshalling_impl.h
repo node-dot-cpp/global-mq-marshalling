@@ -257,13 +257,14 @@ void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 	composer.buff.appendUint8( '\"' );
 }
 
-template<typename ComposerT>
-void composeString(ComposerT& composer, GMQ_COLL string str )
-{
-	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str.c_str(), str.size() );
-	composer.buff.appendUint8( '\"' );
-}
+// mb: this creates ambiguity
+// template<typename ComposerT>
+// void composeString(ComposerT& composer, GMQ_COLL string str )
+// {
+// 	composer.buff.appendUint8( '\"' );
+// 	composer.buff.append( str.c_str(), str.size() );
+// 	composer.buff.appendUint8( '\"' );
+// }
 
 template<typename ComposerT>
 void composeString(ComposerT& composer, const char* str )
