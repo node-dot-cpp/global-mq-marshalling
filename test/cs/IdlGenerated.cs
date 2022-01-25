@@ -2895,13 +2895,13 @@ public class publishable_seven_subs : publishable_seven, StateSubscriberBase
 				if(addr.Length == offset + 1) // full vector replace
 				{
 					IList<point3D> newVal = t.make_structVec();
-					parser.parseVector("structVec",
+					parser.parseVector("value",
 						(IPublishableParser parser, int index) =>
 						{
 							parser.parseStructBegin();
 							point3D val = t.make_structVec_element();
 							point3D_subs.parseForStateSync(parser, val);
-							t.structVec.Add(val);
+							newVal.Add(val);
 							parser.parseStructEnd();
 						}
 					);

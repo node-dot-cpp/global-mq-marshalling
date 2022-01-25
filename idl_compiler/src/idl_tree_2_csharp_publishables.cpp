@@ -557,13 +557,13 @@ namespace {
 					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t\t\t\t\tparser.parseVector(\"%s\",\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\tparser.parseVector(\"value\",\n");
 					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
 					fprintf(header, "\t\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructBegin();\n");
 					fprintf(header, "\t\t\t\t\t\t\t%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t\t%s_subs.parseForStateSync(parser, val);\n", elem_type_name);
-					fprintf(header, "\t\t\t\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\tnewVal.Add(val);\n");
 					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\t\t);\n");

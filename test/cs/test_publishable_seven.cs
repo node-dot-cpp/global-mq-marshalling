@@ -35,10 +35,19 @@ namespace TestProject1
 
     public class test_publishable_seven
     {
-        private const string Path = "test_publishable_seven.json";
-        private const string Path1 = "test_publishable_seven_u1.json";
-        private const string Path2 = "test_publishable_seven_u2.json";
-        private const string Path3 = "test_publishable_seven_u3.json";
+        private const string JsonPath = "test_publishable_seven.json";
+        private const string JsonPath1 = "test_publishable_seven_u1.json";
+        private const string JsonPath2 = "test_publishable_seven_u2.json";
+        private const string JsonPath3 = "test_publishable_seven_u3.json";
+        private const string JsonPath4 = "test_publishable_seven_u4.json";
+        private const string JsonPath5 = "test_publishable_seven_u5.json";
+
+        private const string GmqPath = "test_publishable_seven.gmq";
+        private const string GmqPath1 = "test_publishable_seven_u1.gmq";
+        private const string GmqPath2 = "test_publishable_seven_u2.gmq";
+        private const string GmqPath3 = "test_publishable_seven_u3.gmq";
+        private const string GmqPath4 = "test_publishable_seven_u4.gmq";
+        private const string GmqPath5 = "test_publishable_seven_u5.gmq";
 
         public static mtest.publishable.publishable_seven_impl GetPublishableSeven()
         {
@@ -97,7 +106,7 @@ namespace TestProject1
             // uncomment to update file
             //buffer.writeToFile(Path);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(JsonPath));
         }
 
         [Fact]
@@ -107,94 +116,231 @@ namespace TestProject1
 
             mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
 
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path);
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(JsonPath);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
             subs.applyStateSyncMessage(parser);
 
             Assert.Equal(data, GetPublishableSeven());
         }
-
-        [Fact]
-        public static void TestJsonComposeUpdate1()
+        static void TestJsonComposeUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
             mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, new JsonPublishableComposer(), new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
 
-            //modify substructure inside vector
             publ.startTick(buffer);
-            publ.structVec[0].y = 505;
+
+            updateDelegate(publ);
+
             publ.endTick();
 
-            // uncomment to update file
-            //buffer.writeToFile(Path1);
+            // uncomment to update files
+            //buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path1));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+        }
+        static void TestJsonParseUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
+        {
+            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
+            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
+            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+
+            subs.applyMessageWithUpdates(parser);
+
+            mtest.publishable.publishable_seven_impl data2 = GetPublishableSeven();
+
+            Assert.NotEqual(data, data2);
+
+            updateDelegate(data2);
+
+            Assert.Equal(data, data2);
+        }
+
+        static void doUpdate1(mtest.publishable.publishable_seven data)
+        {
+            //modify substructure inside vector
+            data.structVec[0].y = 505;
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate1()
+        {
+            TestJsonComposeUpdate(JsonPath1, doUpdate1);
         }
 
         [Fact]
         public static void TestJsonParseUpdate1()
         {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+            TestJsonParseUpdate(JsonPath1, doUpdate1);
+        }
 
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path1);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+        static void doUpdate2(mtest.publishable.publishable_seven data)
+        {
+            //modify existing elements
+            data.intVec[0] = 303;
+            data.uintVec[1] = 404;
+            data.realVec[2] = 505;
+            data.strVec[1] = "four";
 
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.publishable_seven_impl data2 = GetPublishableSeven();
-
-            Assert.NotEqual(data, data2);
-
-            data2.structVec[0].y = 505;
-            Assert.Equal(data, data2);
+            mtest.publishable.point3D e1 = data.make_structVec_element();
+            e1.x = 901;
+            e1.x = 902;
+            e1.x = 903;
+            data.structVec[0] = e1;
         }
 
         [Fact]
         public static void TestJsonComposeUpdate2()
         {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-
-            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, new JsonPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
-
-            publ.startTick(buffer);
-
-            publ.intVec[0] = 303;
-            publ.uintVec[1] = 404;
-            publ.realVec[2] = 505;
-            publ.strVec[1] = "four";
-
-            mtest.publishable.point3D e1 = publ.make_structVec_element();
-            e1.x = 901;
-            e1.x = 902;
-            e1.x = 903;
-            publ.structVec[0] = e1;
-
-
-            publ.endTick();
-
-            //uncomment to update file
-            //buffer.writeToFile(Path2);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path2));
+            TestJsonComposeUpdate(JsonPath2, doUpdate2);
         }
 
         [Fact]
         public static void TestJsonParseUpdate2()
         {
+            TestJsonParseUpdate(JsonPath2, doUpdate2);
+        }
+
+        static void doUpdate3(mtest.publishable.publishable_seven data)
+        {
+            //replace complete vector
+            IList<String> strVec = data.make_strVec();
+            strVec.Add("four");
+            strVec.Add("five");
+            data.strVec = strVec;
+
+            data.realVec = data.make_realVec();
+
+            IList<mtest.publishable.point3D> vec = data.make_structVec();
+            mtest.publishable.point3D e1 = data.make_structVec_element();
+            e1.x = 301;
+            e1.x = 302;
+            e1.x = 303;
+            vec.Add(e1);
+            data.structVec = vec;
+        }
+        [Fact]
+        public static void TestJsonComposeUpdate3()
+        {
+            TestJsonComposeUpdate(JsonPath3, doUpdate3);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate3()
+        {
+            TestJsonParseUpdate(JsonPath3, doUpdate3);
+        }
+        static void doUpdate4(mtest.publishable.publishable_seven data)
+        {
+            //erase elements in vector
+            data.intVec.RemoveAt(0);
+            data.realVec.RemoveAt(1);
+            data.structVec.RemoveAt(1);
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate4()
+        {
+            TestJsonComposeUpdate(JsonPath4, doUpdate4);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate4()
+        {
+            TestJsonParseUpdate(JsonPath4, doUpdate4);
+        }
+        static void doUpdate5(mtest.publishable.publishable_seven data)
+        {
+            //erase elements in vector
+            data.intVec.Insert(0, 77);
+            data.uintVec.Insert(1, 88);
+            data.realVec.Insert(2, 99);
+            data.strVec.Insert(3, "last");
+
+            mtest.publishable.point3D e1 = data.make_structVec_element();
+            e1.x = 301;
+            e1.x = 302;
+            e1.x = 303;
+            data.structVec.Insert(1, e1);
+        }
+        [Fact]
+        public static void TestJsonComposeUpdate5()
+        {
+            TestJsonComposeUpdate(JsonPath5, doUpdate5);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate5()
+        {
+            TestJsonParseUpdate(JsonPath5, doUpdate5);
+        }
+
+
+        ///////////////////// gmq //////////////////
+        [Fact]
+        public static void TestGmqComposeStateSync()
+        {
+            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
+
+            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, null, new UInt64[] { });
+
+            SimpleBuffer buffer = new SimpleBuffer();
+            GmqPublishableComposer composer = new GmqPublishableComposer();
+
+            composer.startTick(buffer);
+            publ.generateStateSyncMessage(composer);
+
+            // uncomment to update file
+                //buffer.writeToFile(GmqPath);
+
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(GmqPath));
+        }
+
+        [Fact]
+        public static void TestGmqParseStateSync()
+        {
+            mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
+
+            mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(GmqPath);
+            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
+
+            subs.applyStateSyncMessage(parser);
+
+            Assert.Equal(data, GetPublishableSeven());
+        }
+        static void TestGmqComposeUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate, bool updateFile)
+        {
+            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
+
+            mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, new GmqPublishableComposer(), new UInt64[] { });
+
+            SimpleBuffer buffer = new SimpleBuffer();
+
+            publ.startTick(buffer);
+
+            updateDelegate(publ);
+
+            publ.endTick();
+
+            if (updateFile)
+                buffer.writeToFile(fileName);
+
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+        }
+        static void TestGmqParseUpdate(String fileName, Action<mtest.publishable.publishable_seven> updateDelegate)
+        {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
             mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
 
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path2);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
+            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
@@ -202,55 +348,70 @@ namespace TestProject1
 
             Assert.NotEqual(data, data2);
 
-            data2.intVec[0] = 303;
-            data2.uintVec[1] = 404;
-            data2.realVec[2] = 505;
-            data2.strVec[1] = "four";
-
-            mtest.publishable.point3D e1 = data2.make_structVec_element();
-            e1.x = 901;
-            e1.x = 902;
-            e1.x = 903;
-            data2.structVec[0] = e1;
+            updateDelegate(data2);
 
             Assert.Equal(data, data2);
         }
 
-        //[Fact]
-        //public static void TestComposeNoChangeUpdate3()
-        //{
-        //    mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
-        //    mtest.publishable.publishable_seven_publ publ = new mtest.publishable.publishable_seven_publ(data, new JsonPublishableComposer(), new UInt64[] { });
+        [Fact]
+        public static void TestGmqComposeUpdate1()
+        {
+            TestJsonComposeUpdate(GmqPath1, doUpdate1);
+        }
 
-        //    SimpleBuffer buffer = new SimpleBuffer();
-        //    //JsonPublishableComposer composer = new JsonPublishableComposer();
+        [Fact]
+        public static void TestGmqParseUpdate1()
+        {
+            TestJsonParseUpdate(GmqPath1, doUpdate1);
+        }
 
-        //    publ.startTick(buffer);
-        //    // no change
-        //    publ.endTick();
+        [Fact]
+        public static void TestGmqComposeUpdate2()
+        {
+            TestJsonComposeUpdate(GmqPath2, doUpdate2);
+        }
 
-        //    // uncomment to update file
-        //    //buffer.writeToFile(Path3);
+        [Fact]
+        public static void TestGmqParseUpdate2()
+        {
+            TestJsonParseUpdate(GmqPath2, doUpdate2);
+        }
+        [Fact]
+        public static void TestGmqComposeUpdate3()
+        {
+            TestJsonComposeUpdate(GmqPath3, doUpdate3);
+        }
 
-        //    Assert.Equal(buffer, SimpleBuffer.readFromFile(Path3));
-        //}
+        [Fact]
+        public static void TestGmqParseUpdate3()
+        {
+            TestJsonParseUpdate(GmqPath3, doUpdate3);
+        }
 
-        //[Fact]
-        //public static void TestJsonParseNoChangeUpdate3()
-        //{
-        //    mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-        //    mtest.publishable.publishable_seven_subs subs = new mtest.publishable.publishable_seven_subs(data);
+        [Fact]
+        public static void TestGmqComposeUpdate4()
+        {
+            TestJsonComposeUpdate(GmqPath4, doUpdate4);
+        }
 
-        //    SimpleBuffer buffer = SimpleBuffer.readFromFile(Path3);
-        //    JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+        [Fact]
+        public static void TestGmqParseUpdate4()
+        {
+            TestJsonParseUpdate(GmqPath4, doUpdate4);
+        }
+        [Fact]
+        public static void TestGmqComposeUpdate5()
+        {
+            TestJsonComposeUpdate(GmqPath5, doUpdate5);
+        }
 
-        //    subs.applyMessageWithUpdates(parser);
+        [Fact]
+        public static void TestGmqParseUpdate5()
+        {
+            TestJsonParseUpdate(GmqPath5, doUpdate5);
+        }
 
-        //    mtest.publishable.publishable_seven_impl data2 = GetPublishableSeven();
-
-        //    Assert.Equal(data, data2);
-        //}
     }
 
 }

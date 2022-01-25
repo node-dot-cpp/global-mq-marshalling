@@ -422,11 +422,7 @@ namespace globalmq.marshalling
         {
             composer.addNamePart("action");
             composer.composeUnsignedInteger(actionId);
-            if (emptyData)
-            {
-                composer.append("},");
-            }
-            else
+            if (!emptyData)
                 composer.append(',');
         }
 
