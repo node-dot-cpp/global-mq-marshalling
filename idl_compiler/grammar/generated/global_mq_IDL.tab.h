@@ -63,8 +63,9 @@
      KW_CHARACTER_STRING = 279,
      KW_BLOB = 280,
      KW_VECTOR = 281,
-     KW_PROTO = 282,
-     KW_SCOPE = 283
+     KW_DICTIONARY = 282,
+     KW_PROTO = 283,
+     KW_SCOPE = 284
    };
 #endif
 

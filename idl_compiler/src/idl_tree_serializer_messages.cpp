@@ -308,6 +308,7 @@ void impl_GenerateMessageDefaults_MemberIterationBlock_GetCount( FILE* header, C
 					case MessageParameterType::KIND::BLOB:
 					case MessageParameterType::KIND::ENUM:
 					case MessageParameterType::KIND::VECTOR:
+					case MessageParameterType::KIND::DICTIONARY:
 					{
 						break; // unsupported (yet)
 					}
@@ -344,6 +345,7 @@ void impl_GenerateMessageDefaults_MemberIterationBlock( FILE* header, CompositeT
 				case MessageParameterType::KIND::REAL:
 					break; // will be added right to respective calls
 				case MessageParameterType::KIND::VECTOR:
+				case MessageParameterType::KIND::DICTIONARY:
 					break; // TODO: revise
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
@@ -484,6 +486,37 @@ void impl_generateParamTypeLIst_MemberIterationBlock( FILE* header, CompositeTyp
 						break;
 				}
 				break;
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				switch ( param.type.dictionaryValueKind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
+					case MessageParameterType::KIND::CHARACTER_STRING:
+					case MessageParameterType::KIND::BYTE_ARRAY:
+					case MessageParameterType::KIND::BLOB:
+					case MessageParameterType::KIND::ENUM:
+						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DictionaryOfSympleTypes<%s, %s>, %s::Name>;\n", count, paramTypeToLibType(param.type.dictionaryKeyKind), paramTypeToLibType(param.type.dictionaryValueKind), paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::STRUCT:
+						if ( param.type.isNonExtendable )
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DictionaryOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						else
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DictionaryOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					case MessageParameterType::KIND::DISCRIMINATED_UNION:
+						if ( param.type.isNonExtendable )
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DictionaryOfNonextDiscriminatedUnionTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						else
+							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DictionaryOfDiscriminatedUnionType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						break;
+					default:
+						assert( false ); // unexpected
+						break;
+				}
+				break;
+			}
 			case MessageParameterType::KIND::STRUCT:
 				if ( param.type.isNonExtendable )
 					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
@@ -563,6 +596,9 @@ void impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( FILE* head
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+				break;
+			case MessageParameterType::KIND::DICTIONARY: // TODO: revise
 				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
@@ -779,6 +815,9 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
+				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				break;
+			case MessageParameterType::KIND::DICTIONARY: // TODO: revise
 				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:

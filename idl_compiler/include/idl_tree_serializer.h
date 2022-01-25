@@ -69,6 +69,62 @@ void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, 
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
 inline
+string impl_typeToLibTypeOrTypeProcessor( const MessageParameterType& type, MessageParameterType::KIND kind, Root& root )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: 
+			assert( type.structIdx < root.structs.size() );
+			return fmt::format( "publishable_STRUCT_{}", root.structs[type.structIdx]->name );
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+			assert( type.structIdx < root.structs.size() );
+			return fmt::format( "publishable_DISCRIMINATED_UNION_{}", root.structs[type.structIdx]->name );
+		default: 
+			assert( false );
+			return "";
+	}
+}
+
+inline
+string vectorElementTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	return impl_typeToLibTypeOrTypeProcessor( type, type.vectorElemKind, root );
+}
+
+inline
+string dictionaryKeyTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	return impl_typeToLibTypeOrTypeProcessor( type, type.dictionaryKeyKind, root );
+}
+
+inline
+string dictionaryValueTypeToLibTypeOrTypeProcessor( const MessageParameterType& type, Root& root )
+{
+	return impl_typeToLibTypeOrTypeProcessor( type, type.dictionaryValueKind, root );
+}
+
+inline
+const char* paramTypeToLibType( MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "::globalmq::marshalling::impl::SignedIntegralType";
+		case MessageParameterType::KIND::UINTEGER: return "::globalmq::marshalling::impl::UnsignedIntegralType";
+		case MessageParameterType::KIND::REAL: return "::globalmq::marshalling::impl::RealType";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "::globalmq::marshalling::impl::StringType";
+		case MessageParameterType::KIND::STRUCT: return "::globalmq::marshalling::impl::StructType";
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: return "::globalmq::marshalling::impl::DiscriminatedUnionType";
+		case MessageParameterType::KIND::BLOB: return "::globalmq::marshalling::impl::BlobType";
+		case MessageParameterType::KIND::ENUM: return "::globalmq::marshalling::impl::EnumType";
+		default: return nullptr;
+	}
+}
+
+inline
 std::string impl_discriminatedUnionCaseMemberType( MessageParameter member ) { return fmt::format( "Case_{}_{}_T", member.caseName, member.name ); }
 
 inline

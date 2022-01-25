@@ -119,6 +119,7 @@ struct StringType {static constexpr bool dummy = false;};
 struct BlobType {static constexpr bool dummy = false;};
 struct ByteArrayType {static constexpr bool dummy = false;};
 struct EnumType {static constexpr bool dummy = false;};
+
 struct VectorType {static constexpr bool dummy = false;};
 struct VectorOfSympleTypesBase : public VectorType {static constexpr bool dummy = false;};
 template<class value_type_>
@@ -129,6 +130,18 @@ struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {stati
 struct VectorOfDiscriminatedUnionType : public VectorType {static constexpr bool dummy = false;};
 struct VectorOfNonextDiscriminatedUnionTypesBase : public VectorType {static constexpr bool dummy = false;};
 struct VectorOfNonextDiscriminatedUnionTypes : public VectorOfNonextDiscriminatedUnionTypesBase {static constexpr bool dummy = false;};
+
+struct DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfSympleTypesBase : public DictionaryType {static constexpr bool dummy = false;};
+template<class key_type_, class value_type_>
+struct DictionaryOfSympleTypes : public DictionaryOfSympleTypesBase {static constexpr bool dummy = false; using key_type = key_type_; using value_type = value_type_;};
+struct DictionaryOfMessageType : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextMessageTypesBase : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextMessageTypes : public DictionaryOfNonextMessageTypesBase {static constexpr bool dummy = false;};
+struct DictionaryOfDiscriminatedUnionType : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextDiscriminatedUnionTypesBase : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextDiscriminatedUnionTypes : public DictionaryOfNonextDiscriminatedUnionTypesBase {static constexpr bool dummy = false;};
+
 struct StructType {static constexpr bool dummy = false;};
 struct MessageType {static constexpr bool dummy = false;};
 struct NonextMessageType : public MessageType {static constexpr bool dummy = false;};
@@ -285,15 +298,6 @@ void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 {
 	composer.buff.appendUint8( '\"' );
 	auto str1 = string2JsonString( *str );
-	composer.buff.append( str1.c_str(), str1.size() );
-	composer.buff.appendUint8( '\"' );
-}
-
-template<typename ComposerT>
-void composeString(ComposerT& composer, GMQ_COLL string str )
-{
-	composer.buff.appendUint8( '\"' );
-	auto str1 = string2JsonString( str );
 	composer.buff.append( str1.c_str(), str1.size() );
 	composer.buff.appendUint8( '\"' );
 }
