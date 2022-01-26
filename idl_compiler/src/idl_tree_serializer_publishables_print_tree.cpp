@@ -262,6 +262,13 @@ void printDataType( MessageParameterType& s )
 		else
 			printf( "%s<%s>", impl_kindToString( s.kind ), impl_kindToString( s.vectorElemKind ) );
 	}
+	else if ( s.kind == MessageParameterType::KIND::DICTIONARY )
+	{
+		if ( s.dictionaryValueKind == MessageParameterType::KIND::STRUCT )
+			printf( "%s<%s, %s%s %s>", impl_kindToString( s.kind ), impl_kindToString( s.dictionaryKeyKind ), s.isNonExtendable ? "NONEXTENDABLE " : "", impl_kindToString( s.dictionaryValueKind ), s.name.c_str() );
+		else
+			printf( "%s<%s, %s>", impl_kindToString( s.kind ), impl_kindToString( s.dictionaryKeyKind ), impl_kindToString( s.dictionaryValueKind ) );
+	}
 	else if ( s.kind == MessageParameterType::KIND::STRUCT || s.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
 		printf( "%s %s %s", impl_kindToString( s.kind ), s.isNonExtendable ? "NONEXTENDABLE " : "", s.name.c_str() );

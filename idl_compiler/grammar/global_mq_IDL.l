@@ -98,6 +98,7 @@ int createToken(int token)
 	"BYTE_ARRAY" { return createToken( KW_BYTE_ARRAY ); }
 	"BLOB" { return createToken( KW_BLOB ); }
 	"VECTOR" { return createToken( KW_VECTOR ); }
+	"DICTIONARY" { return createToken( KW_DICTIONARY ); }
 
 
 	/* INT32, DOUBLE, etc will be parsed as IDENTIFIER (easier),

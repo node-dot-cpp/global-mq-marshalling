@@ -58,7 +58,7 @@ public:
 class MessageParameterType
 {
 public:
-	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, STRUCT, DISCRIMINATED_UNION };
+	enum KIND { UNDEFINED, EXTENSION, ENUM, INTEGER, UINTEGER, REAL, CHARACTER_STRING, BYTE_ARRAY, BLOB, VECTOR, DICTIONARY, STRUCT, DISCRIMINATED_UNION };
 	static bool isNumericType( KIND kind ) { return kind == KIND::INTEGER || kind == KIND::UINTEGER || kind == KIND::REAL; }
 	static bool isNamedType( KIND kind ) { return kind == KIND::ENUM || kind == KIND::STRUCT || kind == KIND::DISCRIMINATED_UNION; }
 	KIND kind = UNDEFINED;
@@ -81,7 +81,11 @@ public:
 
 	KIND vectorElemKind = UNDEFINED; // VECTOR
 	bool isNonExtendable = false; // VECTOR
-	size_t messageIdx; // VECTOR of MESSAGEs, reserved for postprocessing
+
+	KIND dictionaryKeyKind = UNDEFINED; // DICTIONARY
+	KIND dictionaryValueKind = UNDEFINED; // DICTIONARY
+
+	size_t structIdx; // VECTOR or DICTIONARY with element kind STRUCT, reserved for postprocessing
 
 	map<string, uint32_t> enumValues; // ENUM
 

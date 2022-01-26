@@ -916,8 +916,8 @@ namespace {
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					assert(member.type.messageIdx < root.structs.size());
-					fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
+					assert(member.type.structIdx < root.structs.size());
+					fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.structIdx]->name.c_str(), member.name.c_str());
 					break;
 				default:
 					assert(false); // not implemented (yet)
@@ -981,8 +981,8 @@ namespace {
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					assert(member.type.messageIdx < root.structs.size());
-					fprintf(header, "\tpublic List<%s> %s\n", root.structs[member.type.messageIdx]->name.c_str(), member.name.c_str());
+					assert(member.type.structIdx < root.structs.size());
+					fprintf(header, "\tpublic List<%s> %s\n", root.structs[member.type.structIdx]->name.c_str(), member.name.c_str());
 					break;
 				default:
 					assert(false); // not implemented (yet)
@@ -1367,7 +1367,8 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 
 
 	vector<CompositeType*> structsOrderedByDependency;
-	orderStructsByDependency( s.structs, structsOrderedByDependency );
+	std::unordered_set<size_t> collElementTypes;
+	orderStructsByDependency( s.structs, structsOrderedByDependency, collElementTypes );
 
 	fprintf(header, "//////////////////////////////////////////////////////////////\n");
 	fprintf(header, "//\n");
