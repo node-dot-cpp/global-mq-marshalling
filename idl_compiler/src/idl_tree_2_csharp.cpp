@@ -479,7 +479,7 @@ namespace {
 		fprintf(header, "\t\tcomposer.addNamePart(\"caseData\");\n");
 
 		std::string type_name = csharpMsg_getTypeName(s);
-		fprintf(header, "\t\t%s_message.compose(composer, ", type_name.c_str());
+		fprintf(header, "\t\t%s.compose(composer, ", type_name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, s, false);
 		fprintf(header, ");\n");
 
@@ -501,7 +501,7 @@ namespace {
 		fprintf(header, "\t\tcomposer.composeSignedInteger((Int64)Variants.%s);\n", s.name.c_str());
 
 		std::string type_name = csharpMsg_getTypeName(s);
-		fprintf(header, "\t\t%s_message.compose(composer, ", type_name.c_str());
+		fprintf(header, "\t\t%s.compose(composer, ", type_name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, s, false);
 		fprintf(header, ");\n");
 
@@ -1042,7 +1042,7 @@ namespace {
 			fprintf(header,
 				"\t\tGmqComposer composer = new GmqComposer(buffer);\n\n"
 				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
-				"\t\t%s_message.compose(composer, ", msgName.c_str(), msgName.c_str());
+				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
 
 
 			csharpMsg_generateCallerParamTypeLIst(header, s, false);
@@ -1057,7 +1057,7 @@ namespace {
 				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
 				"\t\tcomposer.append(\",\\n  \");\n"
 				"\t\tcomposer.addNamePart(\"msgbody\");\n"
-				"\t\t%s_message.compose(composer, ", msgName.c_str(), msgName.c_str());
+				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
 
 			csharpMsg_generateCallerParamTypeLIst(header, s, false);
 			fprintf(header,	");\n"
@@ -1224,7 +1224,7 @@ namespace {
 		csharpMsg_generateComposeParamTypeLIst(header, target);
 		fprintf(header, ")\n\t{\n");
 
-		fprintf(header, "\t\t%s_message.compose(composer, ", target.name.c_str());
+		fprintf(header, "\t\t%s.compose(composer, ", target.name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, target, false);
 		fprintf(header, ");\n");
 

@@ -42,6 +42,9 @@ namespace globalmq.marshalling
         char getChar();
         void inc();
         ReadOnlySpan<byte> read(int size);
+        //public ReadOnlySpan<byte> fromBeginToCurrent();
+        //ReadOnlySpan<byte> fromCurrentToEnd();
+
         void skip(int size);
         int offset();
     }
@@ -52,6 +55,7 @@ namespace globalmq.marshalling
         bool empty();
         int capacity();
         void append(byte[] dt);
+        void append(ReadOnlySpan<byte> dt);
         void appendAscii(string str);
         void appendUint8(byte val);
         void appendUint8(char val);
@@ -129,6 +133,13 @@ namespace globalmq.marshalling
             Buffer.BlockCopy(dt, 0, _data, _size, dt.Length);
             _size += dt.Length;
         }
+        public void append(ReadOnlySpan<byte> dt)
+        {
+            ensureCapacity(_size + dt.Length);
+            dt.CopyTo(new Span<byte>(_data, _size, dt.Length));
+            _size += dt.Length;
+        }
+
         public void appendAscii(string str)
         {
             append(Encoding.ASCII.GetBytes(str));
@@ -203,6 +214,18 @@ namespace globalmq.marshalling
                 else
                     return ReadOnlySpan<byte>.Empty;
             }
+
+            //public ReadOnlySpan<byte> fromBeginToCurrent()
+            //{
+            //    ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, 0, currentOffset);
+            //    return res;
+            //}
+            //public ReadOnlySpan<byte> fromCurrentToEnd()
+            //{
+            //    ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, currentOffset, _size - currentOffset);
+            //    return res;
+            //}
+
             public void skip(int size)
             {
                 if (_data != null)

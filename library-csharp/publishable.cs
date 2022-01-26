@@ -78,6 +78,9 @@ namespace globalmq.marshalling
     }
     public interface IPublishableParser
     {
+        //void copyFromBeginToCurrent(BufferT buff);
+        void parseKey(String expectedName); //TODO remove, make private
+        void copyFromCurrentToEnd(BufferT buff);
         bool parseAddress(ref UInt64[] addr);
         void parseAddressEnd();
         Int64 parseInteger(String expectedName);
@@ -101,7 +104,16 @@ namespace globalmq.marshalling
 
         public JsonPublishableParser(ReadIteratorT riter) { p = new JsonParser(riter); }
 
-        private void parseKey(String expectedName)
+        //public void copyFromBeginToCurrent(BufferT buff)
+        //{
+        //    p.copyFromBeginToCurrent(buff);
+        //}
+        public void copyFromCurrentToEnd(BufferT buff)
+        {
+            p.copyFromCurrentToEnd(buff);
+        }
+
+        public void parseKey(String expectedName)
         {
             String key;
             p.readKeyFromJson(out key);
@@ -296,7 +308,15 @@ namespace globalmq.marshalling
         GmqParser p;
 
         public GmqPublishableParser(ReadIteratorT riter) { p = new GmqParser(riter); }
-
+        //public void copyFromBeginToCurrent(BufferT buff)
+        //{
+        //    p.copyFromBeginToCurrent(buff);
+        //}
+        public void parseKey(String expectedName) { }
+        public void copyFromCurrentToEnd(BufferT buff)
+        {
+            p.copyFromCurrentToEnd(buff);
+        }
         public bool parseAddress(ref UInt64[] addr)
         {
             UInt64 cnt;
@@ -367,6 +387,8 @@ namespace globalmq.marshalling
 
     public interface IPublishableComposer
     {
+        void composeKey(String name); //TODO remove
+        BufferT getBuffer();
         void startTick(BufferT buffer);
         BufferT endTick();
         void composeAddress(UInt64[] baseAddr, UInt64 last);
@@ -392,6 +414,15 @@ namespace globalmq.marshalling
         JsonComposer composer;
 
         public JsonPublishableComposer() { composer = new JsonComposer(null); }
+        public JsonPublishableComposer(BufferT buffer) { composer = new JsonComposer(buffer); }
+        public void composeKey(String name) //TODO remove
+        {
+            composer.addNamePart(name);
+        }
+        public BufferT getBuffer()
+        {
+            return composer.getBuffer();
+        }
 
         public void startTick(BufferT buffer)
         {
@@ -515,7 +546,13 @@ namespace globalmq.marshalling
         GmqComposer composer;
 
         public GmqPublishableComposer() { composer = new GmqComposer(null); }
+        public GmqPublishableComposer(BufferT buffer) { composer = new GmqComposer(buffer); }
 
+        public void composeKey(String name) { }
+        public BufferT getBuffer()
+        {
+            return composer.getBuffer();
+        }
         public void startTick(BufferT buffer)
         {
             composer.startTick(buffer);
