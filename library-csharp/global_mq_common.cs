@@ -47,6 +47,7 @@ namespace globalmq.marshalling
 
         void skip(int size);
         int offset();
+        ReadIteratorT shallowClone();
     }
 
     public interface BufferT
@@ -55,11 +56,13 @@ namespace globalmq.marshalling
         bool empty();
         int capacity();
         void append(byte[] dt);
-        void append(ReadOnlySpan<byte> dt);
+        //void append(ReadOnlySpan<byte> dt);
+        void append(ReadIteratorT it, int size);
         void appendAscii(string str);
         void appendUint8(byte val);
         void appendUint8(char val);
         ReadIteratorT getReadIterator();
+
     }
     public class SimpleBuffer : BufferT
     {
@@ -133,11 +136,23 @@ namespace globalmq.marshalling
             Buffer.BlockCopy(dt, 0, _data, _size, dt.Length);
             _size += dt.Length;
         }
-        public void append(ReadOnlySpan<byte> dt)
+        void append(ReadOnlySpan<byte> dt)
         {
             ensureCapacity(_size + dt.Length);
             dt.CopyTo(new Span<byte>(_data, _size, dt.Length));
             _size += dt.Length;
+        }
+
+        public void append(ReadIteratorT it, int size)
+        {
+            while(size > 0 && it.isData())
+            {
+                int avail = it.directlyAvailableSize();
+                int toRead = Math.Min(size, avail);
+                ReadOnlySpan<byte> sp = it.read(toRead);
+                append(sp);
+                size -= sp.Length;
+            }
         }
 
         public void appendAscii(string str)
@@ -181,17 +196,19 @@ namespace globalmq.marshalling
             int _size = 0;
             int currentOffset = 0;
             byte[] _data;
-            public ReadIter() { }
             public ReadIter(byte[] _data, Int32 _size)
             {
                 this._data = _data;
                 this._size = _size;
+                //if (_data == null)
+                //    throw new ArgumentNullException();
+                //if (_size < 0 || _size > _data.Length)
+                //    throw new ArgumentOutOfRangeException();
             }
-            public bool isData() { return currentOffset < _size; }
+            public bool isData() { return _data != null && currentOffset < _size; }
             public int directlyAvailableSize() { return _data != null ? _size - currentOffset : 0; }
             public byte get()
             {
-                Debug.Assert(currentOffset != _size);
                 return _data[currentOffset];
             }
             public char getChar()
@@ -204,37 +221,24 @@ namespace globalmq.marshalling
             }
             public ReadOnlySpan<byte> read(int size)
             {
-                if (_data != null)
-                {
-                    size = size <= (_size - currentOffset) ? size : _size - currentOffset;
-                    ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, currentOffset, size);
-                    currentOffset += size;
-                    return res;
-                }
-                else
-                    return ReadOnlySpan<byte>.Empty;
+                Debug.Assert(isData());
+                size = Math.Min(size, (_size - currentOffset));
+                ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, currentOffset, size);
+                currentOffset += size;
+                return res;
             }
-
-            //public ReadOnlySpan<byte> fromBeginToCurrent()
-            //{
-            //    ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, 0, currentOffset);
-            //    return res;
-            //}
-            //public ReadOnlySpan<byte> fromCurrentToEnd()
-            //{
-            //    ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, currentOffset, _size - currentOffset);
-            //    return res;
-            //}
 
             public void skip(int size)
             {
-                if (_data != null)
-                {
-                    size = size <= (_size - currentOffset) ? size : _size - currentOffset;
-                    currentOffset += size;
-                }
+                size = Math.Min(size, (_size - currentOffset));
+                currentOffset += size;
             }
             public int offset() { return currentOffset; }
+            public ReadIteratorT shallowClone()
+            {
+                return (ReadIteratorT)MemberwiseClone();
+            }
+
             public string debugToString()
             {
                 StringBuilder sb = new StringBuilder();

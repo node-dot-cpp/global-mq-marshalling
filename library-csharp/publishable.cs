@@ -78,9 +78,8 @@ namespace globalmq.marshalling
     }
     public interface IPublishableParser
     {
-        //void copyFromBeginToCurrent(BufferT buff);
         void parseKey(String expectedName); //TODO remove, make private
-        void copyFromCurrentToEnd(BufferT buff);
+        public ReadIteratorT getIterator();
         bool parseAddress(ref UInt64[] addr);
         void parseAddressEnd();
         Int64 parseInteger(String expectedName);
@@ -104,13 +103,9 @@ namespace globalmq.marshalling
 
         public JsonPublishableParser(ReadIteratorT riter) { p = new JsonParser(riter); }
 
-        //public void copyFromBeginToCurrent(BufferT buff)
-        //{
-        //    p.copyFromBeginToCurrent(buff);
-        //}
-        public void copyFromCurrentToEnd(BufferT buff)
+        public ReadIteratorT getIterator()
         {
-            p.copyFromCurrentToEnd(buff);
+            return p.getIterator();
         }
 
         public void parseKey(String expectedName)
@@ -308,14 +303,11 @@ namespace globalmq.marshalling
         GmqParser p;
 
         public GmqPublishableParser(ReadIteratorT riter) { p = new GmqParser(riter); }
-        //public void copyFromBeginToCurrent(BufferT buff)
-        //{
-        //    p.copyFromBeginToCurrent(buff);
-        //}
+
         public void parseKey(String expectedName) { }
-        public void copyFromCurrentToEnd(BufferT buff)
+        public ReadIteratorT getIterator()
         {
-            p.copyFromCurrentToEnd(buff);
+            return p.getIterator();
         }
         public bool parseAddress(ref UInt64[] addr)
         {
@@ -388,7 +380,7 @@ namespace globalmq.marshalling
     public interface IPublishableComposer
     {
         void composeKey(String name); //TODO remove
-        BufferT getBuffer();
+        void appendRaw(ReadIteratorT it, int size = int.MaxValue);
         void startTick(BufferT buffer);
         BufferT endTick();
         void composeAddress(UInt64[] baseAddr, UInt64 last);
@@ -419,9 +411,9 @@ namespace globalmq.marshalling
         {
             composer.addNamePart(name);
         }
-        public BufferT getBuffer()
+        public void appendRaw(ReadIteratorT it, int size = int.MaxValue)
         {
-            return composer.getBuffer();
+            composer.getBuffer().append(it, size);
         }
 
         public void startTick(BufferT buffer)
@@ -549,10 +541,11 @@ namespace globalmq.marshalling
         public GmqPublishableComposer(BufferT buffer) { composer = new GmqComposer(buffer); }
 
         public void composeKey(String name) { }
-        public BufferT getBuffer()
+        public void appendRaw(ReadIteratorT it, int size = int.MaxValue)
         {
-            return composer.getBuffer();
+            composer.getBuffer().append(it, size);
         }
+
         public void startTick(BufferT buffer)
         {
             composer.startTick(buffer);

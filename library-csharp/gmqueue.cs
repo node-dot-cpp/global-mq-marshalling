@@ -112,14 +112,12 @@ namespace globalmq.marshalling
             parser.parsePublishableStructEnd();
         }
 
-        public static void parseAndUpdate(IPublishableComposer composer, IPublishableParser parser, UpdatedData udata)
+        public static void parseAndUpdate(ReadIteratorT msgStart, IPublishableParser parser, IPublishableComposer composer, UpdatedData udata)
         {
             //		ParserT parser2 = parser;
             parser.parsePublishableStructBegin("hdr");
-            composer.composePublishableStructBegin("hdr");
             //size_t msgType;
             UInt64 msgType = parser.parseUnsigned("msg_type");
-            composer.composeUnsigned("msg_type", msgType, true);
             UInt64 dummy;
             string dummyStr;
             switch ((MsgType)msgType)
@@ -128,29 +126,27 @@ namespace globalmq.marshalling
                 case MsgType.subscriptionResponse:
                 case MsgType.stateUpdate:
                     dummy = parser.parseUnsigned("state_type_id");
-                    composer.composeUnsigned("state_type_id", dummy, true);
                     break;
                 case MsgType.connectionRequest:
                 case MsgType.connectionAccepted:
                 case MsgType.connectionMessage:
                     dummy = parser.parseUnsigned("direction");
-                    composer.composeUnsigned("direction", dummy, true);
                     break;
                 default:
                     throw new Exception(); // TODO: ... (unknown msg type)
             }
             dummy = parser.parseUnsigned("priority");
-            composer.composeUnsigned("priority", dummy, true);
             switch ((MsgType)msgType)
             {
                 case MsgType.subscriptionRequest:
                 case MsgType.connectionRequest:
                     {
                         dummyStr = parser.parseString("path");
-                        composer.composeString("path", dummyStr, true);
                         Debug.Assert(!udata.update_ref_id_at_publisher);
 
-                        //parser.copyFromBeginToCurrent(composer.getBuffer());
+                        int offset = parser.getIterator().offset();
+                        composer.appendRaw(msgStart, offset);
+
                         dummy = parser.parseUnsigned("ref_id_at_subscriber");
                         if (udata.update_ref_id_at_subscriber)
                             composer.composeUnsigned("ref_id_at_subscriber", udata.ref_id_at_subscriber, false);
@@ -163,7 +159,9 @@ namespace globalmq.marshalling
                 case MsgType.connectionAccepted:
                 case MsgType.connectionMessage:
                     {
-                        //parser.copyFromBeginToCurrent(composer.getBuffer());
+                        int offset = parser.getIterator().offset();
+                        composer.appendRaw(msgStart, offset);
+
                         dummy = parser.parseUnsigned("ref_id_at_subscriber");
                         if (udata.update_ref_id_at_subscriber)
                             composer.composeUnsigned("ref_id_at_subscriber", udata.ref_id_at_subscriber, false);
@@ -180,7 +178,7 @@ namespace globalmq.marshalling
                 default:
                     throw new Exception(); // TODO: ... (unknown msg type)
             }
-            parser.copyFromCurrentToEnd(composer.getBuffer());
+            composer.appendRaw(parser.getIterator());
         }
 
         public void compose(IPublishableComposer composer, bool addSeparator)
@@ -873,7 +871,7 @@ namespace globalmq.marshalling
             }
         }
 
-        void helperComposePublishableStateMessageBegin(IPublishableComposer composer, PublishableStateMessageHeader header)
+        public static void helperComposePublishableStateMessageBegin(IPublishableComposer composer, PublishableStateMessageHeader header)
         {
             composer.composeStructBegin();
             if (header.type == PublishableStateMessageHeader.MsgType.subscriptionResponse ||
@@ -888,11 +886,11 @@ namespace globalmq.marshalling
                 header.compose(composer, false);
         }
 
-        void helperComposePublishableStateMessageEnd(IPublishableComposer composer)
+        public static void helperComposePublishableStateMessageEnd(IPublishableComposer composer)
         {
             composer.composeStructEnd();
         }
-        void helperParsePublishableStateMessageBegin(IPublishableParser parser, PublishableStateMessageHeader header)
+        public static void helperParsePublishableStateMessageBegin(IPublishableParser parser, ref PublishableStateMessageHeader header)
         {
             parser.parseStructBegin();
             header.parse(parser);
@@ -904,18 +902,22 @@ namespace globalmq.marshalling
             }
         }
 
-        void helperParsePublishableStateMessageEnd(IPublishableParser parser, PublishableStateMessageHeader header)
+        public static void helperParsePublishableStateMessageEnd(IPublishableParser parser)
         {
             parser.parseStructEnd();
         }
 
-        void helperParseAndUpdatePublishableStateMessage(BufferT buffFrom, BufferT buffTo, PublishableStateMessageHeader.UpdatedData udata)
+        public static void helperParseAndUpdatePublishableStateMessage(IPlatformSupport ps, BufferT buffFrom, BufferT buffTo, PublishableStateMessageHeader.UpdatedData udata)
         {
+            ReadIteratorT riter = buffFrom.getReadIterator();
+            
             ReadIteratorT riter1 = buffFrom.getReadIterator();
-            IPublishableComposer composer = platformSupport.makePublishableComposer(buffTo);
-            IPublishableParser parserCurrent = platformSupport.makePublishableParser(riter1);
+            IPublishableParser parserCurrent = ps.makePublishableParser(riter1);
             parserCurrent.parseStructBegin();
-            PublishableStateMessageHeader.parseAndUpdate(composer, parserCurrent, udata);
+
+            IPublishableComposer composer = ps.makePublishableComposer(buffTo);
+
+            PublishableStateMessageHeader.parseAndUpdate(riter, parserCurrent, composer, udata);
         }
 
         public class MsgToBeSent
@@ -936,7 +938,7 @@ namespace globalmq.marshalling
             PublishableStateMessageHeader mh = new PublishableStateMessageHeader();
             ReadIteratorT riter = msg.getReadIterator();
             IPublishableParser parser = platformSupport.makePublishableParser(riter);
-            helperParsePublishableStateMessageBegin(parser, mh);
+            helperParsePublishableStateMessageBegin(parser, ref mh);
 
             //std::unique_lock < std::mutex > lock (mx) ;
             List<MsgToBeSent> msgsToSend = new List<MsgToBeSent>();
@@ -1007,7 +1009,7 @@ namespace globalmq.marshalling
                                     ud.update_ref_id_at_subscriber = true;
 
                                     BufferT msgForward = platformSupport.makeBuffer();
-                                    helperParseAndUpdatePublishableStateMessage(msg, msgForward, ud);
+                                    helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
                                     InProcessMessagePostmanBase postman = addressableLocations.getPostman(targetIdx);
                                     //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
@@ -1035,7 +1037,7 @@ namespace globalmq.marshalling
                                 ud.ref_id_at_subscriber = subscriber.ref_id_at_subscriber;
                                 ud.ref_id_at_publisher = subscriber.ref_id_at_publisher;
                                 BufferT msgForward = platformSupport.makeBuffer();
-                                helperParseAndUpdatePublishableStateMessage(msg, msgForward, ud);
+                                helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
                                 InProcessMessagePostmanBase postman = addressableLocations.getPostman(subscriber.senderSlotIdx);
                                 //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
@@ -1062,7 +1064,7 @@ namespace globalmq.marshalling
                                 ud.ref_id_at_subscriber = subscriber.ref_id_at_subscriber;
                                 ud.ref_id_at_publisher = subscriber.ref_id_at_publisher;
                                 BufferT msgForward = platformSupport.makeBuffer();
-                                helperParseAndUpdatePublishableStateMessage(msg, msgForward, ud);
+                                helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
                                 InProcessMessagePostmanBase postman = addressableLocations.getPostman(subscriber.senderSlotIdx);
                                 //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
@@ -1096,7 +1098,7 @@ namespace globalmq.marshalling
                                 ud.update_ref_id_at_subscriber = true;
 
                                 BufferT msgForward = platformSupport.makeBuffer();
-                                helperParseAndUpdatePublishableStateMessage(msg, msgForward, ud);
+                                helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
                                 InProcessMessagePostmanBase postman = addressableLocations.getPostman(targetIdx);
                                 //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
@@ -1119,7 +1121,7 @@ namespace globalmq.marshalling
                             ud.ref_id_at_publisher = fields.idAtSource;
 
                             BufferT msgForward = platformSupport.makeBuffer();
-                            helperParseAndUpdatePublishableStateMessage(msg, msgForward, ud);
+                            helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
                             InProcessMessagePostmanBase postman = addressableLocations.getPostman(fields.targetSlotIdx);
                             //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
@@ -1152,7 +1154,7 @@ namespace globalmq.marshalling
 
 
                             BufferT msgForward = platformSupport.makeBuffer();
-                            helperParseAndUpdatePublishableStateMessage(msg, msgForward, ud);
+                            helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
                             InProcessMessagePostmanBase postman = addressableLocations.getPostman(fields.targetSlotIdx);
                             //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
@@ -1228,7 +1230,7 @@ namespace globalmq.marshalling
         //}
     };
 
-    class GMQTransportBase
+    public class GMQTransportBase
     {
         GMQueue gmq;
         string name;
@@ -1268,7 +1270,7 @@ namespace globalmq.marshalling
 
             this.id = gmq.add(postman, ref idx);
         }
-        void postMessage(BufferT msg)
+        public void postMessage(BufferT msg)
         {
             Debug.Assert(idx.isInitialized());
             gmq.postMessage(msg, id, idx);

@@ -251,16 +251,11 @@ namespace globalmq.marshalling
 		ReadIteratorT riter;
 
 		public GmqParser(ReadIteratorT riter_) { riter = riter_; }
-		//public void copyFromBeginToCurrent(BufferT buff)
-		//{
-		//	ReadOnlySpan<byte> sp = riter.fromBeginToCurrent();
-		//	buff.append(sp);
-		//}
-		public void copyFromCurrentToEnd(BufferT buff)
-		{
-			ReadOnlySpan<byte> sp = riter.read(int.MaxValue);
-			buff.append(sp);
-		}
+
+		public ReadIteratorT getIterator()
+        {
+			return riter;
+        }
 		public void parseSignedInteger(out sbyte num)
 		{
 			num = (sbyte)BitConverter.ToInt64(riter.read(8));
@@ -352,17 +347,11 @@ namespace globalmq.marshalling
 		NumberFormatInfo nfi = new NumberFormatInfo();
 
 		public JsonParser(ReadIteratorT riter_) { riter = riter_; nfi.NumberDecimalSeparator = "."; }
-		//public void copyFromBeginToCurrent(BufferT buff)
-		//{
-		//	ReadOnlySpan<byte> sp = riter.fromBeginToCurrent();
-		//	buff.append(sp);
-		//}
-		public void copyFromCurrentToEnd(BufferT buff)
-		{
-			ReadOnlySpan<byte> sp = riter.read(int.MaxValue);
-			buff.append(sp);
-		}
 
+		public ReadIteratorT getIterator()
+		{
+			return riter;
+		}
 		void impl_skipBlockFromJson(char left, char right)
 		{
 			// mb: TODO this needs more work
