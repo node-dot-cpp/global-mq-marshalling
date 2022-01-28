@@ -394,23 +394,20 @@ namespace globalmq.marshalling
             return true;
         }
     };
-    public interface StateConcentratorBase
+    public interface IStateConcentrator
     {
-        string name { get; }
+        string stateSubscriberName();
+        UInt64 stateTypeID();
         // as subscriber
-        void applyGmqMessageWithUpdates(GmqPublishableParser parser);
-        void applyJsonMessageWithUpdates(JsonPublishableParser parser);
-        void applyGmqStateSyncMessage(GmqPublishableParser parser);
-        void applyJsonStateSyncMessage(JsonPublishableParser parser);
         void applyMessageWithUpdates(IPublishableParser parser);
         void applyStateSyncMessage(IPublishableParser parser);
         // as publisher
         void generateStateSyncMessage(IPublishableComposer composer);
     };
 
-    public interface StateConcentratorFactoryBase
+    public interface IStateConcentratorFactory
     {
-        StateConcentratorBase createConcentrator(UInt64 typeID);
+        IStateConcentrator createConcentrator(UInt64 typeID);
 
     }
     public interface InProcessMessagePostmanBase
@@ -493,7 +490,7 @@ namespace globalmq.marshalling
         }
     }
 
-    class GMQueue
+    public class GMQueue
     {
         //using InputBufferT = typename PlatformSupportT::BufferT;
         //using ComposerT = typename PlatformSupportT::ComposerT;
@@ -512,7 +509,7 @@ namespace globalmq.marshalling
         {
             //friend class GMQueue<PlatformSupportT>;
 
-            StateConcentratorBase ptr = null;
+            IStateConcentrator ptr = null;
             bool subscriptionResponseReceived = false;
             UInt64 idAtPublisher; // one for all subscriber using this concentrator
 
@@ -524,7 +521,7 @@ namespace globalmq.marshalling
             };
             public List<SubscriberData> subscribers = new List<SubscriberData>();
 
-            public ConcentratorWrapper(StateConcentratorBase ptr) { this.ptr = ptr; }
+            public ConcentratorWrapper(IStateConcentrator ptr) { this.ptr = ptr; }
             //~ConcentratorWrapper() { if (ptr) delete ptr; }
 
             // Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
@@ -708,7 +705,7 @@ namespace globalmq.marshalling
         Dictionary<UInt64, Tuple<UInt64, UInt64>> ID2ConcentratorSubscriberPairMapping = new Dictionary<UInt64, Tuple<UInt64, UInt64>>();
         UInt64 publisherAndItsConcentratorBase = 0;
 
-        StateConcentratorFactoryBase stateConcentratorFactory = null;
+        IStateConcentratorFactory stateConcentratorFactory = null;
         IPlatformSupport platformSupport = null;
 
         void addConcentratorSubscriberPair(UInt64 id, UInt64 concentratorID, UInt64 subscriberDataID)
@@ -744,7 +741,7 @@ namespace globalmq.marshalling
             {
                 //Debug.Assert(!path.empty());
                 Debug.Assert(stateConcentratorFactory != null);
-                StateConcentratorBase concentrator = stateConcentratorFactory.createConcentrator(stateTypeID);
+                IStateConcentrator concentrator = stateConcentratorFactory.createConcentrator(stateTypeID);
                 Debug.Assert(concentrator != null);
                 ConcentratorWrapper cwrapper = new ConcentratorWrapper(concentrator);
                 /*auto ins = */
@@ -848,7 +845,7 @@ namespace globalmq.marshalling
         //}
 
         //template <class StateFactoryT>
-        public void initStateConcentratorFactory(StateConcentratorFactoryBase factory, IPlatformSupport platform) // Note: potentially, temporary solution
+        public void initStateConcentratorFactory(IStateConcentratorFactory factory, IPlatformSupport platform) // Note: potentially, temporary solution
         {
             //std::unique_lock < std::mutex > lock (mx) ;
             lock (mx)
@@ -1256,7 +1253,7 @@ namespace globalmq.marshalling
         //    if (idx.isInitialized())
         //        gmq.remove(name, idx);
         //}
-        GMQTransportBase(GMQueue queue, string name_, InProcessMessagePostmanBase postman)
+        public GMQTransportBase(GMQueue queue, string name_, InProcessMessagePostmanBase postman)
         {
 
             Debug.Assert(name_.Length != 0);
@@ -1264,7 +1261,7 @@ namespace globalmq.marshalling
             this.name = name_;
             this.id = gmq.add(name, postman, ref idx);
         }
-        GMQTransportBase(GMQueue queue, InProcessMessagePostmanBase postman)
+        public GMQTransportBase(GMQueue queue, InProcessMessagePostmanBase postman)
         {
             this.gmq = queue;
 

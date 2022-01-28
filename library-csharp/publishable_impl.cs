@@ -45,33 +45,33 @@ namespace globalmq.marshalling
         }
     };
 
-    public abstract class StatePublisherBase
+    public interface IStatePublisher
     {
-        public int idx { get; set; } // for use in pools, etc
-        public abstract void generateStateSyncMessage(IPublishableComposer composer);
-        public abstract void startTick(BufferT buff);
-        public abstract BufferT endTick();
-        public abstract String statePublisherName();
-        public abstract UInt64 stateTypeID();
+        int idx { get; set; } // for use in pools, etc
+        void generateStateSyncMessage(IPublishableComposer composer);
+        void startTick(BufferT buff);
+        BufferT endTick();
+        String statePublisherName();
+        UInt64 stateTypeID();
     };
 
     public class StatePublisherData
     {
 
-        public StatePublisherBase publisher = null;
+        public IStatePublisher publisher = null;
         public List<StateSubscriberData> subscribers = new List<StateSubscriberData>();
         public int idx; // in pool
 
-        public StatePublisherData(int idx_, StatePublisherBase publisher_)
+        public StatePublisherData(int idx_, IStatePublisher publisher_)
         {
-            Debug.Assert(publisher != null);
+            Debug.Assert(publisher_ != null);
             this.publisher = publisher_;
             this.idx = idx_;
             publisher.idx = idx_;
             //BufferT buff; // just empty
             //publisher.startTick(buff);
         }
-        public void setPublisher(StatePublisherBase publisher_)
+        public void setPublisher(IStatePublisher publisher_)
         {
             Debug.Assert(this.publisher == null);
             Debug.Assert(publisher_ != null);
@@ -80,7 +80,7 @@ namespace globalmq.marshalling
             //BufferT buff; // just empty
             //publisher.startTick(buff);
         }
-        public void setUnused(StatePublisherBase publisher_)
+        public void setUnused(IStatePublisher publisher_)
         {
             Debug.Assert(this.publisher == publisher_);
             this.publisher = null;
@@ -116,7 +116,7 @@ namespace globalmq.marshalling
         Dictionary<UInt64, (int, int)> ID2PublisherAndItsSubscriberMapping = new Dictionary<UInt64, (int, int)>();
         UInt64 publisherAndItsSubscriberBase = 0;
 
-        public int add(StatePublisherBase publisher)
+        public int add(IStatePublisher publisher)
         {
             for (int i = 0; i < publishers.Count; ++i)
             {
@@ -142,7 +142,7 @@ namespace globalmq.marshalling
 
             return publishers.Count - 1;
         }
-        public void remove(StatePublisherBase publisher)
+        public void remove(IStatePublisher publisher)
         {
             bool res = name2publisherMapping.Remove(publisher.statePublisherName());
             Debug.Assert(res);
@@ -301,7 +301,7 @@ namespace globalmq.marshalling
         public void setTransport(GMQTransportBase tr) { transport = tr; }
         public void setPlatform(IPlatformSupport pl) { platform = pl; }
 
-        void subscribe(StateSubscriberBase subscriber, string path)
+        public void subscribe(StateSubscriberBase subscriber, string path)
         {
             for (int i = 0; i < subscribers.Count; ++i)
                 if (subscribers[i].subscriber == subscriber)
@@ -775,13 +775,12 @@ namespace globalmq.marshalling
         }
 
 
-        void add(StatePublisherBase obj)
+        public void add(IStatePublisher obj)
         {
             pubPool.add(obj);
         }
 
-        void add(StateSubscriberBase obj)
-
+        public void add(StateSubscriberBase obj)
         {
             subPool.add(obj);
         }
@@ -790,19 +789,22 @@ namespace globalmq.marshalling
             cliPool.add(obj);
         }
 
-        void remove(StatePublisherBase obj)
+        public void remove(IStatePublisher obj)
         {
             pubPool.remove(obj);
         }
 
-        void remove(StateSubscriberBase obj)
-
+        public void remove(StateSubscriberBase obj)
         {
             subPool.remove(obj);
         }
         void remove(ClientConnectionBase obj)
         {
             cliPool.remove(obj);
+        }
+        public void subscribe(StateSubscriberBase subscriber, string path)
+        {
+            subPool.subscribe(subscriber, path);
         }
 
         void onMessage(IPublishableParser parser)
@@ -845,14 +847,14 @@ namespace globalmq.marshalling
             }
         }
 
-        void onMessage(BufferT buffer)
+        public void onMessage(BufferT buffer)
         {
             ReadIteratorT riter = buffer.getReadIterator();
             IPublishableParser parser = platform.makePublishableParser(riter);
             onMessage(parser);
         }
 
-        void postAllUpdates()
+        public void postAllUpdates()
         {
             pubPool.postAllUpdates();
         }

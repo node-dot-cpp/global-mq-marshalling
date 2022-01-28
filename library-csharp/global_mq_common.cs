@@ -190,6 +190,16 @@ namespace globalmq.marshalling
         {
             return HashCode.Combine(_size, _data);
         }
+        public string toDebugString()
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < _size; ++i)
+            {
+                sb.Append((char)_data[i]);
+            }
+
+            return sb.ToString();
+        }
 
         public class ReadIter : ReadIteratorT
         {
@@ -239,7 +249,7 @@ namespace globalmq.marshalling
                 return (ReadIteratorT)MemberwiseClone();
             }
 
-            public string debugToString()
+            public string toDebugString()
             {
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < _size; ++i)
@@ -248,7 +258,6 @@ namespace globalmq.marshalling
                 }
 
                 return sb.ToString();
-
             }
         }
     }

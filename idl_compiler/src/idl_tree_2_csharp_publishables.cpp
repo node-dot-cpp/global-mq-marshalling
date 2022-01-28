@@ -142,9 +142,9 @@ namespace {
 					{
 						assert(member.type.structIdx < root.structs.size());
 						const std::string type_name = root.structs[member.type.structIdx]->name;
-						fprintf(header, "\tIList<%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
-						fprintf(header, "\tIList<%s> make_%s();\n", type_name.c_str(), member.name.c_str());
-						fprintf(header, "\t%s make_%s_element();\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\tIList<I%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\tIList<I%s> make_%s();\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\tI%s make_%s_element();\n", type_name.c_str(), member.name.c_str());
 						break;
 					}
 				default:
@@ -206,9 +206,9 @@ namespace {
 				{
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
-					fprintf(header, "\tpublic IList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\tpublic IList<%s> make_%s() { return new List<%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
-					fprintf(header, "\tpublic %s make_%s_element() { return new %s_impl(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic IList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic IList<I%s> make_%s() { return new List<I%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic I%s make_%s_element() { return new %s_impl(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
 					break;
 				}
 				default:
@@ -621,11 +621,6 @@ namespace {
 		fprintf(header, "\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
 		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
 
-		fprintf(header, "\tpublic void applyGmqMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }\n");
-		fprintf(header, "\tpublic void applyJsonMessageWithUpdates(IPublishableParser parser) { applyMessageWithUpdates(parser); }\n");
-		fprintf(header, "\tpublic void applyGmqStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }\n");
-		fprintf(header, "\tpublic void applyJsonStateSyncMessage(IPublishableParser parser) { applyStateSyncMessage(parser); }\n");
-
 		fprintf(header, "\tpublic void applyMessageWithUpdates(IPublishableParser parser)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
@@ -718,7 +713,7 @@ namespace {
 				{
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
-					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
 					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<I%s>(t.%s); }\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
@@ -818,14 +813,14 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		//fprintf(header, "\tpublic UInt64 idx { get; set; }\n");
+		fprintf(header, "\tpublic int idx { get; set; } // for use in pools, etc\n");
 		fprintf(header, "\tpublic String statePublisherName() { return \"%s\"; }\n", s.name.c_str());
 		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
 
 		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tcomposer.composeStructBegin();\n");
-		fprintf(header, "\t\t%s_publisher.compose(composer, this);\n", type_name.c_str());
+		fprintf(header, "\t\t%s_publisher.compose(composer, this.t);\n", type_name.c_str());
 		fprintf(header, "\t\tcomposer.composeStructEnd();\n");
 		fprintf(header, "\t}\n");
 		
@@ -851,7 +846,7 @@ namespace {
 		fprintf(header, "public class %s_publisher : I%s", type_name.c_str(), type_name.c_str());
 
 		if (s.type == CompositeType::Type::publishable)
-			fprintf(header, ", StatePublisherBase");
+			fprintf(header, ", IStatePublisher");
 
 		fprintf(header, "\n");
 
@@ -1008,6 +1003,80 @@ namespace {
 		fprintf(header, "} // class %s_publisher\n\n", type_name.c_str());
 	}
 
+	void csharpPub_generateStateConcentratorBase(FILE* header, CompositeType& s, const std::string& type_name)
+	{
+		assert(s.type == CompositeType::Type::publishable);
+
+		fprintf(header, "\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
+		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
+
+		fprintf(header, "\tpublic void applyMessageWithUpdates(IPublishableParser parser)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
+		fprintf(header, "\t\tUInt64[] addr = null;\n");
+		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
+		fprintf(header, "\t\t{\n");
+		fprintf(header, "\t\t\t%s_subscriber.parse(parser, this.t, addr, 0);\n", type_name.c_str());
+		fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
+		fprintf(header, "\t\t\taddr = null;\n");
+		fprintf(header, "\t\t}\n");
+		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tparser.parseStructBegin();\n");
+		fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, this.t);\n", type_name.c_str());
+		fprintf(header, "\t\tparser.parseStructEnd();\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tcomposer.composeStructBegin();\n");
+		fprintf(header, "\t\t%s_publisher.compose(composer, this.t);\n", type_name.c_str());
+		fprintf(header, "\t\tcomposer.composeStructEnd();\n");
+		fprintf(header, "\t}\n");
+
+	}
+
+
+	void csharpPub_generateStructConcentrator(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
+	{
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+
+
+		fprintf(header, "public class %s_concentrator", type_name.c_str());
+
+		if (s.type == CompositeType::Type::publishable)
+			fprintf(header, " : IStateConcentrator");
+
+		fprintf(header, "\n");
+
+
+		fprintf(header, "{\n");
+		fprintf(header, "\tI%s t = new %s_impl();\n", type_name.c_str(), type_name.c_str());
+
+		csharpPub_generateAddressEnum(header, s);
+
+		//fprintf(header, "\tpublic %s_concentrator(I%s t)\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "\t{\n");
+		//fprintf(header, "\t\tthis.t = t;\n");
+		//fprintf(header, "\t}\n");
+
+
+		csharpPub_generateCompose(header, root, s, type_name);
+		csharpPub_generateParseStateSync(header, root, s, type_name);
+		csharpPub_generateParse1(header, root, s, type_name);
+		csharpPub_generateParse2(header, root, s, type_name);
+
+
+		if (s.type == CompositeType::Type::publishable)
+			csharpPub_generateStateConcentratorBase(header, s, type_name);
+
+		fprintf(header, "} // class %s_concentrator\n\n", type_name.c_str());
+	}
+
+
 	void csharpPub_generateStruct(FILE* header, Root& root, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
@@ -1033,6 +1102,10 @@ namespace {
 
 		// wrapper for publisher
 		csharpPub_generateStructPubl(header, root, s, name);
+
+		// wrapper for concentrator
+		if (s.type == CompositeType::Type::publishable)
+			csharpPub_generateStructConcentrator(header, root, s, name);
 
 
 		fprintf(header, "\n");
@@ -1091,8 +1164,32 @@ void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FI
 	}
 	//fprintf( header, "\n//===============================================================================\n\n" );
 
-	//if ( !s.publishables.empty() )
-	//{
+	if (!s.publishables.empty())
+	{
+		fprintf(header, "public class StateConcentratorFactory : IStateConcentratorFactory\n");
+		fprintf(header, "{\n");
+		fprintf(header, "\tpublic IStateConcentrator createConcentrator(UInt64 typeID)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tswitch(typeID)\n");
+		fprintf(header, "\t\t{\n");
+		for (auto& it : s.publishables)
+		{
+			auto& obj_1 = it;
+			assert(it != nullptr);
+			assert(typeid(*(it)) == typeid(CompositeType));
+			assert(it->type == CompositeType::Type::publishable);
+			std::string name = csharpPub_getTypeName(*it);
+			fprintf(header, "\t\tcase %lld:\n", it->numID);
+			fprintf(header, "\t\t\treturn new %s_concentrator();\n", name.c_str());
+		}
+		fprintf(header, "\t\tdefault:\n");
+		fprintf(header, "\t\t\treturn null;\n");
+		fprintf(header, "\t\t}\n");
+
+		fprintf(header, "\t}\n");
+		fprintf(header, "} // class StateConcentratorFactory\n\n");
+	}
+
 	//	generateStateConcentratorFactory( header, s );
 	//	fprintf( header, "\n//===============================================================================\n\n" );
 	//}
