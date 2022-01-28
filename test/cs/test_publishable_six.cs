@@ -139,6 +139,23 @@ namespace TestProject1
             Assert.Equal(data, data2);
         }
 
+        public static void doUpdate2(mtest.publishable.IStructSix data)
+        {
+            //modify substructure inside vector
+            data.aggregate.name = "changed name";
+
+            data.basic.anInt = -2;
+            data.basic.anUInt = 3;
+            data.basic.aReal = 4.0;
+
+            mtest.publishable.IBasicTypes aggr = data.aggregate.make_theAggregate();
+            aggr.anInt = -200;
+            aggr.anUInt = 300;
+            aggr.aReal = 400.0;
+            aggr.aString = "new part";
+            data.aggregate.theAggregate = aggr;
+        }
+
         [Fact]
         public static void TestJsonComposeUpdate2()
         {
@@ -151,19 +168,7 @@ namespace TestProject1
 
             publ.startTick(buffer);
 
-            publ.aggregate.name = "changed name";
-
-            publ.basic.anInt = -2;
-            publ.basic.anUInt = 3;
-            publ.basic.aReal = 4.0;
-
-            mtest.publishable.IBasicTypes aggr = publ.aggregate.make_theAggregate();
-            aggr.anInt = -200;
-            aggr.anUInt = 300;
-            aggr.aReal = 400.0;
-            aggr.aString = "new part";
-            publ.aggregate.theAggregate = aggr;
-
+            doUpdate2(publ);
 
             publ.endTick();
 
@@ -188,17 +193,8 @@ namespace TestProject1
 
             Assert.NotEqual(data, data2);
 
-            data2.aggregate.name = "changed name";
-
-            data2.basic.anInt = -2;
-            data2.basic.anUInt = 3;
-            data2.basic.aReal = 4.0;
-
-            data2.aggregate.theAggregate.anInt = -200;
-            data2.aggregate.theAggregate.anUInt = 300;
-            data2.aggregate.theAggregate.aReal = 400.0;
-            data2.aggregate.theAggregate.aString = "new part";
-
+            doUpdate2(data2);
+ 
             Assert.Equal(data, data2);
         }
 
