@@ -1008,6 +1008,66 @@ YYSTYPE createVectorOfDiscriminatedUnionsType(YYSTYPE token, YYSTYPE structName,
 	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::DISCRIMINATED_UNION);
 }
 
+YYSTYPE createVectorOfDictionaryType(YYSTYPE token, YYSTYPE structName, bool nonext, bool hasDefault)
+{
+	return createVectorOfCompositeType(token, structName, nonext, hasDefault, MessageParameterType::DICTIONARY);
+}
+
+YYSTYPE createDictionaryBeginBase(YYSTYPE token, MessageParameterType::KIND kind)
+{
+	unique_ptr<YyBase> d0(token);
+
+	YyDataType* yy = new YyDataType();
+
+	yy->dataType->kind = MessageParameterType::DICTIONARY;
+	yy->dataType->dictionaryKeyKind = kind;
+	yy->dataType->isNonExtendable = true;
+
+	return yy;
+}
+
+YYSTYPE createDictionaryBeginWithIntegerKey(YYSTYPE token) { return createDictionaryBeginBase( token, MessageParameterType::INTEGER ); }
+YYSTYPE createDictionaryBeginWithUintegerKey(YYSTYPE token) { return createDictionaryBeginBase( token, MessageParameterType::UINTEGER ); }
+YYSTYPE createDictionaryBeginWithCharStringKey(YYSTYPE token) { return createDictionaryBeginBase( token, MessageParameterType::CHARACTER_STRING ); }
+
+YYSTYPE createDictionaryWithSimpleValueBase(YYSTYPE token, MessageParameterType::KIND kind)
+{
+	YyDataType* yy = yystype_cast<YyDataType*>(token);
+
+	assert( yy->dataType->kind == MessageParameterType::DICTIONARY );
+	assert( yy->dataType->dictionaryKeyKind != MessageParameterType::UNDEFINED );
+	assert( yy->dataType->isNonExtendable );
+	yy->dataType->dictionaryValueKind = kind;
+
+	return yy;
+}
+
+YYSTYPE createDictionaryWithIntegerValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::INTEGER ); }
+YYSTYPE createDictionaryWithUintegerValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::UINTEGER ); }
+YYSTYPE createDictionaryWithRealValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::REAL ); }
+YYSTYPE createDictionaryWithCharStringValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::CHARACTER_STRING ); }
+YYSTYPE createDictionaryWithBLOBValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::BLOB ); }
+YYSTYPE createDictionaryWithByteArrayValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::BYTE_ARRAY ); }
+
+YYSTYPE createDictionaryWithCompositeValueType(YYSTYPE token, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
+{
+	unique_ptr<YyBase> d1(compositeTypeName);
+
+	YyDataType* yy = yystype_cast<YyDataType*>(token);
+
+	assert( yy->dataType->kind == MessageParameterType::DICTIONARY );
+	assert( yy->dataType->dictionaryKeyKind != MessageParameterType::UNDEFINED );
+	assert( yy->dataType->isNonExtendable );
+	yy->dataType->dictionaryValueKind = kind;
+
+	yy->dataType->name = nameFromYyIdentifier(compositeTypeName);
+
+	return yy;
+}
+
+YYSTYPE createDictionaryWithStructValue(YYSTYPE token, YYSTYPE structName) { return createDictionaryWithCompositeValueType( token, structName, MessageParameterType::STRUCT ); }
+YYSTYPE createDictionaryWithDiscriminatedUnionValue(YYSTYPE token, YYSTYPE structName) { return createDictionaryWithCompositeValueType( token, structName, MessageParameterType::DISCRIMINATED_UNION ); }
+
 YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
 {
 	unique_ptr<YyBase> d0(token);

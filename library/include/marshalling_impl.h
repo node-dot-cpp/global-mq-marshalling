@@ -119,6 +119,7 @@ struct StringType {static constexpr bool dummy = false;};
 struct BlobType {static constexpr bool dummy = false;};
 struct ByteArrayType {static constexpr bool dummy = false;};
 struct EnumType {static constexpr bool dummy = false;};
+
 struct VectorType {static constexpr bool dummy = false;};
 struct VectorOfSympleTypesBase : public VectorType {static constexpr bool dummy = false;};
 template<class value_type_>
@@ -129,6 +130,18 @@ struct VectorOfNonextMessageTypes : public VectorOfNonextMessageTypesBase {stati
 struct VectorOfDiscriminatedUnionType : public VectorType {static constexpr bool dummy = false;};
 struct VectorOfNonextDiscriminatedUnionTypesBase : public VectorType {static constexpr bool dummy = false;};
 struct VectorOfNonextDiscriminatedUnionTypes : public VectorOfNonextDiscriminatedUnionTypesBase {static constexpr bool dummy = false;};
+
+struct DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfSympleTypesBase : public DictionaryType {static constexpr bool dummy = false;};
+template<class key_type_, class value_type_>
+struct DictionaryOfSympleTypes : public DictionaryOfSympleTypesBase {static constexpr bool dummy = false; using key_type = key_type_; using value_type = value_type_;};
+struct DictionaryOfMessageType : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextMessageTypesBase : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextMessageTypes : public DictionaryOfNonextMessageTypesBase {static constexpr bool dummy = false;};
+struct DictionaryOfDiscriminatedUnionType : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextDiscriminatedUnionTypesBase : public DictionaryType {static constexpr bool dummy = false;};
+struct DictionaryOfNonextDiscriminatedUnionTypes : public DictionaryOfNonextDiscriminatedUnionTypesBase {static constexpr bool dummy = false;};
+
 struct StructType {static constexpr bool dummy = false;};
 struct MessageType {static constexpr bool dummy = false;};
 struct NonextMessageType : public MessageType {static constexpr bool dummy = false;};
@@ -241,11 +254,42 @@ void composeReal(ComposerT& composer, T num )
 	composer.buff.append( str.c_str(), str.size() );
 }
 
+template<class StringT>
+GMQ_COLL string string2JsonString( const StringT& str )
+{
+	GMQ_COLL string out;
+	for ( auto& ch : str )
+	{
+		switch ( ch )
+		{
+			case '\\':
+				out += "\\\\";
+				break;
+			case '\n':
+				out += "\\n";
+				break;
+			case '\r':
+				out += "\\r";
+				break;
+			case '\t':
+				out += "\\t";
+				break;
+			case '\"':
+				out += "\\\"";
+				break;
+			default:
+				out.push_back( ch );
+		}
+	}
+	return out;
+}
+
 template<typename ComposerT>
 void composeString(ComposerT& composer, const GMQ_COLL string& str )
 {
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str.c_str(), str.size() );
+	auto str1 = string2JsonString( str );
+	composer.buff.append( str1.c_str(), str1.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
@@ -253,25 +297,18 @@ template<typename ComposerT>
 void composeString(ComposerT& composer, const StringLiteralForComposing* str )
 {
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str->str, str->size );
+	auto str1 = string2JsonString( *str );
+	composer.buff.append( str1.c_str(), str1.size() );
 	composer.buff.appendUint8( '\"' );
 }
-
-// mb: this creates ambiguity
-// template<typename ComposerT>
-// void composeString(ComposerT& composer, GMQ_COLL string str )
-// {
-// 	composer.buff.appendUint8( '\"' );
-// 	composer.buff.append( str.c_str(), str.size() );
-// 	composer.buff.appendUint8( '\"' );
-// }
 
 template<typename ComposerT>
 void composeString(ComposerT& composer, const char* str )
 {
 	size_t sz = strlen( str );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str, strlen( str ) );
+	auto str1 = string2JsonString( GMQ_COLL string( str ) );
+	composer.buff.append( str1.c_str(), str1.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
@@ -322,7 +359,8 @@ void composeNamedString(ComposerT& composer, GMQ_COLL string name, const GMQ_COL
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str.c_str(), str.size() );
+	auto str1 = string2JsonString( str );
+	composer.buff.append( str1.c_str(), str1.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
@@ -331,7 +369,8 @@ void composeNamedString(ComposerT& composer, GMQ_COLL string name, const StringL
 {
 	addNamePart( composer, name );
 	composer.buff.appendUint8( '\"' );
-	composer.buff.append( str->str, str->size );
+	auto str1 = string2JsonString( *str );
+	composer.buff.append( str1.c_str(), str1.size() );
 	composer.buff.appendUint8( '\"' );
 }
 
@@ -687,10 +726,45 @@ public:
 		if ( *riter != '\"' )
 			throw std::exception(); // TODO
 		++riter;
-		while ( riter.isData() && *riter != '\"' )
+		bool done = false;
+		while ( (!done) && riter.isData()  )
 		{
-			*s += *riter;
-			++riter;
+			switch ( *riter )
+			{
+				case '\"':
+					done = true;
+					break;
+				case '\\':
+					++riter;
+					if ( !riter.isData() )
+						throw std::exception(); // TODO
+					switch ( *riter )
+					{
+						case '\\':
+							*s += '\\';
+							break;
+						case 't':
+							*s += '\t';
+							break;
+						case 'r':
+							*s += '\r';
+							break;
+						case 'n':
+							*s += '\n';
+							break;
+						case '\"':
+							*s += '\"';
+							break;
+						default:
+							throw std::exception(); // TODO (unexpected)
+					}
+					++riter;
+					break;
+				default:
+					*s += *riter;
+					++riter;
+					break;
+			}
 		}
 		if ( !riter.isData() )
 			throw std::exception(); // TODO
@@ -714,8 +788,34 @@ public:
 		if ( *riter != '\"' )
 			throw std::exception(); // TODO
 		++riter;
-		while ( riter.isData() && *riter != '\"' )
-			++riter;
+		bool done = false;
+		while ( (!done) && riter.isData()  )
+		{
+			switch ( *riter )
+			{
+				case '\"':
+					done = true;
+					break;
+				case '\\':
+					++riter;
+					if ( !riter.isData() )
+						throw std::exception(); // TODO
+					switch ( *riter )
+					{
+						case '\\':
+						case 't':
+						case 'r':
+						case 'n':
+						case '\"':
+							break;
+						default:
+							throw std::exception(); // TODO (unexpected)
+					}
+					++riter;
+				default:
+					++riter;
+			}
+		}
 		if ( !riter.isData() )
 			throw std::exception(); // TODO
 		++riter;

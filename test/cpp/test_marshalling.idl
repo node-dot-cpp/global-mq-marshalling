@@ -37,6 +37,7 @@ SCOPE infrastructural PROTO = GMQ;
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 
+MESSAGE scope_one:point3D=11 = STRUCT point3D;
 MESSAGE scope_one:point3D_alias=1 = STRUCT point3D;
 MESSAGE scope_one:point_alias=2 = STRUCT point;
 
@@ -163,20 +164,19 @@ DISCRIMINATED_UNION du_one {
 MESSAGE NONEXTENDABLE infrastructural:point3D=5 {
   STRUCT point3D pt;
   DISCRIMINATED_UNION du_one du_one_instance;
+  DICTIONARY<UINTEGER, CHARACTER-STRING> num2stringDictionary;
 };
 
+
+// html tag sample idl
 
 PUBLISHABLE publishable_html_tag=3 {
 	STRUCT HtmlTag tag;
 };
 
-STRUCT Property {
-  CHARACTER-STRING name;
-  CHARACTER-STRING value;
-};
-
 STRUCT HtmlTag {
-	VECTOR<STRUCT Property> properties;
+	CHARACTER-STRING name;
+	DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> properties;
 	DISCRIMINATED_UNION HtmlTextOrTags tags;
 };
 
@@ -189,3 +189,23 @@ DISCRIMINATED_UNION HtmlTextOrTags {
 	}
 };
 
+
+SCOPE level_data PROTO = JSON;
+MESSAGE level_data:Level=1{
+	VECTOR <STRUCT PolygonSt> Level;
+};
+
+STRUCT PolygonSt{
+	VECTOR<STRUCT Line_> portalMap;
+	STRUCT AnimZone animZones;
+};
+
+STRUCT AnimZone{
+	VECTOR <STRUCT Line_> animVector;
+	VECTOR <REAL> animSpeed;
+};
+
+STRUCT Line_{
+	STRUCT Vertex a;
+	STRUCT Vertex b;
+};

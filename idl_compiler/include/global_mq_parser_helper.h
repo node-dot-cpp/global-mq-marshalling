@@ -125,6 +125,20 @@ YYSTYPE createVectorOfBLOBType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfByteArrayType(YYSTYPE token, bool hasDefault);
 YYSTYPE createVectorOfStructsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
 YYSTYPE createVectorOfDiscriminatedUnionsType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
+YYSTYPE createVectorOfDictionaryType(YYSTYPE token, YYSTYPE messageName, bool nonext, bool hasDefault);
+
+YYSTYPE createDictionaryBeginWithIntegerKey(YYSTYPE token);
+YYSTYPE createDictionaryBeginWithUintegerKey(YYSTYPE token);
+YYSTYPE createDictionaryBeginWithCharStringKey(YYSTYPE token);
+
+YYSTYPE createDictionaryWithIntegerValue(YYSTYPE token);
+YYSTYPE createDictionaryWithUintegerValue(YYSTYPE token);
+YYSTYPE createDictionaryWithRealValue(YYSTYPE token);
+YYSTYPE createDictionaryWithCharStringValue(YYSTYPE token);
+YYSTYPE createDictionaryWithBLOBValue(YYSTYPE token);
+YYSTYPE createDictionaryWithByteArrayValue(YYSTYPE token);
+YYSTYPE createDictionaryWithStructValue(YYSTYPE token, YYSTYPE structName);
+YYSTYPE createDictionaryWithDiscriminatedUnionValue(YYSTYPE token, YYSTYPE structName);
 
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 YYSTYPE createDiscriminatedUnionType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);

@@ -1505,6 +1505,36 @@ void publishableParseLeafeVectorEnd(ParserT& p)
 	}
 }
 
+template<typename ParserT>
+void publishableParseLeafeDictionaryBegin(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		std::string key;
+		p.readKey( &key );
+		if ( key != "value" )
+			throw std::exception(); // bad format
+//		p.skipDelimiter( '[' );
+	}
+}
+
+template<typename ParserT>
+void publishableParseLeafeDictionaryEnd(ParserT& p)
+{
+	if constexpr ( ParserT::proto == Proto::GMQ )
+		; // do nothing
+	else
+	{
+		static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+//		p.skipDelimiter( ']' );
+		p.skipDelimiter( '}' );
+		p.skipDelimiter( ',' );
+	}
+}
+
 
 template<typename ComposerT>
 void composeAddressInPublishable( ComposerT& composer, const GMQ_COLL vector<size_t>& addr, size_t last )

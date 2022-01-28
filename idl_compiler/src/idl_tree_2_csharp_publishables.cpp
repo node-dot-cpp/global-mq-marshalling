@@ -140,11 +140,11 @@ namespace {
 					case MessageParameterType::KIND::STRUCT:
 					case MessageParameterType::KIND::DISCRIMINATED_UNION:
 					{
-						assert(member.type.messageIdx < root.structs.size());
-						const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
-						fprintf(header, "\tIList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-						fprintf(header, "\tIList<I%s> make_%s();\n", elem_type_name, member.name.c_str());
-						fprintf(header, "\tI%s make_%s_element();\n", elem_type_name, member.name.c_str());
+						assert(member.type.structIdx < root.structs.size());
+						const std::string type_name = root.structs[member.type.structIdx]->name;
+						fprintf(header, "\tIList<%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\tIList<%s> make_%s();\n", type_name.c_str(), member.name.c_str());
+						fprintf(header, "\t%s make_%s_element();\n", type_name.c_str(), member.name.c_str());
 						break;
 					}
 				default:
@@ -204,11 +204,11 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
-					fprintf(header, "\tpublic IList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\tpublic IList<I%s> make_%s() { return new List<I%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
-					fprintf(header, "\tpublic I%s make_%s_element() { return new %s_impl(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
+					fprintf(header, "\tpublic IList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic IList<%s> make_%s() { return new List<%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic %s make_%s_element() { return new %s_impl(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
 					break;
 				}
 				default:
@@ -295,8 +295,8 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 
 					fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
@@ -393,8 +393,8 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 
 					fprintf(header, "\t\tIList<I%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
@@ -537,8 +537,8 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 
 					fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
 					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
@@ -716,9 +716,9 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
-					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
+					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
 					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<I%s>(t.%s); }\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
@@ -792,8 +792,8 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 					fprintf(header, "\t\tcomposer.composeVector(\"%s\", t.%s.Count,\n", member.name.c_str(), member.name.c_str());
 					fprintf(header, "\t\t\t(IPublishableComposer composer, int ordinal) => { %s_publisher.compose(composer, t.%s[ordinal]); }, ", elem_type_name, member.name.c_str());
 					break;
@@ -956,8 +956,8 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.messageIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.messageIdx]->name.c_str();
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 
 					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
@@ -1046,7 +1046,8 @@ namespace {
 void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
 {
 	vector<CompositeType*> structsOrderedByDependency;
-	orderStructsByDependency( s.structs, structsOrderedByDependency );
+	std::unordered_set<size_t> collElementTypes;
+	orderStructsByDependency( s.structs, structsOrderedByDependency, collElementTypes );
 	
 
 	fprintf(header, "//////////////////////////////////////////////////////////////\n");
