@@ -44,7 +44,7 @@ namespace TestProject1
             int msgCnt = 0;
             while (true)
             {
-                msgCnt = msgQueue.pop_front(messages, 15);
+                msgCnt = msgQueue.pop_front(messages, 15, false);
                 if (msgCnt == 0)
                     break;
                 for (int i = 0; i < msgCnt; ++i)

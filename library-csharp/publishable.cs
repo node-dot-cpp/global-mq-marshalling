@@ -706,39 +706,6 @@ namespace globalmq.marshalling
             throw new NotImplementedException();
         }
 
-        public static bool parseVectorActionSimple(IPublishableParser parser, IList<T> data, int index, Func<IPublishableParser, T> elementParser)
-        {
-            bool changed = false;
-            Publishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();
-            switch (action)
-            {
-                case Publishable.ActionOnVector.remove_at:
-                    {
-                        data.RemoveAt(index);
-                        changed = true;
-                        break;
-                    }
-                case Publishable.ActionOnVector.update_at:
-                    {
-                        
-                        T elem = elementParser(parser);
-                        data[index] = elem;
-                        changed = true;
-                        break;
-                    }
-                case Publishable.ActionOnVector.insert_single_before:
-                    {
-                        T elem = elementParser(parser);
-                        data.Insert(index, elem);
-                        changed = true;
-                        break;
-                    }
-                default:
-                    throw new Exception();
-            }
-
-            return changed;
-        }
     }
 
     public class SubscriberVectorWrapper<T> : IList<T>
@@ -748,6 +715,10 @@ namespace globalmq.marshalling
         public SubscriberVectorWrapper(IList<T> t)
         {
             this.t = t;
+        }
+        public SubscriberVectorWrapper()
+        {
+            this.t = new List<T>();
         }
         public T this[int index] { get => t[index]; set => throw new InvalidOperationException(); }
 
@@ -804,5 +775,52 @@ namespace globalmq.marshalling
         {
             throw new NotImplementedException();
         }
+    }
+
+    public class SubscriberVectorHelper
+    {
+
+        public static bool parseVectorPrimitive<T>(IPublishableParser parser, IList<T> data, int index,
+    Func<IPublishableParser, T> elementParser, Action<int, T> notifyUpdate,
+    Action<int> notifyInsert, Action<int> notifyRemove)
+        {
+            bool changed = false;
+            Publishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();
+            switch (action)
+            {
+                case Publishable.ActionOnVector.update_at:
+                    {
+                        T newVal = elementParser(parser);
+                        if (!data[index].Equals(newVal))
+                        {
+                            T oldVal = data[index];
+                            data[index] = newVal;
+                            changed = true;
+                            notifyUpdate(index, oldVal);
+                        }
+                        break;
+                    }
+                case Publishable.ActionOnVector.insert_single_before:
+                    {
+                        T newVal = elementParser(parser);
+                        data.Insert(index, newVal);
+                        changed = true;
+                        notifyInsert(index);
+                        break;
+                    }
+                case Publishable.ActionOnVector.remove_at:
+                    {
+                        data.RemoveAt(index);
+                        changed = true;
+                        notifyRemove(index);
+                        break;
+                    }
+                default:
+                    throw new Exception();
+            }
+
+            return changed;
+        }
+
     }
 } // namespace globalmq::marshalling

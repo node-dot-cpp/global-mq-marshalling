@@ -53,35 +53,35 @@ namespace TestProject1
         {
             mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
 
-            data.intVec = data.make_intVec();
+            data.intVec = new List<Int64>();
             data.intVec.Add(1);
             data.intVec.Add(2);
             data.intVec.Add(3);
 
-            data.uintVec = data.make_uintVec();
+            data.uintVec = new List<UInt64>();
             data.uintVec.Add(4);
             data.uintVec.Add(5);
             data.uintVec.Add(6);
 
-            data.realVec = data.make_realVec();
+            data.realVec = new List<Double>();
             data.realVec.Add(7);
             data.realVec.Add(8);
             data.realVec.Add(9);
 
-            data.strVec = data.make_strVec();
+            data.strVec = new List<String>();
             data.strVec.Add("one");
             data.strVec.Add("two");
             data.strVec.Add("three");
 
-            data.structVec = data.make_structVec();
+            data.structVec = new List<mtest.publishable.Ipoint3D>();
 
-            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
             e1.x = 101;
             e1.y = 102;
             e1.z = 103;
             data.structVec.Add(e1);
 
-            mtest.publishable.Ipoint3D e2 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e2 = new mtest.publishable.point3D_impl();
             e2.x = 201;
             e2.y = 202;
             e2.z = 203;
@@ -187,7 +187,7 @@ namespace TestProject1
             data.realVec[2] = 505;
             data.strVec[1] = "four";
 
-            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
             e1.x = 901;
             e1.y = 902;
             e1.z = 903;
@@ -209,15 +209,15 @@ namespace TestProject1
         static void doUpdate3(mtest.publishable.Ipublishable_seven data)
         {
             //replace complete vector
-            IList<String> strVec = data.make_strVec();
+            IList<String> strVec = new List<String>();
             strVec.Add("four");
             strVec.Add("five");
             data.strVec = strVec;
 
-            data.realVec = data.make_realVec();
+            data.realVec = new List<Double>();
 
-            IList<mtest.publishable.Ipoint3D> vec = data.make_structVec();
-            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
+            IList<mtest.publishable.Ipoint3D> vec = new List<mtest.publishable.Ipoint3D>();
+            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
             e1.x = 301;
             e1.y = 302;
             e1.z = 303;
@@ -262,7 +262,7 @@ namespace TestProject1
             data.realVec.Insert(2, 99);
             data.strVec.Insert(3, "last");
 
-            mtest.publishable.Ipoint3D e1 = data.make_structVec_element();
+            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
             e1.x = 301;
             e1.y = 302;
             e1.z = 303;

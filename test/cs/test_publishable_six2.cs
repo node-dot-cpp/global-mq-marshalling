@@ -46,16 +46,16 @@ namespace TestProject1
 
             data.name = "TheName";
             
-            data.basic = data.make_basic();
+            data.basic = new mtest.publishable.BasicTypes_impl();
             data.basic.anInt = -100000;
             data.basic.anUInt = 100000;
             data.basic.aReal = 3.14;
             data.basic.aString = "basic string";
 
-            data.aggregate = data.make_aggregate();
+            data.aggregate = new mtest.publishable.AggregateType_impl();
             data.aggregate.name = "aggregate name";
 
-            data.aggregate.theAggregate = data.aggregate.make_theAggregate();
+            data.aggregate.theAggregate = new mtest.publishable.BasicTypes_impl();
             data.aggregate.theAggregate.anInt = -100;
             data.aggregate.theAggregate.anUInt = 100;
             data.aggregate.theAggregate.aReal = 100;
@@ -155,7 +155,7 @@ namespace TestProject1
             publ.basic.anUInt = 3;
             publ.basic.aReal = 4.0;
 
-            mtest.publishable.IBasicTypes aggr = publ.aggregate.make_theAggregate();
+            mtest.publishable.IBasicTypes aggr = new mtest.publishable.BasicTypes_impl();
             aggr.anInt = -200;
             aggr.anUInt = 300;
             aggr.aReal = 400.0;

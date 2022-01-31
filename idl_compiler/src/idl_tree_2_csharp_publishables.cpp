@@ -121,7 +121,6 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\tI%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\tI%s make_%s();\n", member.type.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -134,7 +133,6 @@ namespace {
 					{
 						const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
 						fprintf(header, "\tIList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-						fprintf(header, "\tIList<%s> make_%s();\n", elem_type_name, member.name.c_str());
 						break;
 					}
 					case MessageParameterType::KIND::STRUCT:
@@ -143,8 +141,6 @@ namespace {
 						assert(member.type.structIdx < root.structs.size());
 						const std::string type_name = root.structs[member.type.structIdx]->name;
 						fprintf(header, "\tIList<I%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
-						fprintf(header, "\tIList<I%s> make_%s();\n", type_name.c_str(), member.name.c_str());
-						fprintf(header, "\tI%s make_%s_element();\n", type_name.c_str(), member.name.c_str());
 						break;
 					}
 				default:
@@ -185,7 +181,6 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\tpublic I%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\tpublic I%s make_%s() { return new %s_impl(); }\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -198,7 +193,6 @@ namespace {
 				{
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
 					fprintf(header, "\tpublic IList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\tpublic IList<%s> make_%s() { return new List<%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
@@ -207,8 +201,6 @@ namespace {
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 					fprintf(header, "\tpublic IList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\tpublic IList<I%s> make_%s() { return new List<I%s>(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
-					fprintf(header, "\tpublic I%s make_%s_element() { return new %s_impl(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
 					break;
 				}
 				default:
@@ -277,7 +269,7 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
-				fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\tt.%s = new %s_impl();\n", member.name.c_str(), member.type.name.c_str());
 				fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\tparser.parsePublishableStructEnd();\n");
 				break;
@@ -289,20 +281,23 @@ namespace {
 				case MessageParameterType::KIND::UINTEGER:
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+					fprintf(header, "\t\tt.%s = new List<%s>();\n", member.name.c_str(), elem_type_name);
 					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", Publishable.makeParser(t.%s));\n", member.name.c_str(), member.name.c_str());
 					break;
+				}
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 
-					fprintf(header, "\t\tt.%s = t.make_%s();\n", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\tt.%s = new List<I%s>();\n", member.name.c_str(), elem_type_name);
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
 					fprintf(header, "\t\t\t{\n");
 					fprintf(header, "\t\t\t\tparser.parseStructBegin();\n");
-					fprintf(header, "\t\t\t\tI%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\tI%s val = new %s_impl();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, val);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
@@ -380,7 +375,7 @@ namespace {
 				{
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
 
-					fprintf(header, "\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", Publishable.makeParser(newVal));\n", member.name.c_str());
 					fprintf(header, "\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
 					fprintf(header, "\t\t{\n");
@@ -396,11 +391,11 @@ namespace {
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 
-					fprintf(header, "\t\tIList<I%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tIList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
 					fprintf(header, "\t\t\t{\n");
 					fprintf(header, "\t\t\t\tparser.parseStructBegin();\n");
-					fprintf(header, "\t\t\t\tI%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\tI%s val = new %s_impl();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, val);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tt.%s.Add(val);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
@@ -432,7 +427,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		fprintf(header, "\tpublic static bool parse(IPublishableParser parser, I%s t, UInt64[] addr, int offset)\n", type_name.c_str());
+		fprintf(header, "\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber, UInt64[] addr, int offset)\n", type_name.c_str());
 		fprintf(header, "\t{\n");
 
 		fprintf(header, "\t\tbool changed = false;\n");
@@ -463,10 +458,12 @@ namespace {
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
 				fprintf(header, "\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", type_name, parse_method);
-				fprintf(header, "\t\t\t\tif(newVal != t.%s)\n", member.name.c_str());
+				fprintf(header, "\t\t\t\tif(newVal != subscriber.data.%s)\n", member.name.c_str());
 				fprintf(header, "\t\t\t\t{\n");
-				fprintf(header, "\t\t\t\t\tt.%s = newVal;\n", member.name.c_str());
+				fprintf(header, "\t\t\t\t\t%s oldVal = subscriber.data.%s;\n", type_name, member.name.c_str());
+				fprintf(header, "\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
 				fprintf(header, "\t\t\t\t\tchanged = true;\n");
+				fprintf(header, "\t\t\t\t\tsubscriber.notifyUpdated_%s(oldVal);\n", member.name.c_str());
 				fprintf(header, "\t\t\t\t}\n");
 				break;
 			}
@@ -476,12 +473,12 @@ namespace {
 				fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full element replace\n");
 				fprintf(header, "\t\t\t\t{\n");
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, t.%s);\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.%s_wrapper);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\t\t}\n");
 				fprintf(header, "\t\t\t\telse if(addr.Length > offset + 1) // let child continue parsing\n");
 				fprintf(header, "\t\t\t\t{\n");
-				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, t.%s, addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.%s_wrapper, addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t}\n");
 				fprintf(header, "\t\t\t\telse\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
@@ -489,7 +486,7 @@ namespace {
 				fprintf(header, "\t\t\t\tif(currentChanged)\n");
 				fprintf(header, "\t\t\t\t{\n");
 				fprintf(header, "\t\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t\t\t// TODO\n");
+				fprintf(header, "\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
 				fprintf(header, "\t\t\t\t}\n");
 
 				break;
@@ -508,11 +505,11 @@ namespace {
 					fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
 					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
 					fprintf(header, "\t\t\t\t{\n");
-					fprintf(header, "\t\t\t\t\tIList<%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\tparser.parseSimpleVector(\"value\", Publishable.makeParser(newVal));\n");
-					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t{\n");
-					fprintf(header, "\t\t\t\t\t\tt.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
 					fprintf(header, "\t\t\t\t\t}\n");
 
@@ -520,8 +517,13 @@ namespace {
 					fprintf(header, "\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-					fprintf(header, "\t\t\t\t\tcurrentChanged = PublisherVectorWrapper<%s>.parseVectorActionSimple(parser, t.%s, index,\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser) => { return parser.parse%s(\"value\"); });\n", parse_method);
+					fprintf(header, "\t\t\t\t\tcurrentChanged = SubscriberVectorHelper.parseVectorPrimitive<%s>(\n", elem_type_name);
+					fprintf(header, "\t\t\t\t\t\tparser, subscriber.data.%s, index,\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser) => { return parser.parse%s(\"value\"); },\n", parse_method);
+					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s,\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyInserted_%s,\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyErased_%s\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t);\n");
 					fprintf(header, "\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\telse // simple type can't handle deeper address\n");
 					fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
@@ -529,7 +531,7 @@ namespace {
 					fprintf(header, "\t\t\t\tif(currentChanged)\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tchanged = true;\n");
-					fprintf(header, "\t\t\t\t\t// TODO\n");
+					fprintf(header, "\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t}\n");
 
 					break;
@@ -543,21 +545,26 @@ namespace {
 					fprintf(header, "\t\t\t\tbool currentChanged = false;\n");
 					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
 					fprintf(header, "\t\t\t\t{\n");
-					fprintf(header, "\t\t\t\t\tIList<I%s> newVal = t.make_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\tIList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t\t\tSubscriberVectorWrapper<%s_subscriber> newVal_wrapper = new SubscriberVectorWrapper<%s_subscriber>();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\tparser.parseVector(\"value\",\n");
 					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
 					fprintf(header, "\t\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructBegin();\n");
-					fprintf(header, "\t\t\t\t\t\t\tI%s val = t.make_%s_element();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\tI%s val = new %s_impl();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t\t%s_subscriber.parseForStateSync(parser, val);\n", elem_type_name);
+					fprintf(header, "\t\t\t\t\t\t\t%s_subscriber val_wrapper = subscriber.makeElementHandler_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\t\tval_wrapper.data = val;\n");
 					fprintf(header, "\t\t\t\t\t\t\tnewVal.Add(val);\n");
+					fprintf(header, "\t\t\t\t\t\t\tnewVal_wrapper.Add(val_wrapper);\n");
 					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\t\t);\n");
 
-					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, t.%s))\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t{\n");
-					fprintf(header, "\t\t\t\t\t\tt.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.%s_wrapper = newVal_wrapper;\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
 					fprintf(header, "\t\t\t\t\t}\n");
 
@@ -565,21 +572,58 @@ namespace {
 					fprintf(header, "\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-					fprintf(header, "\t\t\t\t\tcurrentChanged = PublisherVectorWrapper<I%s>.parseVectorActionSimple(parser, t.%s, index,\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser) =>\n");
+					fprintf(header, "\t\t\t\t\tPublishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();\n");
+
+					fprintf(header, "\t\t\t\t\tswitch (action)\n");
+					fprintf(header, "\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.update_at:\n");
+					fprintf(header, "\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
+					fprintf(header, "\t\t\t\t\t\tbool elemChanged = %s_subscriber.parse(parser, subscriber.data.%s[index]);\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+					fprintf(header, "\t\t\t\t\t\tif (elemChanged)\n");
 					fprintf(header, "\t\t\t\t\t\t{\n");
-					fprintf(header, "\t\t\t\t\t\t\tI%s newVal = t.make_%s_element();\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-					fprintf(header, "\t\t\t\t\t\t\t%s_subscriber.parseForStateSync(parser, newVal);\n", member.type.name.c_str());
-					fprintf(header, "\t\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
-					fprintf(header, "\t\t\t\t\t\t\treturn newVal;\n");
+					fprintf(header, "\t\t\t\t\t\t\tcurrentChanged = true;\n");
+					fprintf(header, "\t\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s(index);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t}\n");
-					fprintf(header, "\t\t\t\t\t);\n");
+					fprintf(header, "\t\t\t\t\t\tbreak;\n");
+					fprintf(header, "\t\t\t\t\t}\n");
+
+
+					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.insert_single_before:\n");
+					fprintf(header, "\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
+					fprintf(header, "\t\t\t\t\t\tI%s newVal = new %s_impl();\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t\t\t\t%s_subscriber.parse(parser, newVal);\n", elem_type_name);
+					fprintf(header, "\t\t\t\t\t\t%s_subscriber newVal_wrapper = subscriber.makeElementHandler_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.%s_wrapper.Insert(index, newVal_wrapper);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
+					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tbreak;\n");
+					fprintf(header, "\t\t\t\t\t}\n");
+
+
+
+					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.remove_at:\n");
+					fprintf(header, "\t\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.RemoveAt(index);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.%s_wrapper.RemoveAt(index);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
+					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyErased_%s(index);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tbreak;\n");
+					fprintf(header, "\t\t\t\t\t}\n");
+					fprintf(header, "\t\t\t\t\tdefault:\n");
+					fprintf(header, "\t\t\t\t\t\tthrow new Exception();\n");
+					fprintf(header, "\t\t\t\t\t}\n");
+
+
 					fprintf(header, "\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\telse if(addr.Length > offset + 2) // let child continue parsing\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-					fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, t.%s[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.%s_wrapper[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\telse\n");
 					fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
@@ -587,7 +631,7 @@ namespace {
 					fprintf(header, "\t\t\t\tif(currentChanged)\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tchanged = true;\n");
-					fprintf(header, "\t\t\t\t\t// TODO\n");
+					fprintf(header, "\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t}\n");
 
 
@@ -627,7 +671,7 @@ namespace {
 		fprintf(header, "\t\tUInt64[] addr = null;\n");
 		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
 		fprintf(header, "\t\t{\n");
-		fprintf(header, "\t\t\t%s_subscriber.parse(parser, this.t, addr, 0);\n", type_name.c_str());
+		fprintf(header, "\t\t\t%s_subscriber.parse(parser, this, addr, 0);\n", type_name.c_str());
 		fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
 		fprintf(header, "\t\t\taddr = null;\n");
 		fprintf(header, "\t\t}\n");
@@ -637,10 +681,80 @@ namespace {
 		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tparser.parseStructBegin();\n");
-		fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, this.t);\n", type_name.c_str());
+		fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, this.data);\n", type_name.c_str());
 		fprintf(header, "\t\tparser.parseStructEnd();\n");
+		fprintf(header, "\t\tthis.notifyFullyUpdated();\n");
 		fprintf(header, "\t}\n");
 	}
+
+	void csharpPub_generateEventHandlerSubs(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
+	{
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+
+		fprintf(header, "\n\t// event handlers\n");
+
+		if (s.type == CompositeType::Type::publishable)
+			fprintf(header, "\tpublic virtual void notifyFullyUpdated() { }\n");
+
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
+		{
+			auto& it = mem[i];
+			assert(it != nullptr);
+			auto& member = *it;
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* type_name = csharpPub_getCSharpType(member.type.kind);
+				fprintf(header, "\tpublic virtual void notifyUpdated_%s(%s old) { }\n", member.name.c_str(), type_name);
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\tpublic virtual void notifyUpdated_%s() { }\n", member.name.c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
+					fprintf(header, "\tpublic virtual void notifyUpdated_%s() { }\n", member.name.c_str());
+					fprintf(header, "\tpublic virtual void notifyElementUpdated_%s(int index, %s old) { }\n", member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic virtual void notifyInserted_%s(int index) { }\n", member.name.c_str());
+					fprintf(header, "\tpublic virtual void notifyErased_%s(int index) { }\n", member.name.c_str());
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					//assert(member.type.structIdx < root.structs.size());
+					//const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
+					fprintf(header, "\tpublic virtual void notifyUpdated_%s() { }\n", member.name.c_str());
+					fprintf(header, "\tpublic virtual void notifyElementUpdated_%s(int index) { }\n", member.name.c_str());
+					fprintf(header, "\tpublic virtual void notifyInserted_%s(int index) { }\n", member.name.c_str());
+					fprintf(header, "\tpublic virtual void notifyErased_%s(int index) { }\n", member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+		}
+	}
+
 
 	void csharpPub_generateStructSubs(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
@@ -654,13 +768,14 @@ namespace {
 		fprintf(header, "\n");
 
 		fprintf(header, "{\n");
-		fprintf(header, "\tI%s t;\n", type_name.c_str());
+		fprintf(header, "\tinternal I%s data;\n", type_name.c_str());
 
 		csharpPub_generateAddressEnum(header, s);
 
-		fprintf(header, "\tpublic %s_subscriber(I%s t)\n", type_name.c_str(), type_name.c_str());
+		fprintf(header, "\tpublic %s_subscriber() { }\n", type_name.c_str());
+		fprintf(header, "\tpublic %s_subscriber(I%s data)\n", type_name.c_str(), type_name.c_str());
 		fprintf(header, "\t{\n");
-		fprintf(header, "\t\tthis.t = t;\n");
+		fprintf(header, "\t\tthis.data = data;\n");
 		fprintf(header, "\t}\n");
 
 		auto& mem = s.getMembers();
@@ -677,18 +792,27 @@ namespace {
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\tpublic %s %s\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
 				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return t.%s; }\n", member.name.c_str());
+				fprintf(header, "\t\tget { return data.%s; }\n", member.name.c_str());
 				fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 				fprintf(header, "\t}\n");
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\tpublic %s_subscriber %s_wrapper;\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\tpublic I%s %s\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return new %s_subscriber(t.%s); }\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\tget\n");
+				fprintf(header, "\t\t{\n");
+				fprintf(header, "\t\t\tif(data.%s != null && %s_wrapper == null)\n", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t{\n");
+				fprintf(header, "\t\t\t\t%s_wrapper = makeHandler_%s();\n", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\t%s_wrapper.data = data.%s;\n", member.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t}\n");
+				fprintf(header, "\t\t\treturn %s_wrapper;\n", member.name.c_str());
+				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 				fprintf(header, "\t}\n");
-				fprintf(header, "\tpublic I%s make_%s() { throw new InvalidOperationException(); }\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\tpublic virtual %s_subscriber makeHandler_%s() { return new %s_subscriber(); }\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -702,10 +826,9 @@ namespace {
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
 					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
-					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<%s>(t.%s); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<%s>(data.%s); }\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 					fprintf(header, "\t}\n");
-					fprintf(header, "\tpublic IList<%s> make_%s() { throw new InvalidOperationException(); }\n", elem_type_name, member.name.c_str());
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
@@ -713,13 +836,32 @@ namespace {
 				{
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
+					fprintf(header, "\tSubscriberVectorWrapper<%s_subscriber> %s_wrapper;\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
-					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<I%s>(t.%s); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tget\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tif(data.%s != null && %s_wrapper == null)\n", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\t\t{\n");
+					fprintf(header, "\t\t\t\t%s_wrapper = new SubscriberVectorWrapper<%s_subscriber>();\n", member.name.c_str(), elem_type_name);
+					fprintf(header, "\t\t\t\tfor(int i = 0; i < data.%s.Count; ++i)\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t{\n");
+					fprintf(header, "\t\t\t\t%s_subscriber val_wrapper = makeElementHandler_%s();\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\tval_wrapper.data = data.%s[i];\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t%s_wrapper.Add(val_wrapper);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t}\n");
+					fprintf(header, "\t\t\t}\n");
+					fprintf(header, "\t\t\treturn (IList<I%s>)%s_wrapper;\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t}\n");
 					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 					fprintf(header, "\t}\n");
-					fprintf(header, "\tpublic IList<I%s> make_%s() { throw new InvalidOperationException(); }\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\tpublic I%s make_%s_element() { throw new InvalidOperationException(); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tpublic virtual %s_subscriber makeElementHandler_%s() { return new %s_subscriber(); }\n", elem_type_name, member.name.c_str(), elem_type_name);
+					//fprintf(header, "\t%s_subscriber makeElementHandler_%s_internal(I%s data)\n", elem_type_name, member.name.c_str(), elem_type_name);
+					//fprintf(header, "\t{\n");
+					//fprintf(header, "\t\t%s_subscriber wrapper = makeElementHandler_%s();\n", elem_type_name, member.name.c_str());
+					//fprintf(header, "\t\twrapper.data = data;\n");
+					//fprintf(header, "\t\treturn wrapper;\n");
+					//fprintf(header, "\t}\n");
 					break;
 				}
 				default:
@@ -738,6 +880,8 @@ namespace {
 
 		if (s.type == CompositeType::Type::publishable)
 			csharpPub_generateStateSubscriberBase(header, s, type_name);
+
+		csharpPub_generateEventHandlerSubs(header, root, s, type_name);
 
 		fprintf(header, "} // class %s_subscriber\n\n", type_name.c_str());
 	}
@@ -912,7 +1056,6 @@ namespace {
 				fprintf(header, "\t\t}\n");
 				fprintf(header, "\t}\n");
 
-				fprintf(header, "\tpublic I%s make_%s() { return t.make_%s(); }\n", member.type.name.c_str(), member.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -945,7 +1088,6 @@ namespace {
 					fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
 					fprintf(header, "\t\t}\n");
 					fprintf(header, "\t}\n");
-					fprintf(header, "\tpublic IList<%s> make_%s() { return t.make_%s(); }\n", elem_type_name, member.name.c_str(), member.name.c_str());
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
@@ -980,9 +1122,6 @@ namespace {
 					fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
 					fprintf(header, "\t\t}\n");
 					fprintf(header, "\t}\n");
-
-					fprintf(header, "\tpublic IList<I%s> make_%s() { return t.make_%s(); }\n", elem_type_name, member.name.c_str(), member.name.c_str());
-					fprintf(header, "\tpublic I%s make_%s_element() { return t.make_%s_element(); }\n", elem_type_name, member.name.c_str(), member.name.c_str());
 					break;
 				}
 				default:
@@ -1007,33 +1146,33 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		fprintf(header, "\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
-		fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
+		//fprintf(header, "\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
+		//fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
 
-		fprintf(header, "\tpublic void applyMessageWithUpdates(IPublishableParser parser)\n");
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
-		fprintf(header, "\t\tUInt64[] addr = null;\n");
-		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
-		fprintf(header, "\t\t{\n");
-		fprintf(header, "\t\t\t%s_subscriber.parse(parser, this.t, addr, 0);\n", type_name.c_str());
-		fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
-		fprintf(header, "\t\t\taddr = null;\n");
-		fprintf(header, "\t\t}\n");
-		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
-		fprintf(header, "\t}\n");
+		//fprintf(header, "\tpublic void applyMessageWithUpdates(IPublishableParser parser)\n");
+		//fprintf(header, "\t{\n");
+		//fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
+		//fprintf(header, "\t\tUInt64[] addr = null;\n");
+		//fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
+		//fprintf(header, "\t\t{\n");
+		//fprintf(header, "\t\t\t%s_subscriber.parse(parser, this, addr, 0);\n", type_name.c_str());
+		//fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
+		//fprintf(header, "\t\t\taddr = null;\n");
+		//fprintf(header, "\t\t}\n");
+		//fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
+		//fprintf(header, "\t}\n");
 
-		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\tparser.parseStructBegin();\n");
-		fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, this.t);\n", type_name.c_str());
-		fprintf(header, "\t\tparser.parseStructEnd();\n");
-		fprintf(header, "\t}\n");
+		//fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
+		//fprintf(header, "\t{\n");
+		//fprintf(header, "\t\tparser.parseStructBegin();\n");
+		//fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, this.data);\n", type_name.c_str());
+		//fprintf(header, "\t\tparser.parseStructEnd();\n");
+		//fprintf(header, "\t}\n");
 
 		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tcomposer.composeStructBegin();\n");
-		fprintf(header, "\t\t%s_publisher.compose(composer, this.t);\n", type_name.c_str());
+		fprintf(header, "\t\t%s_publisher.compose(composer, this.data);\n", type_name.c_str());
 		fprintf(header, "\t\tcomposer.composeStructEnd();\n");
 		fprintf(header, "\t}\n");
 
@@ -1045,18 +1184,18 @@ namespace {
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
 
-		fprintf(header, "public class %s_concentrator", type_name.c_str());
+		fprintf(header, "public class %s_concentrator : %s_subscriber, IStateConcentrator\n", type_name.c_str(), type_name.c_str());
 
-		if (s.type == CompositeType::Type::publishable)
-			fprintf(header, " : IStateConcentrator");
+		////if (s.type == CompositeType::Type::publishable)
+		////	fprintf(header, " : IStateConcentrator");
 
-		fprintf(header, "\n");
+		//fprintf(header, "\n");
 
 
 		fprintf(header, "{\n");
-		fprintf(header, "\tI%s t = new %s_impl();\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "\tI%s data = new %s_impl();\n", type_name.c_str(), type_name.c_str());
 
-		csharpPub_generateAddressEnum(header, s);
+		//csharpPub_generateAddressEnum(header, s);
 
 		//fprintf(header, "\tpublic %s_concentrator(I%s t)\n", type_name.c_str(), type_name.c_str());
 		//fprintf(header, "\t{\n");
@@ -1065,13 +1204,13 @@ namespace {
 
 
 		csharpPub_generateCompose(header, root, s, type_name);
-		csharpPub_generateParseStateSync(header, root, s, type_name);
-		csharpPub_generateParse1(header, root, s, type_name);
-		csharpPub_generateParse2(header, root, s, type_name);
+		//csharpPub_generateParseStateSync(header, root, s, type_name);
+		//csharpPub_generateParse1(header, root, s, type_name);
+		//csharpPub_generateParse2(header, root, s, type_name);
 
 
-		if (s.type == CompositeType::Type::publishable)
-			csharpPub_generateStateConcentratorBase(header, s, type_name);
+		//if (s.type == CompositeType::Type::publishable)
+		csharpPub_generateStateConcentratorBase(header, s, type_name);
 
 		fprintf(header, "} // class %s_concentrator\n\n", type_name.c_str());
 	}

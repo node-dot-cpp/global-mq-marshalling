@@ -82,6 +82,7 @@ namespace globalmq.marshalling
     };
 
     //mb: this implementation is very basic, just for first tests.
+    // only readers block on empty queue
     public class BasicMtQueue<T>
     {
         object mx = new object();
@@ -89,22 +90,15 @@ namespace globalmq.marshalling
         bool killflag = false;
 
         //stats:
-        int nfulls = 0;
         int hwmsize = 0;//high watermark on queue size
 
         public void push_back(T it)
         {
-            //if the queue is full, BLOCKS until some space is freed
+            //if the queue is full, just throw
             lock (mx)
             {
-                while (coll.is_full() && !killflag)
-                {
-                    Monitor.Wait(mx);
-                    ++nfulls;
-                }
-
-                if (killflag)
-                    return;
+                if (coll.is_full())
+                    throw new Exception();
 
                 Debug.Assert(!coll.is_full());
                 coll.push_back(it);
@@ -115,12 +109,18 @@ namespace globalmq.marshalling
             }//unlocking mx
         }
 
-        public int pop_front(T[] messages, int count)
+        public int pop_front(T[] messages, int count, bool wait)
         {
             lock (mx)
             {
-                if (coll.size() == 0 || killflag)
+                while (coll.size() == 0 && !killflag && wait)
+                {
+                    Monitor.Wait(mx);
+                }
+
+                if (coll.size() == 0)
                     return 0;
+
 
                 Debug.Assert(coll.size() > 0);
                 Debug.Assert(count <= messages.Length);

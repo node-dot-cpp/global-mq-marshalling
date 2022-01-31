@@ -394,13 +394,13 @@ namespace globalmq.marshalling
             return true;
         }
     };
-    public interface IStateConcentrator
+    public interface IStateConcentrator : StateSubscriberBase
     {
-        string stateSubscriberName();
-        UInt64 stateTypeID();
-        // as subscriber
-        void applyMessageWithUpdates(IPublishableParser parser);
-        void applyStateSyncMessage(IPublishableParser parser);
+        //string stateSubscriberName();
+        //UInt64 stateTypeID();
+        //// as subscriber
+        //void applyMessageWithUpdates(IPublishableParser parser);
+        //void applyStateSyncMessage(IPublishableParser parser);
         // as publisher
         void generateStateSyncMessage(IPublishableComposer composer);
     };

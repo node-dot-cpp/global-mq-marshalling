@@ -1626,30 +1626,31 @@ public class BasicTypes_impl : IBasicTypes, IEquatable<BasicTypes_impl>
 
 public class BasicTypes_subscriber : IBasicTypes
 {
-	IBasicTypes t;
+	internal IBasicTypes data;
 	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
-	public BasicTypes_subscriber(IBasicTypes t)
+	public BasicTypes_subscriber() { }
+	public BasicTypes_subscriber(IBasicTypes data)
 	{
-		this.t = t;
+		this.data = data;
 	}
 	public Int64 anInt
 	{
-		get { return t.anInt; }
+		get { return data.anInt; }
 		set { throw new InvalidOperationException(); }
 	}
 	public UInt64 anUInt
 	{
-		get { return t.anUInt; }
+		get { return data.anUInt; }
 		set { throw new InvalidOperationException(); }
 	}
 	public Double aReal
 	{
-		get { return t.aReal; }
+		get { return data.aReal; }
 		set { throw new InvalidOperationException(); }
 	}
 	public String aString
 	{
-		get { return t.aString; }
+		get { return data.aString; }
 		set { throw new InvalidOperationException(); }
 	}
 	public static void parseForStateSync(IPublishableParser parser, IBasicTypes t)
@@ -1696,7 +1697,7 @@ public class BasicTypes_subscriber : IBasicTypes
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, IBasicTypes t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, BasicTypes_subscriber subscriber, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -1706,10 +1707,12 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != t.anInt)
+				if(newVal != subscriber.data.anInt)
 				{
-					t.anInt = newVal;
+					Int64 oldVal = subscriber.data.anInt;
+					subscriber.data.anInt = newVal;
 					changed = true;
+					subscriber.notifyUpdated_anInt(oldVal);
 				}
 			}
 			break;
@@ -1718,10 +1721,12 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				UInt64 newVal = parser.parseUnsigned("value");
-				if(newVal != t.anUInt)
+				if(newVal != subscriber.data.anUInt)
 				{
-					t.anUInt = newVal;
+					UInt64 oldVal = subscriber.data.anUInt;
+					subscriber.data.anUInt = newVal;
 					changed = true;
+					subscriber.notifyUpdated_anUInt(oldVal);
 				}
 			}
 			break;
@@ -1730,10 +1735,12 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Double newVal = parser.parseReal("value");
-				if(newVal != t.aReal)
+				if(newVal != subscriber.data.aReal)
 				{
-					t.aReal = newVal;
+					Double oldVal = subscriber.data.aReal;
+					subscriber.data.aReal = newVal;
 					changed = true;
+					subscriber.notifyUpdated_aReal(oldVal);
 				}
 			}
 			break;
@@ -1742,10 +1749,12 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				String newVal = parser.parseString("value");
-				if(newVal != t.aString)
+				if(newVal != subscriber.data.aString)
 				{
-					t.aString = newVal;
+					String oldVal = subscriber.data.aString;
+					subscriber.data.aString = newVal;
 					changed = true;
+					subscriber.notifyUpdated_aString(oldVal);
 				}
 			}
 			break;
@@ -1754,6 +1763,12 @@ public class BasicTypes_subscriber : IBasicTypes
 		}
 		return changed;
 	}
+
+	// event handlers
+	public virtual void notifyUpdated_anInt(Int64 old) { }
+	public virtual void notifyUpdated_anUInt(UInt64 old) { }
+	public virtual void notifyUpdated_aReal(Double old) { }
+	public virtual void notifyUpdated_aString(String old) { }
 } // class BasicTypes_subscriber
 
 public class BasicTypes_publisher : IBasicTypes
@@ -1874,25 +1889,26 @@ public class point3D_impl : Ipoint3D, IEquatable<point3D_impl>
 
 public class point3D_subscriber : Ipoint3D
 {
-	Ipoint3D t;
+	internal Ipoint3D data;
 	enum Address { x = 0, y = 1, z = 2 };
-	public point3D_subscriber(Ipoint3D t)
+	public point3D_subscriber() { }
+	public point3D_subscriber(Ipoint3D data)
 	{
-		this.t = t;
+		this.data = data;
 	}
 	public Int64 x
 	{
-		get { return t.x; }
+		get { return data.x; }
 		set { throw new InvalidOperationException(); }
 	}
 	public Int64 y
 	{
-		get { return t.y; }
+		get { return data.y; }
 		set { throw new InvalidOperationException(); }
 	}
 	public Int64 z
 	{
-		get { return t.z; }
+		get { return data.z; }
 		set { throw new InvalidOperationException(); }
 	}
 	public static void parseForStateSync(IPublishableParser parser, Ipoint3D t)
@@ -1930,7 +1946,7 @@ public class point3D_subscriber : Ipoint3D
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, Ipoint3D t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, point3D_subscriber subscriber, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -1940,10 +1956,12 @@ public class point3D_subscriber : Ipoint3D
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != t.x)
+				if(newVal != subscriber.data.x)
 				{
-					t.x = newVal;
+					Int64 oldVal = subscriber.data.x;
+					subscriber.data.x = newVal;
 					changed = true;
+					subscriber.notifyUpdated_x(oldVal);
 				}
 			}
 			break;
@@ -1952,10 +1970,12 @@ public class point3D_subscriber : Ipoint3D
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != t.y)
+				if(newVal != subscriber.data.y)
 				{
-					t.y = newVal;
+					Int64 oldVal = subscriber.data.y;
+					subscriber.data.y = newVal;
 					changed = true;
+					subscriber.notifyUpdated_y(oldVal);
 				}
 			}
 			break;
@@ -1964,10 +1984,12 @@ public class point3D_subscriber : Ipoint3D
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != t.z)
+				if(newVal != subscriber.data.z)
 				{
-					t.z = newVal;
+					Int64 oldVal = subscriber.data.z;
+					subscriber.data.z = newVal;
 					changed = true;
+					subscriber.notifyUpdated_z(oldVal);
 				}
 			}
 			break;
@@ -1976,6 +1998,11 @@ public class point3D_subscriber : Ipoint3D
 		}
 		return changed;
 	}
+
+	// event handlers
+	public virtual void notifyUpdated_x(Int64 old) { }
+	public virtual void notifyUpdated_y(Int64 old) { }
+	public virtual void notifyUpdated_z(Int64 old) { }
 } // class point3D_subscriber
 
 public class point3D_publisher : Ipoint3D
@@ -2036,7 +2063,6 @@ public interface IAggregateType
 {
 	String name { get; set; }
 	IBasicTypes theAggregate { get; set; }
-	IBasicTypes make_theAggregate();
 	Int64 lastValue { get; set; }
 } // interface AggregateType
 
@@ -2044,7 +2070,6 @@ public class AggregateType_impl : IAggregateType, IEquatable<AggregateType_impl>
 {
 	public String name { get; set; }
 	public IBasicTypes theAggregate { get; set; }
-	public IBasicTypes make_theAggregate() { return new BasicTypes_impl(); }
 	public Int64 lastValue { get; set; }
 	public override bool Equals(object obj)
 	{
@@ -2086,33 +2111,43 @@ public class AggregateType_impl : IAggregateType, IEquatable<AggregateType_impl>
 
 public class AggregateType_subscriber : IAggregateType
 {
-	IAggregateType t;
+	internal IAggregateType data;
 	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
-	public AggregateType_subscriber(IAggregateType t)
+	public AggregateType_subscriber() { }
+	public AggregateType_subscriber(IAggregateType data)
 	{
-		this.t = t;
+		this.data = data;
 	}
 	public String name
 	{
-		get { return t.name; }
+		get { return data.name; }
 		set { throw new InvalidOperationException(); }
 	}
+	public BasicTypes_subscriber theAggregate_wrapper;
 	public IBasicTypes theAggregate
 	{
-		get { return new BasicTypes_subscriber(t.theAggregate); }
+		get
+		{
+			if(data.theAggregate != null && theAggregate_wrapper == null)
+			{
+				theAggregate_wrapper = makeHandler_theAggregate();
+				theAggregate_wrapper.data = data.theAggregate;
+			}
+			return theAggregate_wrapper;
+		}
 		set { throw new InvalidOperationException(); }
 	}
-	public IBasicTypes make_theAggregate() { throw new InvalidOperationException(); }
+	public virtual BasicTypes_subscriber makeHandler_theAggregate() { return new BasicTypes_subscriber(); }
 	public Int64 lastValue
 	{
-		get { return t.lastValue; }
+		get { return data.lastValue; }
 		set { throw new InvalidOperationException(); }
 	}
 	public static void parseForStateSync(IPublishableParser parser, IAggregateType t)
 	{
 		t.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("theAggregate");
-		t.theAggregate = t.make_theAggregate();
+		t.theAggregate = new BasicTypes_impl();
 		BasicTypes_subscriber.parseForStateSync(parser, t.theAggregate);
 		parser.parsePublishableStructEnd();
 		t.lastValue = parser.parseInteger("lastValue");
@@ -2148,7 +2183,7 @@ public class AggregateType_subscriber : IAggregateType
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, IAggregateType t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, AggregateType_subscriber subscriber, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -2158,10 +2193,12 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				String newVal = parser.parseString("value");
-				if(newVal != t.name)
+				if(newVal != subscriber.data.name)
 				{
-					t.name = newVal;
+					String oldVal = subscriber.data.name;
+					subscriber.data.name = newVal;
 					changed = true;
+					subscriber.notifyUpdated_name(oldVal);
 				}
 			}
 			break;
@@ -2171,12 +2208,12 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, t.theAggregate);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.theAggregate_wrapper);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subscriber.parse(parser, t.theAggregate, addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.theAggregate_wrapper, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2184,7 +2221,7 @@ public class AggregateType_subscriber : IAggregateType
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_theAggregate();
 				}
 			}
 			break;
@@ -2193,10 +2230,12 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != t.lastValue)
+				if(newVal != subscriber.data.lastValue)
 				{
-					t.lastValue = newVal;
+					Int64 oldVal = subscriber.data.lastValue;
+					subscriber.data.lastValue = newVal;
 					changed = true;
+					subscriber.notifyUpdated_lastValue(oldVal);
 				}
 			}
 			break;
@@ -2205,6 +2244,11 @@ public class AggregateType_subscriber : IAggregateType
 		}
 		return changed;
 	}
+
+	// event handlers
+	public virtual void notifyUpdated_name(String old) { }
+	public virtual void notifyUpdated_theAggregate() { }
+	public virtual void notifyUpdated_lastValue(Int64 old) { }
 } // class AggregateType_subscriber
 
 public class AggregateType_publisher : IAggregateType
@@ -2243,7 +2287,6 @@ public class AggregateType_publisher : IAggregateType
 			composer.composeAddressEnd();
 		}
 	}
-	public IBasicTypes make_theAggregate() { return t.make_theAggregate(); }
 	public Int64 lastValue
 	{
 		get { return t.lastValue; }
@@ -2277,18 +2320,14 @@ public interface IStructSix
 {
 	String name { get; set; }
 	IBasicTypes basic { get; set; }
-	IBasicTypes make_basic();
 	IAggregateType aggregate { get; set; }
-	IAggregateType make_aggregate();
 } // interface StructSix
 
 public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 {
 	public String name { get; set; }
 	public IBasicTypes basic { get; set; }
-	public IBasicTypes make_basic() { return new BasicTypes_impl(); }
 	public IAggregateType aggregate { get; set; }
-	public IAggregateType make_aggregate() { return new AggregateType_impl(); }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as StructSix_impl);
@@ -2329,38 +2368,57 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 
 public class StructSix_subscriber : IStructSix, StateSubscriberBase
 {
-	IStructSix t;
+	internal IStructSix data;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_subscriber(IStructSix t)
+	public StructSix_subscriber() { }
+	public StructSix_subscriber(IStructSix data)
 	{
-		this.t = t;
+		this.data = data;
 	}
 	public String name
 	{
-		get { return t.name; }
+		get { return data.name; }
 		set { throw new InvalidOperationException(); }
 	}
+	public BasicTypes_subscriber basic_wrapper;
 	public IBasicTypes basic
 	{
-		get { return new BasicTypes_subscriber(t.basic); }
+		get
+		{
+			if(data.basic != null && basic_wrapper == null)
+			{
+				basic_wrapper = makeHandler_basic();
+				basic_wrapper.data = data.basic;
+			}
+			return basic_wrapper;
+		}
 		set { throw new InvalidOperationException(); }
 	}
-	public IBasicTypes make_basic() { throw new InvalidOperationException(); }
+	public virtual BasicTypes_subscriber makeHandler_basic() { return new BasicTypes_subscriber(); }
+	public AggregateType_subscriber aggregate_wrapper;
 	public IAggregateType aggregate
 	{
-		get { return new AggregateType_subscriber(t.aggregate); }
+		get
+		{
+			if(data.aggregate != null && aggregate_wrapper == null)
+			{
+				aggregate_wrapper = makeHandler_aggregate();
+				aggregate_wrapper.data = data.aggregate;
+			}
+			return aggregate_wrapper;
+		}
 		set { throw new InvalidOperationException(); }
 	}
-	public IAggregateType make_aggregate() { throw new InvalidOperationException(); }
+	public virtual AggregateType_subscriber makeHandler_aggregate() { return new AggregateType_subscriber(); }
 	public static void parseForStateSync(IPublishableParser parser, IStructSix t)
 	{
 		t.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("basic");
-		t.basic = t.make_basic();
+		t.basic = new BasicTypes_impl();
 		BasicTypes_subscriber.parseForStateSync(parser, t.basic);
 		parser.parsePublishableStructEnd();
 		parser.parsePublishableStructBegin("aggregate");
-		t.aggregate = t.make_aggregate();
+		t.aggregate = new AggregateType_impl();
 		AggregateType_subscriber.parseForStateSync(parser, t.aggregate);
 		parser.parsePublishableStructEnd();
 	}
@@ -2397,7 +2455,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, IStructSix t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, StructSix_subscriber subscriber, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -2407,10 +2465,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				String newVal = parser.parseString("value");
-				if(newVal != t.name)
+				if(newVal != subscriber.data.name)
 				{
-					t.name = newVal;
+					String oldVal = subscriber.data.name;
+					subscriber.data.name = newVal;
 					changed = true;
+					subscriber.notifyUpdated_name(oldVal);
 				}
 			}
 			break;
@@ -2420,12 +2480,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, t.basic);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.basic_wrapper);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subscriber.parse(parser, t.basic, addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.basic_wrapper, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2433,7 +2493,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_basic();
 				}
 			}
 			break;
@@ -2443,12 +2503,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = AggregateType_subscriber.parse(parser, t.aggregate);
+					currentChanged = AggregateType_subscriber.parse(parser, subscriber.aggregate_wrapper);
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = AggregateType_subscriber.parse(parser, t.aggregate, addr, offset + 1);
+					currentChanged = AggregateType_subscriber.parse(parser, subscriber.aggregate_wrapper, addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2456,7 +2516,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_aggregate();
 				}
 			}
 			break;
@@ -2473,7 +2533,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		UInt64[] addr = null;
 		while(parser.parseAddress(ref addr))
 		{
-			StructSix_subscriber.parse(parser, this.t, addr, 0);
+			StructSix_subscriber.parse(parser, this, addr, 0);
 			parser.parseAddressEnd();
 			addr = null;
 		}
@@ -2482,9 +2542,16 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	public void applyStateSyncMessage(IPublishableParser parser)
 	{
 		parser.parseStructBegin();
-		StructSix_subscriber.parseForStateSync(parser, this.t);
+		StructSix_subscriber.parseForStateSync(parser, this.data);
 		parser.parseStructEnd();
+		this.notifyFullyUpdated();
 	}
+
+	// event handlers
+	public virtual void notifyFullyUpdated() { }
+	public virtual void notifyUpdated_name(String old) { }
+	public virtual void notifyUpdated_basic() { }
+	public virtual void notifyUpdated_aggregate() { }
 } // class StructSix_subscriber
 
 public class StructSix_publisher : IStructSix, IStatePublisher
@@ -2523,7 +2590,6 @@ public class StructSix_publisher : IStructSix, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IBasicTypes make_basic() { return t.make_basic(); }
 	public IAggregateType aggregate
 	{
 		get { return new AggregateType_publisher(t.aggregate, composer, Publishable.makeAddress(address, (UInt64)Address.aggregate)); }
@@ -2537,7 +2603,6 @@ public class StructSix_publisher : IStructSix, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IAggregateType make_aggregate() { return t.make_aggregate(); }
 	public static void compose(IPublishableComposer composer, IStructSix t)
 	{
 		composer.composeString("name", t.name, true);
@@ -2569,10 +2634,8 @@ public class StructSix_publisher : IStructSix, IStatePublisher
 	}
 } // class StructSix_publisher
 
-public class StructSix_concentrator : IStateConcentrator
+public class StructSix_concentrator : StructSix_subscriber, IStateConcentrator
 {
-	IStructSix t = new StructSix_impl();
-	enum Address { name = 0, basic = 1, aggregate = 2 };
 	public static void compose(IPublishableComposer composer, IStructSix t)
 	{
 		composer.composeString("name", t.name, true);
@@ -2583,143 +2646,10 @@ public class StructSix_concentrator : IStateConcentrator
 		AggregateType_publisher.compose(composer, t.aggregate);
 		composer.composePublishableStructEnd(false);
 	}
-	public static void parseForStateSync(IPublishableParser parser, IStructSix t)
-	{
-		t.name = parser.parseString("name");
-		parser.parsePublishableStructBegin("basic");
-		t.basic = t.make_basic();
-		BasicTypes_subscriber.parseForStateSync(parser, t.basic);
-		parser.parsePublishableStructEnd();
-		parser.parsePublishableStructBegin("aggregate");
-		t.aggregate = t.make_aggregate();
-		AggregateType_subscriber.parseForStateSync(parser, t.aggregate);
-		parser.parsePublishableStructEnd();
-	}
-	public static bool parse(IPublishableParser parser, IStructSix t)
-	{
-		bool changed = false;
-		{
-			String newVal = parser.parseString("name");
-			if(newVal != t.name)
-			{
-				t.name = newVal;
-				changed = true;
-			}
-		}
-		{
-			parser.parsePublishableStructBegin("basic");
-			bool currentChanged = BasicTypes_subscriber.parse(parser, t.basic);
-			parser.parsePublishableStructEnd();
-			if(currentChanged)
-			{
-					changed = true;
-					// TODO
-			}
-		}
-		{
-			parser.parsePublishableStructBegin("aggregate");
-			bool currentChanged = AggregateType_subscriber.parse(parser, t.aggregate);
-			parser.parsePublishableStructEnd();
-			if(currentChanged)
-			{
-					changed = true;
-					// TODO
-			}
-		}
-		return changed;
-	}
-	public static bool parse(IPublishableParser parser, IStructSix t, UInt64[] addr, int offset)
-	{
-		bool changed = false;
-		switch ((Address)addr[offset])
-		{
-			case Address.name:
-			{
-				if(addr.Length != offset + 1)
-					throw new Exception();
-				String newVal = parser.parseString("value");
-				if(newVal != t.name)
-				{
-					t.name = newVal;
-					changed = true;
-				}
-			}
-			break;
-			case Address.basic:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full element replace
-				{
-					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, t.basic);
-					parser.parsePublishableStructEnd();
-				}
-				else if(addr.Length > offset + 1) // let child continue parsing
-				{
-					currentChanged = BasicTypes_subscriber.parse(parser, t.basic, addr, offset + 1);
-				}
-				else
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.aggregate:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full element replace
-				{
-					parser.parsePublishableStructBegin("value");
-					currentChanged = AggregateType_subscriber.parse(parser, t.aggregate);
-					parser.parsePublishableStructEnd();
-				}
-				else if(addr.Length > offset + 1) // let child continue parsing
-				{
-					currentChanged = AggregateType_subscriber.parse(parser, t.aggregate, addr, offset + 1);
-				}
-				else
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			default:
-				throw new Exception();
-		}
-		return changed;
-	}
-	public String stateSubscriberName() { return "StructSix"; }
-	public UInt64 stateTypeID() { return 6; }
-	public void applyMessageWithUpdates(IPublishableParser parser)
-	{
-		parser.parseStateUpdateMessageBegin();
-		UInt64[] addr = null;
-		while(parser.parseAddress(ref addr))
-		{
-			StructSix_subscriber.parse(parser, this.t, addr, 0);
-			parser.parseAddressEnd();
-			addr = null;
-		}
-		parser.parseStateUpdateMessageEnd();
-	}
-	public void applyStateSyncMessage(IPublishableParser parser)
-	{
-		parser.parseStructBegin();
-		StructSix_subscriber.parseForStateSync(parser, this.t);
-		parser.parseStructEnd();
-	}
 	public void generateStateSyncMessage(IPublishableComposer composer)
 	{
 		composer.composeStructBegin();
-		StructSix_publisher.compose(composer, this.t);
+		StructSix_publisher.compose(composer, this.data);
 		composer.composeStructEnd();
 	}
 } // class StructSix_concentrator
@@ -2737,31 +2667,19 @@ public class StructSix_concentrator : IStateConcentrator
 public interface Ipublishable_seven
 {
 	IList<Int64> intVec { get; set; }
-	IList<Int64> make_intVec();
 	IList<UInt64> uintVec { get; set; }
-	IList<UInt64> make_uintVec();
 	IList<Double> realVec { get; set; }
-	IList<Double> make_realVec();
 	IList<String> strVec { get; set; }
-	IList<String> make_strVec();
 	IList<Ipoint3D> structVec { get; set; }
-	IList<Ipoint3D> make_structVec();
-	Ipoint3D make_structVec_element();
 } // interface publishable_seven
 
 public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable_seven_impl>
 {
 	public IList<Int64> intVec { get; set; }
-	public IList<Int64> make_intVec() { return new List<Int64>(); }
 	public IList<UInt64> uintVec { get; set; }
-	public IList<UInt64> make_uintVec() { return new List<UInt64>(); }
 	public IList<Double> realVec { get; set; }
-	public IList<Double> make_realVec() { return new List<Double>(); }
 	public IList<String> strVec { get; set; }
-	public IList<String> make_strVec() { return new List<String>(); }
 	public IList<Ipoint3D> structVec { get; set; }
-	public IList<Ipoint3D> make_structVec() { return new List<Ipoint3D>(); }
-	public Ipoint3D make_structVec_element() { return new point3D_impl(); }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as publishable_seven_impl);
@@ -2804,58 +2722,68 @@ public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable
 
 public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberBase
 {
-	Ipublishable_seven t;
+	internal Ipublishable_seven data;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_subscriber(Ipublishable_seven t)
+	public publishable_seven_subscriber() { }
+	public publishable_seven_subscriber(Ipublishable_seven data)
 	{
-		this.t = t;
+		this.data = data;
 	}
 	public IList<Int64> intVec
 	{
-		get { return new SubscriberVectorWrapper<Int64>(t.intVec); }
+		get { return new SubscriberVectorWrapper<Int64>(data.intVec); }
 		set { throw new InvalidOperationException(); }
 	}
-	public IList<Int64> make_intVec() { throw new InvalidOperationException(); }
 	public IList<UInt64> uintVec
 	{
-		get { return new SubscriberVectorWrapper<UInt64>(t.uintVec); }
+		get { return new SubscriberVectorWrapper<UInt64>(data.uintVec); }
 		set { throw new InvalidOperationException(); }
 	}
-	public IList<UInt64> make_uintVec() { throw new InvalidOperationException(); }
 	public IList<Double> realVec
 	{
-		get { return new SubscriberVectorWrapper<Double>(t.realVec); }
+		get { return new SubscriberVectorWrapper<Double>(data.realVec); }
 		set { throw new InvalidOperationException(); }
 	}
-	public IList<Double> make_realVec() { throw new InvalidOperationException(); }
 	public IList<String> strVec
 	{
-		get { return new SubscriberVectorWrapper<String>(t.strVec); }
+		get { return new SubscriberVectorWrapper<String>(data.strVec); }
 		set { throw new InvalidOperationException(); }
 	}
-	public IList<String> make_strVec() { throw new InvalidOperationException(); }
+	SubscriberVectorWrapper<point3D_subscriber> structVec_wrapper;
 	public IList<Ipoint3D> structVec
 	{
-		get { return new SubscriberVectorWrapper<Ipoint3D>(t.structVec); }
+		get
+		{
+			if(data.structVec != null && structVec_wrapper == null)
+			{
+				structVec_wrapper = new SubscriberVectorWrapper<point3D_subscriber>();
+				for(int i = 0; i < data.structVec.Count; ++i)
+				{
+				point3D_subscriber val_wrapper = makeElementHandler_structVec();
+				val_wrapper.data = data.structVec[i];
+				structVec_wrapper.Add(val_wrapper);
+				}
+			}
+			return (IList<Ipoint3D>)structVec_wrapper;
+		}
 		set { throw new InvalidOperationException(); }
 	}
-	public IList<Ipoint3D> make_structVec() { throw new InvalidOperationException(); }
-	public Ipoint3D make_structVec_element() { throw new InvalidOperationException(); }
+	public virtual point3D_subscriber makeElementHandler_structVec() { return new point3D_subscriber(); }
 	public static void parseForStateSync(IPublishableParser parser, Ipublishable_seven t)
 	{
-		t.intVec = t.make_intVec();
+		t.intVec = new List<Int64>();
 		parser.parseSimpleVector("intVec", Publishable.makeParser(t.intVec));
-		t.uintVec = t.make_uintVec();
+		t.uintVec = new List<UInt64>();
 		parser.parseSimpleVector("uintVec", Publishable.makeParser(t.uintVec));
-		t.realVec = t.make_realVec();
+		t.realVec = new List<Double>();
 		parser.parseSimpleVector("realVec", Publishable.makeParser(t.realVec));
-		t.strVec = t.make_strVec();
+		t.strVec = new List<String>();
 		parser.parseSimpleVector("strVec", Publishable.makeParser(t.strVec));
-		t.structVec = t.make_structVec();
+		t.structVec = new List<Ipoint3D>();
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
-				Ipoint3D val = t.make_structVec_element();
+				Ipoint3D val = new point3D_impl();
 				point3D_subscriber.parseForStateSync(parser, val);
 				t.structVec.Add(val);
 				parser.parseStructEnd();
@@ -2866,7 +2794,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	{
 		bool changed = false;
 		{
-		IList<Int64> newVal = t.make_intVec();
+		IList<Int64> newVal = new List<Int64>();
 		parser.parseSimpleVector("intVec", Publishable.makeParser(newVal));
 		if(!Enumerable.SequenceEqual(newVal, t.intVec))
 		{
@@ -2875,7 +2803,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		}
 		{
-		IList<UInt64> newVal = t.make_uintVec();
+		IList<UInt64> newVal = new List<UInt64>();
 		parser.parseSimpleVector("uintVec", Publishable.makeParser(newVal));
 		if(!Enumerable.SequenceEqual(newVal, t.uintVec))
 		{
@@ -2884,7 +2812,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		}
 		{
-		IList<Double> newVal = t.make_realVec();
+		IList<Double> newVal = new List<Double>();
 		parser.parseSimpleVector("realVec", Publishable.makeParser(newVal));
 		if(!Enumerable.SequenceEqual(newVal, t.realVec))
 		{
@@ -2893,7 +2821,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		}
 		{
-		IList<String> newVal = t.make_strVec();
+		IList<String> newVal = new List<String>();
 		parser.parseSimpleVector("strVec", Publishable.makeParser(newVal));
 		if(!Enumerable.SequenceEqual(newVal, t.strVec))
 		{
@@ -2902,11 +2830,11 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		}
 		{
-		IList<Ipoint3D> newVal = t.make_structVec();
+		IList<Ipoint3D> newVal = new List<Ipoint3D>();
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
-				Ipoint3D val = t.make_structVec_element();
+				Ipoint3D val = new point3D_impl();
 				point3D_subscriber.parseForStateSync(parser, val);
 				t.structVec.Add(val);
 				parser.parseStructEnd();
@@ -2920,7 +2848,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		return changed;
 	}
-	public static bool parse(IPublishableParser parser, Ipublishable_seven t, UInt64[] addr, int offset)
+	public static bool parse(IPublishableParser parser, publishable_seven_subscriber subscriber, UInt64[] addr, int offset)
 	{
 		bool changed = false;
 		switch ((Address)addr[offset])
@@ -2930,19 +2858,24 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				bool currentChanged = false;
 				if(addr.Length == offset + 1) // full vector replace
 				{
-					IList<Int64> newVal = t.make_intVec();
+					IList<Int64> newVal = new List<Int64>();
 					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.intVec))
+					if(!Enumerable.SequenceEqual(newVal, subscriber.data.intVec))
 					{
-						t.intVec = newVal;
+						subscriber.data.intVec = newVal;
 						currentChanged = true;
 					}
 				}
 				else if(addr.Length == offset + 2) // action over one of the elements
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<Int64>.parseVectorActionSimple(parser, t.intVec, index,
-						(IPublishableParser parser) => { return parser.parseInteger("value"); });
+					currentChanged = SubscriberVectorHelper.parseVectorPrimitive<Int64>(
+						parser, subscriber.data.intVec, index,
+						(IPublishableParser parser) => { return parser.parseInteger("value"); },
+						subscriber.notifyElementUpdated_intVec,
+						subscriber.notifyInserted_intVec,
+						subscriber.notifyErased_intVec
+					);
 				}
 				else // simple type can't handle deeper address
 					throw new Exception();
@@ -2950,7 +2883,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_intVec();
 				}
 			}
 			break;
@@ -2959,19 +2892,24 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				bool currentChanged = false;
 				if(addr.Length == offset + 1) // full vector replace
 				{
-					IList<UInt64> newVal = t.make_uintVec();
+					IList<UInt64> newVal = new List<UInt64>();
 					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.uintVec))
+					if(!Enumerable.SequenceEqual(newVal, subscriber.data.uintVec))
 					{
-						t.uintVec = newVal;
+						subscriber.data.uintVec = newVal;
 						currentChanged = true;
 					}
 				}
 				else if(addr.Length == offset + 2) // action over one of the elements
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<UInt64>.parseVectorActionSimple(parser, t.uintVec, index,
-						(IPublishableParser parser) => { return parser.parseUnsigned("value"); });
+					currentChanged = SubscriberVectorHelper.parseVectorPrimitive<UInt64>(
+						parser, subscriber.data.uintVec, index,
+						(IPublishableParser parser) => { return parser.parseUnsigned("value"); },
+						subscriber.notifyElementUpdated_uintVec,
+						subscriber.notifyInserted_uintVec,
+						subscriber.notifyErased_uintVec
+					);
 				}
 				else // simple type can't handle deeper address
 					throw new Exception();
@@ -2979,7 +2917,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_uintVec();
 				}
 			}
 			break;
@@ -2988,19 +2926,24 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				bool currentChanged = false;
 				if(addr.Length == offset + 1) // full vector replace
 				{
-					IList<Double> newVal = t.make_realVec();
+					IList<Double> newVal = new List<Double>();
 					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.realVec))
+					if(!Enumerable.SequenceEqual(newVal, subscriber.data.realVec))
 					{
-						t.realVec = newVal;
+						subscriber.data.realVec = newVal;
 						currentChanged = true;
 					}
 				}
 				else if(addr.Length == offset + 2) // action over one of the elements
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<Double>.parseVectorActionSimple(parser, t.realVec, index,
-						(IPublishableParser parser) => { return parser.parseReal("value"); });
+					currentChanged = SubscriberVectorHelper.parseVectorPrimitive<Double>(
+						parser, subscriber.data.realVec, index,
+						(IPublishableParser parser) => { return parser.parseReal("value"); },
+						subscriber.notifyElementUpdated_realVec,
+						subscriber.notifyInserted_realVec,
+						subscriber.notifyErased_realVec
+					);
 				}
 				else // simple type can't handle deeper address
 					throw new Exception();
@@ -3008,7 +2951,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_realVec();
 				}
 			}
 			break;
@@ -3017,19 +2960,24 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				bool currentChanged = false;
 				if(addr.Length == offset + 1) // full vector replace
 				{
-					IList<String> newVal = t.make_strVec();
+					IList<String> newVal = new List<String>();
 					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.strVec))
+					if(!Enumerable.SequenceEqual(newVal, subscriber.data.strVec))
 					{
-						t.strVec = newVal;
+						subscriber.data.strVec = newVal;
 						currentChanged = true;
 					}
 				}
 				else if(addr.Length == offset + 2) // action over one of the elements
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<String>.parseVectorActionSimple(parser, t.strVec, index,
-						(IPublishableParser parser) => { return parser.parseString("value"); });
+					currentChanged = SubscriberVectorHelper.parseVectorPrimitive<String>(
+						parser, subscriber.data.strVec, index,
+						(IPublishableParser parser) => { return parser.parseString("value"); },
+						subscriber.notifyElementUpdated_strVec,
+						subscriber.notifyInserted_strVec,
+						subscriber.notifyErased_strVec
+					);
 				}
 				else // simple type can't handle deeper address
 					throw new Exception();
@@ -3037,7 +2985,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_strVec();
 				}
 			}
 			break;
@@ -3046,41 +2994,75 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				bool currentChanged = false;
 				if(addr.Length == offset + 1) // full vector replace
 				{
-					IList<Ipoint3D> newVal = t.make_structVec();
+					IList<Ipoint3D> newVal = new List<Ipoint3D>();
+					SubscriberVectorWrapper<point3D_subscriber> newVal_wrapper = new SubscriberVectorWrapper<point3D_subscriber>();
 					parser.parseVector("value",
 						(IPublishableParser parser, int index) =>
 						{
 							parser.parseStructBegin();
-							Ipoint3D val = t.make_structVec_element();
+							Ipoint3D val = new point3D_impl();
 							point3D_subscriber.parseForStateSync(parser, val);
+							point3D_subscriber val_wrapper = subscriber.makeElementHandler_structVec();
+							val_wrapper.data = val;
 							newVal.Add(val);
+							newVal_wrapper.Add(val_wrapper);
 							parser.parseStructEnd();
 						}
 					);
-					if(!Enumerable.SequenceEqual(newVal, t.structVec))
+					if(!Enumerable.SequenceEqual(newVal, subscriber.data.structVec))
 					{
-						t.structVec = newVal;
+						subscriber.data.structVec = newVal;
+						subscriber.structVec_wrapper = newVal_wrapper;
 						currentChanged = true;
 					}
 				}
 				else if(addr.Length == offset + 2) // action over one of the elements
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<Ipoint3D>.parseVectorActionSimple(parser, t.structVec, index,
-						(IPublishableParser parser) =>
+					Publishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();
+					switch (action)
+					{
+					case Publishable.ActionOnVector.update_at:
+					{
+						parser.parsePublishableStructBegin("value");
+						bool elemChanged = point3D_subscriber.parse(parser, subscriber.data.structVec[index]);
+						parser.parsePublishableStructEnd();
+						if (elemChanged)
 						{
-							Ipoint3D newVal = t.make_structVec_element();
-							parser.parsePublishableStructBegin("value");
-							point3D_subscriber.parseForStateSync(parser, newVal);
-							parser.parsePublishableStructEnd();
-							return newVal;
+							currentChanged = true;
+							subscriber.notifyElementUpdated_structVec(index);
 						}
-					);
+						break;
+					}
+					case Publishable.ActionOnVector.insert_single_before:
+					{
+						parser.parsePublishableStructBegin("value");
+						Ipoint3D newVal = new point3D_impl();
+						point3D_subscriber.parse(parser, newVal);
+						point3D_subscriber newVal_wrapper = subscriber.makeElementHandler_structVec();
+						parser.parsePublishableStructEnd();
+						subscriber.data.structVec.Insert(index, newVal);
+						subscriber.structVec_wrapper.Insert(index, newVal_wrapper);
+						currentChanged = true;
+						subscriber.notifyInserted_structVec(index);
+						break;
+					}
+					case Publishable.ActionOnVector.remove_at:
+					{
+						subscriber.data.structVec.RemoveAt(index);
+						subscriber.structVec_wrapper.RemoveAt(index);
+						currentChanged = true;
+						subscriber.notifyErased_structVec(index);
+						break;
+					}
+					default:
+						throw new Exception();
+					}
 				}
 				else if(addr.Length > offset + 2) // let child continue parsing
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = point3D_subscriber.parse(parser, t.structVec[index], addr, offset + 2);
+					currentChanged = point3D_subscriber.parse(parser, subscriber.structVec_wrapper[index], addr, offset + 2);
 				}
 				else
 					throw new Exception();
@@ -3088,7 +3070,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(currentChanged)
 				{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_structVec();
 				}
 			}
 			break;
@@ -3105,7 +3087,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		UInt64[] addr = null;
 		while(parser.parseAddress(ref addr))
 		{
-			publishable_seven_subscriber.parse(parser, this.t, addr, 0);
+			publishable_seven_subscriber.parse(parser, this, addr, 0);
 			parser.parseAddressEnd();
 			addr = null;
 		}
@@ -3114,9 +3096,33 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	public void applyStateSyncMessage(IPublishableParser parser)
 	{
 		parser.parseStructBegin();
-		publishable_seven_subscriber.parseForStateSync(parser, this.t);
+		publishable_seven_subscriber.parseForStateSync(parser, this.data);
 		parser.parseStructEnd();
+		this.notifyFullyUpdated();
 	}
+
+	// event handlers
+	public virtual void notifyFullyUpdated() { }
+	public virtual void notifyUpdated_intVec() { }
+	public virtual void notifyElementUpdated_intVec(int index, Int64 old) { }
+	public virtual void notifyInserted_intVec(int index) { }
+	public virtual void notifyErased_intVec(int index) { }
+	public virtual void notifyUpdated_uintVec() { }
+	public virtual void notifyElementUpdated_uintVec(int index, UInt64 old) { }
+	public virtual void notifyInserted_uintVec(int index) { }
+	public virtual void notifyErased_uintVec(int index) { }
+	public virtual void notifyUpdated_realVec() { }
+	public virtual void notifyElementUpdated_realVec(int index, Double old) { }
+	public virtual void notifyInserted_realVec(int index) { }
+	public virtual void notifyErased_realVec(int index) { }
+	public virtual void notifyUpdated_strVec() { }
+	public virtual void notifyElementUpdated_strVec(int index, String old) { }
+	public virtual void notifyInserted_strVec(int index) { }
+	public virtual void notifyErased_strVec(int index) { }
+	public virtual void notifyUpdated_structVec() { }
+	public virtual void notifyElementUpdated_structVec(int index) { }
+	public virtual void notifyInserted_structVec(int index) { }
+	public virtual void notifyErased_structVec(int index) { }
 } // class publishable_seven_subscriber
 
 public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
@@ -3149,7 +3155,6 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IList<Int64> make_intVec() { return t.make_intVec(); }
 	public IList<UInt64> uintVec
 	{
 		get
@@ -3168,7 +3173,6 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IList<UInt64> make_uintVec() { return t.make_uintVec(); }
 	public IList<Double> realVec
 	{
 		get
@@ -3187,7 +3191,6 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IList<Double> make_realVec() { return t.make_realVec(); }
 	public IList<String> strVec
 	{
 		get
@@ -3206,7 +3209,6 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IList<String> make_strVec() { return t.make_strVec(); }
 	public IList<Ipoint3D> structVec
 	{
 		get
@@ -3233,8 +3235,6 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 			composer.composeAddressEnd();
 		}
 	}
-	public IList<Ipoint3D> make_structVec() { return t.make_structVec(); }
-	public Ipoint3D make_structVec_element() { return t.make_structVec_element(); }
 	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
 		composer.composeSimpleVector("intVec", Publishable.makeComposer(t.intVec), true);
@@ -3265,10 +3265,8 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 	}
 } // class publishable_seven_publisher
 
-public class publishable_seven_concentrator : IStateConcentrator
+public class publishable_seven_concentrator : publishable_seven_subscriber, IStateConcentrator
 {
-	Ipublishable_seven t = new publishable_seven_impl();
-	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
 	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
 		composer.composeSimpleVector("intVec", Publishable.makeComposer(t.intVec), true);
@@ -3278,286 +3276,10 @@ public class publishable_seven_concentrator : IStateConcentrator
 		composer.composeVector("structVec", t.structVec.Count,
 			(IPublishableComposer composer, int ordinal) => { point3D_publisher.compose(composer, t.structVec[ordinal]); }, false);
 	}
-	public static void parseForStateSync(IPublishableParser parser, Ipublishable_seven t)
-	{
-		t.intVec = t.make_intVec();
-		parser.parseSimpleVector("intVec", Publishable.makeParser(t.intVec));
-		t.uintVec = t.make_uintVec();
-		parser.parseSimpleVector("uintVec", Publishable.makeParser(t.uintVec));
-		t.realVec = t.make_realVec();
-		parser.parseSimpleVector("realVec", Publishable.makeParser(t.realVec));
-		t.strVec = t.make_strVec();
-		parser.parseSimpleVector("strVec", Publishable.makeParser(t.strVec));
-		t.structVec = t.make_structVec();
-		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
-			{
-				parser.parseStructBegin();
-				Ipoint3D val = t.make_structVec_element();
-				point3D_subscriber.parseForStateSync(parser, val);
-				t.structVec.Add(val);
-				parser.parseStructEnd();
-			}
-		);
-	}
-	public static bool parse(IPublishableParser parser, Ipublishable_seven t)
-	{
-		bool changed = false;
-		{
-		IList<Int64> newVal = t.make_intVec();
-		parser.parseSimpleVector("intVec", Publishable.makeParser(newVal));
-		if(!Enumerable.SequenceEqual(newVal, t.intVec))
-		{
-			t.intVec = newVal;
-			changed = true;
-		}
-		}
-		{
-		IList<UInt64> newVal = t.make_uintVec();
-		parser.parseSimpleVector("uintVec", Publishable.makeParser(newVal));
-		if(!Enumerable.SequenceEqual(newVal, t.uintVec))
-		{
-			t.uintVec = newVal;
-			changed = true;
-		}
-		}
-		{
-		IList<Double> newVal = t.make_realVec();
-		parser.parseSimpleVector("realVec", Publishable.makeParser(newVal));
-		if(!Enumerable.SequenceEqual(newVal, t.realVec))
-		{
-			t.realVec = newVal;
-			changed = true;
-		}
-		}
-		{
-		IList<String> newVal = t.make_strVec();
-		parser.parseSimpleVector("strVec", Publishable.makeParser(newVal));
-		if(!Enumerable.SequenceEqual(newVal, t.strVec))
-		{
-			t.strVec = newVal;
-			changed = true;
-		}
-		}
-		{
-		IList<Ipoint3D> newVal = t.make_structVec();
-		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
-			{
-				parser.parseStructBegin();
-				Ipoint3D val = t.make_structVec_element();
-				point3D_subscriber.parseForStateSync(parser, val);
-				t.structVec.Add(val);
-				parser.parseStructEnd();
-			}
-		);
-		if(!Enumerable.SequenceEqual(newVal, t.structVec))
-		{
-			t.structVec = newVal;
-			changed = true;
-		}
-		}
-		return changed;
-	}
-	public static bool parse(IPublishableParser parser, Ipublishable_seven t, UInt64[] addr, int offset)
-	{
-		bool changed = false;
-		switch ((Address)addr[offset])
-		{
-			case Address.intVec:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full vector replace
-				{
-					IList<Int64> newVal = t.make_intVec();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.intVec))
-					{
-						t.intVec = newVal;
-						currentChanged = true;
-					}
-				}
-				else if(addr.Length == offset + 2) // action over one of the elements
-				{
-					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<Int64>.parseVectorActionSimple(parser, t.intVec, index,
-						(IPublishableParser parser) => { return parser.parseInteger("value"); });
-				}
-				else // simple type can't handle deeper address
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.uintVec:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full vector replace
-				{
-					IList<UInt64> newVal = t.make_uintVec();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.uintVec))
-					{
-						t.uintVec = newVal;
-						currentChanged = true;
-					}
-				}
-				else if(addr.Length == offset + 2) // action over one of the elements
-				{
-					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<UInt64>.parseVectorActionSimple(parser, t.uintVec, index,
-						(IPublishableParser parser) => { return parser.parseUnsigned("value"); });
-				}
-				else // simple type can't handle deeper address
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.realVec:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full vector replace
-				{
-					IList<Double> newVal = t.make_realVec();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.realVec))
-					{
-						t.realVec = newVal;
-						currentChanged = true;
-					}
-				}
-				else if(addr.Length == offset + 2) // action over one of the elements
-				{
-					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<Double>.parseVectorActionSimple(parser, t.realVec, index,
-						(IPublishableParser parser) => { return parser.parseReal("value"); });
-				}
-				else // simple type can't handle deeper address
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.strVec:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full vector replace
-				{
-					IList<String> newVal = t.make_strVec();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
-					if(!Enumerable.SequenceEqual(newVal, t.strVec))
-					{
-						t.strVec = newVal;
-						currentChanged = true;
-					}
-				}
-				else if(addr.Length == offset + 2) // action over one of the elements
-				{
-					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<String>.parseVectorActionSimple(parser, t.strVec, index,
-						(IPublishableParser parser) => { return parser.parseString("value"); });
-				}
-				else // simple type can't handle deeper address
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			case Address.structVec:
-			{
-				bool currentChanged = false;
-				if(addr.Length == offset + 1) // full vector replace
-				{
-					IList<Ipoint3D> newVal = t.make_structVec();
-					parser.parseVector("value",
-						(IPublishableParser parser, int index) =>
-						{
-							parser.parseStructBegin();
-							Ipoint3D val = t.make_structVec_element();
-							point3D_subscriber.parseForStateSync(parser, val);
-							newVal.Add(val);
-							parser.parseStructEnd();
-						}
-					);
-					if(!Enumerable.SequenceEqual(newVal, t.structVec))
-					{
-						t.structVec = newVal;
-						currentChanged = true;
-					}
-				}
-				else if(addr.Length == offset + 2) // action over one of the elements
-				{
-					int index = (int)addr[offset + 1];
-					currentChanged = PublisherVectorWrapper<Ipoint3D>.parseVectorActionSimple(parser, t.structVec, index,
-						(IPublishableParser parser) =>
-						{
-							Ipoint3D newVal = t.make_structVec_element();
-							parser.parsePublishableStructBegin("value");
-							point3D_subscriber.parseForStateSync(parser, newVal);
-							parser.parsePublishableStructEnd();
-							return newVal;
-						}
-					);
-				}
-				else if(addr.Length > offset + 2) // let child continue parsing
-				{
-					int index = (int)addr[offset + 1];
-					currentChanged = point3D_subscriber.parse(parser, t.structVec[index], addr, offset + 2);
-				}
-				else
-					throw new Exception();
-
-				if(currentChanged)
-				{
-					changed = true;
-					// TODO
-				}
-			}
-			break;
-			default:
-				throw new Exception();
-		}
-		return changed;
-	}
-	public String stateSubscriberName() { return "publishable_seven"; }
-	public UInt64 stateTypeID() { return 7; }
-	public void applyMessageWithUpdates(IPublishableParser parser)
-	{
-		parser.parseStateUpdateMessageBegin();
-		UInt64[] addr = null;
-		while(parser.parseAddress(ref addr))
-		{
-			publishable_seven_subscriber.parse(parser, this.t, addr, 0);
-			parser.parseAddressEnd();
-			addr = null;
-		}
-		parser.parseStateUpdateMessageEnd();
-	}
-	public void applyStateSyncMessage(IPublishableParser parser)
-	{
-		parser.parseStructBegin();
-		publishable_seven_subscriber.parseForStateSync(parser, this.t);
-		parser.parseStructEnd();
-	}
 	public void generateStateSyncMessage(IPublishableComposer composer)
 	{
 		composer.composeStructBegin();
-		publishable_seven_publisher.compose(composer, this.t);
+		publishable_seven_publisher.compose(composer, this.data);
 		composer.composeStructEnd();
 	}
 } // class publishable_seven_concentrator
