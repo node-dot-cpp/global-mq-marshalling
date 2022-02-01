@@ -175,12 +175,37 @@ namespace {
 			case MessageParameterType::KIND::INTEGER:
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
 				fprintf(header, "\tpublic %s %s { get; set; }\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf(header, "\t%s _%s = String.Empty;\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
+				fprintf(header, "\tpublic %s %s\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
+				fprintf(header, "\t{\n");
+				fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+				fprintf(header, "\t\tset\n");
+				fprintf(header, "\t\t{\n");
+				fprintf(header, "\t\t\tif(value == null)\n");
+				fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+				fprintf(header, "\t\t\t_%s = value;\n", member.name.c_str());
+				fprintf(header, "\t\t}\n");
+				fprintf(header, "\t}\n");
+
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\tpublic I%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t%s_impl _%s = new %s_impl();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
+				fprintf(header, "\tpublic I%s %s\n", member.type.name.c_str(), member.name.c_str());
+
+				fprintf(header, "\t{\n");
+				fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+				fprintf(header, "\t\tset\n");
+				fprintf(header, "\t\t{\n");
+				fprintf(header, "\t\t\tif(value == null)\n");
+				fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+				fprintf(header, "\t\t\t_%s = (%s_impl)value;\n", member.name.c_str(), member.type.name.c_str());
+				fprintf(header, "\t\t}\n");
+				fprintf(header, "\t}\n");
+
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -192,7 +217,17 @@ namespace {
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
-					fprintf(header, "\tpublic IList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tList<%s> _%s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t{\n");
+					fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+					fprintf(header, "\t\tset\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tif(value == null)\n");
+					fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+					fprintf(header, "\t\t\t_%s = (List<%s>)value;\n", member.name.c_str(), elem_type_name);
+					fprintf(header, "\t\t}\n");
+					fprintf(header, "\t}\n");
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
@@ -200,7 +235,20 @@ namespace {
 				{
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
-					fprintf(header, "\tpublic IList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tList<I%s> _%s = new List<I%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
+					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t{\n");
+					fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+					fprintf(header, "\t\tset\n");
+					fprintf(header, "\t\t{\n");
+					fprintf(header, "\t\t\tif(value == null)\n");
+					fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+
+					fprintf(header, "\t\t\tList<I%s> tmp = (List<I%s>)value;\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\ttmp.ForEach((I%s each) => { if(!(each is %s_impl)) throw new InvalidCastException(); });\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t_%s = tmp;\n", member.name.c_str());
+					fprintf(header, "\t\t}\n");
+					fprintf(header, "\t}\n");
 					break;
 				}
 				default:

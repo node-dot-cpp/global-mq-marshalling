@@ -1584,7 +1584,17 @@ public class BasicTypes_impl : IBasicTypes, IEquatable<BasicTypes_impl>
 	public Int64 anInt { get; set; }
 	public UInt64 anUInt { get; set; }
 	public Double aReal { get; set; }
-	public String aString { get; set; }
+	String _aString = String.Empty;
+	public String aString
+	{
+		get { return _aString; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_aString = value;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as BasicTypes_impl);
@@ -2068,8 +2078,28 @@ public interface IAggregateType
 
 public class AggregateType_impl : IAggregateType, IEquatable<AggregateType_impl>
 {
-	public String name { get; set; }
-	public IBasicTypes theAggregate { get; set; }
+	String _name = String.Empty;
+	public String name
+	{
+		get { return _name; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_name = value;
+		}
+	}
+	BasicTypes_impl _theAggregate = new BasicTypes_impl();
+	public IBasicTypes theAggregate
+	{
+		get { return _theAggregate; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_theAggregate = (BasicTypes_impl)value;
+		}
+	}
 	public Int64 lastValue { get; set; }
 	public override bool Equals(object obj)
 	{
@@ -2325,9 +2355,39 @@ public interface IStructSix
 
 public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 {
-	public String name { get; set; }
-	public IBasicTypes basic { get; set; }
-	public IAggregateType aggregate { get; set; }
+	String _name = String.Empty;
+	public String name
+	{
+		get { return _name; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_name = value;
+		}
+	}
+	BasicTypes_impl _basic = new BasicTypes_impl();
+	public IBasicTypes basic
+	{
+		get { return _basic; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_basic = (BasicTypes_impl)value;
+		}
+	}
+	AggregateType_impl _aggregate = new AggregateType_impl();
+	public IAggregateType aggregate
+	{
+		get { return _aggregate; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_aggregate = (AggregateType_impl)value;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as StructSix_impl);
@@ -2675,11 +2735,63 @@ public interface Ipublishable_seven
 
 public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable_seven_impl>
 {
-	public IList<Int64> intVec { get; set; }
-	public IList<UInt64> uintVec { get; set; }
-	public IList<Double> realVec { get; set; }
-	public IList<String> strVec { get; set; }
-	public IList<Ipoint3D> structVec { get; set; }
+	List<Int64> _intVec = new List<Int64>();
+	public IList<Int64> intVec
+	{
+		get { return _intVec; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_intVec = (List<Int64>)value;
+		}
+	}
+	List<UInt64> _uintVec = new List<UInt64>();
+	public IList<UInt64> uintVec
+	{
+		get { return _uintVec; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_uintVec = (List<UInt64>)value;
+		}
+	}
+	List<Double> _realVec = new List<Double>();
+	public IList<Double> realVec
+	{
+		get { return _realVec; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_realVec = (List<Double>)value;
+		}
+	}
+	List<String> _strVec = new List<String>();
+	public IList<String> strVec
+	{
+		get { return _strVec; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_strVec = (List<String>)value;
+		}
+	}
+	List<Ipoint3D> _structVec = new List<Ipoint3D>();
+	public IList<Ipoint3D> structVec
+	{
+		get { return _structVec; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
+			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D_impl)) throw new InvalidCastException(); });
+			_structVec = tmp;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as publishable_seven_impl);
