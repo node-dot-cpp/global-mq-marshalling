@@ -865,9 +865,16 @@ namespace {
 		if(s.type == CompositeType::Type::publishable)
 			fprintf(header, ", StateSubscriberBase");
 
-		fprintf(header, "\n");
+		fprintf(header, "\n{\n");
 
-		fprintf(header, "{\n");
+		fprintf(header, "\n\t/////////////////////////////////  begin user override section /////////////////////////////////\n\n");
+
+		csharpPub_generateFactoryMethodSubs(header, root, s, type_name);
+		csharpPub_generateEventHandlerSubs(header, root, s, type_name);
+
+		fprintf(header, "\n\t/////////////////////////////////   end user override section  /////////////////////////////////\n\n\n");
+
+
 		fprintf(header, "\tinternal I%s data;\n", type_name.c_str());
 
 		csharpPub_generateAddressEnum(header, s);
@@ -877,14 +884,6 @@ namespace {
 
 		fprintf(header, "\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name.c_str(), type_name.c_str());
 
-		fprintf(header, "\n");
-		fprintf(header, "\t/////////////////////////////////  begin user override section /////////////////////////////////\n");
-
-		csharpPub_generateFactoryMethodSubs(header, root, s, type_name);
-		csharpPub_generateEventHandlerSubs(header, root, s, type_name);
-
-		fprintf(header, "\t/////////////////////////////////   end user override section  /////////////////////////////////\n");
-		fprintf(header, "\n");
 
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)

@@ -1636,17 +1636,20 @@ public class BasicTypes_impl : IBasicTypes, IEquatable<BasicTypes_impl>
 
 public class BasicTypes_subscriber : IBasicTypes
 {
-	internal IBasicTypes data;
-	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
-	public BasicTypes_subscriber(IBasicTypes data) { this.data = data; }
 
 	/////////////////////////////////  begin user override section /////////////////////////////////
+
 	public virtual void notifyUpdated_anInt(Int64 old) { }
 	public virtual void notifyUpdated_anUInt(UInt64 old) { }
 	public virtual void notifyUpdated_aReal(Double old) { }
 	public virtual void notifyUpdated_aString(String old) { }
+
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
+
+	internal IBasicTypes data;
+	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
+	public BasicTypes_subscriber(IBasicTypes data) { this.data = data; }
 	public Int64 anInt
 	{
 		get { return data.anInt; }
@@ -1905,16 +1908,19 @@ public class point3D_impl : Ipoint3D, IEquatable<point3D_impl>
 
 public class point3D_subscriber : Ipoint3D
 {
-	internal Ipoint3D data;
-	enum Address { x = 0, y = 1, z = 2 };
-	public point3D_subscriber(Ipoint3D data) { this.data = data; }
 
 	/////////////////////////////////  begin user override section /////////////////////////////////
+
 	public virtual void notifyUpdated_x(Int64 old) { }
 	public virtual void notifyUpdated_y(Int64 old) { }
 	public virtual void notifyUpdated_z(Int64 old) { }
+
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
+
+	internal Ipoint3D data;
+	enum Address { x = 0, y = 1, z = 2 };
+	public point3D_subscriber(Ipoint3D data) { this.data = data; }
 	public Int64 x
 	{
 		get { return data.x; }
@@ -2151,17 +2157,20 @@ public class AggregateType_impl : IAggregateType, IEquatable<AggregateType_impl>
 
 public class AggregateType_subscriber : IAggregateType
 {
-	internal IAggregateType data;
-	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
-	public AggregateType_subscriber(IAggregateType data) { this.data = data; }
 
 	/////////////////////////////////  begin user override section /////////////////////////////////
+
 	public virtual BasicTypes_subscriber makeHandler_theAggregate(IBasicTypes data) { return new BasicTypes_subscriber(data); }
 	public virtual void notifyUpdated_name(String old) { }
 	public virtual void notifyUpdated_theAggregate() { }
 	public virtual void notifyUpdated_lastValue(Int64 old) { }
+
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
+
+	internal IAggregateType data;
+	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
+	public AggregateType_subscriber(IAggregateType data) { this.data = data; }
 	public String name
 	{
 		get { return data.name; }
@@ -2437,20 +2446,23 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 
 public class StructSix_subscriber : IStructSix, StateSubscriberBase
 {
-	internal IStructSix data;
-	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_subscriber() : this(new StructSix_impl()) { }
-	public StructSix_subscriber(IStructSix data) { this.data = data; }
 
 	/////////////////////////////////  begin user override section /////////////////////////////////
+
 	public virtual BasicTypes_subscriber makeHandler_basic(IBasicTypes data) { return new BasicTypes_subscriber(data); }
 	public virtual AggregateType_subscriber makeHandler_aggregate(IAggregateType data) { return new AggregateType_subscriber(data); }
 	public virtual void notifyFullyUpdated() { }
 	public virtual void notifyUpdated_name(String old) { }
 	public virtual void notifyUpdated_basic() { }
 	public virtual void notifyUpdated_aggregate() { }
+
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
+
+	internal IStructSix data;
+	enum Address { name = 0, basic = 1, aggregate = 2 };
+	public StructSix_subscriber() : this(new StructSix_impl()) { }
+	public StructSix_subscriber(IStructSix data) { this.data = data; }
 	public String name
 	{
 		get { return data.name; }
@@ -2838,12 +2850,9 @@ public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable
 
 public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberBase
 {
-	internal Ipublishable_seven data;
-	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_subscriber() : this(new publishable_seven_impl()) { }
-	public publishable_seven_subscriber(Ipublishable_seven data) { this.data = data; }
 
 	/////////////////////////////////  begin user override section /////////////////////////////////
+
 	public virtual point3D_subscriber makeElementHandler_structVec(Ipoint3D data) { return new point3D_subscriber(data); }
 	public virtual void notifyFullyUpdated() { }
 	public virtual void notifyUpdated_intVec() { }
@@ -2866,8 +2875,14 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	public virtual void notifyElementUpdated_structVec(int index) { }
 	public virtual void notifyInserted_structVec(int index) { }
 	public virtual void notifyErased_structVec(int index) { }
+
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
+
+	internal Ipublishable_seven data;
+	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
+	public publishable_seven_subscriber() : this(new publishable_seven_impl()) { }
+	public publishable_seven_subscriber(Ipublishable_seven data) { this.data = data; }
 	public IList<Int64> intVec
 	{
 		get { return new SubscriberVectorWrapper<Int64>(data.intVec); }
