@@ -35,12 +35,12 @@ namespace TestProject1
 
     public class test_publishable_six
     {
-        private const string Path = "test_publishable_six.json";
-        private const string Path1 = "test_publishable_six_update1.json";
-        private const string Path2 = "test_publishable_six_update2.json";
-        private const string Path3 = "test_publishable_six_update3.json";
+        internal const string Path = "test_publishable_six.json";
+        internal const string Path1 = "test_publishable_six_update1.json";
+        internal const string Path2 = "test_publishable_six_update2.json";
+        internal const string Path3 = "test_publishable_six_update3.json";
 
-        public static mtest.publishable.StructSix_impl GetPublishableSix()
+        internal static mtest.publishable.StructSix_impl GetPublishableSix()
         {
             mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
 
@@ -100,8 +100,7 @@ namespace TestProject1
             Assert.Equal(data, GetPublishableSix());
         }
 
-        [Fact]
-        public static void TestJsonComposeUpdate1()
+        static void TestJsonComposeUpdate(String fileName, Action<mtest.publishable.IStructSix> updateDelegate)
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
@@ -111,22 +110,22 @@ namespace TestProject1
             //JsonPublishableComposer composer = new JsonPublishableComposer();
 
             publ.startTick(buffer);
-            publ.aggregate.theAggregate.anInt = -101;
+
+            updateDelegate(publ);
+
             publ.endTick();
 
             // uncomment to update file
             //buffer.writeToFile(Path1);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path1));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-
-        [Fact]
-        public static void TestJsonParseUpdate1()
+        static void TestJsonParseUpdate(String fileName, Action<mtest.publishable.IStructSix> updateDelegate)
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
             mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
 
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path1);
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
@@ -135,11 +134,29 @@ namespace TestProject1
 
             Assert.NotEqual(data, data2);
 
-            data2.aggregate.theAggregate.anInt = -101;
+            updateDelegate(data2);
+
             Assert.Equal(data, data2);
         }
 
-        public static void doUpdate2(mtest.publishable.IStructSix data)
+        internal static void doUpdate1(mtest.publishable.IStructSix data)
+        {
+            data.aggregate.theAggregate.anInt = -101;
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate1()
+        {
+            TestJsonComposeUpdate(Path1, doUpdate1);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate1()
+        {
+            TestJsonParseUpdate(Path1, doUpdate1);
+        }
+
+        internal static void doUpdate2(mtest.publishable.IStructSix data)
         {
             //modify substructure inside vector
             data.aggregate.name = "changed name";
@@ -159,63 +176,22 @@ namespace TestProject1
         [Fact]
         public static void TestJsonComposeUpdate2()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
-
-            publ.startTick(buffer);
-
-            doUpdate2(publ);
-
-            publ.endTick();
-
-            // uncomment to update file
-            //buffer.writeToFile(Path2);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path2));
+            TestJsonComposeUpdate(Path2, doUpdate2);
         }
 
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path2);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
-
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.StructSix_impl data2 = GetPublishableSix();
-
-            Assert.NotEqual(data, data2);
-
-            doUpdate2(data2);
- 
-            Assert.Equal(data, data2);
+            TestJsonParseUpdate(Path2, doUpdate2);
         }
+
+        internal static void doNothing(mtest.publishable.IStructSix data) { }
+
 
         [Fact]
         public static void TestComposeNoChangeUpdate3()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
-
-            publ.startTick(buffer);
-            // no change
-            publ.endTick();
-
-            // uncomment to update file
-            //buffer.writeToFile(Path3);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path3));
+            TestJsonComposeUpdate(Path3, doNothing);
         }
 
         [Fact]
@@ -234,5 +210,4 @@ namespace TestProject1
             Assert.Equal(data, data2);
         }
     }
-
 }

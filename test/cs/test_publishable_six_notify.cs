@@ -1,0 +1,153 @@
+/* -------------------------------------------------------------------------------
+* Copyright (c) 2022, OLogN Technologies AG
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*	 * Redistributions of source code must retain the above copyright
+*	   notice, this list of conditions and the following disclaimer.
+*	 * Redistributions in binary form must reproduce the above copyright
+*	   notice, this list of conditions and the following disclaimer in the
+*	   documentation and/or other materials provided with the distribution.
+*	 * Neither the name of the OLogN Technologies AG nor the
+*	   names of its contributors may be used to endorse or promote products
+*	   derived from this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL OLogN Technologies AG BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+* -------------------------------------------------------------------------------*/
+
+using globalmq.marshalling;
+using System;
+using System.Collections.Generic;
+using Xunit;
+
+namespace TestProject1
+{
+
+    public class test_publishable_six_notify
+    {
+        public enum Events { notifyUpdated_primitive, notifyUpdated_struct, notifyFullyUpdated };
+        public class BasicTypes_stub : mtest.publishable.BasicTypes_subscriber
+        {
+            List<Events> handled;
+
+            public BasicTypes_stub(mtest.publishable.IBasicTypes data, List<Events> handled) : base(data)
+            {
+                this.handled = handled;
+            }
+
+
+            public override void notifyUpdated_anInt(Int64 old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_anUInt(UInt64 old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_aReal(Double old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_aString(String old) { handled.Add(Events.notifyUpdated_primitive); }
+
+        }
+        public class AggregateType_stub : mtest.publishable.AggregateType_subscriber
+        {
+            List<Events> handled;
+
+            public AggregateType_stub(mtest.publishable.IAggregateType data, List<Events> handled) : base(data)
+            {
+                this.handled = handled;
+            }
+
+            public override mtest.publishable.BasicTypes_subscriber makeHandler_theAggregate(mtest.publishable.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
+
+            public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_theAggregate() { handled.Add(Events.notifyUpdated_struct); }
+            public override void notifyUpdated_lastValue(Int64 old) { handled.Add(Events.notifyUpdated_primitive); }
+
+
+        }
+
+        public class StructSix_stub : mtest.publishable.StructSix_subscriber
+        {
+            List<Events> handled;
+
+            public StructSix_stub(List<Events> handled)
+            {
+                this.handled = handled;
+            }
+
+            public override mtest.publishable.BasicTypes_subscriber makeHandler_basic(mtest.publishable.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
+            public override mtest.publishable.AggregateType_subscriber makeHandler_aggregate(mtest.publishable.IAggregateType data) { return new AggregateType_stub(data, handled); }
+
+            public override void notifyFullyUpdated() { handled.Add(Events.notifyFullyUpdated); }
+            public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_basic() { handled.Add(Events.notifyUpdated_struct); }
+            public override void notifyUpdated_aggregate() { handled.Add(Events.notifyUpdated_struct); }
+
+        }
+
+
+        [Fact]
+        public static void TestJsonNotifyStateSync()
+        {
+            List<Events> handled = new List<Events>();
+            StructSix_stub stub = new StructSix_stub(handled);
+
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(test_publishable_six.Path);
+            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+
+            stub.applyStateSyncMessage(parser);
+
+            Assert.Equal(handled.ToArray(), new Events[]{ Events.notifyFullyUpdated });
+        }
+
+        static void TestJsonParseUpdate(String fileName, Events[] events)
+        {
+            List<Events> handled = new List<Events>();
+            StructSix_stub stub = new StructSix_stub(handled);
+
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
+            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+
+            stub.applyMessageWithUpdates(parser);
+
+            Assert.Equal(handled.ToArray(), events);
+        }
+
+        [Fact]
+        public static void TestJsonNotifyUpdate1()
+        {
+            TestJsonParseUpdate(test_publishable_six.Path1, new Events[] {
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_struct,
+                Events.notifyUpdated_struct
+            });
+        }
+
+
+        [Fact]
+        public static void TestJsonNotifyUpdate2()
+        {
+            TestJsonParseUpdate(test_publishable_six.Path2, new Events[] { 
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_struct,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_struct,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_struct,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_struct,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_primitive,
+                Events.notifyUpdated_struct,
+                Events.notifyUpdated_struct,
+            });
+        }
+
+    }
+}

@@ -1638,10 +1638,15 @@ public class BasicTypes_subscriber : IBasicTypes
 {
 	internal IBasicTypes data;
 	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
-	public BasicTypes_subscriber(IBasicTypes data)
-	{
-		this.data = data;
-	}
+	public BasicTypes_subscriber(IBasicTypes data) { this.data = data; }
+
+	/////////////////////////////////  begin user override section /////////////////////////////////
+	public virtual void notifyUpdated_anInt(Int64 old) { }
+	public virtual void notifyUpdated_anUInt(UInt64 old) { }
+	public virtual void notifyUpdated_aReal(Double old) { }
+	public virtual void notifyUpdated_aString(String old) { }
+	/////////////////////////////////   end user override section  /////////////////////////////////
+
 	public Int64 anInt
 	{
 		get { return data.anInt; }
@@ -1676,32 +1681,40 @@ public class BasicTypes_subscriber : IBasicTypes
 			Int64 newVal = parser.parseInteger("anInt");
 			if(newVal != subscriber.data.anInt)
 			{
+				Int64 oldVal = subscriber.data.anInt;
 				subscriber.data.anInt = newVal;
 				changed = true;
+				subscriber.notifyUpdated_anInt(oldVal);
 			}
 		}
 		{
 			UInt64 newVal = parser.parseUnsigned("anUInt");
 			if(newVal != subscriber.data.anUInt)
 			{
+				UInt64 oldVal = subscriber.data.anUInt;
 				subscriber.data.anUInt = newVal;
 				changed = true;
+				subscriber.notifyUpdated_anUInt(oldVal);
 			}
 		}
 		{
 			Double newVal = parser.parseReal("aReal");
 			if(newVal != subscriber.data.aReal)
 			{
+				Double oldVal = subscriber.data.aReal;
 				subscriber.data.aReal = newVal;
 				changed = true;
+				subscriber.notifyUpdated_aReal(oldVal);
 			}
 		}
 		{
 			String newVal = parser.parseString("aString");
 			if(newVal != subscriber.data.aString)
 			{
+				String oldVal = subscriber.data.aString;
 				subscriber.data.aString = newVal;
 				changed = true;
+				subscriber.notifyUpdated_aString(oldVal);
 			}
 		}
 		return changed;
@@ -1772,12 +1785,6 @@ public class BasicTypes_subscriber : IBasicTypes
 		}
 		return changed;
 	}
-
-	// event handlers
-	public virtual void notifyUpdated_anInt(Int64 old) { }
-	public virtual void notifyUpdated_anUInt(UInt64 old) { }
-	public virtual void notifyUpdated_aReal(Double old) { }
-	public virtual void notifyUpdated_aString(String old) { }
 } // class BasicTypes_subscriber
 
 public class BasicTypes_publisher : IBasicTypes
@@ -1900,10 +1907,14 @@ public class point3D_subscriber : Ipoint3D
 {
 	internal Ipoint3D data;
 	enum Address { x = 0, y = 1, z = 2 };
-	public point3D_subscriber(Ipoint3D data)
-	{
-		this.data = data;
-	}
+	public point3D_subscriber(Ipoint3D data) { this.data = data; }
+
+	/////////////////////////////////  begin user override section /////////////////////////////////
+	public virtual void notifyUpdated_x(Int64 old) { }
+	public virtual void notifyUpdated_y(Int64 old) { }
+	public virtual void notifyUpdated_z(Int64 old) { }
+	/////////////////////////////////   end user override section  /////////////////////////////////
+
 	public Int64 x
 	{
 		get { return data.x; }
@@ -1932,24 +1943,30 @@ public class point3D_subscriber : Ipoint3D
 			Int64 newVal = parser.parseInteger("x");
 			if(newVal != subscriber.data.x)
 			{
+				Int64 oldVal = subscriber.data.x;
 				subscriber.data.x = newVal;
 				changed = true;
+				subscriber.notifyUpdated_x(oldVal);
 			}
 		}
 		{
 			Int64 newVal = parser.parseInteger("y");
 			if(newVal != subscriber.data.y)
 			{
+				Int64 oldVal = subscriber.data.y;
 				subscriber.data.y = newVal;
 				changed = true;
+				subscriber.notifyUpdated_y(oldVal);
 			}
 		}
 		{
 			Int64 newVal = parser.parseInteger("z");
 			if(newVal != subscriber.data.z)
 			{
+				Int64 oldVal = subscriber.data.z;
 				subscriber.data.z = newVal;
 				changed = true;
+				subscriber.notifyUpdated_z(oldVal);
 			}
 		}
 		return changed;
@@ -2006,11 +2023,6 @@ public class point3D_subscriber : Ipoint3D
 		}
 		return changed;
 	}
-
-	// event handlers
-	public virtual void notifyUpdated_x(Int64 old) { }
-	public virtual void notifyUpdated_y(Int64 old) { }
-	public virtual void notifyUpdated_z(Int64 old) { }
 } // class point3D_subscriber
 
 public class point3D_publisher : Ipoint3D
@@ -2141,23 +2153,32 @@ public class AggregateType_subscriber : IAggregateType
 {
 	internal IAggregateType data;
 	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
-	public AggregateType_subscriber(IAggregateType data)
-	{
-		this.data = data;
-	this.theAggregate_handler = makeHandler_theAggregate(data.theAggregate);
-	}
+	public AggregateType_subscriber(IAggregateType data) { this.data = data; }
+
+	/////////////////////////////////  begin user override section /////////////////////////////////
+	public virtual BasicTypes_subscriber makeHandler_theAggregate(IBasicTypes data) { return new BasicTypes_subscriber(data); }
+	public virtual void notifyUpdated_name(String old) { }
+	public virtual void notifyUpdated_theAggregate() { }
+	public virtual void notifyUpdated_lastValue(Int64 old) { }
+	/////////////////////////////////   end user override section  /////////////////////////////////
+
 	public String name
 	{
 		get { return data.name; }
 		set { throw new InvalidOperationException(); }
 	}
-	public BasicTypes_subscriber theAggregate_handler;
+	BasicTypes_subscriber theAggregate_handler;
+	BasicTypes_subscriber get_theAggregate_handler()
+	{ // mb: MUST use lazy initialization
+		if (theAggregate_handler == null)
+			theAggregate_handler = makeHandler_theAggregate(data.theAggregate);
+		return theAggregate_handler;
+	}
 	public IBasicTypes theAggregate
 	{
-		get { return theAggregate_handler; }
+		get { return get_theAggregate_handler(); }
 		set { throw new InvalidOperationException(); }
 	}
-	public virtual BasicTypes_subscriber makeHandler_theAggregate(IBasicTypes data) { return new BasicTypes_subscriber(data); }
 	public Int64 lastValue
 	{
 		get { return data.lastValue; }
@@ -2167,7 +2188,7 @@ public class AggregateType_subscriber : IAggregateType
 	{
 		subscriber.data.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("theAggregate");
-		BasicTypes_subscriber.parseForStateSync(parser, subscriber.theAggregate_handler);
+		BasicTypes_subscriber.parseForStateSync(parser, subscriber.get_theAggregate_handler());
 		parser.parsePublishableStructEnd();
 		subscriber.data.lastValue = parser.parseInteger("lastValue");
 	}
@@ -2178,26 +2199,30 @@ public class AggregateType_subscriber : IAggregateType
 			String newVal = parser.parseString("name");
 			if(newVal != subscriber.data.name)
 			{
+				String oldVal = subscriber.data.name;
 				subscriber.data.name = newVal;
 				changed = true;
+				subscriber.notifyUpdated_name(oldVal);
 			}
 		}
 		{
 			parser.parsePublishableStructBegin("theAggregate");
-			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.theAggregate_handler);
+			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_theAggregate_handler());
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_theAggregate();
 			}
 		}
 		{
 			Int64 newVal = parser.parseInteger("lastValue");
 			if(newVal != subscriber.data.lastValue)
 			{
+				Int64 oldVal = subscriber.data.lastValue;
 				subscriber.data.lastValue = newVal;
 				changed = true;
+				subscriber.notifyUpdated_lastValue(oldVal);
 			}
 		}
 		return changed;
@@ -2227,12 +2252,12 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.theAggregate_handler);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_theAggregate_handler());
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.theAggregate_handler, addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_theAggregate_handler(), addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2263,11 +2288,6 @@ public class AggregateType_subscriber : IAggregateType
 		}
 		return changed;
 	}
-
-	// event handlers
-	public virtual void notifyUpdated_name(String old) { }
-	public virtual void notifyUpdated_theAggregate() { }
-	public virtual void notifyUpdated_lastValue(Int64 old) { }
 } // class AggregateType_subscriber
 
 public class AggregateType_publisher : IAggregateType
@@ -2419,40 +2439,55 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 {
 	internal IStructSix data;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_subscriber() : this(new StructSix_impl()) {}
-	public StructSix_subscriber(IStructSix data)
-	{
-		this.data = data;
-	this.basic_handler = makeHandler_basic(data.basic);
-	this.aggregate_handler = makeHandler_aggregate(data.aggregate);
-	}
+	public StructSix_subscriber() : this(new StructSix_impl()) { }
+	public StructSix_subscriber(IStructSix data) { this.data = data; }
+
+	/////////////////////////////////  begin user override section /////////////////////////////////
+	public virtual BasicTypes_subscriber makeHandler_basic(IBasicTypes data) { return new BasicTypes_subscriber(data); }
+	public virtual AggregateType_subscriber makeHandler_aggregate(IAggregateType data) { return new AggregateType_subscriber(data); }
+	public virtual void notifyFullyUpdated() { }
+	public virtual void notifyUpdated_name(String old) { }
+	public virtual void notifyUpdated_basic() { }
+	public virtual void notifyUpdated_aggregate() { }
+	/////////////////////////////////   end user override section  /////////////////////////////////
+
 	public String name
 	{
 		get { return data.name; }
 		set { throw new InvalidOperationException(); }
 	}
-	public BasicTypes_subscriber basic_handler;
+	BasicTypes_subscriber basic_handler;
+	BasicTypes_subscriber get_basic_handler()
+	{ // mb: MUST use lazy initialization
+		if (basic_handler == null)
+			basic_handler = makeHandler_basic(data.basic);
+		return basic_handler;
+	}
 	public IBasicTypes basic
 	{
-		get { return basic_handler; }
+		get { return get_basic_handler(); }
 		set { throw new InvalidOperationException(); }
 	}
-	public virtual BasicTypes_subscriber makeHandler_basic(IBasicTypes data) { return new BasicTypes_subscriber(data); }
-	public AggregateType_subscriber aggregate_handler;
+	AggregateType_subscriber aggregate_handler;
+	AggregateType_subscriber get_aggregate_handler()
+	{ // mb: MUST use lazy initialization
+		if (aggregate_handler == null)
+			aggregate_handler = makeHandler_aggregate(data.aggregate);
+		return aggregate_handler;
+	}
 	public IAggregateType aggregate
 	{
-		get { return aggregate_handler; }
+		get { return get_aggregate_handler(); }
 		set { throw new InvalidOperationException(); }
 	}
-	public virtual AggregateType_subscriber makeHandler_aggregate(IAggregateType data) { return new AggregateType_subscriber(data); }
 	public static void parseForStateSync(IPublishableParser parser, StructSix_subscriber subscriber)
 	{
 		subscriber.data.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("basic");
-		BasicTypes_subscriber.parseForStateSync(parser, subscriber.basic_handler);
+		BasicTypes_subscriber.parseForStateSync(parser, subscriber.get_basic_handler());
 		parser.parsePublishableStructEnd();
 		parser.parsePublishableStructBegin("aggregate");
-		AggregateType_subscriber.parseForStateSync(parser, subscriber.aggregate_handler);
+		AggregateType_subscriber.parseForStateSync(parser, subscriber.get_aggregate_handler());
 		parser.parsePublishableStructEnd();
 	}
 	public static bool parse(IPublishableParser parser, StructSix_subscriber subscriber)
@@ -2462,28 +2497,30 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 			String newVal = parser.parseString("name");
 			if(newVal != subscriber.data.name)
 			{
+				String oldVal = subscriber.data.name;
 				subscriber.data.name = newVal;
 				changed = true;
+				subscriber.notifyUpdated_name(oldVal);
 			}
 		}
 		{
 			parser.parsePublishableStructBegin("basic");
-			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.basic_handler);
+			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_basic_handler());
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_basic();
 			}
 		}
 		{
 			parser.parsePublishableStructBegin("aggregate");
-			bool currentChanged = AggregateType_subscriber.parse(parser, subscriber.aggregate_handler);
+			bool currentChanged = AggregateType_subscriber.parse(parser, subscriber.get_aggregate_handler());
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
 					changed = true;
-					// TODO
+					subscriber.notifyUpdated_aggregate();
 			}
 		}
 		return changed;
@@ -2513,12 +2550,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.basic_handler);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_basic_handler());
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.basic_handler, addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_basic_handler(), addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2536,12 +2573,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = AggregateType_subscriber.parse(parser, subscriber.aggregate_handler);
+					currentChanged = AggregateType_subscriber.parse(parser, subscriber.get_aggregate_handler());
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = AggregateType_subscriber.parse(parser, subscriber.aggregate_handler, addr, offset + 1);
+					currentChanged = AggregateType_subscriber.parse(parser, subscriber.get_aggregate_handler(), addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2579,12 +2616,6 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		parser.parseStructEnd();
 		this.notifyFullyUpdated();
 	}
-
-	// event handlers
-	public virtual void notifyFullyUpdated() { }
-	public virtual void notifyUpdated_name(String old) { }
-	public virtual void notifyUpdated_basic() { }
-	public virtual void notifyUpdated_aggregate() { }
 } // class StructSix_subscriber
 
 public class StructSix_publisher : IStructSix, IStatePublisher
@@ -2809,17 +2840,34 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 {
 	internal Ipublishable_seven data;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_subscriber() : this(new publishable_seven_impl()) {}
-	public publishable_seven_subscriber(Ipublishable_seven data)
-	{
-		this.data = data;
-	this.structVec_handlers = new List<point3D_subscriber>();
-	for(int i = 0; i < data.structVec.Count; ++i)
-	{
-		point3D_subscriber handler = makeElementHandler_structVec(data.structVec[i]);
-		structVec_handlers.Add(handler);
-	}
-	}
+	public publishable_seven_subscriber() : this(new publishable_seven_impl()) { }
+	public publishable_seven_subscriber(Ipublishable_seven data) { this.data = data; }
+
+	/////////////////////////////////  begin user override section /////////////////////////////////
+	public virtual point3D_subscriber makeElementHandler_structVec(Ipoint3D data) { return new point3D_subscriber(data); }
+	public virtual void notifyFullyUpdated() { }
+	public virtual void notifyUpdated_intVec() { }
+	public virtual void notifyElementUpdated_intVec(int index, Int64 old) { }
+	public virtual void notifyInserted_intVec(int index) { }
+	public virtual void notifyErased_intVec(int index) { }
+	public virtual void notifyUpdated_uintVec() { }
+	public virtual void notifyElementUpdated_uintVec(int index, UInt64 old) { }
+	public virtual void notifyInserted_uintVec(int index) { }
+	public virtual void notifyErased_uintVec(int index) { }
+	public virtual void notifyUpdated_realVec() { }
+	public virtual void notifyElementUpdated_realVec(int index, Double old) { }
+	public virtual void notifyInserted_realVec(int index) { }
+	public virtual void notifyErased_realVec(int index) { }
+	public virtual void notifyUpdated_strVec() { }
+	public virtual void notifyElementUpdated_strVec(int index, String old) { }
+	public virtual void notifyInserted_strVec(int index) { }
+	public virtual void notifyErased_strVec(int index) { }
+	public virtual void notifyUpdated_structVec() { }
+	public virtual void notifyElementUpdated_structVec(int index) { }
+	public virtual void notifyInserted_structVec(int index) { }
+	public virtual void notifyErased_structVec(int index) { }
+	/////////////////////////////////   end user override section  /////////////////////////////////
+
 	public IList<Int64> intVec
 	{
 		get { return new SubscriberVectorWrapper<Int64>(data.intVec); }
@@ -2841,12 +2889,24 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		set { throw new InvalidOperationException(); }
 	}
 	List<point3D_subscriber> structVec_handlers;
+	List<point3D_subscriber> get_structVec_handlers()
+	{ // mb: MUST use lazy initialization
+		if (structVec_handlers == null)
+		{
+			structVec_handlers = new List<point3D_subscriber>();
+			for (int i = 0; i < data.structVec.Count; ++i)
+			{
+				point3D_subscriber handler = makeElementHandler_structVec(data.structVec[i]);
+				structVec_handlers.Add(handler);
+			}
+		}
+		return structVec_handlers;
+	}
 	public IList<Ipoint3D> structVec
 	{
-		get { return new SubscriberVectorWrapper<Ipoint3D>((IList<Ipoint3D>)structVec_handlers); }
+		get { return new SubscriberVectorWrapper<Ipoint3D>((IList<Ipoint3D>)get_structVec_handlers()); }
 		set { throw new InvalidOperationException(); }
 	}
-	public virtual point3D_subscriber makeElementHandler_structVec(Ipoint3D data) { return new point3D_subscriber(data); }
 	public static void parseForStateSync(IPublishableParser parser, publishable_seven_subscriber subscriber)
 	{
 		parser.parseSimpleVector("intVec", Publishable.makeParser(subscriber.data.intVec));
@@ -2860,7 +2920,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 				point3D_subscriber.parseForStateSync(parser, handler);
 				subscriber.data.structVec.Add(val);
-				subscriber.structVec_handlers.Add(handler);
+				subscriber.get_structVec_handlers().Add(handler);
 				parser.parseStructEnd();
 			}
 		);
@@ -2875,6 +2935,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		{
 			subscriber.data.intVec = newVal;
 			changed = true;
+			subscriber.notifyUpdated_intVec();
 		}
 		}
 		{
@@ -2884,6 +2945,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		{
 			subscriber.data.uintVec = newVal;
 			changed = true;
+			subscriber.notifyUpdated_uintVec();
 		}
 		}
 		{
@@ -2893,6 +2955,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		{
 			subscriber.data.realVec = newVal;
 			changed = true;
+			subscriber.notifyUpdated_realVec();
 		}
 		}
 		{
@@ -2902,6 +2965,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		{
 			subscriber.data.strVec = newVal;
 			changed = true;
+			subscriber.notifyUpdated_strVec();
 		}
 		}
 		{
@@ -2923,6 +2987,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 			subscriber.data.structVec = newVal;
 			subscriber.structVec_handlers = newHandlers;
 			changed = true;
+			subscriber.notifyUpdated_structVec();
 		}
 		}
 		return changed;
@@ -3103,7 +3168,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 					case Publishable.ActionOnVector.update_at:
 					{
 						parser.parsePublishableStructBegin("value");
-						bool elemChanged = point3D_subscriber.parse(parser, subscriber.structVec_handlers[index]);
+						bool elemChanged = point3D_subscriber.parse(parser, subscriber.get_structVec_handlers()[index]);
 						parser.parsePublishableStructEnd();
 						if (elemChanged)
 						{
@@ -3119,7 +3184,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 						point3D_subscriber handler = subscriber.makeElementHandler_structVec(newVal);
 						point3D_subscriber.parse(parser, handler);
 						subscriber.data.structVec.Insert(index, newVal);
-						subscriber.structVec_handlers.Insert(index, handler);
+						subscriber.get_structVec_handlers().Insert(index, handler);
 						parser.parsePublishableStructEnd();
 						currentChanged = true;
 						subscriber.notifyInserted_structVec(index);
@@ -3127,8 +3192,9 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 					}
 					case Publishable.ActionOnVector.remove_at:
 					{
+						// mb: reversed in case of lazy initialization
+						subscriber.get_structVec_handlers().RemoveAt(index);
 						subscriber.data.structVec.RemoveAt(index);
-						subscriber.structVec_handlers.RemoveAt(index);
 						currentChanged = true;
 						subscriber.notifyErased_structVec(index);
 						break;
@@ -3140,7 +3206,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				else if(addr.Length > offset + 2) // let child continue parsing
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = point3D_subscriber.parse(parser, subscriber.structVec_handlers[index], addr, offset + 2);
+					currentChanged = point3D_subscriber.parse(parser, subscriber.get_structVec_handlers()[index], addr, offset + 2);
 				}
 				else
 					throw new Exception();
@@ -3178,29 +3244,6 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		parser.parseStructEnd();
 		this.notifyFullyUpdated();
 	}
-
-	// event handlers
-	public virtual void notifyFullyUpdated() { }
-	public virtual void notifyUpdated_intVec() { }
-	public virtual void notifyElementUpdated_intVec(int index, Int64 old) { }
-	public virtual void notifyInserted_intVec(int index) { }
-	public virtual void notifyErased_intVec(int index) { }
-	public virtual void notifyUpdated_uintVec() { }
-	public virtual void notifyElementUpdated_uintVec(int index, UInt64 old) { }
-	public virtual void notifyInserted_uintVec(int index) { }
-	public virtual void notifyErased_uintVec(int index) { }
-	public virtual void notifyUpdated_realVec() { }
-	public virtual void notifyElementUpdated_realVec(int index, Double old) { }
-	public virtual void notifyInserted_realVec(int index) { }
-	public virtual void notifyErased_realVec(int index) { }
-	public virtual void notifyUpdated_strVec() { }
-	public virtual void notifyElementUpdated_strVec(int index, String old) { }
-	public virtual void notifyInserted_strVec(int index) { }
-	public virtual void notifyErased_strVec(int index) { }
-	public virtual void notifyUpdated_structVec() { }
-	public virtual void notifyElementUpdated_structVec(int index) { }
-	public virtual void notifyInserted_structVec(int index) { }
-	public virtual void notifyErased_structVec(int index) { }
 } // class publishable_seven_subscriber
 
 public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
