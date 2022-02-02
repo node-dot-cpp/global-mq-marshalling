@@ -330,16 +330,70 @@ namespace {
 		}
 		fprintf(header, "\t}\n");
 	}
+	//void csharpMsg_generateStructParseGmq(FILE* header, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-	void csharpMsg_generateStructParseGmq(FILE* header, CompositeType& s)
+	//	fprintf(header, "\tprotected static void parse(GmqParser parser, ");
+
+	//	csharpMsg_generateParseParamTypeLIst(header, s);
+
+	//	fprintf(header, ")\n\t{\n");
+
+	//	int count = 0;
+	//	for (auto& it : s.getMembers())
+	//	{
+	//		assert(it != nullptr);
+
+	//		MessageParameter& param = *it;
+	//		if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+	//			continue;
+	//		++count;
+
+	//		switch (param.type.kind)
+	//		{
+	//		case MessageParameterType::KIND::INTEGER:
+	//			fprintf(header, "\t\tparser.parseSignedInteger(out %s);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::UINTEGER:
+	//			fprintf(header, "\t\tparser.parseUnsignedInteger(out %s);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::REAL:
+	//			fprintf(header, "\t\tparser.parseReal(out %s);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::CHARACTER_STRING:
+	//			fprintf(header, "\t\tparser.parseString(out %s);\n", param.name.c_str());
+	//			break;
+	//			//case MessageParameterType::KIND::BYTE_ARRAY:
+	//			//	break;
+	//			//case MessageParameterType::KIND::BLOB:
+	//			//	break;
+	//			//case MessageParameterType::KIND::ENUM:
+	//			//	break;
+	//		case MessageParameterType::KIND::VECTOR:
+	//			fprintf(header, "\t\t%s.parseGmq(parser);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::EXTENSION:
+	//			break; // TODO: treatment
+	//		case MessageParameterType::KIND::STRUCT:
+	//		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			fprintf(header, "\t\t%s.parse(parser);\n", param.name.c_str());
+	//			break; // TODO: ...
+	//		default:
+	//			assert(false); // unexpected
+	//			break;
+	//		}
+	//	}
+	//	fprintf(header, "\t}\n");
+	//}
+
+	void csharpMsg_generateStructParseGmq3(FILE* header, CompositeType& s, const char* name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tprotected static void parse(GmqParser parser, ");
+		fprintf(header, "\tprotected static void parse(GmqParser parser, %s val)\n", name);
 
-		csharpMsg_generateParseParamTypeLIst(header, s);
-
-		fprintf(header, ")\n\t{\n");
+		fprintf(header, "\t{\n");
 
 		int count = 0;
 		for (auto& it : s.getMembers())
@@ -351,19 +405,28 @@ namespace {
 				continue;
 			++count;
 
+			fprintf(header, "\t{\n");
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\tparser.parseSignedInteger(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\tInt64 tmp;\n");
+				fprintf(header, "\t\tparser.parseSignedInteger(out tmp);\n");
+				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\tparser.parseUnsignedInteger(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\tUInt64 tmp;\n");
+				fprintf(header, "\t\tparser.parseUnsignedInteger(out tmp);\n");
+				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\t\tparser.parseReal(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\tDouble tmp;\n");
+				fprintf(header, "\t\tparser.parseReal(out tmp);\n");
+				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\tparser.parseString(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\tString tmp;\n");
+				fprintf(header, "\t\tparser.parseString(out tmp);\n");
+				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			//case MessageParameterType::KIND::BYTE_ARRAY:
 			//	break;
@@ -372,18 +435,66 @@ namespace {
 			//case MessageParameterType::KIND::ENUM:
 			//	break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\t%s.parseGmq(parser);\n", param.name.c_str());
+
+				switch (param.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
+					break;
+				case MessageParameterType::KIND::UINTEGER:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
+					break;
+				case MessageParameterType::KIND::REAL:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
+					break;
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
+					break;
+					//case MessageParameterType::KIND::BYTE_ARRAY:
+					//case MessageParameterType::KIND::BLOB:
+					//case MessageParameterType::KIND::ENUM:
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+					//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ %s t = new %s(); %s.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
+					break;
+				default:
+					assert(false); // unexpected
+					break;
+				}
 				break;
+
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: treatment
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s.parse(parser);\n", param.name.c_str());
+				fprintf(header, "\t\t%s.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
 				break;
 			}
+			fprintf(header, "\t}\n");
 		}
 		fprintf(header, "\t}\n");
 	}
@@ -509,15 +620,100 @@ namespace {
 	}
 
 
-	void csharpMsg_generateStructParseJson(FILE* header, CompositeType& s)
+	//void csharpMsg_generateStructParseJson(FILE* header, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+
+	//	fprintf(header, "\tprotected static void parse(JsonParser parser, ");
+
+	//	csharpMsg_generateParseParamTypeLIst(header, s);
+
+	//	fprintf(header, ")\n\t{\n");
+
+
+	//	fprintf(header, "\t\tparser.skipDelimiter( \'{\' );\n");
+	//	fprintf(header, "\t\twhile (true)\n");
+	//	fprintf(header, "\t\t{\n");
+	//	fprintf(header, "\t\t\tstring key;\n");
+	//	fprintf(header, "\t\t\tparser.readKeyFromJson( out key );\n");
+
+	//	int count = 0;
+	//	auto& mem = s.getMembers();
+	//	for (auto it = mem.begin(); it != mem.end(); ++it)
+	//	{
+	//		assert(*it != nullptr);
+
+	//		MessageParameter& param = **it;
+	//		if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+	//			continue;
+	//		++count;
+
+	//		fprintf(header, "\t\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str());
+
+	//		switch (param.type.kind)
+	//		{
+	//		case MessageParameterType::KIND::INTEGER:
+	//			fprintf(header, "\t\t\t\tparser.parseSignedInteger(out %s);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::UINTEGER:
+	//			fprintf(header, "\t\t\t\tparser.parseUnsignedInteger(out %s);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::REAL:
+	//			fprintf(header, "\t\t\t\tparser.parseReal(out %s);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::CHARACTER_STRING:
+	//			fprintf(header, "\t\t\t\tparser.parseString(out %s);\n", param.name.c_str());
+	//			break;
+	//		//case MessageParameterType::KIND::BYTE_ARRAY:
+	//		//	break;
+	//		//case MessageParameterType::KIND::BLOB:
+	//		//	break;
+	//		//case MessageParameterType::KIND::ENUM:
+	//		//	break;
+	//		case MessageParameterType::KIND::VECTOR:
+	//			fprintf(header, "\t\t\t\t%s.parseJson(parser);\n", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::EXTENSION:
+	//			break; // TODO: ...
+	//		case MessageParameterType::KIND::STRUCT:
+	//		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			fprintf(header, "\t\t\t\t%s.parse(parser);\n", param.name.c_str());
+	//			break; // TODO: ...
+	//		default:
+	//			assert(false); // unexpected
+	//			break;
+	//		}
+	//	}
+
+	//	//TODO if unknown it should be skipped
+	//	fprintf(header, "\n");
+
+	//	fprintf(header, "\t\t\tparser.skipSpacesEtc();\n");
+	//	fprintf(header, "\t\t\tif ( parser.isDelimiter( \',\' ) )\n");
+	//	fprintf(header, "\t\t\t{\n");
+	//	fprintf(header, "\t\t\t\tparser.skipDelimiter( \',\' );\n");
+	//	fprintf(header, "\t\t\t\tcontinue;\n");
+	//	fprintf(header, "\t\t\t}\n");
+	//	fprintf(header, "\t\t\tif ( parser.isDelimiter( \'}\' ) )\n");
+	//	fprintf(header, "\t\t\t{\n");
+	//	fprintf(header, "\t\t\t\tparser.skipDelimiter( \'}\' );\n");
+	//	fprintf(header, "\t\t\t\tbreak;\n");
+	//	fprintf(header, "\t\t\t}\n");
+	//	fprintf(header, "\t\t\tthrow new FormatException(); // bad format\n");
+
+	//	fprintf(header, "\t\t}\n");
+
+	//	fprintf(header, "\t}\n");
+	//}
+
+	void csharpMsg_generateStructParseJson3(FILE* header, CompositeType& s, const std::string& name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tprotected static void parse(JsonParser parser, ");
+		fprintf(header, "\tpublic static void parse(JsonParser parser, %s val)", name.c_str());
 
-		csharpMsg_generateParseParamTypeLIst(header, s);
 
-		fprintf(header, ")\n\t{\n");
+		fprintf(header, "\t{\n");
 
 
 		fprintf(header, "\t\tparser.skipDelimiter( \'{\' );\n");
@@ -539,39 +735,97 @@ namespace {
 
 			fprintf(header, "\t\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str());
 
+			fprintf(header, "\t\t\t{\n");
+
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\t\t\tparser.parseSignedInteger(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\tInt64 tmp;\n");
+				fprintf(header, "\t\t\t\tparser.parseSignedInteger(out tmp);\n");
+				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\t\t\tparser.parseUnsignedInteger(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\tUInt64 tmp;\n");
+				fprintf(header, "\t\t\t\tparser.parseUnsignedInteger(out tmp);\n");
+				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\t\t\t\tparser.parseReal(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\tDouble tmp;\n");
+				fprintf(header, "\t\t\t\tparser.parseReal(out tmp);\n");
+				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\t\t\tparser.parseString(out %s);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\tString tmp;\n");
+				fprintf(header, "\t\t\t\tparser.parseString(out tmp);\n");
+				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//	break;
-			//case MessageParameterType::KIND::BLOB:
-			//	break;
-			//case MessageParameterType::KIND::ENUM:
-			//	break;
+				//case MessageParameterType::KIND::BYTE_ARRAY:
+				//	break;
+				//case MessageParameterType::KIND::BLOB:
+				//	break;
+				//case MessageParameterType::KIND::ENUM:
+				//	break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\t\t\t%s.parseJson(parser);\n", param.name.c_str());
+				switch (param.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
+					break;
+				case MessageParameterType::KIND::UINTEGER:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
+					break;
+				case MessageParameterType::KIND::REAL:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
+					break;
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
+					break;
+					//case MessageParameterType::KIND::BYTE_ARRAY:
+					//case MessageParameterType::KIND::BLOB:
+					//case MessageParameterType::KIND::ENUM:
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+					//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
+					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
+						"\t\t\t\t() => { },\n");
+					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+						"{ %s t = new %s(); %s.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
+					break;
+				default:
+					assert(false); // unexpected
+					break;
+				}
 				break;
+
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\t\t%s.parse(parser);\n", param.name.c_str());
+				fprintf(header, "\t\t\t\t%s.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
 				break;
 			}
+
+			fprintf(header, "\t\t\t}\n");
 		}
 
 		//TODO if unknown it should be skipped
@@ -595,16 +849,65 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateUnionParseJson(FILE* header, CompositeType& s)
+	//void csharpMsg_generateUnionParseJson(FILE* header, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::discriminated_union);
+
+	//	std::string type_name = csharpMsg_getTypeName(s);
+
+	//	fprintf(header, "\tprotected static %s parse(JsonParser parser)\n", type_name.c_str());
+
+	//	fprintf(header, "\t{\n");
+	//	fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
+
+	//	fprintf(header, "\t\tparser.skipDelimiter('{');\n");
+	//	fprintf(header, "\t\tstring key;\n");
+	//	fprintf(header, "\t\tparser.readKeyFromJson( out key );\n");
+	//	fprintf(header, "\t\tif (key != \"caseid\")\n");
+	//	fprintf(header, "\t\t\tthrow new FormatException();\n");
+	//	fprintf(header, "\t\tInt64 caseID;\n");
+	//	fprintf(header, "\t\tparser.parseSignedInteger(out caseID);\n");
+	//	fprintf(header, "\t\tparser.skipSpacesEtc();\n");
+	//	fprintf(header, "\t\tparser.skipDelimiter(',');\n");
+	//	fprintf(header, "\t\tparser.readKeyFromJson(out key);\n");
+	//	fprintf(header, "\t\tif (key != \"caseData\")\n");
+	//	fprintf(header, "\t\t\tthrow new FormatException();\n\n");
+
+	//	fprintf(header, "\t\tswitch ((Variants)caseID)\n");
+	//	fprintf(header, "\t\t{\n");
+
+	//	// each case attributes
+	//	for (auto& duit : s.getDiscriminatedUnionCases())
+	//	{
+	//		assert(duit != nullptr);
+	//		auto& cs = *duit;
+
+	//		std::string case_name = csharpMsg_getTypeName(cs);
+
+	//		fprintf(header, "\t\t\tcase Variants.%s: %s tmp = new %s(); %s.parse(parser, tmp); val.mem = tmp; break;\n",
+	//			cs.name.c_str(), case_name.c_str(), case_name.c_str(), case_name.c_str());
+
+	//	}
+
+	//	fprintf(header, "\t\t\tdefault: throw new System.Exception();\n");
+	//	fprintf(header, "\t\t}\n\n");
+
+	//	fprintf(header, "\t\tparser.skipDelimiter('}');\n\n");
+	//	
+	//	fprintf(header, "\t\treturn val;\n");
+	//	fprintf(header, "\t}\n");
+	//}
+
+	void csharpMsg_generateUnionParseJson3(FILE* header, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tprotected static %s parse(JsonParser parser)\n", type_name.c_str());
+		fprintf(header, "\tprotected static void parse(JsonParser parser, %s val)\n", type_name.c_str());
 
 		fprintf(header, "\t{\n");
-		fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
 
 		fprintf(header, "\t\tparser.skipDelimiter('{');\n");
 		fprintf(header, "\t\tstring key;\n");
@@ -630,8 +933,8 @@ namespace {
 
 			std::string case_name = csharpMsg_getTypeName(cs);
 
-			fprintf(header, "\t\t\tcase Variants.%s: val.mem = %s.parse(parser); break;\n",
-				cs.name.c_str(), case_name.c_str());
+			fprintf(header, "\t\t\tcase Variants.%s: { %s tmp = new %s(); %s.parse(parser, tmp); val.mem = tmp; break; }\n",
+				cs.name.c_str(), case_name.c_str(), case_name.c_str(), case_name.c_str());
 
 		}
 
@@ -639,21 +942,59 @@ namespace {
 		fprintf(header, "\t\t}\n\n");
 
 		fprintf(header, "\t\tparser.skipDelimiter('}');\n\n");
-		
-		fprintf(header, "\t\treturn val;\n");
+
+		//fprintf(header, "\t\treturn val;\n");
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateUnionParseGmq(FILE* header, CompositeType& s)
+	//void csharpMsg_generateUnionParseGmq(FILE* header, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::discriminated_union);
+
+	//	std::string type_name = csharpMsg_getTypeName(s);
+
+	//	fprintf(header, "\tprotected static %s parse(GmqParser parser)\n", type_name.c_str());
+
+	//	fprintf(header, "\t{\n");
+	//	fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
+
+
+	//	fprintf(header, "\t\tInt64 caseID;\n");
+	//	fprintf(header, "\t\tparser.parseSignedInteger(out caseID);\n\n");
+
+	//	fprintf(header, "\t\tswitch ((Variants)caseID)\n");
+	//	fprintf(header, "\t\t{\n");
+
+	//	// each case attributes
+	//	for (auto& duit : s.getDiscriminatedUnionCases())
+	//	{
+	//		assert(duit != nullptr);
+	//		auto& cs = *duit;
+
+	//		std::string case_name = csharpMsg_getTypeName(cs);
+
+	//		fprintf(header, "\t\t\tcase Variants.%s: val.mem = %s.parse(parser); break;\n",
+	//			cs.name.c_str(), case_name.c_str());
+
+	//	}
+
+	//	fprintf(header, "\t\t\tdefault: throw new System.Exception();\n");
+	//	fprintf(header, "\t\t}\n\n");
+
+	//	fprintf(header, "\t\treturn val;\n");
+	//	fprintf(header, "\t}\n");
+	//}
+
+	void csharpMsg_generateUnionParseGmq3(FILE* header, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tprotected static %s parse(GmqParser parser)\n", type_name.c_str());
+		fprintf(header, "\tprotected static void parse(GmqParser parser, %s val)\n", type_name.c_str());
 
 		fprintf(header, "\t{\n");
-		fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
 
 
 		fprintf(header, "\t\tInt64 caseID;\n");
@@ -670,114 +1011,126 @@ namespace {
 
 			std::string case_name = csharpMsg_getTypeName(cs);
 
-			fprintf(header, "\t\t\tcase Variants.%s: val.mem = %s.parse(parser); break;\n",
-				cs.name.c_str(), case_name.c_str());
+			fprintf(header, "\t\t\tcase Variants.%s: { %s tmp = new %s(); %s.parse(parser, tmp); val.mem = tmp; break; }\n",
+				cs.name.c_str(), case_name.c_str(), case_name.c_str(), case_name.c_str());
 
 		}
 
 		fprintf(header, "\t\t\tdefault: throw new System.Exception();\n");
 		fprintf(header, "\t\t}\n\n");
 
-		fprintf(header, "\t\treturn val;\n");
+		//fprintf(header, "\t\treturn val;\n");
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructParseBase2(FILE* header, CompositeType& s, const std::string& name, bool needsNew)
+	//void csharpMsg_generateStructParseBase2(FILE* header, CompositeType& s, const std::string& name, bool needsNew)
+	//{
+	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+
+	//	fprintf(header, "\tpublic %sstatic %s parse(ParserBase parser)\n", needsNew ? "new " : "", name.c_str());
+
+	//	fprintf(header,
+	//		"\t{\n"
+	//		"\t\t%s tmp = new %s();\n"
+	//		"\t\tparse(parser,\n", name.c_str(), name.c_str());
+
+	//	int count = 0;
+	//	auto& mem = s.getMembers();
+	//	for (auto it = mem.begin(); it != mem.end(); ++it)
+	//	{
+	//		assert(*it != nullptr);
+
+	//		MessageParameter& param = **it;
+	//		if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+	//			continue;
+	//		++count;
+
+	//		if (it != mem.begin())
+	//			fprintf(header, ",\n");
+
+	//		switch (param.type.kind)
+	//		{
+	//		case MessageParameterType::KIND::INTEGER:
+	//		case MessageParameterType::KIND::UINTEGER:
+	//		case MessageParameterType::KIND::REAL:
+	//		case MessageParameterType::KIND::CHARACTER_STRING:
+	//			fprintf(header, "\t\t\t%s: ref tmp.%s", param.name.c_str(), param.name.c_str());
+	//			break;
+	//		//case MessageParameterType::KIND::BYTE_ARRAY:
+	//		//case MessageParameterType::KIND::BLOB:
+	//		//case MessageParameterType::KIND::ENUM:
+	//			break;
+	//		case MessageParameterType::KIND::VECTOR:
+	//			switch (param.type.vectorElemKind)
+	//			{
+	//			case MessageParameterType::KIND::INTEGER:
+	//				fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
+	//					"\t\t\t\t() => { tmp.%s = new List<Int64>(); },\n", param.name.c_str(), param.name.c_str());
+	//				fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+	//					"{ Int64 val; parser.parseSignedInteger(out val); tmp.%s.Add(val); })", param.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::UINTEGER:
+	//				fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
+	//					"\t\t\t\t() => { tmp.%s = new List<UInt64>(); },\n", param.name.c_str(), param.name.c_str());
+	//				fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+	//					"{ UInt64 val; parser.parseUnsignedInteger(out val); tmp.%s.Add(val); })", param.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::REAL:
+	//				fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
+	//					"\t\t\t\t() => { tmp.%s = new List<Double>(); },\n", param.name.c_str(), param.name.c_str());
+	//				fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+	//					"{ Double val; parser.parseReal(out val); tmp.%s.Add(val); })", param.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::CHARACTER_STRING:
+	//				fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
+	//					"\t\t\t\t() => { tmp.%s = new List<String>(); },\n", param.name.c_str(), param.name.c_str());
+	//				fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+	//					"{ String val; parse.parseString(out val); tmp.%s.Add(val); })", param.name.c_str());
+	//				break;
+	//				//case MessageParameterType::KIND::BYTE_ARRAY:
+	//				//case MessageParameterType::KIND::BLOB:
+	//				//case MessageParameterType::KIND::ENUM:
+	//			case MessageParameterType::KIND::STRUCT:
+	//			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//				//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
+	//				fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
+	//					"\t\t\t\t() => { tmp.%s = new List<%s>(); },\n", param.name.c_str(), param.name.c_str(), param.type.name.c_str());
+	//				fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
+	//					"{ %s val = %s.parse(parser); tmp.%s.Add(val); })", param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+	//				break;
+	//			default:
+	//				assert(false); // unexpected
+	//				break;
+	//			}
+	//			break;
+	//		case MessageParameterType::KIND::STRUCT:
+	//		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			fprintf(header, "\t\t\t%s: new MessageWrapperForParsing(\n", param.name.c_str());
+	//			fprintf(header, "\t\t\t\t(ParserBase parser) => { tmp.%s = %s.parse(parser); })", param.name.c_str(), param.type.name.c_str());
+	//			break; // TODO: ...
+	//		default:
+	//			assert(false); // unexpected
+	//			break;
+	//		}
+	//	}
+	//	fprintf(header, 
+	//		"\n\t\t);\n"
+	//		"\t\treturn tmp;\n"
+	//		"\t}\n");
+	//}
+
+	void csharpMsg_generateStructParseBase4(FILE* header, CompositeType& s, const char* name)
 	{
-		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+		assert(s.type == CompositeType::Type::message);
 
-		fprintf(header, "\tpublic %sstatic %s parse(ParserBase parser)\n", needsNew ? "new " : "", name.c_str());
+		fprintf(header, "\tpublic static %s parse(ParserBase parser)\n", name);
 
-		fprintf(header,
-			"\t{\n"
-			"\t\t%s tmp = new %s();\n"
-			"\t\tparse(parser,\n", name.c_str(), name.c_str());
-
-		int count = 0;
-		auto& mem = s.getMembers();
-		for (auto it = mem.begin(); it != mem.end(); ++it)
-		{
-			assert(*it != nullptr);
-
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
-				continue;
-			++count;
-
-			if (it != mem.begin())
-				fprintf(header, ",\n");
-
-			switch (param.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\t\t%s: ref tmp.%s", param.name.c_str(), param.name.c_str());
-				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//case MessageParameterType::KIND::BLOB:
-			//case MessageParameterType::KIND::ENUM:
-				break;
-			case MessageParameterType::KIND::VECTOR:
-				switch (param.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t() => { tmp.%s = new List<Int64>(); },\n", param.name.c_str(), param.name.c_str());
-					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ Int64 val; parser.parseSignedInteger(out val); tmp.%s.Add(val); })", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t() => { tmp.%s = new List<UInt64>(); },\n", param.name.c_str(), param.name.c_str());
-					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ UInt64 val; parser.parseUnsignedInteger(out val); tmp.%s.Add(val); })", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t() => { tmp.%s = new List<Double>(); },\n", param.name.c_str(), param.name.c_str());
-					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ Double val; parser.parseReal(out val); tmp.%s.Add(val); })", param.name.c_str());
-					break;
-				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t() => { tmp.%s = new List<String>(); },\n", param.name.c_str(), param.name.c_str());
-					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ String val; parse.parseString(out val); tmp.%s.Add(val); })", param.name.c_str());
-					break;
-					//case MessageParameterType::KIND::BYTE_ARRAY:
-					//case MessageParameterType::KIND::BLOB:
-					//case MessageParameterType::KIND::ENUM:
-				case MessageParameterType::KIND::STRUCT:
-				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					//new MessageWrapperForComposing((ComposerBase composer) = > { mtest.STRUCT_point_compose(composer, x: msg.eighthParam.x, y : msg.eighthParam.y); }),
-					fprintf(header, "\t\t\t%s: new CollectionWrapperForParsing(\n"
-						"\t\t\t\t() => { tmp.%s = new List<%s>(); },\n", param.name.c_str(), param.name.c_str(), param.type.name.c_str());
-					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ %s val = %s.parse(parser); tmp.%s.Add(val); })", param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
-					break;
-				default:
-					assert(false); // unexpected
-					break;
-				}
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\t%s: new MessageWrapperForParsing(\n", param.name.c_str());
-				fprintf(header, "\t\t\t\t(ParserBase parser) => { tmp.%s = %s.parse(parser); })", param.name.c_str(), param.type.name.c_str());
-				break; // TODO: ...
-			default:
-				assert(false); // unexpected
-				break;
-			}
-		}
-		fprintf(header, 
-			"\n\t\t);\n"
-			"\t\treturn tmp;\n"
-			"\t}\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\t%s tmp = new %s();\n", name, name);
+		fprintf(header, "\t\tparse(parser, tmp);\n");
+		fprintf(header,	"\t\treturn tmp;\n");
+		fprintf(header, "\t}\n");
 	}
-
 
 	void csharpMsg_generateStructComposeBase(FILE* header, CompositeType& s, bool add_sufix = false)
 	{
@@ -812,29 +1165,52 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructParseBase(FILE* header, CompositeType& s)
+	//void csharpMsg_generateStructParseBase(FILE* header, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+
+	//	fprintf(header, "\tprotected static void parse(ParserBase parser, ");
+
+	//	csharpMsg_generateParseParamTypeLIst(header, s);
+
+	//	fprintf(header, ")\n\t{\n");
+
+	//	fprintf(header,
+	//		"\t\tif (parser is GmqParser gmqP)\n"
+	//		"\t\t\tparse(gmqP, ");
+
+	//	csharpMsg_generateCallerParamTypeLIst(header, s, true);
+	//	fprintf(header, ");\n");
+
+	//	fprintf(header,
+	//		"\t\telse if (parser is JsonParser jsonP)\n"
+	//		"\t\t\tparse(jsonP, ");
+
+	//	csharpMsg_generateCallerParamTypeLIst(header, s, true);
+	//	fprintf(header, ");\n");
+
+	//	fprintf(header,
+	//		"\t\telse\n"
+	//		"\t\t\tthrow new ArgumentException();\n");
+
+	//	fprintf(header, "\t}\n");
+	//}
+
+	void csharpMsg_generateStructParseBase3(FILE* header, CompositeType& s, const char* name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tprotected static void parse(ParserBase parser, ");
+		fprintf(header, "\tpublic static void parse(ParserBase parser, %s val)\n", name);
 
-		csharpMsg_generateParseParamTypeLIst(header, s);
-
-		fprintf(header, ")\n\t{\n");
+		fprintf(header, "\t{\n");
 
 		fprintf(header,
 			"\t\tif (parser is GmqParser gmqP)\n"
-			"\t\t\tparse(gmqP, ");
-
-		csharpMsg_generateCallerParamTypeLIst(header, s, true);
-		fprintf(header, ");\n");
+			"\t\t\tparse(gmqP, val);\n");
 
 		fprintf(header,
 			"\t\telse if (parser is JsonParser jsonP)\n"
-			"\t\t\tparse(jsonP, ");
-
-		csharpMsg_generateCallerParamTypeLIst(header, s, true);
-		fprintf(header, ");\n");
+			"\t\t\tparse(jsonP, val);\n");
 
 		fprintf(header,
 			"\t\telse\n"
@@ -843,20 +1219,40 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateUnionParseBase(FILE* header, CompositeType& s)
+	//void csharpMsg_generateUnionParseBase(FILE* header, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::discriminated_union);
+
+	//	std::string type_name = csharpMsg_getTypeName(s);
+
+	//	fprintf(header, "\tpublic static %s parse(ParserBase parser)\n", type_name.c_str());
+
+	//	fprintf(header,
+	//		"\t{\n"
+	//		"\t\tif (parser is GmqParser gmqP)\n"
+	//		"\t\t\treturn parse(gmqP);\n"
+	//		"\t\telse if (parser is JsonParser jsonP)\n"
+	//		"\t\t\treturn parse(jsonP);\n"
+	//		"\t\telse\n"
+	//		"\t\t\tthrow new ArgumentException();\n"
+	//		"\t}\n"
+	//	);
+	//}
+
+	void csharpMsg_generateUnionParseBase3(FILE* header, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tpublic static %s parse(ParserBase parser)\n", type_name.c_str());
+		fprintf(header, "\tpublic static void parse(ParserBase parser, %s val)\n", type_name.c_str());
 
 		fprintf(header,
 			"\t{\n"
 			"\t\tif (parser is GmqParser gmqP)\n"
-			"\t\t\treturn parse(gmqP);\n"
+			"\t\t\tparse(gmqP, val);\n"
 			"\t\telse if (parser is JsonParser jsonP)\n"
-			"\t\t\treturn parse(jsonP);\n"
+			"\t\t\tparse(jsonP, val);\n"
 			"\t\telse\n"
 			"\t\t\tthrow new ArgumentException();\n"
 			"\t}\n"
@@ -889,36 +1285,39 @@ namespace {
 				fprintf(header, "\tpublic Double %s;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\tpublic String %s;\n", member.name.c_str());
+				fprintf(header, "\tpublic String %s = String.Empty;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\tpublic %s %s;\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\tpublic %s %s = new %s();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
 				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\tpublic List<Int64> %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic List<Int64> %s = new List<Int64>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\tpublic List<UInt64> %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic List<UInt64> %s = new List<UInt64>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\tpublic List<Double> %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic List<Double> %s = new List<Double>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\tpublic List<String> %s;\n", member.name.c_str());
+					fprintf(header, "\tpublic List<String> %s = new List<String>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert(false); // unexpected
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
 					assert(member.type.structIdx < root.structs.size());
-					fprintf(header, "\tpublic List<%s> %s;\n", root.structs[member.type.structIdx]->name.c_str(), member.name.c_str());
+					const char* type_name = root.structs[member.type.structIdx]->name.c_str();
+					fprintf(header, "\tpublic List<%s> %s = new List<%s>();\n", type_name, member.name.c_str(), type_name);
 					break;
+				}
 				default:
 					assert(false); // not implemented (yet)
 				}
@@ -1104,10 +1503,17 @@ namespace {
 		csharpMsg_generateStructComposeJson(header, s);
 		csharpMsg_generateStructComposeGmq(header, s);
 
-		csharpMsg_generateStructParseBase2(header, s, type_name, false);
-		csharpMsg_generateStructParseBase(header, s);
-		csharpMsg_generateStructParseJson(header, s);
-		csharpMsg_generateStructParseGmq(header, s);
+		//csharpMsg_generateStructParseBase2(header, s, type_name, false);
+
+		if (s.type == CompositeType::Type::message)
+			csharpMsg_generateStructParseBase4(header, s, type_name.c_str());
+		
+		//csharpMsg_generateStructParseBase(header, s);
+		csharpMsg_generateStructParseBase3(header, s, type_name.c_str());
+		//csharpMsg_generateStructParseJson(header, s);
+		csharpMsg_generateStructParseJson3(header, s, type_name);
+		//csharpMsg_generateStructParseGmq(header, s);
+		csharpMsg_generateStructParseGmq3(header, s, type_name.c_str());
 
 		fprintf(header, "} // class %s\n\n", type_name.c_str());
 	}
@@ -1198,10 +1604,13 @@ namespace {
 			csharpMsg_generateUnionCaseProperties(header, root, cs);
 		}
 
-		csharpMsg_generateUnionParseBase(header, s);
-		csharpMsg_generateUnionParseJson(header, s);
-		csharpMsg_generateUnionParseGmq(header, s);
-		
+		//csharpMsg_generateUnionParseBase(header, s);
+		csharpMsg_generateUnionParseBase3(header, s);
+		//csharpMsg_generateUnionParseJson(header, s);
+		csharpMsg_generateUnionParseJson3(header, s);
+		//csharpMsg_generateUnionParseGmq(header, s);
+		csharpMsg_generateUnionParseGmq3(header, s);
+
 		for (auto& duit : s.getDiscriminatedUnionCases())
 		{
 			assert(duit != nullptr);
@@ -1232,16 +1641,16 @@ namespace {
 		fprintf(header, "\t}\n");
 
 		// parse function
-		fprintf(header, "\tprotected new static void parse(%s parser, ", parserType);
-		csharpMsg_generateParseParamTypeLIst(header, target);
-		fprintf(header, ")\n\t{\n");
+		//fprintf(header, "\tprotected new static void parse(%s parser, ", parserType);
+		//csharpMsg_generateParseParamTypeLIst(header, target);
+		//fprintf(header, ")\n\t{\n");
 
 
-		fprintf(header, "\t\t%s.parse(parser, ", target.name.c_str());
-		csharpMsg_generateCallerParamTypeLIst(header, target, true);
-		fprintf(header, ");\n");
+		//fprintf(header, "\t\t%s.parse(parser, ", target.name.c_str());
+		//csharpMsg_generateCallerParamTypeLIst(header, target, true);
+		//fprintf(header, ");\n");
 
-		fprintf(header, "\t}\n");
+		//fprintf(header, "\t}\n");
 	}
 
 	void csharpMsg_generateMessageAlias(FILE* header, CompositeType& s, CompositeType& target)
@@ -1256,7 +1665,8 @@ namespace {
 			"{\n", s.name.c_str(), target.name.c_str());
 
 		std::string type_name = csharpMsg_getTypeName(s);
-		csharpMsg_generateStructParseBase2(header, target, type_name, true);
+		//csharpMsg_generateStructParseBase2(header, target, type_name, true);
+		csharpMsg_generateStructParseBase4(header, s, type_name.c_str());
 		csharpMsg_generateMessageAliasMethods(header, s, target, "ComposerBase", "ParserBase");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "GmqComposer", "GmqParser");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "JsonComposer", "JsonParser");

@@ -104,7 +104,7 @@ namespace TestProject1
                 mtest.test_gmq.makeDefaultMessageHandler((ParserBase parser) => {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
                     // TODO see what we should really do in that case
-                    mtest.struct_one.parse(parser);
+                    mtest.test_gmq.message_two.parse(parser);
                     condition = true;
                 })
             );

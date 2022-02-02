@@ -108,7 +108,8 @@ namespace TestProject1
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathGmq);
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-            mtest.struct_one msg = mtest.struct_one.parse(parser);
+            mtest.struct_one msg = new mtest.struct_one();
+            mtest.struct_one.parse(parser, msg);
 
             Assert.Equal(msg, GetSampleData());
         }
@@ -119,7 +120,8 @@ namespace TestProject1
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
-            mtest.struct_one msg = mtest.struct_one.parse(parser);
+            mtest.struct_one msg = new mtest.struct_one();
+            mtest.struct_one.parse(parser, msg);
 
             Assert.Equal(msg, GetSampleData());
         }
@@ -135,7 +137,8 @@ namespace TestProject1
 
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-            mtest.struct_one msg2 = mtest.struct_one.parse(parser);
+            mtest.struct_one msg2 = new mtest.struct_one();
+            mtest.struct_one.parse(parser, msg2);
 
             Assert.Equal(msg, msg2);
         }
@@ -152,7 +155,8 @@ namespace TestProject1
 
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
-            mtest.struct_one msg2 = mtest.struct_one.parse(parser);
+            mtest.struct_one msg2 = new mtest.struct_one();
+            mtest.struct_one.parse(parser, msg2);
 
             Assert.Equal(msg, msg2);
         }

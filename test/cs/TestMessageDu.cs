@@ -72,7 +72,8 @@ Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-            mtest.struct_du msg = mtest.struct_du.parse(parser);
+            mtest.struct_du msg = new mtest.struct_du();
+            mtest.struct_du.parse(parser, msg);
 
             SimpleBuffer buffer2 = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer2);
