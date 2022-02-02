@@ -19,6 +19,182 @@ namespace mtest
 //
 //////////////////////////////////////////////////////////////
 
+public interface IBasicTypes
+{
+	Int64 anInt { get; set; }
+	UInt64 anUInt { get; set; }
+	Double aReal { get; set; }
+	String aString { get; set; }
+} // interface BasicTypes
+
+public class BasicTypes : IBasicTypes, IEquatable<BasicTypes>
+{
+	public Int64 anInt { get; set; }
+	public UInt64 anUInt { get; set; }
+	public Double aReal { get; set; }
+	String _aString = String.Empty;
+	public String aString
+	{
+		get { return _aString; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_aString = value;
+		}
+	}
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as BasicTypes);
+	}
+	public static bool operator ==(BasicTypes left, BasicTypes right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(BasicTypes left, BasicTypes right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(BasicTypes other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.anInt == other.anInt &&
+				this.anUInt == other.anUInt &&
+				this.aReal == other.aReal &&
+				this.aString == other.aString;
+	}
+} // class BasicTypes
+
+public class BasicTypes_message
+{
+	public static void compose(ComposerBase composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		if (composer is GmqComposer gmqC)
+			compose(gmqC, anInt, anUInt, aReal, aString);
+		else if (composer is JsonComposer jsonC)
+			compose(jsonC, anInt, anUInt, aReal, aString);
+		else
+			throw new ArgumentException();
+	}
+	public static void compose(JsonComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("anInt");
+		composer.composeSignedInteger(anInt);
+		composer.append( ",\n  " );
+		composer.addNamePart("anUInt");
+		composer.composeUnsignedInteger(anUInt);
+		composer.append( ",\n  " );
+		composer.addNamePart("aReal");
+		composer.composeReal(aReal);
+		composer.append( ",\n  " );
+		composer.addNamePart("aString");
+		composer.composeString(aString);
+		composer.append( "\n}" );
+	}
+	public static void compose(GmqComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		composer.composeSignedInteger(anInt);
+		composer.composeUnsignedInteger(anUInt);
+		composer.composeReal(aReal);
+		composer.composeString(aString);
+	}
+	public static void parse(ParserBase parser, IBasicTypes val)
+	{
+		if (parser is GmqParser gmqP)
+			parse(gmqP, val);
+		else if (parser is JsonParser jsonP)
+			parse(jsonP, val);
+		else
+			throw new ArgumentException();
+	}
+	public static void parse(JsonParser parser, IBasicTypes val)	{
+		parser.skipDelimiter( '{' );
+		while (true)
+		{
+			string key;
+			parser.readKeyFromJson( out key );
+			if ( key == "anInt" )
+			{
+				Int64 tmp;
+				parser.parseSignedInteger(out tmp);
+				val.anInt = tmp;
+			}
+			else if ( key == "anUInt" )
+			{
+				UInt64 tmp;
+				parser.parseUnsignedInteger(out tmp);
+				val.anUInt = tmp;
+			}
+			else if ( key == "aReal" )
+			{
+				Double tmp;
+				parser.parseReal(out tmp);
+				val.aReal = tmp;
+			}
+			else if ( key == "aString" )
+			{
+				String tmp;
+				parser.parseString(out tmp);
+				val.aString = tmp;
+			}
+
+			parser.skipSpacesEtc();
+			if ( parser.isDelimiter( ',' ) )
+			{
+				parser.skipDelimiter( ',' );
+				continue;
+			}
+			if ( parser.isDelimiter( '}' ) )
+			{
+				parser.skipDelimiter( '}' );
+				break;
+			}
+			throw new FormatException(); // bad format
+		}
+	}
+	protected static void parse(GmqParser parser, IBasicTypes val)
+	{
+	{
+		Int64 tmp;
+		parser.parseSignedInteger(out tmp);
+		val.anInt = tmp;
+	}
+	{
+		UInt64 tmp;
+		parser.parseUnsignedInteger(out tmp);
+		val.anUInt = tmp;
+	}
+	{
+		Double tmp;
+		parser.parseReal(out tmp);
+		val.aReal = tmp;
+	}
+	{
+		String tmp;
+		parser.parseString(out tmp);
+		val.aString = tmp;
+	}
+	}
+} // class BasicTypes_message
+
 //**********************************************************************
 // DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
 //  CASE one (3 parameters)(3 parameters)
@@ -29,17 +205,106 @@ namespace mtest
 //    1. VECTOR<REAL> Data (REQUIRED)
 //**********************************************************************
 
-public class du_one : IEquatable<du_one>
+public interface Idu_one
 {
 	public enum Variants { one = 1, two = 2, unknown };
+	Variants currentVariant();
+	void setVariant(ICASE_one obj);
+	void setVariant(ICASE_two obj);
+
+	// IDL CASE one:
+	Double D1 { get; set; }
+	Double D2 { get; set; }
+	Double D3 { get; set; }
+public interface ICASE_one
+{
+	Double D1 { get; set; }
+	Double D2 { get; set; }
+	Double D3 { get; set; }
+} // interface CASE_one
+
+
+	// IDL CASE two:
+	IList<Double> Data { get; set; }
+public interface ICASE_two
+{
+	IList<Double> Data { get; set; }
+} // interface CASE_two
+
+} // interface Idu_one
+
+public class du_one : Idu_one, IEquatable<du_one>
+{
 	Object mem;
 
-public class CASE_one : IEquatable<CASE_one>
-{
-	public Double D1;
-	public Double D2;
-	public Double D3;
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as du_one);
+	}
+	public static bool operator ==(du_one left, du_one right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(du_one left, du_one right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(du_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return this.mem.Equals(other.mem);
+	}
+	public Idu_one.Variants currentVariant()
+	{
+		if(this.mem == null)
+			return Idu_one.Variants.unknown;
+		else if(this.mem is CASE_one)
+			return Idu_one.Variants.one;
+		else if(this.mem is CASE_two)
+			return Idu_one.Variants.two;
+		else
+			return Idu_one.Variants.unknown;
+	}
+	public void setVariant(Idu_one.ICASE_one obj) { this.mem = obj; }
+	public void setVariant(Idu_one.ICASE_two obj) { this.mem = obj; }
 
+	// IDL CASE one:
+	public Double D1
+	{
+		get { return ((CASE_one)this.mem).D1; }
+		set { ((CASE_one)this.mem).D1 = value; }
+	}
+	public Double D2
+	{
+		get { return ((CASE_one)this.mem).D2; }
+		set { ((CASE_one)this.mem).D2 = value; }
+	}
+	public Double D3
+	{
+		get { return ((CASE_one)this.mem).D3; }
+		set { ((CASE_one)this.mem).D3 = value; }
+	}
+public class CASE_one : Idu_one.ICASE_one, IEquatable<CASE_one>
+{
+	public Double D1 { get; set; }
+	public Double D2 { get; set; }
+	public Double D3 { get; set; }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as CASE_one);
@@ -76,6 +341,10 @@ public class CASE_one : IEquatable<CASE_one>
 				this.D2 == other.D2 &&
 				this.D3 == other.D3;
 	}
+} // class CASE_one
+
+public class CASE_one_message
+{
 	public static void compose(ComposerBase composer, Double D1, Double D2, Double D3)
 	{
 		if (composer is GmqComposer gmqC)
@@ -104,7 +373,7 @@ public class CASE_one : IEquatable<CASE_one>
 		composer.composeReal(D2);
 		composer.composeReal(D3);
 	}
-	public static void parse(ParserBase parser, CASE_one val)
+	public static void parse(ParserBase parser, Idu_one.ICASE_one val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -113,7 +382,7 @@ public class CASE_one : IEquatable<CASE_one>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, CASE_one val)	{
+	public static void parse(JsonParser parser, Idu_one.ICASE_one val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -152,7 +421,7 @@ public class CASE_one : IEquatable<CASE_one>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, CASE_one val)
+	protected static void parse(GmqParser parser, Idu_one.ICASE_one val)
 	{
 	{
 		Double tmp;
@@ -170,12 +439,28 @@ public class CASE_one : IEquatable<CASE_one>
 		val.D3 = tmp;
 	}
 	}
-} // class CASE_one
+} // class CASE_one_message
 
-public class CASE_two : IEquatable<CASE_two>
+
+	// IDL CASE two:
+	public IList<Double> Data
+	{
+		get { return ((CASE_two)this.mem).Data; }
+		set { ((CASE_two)this.mem).Data = value; }
+	}
+public class CASE_two : Idu_one.ICASE_two, IEquatable<CASE_two>
 {
-	public List<Double> Data = new List<Double>();
-
+	List<Double> _Data = new List<Double>();
+	public IList<Double> Data
+	{
+		get { return _Data; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_Data = (List<Double>)value;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as CASE_two);
@@ -210,6 +495,10 @@ public class CASE_two : IEquatable<CASE_two>
 			return
 				Enumerable.SequenceEqual(this.Data, other.Data);
 	}
+} // class CASE_two
+
+public class CASE_two_message
+{
 	public static void compose(ComposerBase composer, ICollectionCompose Data)
 	{
 		if (composer is GmqComposer gmqC)
@@ -230,7 +519,7 @@ public class CASE_two : IEquatable<CASE_two>
 	{
 		Data.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, CASE_two val)
+	public static void parse(ParserBase parser, Idu_one.ICASE_two val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -239,7 +528,7 @@ public class CASE_two : IEquatable<CASE_two>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, CASE_two val)	{
+	public static void parse(JsonParser parser, Idu_one.ICASE_two val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -267,7 +556,7 @@ public class CASE_two : IEquatable<CASE_two>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, CASE_two val)
+	protected static void parse(GmqParser parser, Idu_one.ICASE_two val)
 	{
 	{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
@@ -276,77 +565,13 @@ public class CASE_two : IEquatable<CASE_two>
 				tmp.parseGmq(parser);
 	}
 	}
-} // class CASE_two
+} // class CASE_two_message
 
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as du_one);
-	}
-	public static bool operator ==(du_one left, du_one right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(du_one left, du_one right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(du_one other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return this.mem.Equals(other.mem);
-	}
-	public Variants currentVariant()
-	{
-		if(this.mem == null)
-			return Variants.unknown;
-		else if(this.mem is CASE_one)
-			return Variants.one;
-		else if(this.mem is CASE_two)
-			return Variants.two;
-		else
-			return Variants.unknown;
-	}
+} // class du_one
 
-	// IDL CASE one:
-	public Double D1
-	{
-		get { return ((CASE_one)this.mem).D1; }
-		set { ((CASE_one)this.mem).D1 = value; }
-	}
-	public Double D2
-	{
-		get { return ((CASE_one)this.mem).D2; }
-		set { ((CASE_one)this.mem).D2 = value; }
-	}
-	public Double D3
-	{
-		get { return ((CASE_one)this.mem).D3; }
-		set { ((CASE_one)this.mem).D3 = value; }
-	}
-
-	// IDL CASE two:
-	public List<Double> Data
-	{
-		get { return ((CASE_two)this.mem).Data; }
-		set { ((CASE_two)this.mem).Data = value; }
-	}
-	public static void parse(ParserBase parser, du_one val)
+public class du_one_message
+{
+	public static void parse(ParserBase parser, Idu_one val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -355,7 +580,7 @@ public class CASE_two : IEquatable<CASE_two>
 		else
 			throw new ArgumentException();
 	}
-	protected static void parse(JsonParser parser, du_one val)
+	protected static void parse(JsonParser parser, Idu_one val)
 	{
 		parser.skipDelimiter('{');
 		string key;
@@ -370,25 +595,49 @@ public class CASE_two : IEquatable<CASE_two>
 		if (key != "caseData")
 			throw new FormatException();
 
-		switch ((Variants)caseID)
+		switch ((Idu_one.Variants)caseID)
 		{
-			case Variants.one: { CASE_one tmp = new CASE_one(); CASE_one.parse(parser, tmp); val.mem = tmp; break; }
-			case Variants.two: { CASE_two tmp = new CASE_two(); CASE_two.parse(parser, tmp); val.mem = tmp; break; }
+			case Idu_one.Variants.one:
+			{
+				du_one.CASE_one tmp = new du_one.CASE_one();
+				du_one.CASE_one_message.parse(parser, tmp);
+				val.setVariant(tmp);
+				break;
+			}
+			case Idu_one.Variants.two:
+			{
+				du_one.CASE_two tmp = new du_one.CASE_two();
+				du_one.CASE_two_message.parse(parser, tmp);
+				val.setVariant(tmp);
+				break;
+			}
 			default: throw new System.Exception();
 		}
 
 		parser.skipDelimiter('}');
 
 	}
-	protected static void parse(GmqParser parser, du_one val)
+	protected static void parse(GmqParser parser, Idu_one val)
 	{
 		Int64 caseID;
 		parser.parseSignedInteger(out caseID);
 
-		switch ((Variants)caseID)
+		switch ((Idu_one.Variants)caseID)
 		{
-			case Variants.one: { CASE_one tmp = new CASE_one(); CASE_one.parse(parser, tmp); val.mem = tmp; break; }
-			case Variants.two: { CASE_two tmp = new CASE_two(); CASE_two.parse(parser, tmp); val.mem = tmp; break; }
+			case Idu_one.Variants.one:
+			{
+				du_one.CASE_one tmp = new du_one.CASE_one();
+				du_one.CASE_one_message.parse(parser, tmp);
+				val.setVariant(tmp);
+				break;
+			}
+			case Idu_one.Variants.two:
+			{
+				du_one.CASE_two tmp = new du_one.CASE_two();
+				du_one.CASE_two_message.parse(parser, tmp);
+				val.setVariant(tmp);
+				break;
+			}
 			default: throw new System.Exception();
 		}
 
@@ -408,16 +657,16 @@ public class CASE_two : IEquatable<CASE_two>
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("caseid");
-		composer.composeSignedInteger((Int64)Variants.one);
+		composer.composeSignedInteger((Int64)Idu_one.Variants.one);
 		composer.append( ",\n  " );
 		composer.addNamePart("caseData");
-		CASE_one.compose(composer, D1, D2, D3);
+		du_one.CASE_one_message.compose(composer, D1, D2, D3);
 		composer.append( "\n}" );
 	}
 	public static void compose_one(GmqComposer composer, Double D1, Double D2, Double D3)
 	{
-		composer.composeSignedInteger((Int64)Variants.one);
-		CASE_one.compose(composer, D1, D2, D3);
+		composer.composeSignedInteger((Int64)Idu_one.Variants.one);
+		du_one.CASE_one_message.compose(composer, D1, D2, D3);
 	}
 
 	// IDL CASE two:
@@ -434,32 +683,31 @@ public class CASE_two : IEquatable<CASE_two>
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("caseid");
-		composer.composeSignedInteger((Int64)Variants.two);
+		composer.composeSignedInteger((Int64)Idu_one.Variants.two);
 		composer.append( ",\n  " );
 		composer.addNamePart("caseData");
-		CASE_two.compose(composer, Data);
+		du_one.CASE_two_message.compose(composer, Data);
 		composer.append( "\n}" );
 	}
 	public static void compose_two(GmqComposer composer, ICollectionCompose Data)
 	{
-		composer.composeSignedInteger((Int64)Variants.two);
-		CASE_two.compose(composer, Data);
+		composer.composeSignedInteger((Int64)Idu_one.Variants.two);
+		du_one.CASE_two_message.compose(composer, Data);
 	}
-} // class du_one
+} // class du_one_message
 
-//**********************************************************************
-// STRUCT "point3D" Targets: JSON GMQ (3 parameters)
-//  1. INTEGER x (REQUIRED)
-//  2. INTEGER y (REQUIRED)
-//  3. INTEGER z (REQUIRED)
-//**********************************************************************
-
-public class point3D : IEquatable<point3D>
+public interface Ipoint3D
 {
-	public Int64 x;
-	public Int64 y;
-	public Int64 z;
+	Int64 x { get; set; }
+	Int64 y { get; set; }
+	Int64 z { get; set; }
+} // interface point3D
 
+public class point3D : Ipoint3D, IEquatable<point3D>
+{
+	public Int64 x { get; set; }
+	public Int64 y { get; set; }
+	public Int64 z { get; set; }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point3D);
@@ -496,6 +744,10 @@ public class point3D : IEquatable<point3D>
 				this.y == other.y &&
 				this.z == other.z;
 	}
+} // class point3D
+
+public class point3D_message
+{
 	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
 	{
 		if (composer is GmqComposer gmqC)
@@ -524,7 +776,7 @@ public class point3D : IEquatable<point3D>
 		composer.composeSignedInteger(y);
 		composer.composeSignedInteger(z);
 	}
-	public static void parse(ParserBase parser, point3D val)
+	public static void parse(ParserBase parser, Ipoint3D val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -533,7 +785,7 @@ public class point3D : IEquatable<point3D>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, point3D val)	{
+	public static void parse(JsonParser parser, Ipoint3D val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -572,7 +824,7 @@ public class point3D : IEquatable<point3D>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, point3D val)
+	protected static void parse(GmqParser parser, Ipoint3D val)
 	{
 	{
 		Int64 tmp;
@@ -590,19 +842,18 @@ public class point3D : IEquatable<point3D>
 		val.z = tmp;
 	}
 	}
-} // class point3D
+} // class point3D_message
 
-//**********************************************************************
-// STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
-//  1. INTEGER x (REQUIRED)
-//  2. INTEGER y (REQUIRED)
-//**********************************************************************
-
-public class point : IEquatable<point>
+public interface Ipoint
 {
-	public Int64 x;
-	public Int64 y;
+	Int64 x { get; set; }
+	Int64 y { get; set; }
+} // interface point
 
+public class point : Ipoint, IEquatable<point>
+{
+	public Int64 x { get; set; }
+	public Int64 y { get; set; }
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point);
@@ -638,6 +889,10 @@ public class point : IEquatable<point>
 				this.x == other.x &&
 				this.y == other.y;
 	}
+} // class point
+
+public class point_message
+{
 	public static void compose(ComposerBase composer, Int64 x, Int64 y)
 	{
 		if (composer is GmqComposer gmqC)
@@ -662,7 +917,7 @@ public class point : IEquatable<point>
 		composer.composeSignedInteger(x);
 		composer.composeSignedInteger(y);
 	}
-	public static void parse(ParserBase parser, point val)
+	public static void parse(ParserBase parser, Ipoint val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -671,7 +926,7 @@ public class point : IEquatable<point>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, point val)	{
+	public static void parse(JsonParser parser, Ipoint val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -704,7 +959,7 @@ public class point : IEquatable<point>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, point val)
+	protected static void parse(GmqParser parser, Ipoint val)
 	{
 	{
 		Int64 tmp;
@@ -717,19 +972,202 @@ public class point : IEquatable<point>
 		val.y = tmp;
 	}
 	}
-} // class point
+} // class point_message
 
-//**********************************************************************
-// STRUCT "struct_du" Targets: GMQ (2 parameters)
-//  1. STRUCT point3D pt (REQUIRED)
-//  2. DISCRIMINATED_UNION du_one disc_union (REQUIRED)
-//**********************************************************************
-
-public class struct_du : IEquatable<struct_du>
+public interface IAggregateType
 {
-	public point3D pt = new point3D();
-	public du_one disc_union = new du_one();
+	String name { get; set; }
+	IBasicTypes theAggregate { get; set; }
+	Int64 lastValue { get; set; }
+} // interface AggregateType
 
+public class AggregateType : IAggregateType, IEquatable<AggregateType>
+{
+	String _name = String.Empty;
+	public String name
+	{
+		get { return _name; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_name = value;
+		}
+	}
+	BasicTypes _theAggregate = new BasicTypes();
+	public IBasicTypes theAggregate
+	{
+		get { return _theAggregate; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_theAggregate = (BasicTypes)value;
+		}
+	}
+	public Int64 lastValue { get; set; }
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as AggregateType);
+	}
+	public static bool operator ==(AggregateType left, AggregateType right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(AggregateType left, AggregateType right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(AggregateType other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.name == other.name &&
+				this.theAggregate.Equals(other.theAggregate) &&
+				this.lastValue == other.lastValue;
+	}
+} // class AggregateType
+
+public class AggregateType_message
+{
+	public static void compose(ComposerBase composer, String name, IMessageCompose theAggregate, Int64 lastValue)
+	{
+		if (composer is GmqComposer gmqC)
+			compose(gmqC, name, theAggregate, lastValue);
+		else if (composer is JsonComposer jsonC)
+			compose(jsonC, name, theAggregate, lastValue);
+		else
+			throw new ArgumentException();
+	}
+	public static void compose(JsonComposer composer, String name, IMessageCompose theAggregate, Int64 lastValue)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("name");
+		composer.composeString(name);
+		composer.append( ",\n  " );
+		composer.addNamePart("theAggregate");
+		theAggregate.compose(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("lastValue");
+		composer.composeSignedInteger(lastValue);
+		composer.append( "\n}" );
+	}
+	public static void compose(GmqComposer composer, String name, IMessageCompose theAggregate, Int64 lastValue)
+	{
+		composer.composeString(name);
+		theAggregate.compose(composer);
+		composer.composeSignedInteger(lastValue);
+	}
+	public static void parse(ParserBase parser, IAggregateType val)
+	{
+		if (parser is GmqParser gmqP)
+			parse(gmqP, val);
+		else if (parser is JsonParser jsonP)
+			parse(jsonP, val);
+		else
+			throw new ArgumentException();
+	}
+	public static void parse(JsonParser parser, IAggregateType val)	{
+		parser.skipDelimiter( '{' );
+		while (true)
+		{
+			string key;
+			parser.readKeyFromJson( out key );
+			if ( key == "name" )
+			{
+				String tmp;
+				parser.parseString(out tmp);
+				val.name = tmp;
+			}
+			else if ( key == "theAggregate" )
+			{
+				BasicTypes_message.parse(parser, val.theAggregate);
+			}
+			else if ( key == "lastValue" )
+			{
+				Int64 tmp;
+				parser.parseSignedInteger(out tmp);
+				val.lastValue = tmp;
+			}
+
+			parser.skipSpacesEtc();
+			if ( parser.isDelimiter( ',' ) )
+			{
+				parser.skipDelimiter( ',' );
+				continue;
+			}
+			if ( parser.isDelimiter( '}' ) )
+			{
+				parser.skipDelimiter( '}' );
+				break;
+			}
+			throw new FormatException(); // bad format
+		}
+	}
+	protected static void parse(GmqParser parser, IAggregateType val)
+	{
+	{
+		String tmp;
+		parser.parseString(out tmp);
+		val.name = tmp;
+	}
+	{
+		BasicTypes_message.parse(parser, val.theAggregate);
+	}
+	{
+		Int64 tmp;
+		parser.parseSignedInteger(out tmp);
+		val.lastValue = tmp;
+	}
+	}
+} // class AggregateType_message
+
+public interface Istruct_du
+{
+	Ipoint3D pt { get; set; }
+	Idu_one disc_union { get; set; }
+} // interface struct_du
+
+public class struct_du : Istruct_du, IEquatable<struct_du>
+{
+	point3D _pt = new point3D();
+	public Ipoint3D pt
+	{
+		get { return _pt; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_pt = (point3D)value;
+		}
+	}
+	du_one _disc_union = new du_one();
+	public Idu_one disc_union
+	{
+		get { return _disc_union; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_disc_union = (du_one)value;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as struct_du);
@@ -765,6 +1203,10 @@ public class struct_du : IEquatable<struct_du>
 				this.pt.Equals(other.pt) &&
 				this.disc_union.Equals(other.disc_union);
 	}
+} // class struct_du
+
+public class struct_du_message
+{
 	public static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
 		if (composer is GmqComposer gmqC)
@@ -789,7 +1231,7 @@ public class struct_du : IEquatable<struct_du>
 		pt.compose(composer);
 		disc_union.compose(composer);
 	}
-	public static void parse(ParserBase parser, struct_du val)
+	public static void parse(ParserBase parser, Istruct_du val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -798,7 +1240,7 @@ public class struct_du : IEquatable<struct_du>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, struct_du val)	{
+	public static void parse(JsonParser parser, Istruct_du val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -806,11 +1248,11 @@ public class struct_du : IEquatable<struct_du>
 			parser.readKeyFromJson( out key );
 			if ( key == "pt" )
 			{
-				point3D.parse(parser, val.pt);
+				point3D_message.parse(parser, val.pt);
 			}
 			else if ( key == "disc_union" )
 			{
-				du_one.parse(parser, val.disc_union);
+				du_one_message.parse(parser, val.disc_union);
 			}
 
 			parser.skipSpacesEtc();
@@ -827,44 +1269,117 @@ public class struct_du : IEquatable<struct_du>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, struct_du val)
+	protected static void parse(GmqParser parser, Istruct_du val)
 	{
 	{
-		point3D.parse(parser, val.pt);
+		point3D_message.parse(parser, val.pt);
 	}
 	{
-		du_one.parse(parser, val.disc_union);
+		du_one_message.parse(parser, val.disc_union);
 	}
 	}
-} // class struct_du
+} // class struct_du_message
 
-//**********************************************************************
-// STRUCT "struct_one" Targets: JSON GMQ (10 parameters)
-//  1. INTEGER firstParam (REQUIRED)
-//  2. VECTOR<INTEGER> secondParam (REQUIRED)
-//  3. VECTOR< STRUCT point3D> thirdParam (REQUIRED)
-//  4. UINTEGER forthParam (REQUIRED)
-//  5. CHARACTER_STRING fifthParam (REQUIRED)
-//  6. VECTOR<NONEXTENDABLE STRUCT point> sixthParam (REQUIRED)
-//  7. REAL seventhParam (REQUIRED)
-//  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
-//  9. STRUCT point3D ninethParam (REQUIRED)
-//  10. VECTOR<REAL> tenthParam (REQUIRED)
-//**********************************************************************
-
-public class struct_one : IEquatable<struct_one>
+public interface Istruct_one
 {
-	public Int64 firstParam;
-	public List<Int64> secondParam = new List<Int64>();
-	public List<point3D> thirdParam = new List<point3D>();
-	public UInt64 forthParam;
-	public String fifthParam = String.Empty;
-	public List<point> sixthParam = new List<point>();
-	public Double seventhParam;
-	public point eighthParam = new point();
-	public point3D ninethParam = new point3D();
-	public List<Double> tenthParam = new List<Double>();
+	Int64 firstParam { get; set; }
+	IList<Int64> secondParam { get; set; }
+	IList<Ipoint3D> thirdParam { get; set; }
+	UInt64 forthParam { get; set; }
+	String fifthParam { get; set; }
+	IList<Ipoint> sixthParam { get; set; }
+	Double seventhParam { get; set; }
+	Ipoint eighthParam { get; set; }
+	Ipoint3D ninethParam { get; set; }
+	IList<Double> tenthParam { get; set; }
+} // interface struct_one
 
+public class struct_one : Istruct_one, IEquatable<struct_one>
+{
+	public Int64 firstParam { get; set; }
+	List<Int64> _secondParam = new List<Int64>();
+	public IList<Int64> secondParam
+	{
+		get { return _secondParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_secondParam = (List<Int64>)value;
+		}
+	}
+	List<Ipoint3D> _thirdParam = new List<Ipoint3D>();
+	public IList<Ipoint3D> thirdParam
+	{
+		get { return _thirdParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
+			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
+			_thirdParam = tmp;
+		}
+	}
+	public UInt64 forthParam { get; set; }
+	String _fifthParam = String.Empty;
+	public String fifthParam
+	{
+		get { return _fifthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_fifthParam = value;
+		}
+	}
+	List<Ipoint> _sixthParam = new List<Ipoint>();
+	public IList<Ipoint> sixthParam
+	{
+		get { return _sixthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint> tmp = (List<Ipoint>)value;
+			tmp.ForEach((Ipoint each) => { if(!(each is point)) throw new InvalidCastException(); });
+			_sixthParam = tmp;
+		}
+	}
+	public Double seventhParam { get; set; }
+	point _eighthParam = new point();
+	public Ipoint eighthParam
+	{
+		get { return _eighthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_eighthParam = (point)value;
+		}
+	}
+	point3D _ninethParam = new point3D();
+	public Ipoint3D ninethParam
+	{
+		get { return _ninethParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_ninethParam = (point3D)value;
+		}
+	}
+	List<Double> _tenthParam = new List<Double>();
+	public IList<Double> tenthParam
+	{
+		get { return _tenthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_tenthParam = (List<Double>)value;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as struct_one);
@@ -908,6 +1423,10 @@ public class struct_one : IEquatable<struct_one>
 				this.ninethParam.Equals(other.ninethParam) &&
 				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
+} // class struct_one
+
+public class struct_one_message
+{
 	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
 		if (composer is GmqComposer gmqC)
@@ -964,7 +1483,7 @@ public class struct_one : IEquatable<struct_one>
 		ninethParam.compose(composer);
 		tenthParam.composeGmq(composer);
 	}
-	public static void parse(ParserBase parser, struct_one val)
+	public static void parse(ParserBase parser, Istruct_one val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -973,7 +1492,7 @@ public class struct_one : IEquatable<struct_one>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, struct_one val)	{
+	public static void parse(JsonParser parser, Istruct_one val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -996,7 +1515,7 @@ public class struct_one : IEquatable<struct_one>
 			{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D.parse(parser, t); val.thirdParam.Add(t); });
+				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "forthParam" )
@@ -1015,7 +1534,7 @@ public class struct_one : IEquatable<struct_one>
 			{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point t = new point(); point.parse(parser, t); val.sixthParam.Add(t); });
+				(ParserBase parser, int ordinal) => { point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "seventhParam" )
@@ -1026,11 +1545,11 @@ public class struct_one : IEquatable<struct_one>
 			}
 			else if ( key == "eighthParam" )
 			{
-				point.parse(parser, val.eighthParam);
+				point_message.parse(parser, val.eighthParam);
 			}
 			else if ( key == "ninethParam" )
 			{
-				point3D.parse(parser, val.ninethParam);
+				point3D_message.parse(parser, val.ninethParam);
 			}
 			else if ( key == "tenthParam" )
 			{
@@ -1054,7 +1573,7 @@ public class struct_one : IEquatable<struct_one>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, struct_one val)
+	protected static void parse(GmqParser parser, Istruct_one val)
 	{
 	{
 		Int64 tmp;
@@ -1070,7 +1589,7 @@ public class struct_one : IEquatable<struct_one>
 	{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D.parse(parser, t); val.thirdParam.Add(t); });
+				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
@@ -1086,7 +1605,7 @@ public class struct_one : IEquatable<struct_one>
 	{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point t = new point(); point.parse(parser, t); val.sixthParam.Add(t); });
+				(ParserBase parser, int ordinal) => { point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
@@ -1095,10 +1614,10 @@ public class struct_one : IEquatable<struct_one>
 		val.seventhParam = tmp;
 	}
 	{
-		point.parse(parser, val.eighthParam);
+		point_message.parse(parser, val.eighthParam);
 	}
 	{
-		point3D.parse(parser, val.ninethParam);
+		point3D_message.parse(parser, val.ninethParam);
 	}
 	{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
@@ -1107,7 +1626,7 @@ public class struct_one : IEquatable<struct_one>
 				tmp.parseGmq(parser);
 	}
 	}
-} // class struct_one
+} // class struct_one_message
 
 //////////////////////////////////////////////////////////////
 //
@@ -1154,25 +1673,25 @@ public class test_gmq
 // MESSAGE "message_two" Targets: GMQ (0 parameters)
 //**********************************************************************
 
-public class message_two : struct_one
+public class message_two_message
 {
-	public static message_two parse(ParserBase parser)
+	public static struct_one parse(ParserBase parser)
 	{
-		message_two tmp = new message_two();
-		parse(parser, tmp);
+		struct_one tmp = new struct_one();
+		struct_one_message.parse(parser, tmp);
 		return tmp;
 	}
-	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
-		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
-		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
-		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 } // class message_two
 
@@ -1181,20 +1700,41 @@ public class message_two : struct_one
 		GmqComposer composer = new GmqComposer(buffer);
 
 		composer.composeUnsignedInteger((UInt64)MsgId.message_two);
-		message_two.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		message_two_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 
-//**********************************************************************
-// MESSAGE "message_four" NONEXTENDABLE Targets: GMQ (2 parameters)
-//  1. STRUCT point pt (REQUIRED)
-//  2. VECTOR< STRUCT point3D> pts3d (REQUIRED)
-//**********************************************************************
-
-public class message_four : IEquatable<message_four>
+public interface Imessage_four
 {
-	public point pt = new point();
-	public List<point3D> pts3d = new List<point3D>();
+	Ipoint pt { get; set; }
+	IList<Ipoint3D> pts3d { get; set; }
+} // interface message_four
 
+public class message_four : Imessage_four, IEquatable<message_four>
+{
+	point _pt = new point();
+	public Ipoint pt
+	{
+		get { return _pt; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_pt = (point)value;
+		}
+	}
+	List<Ipoint3D> _pts3d = new List<Ipoint3D>();
+	public IList<Ipoint3D> pts3d
+	{
+		get { return _pts3d; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
+			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
+			_pts3d = tmp;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as message_four);
@@ -1230,6 +1770,10 @@ public class message_four : IEquatable<message_four>
 				this.pt.Equals(other.pt) &&
 				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
 	}
+} // class message_four
+
+public class message_four_message
+{
 	public static void compose(ComposerBase composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
 		if (composer is GmqComposer gmqC)
@@ -1257,10 +1801,10 @@ public class message_four : IEquatable<message_four>
 	public static message_four parse(ParserBase parser)
 	{
 		message_four tmp = new message_four();
-		parse(parser, tmp);
+		message_four_message.parse(parser, tmp);
 		return tmp;
 	}
-	public static void parse(ParserBase parser, message_four val)
+	public static void parse(ParserBase parser, Imessage_four val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -1269,7 +1813,7 @@ public class message_four : IEquatable<message_four>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, message_four val)	{
+	public static void parse(JsonParser parser, Imessage_four val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -1277,13 +1821,13 @@ public class message_four : IEquatable<message_four>
 			parser.readKeyFromJson( out key );
 			if ( key == "pt" )
 			{
-				point.parse(parser, val.pt);
+				point_message.parse(parser, val.pt);
 			}
 			else if ( key == "pts3d" )
 			{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D.parse(parser, t); val.pts3d.Add(t); });
+				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -1301,51 +1845,51 @@ public class message_four : IEquatable<message_four>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, message_four val)
+	protected static void parse(GmqParser parser, Imessage_four val)
 	{
 	{
-		point.parse(parser, val.pt);
+		point_message.parse(parser, val.pt);
 	}
 	{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D.parse(parser, t); val.pts3d.Add(t); });
+				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
-} // class message_four
+} // class message_four_message
 
 	public static void composeMessage_message_four(BufferT buffer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
 		composer.composeUnsignedInteger((UInt64)MsgId.message_four);
-		message_four.compose(composer, pt, pts3d);
+		message_four_message.compose(composer, pt, pts3d);
 	}
 
 //**********************************************************************
 // MESSAGE "message_du" Targets: GMQ (0 parameters)
 //**********************************************************************
 
-public class message_du : struct_du
+public class message_du_message
 {
-	public static message_du parse(ParserBase parser)
+	public static struct_du parse(ParserBase parser)
 	{
-		message_du tmp = new message_du();
-		parse(parser, tmp);
+		struct_du tmp = new struct_du();
+		struct_du_message.parse(parser, tmp);
 		return tmp;
 	}
-	public new static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
+	public static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
-		struct_du.compose(composer, pt, disc_union);
+		struct_du_message.compose(composer, pt, disc_union);
 	}
-	public new static void compose(GmqComposer composer, IMessageCompose pt, IMessageCompose disc_union)
+	public static void compose(GmqComposer composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
-		struct_du.compose(composer, pt, disc_union);
+		struct_du_message.compose(composer, pt, disc_union);
 	}
-	public new static void compose(JsonComposer composer, IMessageCompose pt, IMessageCompose disc_union)
+	public static void compose(JsonComposer composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
-		struct_du.compose(composer, pt, disc_union);
+		struct_du_message.compose(composer, pt, disc_union);
 	}
 } // class message_du
 
@@ -1354,7 +1898,7 @@ public class message_du : struct_du
 		GmqComposer composer = new GmqComposer(buffer);
 
 		composer.composeUnsignedInteger((UInt64)MsgId.message_du);
-		message_du.compose(composer, pt, disc_union);
+		message_du_message.compose(composer, pt, disc_union);
 	}
 
 } // class test_gmq
@@ -1385,25 +1929,25 @@ public class test_json
 // MESSAGE "message_three" Targets: JSON (0 parameters)
 //**********************************************************************
 
-public class message_three : struct_one
+public class message_three_message
 {
-	public static message_three parse(ParserBase parser)
+	public static struct_one parse(ParserBase parser)
 	{
-		message_three tmp = new message_three();
-		parse(parser, tmp);
+		struct_one tmp = new struct_one();
+		struct_one_message.parse(parser, tmp);
 		return tmp;
 	}
-	public new static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
-		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
-		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
-	public new static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
 	{
-		struct_one.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 } // class message_three
 
@@ -1416,21 +1960,42 @@ public class message_three : struct_one
 		composer.composeUnsignedInteger((UInt64)MsgId.message_three);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
-		message_three.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		message_three_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 		composer.append("\n}");
 	}
 
-//**********************************************************************
-// MESSAGE "message_five" NONEXTENDABLE Targets: JSON (2 parameters)
-//  1. STRUCT point pt (REQUIRED)
-//  2. VECTOR< STRUCT point3D> pts3d (REQUIRED)
-//**********************************************************************
-
-public class message_five : IEquatable<message_five>
+public interface Imessage_five
 {
-	public point pt = new point();
-	public List<point3D> pts3d = new List<point3D>();
+	Ipoint pt { get; set; }
+	IList<Ipoint3D> pts3d { get; set; }
+} // interface message_five
 
+public class message_five : Imessage_five, IEquatable<message_five>
+{
+	point _pt = new point();
+	public Ipoint pt
+	{
+		get { return _pt; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_pt = (point)value;
+		}
+	}
+	List<Ipoint3D> _pts3d = new List<Ipoint3D>();
+	public IList<Ipoint3D> pts3d
+	{
+		get { return _pts3d; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
+			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
+			_pts3d = tmp;
+		}
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as message_five);
@@ -1466,6 +2031,10 @@ public class message_five : IEquatable<message_five>
 				this.pt.Equals(other.pt) &&
 				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
 	}
+} // class message_five
+
+public class message_five_message
+{
 	public static void compose(ComposerBase composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
 		if (composer is GmqComposer gmqC)
@@ -1493,10 +2062,10 @@ public class message_five : IEquatable<message_five>
 	public static message_five parse(ParserBase parser)
 	{
 		message_five tmp = new message_five();
-		parse(parser, tmp);
+		message_five_message.parse(parser, tmp);
 		return tmp;
 	}
-	public static void parse(ParserBase parser, message_five val)
+	public static void parse(ParserBase parser, Imessage_five val)
 	{
 		if (parser is GmqParser gmqP)
 			parse(gmqP, val);
@@ -1505,7 +2074,7 @@ public class message_five : IEquatable<message_five>
 		else
 			throw new ArgumentException();
 	}
-	public static void parse(JsonParser parser, message_five val)	{
+	public static void parse(JsonParser parser, Imessage_five val)	{
 		parser.skipDelimiter( '{' );
 		while (true)
 		{
@@ -1513,13 +2082,13 @@ public class message_five : IEquatable<message_five>
 			parser.readKeyFromJson( out key );
 			if ( key == "pt" )
 			{
-				point.parse(parser, val.pt);
+				point_message.parse(parser, val.pt);
 			}
 			else if ( key == "pts3d" )
 			{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D.parse(parser, t); val.pts3d.Add(t); });
+				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -1537,19 +2106,19 @@ public class message_five : IEquatable<message_five>
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, message_five val)
+	protected static void parse(GmqParser parser, Imessage_five val)
 	{
 	{
-		point.parse(parser, val.pt);
+		point_message.parse(parser, val.pt);
 	}
 	{
 				ICollectionParse tmp = new CollectionWrapperForParsing(
 				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D.parse(parser, t); val.pts3d.Add(t); });
+				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
-} // class message_five
+} // class message_five_message
 
 	public static void composeMessage_message_five(BufferT buffer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
@@ -1560,7 +2129,7 @@ public class message_five : IEquatable<message_five>
 		composer.composeUnsignedInteger((UInt64)MsgId.message_five);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
-		message_five.compose(composer, pt, pts3d);
+		message_five_message.compose(composer, pt, pts3d);
 		composer.append("\n}");
 	}
 
@@ -1571,72 +2140,6 @@ public class message_five : IEquatable<message_five>
 //                 Publishables
 //
 //////////////////////////////////////////////////////////////
-
-namespace publishable
-{
-
-public interface IBasicTypes
-{
-	Int64 anInt { get; set; }
-	UInt64 anUInt { get; set; }
-	Double aReal { get; set; }
-	String aString { get; set; }
-} // interface BasicTypes
-
-public class BasicTypes_impl : IBasicTypes, IEquatable<BasicTypes_impl>
-{
-	public Int64 anInt { get; set; }
-	public UInt64 anUInt { get; set; }
-	public Double aReal { get; set; }
-	String _aString = String.Empty;
-	public String aString
-	{
-		get { return _aString; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_aString = value;
-		}
-	}
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as BasicTypes_impl);
-	}
-	public static bool operator ==(BasicTypes_impl left, BasicTypes_impl right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(BasicTypes_impl left, BasicTypes_impl right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(BasicTypes_impl other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.anInt == other.anInt &&
-				this.anUInt == other.anUInt &&
-				this.aReal == other.aReal &&
-				this.aString == other.aString;
-	}
-} // class BasicTypes_impl
 
 public class BasicTypes_subscriber : IBasicTypes
 {
@@ -1867,56 +2370,6 @@ public class BasicTypes_publisher : IBasicTypes
 } // class BasicTypes_publisher
 
 
-public interface Ipoint3D
-{
-	Int64 x { get; set; }
-	Int64 y { get; set; }
-	Int64 z { get; set; }
-} // interface point3D
-
-public class point3D_impl : Ipoint3D, IEquatable<point3D_impl>
-{
-	public Int64 x { get; set; }
-	public Int64 y { get; set; }
-	public Int64 z { get; set; }
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as point3D_impl);
-	}
-	public static bool operator ==(point3D_impl left, point3D_impl right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(point3D_impl left, point3D_impl right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(point3D_impl other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.x == other.x &&
-				this.y == other.y &&
-				this.z == other.z;
-	}
-} // class point3D_impl
-
 public class point3D_subscriber : Ipoint3D
 {
 
@@ -2102,76 +2555,6 @@ public class point3D_publisher : Ipoint3D
 	}
 } // class point3D_publisher
 
-
-public interface IAggregateType
-{
-	String name { get; set; }
-	IBasicTypes theAggregate { get; set; }
-	Int64 lastValue { get; set; }
-} // interface AggregateType
-
-public class AggregateType_impl : IAggregateType, IEquatable<AggregateType_impl>
-{
-	String _name = String.Empty;
-	public String name
-	{
-		get { return _name; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_name = value;
-		}
-	}
-	BasicTypes_impl _theAggregate = new BasicTypes_impl();
-	public IBasicTypes theAggregate
-	{
-		get { return _theAggregate; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_theAggregate = (BasicTypes_impl)value;
-		}
-	}
-	public Int64 lastValue { get; set; }
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as AggregateType_impl);
-	}
-	public static bool operator ==(AggregateType_impl left, AggregateType_impl right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(AggregateType_impl left, AggregateType_impl right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(AggregateType_impl other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.name == other.name &&
-				this.theAggregate.Equals(other.theAggregate) &&
-				this.lastValue == other.lastValue;
-	}
-} // class AggregateType_impl
 
 public class AggregateType_subscriber : IAggregateType
 {
@@ -2383,13 +2766,6 @@ public class AggregateType_publisher : IAggregateType
 } // class AggregateType_publisher
 
 
-//**********************************************************************
-// PUBLISHABLE StructSix (3 parameters)
-// 1. CHARACTER_STRING name
-// 2. STRUCT BasicTypes basic
-// 3. STRUCT AggregateType aggregate
-//**********************************************************************
-
 public interface IStructSix
 {
 	String name { get; set; }
@@ -2397,7 +2773,7 @@ public interface IStructSix
 	IAggregateType aggregate { get; set; }
 } // interface StructSix
 
-public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
+public class StructSix : IStructSix, IEquatable<StructSix>
 {
 	String _name = String.Empty;
 	public String name
@@ -2410,7 +2786,7 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 			_name = value;
 		}
 	}
-	BasicTypes_impl _basic = new BasicTypes_impl();
+	BasicTypes _basic = new BasicTypes();
 	public IBasicTypes basic
 	{
 		get { return _basic; }
@@ -2418,10 +2794,10 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 		{
 			if(value == null)
 				throw new ArgumentNullException();
-			_basic = (BasicTypes_impl)value;
+			_basic = (BasicTypes)value;
 		}
 	}
-	AggregateType_impl _aggregate = new AggregateType_impl();
+	AggregateType _aggregate = new AggregateType();
 	public IAggregateType aggregate
 	{
 		get { return _aggregate; }
@@ -2429,14 +2805,14 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 		{
 			if(value == null)
 				throw new ArgumentNullException();
-			_aggregate = (AggregateType_impl)value;
+			_aggregate = (AggregateType)value;
 		}
 	}
 	public override bool Equals(object obj)
 	{
-		return Equals(obj as StructSix_impl);
+		return Equals(obj as StructSix);
 	}
-	public static bool operator ==(StructSix_impl left, StructSix_impl right)
+	public static bool operator ==(StructSix left, StructSix right)
 	{
 		if (ReferenceEquals(left, right))
 			return true;
@@ -2447,7 +2823,7 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 		else
 			return left.Equals(right);
 	}
-	public static bool operator !=(StructSix_impl left, StructSix_impl right)
+	public static bool operator !=(StructSix left, StructSix right)
 	{
 		return !(left == right);
 	}
@@ -2456,7 +2832,7 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 		// TODO
 		throw new InvalidOperationException();
 	}
-	public bool Equals(StructSix_impl other)
+	public bool Equals(StructSix other)
 	{
 		if (ReferenceEquals(this, other))
 			return true;
@@ -2468,7 +2844,14 @@ public class StructSix_impl : IStructSix, IEquatable<StructSix_impl>
 				this.basic.Equals(other.basic) &&
 				this.aggregate.Equals(other.aggregate);
 	}
-} // class StructSix_impl
+} // class StructSix
+
+//**********************************************************************
+// PUBLISHABLE StructSix (3 parameters)
+// 1. CHARACTER_STRING name
+// 2. STRUCT BasicTypes basic
+// 3. STRUCT AggregateType aggregate
+//**********************************************************************
 
 public class StructSix_subscriber : IStructSix, StateSubscriberBase
 {
@@ -2487,7 +2870,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 
 	internal IStructSix data;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_subscriber() : this(new StructSix_impl()) { }
+	public StructSix_subscriber() : this(new StructSix()) { }
 	public StructSix_subscriber(IStructSix data) { this.data = data; }
 	public String name
 	{
@@ -2766,15 +3149,6 @@ public class StructSix_concentrator : StructSix_subscriber, IStateConcentrator
 } // class StructSix_concentrator
 
 
-//**********************************************************************
-// PUBLISHABLE publishable_seven (5 parameters)
-// 1. VECTOR<INTEGER> intVec
-// 2. VECTOR<UINTEGER> uintVec
-// 3. VECTOR<REAL> realVec
-// 4. VECTOR<CHARACTER_STRING> strVec
-// 5. VECTOR< STRUCT point3D> structVec
-//**********************************************************************
-
 public interface Ipublishable_seven
 {
 	IList<Int64> intVec { get; set; }
@@ -2784,7 +3158,7 @@ public interface Ipublishable_seven
 	IList<Ipoint3D> structVec { get; set; }
 } // interface publishable_seven
 
-public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable_seven_impl>
+public class publishable_seven : Ipublishable_seven, IEquatable<publishable_seven>
 {
 	List<Int64> _intVec = new List<Int64>();
 	public IList<Int64> intVec
@@ -2839,15 +3213,15 @@ public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable
 			if(value == null)
 				throw new ArgumentNullException();
 			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
-			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D_impl)) throw new InvalidCastException(); });
+			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
 			_structVec = tmp;
 		}
 	}
 	public override bool Equals(object obj)
 	{
-		return Equals(obj as publishable_seven_impl);
+		return Equals(obj as publishable_seven);
 	}
-	public static bool operator ==(publishable_seven_impl left, publishable_seven_impl right)
+	public static bool operator ==(publishable_seven left, publishable_seven right)
 	{
 		if (ReferenceEquals(left, right))
 			return true;
@@ -2858,7 +3232,7 @@ public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable
 		else
 			return left.Equals(right);
 	}
-	public static bool operator !=(publishable_seven_impl left, publishable_seven_impl right)
+	public static bool operator !=(publishable_seven left, publishable_seven right)
 	{
 		return !(left == right);
 	}
@@ -2867,7 +3241,7 @@ public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable
 		// TODO
 		throw new InvalidOperationException();
 	}
-	public bool Equals(publishable_seven_impl other)
+	public bool Equals(publishable_seven other)
 	{
 		if (ReferenceEquals(this, other))
 			return true;
@@ -2881,7 +3255,16 @@ public class publishable_seven_impl : Ipublishable_seven, IEquatable<publishable
 				Enumerable.SequenceEqual(this.strVec, other.strVec) &&
 				Enumerable.SequenceEqual(this.structVec, other.structVec);
 	}
-} // class publishable_seven_impl
+} // class publishable_seven
+
+//**********************************************************************
+// PUBLISHABLE publishable_seven (5 parameters)
+// 1. VECTOR<INTEGER> intVec
+// 2. VECTOR<UINTEGER> uintVec
+// 3. VECTOR<REAL> realVec
+// 4. VECTOR<CHARACTER_STRING> strVec
+// 5. VECTOR< STRUCT point3D> structVec
+//**********************************************************************
 
 public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberBase
 {
@@ -2916,7 +3299,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 
 	internal Ipublishable_seven data;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_subscriber() : this(new publishable_seven_impl()) { }
+	public publishable_seven_subscriber() : this(new publishable_seven()) { }
 	public publishable_seven_subscriber(Ipublishable_seven data) { this.data = data; }
 	public IList<Int64> intVec
 	{
@@ -2966,7 +3349,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
-				Ipoint3D val = new point3D_impl();
+				Ipoint3D val = new point3D();
 				point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 				point3D_subscriber.parseForStateSync(parser, handler);
 				subscriber.data.structVec.Add(val);
@@ -3024,7 +3407,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
-				Ipoint3D val = new point3D_impl();
+				Ipoint3D val = new point3D();
 				point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 				point3D_subscriber.parseForStateSync(parser, handler);
 				newVal.Add(val);
@@ -3194,7 +3577,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 						(IPublishableParser parser, int index) =>
 						{
 							parser.parseStructBegin();
-							Ipoint3D val = new point3D_impl();
+							Ipoint3D val = new point3D();
 							point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 							point3D_subscriber.parseForStateSync(parser, handler);
 							newVal.Add(val);
@@ -3230,7 +3613,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 					case Publishable.ActionOnVector.insert_single_before:
 					{
 						parser.parsePublishableStructBegin("value");
-						Ipoint3D newVal = new point3D_impl();
+						Ipoint3D newVal = new point3D();
 						point3D_subscriber handler = subscriber.makeElementHandler_structVec(newVal);
 						point3D_subscriber.parse(parser, handler);
 						subscriber.data.structVec.Insert(index, newVal);
@@ -3479,9 +3862,6 @@ public class StateConcentratorFactory : IStateConcentratorFactory
 		}
 	}
 } // class StateConcentratorFactory
-
-
-} // namespace publishable
 
 
 } // namespace mtest

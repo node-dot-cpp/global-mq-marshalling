@@ -39,13 +39,13 @@ namespace TestProject1
         private static void ComposeMessageThree(BufferT buffer, mtest.struct_one msg)
         {
             mtest.test_json.composeMessage_message_three(buffer,
-                thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
+                thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D_message.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
                 firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
-                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
-                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z); }),
+                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point_message.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
+                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D_message.compose(composer, x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z); }),
                 secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
                 tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam),
-                sixthParam: new CollectionWrapperForComposing(() => { return msg.sixthParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.sixthParam[ordinal].x, y: msg.sixthParam[ordinal].y); })
+                sixthParam: new CollectionWrapperForComposing(() => { return msg.sixthParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point_message.compose(composer, x: msg.sixthParam[ordinal].x, y: msg.sixthParam[ordinal].y); })
             );
         }
 
@@ -73,7 +73,7 @@ namespace TestProject1
 
             mtest.test_json.handleMessage(buffer,
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (ParserBase parser) => {
-                    mtest.test_json.message_three msg = mtest.test_json.message_three.parse(parser);
+                    mtest.struct_one msg = mtest.test_json.message_three_message.parse(parser);
                     condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
@@ -96,7 +96,7 @@ namespace TestProject1
                 {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
                     // TODO see what we should really do in that case
-                    mtest.test_json.message_three.parse(parser);
+                    mtest.test_json.message_three_message.parse(parser);
                     condition = true;
                 })
             );

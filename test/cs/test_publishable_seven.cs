@@ -53,9 +53,9 @@ namespace TestProject1
         static IPlatformSupport GmqFactory = new DefaultGmqPlatformSupport();
 
 
-        public static mtest.publishable.publishable_seven_impl GetPublishableSeven()
+        public static mtest.publishable_seven GetPublishableSeven()
         {
-            mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
+            mtest.publishable_seven data = new mtest.publishable_seven();
 
             data.intVec = new List<Int64>();
             data.intVec.Add(1);
@@ -77,15 +77,15 @@ namespace TestProject1
             data.strVec.Add("two");
             data.strVec.Add("three");
 
-            data.structVec = new List<mtest.publishable.Ipoint3D>();
+            data.structVec = new List<mtest.Ipoint3D>();
 
-            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
+            mtest.Ipoint3D e1 = new mtest.point3D();
             e1.x = 101;
             e1.y = 102;
             e1.z = 103;
             data.structVec.Add(e1);
 
-            mtest.publishable.Ipoint3D e2 = new mtest.publishable.point3D_impl();
+            mtest.Ipoint3D e2 = new mtest.point3D();
             e2.x = 201;
             e2.y = 202;
             e2.z = 203;
@@ -96,9 +96,9 @@ namespace TestProject1
 
         static void TestComposeStateSync(IPlatformSupport platform, String fileName)
         {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
+            mtest.publishable_seven data = GetPublishableSeven();
 
-            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, null, new UInt64[] { });
+            mtest.publishable_seven_publisher publ = new mtest.publishable_seven_publisher(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
             IPublishableComposer composer = platform.makePublishableComposer(buffer);
@@ -113,25 +113,25 @@ namespace TestProject1
 
         static void TestParseStateSync(IPlatformSupport platform, String fileName)
         {
-            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber();
+            mtest.publishable_seven_subscriber subs = new mtest.publishable_seven_subscriber();
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
 
             subs.applyStateSyncMessage(parser);
 
-            mtest.publishable.publishable_seven_impl actual = (mtest.publishable.publishable_seven_impl)subs.debugOnlyGetData();
-            mtest.publishable.publishable_seven_impl expected = GetPublishableSeven();
+            mtest.publishable_seven actual = (mtest.publishable_seven)subs.debugOnlyGetData();
+            mtest.publishable_seven expected = GetPublishableSeven();
 
             Assert.Equal(expected, actual);
         }
 
-        static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
+        static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
         {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
+            mtest.publishable_seven data = GetPublishableSeven();
 
             IPublishableComposer composer = platform.makePublishableComposer(null);
-            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, composer, new UInt64[] { });
+            mtest.publishable_seven_publisher publ = new mtest.publishable_seven_publisher(data, composer, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
 
@@ -146,9 +146,9 @@ namespace TestProject1
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-        static void TestParseUpdate(IPlatformSupport platform, String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
+        static void TestParseUpdate(IPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
         {
-            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber();
+            mtest.publishable_seven_subscriber subs = new mtest.publishable_seven_subscriber();
             subs.debugOnlySetData(GetPublishableSeven());
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
@@ -156,8 +156,8 @@ namespace TestProject1
 
             subs.applyMessageWithUpdates(parser);
 
-            mtest.publishable.publishable_seven_impl actual = (mtest.publishable.publishable_seven_impl)subs.debugOnlyGetData();
-            mtest.publishable.publishable_seven_impl expected = GetPublishableSeven();
+            mtest.publishable_seven actual = (mtest.publishable_seven)subs.debugOnlyGetData();
+            mtest.publishable_seven expected = GetPublishableSeven();
 
             Assert.NotEqual(expected, actual);
 
@@ -166,13 +166,13 @@ namespace TestProject1
             Assert.Equal(expected, actual);
         }
 
-        static void doUpdate1(mtest.publishable.Ipublishable_seven data)
+        static void doUpdate1(mtest.Ipublishable_seven data)
         {
             //modify substructure inside vector
             data.structVec[0].y = 505;
         }
 
-        static void doUpdate2(mtest.publishable.Ipublishable_seven data)
+        static void doUpdate2(mtest.Ipublishable_seven data)
         {
             //modify existing elements
             data.intVec[0] = 303;
@@ -180,14 +180,14 @@ namespace TestProject1
             data.realVec[2] = 505;
             data.strVec[1] = "four";
 
-            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
+            mtest.Ipoint3D e1 = new mtest.point3D();
             e1.x = 901;
             e1.y = 902;
             e1.z = 903;
             data.structVec[0] = e1;
         }
 
-        static void doUpdate3(mtest.publishable.Ipublishable_seven data)
+        static void doUpdate3(mtest.Ipublishable_seven data)
         {
             //replace complete vector
             IList<String> strVec = new List<String>();
@@ -197,15 +197,15 @@ namespace TestProject1
 
             data.realVec = new List<Double>();
 
-            IList<mtest.publishable.Ipoint3D> vec = new List<mtest.publishable.Ipoint3D>();
-            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
+            IList<mtest.Ipoint3D> vec = new List<mtest.Ipoint3D>();
+            mtest.Ipoint3D e1 = new mtest.point3D();
             e1.x = 301;
             e1.y = 302;
             e1.z = 303;
             vec.Add(e1);
             data.structVec = vec;
         }
-        static void doUpdate4(mtest.publishable.Ipublishable_seven data)
+        static void doUpdate4(mtest.Ipublishable_seven data)
         {
             //erase elements in vector
             data.intVec.RemoveAt(0);
@@ -213,7 +213,7 @@ namespace TestProject1
             data.structVec.RemoveAt(1);
         }
 
-        static void doUpdate5(mtest.publishable.Ipublishable_seven data)
+        static void doUpdate5(mtest.Ipublishable_seven data)
         {
             //insert elements in vector
             data.intVec.Insert(0, 77);
@@ -221,7 +221,7 @@ namespace TestProject1
             data.realVec.Insert(2, 99);
             data.strVec.Insert(3, "last");
 
-            mtest.publishable.Ipoint3D e1 = new mtest.publishable.point3D_impl();
+            mtest.Ipoint3D e1 = new mtest.point3D();
             e1.x = 301;
             e1.y = 302;
             e1.z = 303;

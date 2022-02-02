@@ -32,7 +32,8 @@
 #include "idl_tree_serializer.h"
 
 //shared by message and publishables
-void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std::string& type_name);
+//void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std::string& type_name);
+void generateCsharpStruct(FILE* header, Root& root, CompositeType& s);
 
 // code generation
 void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );

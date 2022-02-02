@@ -30,15 +30,40 @@
 
 #include <set>
 
-void generateCsharpStandardMethods(FILE* header, const std::string& type_name)
+std::string csharpMsg_getTypeName(CompositeType& s)
+{
+	if (s.type == CompositeType::Type::discriminated_union_case)
+		return fmt::format("{}_{}", s.type2string(), s.name);
+	else
+		return s.name;
+}
+const char* getCSharpType(MessageParameterType::KIND kind)
+{
+	switch (kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+		return "Int64";
+	case MessageParameterType::KIND::UINTEGER:
+		return "UInt64";
+	case MessageParameterType::KIND::REAL:
+		return "Double";
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		return "String";
+	default:
+		assert(false);
+	}
+	return nullptr;
+}
+
+void generateCsharpStandardMethods(FILE* header, const char* type_name)
 {
 
 	fprintf(header, "\tpublic override bool Equals(object obj)\n"
 		"\t{\n"
 		"\t\treturn Equals(obj as %s);\n"
-		"\t}\n", type_name.c_str());
+		"\t}\n", type_name);
 
-	fprintf(header, "\tpublic static bool operator ==(%s left, %s right)\n", type_name.c_str(), type_name.c_str());
+	fprintf(header, "\tpublic static bool operator ==(%s left, %s right)\n", type_name, type_name);
 	fprintf(header,
 		"\t{\n"
 		"\t\tif (ReferenceEquals(left, right))\n"
@@ -54,7 +79,7 @@ void generateCsharpStandardMethods(FILE* header, const std::string& type_name)
 	fprintf(header, "\tpublic static bool operator !=(%s left, %s right)\n"
 		"\t{\n"
 		"\t\treturn !(left == right);\n"
-		"\t}\n", type_name.c_str(), type_name.c_str());
+		"\t}\n", type_name, type_name);
 
 	fprintf(header, "\tpublic override int GetHashCode()\n"
 		"\t{\n"
@@ -64,7 +89,7 @@ void generateCsharpStandardMethods(FILE* header, const std::string& type_name)
 
 }
 
-void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std::string& type_name)
+void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -72,7 +97,7 @@ void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std:
 
 	generateCsharpStandardMethods(header, type_name);
 
-	fprintf(header, "\tpublic bool Equals(%s other)\n", type_name.c_str());
+	fprintf(header, "\tpublic bool Equals(%s other)\n", type_name);
 	fprintf(header,
 		"\t{\n"
 		"\t\tif (ReferenceEquals(this, other))\n"
@@ -115,16 +140,203 @@ void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std:
 	fprintf(header, ";\n\t}\n");
 }
 
+void csharp_generateStructInterface(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
+{
+	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+		s.type == CompositeType::Type::discriminated_union_case ||
+		s.type == CompositeType::Type::publishable);
+
+	fprintf(header, "public interface I%s\n", type_name.c_str());
+	fprintf(header, "{\n");
+
+
+	auto& mem = s.getMembers();
+	for (size_t i = 0; i < mem.size(); ++i)
+	{
+		auto& it = mem[i];
+		assert(it != nullptr);
+		auto& member = *it;
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			fprintf(header, "\t%s %s { get; set; }\n", getCSharpType(member.type.kind), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			fprintf(header, "\tI%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::VECTOR:
+		{
+			switch (member.type.vectorElemKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* elem_type_name = getCSharpType(member.type.vectorElemKind);
+				fprintf(header, "\tIList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			{
+				assert(member.type.structIdx < root.structs.size());
+				const std::string type_name = root.structs[member.type.structIdx]->name;
+				fprintf(header, "\tIList<I%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+	}
+
+	fprintf(header, "} // interface %s\n\n", type_name.c_str());
+}
+
+void csharp_generateStructImpl(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
+{
+	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+		s.type == CompositeType::Type::discriminated_union_case ||
+		s.type == CompositeType::Type::publishable);
+
+	fprintf(header, "public class %s : %s, IEquatable<%s>\n", type_name, interface_name, type_name);
+	fprintf(header, "{\n");
+
+
+	auto& mem = s.getMembers();
+	for (size_t i = 0; i < mem.size(); ++i)
+	{
+		auto& it = mem[i];
+		assert(it != nullptr);
+		auto& member = *it;
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+			fprintf(header, "\tpublic %s %s { get; set; }\n", getCSharpType(member.type.kind), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			fprintf(header, "\t%s _%s = String.Empty;\n", getCSharpType(member.type.kind), member.name.c_str());
+			fprintf(header, "\tpublic %s %s\n", getCSharpType(member.type.kind), member.name.c_str());
+			fprintf(header, "\t{\n");
+			fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+			fprintf(header, "\t\tset\n");
+			fprintf(header, "\t\t{\n");
+			fprintf(header, "\t\t\tif(value == null)\n");
+			fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+			fprintf(header, "\t\t\t_%s = value;\n", member.name.c_str());
+			fprintf(header, "\t\t}\n");
+			fprintf(header, "\t}\n");
+
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			fprintf(header, "\t%s _%s = new %s();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
+			fprintf(header, "\tpublic I%s %s\n", member.type.name.c_str(), member.name.c_str());
+
+			fprintf(header, "\t{\n");
+			fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+			fprintf(header, "\t\tset\n");
+			fprintf(header, "\t\t{\n");
+			fprintf(header, "\t\t\tif(value == null)\n");
+			fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+			fprintf(header, "\t\t\t_%s = (%s)value;\n", member.name.c_str(), member.type.name.c_str());
+			fprintf(header, "\t\t}\n");
+			fprintf(header, "\t}\n");
+
+			break;
+		case MessageParameterType::KIND::VECTOR:
+		{
+			switch (member.type.vectorElemKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* elem_type_name = getCSharpType(member.type.vectorElemKind);
+				fprintf(header, "\tList<%s> _%s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
+				fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
+				fprintf(header, "\t{\n");
+				fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+				fprintf(header, "\t\tset\n");
+				fprintf(header, "\t\t{\n");
+				fprintf(header, "\t\t\tif(value == null)\n");
+				fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+				fprintf(header, "\t\t\t_%s = (List<%s>)value;\n", member.name.c_str(), elem_type_name);
+				fprintf(header, "\t\t}\n");
+				fprintf(header, "\t}\n");
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			{
+				assert(member.type.structIdx < root.structs.size());
+				const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
+				fprintf(header, "\tList<I%s> _%s = new List<I%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
+				fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
+				fprintf(header, "\t{\n");
+				fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
+				fprintf(header, "\t\tset\n");
+				fprintf(header, "\t\t{\n");
+				fprintf(header, "\t\t\tif(value == null)\n");
+				fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
+
+				fprintf(header, "\t\t\tList<I%s> tmp = (List<I%s>)value;\n", elem_type_name, elem_type_name);
+				fprintf(header, "\t\t\ttmp.ForEach((I%s each) => { if(!(each is %s)) throw new InvalidCastException(); });\n", elem_type_name, elem_type_name);
+				fprintf(header, "\t\t\t_%s = tmp;\n", member.name.c_str());
+				fprintf(header, "\t\t}\n");
+				fprintf(header, "\t}\n");
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+	}
+
+	generateCsharpStructEqualsMethod(header, s, type_name);
+
+	fprintf(header, "} // class %s\n\n", type_name);
+}
+
+void generateCsharpStruct(FILE* header, Root& root, CompositeType& s)
+{
+	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+		s.type == CompositeType::Type::discriminated_union_case ||
+		s.type == CompositeType::Type::publishable);
+
+	bool checked = impl_checkParamNameUniqueness(s);
+	checked = impl_checkFollowingExtensionRules(s) && checked;
+	if (!checked)
+		throw std::exception();
+
+	std::string name = csharpMsg_getTypeName(s);
+
+	// base interface
+	csharp_generateStructInterface(header, root, s, name);
+
+	std::string interface_name = "I" + name;
+	// default implementation
+	csharp_generateStructImpl(header, root, s, name.c_str(), interface_name.c_str());
+}
 
 namespace {
 
-	std::string csharpMsg_getTypeName(CompositeType& s)
-	{
-		if (s.type == CompositeType::Type::discriminated_union_case)
-			return fmt::format("{}_{}", s.type2string(), s.name);
-		else
-			return s.name;
-	}
 
 	void csharpMsg_generateScopeEnum(FILE* header, Scope& scope)
 	{
@@ -187,53 +399,53 @@ namespace {
 		}
 	}
 
-	void csharpMsg_generateParseParamTypeLIst(FILE* header, CompositeType& s)
-	{
-		int count = 0;
-		auto& mem = s.getMembers();
-		for (auto it = mem.begin(); it != mem.end(); ++it)
-		{
-			assert(*it != nullptr);
+	//void csharpMsg_generateParseParamTypeLIst(FILE* header, CompositeType& s)
+	//{
+	//	int count = 0;
+	//	auto& mem = s.getMembers();
+	//	for (auto it = mem.begin(); it != mem.end(); ++it)
+	//	{
+	//		assert(*it != nullptr);
 
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
-				continue;
-			++count;
+	//		MessageParameter& param = **it;
+	//		if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+	//			continue;
+	//		++count;
 
-			if (it != mem.begin())
-				fprintf(header, ", ");
+	//		if (it != mem.begin())
+	//			fprintf(header, ", ");
 
 
-			switch (param.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "ref Int64 %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "ref UInt64 %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::REAL:
-				fprintf(header, "ref Double %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "ref String %s", param.name.c_str());
-				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//case MessageParameterType::KIND::BLOB:
-			//case MessageParameterType::KIND::ENUM:
-			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "ICollectionParse %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "IMessageParse %s", param.name.c_str());
-				break;
-			default:
-				assert(false); // unexpected
-				break;
-			}
-		}
-	}
+	//		switch (param.type.kind)
+	//		{
+	//		case MessageParameterType::KIND::INTEGER:
+	//			fprintf(header, "ref Int64 %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::UINTEGER:
+	//			fprintf(header, "ref UInt64 %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::REAL:
+	//			fprintf(header, "ref Double %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::CHARACTER_STRING:
+	//			fprintf(header, "ref String %s", param.name.c_str());
+	//			break;
+	//		//case MessageParameterType::KIND::BYTE_ARRAY:
+	//		//case MessageParameterType::KIND::BLOB:
+	//		//case MessageParameterType::KIND::ENUM:
+	//		case MessageParameterType::KIND::VECTOR:
+	//			fprintf(header, "ICollectionParse %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::STRUCT:
+	//		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			fprintf(header, "IMessageParse %s", param.name.c_str());
+	//			break;
+	//		default:
+	//			assert(false); // unexpected
+	//			break;
+	//		}
+	//	}
+	//}
 
 	void csharpMsg_generateCallerParamTypeLIst(FILE* header, CompositeType& s, bool useRef)
 	{
@@ -475,7 +687,7 @@ namespace {
 					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
 						"\t\t\t\t() => { },\n");
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ %s t = new %s(); %s.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+						"{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
 					break;
 				default:
@@ -488,7 +700,7 @@ namespace {
 				break; // TODO: treatment
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
+				fprintf(header, "\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
@@ -572,7 +784,7 @@ namespace {
 
 
 
-	void csharpMsg_generateUnionCaseComposeJson(FILE* header, CompositeType& s)
+	void csharpMsg_generateUnionCaseComposeJson(FILE* header, CompositeType& s, const char* scope_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -585,12 +797,12 @@ namespace {
 
 		fprintf(header, "\t\tcomposer.append( \"{\\n  \");\n");
 		fprintf(header, "\t\tcomposer.addNamePart(\"caseid\");\n");
-		fprintf(header, "\t\tcomposer.composeSignedInteger((Int64)Variants.%s);\n", s.name.c_str());
+		fprintf(header, "\t\tcomposer.composeSignedInteger((Int64)I%s.Variants.%s);\n", scope_name, s.name.c_str());
 		fprintf(header, "\t\tcomposer.append( \",\\n  \" );\n");
 		fprintf(header, "\t\tcomposer.addNamePart(\"caseData\");\n");
 
 		std::string type_name = csharpMsg_getTypeName(s);
-		fprintf(header, "\t\t%s.compose(composer, ", type_name.c_str());
+		fprintf(header, "\t\t%s.%s_message.compose(composer, ", scope_name, type_name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, s, false);
 		fprintf(header, ");\n");
 
@@ -599,7 +811,7 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateUnionCaseComposeGmq(FILE* header, CompositeType& s)
+	void csharpMsg_generateUnionCaseComposeGmq(FILE* header, CompositeType& s, const char* scope_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -609,10 +821,10 @@ namespace {
 
 		fprintf(header, ")\n\t{\n");
 
-		fprintf(header, "\t\tcomposer.composeSignedInteger((Int64)Variants.%s);\n", s.name.c_str());
+		fprintf(header, "\t\tcomposer.composeSignedInteger((Int64)I%s.Variants.%s);\n", scope_name, s.name.c_str());
 
 		std::string type_name = csharpMsg_getTypeName(s);
-		fprintf(header, "\t\t%s.compose(composer, ", type_name.c_str());
+		fprintf(header, "\t\t%s.%s_message.compose(composer, ", scope_name, type_name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, s, false);
 		fprintf(header, ");\n");
 
@@ -706,11 +918,11 @@ namespace {
 	//	fprintf(header, "\t}\n");
 	//}
 
-	void csharpMsg_generateStructParseJson3(FILE* header, CompositeType& s, const std::string& name)
+	void csharpMsg_generateStructParseJson3(FILE* header, CompositeType& s, const char* name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void parse(JsonParser parser, %s val)", name.c_str());
+		fprintf(header, "\tpublic static void parse(JsonParser parser, %s val)", name);
 
 
 		fprintf(header, "\t{\n");
@@ -805,7 +1017,7 @@ namespace {
 					fprintf(header, "\t\t\t\tICollectionParse tmp = new CollectionWrapperForParsing(\n"
 						"\t\t\t\t() => { },\n");
 					fprintf(header, "\t\t\t\t(ParserBase parser, int ordinal) => "
-						"{ %s t = new %s(); %s.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+						"{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
 					break;
 				default:
@@ -818,7 +1030,7 @@ namespace {
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\t\t%s.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
+				fprintf(header, "\t\t\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
@@ -904,7 +1116,7 @@ namespace {
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tprotected static void parse(JsonParser parser, %s val)\n", type_name.c_str());
+		fprintf(header, "\tprotected static void parse(JsonParser parser, I%s val)\n", type_name.c_str());
 
 		fprintf(header, "\t{\n");
 		//fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
@@ -922,7 +1134,7 @@ namespace {
 		fprintf(header, "\t\tif (key != \"caseData\")\n");
 		fprintf(header, "\t\t\tthrow new FormatException();\n\n");
 
-		fprintf(header, "\t\tswitch ((Variants)caseID)\n");
+		fprintf(header, "\t\tswitch ((I%s.Variants)caseID)\n", type_name.c_str());
 		fprintf(header, "\t\t{\n");
 
 		// each case attributes
@@ -933,9 +1145,13 @@ namespace {
 
 			std::string case_name = csharpMsg_getTypeName(cs);
 
-			fprintf(header, "\t\t\tcase Variants.%s: { %s tmp = new %s(); %s.parse(parser, tmp); val.mem = tmp; break; }\n",
-				cs.name.c_str(), case_name.c_str(), case_name.c_str(), case_name.c_str());
-
+			fprintf(header, "\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
+			fprintf(header, "\t\t\t{\n");
+			fprintf(header, "\t\t\t\t%s.%s tmp = new %s.%s();\n", type_name.c_str(), case_name.c_str(), type_name.c_str(), case_name.c_str());
+			fprintf(header, "\t\t\t\t%s.%s_message.parse(parser, tmp);\n", type_name.c_str(), case_name.c_str());
+			fprintf(header, "\t\t\t\tval.setVariant(tmp);\n");
+			fprintf(header, "\t\t\t\tbreak;\n");
+			fprintf(header, "\t\t\t}\n");
 		}
 
 		fprintf(header, "\t\t\tdefault: throw new System.Exception();\n");
@@ -991,7 +1207,7 @@ namespace {
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tprotected static void parse(GmqParser parser, %s val)\n", type_name.c_str());
+		fprintf(header, "\tprotected static void parse(GmqParser parser, I%s val)\n", type_name.c_str());
 
 		fprintf(header, "\t{\n");
 		//fprintf(header, "\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
@@ -1000,7 +1216,7 @@ namespace {
 		fprintf(header, "\t\tInt64 caseID;\n");
 		fprintf(header, "\t\tparser.parseSignedInteger(out caseID);\n\n");
 
-		fprintf(header, "\t\tswitch ((Variants)caseID)\n");
+		fprintf(header, "\t\tswitch ((I%s.Variants)caseID)\n", type_name.c_str());
 		fprintf(header, "\t\t{\n");
 
 		// each case attributes
@@ -1011,9 +1227,13 @@ namespace {
 
 			std::string case_name = csharpMsg_getTypeName(cs);
 
-			fprintf(header, "\t\t\tcase Variants.%s: { %s tmp = new %s(); %s.parse(parser, tmp); val.mem = tmp; break; }\n",
-				cs.name.c_str(), case_name.c_str(), case_name.c_str(), case_name.c_str());
-
+			fprintf(header, "\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
+			fprintf(header, "\t\t\t{\n");
+			fprintf(header, "\t\t\t\t%s.%s tmp = new %s.%s();\n", type_name.c_str(), case_name.c_str(), type_name.c_str(), case_name.c_str());
+			fprintf(header, "\t\t\t\t%s.%s_message.parse(parser, tmp);\n", type_name.c_str(), case_name.c_str());
+			fprintf(header, "\t\t\t\tval.setVariant(tmp);\n");
+			fprintf(header, "\t\t\t\tbreak;\n");
+			fprintf(header, "\t\t\t}\n");
 		}
 
 		fprintf(header, "\t\t\tdefault: throw new System.Exception();\n");
@@ -1127,7 +1347,7 @@ namespace {
 
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\t%s tmp = new %s();\n", name, name);
-		fprintf(header, "\t\tparse(parser, tmp);\n");
+		fprintf(header, "\t\t%s_message.parse(parser, tmp);\n", name);
 		fprintf(header,	"\t\treturn tmp;\n");
 		fprintf(header, "\t}\n");
 	}
@@ -1245,7 +1465,7 @@ namespace {
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "\tpublic static void parse(ParserBase parser, %s val)\n", type_name.c_str());
+		fprintf(header, "\tpublic static void parse(ParserBase parser, I%s val)\n", type_name.c_str());
 
 		fprintf(header,
 			"\t{\n"
@@ -1329,7 +1549,7 @@ namespace {
 		}
 	}
 
-	void csharpMsg_generateUnionCaseProperties(FILE* header, Root& root, CompositeType& s)
+	void csharpMsg_generateUnionCaseProperties(FILE* header, Root& root, CompositeType& s, bool forInterface)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1341,39 +1561,45 @@ namespace {
 			auto& it = mem[i];
 			assert(it != nullptr);
 			auto& member = *it;
+
+			if (!forInterface)
+				fprintf(header, "\tpublic ");
+			else
+				fprintf(header, "\t");
+
 			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\tpublic Int64 %s\n", member.name.c_str());
+				fprintf(header, "Int64 %s", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\tpublic UInt64 %s\n", member.name.c_str());
+				fprintf(header, "UInt64 %s", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\tpublic Double %s\n", member.name.c_str());
+				fprintf(header, "Double %s", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\tpublic String %s\n", member.name.c_str());
+				fprintf(header, "String %s", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\tpublic %s %s\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "I%s %s", member.type.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
 				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\tpublic List<Int64> %s\n", member.name.c_str());
+					fprintf(header, "IList<Int64> %s", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\tpublic List<UInt64> %s\n", member.name.c_str());
+					fprintf(header, "IList<UInt64> %s", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\tpublic List<Double> %s\n", member.name.c_str());
+					fprintf(header, "IList<Double> %s", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\tpublic List<String> %s\n", member.name.c_str());
+					fprintf(header, "IList<String> %s", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert(false); // unexpected
@@ -1381,7 +1607,7 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 					assert(member.type.structIdx < root.structs.size());
-					fprintf(header, "\tpublic List<%s> %s\n", root.structs[member.type.structIdx]->name.c_str(), member.name.c_str());
+					fprintf(header, "IList<I%s> %s", root.structs[member.type.structIdx]->name.c_str(), member.name.c_str());
 					break;
 				default:
 					assert(false); // not implemented (yet)
@@ -1392,13 +1618,22 @@ namespace {
 				assert(false); // not implemented (yet)
 			}
 
-			fprintf(header, 
-				"\t{\n"
-				"\t\tget { return ((%s)this.mem).%s; }\n", type_name.c_str(), member.name.c_str());
-			fprintf(header,
-				"\t\tset { ((%s)this.mem).%s = value; }\n", type_name.c_str(), member.name.c_str());
-			fprintf(header,
-				"\t}\n");
+			if (forInterface)
+			{
+				fprintf(header, " { get; set; }\n");
+			}
+			else
+			{
+				fprintf(header,
+					"\n"
+					"\t{\n"
+					"\t\tget { return ((%s)this.mem).%s; }\n", type_name.c_str(), member.name.c_str());
+				fprintf(header,
+					"\t\tset { ((%s)this.mem).%s = value; }\n", type_name.c_str(), member.name.c_str());
+				fprintf(header,
+					"\t}\n");
+
+			}
 
 
 		}
@@ -1410,7 +1645,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
-		generateCsharpStandardMethods(header, type_name);
+		generateCsharpStandardMethods(header, type_name.c_str());
 
 		fprintf(header, "\tpublic bool Equals(%s other)\n", type_name.c_str());
 		fprintf(header,
@@ -1441,7 +1676,7 @@ namespace {
 			fprintf(header,
 				"\t\tGmqComposer composer = new GmqComposer(buffer);\n\n"
 				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
-				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
+				"\t\t%s_message.compose(composer, ", msgName.c_str(), msgName.c_str());
 
 
 			csharpMsg_generateCallerParamTypeLIst(header, s, false);
@@ -1456,7 +1691,7 @@ namespace {
 				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
 				"\t\tcomposer.append(\",\\n  \");\n"
 				"\t\tcomposer.addNamePart(\"msgbody\");\n"
-				"\t\t%s.compose(composer, ", msgName.c_str(), msgName.c_str());
+				"\t\t%s_message.compose(composer, ", msgName.c_str(), msgName.c_str());
 
 			csharpMsg_generateCallerParamTypeLIst(header, s, false);
 			fprintf(header,	");\n"
@@ -1470,7 +1705,7 @@ namespace {
 		fprintf(header, "\t}\n\n");
 	}
 
-	void csharpMsg_generateStruct(FILE* header, Root& root, CompositeType& s)
+	void csharpMsg_generateStruct(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1480,25 +1715,28 @@ namespace {
 		// Inner classes should be indented inside their outer class,
 		// but that goes bad in readability of this function, so I prefer to leave it as it is for now.
 
-		bool checked = impl_checkParamNameUniqueness(s);
-		checked = impl_checkFollowingExtensionRules(s) && checked;
-		if (!checked)
-			throw std::exception();
+		//bool checked = impl_checkParamNameUniqueness(s);
+		//checked = impl_checkFollowingExtensionRules(s) && checked;
+		//if (!checked)
+		//	throw std::exception();
 
-		std::string type_name = csharpMsg_getTypeName(s);
 
-		if(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure)
-			impl_generateMessageCommentBlock(header, s);
+		//if(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure)
+		//	impl_generateMessageCommentBlock(header, s);
 
-		fprintf(header, "public class %s : IEquatable<%s>\n"
-			"{\n", type_name.c_str(), type_name.c_str());
+		//fprintf(header, "public class %s : IEquatable<%s>\n"
+		//	"{\n", type_name.c_str(), type_name.c_str());
 
-		csharpMsg_generateStructMembers(header, root, s);
+		//csharpMsg_generateStructMembers(header, root, s);
 
-		fprintf(header, "\n");
+		//fprintf(header, "\n");
 
-		generateCsharpStructEqualsMethod(header, s, type_name);
-		
+		//generateCsharpStructEqualsMethod(header, s, type_name); 
+
+		//fprintf(header, "} // class %s\n\n", type_name.c_str());
+		fprintf(header, "public class %s_message\n", type_name);
+		fprintf(header, "{\n");
+
 		csharpMsg_generateStructComposeBase(header, s);
 		csharpMsg_generateStructComposeJson(header, s);
 		csharpMsg_generateStructComposeGmq(header, s);
@@ -1506,16 +1744,16 @@ namespace {
 		//csharpMsg_generateStructParseBase2(header, s, type_name, false);
 
 		if (s.type == CompositeType::Type::message)
-			csharpMsg_generateStructParseBase4(header, s, type_name.c_str());
+			csharpMsg_generateStructParseBase4(header, s, type_name);
 		
 		//csharpMsg_generateStructParseBase(header, s);
-		csharpMsg_generateStructParseBase3(header, s, type_name.c_str());
+		csharpMsg_generateStructParseBase3(header, s, interface_name);
 		//csharpMsg_generateStructParseJson(header, s);
-		csharpMsg_generateStructParseJson3(header, s, type_name);
+		csharpMsg_generateStructParseJson3(header, s, interface_name);
 		//csharpMsg_generateStructParseGmq(header, s);
-		csharpMsg_generateStructParseGmq3(header, s, type_name.c_str());
+		csharpMsg_generateStructParseGmq3(header, s, interface_name);
 
-		fprintf(header, "} // class %s\n\n", type_name.c_str());
+		fprintf(header, "} // class %s_message\n\n", type_name);
 	}
 
 
@@ -1534,12 +1772,11 @@ namespace {
 
 		std::string type_name = csharpMsg_getTypeName(s);
 
-		fprintf(header, "public class %s : IEquatable<%s>\n"
-			"{\n", type_name.c_str(), type_name.c_str());
+
+		fprintf(header, "public interface I%s\n", type_name.c_str());
+		fprintf(header, "{\n");
 
 		fprintf(header, "\tpublic enum Variants { ");
-
-		std::string concatenatedNames;
 
 		for (auto& it : s.getDiscriminatedUnionCases())
 		{
@@ -1547,34 +1784,55 @@ namespace {
 			CompositeType& cs = *it;
 			assert(cs.type == CompositeType::Type::discriminated_union_case);
 			fprintf(header, "%s = %lld, ", cs.name.c_str(), cs.numID);
-
-			concatenatedNames += cs.name;
-			concatenatedNames += "_";
 		}
 
 		fprintf(header, "unknown };\n");
+
+		fprintf(header, "\tVariants currentVariant();\n");
+		
+		for (auto& it : s.getDiscriminatedUnionCases())
+		{
+			assert(it != nullptr);
+			CompositeType& cs = *it;
+			assert(cs.type == CompositeType::Type::discriminated_union_case);
+
+			std::string case_type_name = csharpMsg_getTypeName(cs);
+			fprintf(header, "\tvoid setVariant(I%s obj);\n", case_type_name.c_str());
+		}
+
+
+		for (auto& duit : s.getDiscriminatedUnionCases())
+		{
+			assert(duit != nullptr);
+			auto& cs = *duit;
+			assert(cs.type == CompositeType::Type::discriminated_union_case);
+			fprintf(header, "\n\t// IDL CASE %s:\n", cs.name.c_str());
+
+			std::string case_type_name = csharpMsg_getTypeName(cs);
+			csharpMsg_generateUnionCaseProperties(header, root, cs, true);
+			csharp_generateStructInterface(header, root, cs, case_type_name);
+		}
+		fprintf(header, "} // interface I%s\n\n", s.name.c_str());
+
+
+		fprintf(header, "public class %s : I%s, IEquatable<%s>\n"
+			"{\n", type_name.c_str(), type_name.c_str(), type_name.c_str());
+
 
 		fprintf(header, "\tObject mem;\n");
 
 
 		fprintf(header, "\n");
 
-		for (auto& it : s.getDiscriminatedUnionCases())
-		{
-			assert(it != nullptr);
-			CompositeType& cs = *it;
-			assert(cs.type == CompositeType::Type::discriminated_union_case);
-			csharpMsg_generateStruct(header, root, cs);
-		}
 
 		csharpMsg_generateUnionEqualsMethod(header, s, type_name);
 
 		// currentVariant()
-		fprintf(header,
-			"\tpublic Variants currentVariant()\n"
-			"\t{\n"
+
+		fprintf(header, "\tpublic I%s.Variants currentVariant()\n", type_name.c_str());
+		fprintf(header, "\t{\n"
 			"\t\tif(this.mem == null)\n"
-			"\t\t\treturn Variants.unknown;\n");
+			"\t\t\treturn I%s.Variants.unknown;\n", type_name.c_str());
 
 		for (auto& it : s.getDiscriminatedUnionCases())
 		{
@@ -1582,16 +1840,26 @@ namespace {
 			CompositeType& cs = *it;
 			assert(cs.type == CompositeType::Type::discriminated_union_case);
 
-			std::string type_name = csharpMsg_getTypeName(cs);
+			std::string case_type_name = csharpMsg_getTypeName(cs);
 			fprintf(header,
 				"\t\telse if(this.mem is %s)\n"
-				"\t\t\treturn Variants.%s;\n", type_name.c_str(), cs.name.c_str());
+				"\t\t\treturn I%s.Variants.%s;\n", case_type_name.c_str(), type_name.c_str(), cs.name.c_str());
 		}
 
 		fprintf(header,
 			"\t\telse\n"
-			"\t\t\treturn Variants.unknown;\n"
-			"\t}\n");
+			"\t\t\treturn I%s.Variants.unknown;\n"
+			"\t}\n", type_name.c_str());
+
+		for (auto& it : s.getDiscriminatedUnionCases())
+		{
+			assert(it != nullptr);
+			CompositeType& cs = *it;
+			assert(cs.type == CompositeType::Type::discriminated_union_case);
+
+			std::string case_type_name = csharpMsg_getTypeName(cs);
+			fprintf(header, "\tpublic void setVariant(I%s.I%s obj) { this.mem = obj; }\n", type_name.c_str(), case_type_name.c_str());
+		}
 
 
 		// each case attributes
@@ -1599,10 +1867,21 @@ namespace {
 		{
 			assert(duit != nullptr);
 			auto& cs = *duit;
+			assert(cs.type == CompositeType::Type::discriminated_union_case);
 			fprintf(header, "\n\t// IDL CASE %s:\n", cs.name.c_str());
 
-			csharpMsg_generateUnionCaseProperties(header, root, cs);
+			std::string case_type_name = csharpMsg_getTypeName(cs);
+			std::string interface_name = "I" + type_name + ".I" + case_type_name;
+
+			csharpMsg_generateUnionCaseProperties(header, root, cs, false);
+			csharp_generateStructImpl(header, root, cs, case_type_name.c_str(), interface_name.c_str());
+			csharpMsg_generateStruct(header, root, cs, case_type_name.c_str(), interface_name.c_str());
 		}
+
+		fprintf(header, "} // class %s\n\n", s.name.c_str());
+
+		fprintf(header, "public class %s_message\n", type_name.c_str());
+		fprintf(header, "{\n");
 
 		//csharpMsg_generateUnionParseBase(header, s);
 		csharpMsg_generateUnionParseBase3(header, s);
@@ -1617,23 +1896,25 @@ namespace {
 			auto& cs = *duit;
 			fprintf(header, "\n\t// IDL CASE %s:\n", cs.name.c_str());
 
+			std::string type_name = csharpMsg_getTypeName(s);
+
 			csharpMsg_generateStructComposeBase(header, cs, true);
-			csharpMsg_generateUnionCaseComposeJson(header, cs);
-			csharpMsg_generateUnionCaseComposeGmq(header, cs);
+			csharpMsg_generateUnionCaseComposeJson(header, cs, type_name.c_str());
+			csharpMsg_generateUnionCaseComposeGmq(header, cs, type_name.c_str());
 		}
 		
 
-		fprintf(header, "} // class %s\n\n", s.name.c_str());
+		fprintf(header, "} // class %s_message\n\n", s.name.c_str());
 	}
 
 	void csharpMsg_generateMessageAliasMethods(FILE* header, CompositeType& s, CompositeType& target, const char* composerType, const char* parserType)
 	{
 
-		fprintf(header, "\tpublic new static void compose(%s composer, ", composerType);
+		fprintf(header, "\tpublic static void compose(%s composer, ", composerType);
 		csharpMsg_generateComposeParamTypeLIst(header, target);
 		fprintf(header, ")\n\t{\n");
 
-		fprintf(header, "\t\t%s.compose(composer, ", target.name.c_str());
+		fprintf(header, "\t\t%s_message.compose(composer, ", target.name.c_str());
 		csharpMsg_generateCallerParamTypeLIst(header, target, false);
 		fprintf(header, ");\n");
 
@@ -1661,12 +1942,12 @@ namespace {
 
 		impl_generateMessageCommentBlock(header, s);
 
-		fprintf(header, "public class %s : %s\n"
-			"{\n", s.name.c_str(), target.name.c_str());
+		fprintf(header, "public class %s_message\n"
+			"{\n", s.name.c_str());
 
 		std::string type_name = csharpMsg_getTypeName(s);
 		//csharpMsg_generateStructParseBase2(header, target, type_name, true);
-		csharpMsg_generateStructParseBase4(header, s, type_name.c_str());
+		csharpMsg_generateStructParseBase4(header, s, target.name.c_str());
 		csharpMsg_generateMessageAliasMethods(header, s, target, "ComposerBase", "ParserBase");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "GmqComposer", "GmqParser");
 		csharpMsg_generateMessageAliasMethods(header, s, target, "JsonComposer", "JsonParser");
@@ -1791,10 +2072,17 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 		assert(it != nullptr);
 		assert(typeid(*(it)) == typeid(CompositeType));
 
-		if (it->isStruct4Messaging)
+		if (it->isStruct4Messaging || it->isStruct4Publishing)
 		{
 			if (it->type == CompositeType::Type::structure)
-				csharpMsg_generateStruct(header, s, *it);
+			{
+
+				std::string type_name = csharpMsg_getTypeName(*it);
+				std::string interface_name = "I" + type_name;
+
+				generateCsharpStruct(header, s, *it);
+				csharpMsg_generateStruct(header, s, *it, type_name.c_str(), interface_name.c_str());
+			}
 			else if (it->type == CompositeType::Type::discriminated_union)
 				csharpMsg_generateUnion(header, s, *it);
 			else
@@ -1820,7 +2108,11 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 			assert( it->type == CompositeType::Type::message );
 			if (!it->isAlias)
 			{
-				csharpMsg_generateStruct(header, s, *it);
+				std::string type_name = csharpMsg_getTypeName(*it);
+				std::string interface_name = "I" + type_name;
+
+				generateCsharpStruct(header, s, *it);
+				csharpMsg_generateStruct(header, s, *it, type_name.c_str(), interface_name.c_str());
 				csharpMsg_generateComposeMessageMethod(header, it->name, *it, scope->proto);
 			}
 			else

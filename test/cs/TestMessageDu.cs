@@ -40,9 +40,9 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            mtest.struct_du.compose(composer,
-                pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: 5, y: 6, z: 7); }),
-                disc_union: new MessageWrapperForComposing((ComposerBase composer) => { mtest.du_one.compose_one(composer, D1: 2.3, D2: 4.5, D3: 6.7); })
+            mtest.struct_du_message.compose(composer,
+                pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D_message.compose(composer, x: 5, y: 6, z: 7); }),
+                disc_union: new MessageWrapperForComposing((ComposerBase composer) => { mtest.du_one_message.compose_one(composer, D1: 2.3, D2: 4.5, D3: 6.7); })
                 );
 
             buffer.writeToFile("struct_du_1.gmq");
@@ -53,11 +53,11 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            mtest.struct_du.compose(composer,
-                pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: 5, y: 6, z: 7); }),
+            mtest.struct_du_message.compose(composer,
+                pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D_message.compose(composer, x: 5, y: 6, z: 7); }),
                 disc_union: new MessageWrapperForComposing((ComposerBase composer) =>
                 {
-                    mtest.du_one.compose_two(composer,
+                    mtest.du_one_message.compose_two(composer,
 Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
 );
                 })
@@ -73,20 +73,20 @@ Data: SimpleTypeCollection.makeComposer(new List<Single> { 2.3f, 4.5f, 6.7f })
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
             mtest.struct_du msg = new mtest.struct_du();
-            mtest.struct_du.parse(parser, msg);
+            mtest.struct_du_message.parse(parser, msg);
 
             SimpleBuffer buffer2 = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer2);
 
 
-            mtest.struct_du.compose(composer,
-            pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.pt.x, y: msg.pt.y, z: msg.pt.z); }),
+            mtest.struct_du_message.compose(composer,
+            pt: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D_message.compose(composer, x: msg.pt.x, y: msg.pt.y, z: msg.pt.z); }),
             disc_union: new MessageWrapperForComposing((ComposerBase composer) =>
             {
-                if (msg.disc_union.currentVariant() == mtest.du_one.Variants.one)
-                    mtest.du_one.compose_one(composer, D1: msg.disc_union.D1, D2: msg.disc_union.D2, D3: msg.disc_union.D3);
-                else if (msg.disc_union.currentVariant() == mtest.du_one.Variants.two)
-                    mtest.du_one.compose_two(composer,
+                if (msg.disc_union.currentVariant() == mtest.Idu_one.Variants.one)
+                    mtest.du_one_message.compose_one(composer, D1: msg.disc_union.D1, D2: msg.disc_union.D2, D3: msg.disc_union.D3);
+                else if (msg.disc_union.currentVariant() == mtest.Idu_one.Variants.two)
+                    mtest.du_one_message.compose_two(composer,
                         Data: SimpleTypeCollection.makeComposer(msg.disc_union.Data));
             })
             );

@@ -39,11 +39,11 @@ namespace TestProject1
             notifyUpdated_anInt, notifyUpdated_anUInt, notifyUpdated_aReal, notifyUpdated_aString,
             notifyUpdated_name, notifyUpdated_theAggregate, notifyUpdated_lastValue,
             notifyUpdated_basic, notifyUpdated_aggregate, notifyFullyUpdated };
-        public class BasicTypes_stub : mtest.publishable.BasicTypes_subscriber
+        public class BasicTypes_stub :   mtest.BasicTypes_subscriber
         {
             List<Events> handled;
 
-            public BasicTypes_stub(mtest.publishable.IBasicTypes data, List<Events> handled) : base(data)
+            public BasicTypes_stub(  mtest.IBasicTypes data, List<Events> handled) : base(data)
             {
                 this.handled = handled;
             }
@@ -55,16 +55,16 @@ namespace TestProject1
             public override void notifyUpdated_aString(String old) { handled.Add(Events.notifyUpdated_aString); }
 
         }
-        public class AggregateType_stub : mtest.publishable.AggregateType_subscriber
+        public class AggregateType_stub :   mtest.AggregateType_subscriber
         {
             List<Events> handled;
 
-            public AggregateType_stub(mtest.publishable.IAggregateType data, List<Events> handled) : base(data)
+            public AggregateType_stub(  mtest.IAggregateType data, List<Events> handled) : base(data)
             {
                 this.handled = handled;
             }
 
-            public override mtest.publishable.BasicTypes_subscriber makeHandler_theAggregate(mtest.publishable.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
+            public override   mtest.BasicTypes_subscriber makeHandler_theAggregate(  mtest.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
 
             public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_name); }
             public override void notifyUpdated_theAggregate() { handled.Add(Events.notifyUpdated_theAggregate); }
@@ -73,7 +73,7 @@ namespace TestProject1
 
         }
 
-        public class StructSix_stub : mtest.publishable.StructSix_subscriber
+        public class StructSix_stub :   mtest.StructSix_subscriber
         {
             List<Events> handled;
 
@@ -82,8 +82,8 @@ namespace TestProject1
                 this.handled = handled;
             }
 
-            public override mtest.publishable.BasicTypes_subscriber makeHandler_basic(mtest.publishable.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
-            public override mtest.publishable.AggregateType_subscriber makeHandler_aggregate(mtest.publishable.IAggregateType data) { return new AggregateType_stub(data, handled); }
+            public override   mtest.BasicTypes_subscriber makeHandler_basic(  mtest.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
+            public override   mtest.AggregateType_subscriber makeHandler_aggregate(  mtest.IAggregateType data) { return new AggregateType_stub(data, handled); }
 
             public override void notifyFullyUpdated() { handled.Add(Events.notifyFullyUpdated); }
             public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_name); }

@@ -60,7 +60,7 @@ namespace TestProject1
             IPlatformSupport platform = new DefaultJsonPlatformSupport();
 
             GMQueue gmq = new GMQueue();
-            gmq.initStateConcentratorFactory(new mtest.publishable.StateConcentratorFactory(), platform);
+            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory(), platform);
             gmq.setAuthority(String.Empty);
 
             MetaPool mp = new MetaPool();
@@ -71,8 +71,8 @@ namespace TestProject1
             mp.setTransport(transport);
             mp.setPlatform(new DefaultJsonPlatformSupport());
 
-            mtest.publishable.StructSix_impl data = test_publishable_six.GetPublishableSix();
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, platform.makePublishableComposer(null), new UInt64[] { });
+            mtest.StructSix data = test_publishable_six.GetPublishableSix();
+            mtest.StructSix_publisher publ = new mtest.StructSix_publisher(data, platform.makePublishableComposer(null), new UInt64[] { });
 
             mp.add(publ);
 
@@ -84,8 +84,8 @@ namespace TestProject1
             string path = GmqPathHelper.compose(pc);
 
             
-            mtest.publishable.StructSix_subscriber subs1 = new mtest.publishable.StructSix_subscriber();
-            mtest.publishable.StructSix_impl data1 = (mtest.publishable.StructSix_impl)subs1.debugOnlyGetData();
+            mtest.StructSix_subscriber subs1 = new mtest.StructSix_subscriber();
+            mtest.StructSix data1 = (mtest.StructSix)subs1.debugOnlyGetData();
 
             Assert.NotEqual(data, data1);
 
@@ -96,14 +96,14 @@ namespace TestProject1
 
             Assert.Equal(data, data1);
 
-            mtest.publishable.StructSix_subscriber subs2 = new mtest.publishable.StructSix_subscriber();
-            mtest.publishable.StructSix_impl data2 = (mtest.publishable.StructSix_impl)subs2.debugOnlyGetData();
+            mtest.StructSix_subscriber subs2 = new mtest.StructSix_subscriber();
+            mtest.StructSix data2 = (mtest.StructSix)subs2.debugOnlyGetData();
 
             mp.add(subs2);
             mp.subscribe(subs2, path);
 
-            mtest.publishable.StructSix_subscriber subs3 = new mtest.publishable.StructSix_subscriber();
-            mtest.publishable.StructSix_impl data3 = (mtest.publishable.StructSix_impl)subs3.debugOnlyGetData();
+            mtest.StructSix_subscriber subs3 = new mtest.StructSix_subscriber();
+            mtest.StructSix data3 = (mtest.StructSix)subs3.debugOnlyGetData();
 
             mp.add(subs3);
             mp.subscribe(subs3, path);

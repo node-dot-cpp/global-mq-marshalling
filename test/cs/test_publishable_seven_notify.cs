@@ -46,11 +46,11 @@ namespace TestProject1
             notifyFullyUpdated
         };
 
-        class point3D_stub : mtest.publishable.point3D_subscriber
+        class point3D_stub :  mtest.point3D_subscriber
         {
             List<Events> handled;
 
-            public point3D_stub(mtest.publishable.Ipoint3D data, List<Events> handled) : base(data)
+            public point3D_stub( mtest.Ipoint3D data, List<Events> handled) : base(data)
             {
                 this.handled = handled;
             }
@@ -60,7 +60,7 @@ namespace TestProject1
             public override void notifyUpdated_z(Int64 old) { handled.Add(Events.notifyUpdated_z); }
         }
 
-            class publishable_seven_stub : mtest.publishable.publishable_seven_subscriber
+            class publishable_seven_stub :  mtest.publishable_seven_subscriber
         {
             List<Events> handled;
 
@@ -69,7 +69,7 @@ namespace TestProject1
                 this.handled = handled;
             }
 
-            public override mtest.publishable.point3D_subscriber makeElementHandler_structVec(mtest.publishable.Ipoint3D data) { return new point3D_stub(data, handled); }
+            public override  mtest.point3D_subscriber makeElementHandler_structVec( mtest.Ipoint3D data) { return new point3D_stub(data, handled); }
 
 
 
@@ -109,7 +109,7 @@ namespace TestProject1
 
             stub.applyStateSyncMessage(parserInitial);
 
-            Assert.Equal(test_publishable_seven.GetPublishableSeven(), (mtest.publishable.publishable_seven_impl)stub.debugOnlyGetData());
+            Assert.Equal(test_publishable_seven.GetPublishableSeven(), ( mtest.publishable_seven)stub.debugOnlyGetData());
 
             if (fileUpdate != null)
             {

@@ -96,175 +96,6 @@ namespace {
 		return nullptr;
 	}
 
-	void csharpPub_generateStructInterface(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
-	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
-
-		fprintf(header, "public interface I%s\n", type_name.c_str());
-		fprintf(header, "{\n");
-
-
-		auto& mem = s.getMembers();
-		for (size_t i = 0; i < mem.size(); ++i)
-		{
-			auto& it = mem[i];
-			assert(it != nullptr);
-			auto& member = *it;
-			switch (member.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t%s %s { get; set; }\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\tI%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
-				break;
-			case MessageParameterType::KIND::VECTOR:
-			{
-				switch (member.type.vectorElemKind)
-				{
-					case MessageParameterType::KIND::INTEGER:
-					case MessageParameterType::KIND::UINTEGER:
-					case MessageParameterType::KIND::REAL:
-					case MessageParameterType::KIND::CHARACTER_STRING:
-					{
-						const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
-						fprintf(header, "\tIList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-						break;
-					}
-					case MessageParameterType::KIND::STRUCT:
-					case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					{
-						assert(member.type.structIdx < root.structs.size());
-						const std::string type_name = root.structs[member.type.structIdx]->name;
-						fprintf(header, "\tIList<I%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
-						break;
-					}
-				default:
-					assert(false); // not implemented (yet)
-				}
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-		}
-
-		fprintf(header, "} // interface %s\n\n", type_name.c_str());
-	}
-
-	void csharpPub_generateStructImpl(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
-	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
-
-		fprintf(header, "public class %s_impl : I%s, IEquatable<%s_impl>\n", type_name.c_str(), type_name.c_str(), type_name.c_str());
-		fprintf(header, "{\n");
-
-
-		auto& mem = s.getMembers();
-		for (size_t i = 0; i < mem.size(); ++i)
-		{
-			auto& it = mem[i];
-			assert(it != nullptr);
-			auto& member = *it;
-			switch (member.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\tpublic %s %s { get; set; }\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
-				break;
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t%s _%s = String.Empty;\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
-				fprintf(header, "\tpublic %s %s\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
-				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
-				fprintf(header, "\t\tset\n");
-				fprintf(header, "\t\t{\n");
-				fprintf(header, "\t\t\tif(value == null)\n");
-				fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
-				fprintf(header, "\t\t\t_%s = value;\n", member.name.c_str());
-				fprintf(header, "\t\t}\n");
-				fprintf(header, "\t}\n");
-
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t%s_impl _%s = new %s_impl();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
-				fprintf(header, "\tpublic I%s %s\n", member.type.name.c_str(), member.name.c_str());
-
-				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
-				fprintf(header, "\t\tset\n");
-				fprintf(header, "\t\t{\n");
-				fprintf(header, "\t\t\tif(value == null)\n");
-				fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
-				fprintf(header, "\t\t\t_%s = (%s_impl)value;\n", member.name.c_str(), member.type.name.c_str());
-				fprintf(header, "\t\t}\n");
-				fprintf(header, "\t}\n");
-
-				break;
-			case MessageParameterType::KIND::VECTOR:
-			{
-				switch (member.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-				case MessageParameterType::KIND::UINTEGER:
-				case MessageParameterType::KIND::REAL:
-				case MessageParameterType::KIND::CHARACTER_STRING:
-				{
-					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
-					fprintf(header, "\tList<%s> _%s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
-					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t{\n");
-					fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
-					fprintf(header, "\t\tset\n");
-					fprintf(header, "\t\t{\n");
-					fprintf(header, "\t\t\tif(value == null)\n");
-					fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
-					fprintf(header, "\t\t\t_%s = (List<%s>)value;\n", member.name.c_str(), elem_type_name);
-					fprintf(header, "\t\t}\n");
-					fprintf(header, "\t}\n");
-					break;
-				}
-				case MessageParameterType::KIND::STRUCT:
-				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				{
-					assert(member.type.structIdx < root.structs.size());
-					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
-					fprintf(header, "\tList<I%s> _%s = new List<I%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
-					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t{\n");
-					fprintf(header, "\t\tget { return _%s; }\n", member.name.c_str());
-					fprintf(header, "\t\tset\n");
-					fprintf(header, "\t\t{\n");
-					fprintf(header, "\t\t\tif(value == null)\n");
-					fprintf(header, "\t\t\t\tthrow new ArgumentNullException();\n");
-
-					fprintf(header, "\t\t\tList<I%s> tmp = (List<I%s>)value;\n", elem_type_name, elem_type_name);
-					fprintf(header, "\t\t\ttmp.ForEach((I%s each) => { if(!(each is %s_impl)) throw new InvalidCastException(); });\n", elem_type_name, elem_type_name);
-					fprintf(header, "\t\t\t_%s = tmp;\n", member.name.c_str());
-					fprintf(header, "\t\t}\n");
-					fprintf(header, "\t}\n");
-					break;
-				}
-				default:
-					assert(false); // not implemented (yet)
-				}
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-		}
-
-		generateCsharpStructEqualsMethod(header, s, type_name + "_impl");
-
-		fprintf(header, "} // class %s_impl\n\n", type_name.c_str());
-	}
 
 	void csharpPub_generateAddressEnum(FILE* header, CompositeType& s)
 	{
@@ -339,7 +170,7 @@ namespace {
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
 					fprintf(header, "\t\t\t{\n");
 					fprintf(header, "\t\t\t\tparser.parseStructBegin();\n");
-					fprintf(header, "\t\t\t\tI%s val = new %s_impl();\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
@@ -443,7 +274,7 @@ namespace {
 					fprintf(header, "\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
 					fprintf(header, "\t\t\t{\n");
 					fprintf(header, "\t\t\t\tparser.parseStructBegin();\n");
-					fprintf(header, "\t\t\t\tI%s val = new %s_impl();\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tnewVal.Add(val);\n");
@@ -603,7 +434,7 @@ namespace {
 					fprintf(header, "\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
 					fprintf(header, "\t\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\t\tparser.parseStructBegin();\n");
-					fprintf(header, "\t\t\t\t\t\t\tI%s val = new %s_impl();\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t\tnewVal.Add(val);\n");
@@ -644,7 +475,7 @@ namespace {
 					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.insert_single_before:\n");
 					fprintf(header, "\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-					fprintf(header, "\t\t\t\t\t\tI%s newVal = new %s_impl();\n", elem_type_name, elem_type_name);
+					fprintf(header, "\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber.parse(parser, handler);\n", elem_type_name);
 					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
@@ -930,7 +761,7 @@ namespace {
 		csharpPub_generateAddressEnum(header, s);
 
 		if (s.type == CompositeType::Type::publishable)
-			fprintf(header, "\tpublic %s_subscriber() : this(new %s_impl()) { }\n", type_name.c_str(), type_name.c_str());
+			fprintf(header, "\tpublic %s_subscriber() : this(new %s()) { }\n", type_name.c_str(), type_name.c_str());
 
 
 		fprintf(header, "\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name.c_str(), type_name.c_str());
@@ -1380,11 +1211,11 @@ namespace {
 		if(s.type == CompositeType::Type::publishable)
 			impl_generatePublishableCommentBlock(header, s);
 
-		// base interface
-		csharpPub_generateStructInterface(header, root, s, name);
+		//// base interface
+		//csharpPub_generateStructInterface(header, root, s, name);
 
-		// default implementation
-		csharpPub_generateStructImpl(header, root, s, name);
+		//// default implementation
+		//csharpPub_generateStructImpl(header, root, s, name);
 
 		// wrapper for subscriber
 		csharpPub_generateStructSubs(header, root, s, name);
@@ -1418,10 +1249,10 @@ void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FI
 	fprintf(header, "//\n");
 	fprintf(header, "//////////////////////////////////////////////////////////////\n\n");
 
-	fprintf(header,
-		"namespace publishable\n"
-		"{\n"
-		"\n");
+	//fprintf(header,
+		////"namespace publishable\n"
+		////"{\n"
+		//"\n");
 
 	//for ( auto& it : s.publishables )
 	//{
@@ -1449,6 +1280,7 @@ void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FI
 		assert(it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert(it->type == CompositeType::Type::publishable );
+		generateCsharpStruct(header, s, *it);
 		csharpPub_generateStruct( header, s, *it );
 	}
 	//fprintf( header, "\n//===============================================================================\n\n" );
@@ -1495,6 +1327,6 @@ void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FI
 	//	}
 	//}
 
-	fprintf(header, "\n} // namespace publishable\n\n");
+	//fprintf(header, "\n} // namespace publishable\n\n");
 }
 

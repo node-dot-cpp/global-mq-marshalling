@@ -45,10 +45,10 @@ namespace TestProject1
 
             msg.firstParam = 1;
             msg.secondParam = new List<long> { 0, 1, 2, 3, 4, 5 };
-            msg.thirdParam = new System.Collections.Generic.List<mtest.point3D> { new mtest.point3D { x = 0, y = 1, z = 2 }, new mtest.point3D { x = 3, y = 4, z = 5 } };
+            msg.thirdParam = new List<mtest.Ipoint3D> { new mtest.point3D { x = 0, y = 1, z = 2 }, new mtest.point3D { x = 3, y = 4, z = 5 } };
             msg.forthParam = 3;
             msg.fifthParam = "def";
-            msg.sixthParam = new List<mtest.point> { new mtest.point { x = 0, y = 1 }, new mtest.point { x = 2, y = 3 }, new mtest.point { x = 4, y = 5 } };
+            msg.sixthParam = new List<mtest.Ipoint> { new mtest.point { x = 0, y = 1 }, new mtest.point { x = 2, y = 3 }, new mtest.point { x = 4, y = 5 } };
             msg.seventhParam = 3.1416;
             msg.eighthParam = new mtest.point { x = 175, y = 186 };
             msg.ninethParam = new mtest.point3D { x = 123, y = 456, z = 789 };
@@ -59,14 +59,14 @@ namespace TestProject1
 
         private static void ComposeStructOne(ComposerBase composer, mtest.struct_one msg)
         {
-            mtest.struct_one.compose(composer,
-                thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
+            mtest.struct_one_message.compose(composer,
+                thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D_message.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
                 firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
-                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
-                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D.compose(composer, x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z); }),
+                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point_message.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
+                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D_message.compose(composer, x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z); }),
                 secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
                 tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam),
-                sixthParam: new CollectionWrapperForComposing(() => { return msg.sixthParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point.compose(composer, x: msg.sixthParam[ordinal].x, y: msg.sixthParam[ordinal].y); })
+                sixthParam: new CollectionWrapperForComposing(() => { return msg.sixthParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point_message.compose(composer, x: msg.sixthParam[ordinal].x, y: msg.sixthParam[ordinal].y); })
             );
         }
 
@@ -109,7 +109,7 @@ namespace TestProject1
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
             mtest.struct_one msg = new mtest.struct_one();
-            mtest.struct_one.parse(parser, msg);
+            mtest.struct_one_message.parse(parser, msg);
 
             Assert.Equal(msg, GetSampleData());
         }
@@ -121,7 +121,7 @@ namespace TestProject1
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
             mtest.struct_one msg = new mtest.struct_one();
-            mtest.struct_one.parse(parser, msg);
+            mtest.struct_one_message.parse(parser, msg);
 
             Assert.Equal(msg, GetSampleData());
         }
@@ -138,7 +138,7 @@ namespace TestProject1
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
             mtest.struct_one msg2 = new mtest.struct_one();
-            mtest.struct_one.parse(parser, msg2);
+            mtest.struct_one_message.parse(parser, msg2);
 
             Assert.Equal(msg, msg2);
         }
@@ -156,7 +156,7 @@ namespace TestProject1
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
             mtest.struct_one msg2 = new mtest.struct_one();
-            mtest.struct_one.parse(parser, msg2);
+            mtest.struct_one_message.parse(parser, msg2);
 
             Assert.Equal(msg, msg2);
         }
