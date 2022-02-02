@@ -84,8 +84,8 @@ namespace TestProject1
             string path = GmqPathHelper.compose(pc);
 
             
-            mtest.publishable.StructSix_impl data1 = new mtest.publishable.StructSix_impl();
-            mtest.publishable.StructSix_subscriber subs1 = new mtest.publishable.StructSix_subscriber(data1);
+            mtest.publishable.StructSix_subscriber subs1 = new mtest.publishable.StructSix_subscriber();
+            mtest.publishable.StructSix_impl data1 = (mtest.publishable.StructSix_impl)subs1.debugOnlyGetData();
 
             Assert.NotEqual(data, data1);
 
@@ -96,14 +96,14 @@ namespace TestProject1
 
             Assert.Equal(data, data1);
 
-            mtest.publishable.StructSix_impl data2 = new mtest.publishable.StructSix_impl();
-            mtest.publishable.StructSix_subscriber subs2 = new mtest.publishable.StructSix_subscriber(data2);
+            mtest.publishable.StructSix_subscriber subs2 = new mtest.publishable.StructSix_subscriber();
+            mtest.publishable.StructSix_impl data2 = (mtest.publishable.StructSix_impl)subs2.debugOnlyGetData();
 
             mp.add(subs2);
             mp.subscribe(subs2, path);
 
-            mtest.publishable.StructSix_impl data3 = new mtest.publishable.StructSix_impl();
-            mtest.publishable.StructSix_subscriber subs3 = new mtest.publishable.StructSix_subscriber(data3);
+            mtest.publishable.StructSix_subscriber subs3 = new mtest.publishable.StructSix_subscriber();
+            mtest.publishable.StructSix_impl data3 = (mtest.publishable.StructSix_impl)subs3.debugOnlyGetData();
 
             mp.add(subs3);
             mp.subscribe(subs3, path);
