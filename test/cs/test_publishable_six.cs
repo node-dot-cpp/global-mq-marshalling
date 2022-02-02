@@ -40,6 +40,9 @@ namespace TestProject1
         internal const string Path2 = "test_publishable_six_update2.json";
         internal const string Path3 = "test_publishable_six_update3.json";
 
+
+        static IPlatformSupport jsonFactory = new DefaultJsonPlatformSupport();
+
         internal static mtest.publishable.StructSix_impl GetPublishableSix()
         {
             mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
@@ -66,48 +69,46 @@ namespace TestProject1
         }
 
 
-        [Fact]
-        public static void TestJsonComposeStateSync()
+        internal static void TestComposeStateSync(IPlatformSupport platform, String fileName)
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
             mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            JsonPublishableComposer composer = new JsonPublishableComposer();
-            
-            composer.startTick(buffer);
+            IPublishableComposer composer = platform.makePublishableComposer(buffer);
+
             publ.generateStateSyncMessage(composer);
 
             // uncomment to update file
             //buffer.writeToFile(Path);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
 
-        [Fact]
-        public static void TestJsonParseStateSync()
+        internal static void TestParseStateSync(IPlatformSupport platform, String fileName)
         {
-            mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
+            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber();
 
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
+            IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
 
             subs.applyStateSyncMessage(parser);
 
-            Assert.Equal(data, GetPublishableSix());
+            mtest.publishable.StructSix_impl actual = (mtest.publishable.StructSix_impl)subs.debugOnlyGetData();
+            mtest.publishable.StructSix_impl expected = GetPublishableSix();
+            Assert.Equal(expected, actual);
         }
 
-        static void TestJsonComposeUpdate(String fileName, Action<mtest.publishable.IStructSix> updateDelegate)
+
+        internal static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action<mtest.publishable.IStructSix> updateDelegate)
         {
             mtest.publishable.StructSix_impl data = GetPublishableSix();
 
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
+            IPublishableComposer composer = platform.makePublishableComposer(null);
+            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, composer, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            //JsonPublishableComposer composer = new JsonPublishableComposer();
 
             publ.startTick(buffer);
 
@@ -120,40 +121,33 @@ namespace TestProject1
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-        static void TestJsonParseUpdate(String fileName, Action<mtest.publishable.IStructSix> updateDelegate)
+        internal static void TestParseUpdate(IPlatformSupport platform, String fileName, Action<mtest.publishable.IStructSix> updateDelegate)
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
+            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber();
+            subs.debugOnlySetData(GetPublishableSix());
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
-            mtest.publishable.StructSix_impl data2 = GetPublishableSix();
+            mtest.publishable.StructSix_impl actual = (mtest.publishable.StructSix_impl)subs.debugOnlyGetData();
+            mtest.publishable.StructSix_impl expected = GetPublishableSix();
 
-            Assert.NotEqual(data, data2);
+            if(updateDelegate != null)
+            {
+                // not equal yet
+                Assert.NotEqual(expected, actual);
 
-            updateDelegate(data2);
+                updateDelegate(expected);
+            }
 
-            Assert.Equal(data, data2);
+            Assert.Equal(expected, actual);
         }
 
         internal static void doUpdate1(mtest.publishable.IStructSix data)
         {
             data.aggregate.theAggregate.anInt = -101;
-        }
-
-        [Fact]
-        public static void TestJsonComposeUpdate1()
-        {
-            TestJsonComposeUpdate(Path1, doUpdate1);
-        }
-
-        [Fact]
-        public static void TestJsonParseUpdate1()
-        {
-            TestJsonParseUpdate(Path1, doUpdate1);
         }
 
         internal static void doUpdate2(mtest.publishable.IStructSix data)
@@ -173,41 +167,55 @@ namespace TestProject1
             data.aggregate.theAggregate = aggr;
         }
 
+        internal static void doNothing(mtest.publishable.IStructSix data) { }
+
+        [Fact]
+        public static void TestJsonComposeStateSync()
+        {
+            TestComposeStateSync(jsonFactory, Path);
+        }
+
+        [Fact]
+        public static void TestJsonParseStateSync()
+        {
+            TestParseStateSync(jsonFactory, Path);
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate1()
+        {
+            TestComposeUpdate(jsonFactory, Path1, doUpdate1);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate1()
+        {
+            TestParseUpdate(jsonFactory, Path1, doUpdate1);
+        }
+
         [Fact]
         public static void TestJsonComposeUpdate2()
         {
-            TestJsonComposeUpdate(Path2, doUpdate2);
+            TestComposeUpdate(jsonFactory, Path2, doUpdate2);
         }
 
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            TestJsonParseUpdate(Path2, doUpdate2);
+            TestParseUpdate(jsonFactory, Path2, doUpdate2);
         }
-
-        internal static void doNothing(mtest.publishable.IStructSix data) { }
 
 
         [Fact]
-        public static void TestComposeNoChangeUpdate3()
+        public static void TestJsonComposeNoChangeUpdate3()
         {
-            TestJsonComposeUpdate(Path3, doNothing);
+            TestComposeUpdate(jsonFactory, Path3, doNothing);
         }
 
         [Fact]
         public static void TestJsonParseNoChangeUpdate3()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path3);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
-
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.StructSix_impl data2 = GetPublishableSix();
-
-            Assert.Equal(data, data2);
+            TestParseUpdate(jsonFactory, Path3, null);
         }
     }
 }

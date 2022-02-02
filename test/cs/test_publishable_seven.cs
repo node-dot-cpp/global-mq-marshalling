@@ -35,12 +35,12 @@ namespace TestProject1
 
     public class test_publishable_seven
     {
-        private const string JsonPath = "test_publishable_seven.json";
-        private const string JsonPath1 = "test_publishable_seven_u1.json";
-        private const string JsonPath2 = "test_publishable_seven_u2.json";
-        private const string JsonPath3 = "test_publishable_seven_u3.json";
-        private const string JsonPath4 = "test_publishable_seven_u4.json";
-        private const string JsonPath5 = "test_publishable_seven_u5.json";
+        internal const string JsonPath = "test_publishable_seven.json";
+        internal const string JsonPath1 = "test_publishable_seven_u1.json";
+        internal const string JsonPath2 = "test_publishable_seven_u2.json";
+        internal const string JsonPath3 = "test_publishable_seven_u3.json";
+        internal const string JsonPath4 = "test_publishable_seven_u4.json";
+        internal const string JsonPath5 = "test_publishable_seven_u5.json";
 
         private const string GmqPath = "test_publishable_seven.gmq";
         private const string GmqPath1 = "test_publishable_seven_u1.gmq";
@@ -48,6 +48,10 @@ namespace TestProject1
         private const string GmqPath3 = "test_publishable_seven_u3.gmq";
         private const string GmqPath4 = "test_publishable_seven_u4.gmq";
         private const string GmqPath5 = "test_publishable_seven_u5.gmq";
+
+        static IPlatformSupport JsonFactory = new DefaultJsonPlatformSupport();
+        static IPlatformSupport GmqFactory = new DefaultGmqPlatformSupport();
+
 
         public static mtest.publishable.publishable_seven_impl GetPublishableSeven()
         {
@@ -90,44 +94,44 @@ namespace TestProject1
             return data;
         }
 
-        [Fact]
-        public static void TestJsonComposeStateSync()
+        static void TestComposeStateSync(IPlatformSupport platform, String fileName)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
             mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, null, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
-            JsonPublishableComposer composer = new JsonPublishableComposer();
+            IPublishableComposer composer = platform.makePublishableComposer(buffer);
             
-            composer.startTick(buffer);
             publ.generateStateSyncMessage(composer);
 
             // uncomment to update file
-            //buffer.writeToFile(JsonPath);
+            //buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(JsonPath));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
 
-        [Fact]
-        public static void TestJsonParseStateSync()
+        static void TestParseStateSync(IPlatformSupport platform, String fileName)
         {
-            mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
+            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber();
 
-            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(JsonPath);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
+            IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
 
             subs.applyStateSyncMessage(parser);
 
-            Assert.Equal(data, GetPublishableSeven());
+            mtest.publishable.publishable_seven_impl actual = (mtest.publishable.publishable_seven_impl)subs.debugOnlyGetData();
+            mtest.publishable.publishable_seven_impl expected = GetPublishableSeven();
+
+            Assert.Equal(expected, actual);
         }
-        static void TestJsonComposeUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
+
+        static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
 
-            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, new JsonPublishableComposer(), new UInt64[] { });
+            IPublishableComposer composer = platform.makePublishableComposer(null);
+            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, composer, new UInt64[] { });
 
             SimpleBuffer buffer = new SimpleBuffer();
 
@@ -142,41 +146,30 @@ namespace TestProject1
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-        static void TestJsonParseUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
+        static void TestParseUpdate(IPlatformSupport platform, String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
         {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
+            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber();
+            subs.debugOnlySetData(GetPublishableSeven());
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
+            IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
-            mtest.publishable.publishable_seven_impl data2 = GetPublishableSeven();
+            mtest.publishable.publishable_seven_impl actual = (mtest.publishable.publishable_seven_impl)subs.debugOnlyGetData();
+            mtest.publishable.publishable_seven_impl expected = GetPublishableSeven();
 
-            Assert.NotEqual(data, data2);
+            Assert.NotEqual(expected, actual);
 
-            updateDelegate(data2);
+            updateDelegate(expected);
 
-            Assert.Equal(data, data2);
+            Assert.Equal(expected, actual);
         }
 
         static void doUpdate1(mtest.publishable.Ipublishable_seven data)
         {
             //modify substructure inside vector
             data.structVec[0].y = 505;
-        }
-
-        [Fact]
-        public static void TestJsonComposeUpdate1()
-        {
-            TestJsonComposeUpdate(JsonPath1, doUpdate1);
-        }
-
-        [Fact]
-        public static void TestJsonParseUpdate1()
-        {
-            TestJsonParseUpdate(JsonPath1, doUpdate1);
         }
 
         static void doUpdate2(mtest.publishable.Ipublishable_seven data)
@@ -192,18 +185,6 @@ namespace TestProject1
             e1.y = 902;
             e1.z = 903;
             data.structVec[0] = e1;
-        }
-
-        [Fact]
-        public static void TestJsonComposeUpdate2()
-        {
-            TestJsonComposeUpdate(JsonPath2, doUpdate2);
-        }
-
-        [Fact]
-        public static void TestJsonParseUpdate2()
-        {
-            TestJsonParseUpdate(JsonPath2, doUpdate2);
         }
 
         static void doUpdate3(mtest.publishable.Ipublishable_seven data)
@@ -224,17 +205,6 @@ namespace TestProject1
             vec.Add(e1);
             data.structVec = vec;
         }
-        [Fact]
-        public static void TestJsonComposeUpdate3()
-        {
-            TestJsonComposeUpdate(JsonPath3, doUpdate3);
-        }
-
-        [Fact]
-        public static void TestJsonParseUpdate3()
-        {
-            TestJsonParseUpdate(JsonPath3, doUpdate3);
-        }
         static void doUpdate4(mtest.publishable.Ipublishable_seven data)
         {
             //erase elements in vector
@@ -243,17 +213,6 @@ namespace TestProject1
             data.structVec.RemoveAt(1);
         }
 
-        [Fact]
-        public static void TestJsonComposeUpdate4()
-        {
-            TestJsonComposeUpdate(JsonPath4, doUpdate4);
-        }
-
-        [Fact]
-        public static void TestJsonParseUpdate4()
-        {
-            TestJsonParseUpdate(JsonPath4, doUpdate4);
-        }
         static void doUpdate5(mtest.publishable.Ipublishable_seven data)
         {
             //insert elements in vector
@@ -268,16 +227,77 @@ namespace TestProject1
             e1.z = 303;
             data.structVec.Insert(1, e1);
         }
+
+        [Fact]
+        public static void TestJsonComposeStateSync()
+        {
+            TestComposeStateSync(JsonFactory, JsonPath);
+        }
+
+        [Fact]
+        public static void TestJsonParseStateSync()
+        {
+            TestParseStateSync(JsonFactory, JsonPath);
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate1()
+        {
+            TestComposeUpdate(JsonFactory, JsonPath1, doUpdate1);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate1()
+        {
+            TestParseUpdate(JsonFactory, JsonPath1, doUpdate1);
+        }
+
+
+        [Fact]
+        public static void TestJsonComposeUpdate2()
+        {
+            TestComposeUpdate(JsonFactory, JsonPath2, doUpdate2);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate2()
+        {
+            TestParseUpdate(JsonFactory, JsonPath2, doUpdate2);
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate3()
+        {
+            TestComposeUpdate(JsonFactory, JsonPath3, doUpdate3);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate3()
+        {
+            TestParseUpdate(JsonFactory, JsonPath3, doUpdate3);
+        }
+
+        [Fact]
+        public static void TestJsonComposeUpdate4()
+        {
+            TestComposeUpdate(JsonFactory, JsonPath4, doUpdate4);
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate4()
+        {
+            TestParseUpdate(JsonFactory, JsonPath4, doUpdate4);
+        }
         [Fact]
         public static void TestJsonComposeUpdate5()
         {
-            TestJsonComposeUpdate(JsonPath5, doUpdate5);
+            TestComposeUpdate(JsonFactory, JsonPath5, doUpdate5);
         }
 
         [Fact]
         public static void TestJsonParseUpdate5()
         {
-            TestJsonParseUpdate(JsonPath5, doUpdate5);
+            TestParseUpdate(JsonFactory, JsonPath5, doUpdate5);
         }
 
 
@@ -285,131 +305,71 @@ namespace TestProject1
         [Fact]
         public static void TestGmqComposeStateSync()
         {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-
-            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, null, new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-            GmqPublishableComposer composer = new GmqPublishableComposer();
-
-            composer.startTick(buffer);
-            publ.generateStateSyncMessage(composer);
-
-            // uncomment to update file
-            //buffer.writeToFile(GmqPath);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(GmqPath));
+            TestComposeStateSync(GmqFactory, GmqPath);
         }
 
         [Fact]
         public static void TestGmqParseStateSync()
         {
-            mtest.publishable.publishable_seven_impl data = new mtest.publishable.publishable_seven_impl();
-
-            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(GmqPath);
-            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
-
-            subs.applyStateSyncMessage(parser);
-
-            Assert.Equal(data, GetPublishableSeven());
+            TestParseStateSync(GmqFactory, GmqPath);
         }
-        static void TestGmqComposeUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
-        {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-
-            mtest.publishable.publishable_seven_publisher publ = new mtest.publishable.publishable_seven_publisher(data, new GmqPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            publ.startTick(buffer);
-
-            updateDelegate(publ);
-
-            publ.endTick();
-
-            // uncomment to update file
-            //buffer.writeToFile(fileName);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
-        }
-        static void TestGmqParseUpdate(String fileName, Action<mtest.publishable.Ipublishable_seven> updateDelegate)
-        {
-            mtest.publishable.publishable_seven_impl data = GetPublishableSeven();
-            mtest.publishable.publishable_seven_subscriber subs = new mtest.publishable.publishable_seven_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
-            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
-
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.publishable_seven_impl data2 = GetPublishableSeven();
-
-            Assert.NotEqual(data, data2);
-
-            updateDelegate(data2);
-
-            Assert.Equal(data, data2);
-        }
-
 
         [Fact]
         public static void TestGmqComposeUpdate1()
         {
-            TestGmqComposeUpdate(GmqPath1, doUpdate1);
+            TestComposeUpdate(GmqFactory, GmqPath1, doUpdate1);
         }
 
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            TestGmqParseUpdate(GmqPath1, doUpdate1);
+            TestParseUpdate(GmqFactory, GmqPath1, doUpdate1);
         }
 
         [Fact]
         public static void TestGmqComposeUpdate2()
         {
-            TestGmqComposeUpdate(GmqPath2, doUpdate2);
+            TestComposeUpdate(GmqFactory, GmqPath2, doUpdate2);
         }
 
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            TestGmqParseUpdate(GmqPath2, doUpdate2);
+            TestParseUpdate(GmqFactory, GmqPath2, doUpdate2);
         }
         [Fact]
         public static void TestGmqComposeUpdate3()
         {
-            TestGmqComposeUpdate(GmqPath3, doUpdate3);
+            TestComposeUpdate(GmqFactory, GmqPath3, doUpdate3);
         }
 
         [Fact]
         public static void TestGmqParseUpdate3()
         {
-            TestGmqParseUpdate(GmqPath3, doUpdate3);
+            TestParseUpdate(GmqFactory, GmqPath3, doUpdate3);
         }
 
         [Fact]
         public static void TestGmqComposeUpdate4()
         {
-            TestGmqComposeUpdate(GmqPath4, doUpdate4);
+            TestComposeUpdate(GmqFactory, GmqPath4, doUpdate4);
         }
 
         [Fact]
         public static void TestGmqParseUpdate4()
         {
-            TestGmqParseUpdate(GmqPath4, doUpdate4);
+            TestParseUpdate(GmqFactory, GmqPath4, doUpdate4);
         }
         [Fact]
         public static void TestGmqComposeUpdate5()
         {
-            TestGmqComposeUpdate(GmqPath5, doUpdate5);
+            TestComposeUpdate(GmqFactory, GmqPath5, doUpdate5);
         }
 
         [Fact]
         public static void TestGmqParseUpdate5()
         {
-            TestGmqParseUpdate(GmqPath5, doUpdate5);
+            TestParseUpdate(GmqFactory, GmqPath5, doUpdate5);
         }
 
     }

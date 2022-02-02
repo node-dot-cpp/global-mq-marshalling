@@ -1788,6 +1788,13 @@ public class BasicTypes_subscriber : IBasicTypes
 		}
 		return changed;
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public IBasicTypes debugOnlyGetData() { return this.data; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IBasicTypes data)
+	{
+		this.data = data;
+	}
 } // class BasicTypes_subscriber
 
 public class BasicTypes_publisher : IBasicTypes
@@ -2029,6 +2036,13 @@ public class point3D_subscriber : Ipoint3D
 		}
 		return changed;
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public Ipoint3D debugOnlyGetData() { return this.data; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(Ipoint3D data)
+	{
+		this.data = data;
+	}
 } // class point3D_subscriber
 
 public class point3D_publisher : Ipoint3D
@@ -2177,7 +2191,7 @@ public class AggregateType_subscriber : IAggregateType
 		set { throw new InvalidOperationException(); }
 	}
 	BasicTypes_subscriber theAggregate_handler;
-	BasicTypes_subscriber get_theAggregate_handler()
+	BasicTypes_subscriber lazy_theAggregate_handler()
 	{ // mb: MUST use lazy initialization
 		if (theAggregate_handler == null)
 			theAggregate_handler = makeHandler_theAggregate(data.theAggregate);
@@ -2185,7 +2199,7 @@ public class AggregateType_subscriber : IAggregateType
 	}
 	public IBasicTypes theAggregate
 	{
-		get { return get_theAggregate_handler(); }
+		get { return lazy_theAggregate_handler(); }
 		set { throw new InvalidOperationException(); }
 	}
 	public Int64 lastValue
@@ -2197,7 +2211,7 @@ public class AggregateType_subscriber : IAggregateType
 	{
 		subscriber.data.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("theAggregate");
-		BasicTypes_subscriber.parseForStateSync(parser, subscriber.get_theAggregate_handler());
+		BasicTypes_subscriber.parseForStateSync(parser, subscriber.lazy_theAggregate_handler());
 		parser.parsePublishableStructEnd();
 		subscriber.data.lastValue = parser.parseInteger("lastValue");
 	}
@@ -2216,7 +2230,7 @@ public class AggregateType_subscriber : IAggregateType
 		}
 		{
 			parser.parsePublishableStructBegin("theAggregate");
-			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_theAggregate_handler());
+			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.lazy_theAggregate_handler());
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -2261,12 +2275,12 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_theAggregate_handler());
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.lazy_theAggregate_handler());
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_theAggregate_handler(), addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.lazy_theAggregate_handler(), addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2296,6 +2310,14 @@ public class AggregateType_subscriber : IAggregateType
 				throw new Exception();
 		}
 		return changed;
+	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public IAggregateType debugOnlyGetData() { return this.data; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IAggregateType data)
+	{
+		this.data = data;
+		this.theAggregate_handler = null;
 	}
 } // class AggregateType_subscriber
 
@@ -2469,7 +2491,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		set { throw new InvalidOperationException(); }
 	}
 	BasicTypes_subscriber basic_handler;
-	BasicTypes_subscriber get_basic_handler()
+	BasicTypes_subscriber lazy_basic_handler()
 	{ // mb: MUST use lazy initialization
 		if (basic_handler == null)
 			basic_handler = makeHandler_basic(data.basic);
@@ -2477,11 +2499,11 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	}
 	public IBasicTypes basic
 	{
-		get { return get_basic_handler(); }
+		get { return lazy_basic_handler(); }
 		set { throw new InvalidOperationException(); }
 	}
 	AggregateType_subscriber aggregate_handler;
-	AggregateType_subscriber get_aggregate_handler()
+	AggregateType_subscriber lazy_aggregate_handler()
 	{ // mb: MUST use lazy initialization
 		if (aggregate_handler == null)
 			aggregate_handler = makeHandler_aggregate(data.aggregate);
@@ -2489,17 +2511,17 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	}
 	public IAggregateType aggregate
 	{
-		get { return get_aggregate_handler(); }
+		get { return lazy_aggregate_handler(); }
 		set { throw new InvalidOperationException(); }
 	}
 	public static void parseForStateSync(IPublishableParser parser, StructSix_subscriber subscriber)
 	{
 		subscriber.data.name = parser.parseString("name");
 		parser.parsePublishableStructBegin("basic");
-		BasicTypes_subscriber.parseForStateSync(parser, subscriber.get_basic_handler());
+		BasicTypes_subscriber.parseForStateSync(parser, subscriber.lazy_basic_handler());
 		parser.parsePublishableStructEnd();
 		parser.parsePublishableStructBegin("aggregate");
-		AggregateType_subscriber.parseForStateSync(parser, subscriber.get_aggregate_handler());
+		AggregateType_subscriber.parseForStateSync(parser, subscriber.lazy_aggregate_handler());
 		parser.parsePublishableStructEnd();
 	}
 	public static bool parse(IPublishableParser parser, StructSix_subscriber subscriber)
@@ -2517,7 +2539,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		}
 		{
 			parser.parsePublishableStructBegin("basic");
-			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_basic_handler());
+			bool currentChanged = BasicTypes_subscriber.parse(parser, subscriber.lazy_basic_handler());
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -2527,7 +2549,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		}
 		{
 			parser.parsePublishableStructBegin("aggregate");
-			bool currentChanged = AggregateType_subscriber.parse(parser, subscriber.get_aggregate_handler());
+			bool currentChanged = AggregateType_subscriber.parse(parser, subscriber.lazy_aggregate_handler());
 			parser.parsePublishableStructEnd();
 			if(currentChanged)
 			{
@@ -2562,12 +2584,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_basic_handler());
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.lazy_basic_handler());
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.get_basic_handler(), addr, offset + 1);
+					currentChanged = BasicTypes_subscriber.parse(parser, subscriber.lazy_basic_handler(), addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2585,12 +2607,12 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length == offset + 1) // full element replace
 				{
 					parser.parsePublishableStructBegin("value");
-					currentChanged = AggregateType_subscriber.parse(parser, subscriber.get_aggregate_handler());
+					currentChanged = AggregateType_subscriber.parse(parser, subscriber.lazy_aggregate_handler());
 					parser.parsePublishableStructEnd();
 				}
 				else if(addr.Length > offset + 1) // let child continue parsing
 				{
-					currentChanged = AggregateType_subscriber.parse(parser, subscriber.get_aggregate_handler(), addr, offset + 1);
+					currentChanged = AggregateType_subscriber.parse(parser, subscriber.lazy_aggregate_handler(), addr, offset + 1);
 				}
 				else
 					throw new Exception();
@@ -2627,6 +2649,15 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		StructSix_subscriber.parseForStateSync(parser, this);
 		parser.parseStructEnd();
 		this.notifyFullyUpdated();
+	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public IStructSix debugOnlyGetData() { return this.data; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IStructSix data)
+	{
+		this.data = data;
+		this.basic_handler = null;
+		this.aggregate_handler = null;
 	}
 } // class StructSix_subscriber
 
@@ -2885,26 +2916,26 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	public publishable_seven_subscriber(Ipublishable_seven data) { this.data = data; }
 	public IList<Int64> intVec
 	{
-		get { return new SubscriberVectorWrapper<Int64>(data.intVec); }
+		get { return new SubscriberVectorWrapper<Int64, Int64>(data.intVec); }
 		set { throw new InvalidOperationException(); }
 	}
 	public IList<UInt64> uintVec
 	{
-		get { return new SubscriberVectorWrapper<UInt64>(data.uintVec); }
+		get { return new SubscriberVectorWrapper<UInt64, UInt64>(data.uintVec); }
 		set { throw new InvalidOperationException(); }
 	}
 	public IList<Double> realVec
 	{
-		get { return new SubscriberVectorWrapper<Double>(data.realVec); }
+		get { return new SubscriberVectorWrapper<Double, Double>(data.realVec); }
 		set { throw new InvalidOperationException(); }
 	}
 	public IList<String> strVec
 	{
-		get { return new SubscriberVectorWrapper<String>(data.strVec); }
+		get { return new SubscriberVectorWrapper<String, String>(data.strVec); }
 		set { throw new InvalidOperationException(); }
 	}
 	List<point3D_subscriber> structVec_handlers;
-	List<point3D_subscriber> get_structVec_handlers()
+	List<point3D_subscriber> lazy_structVec_handlers()
 	{ // mb: MUST use lazy initialization
 		if (structVec_handlers == null)
 		{
@@ -2919,7 +2950,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	}
 	public IList<Ipoint3D> structVec
 	{
-		get { return new SubscriberVectorWrapper<Ipoint3D>((IList<Ipoint3D>)get_structVec_handlers()); }
+		get { return new SubscriberVectorWrapper<Ipoint3D, point3D_subscriber>(lazy_structVec_handlers()); }
 		set { throw new InvalidOperationException(); }
 	}
 	public static void parseForStateSync(IPublishableParser parser, publishable_seven_subscriber subscriber)
@@ -2935,7 +2966,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 				point3D_subscriber.parseForStateSync(parser, handler);
 				subscriber.data.structVec.Add(val);
-				subscriber.get_structVec_handlers().Add(handler);
+				subscriber.lazy_structVec_handlers().Add(handler);
 				parser.parseStructEnd();
 			}
 		);
@@ -3183,7 +3214,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 					case Publishable.ActionOnVector.update_at:
 					{
 						parser.parsePublishableStructBegin("value");
-						bool elemChanged = point3D_subscriber.parse(parser, subscriber.get_structVec_handlers()[index]);
+						bool elemChanged = point3D_subscriber.parse(parser, subscriber.lazy_structVec_handlers()[index]);
 						parser.parsePublishableStructEnd();
 						if (elemChanged)
 						{
@@ -3199,7 +3230,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 						point3D_subscriber handler = subscriber.makeElementHandler_structVec(newVal);
 						point3D_subscriber.parse(parser, handler);
 						subscriber.data.structVec.Insert(index, newVal);
-						subscriber.get_structVec_handlers().Insert(index, handler);
+						subscriber.lazy_structVec_handlers().Insert(index, handler);
 						parser.parsePublishableStructEnd();
 						currentChanged = true;
 						subscriber.notifyInserted_structVec(index);
@@ -3208,7 +3239,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 					case Publishable.ActionOnVector.remove_at:
 					{
 						// mb: reversed in case of lazy initialization
-						subscriber.get_structVec_handlers().RemoveAt(index);
+						subscriber.lazy_structVec_handlers().RemoveAt(index);
 						subscriber.data.structVec.RemoveAt(index);
 						currentChanged = true;
 						subscriber.notifyErased_structVec(index);
@@ -3221,7 +3252,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				else if(addr.Length > offset + 2) // let child continue parsing
 				{
 					int index = (int)addr[offset + 1];
-					currentChanged = point3D_subscriber.parse(parser, subscriber.get_structVec_handlers()[index], addr, offset + 2);
+					currentChanged = point3D_subscriber.parse(parser, subscriber.lazy_structVec_handlers()[index], addr, offset + 2);
 				}
 				else
 					throw new Exception();
@@ -3258,6 +3289,14 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		publishable_seven_subscriber.parseForStateSync(parser, this);
 		parser.parseStructEnd();
 		this.notifyFullyUpdated();
+	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public Ipublishable_seven debugOnlyGetData() { return this.data; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(Ipublishable_seven data)
+	{
+		this.data = data;
+		this.structVec_handlers = null;
 	}
 } // class publishable_seven_subscriber
 

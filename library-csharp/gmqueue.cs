@@ -51,6 +51,14 @@ namespace globalmq.marshalling
         public InProcessMessagePostmanBase allocPostman(Object[] args) { throw new NotImplementedException(); }
     }
 
+    public class DefaultGmqPlatformSupport : IPlatformSupport
+    {
+        public BufferT makeBuffer() { return new SimpleBuffer(); }
+        public IPublishableComposer makePublishableComposer(BufferT buffer) { return new GmqPublishableComposer(buffer); }
+        public IPublishableParser makePublishableParser(ReadIteratorT readIter) { return new GmqPublishableParser(readIter); }
+        public InProcessMessagePostmanBase allocPostman(Object[] args) { throw new NotImplementedException(); }
+    }
+
 
     public struct PublishableStateMessageHeader
     {

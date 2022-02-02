@@ -40,199 +40,66 @@ namespace TestProject1
         private const string Path2 = "test_publishable_six2_update2.gmq";
         private const string Path3 = "test_publishable_six2_update3.gmq";
 
-        public static mtest.publishable.StructSix_impl GetPublishableSix()
-        {
-            mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
-
-            data.name = "TheName";
-            
-            data.basic = new mtest.publishable.BasicTypes_impl();
-            data.basic.anInt = -100000;
-            data.basic.anUInt = 100000;
-            data.basic.aReal = 3.14;
-            data.basic.aString = "basic string";
-
-            data.aggregate = new mtest.publishable.AggregateType_impl();
-            data.aggregate.name = "aggregate name";
-
-            data.aggregate.theAggregate = new mtest.publishable.BasicTypes_impl();
-            data.aggregate.theAggregate.anInt = -100;
-            data.aggregate.theAggregate.anUInt = 100;
-            data.aggregate.theAggregate.aReal = 100;
-            data.aggregate.theAggregate.aString = "basic string inside aggregate";
-            data.aggregate.lastValue = 0;
-
-            return data;
-        }
+        static IPlatformSupport gmqFactory = new DefaultGmqPlatformSupport();
 
 
         [Fact]
         public static void TestGmqComposeStateSync()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, null, new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-            GmqPublishableComposer composer = new GmqPublishableComposer();
-            
-            composer.startTick(buffer);
-            publ.generateStateSyncMessage(composer);
-
-            // uncomment to update file
-            //buffer.writeToFile(Path);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path));
+            test_publishable_six.TestComposeStateSync(gmqFactory, Path);
         }
 
         [Fact]
         public static void TestGmqParseStateSync()
         {
-            mtest.publishable.StructSix_impl data = new mtest.publishable.StructSix_impl();
-
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path);
-            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
-
-            subs.applyStateSyncMessage(parser);
-
-            Assert.Equal(data, GetPublishableSix());
+            test_publishable_six.TestParseStateSync(gmqFactory, Path);
         }
+        [Fact]
+        public static void TestJsonComposeUpdate1()
+        {
+        }
+
+        [Fact]
+        public static void TestJsonParseUpdate1()
+        {
+            test_publishable_six.TestParseUpdate(gmqFactory, Path1, test_publishable_six.doUpdate1);
+        }
+
 
         [Fact]
         public static void TestGmqComposeUpdate1()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new GmqPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            publ.startTick(buffer);
-            publ.aggregate.theAggregate.anInt = -101;
-            publ.endTick();
-
-            // uncomment to update file
-            //buffer.writeToFile(Path1);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path1));
+            test_publishable_six.TestComposeUpdate(gmqFactory, Path1, test_publishable_six.doUpdate1);
         }
 
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path1);
-            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
-
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.StructSix_impl data2 = GetPublishableSix();
-
-            Assert.NotEqual(data, data2);
-
-            data2.aggregate.theAggregate.anInt = -101;
-            Assert.Equal(data, data2);
+            test_publishable_six.TestParseUpdate(gmqFactory, Path1, test_publishable_six.doUpdate1);
         }
 
         [Fact]
         public static void TestGmqComposeUpdate2()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new GmqPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            publ.startTick(buffer);
-
-            publ.aggregate.name = "changed name";
-
-            publ.basic.anInt = -2;
-            publ.basic.anUInt = 3;
-            publ.basic.aReal = 4.0;
-
-            mtest.publishable.IBasicTypes aggr = new mtest.publishable.BasicTypes_impl();
-            aggr.anInt = -200;
-            aggr.anUInt = 300;
-            aggr.aReal = 400.0;
-            aggr.aString = "new part";
-            publ.aggregate.theAggregate = aggr;
-
-
-            publ.endTick();
-
-            // uncomment to update file
-            //buffer.writeToFile(Path2);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path2));
+            test_publishable_six.TestComposeUpdate(gmqFactory, Path2, test_publishable_six.doUpdate2);
         }
 
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path2);
-            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
-
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.StructSix_impl data2 = GetPublishableSix();
-
-            Assert.NotEqual(data, data2);
-
-            data2.aggregate.name = "changed name";
-
-            data2.basic.anInt = -2;
-            data2.basic.anUInt = 3;
-            data2.basic.aReal = 4.0;
-
-            data2.aggregate.theAggregate.anInt = -200;
-            data2.aggregate.theAggregate.anUInt = 300;
-            data2.aggregate.theAggregate.aReal = 400.0;
-            data2.aggregate.theAggregate.aString = "new part";
-
-            Assert.Equal(data, data2);
+            test_publishable_six.TestParseUpdate(gmqFactory, Path2, test_publishable_six.doUpdate2);
         }
 
         [Fact]
         public static void TestComposeNoChangeUpdate3()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-
-            mtest.publishable.StructSix_publisher publ = new mtest.publishable.StructSix_publisher(data, new GmqPublishableComposer(), new UInt64[] { });
-
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            publ.startTick(buffer);
-            // no change
-            publ.endTick();
-
-            // uncomment to update file
-            //buffer.writeToFile(Path3);
-
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(Path3));
+            test_publishable_six.TestComposeUpdate(gmqFactory, Path3, test_publishable_six.doNothing);
         }
 
         [Fact]
         public static void TestGmqParseNoChangeUpdate3()
         {
-            mtest.publishable.StructSix_impl data = GetPublishableSix();
-            mtest.publishable.StructSix_subscriber subs = new mtest.publishable.StructSix_subscriber(data);
-
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(Path3);
-            GmqPublishableParser parser = new GmqPublishableParser(buffer.getReadIterator());
-
-            subs.applyMessageWithUpdates(parser);
-
-            mtest.publishable.StructSix_impl data2 = GetPublishableSix();
-
-            Assert.Equal(data, data2);
+            test_publishable_six.TestParseUpdate(gmqFactory, Path3, null);
         }
     }
 

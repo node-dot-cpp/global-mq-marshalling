@@ -708,18 +708,18 @@ namespace globalmq.marshalling
 
     }
 
-    public class SubscriberVectorWrapper<T> : IList<T>
+    public class SubscriberVectorWrapper<T, U> : IList<T> where U : T
     {
-        IList<T> t;
+        IList<U> t;
 
-        public SubscriberVectorWrapper(IList<T> t)
+        public SubscriberVectorWrapper(IList<U> t)
         {
             this.t = t;
         }
-        public SubscriberVectorWrapper()
-        {
-            this.t = new List<T>();
-        }
+        //public SubscriberVectorWrapper()
+        //{
+        //    this.t = new List<T>();
+        //}
         public T this[int index] { get => t[index]; set => throw new InvalidOperationException(); }
 
         public int Count => t.Count;
@@ -738,12 +738,12 @@ namespace globalmq.marshalling
 
         public bool Contains(T item)
         {
-            return t.Contains(item);
+            return item is U ? t.Contains((U)item) : false;
         }
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            t.CopyTo(array, arrayIndex);
+            throw new NotImplementedException();
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -753,7 +753,7 @@ namespace globalmq.marshalling
 
         public int IndexOf(T item)
         {
-            return t.IndexOf(item);
+            return item is U ? t.IndexOf((U)item) : -1;
         }
 
         public void Insert(int index, T item)

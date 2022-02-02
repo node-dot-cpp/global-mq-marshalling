@@ -35,7 +35,10 @@ namespace TestProject1
 
     public class test_publishable_six_notify
     {
-        public enum Events { notifyUpdated_primitive, notifyUpdated_struct, notifyFullyUpdated };
+        public enum Events {
+            notifyUpdated_anInt, notifyUpdated_anUInt, notifyUpdated_aReal, notifyUpdated_aString,
+            notifyUpdated_name, notifyUpdated_theAggregate, notifyUpdated_lastValue,
+            notifyUpdated_basic, notifyUpdated_aggregate, notifyFullyUpdated };
         public class BasicTypes_stub : mtest.publishable.BasicTypes_subscriber
         {
             List<Events> handled;
@@ -46,10 +49,10 @@ namespace TestProject1
             }
 
 
-            public override void notifyUpdated_anInt(Int64 old) { handled.Add(Events.notifyUpdated_primitive); }
-            public override void notifyUpdated_anUInt(UInt64 old) { handled.Add(Events.notifyUpdated_primitive); }
-            public override void notifyUpdated_aReal(Double old) { handled.Add(Events.notifyUpdated_primitive); }
-            public override void notifyUpdated_aString(String old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_anInt(Int64 old) { handled.Add(Events.notifyUpdated_anInt); }
+            public override void notifyUpdated_anUInt(UInt64 old) { handled.Add(Events.notifyUpdated_anUInt); }
+            public override void notifyUpdated_aReal(Double old) { handled.Add(Events.notifyUpdated_aReal); }
+            public override void notifyUpdated_aString(String old) { handled.Add(Events.notifyUpdated_aString); }
 
         }
         public class AggregateType_stub : mtest.publishable.AggregateType_subscriber
@@ -63,9 +66,9 @@ namespace TestProject1
 
             public override mtest.publishable.BasicTypes_subscriber makeHandler_theAggregate(mtest.publishable.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
 
-            public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_primitive); }
-            public override void notifyUpdated_theAggregate() { handled.Add(Events.notifyUpdated_struct); }
-            public override void notifyUpdated_lastValue(Int64 old) { handled.Add(Events.notifyUpdated_primitive); }
+            public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_name); }
+            public override void notifyUpdated_theAggregate() { handled.Add(Events.notifyUpdated_theAggregate); }
+            public override void notifyUpdated_lastValue(Int64 old) { handled.Add(Events.notifyUpdated_lastValue); }
 
 
         }
@@ -83,9 +86,9 @@ namespace TestProject1
             public override mtest.publishable.AggregateType_subscriber makeHandler_aggregate(mtest.publishable.IAggregateType data) { return new AggregateType_stub(data, handled); }
 
             public override void notifyFullyUpdated() { handled.Add(Events.notifyFullyUpdated); }
-            public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_primitive); }
-            public override void notifyUpdated_basic() { handled.Add(Events.notifyUpdated_struct); }
-            public override void notifyUpdated_aggregate() { handled.Add(Events.notifyUpdated_struct); }
+            public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_name); }
+            public override void notifyUpdated_basic() { handled.Add(Events.notifyUpdated_basic); }
+            public override void notifyUpdated_aggregate() { handled.Add(Events.notifyUpdated_aggregate); }
 
         }
 
@@ -107,7 +110,7 @@ namespace TestProject1
         static void TestJsonParseUpdate(String fileName, Events[] events)
         {
             List<Events> handled = new List<Events>();
-            StructSix_stub stub = new StructSix_stub(handled);
+            StructSix_stub stub = new StructSix_stub(handled); 
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
@@ -121,9 +124,9 @@ namespace TestProject1
         public static void TestJsonNotifyUpdate1()
         {
             TestJsonParseUpdate(test_publishable_six.Path1, new Events[] {
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_struct,
-                Events.notifyUpdated_struct
+                Events.notifyUpdated_anInt,
+                Events.notifyUpdated_theAggregate,
+                Events.notifyUpdated_aggregate
             });
         }
 
@@ -131,21 +134,21 @@ namespace TestProject1
         [Fact]
         public static void TestJsonNotifyUpdate2()
         {
-            TestJsonParseUpdate(test_publishable_six.Path2, new Events[] { 
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_struct,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_struct,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_struct,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_struct,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_primitive,
-                Events.notifyUpdated_struct,
-                Events.notifyUpdated_struct,
+            TestJsonParseUpdate(test_publishable_six.Path2, new Events[] {
+                Events.notifyUpdated_name,
+                Events.notifyUpdated_aggregate,
+                Events.notifyUpdated_anInt,
+                Events.notifyUpdated_basic,
+                Events.notifyUpdated_anUInt,
+                Events.notifyUpdated_basic,
+                Events.notifyUpdated_aReal,
+                Events.notifyUpdated_basic,
+                Events.notifyUpdated_anInt,
+                Events.notifyUpdated_anUInt,
+                Events.notifyUpdated_aReal,
+                Events.notifyUpdated_aString,
+                Events.notifyUpdated_theAggregate,
+                Events.notifyUpdated_aggregate,
             });
         }
 

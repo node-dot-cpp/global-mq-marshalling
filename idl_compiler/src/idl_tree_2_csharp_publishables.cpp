@@ -314,7 +314,7 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
-				fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, subscriber.get_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\tparser.parsePublishableStructEnd();\n");
 				break;
 			case MessageParameterType::KIND::VECTOR:
@@ -343,7 +343,7 @@ namespace {
 					fprintf(header, "\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
 					fprintf(header, "\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
-					fprintf(header, "\t\t\t\tsubscriber.get_%s_handlers().Add(handler);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\tsubscriber.lazy_%s_handlers().Add(handler);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t}\n");
 					fprintf(header, "\t\t);\n");
@@ -402,7 +402,7 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
-				fprintf(header, "\t\t\tbool currentChanged = %s_subscriber.parse(parser, subscriber.get_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\tbool currentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\tif(currentChanged)\n");
 				fprintf(header, "\t\t\t{\n");
@@ -525,12 +525,12 @@ namespace {
 				fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full element replace\n");
 				fprintf(header, "\t\t\t\t{\n");
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.get_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 				fprintf(header, "\t\t\t\t}\n");
 				fprintf(header, "\t\t\t\telse if(addr.Length > offset + 1) // let child continue parsing\n");
 				fprintf(header, "\t\t\t\t{\n");
-				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.get_%s_handler(), addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler(), addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\t\t\t}\n");
 				fprintf(header, "\t\t\t\telse\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
@@ -630,7 +630,7 @@ namespace {
 					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.update_at:\n");
 					fprintf(header, "\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-					fprintf(header, "\t\t\t\t\t\tbool elemChanged = %s_subscriber.parse(parser, subscriber.get_%s_handlers()[index]);\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tbool elemChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handlers()[index]);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 					fprintf(header, "\t\t\t\t\t\tif (elemChanged)\n");
 					fprintf(header, "\t\t\t\t\t\t{\n");
@@ -648,7 +648,7 @@ namespace {
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber.parse(parser, handler);\n", elem_type_name);
 					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
-					fprintf(header, "\t\t\t\t\t\tsubscriber.get_%s_handlers().Insert(index, handler);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
 					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
@@ -660,7 +660,7 @@ namespace {
 					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.remove_at:\n");
 					fprintf(header, "\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\t// mb: reversed in case of lazy initialization\n");
-					fprintf(header, "\t\t\t\t\t\tsubscriber.get_%s_handlers().RemoveAt(index);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.lazy_%s_handlers().RemoveAt(index);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.RemoveAt(index);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
 					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyErased_%s(index);\n", member.name.c_str());
@@ -675,7 +675,7 @@ namespace {
 					fprintf(header, "\t\t\t\telse if(addr.Length > offset + 2) // let child continue parsing\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-					fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.get_%s_handlers()[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handlers()[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t}\n");
 					fprintf(header, "\t\t\t\telse\n");
 					fprintf(header, "\t\t\t\t\tthrow new Exception();\n\n");
@@ -855,6 +855,56 @@ namespace {
 		}
 	}
 
+	void csharpPub_generateDebugMethodSubs(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
+	{
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+
+		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+		fprintf(header, "\tpublic I%s debugOnlyGetData() { return this.data; }\n", type_name.c_str());
+
+		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+		fprintf(header, "\tpublic void debugOnlySetData(I%s data)\n", type_name.c_str());
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tthis.data = data;\n");
+
+		for (auto& each : s.getMembers())
+		{
+			auto& member = *each;
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\t\tthis.%s_handler = null;\n", member.name.c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					break;
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+					fprintf(header, "\t\tthis.%s_handlers = null;\n", member.name.c_str());
+					break;
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+		}
+		fprintf(header, "\t}\n");
+	}
 
 	void csharpPub_generateStructSubs(FILE* header, Root& root, CompositeType& s, const std::string& type_name)
 	{
@@ -882,6 +932,7 @@ namespace {
 		if (s.type == CompositeType::Type::publishable)
 			fprintf(header, "\tpublic %s_subscriber() : this(new %s_impl()) { }\n", type_name.c_str(), type_name.c_str());
 
+
 		fprintf(header, "\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name.c_str(), type_name.c_str());
 
 
@@ -906,7 +957,7 @@ namespace {
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t%s_subscriber %s_handler;\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\t%s_subscriber get_%s_handler()\n", member.type.name.c_str(), member.name.c_str());
+				fprintf(header, "\t%s_subscriber lazy_%s_handler()\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t{ // mb: MUST use lazy initialization\n");
 				fprintf(header, "\t\tif (%s_handler == null)\n", member.name.c_str());
 				fprintf(header, "\t\t\t%s_handler = makeHandler_%s(data.%s);\n", member.name.c_str(), member.name.c_str(), member.name.c_str());
@@ -916,7 +967,7 @@ namespace {
 
 				fprintf(header, "\tpublic I%s %s\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t{\n");
-				fprintf(header, "\t\tget { return get_%s_handler(); }\n", member.name.c_str());
+				fprintf(header, "\t\tget { return lazy_%s_handler(); }\n", member.name.c_str());
 				fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 				fprintf(header, "\t}\n");
 				break;
@@ -932,7 +983,7 @@ namespace {
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
 					fprintf(header, "\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
-					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<%s>(data.%s); }\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<%s, %s>(data.%s); }\n", elem_type_name, elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 					fprintf(header, "\t}\n");
 					break;
@@ -943,7 +994,7 @@ namespace {
 					assert(member.type.structIdx < root.structs.size());
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 					fprintf(header, "\tList<%s_subscriber> %s_handlers;\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\tList<%s_subscriber> get_%s_handlers()\n", elem_type_name, member.name.c_str());
+					fprintf(header, "\tList<%s_subscriber> lazy_%s_handlers()\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{ // mb: MUST use lazy initialization\n");
 					fprintf(header, "\t\tif (%s_handlers == null)\n", member.name.c_str());
 					fprintf(header, "\t\t{\n");
@@ -958,7 +1009,7 @@ namespace {
 					fprintf(header, "\t}\n");
 					fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t{\n");
-					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<I%s>((IList<I%s>)get_%s_handlers()); }\n", elem_type_name, elem_type_name, member.name.c_str());
+					fprintf(header, "\t\tget { return new SubscriberVectorWrapper<I%s, %s_subscriber>(lazy_%s_handlers()); }\n", elem_type_name, elem_type_name, member.name.c_str());
 					fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 					fprintf(header, "\t}\n");
 					break;
@@ -979,6 +1030,8 @@ namespace {
 
 		if (s.type == CompositeType::Type::publishable)
 			csharpPub_generateStateSubscriberBase(header, s, type_name);
+
+		csharpPub_generateDebugMethodSubs(header, root, s, type_name);
 
 		fprintf(header, "} // class %s_subscriber\n\n", type_name.c_str());
 	}
