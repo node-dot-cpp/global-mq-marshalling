@@ -468,6 +468,14 @@ struct publishable_STRUCT_point3D;
 template<class T> class point3D_RefWrapper;
 template<class T, class RootT> class point3D_RefWrapper4Set;
 
+struct publishable_STRUCT_point;
+template<class T> class point_RefWrapper;
+template<class T, class RootT> class point_RefWrapper4Set;
+
+struct publishable_STRUCT_point3D;
+template<class T> class point3D_RefWrapper;
+template<class T, class RootT> class point3D_RefWrapper4Set;
+
 struct publishable_STRUCT_BasicTypes;
 template<class T> class BasicTypes_RefWrapper;
 template<class T, class RootT> class BasicTypes_RefWrapper4Set;
@@ -766,12 +774,14 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 
 					::globalmq::marshalling::impl::publishableParseReal<ParserT, typename T::Case_one_D3_T>( parser, &(t.D3()), "D3" );
 
+					break;
 				}
 				case 2: // IDL CASE two
 				{
 					::globalmq::marshalling::impl::parseKey( parser, "Data" );
 					PublishableVectorProcessor::parse<ParserT, typename T::Case_two_Data_T, ::globalmq::marshalling::impl::RealType, true>( parser, t.Data() );
 
+					break;
 				}
 				default:
 					throw std::exception(); // unexpected
@@ -1388,23 +1398,6 @@ void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
-//**********************************************************************
-// MESSAGE "message_two" Targets: GMQ (Alias of struct_one)
-
-//**********************************************************************
-
-template<class ComposerT, typename ... Args>
-void MESSAGE_message_two_compose(ComposerT& composer, Args&& ... args)
-{
-	STRUCT_struct_one_compose(composer, std::forward<Args>( args )...);
-}
-
-template<class ParserT, typename ... Args>
-void MESSAGE_message_two_parse(ParserT& p, Args&& ... args)
-{
-	STRUCT_struct_one_parse(p, std::forward<Args>( args )...);
-}
-
 template<class ParserT>
 structures::struct_one STRUCT_struct_one_parse(ParserT& parser)
 {
@@ -1444,6 +1437,44 @@ structures::struct_one STRUCT_struct_one_parse(ParserT& parser)
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
+}
+
+template<class ParserT>
+structures::struct_du STRUCT_struct_du_parse(ParserT& parser)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using T = structures::struct_du;
+	T t;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt" );
+		publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.pt );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "disc_union" );
+		publishable_DISCRIMINATED_UNION_du_one::parseForStateSyncOrMessageInDepth( parser, t.disc_union );
+		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
+}
+
+//**********************************************************************
+// MESSAGE "message_two" Targets: GMQ (Alias of struct_one)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_message_two_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_struct_one_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_message_two_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_struct_one_parse(p, std::forward<Args>( args )...);
 }
 
 template<class ParserT>
@@ -1513,27 +1544,6 @@ template<class ParserT, typename ... Args>
 void MESSAGE_message_du_parse(ParserT& p, Args&& ... args)
 {
 	STRUCT_struct_du_parse(p, std::forward<Args>( args )...);
-}
-
-template<class ParserT>
-structures::struct_du STRUCT_struct_du_parse(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::struct_du;
-	T t;
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt" );
-		publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( parser, t.pt );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "disc_union" );
-		publishable_DISCRIMINATED_UNION_du_one::parseForStateSyncOrMessageInDepth( parser, t.disc_union );
-		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
 }
 
 template<class ParserT>
@@ -1619,23 +1629,6 @@ void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
-//**********************************************************************
-// MESSAGE "message_three" Targets: JSON (Alias of struct_one)
-
-//**********************************************************************
-
-template<class ComposerT, typename ... Args>
-void MESSAGE_message_three_compose(ComposerT& composer, Args&& ... args)
-{
-	STRUCT_struct_one_compose(composer, std::forward<Args>( args )...);
-}
-
-template<class ParserT, typename ... Args>
-void MESSAGE_message_three_parse(ParserT& p, Args&& ... args)
-{
-	STRUCT_struct_one_parse(p, std::forward<Args>( args )...);
-}
-
 template<class ParserT>
 structures::struct_one STRUCT_struct_one_parse(ParserT& parser)
 {
@@ -1675,6 +1668,23 @@ structures::struct_one STRUCT_struct_one_parse(ParserT& parser)
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
+}
+
+//**********************************************************************
+// MESSAGE "message_three" Targets: JSON (Alias of struct_one)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_message_three_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_struct_one_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_message_three_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_struct_one_parse(p, std::forward<Args>( args )...);
 }
 
 template<class ParserT>
@@ -1800,7 +1810,7 @@ public:
 		publishable_STRUCT_BasicTypes::compose( composer, t.basic );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_basic() { return BasicTypes_RefWrapper4Set</*aaa*/decltype(T::basic), StructSix_WrapperForPublisher>(t.basic, *this, GMQ_COLL vector<size_t>(), 1); }
+	auto get4set_basic() { return BasicTypes_RefWrapper4Set<decltype(T::basic), StructSix_WrapperForPublisher>(t.basic, *this, GMQ_COLL vector<size_t>(), 1); }
 	const auto& get_aggregate() { return t.aggregate; }
 	void set_aggregate( decltype(T::aggregate) val) { 
 		t.aggregate = val; 
@@ -1809,7 +1819,7 @@ public:
 		publishable_STRUCT_AggregateType::compose( composer, t.aggregate );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( composer );
 	}
-	auto get4set_aggregate() { return AggregateType_RefWrapper4Set</*aaa*/decltype(T::aggregate), StructSix_WrapperForPublisher>(t.aggregate, *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_aggregate() { return AggregateType_RefWrapper4Set<decltype(T::aggregate), StructSix_WrapperForPublisher>(t.aggregate, *this, GMQ_COLL vector<size_t>(), 2); }
 
 	template<class ComposerType>
 	void compose( ComposerType& composer )
@@ -2432,7 +2442,7 @@ public:
 										{
 											t.notifyElementUpdated_intVec( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_intVec )
-												t.notifyElementUpdated_intVec();
+												t.notifyElementUpdated_intVec( pos );
 											if constexpr ( has_void_element_updated_notifier_for_intVec )
 												t.notifyElementUpdated_intVec();
 										}
@@ -2562,7 +2572,7 @@ public:
 										{
 											t.notifyElementUpdated_uintVec( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_uintVec )
-												t.notifyElementUpdated_uintVec();
+												t.notifyElementUpdated_uintVec( pos );
 											if constexpr ( has_void_element_updated_notifier_for_uintVec )
 												t.notifyElementUpdated_uintVec();
 										}
@@ -2692,7 +2702,7 @@ public:
 										{
 											t.notifyElementUpdated_realVec( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_realVec )
-												t.notifyElementUpdated_realVec();
+												t.notifyElementUpdated_realVec( pos );
 											if constexpr ( has_void_element_updated_notifier_for_realVec )
 												t.notifyElementUpdated_realVec();
 										}
@@ -2822,7 +2832,7 @@ public:
 										{
 											t.notifyElementUpdated_strVec( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_strVec )
-												t.notifyElementUpdated_strVec();
+												t.notifyElementUpdated_strVec( pos );
 											if constexpr ( has_void_element_updated_notifier_for_strVec )
 												t.notifyElementUpdated_strVec();
 										}
@@ -2989,7 +2999,7 @@ public:
 										{
 											t.notifyElementUpdated_structVec( pos, oldValue );
 											if constexpr ( has_element_updated_notifier_for_structVec )
-												t.notifyElementUpdated_structVec();
+												t.notifyElementUpdated_structVec( pos );
 											if constexpr ( has_void_element_updated_notifier_for_structVec )
 												t.notifyElementUpdated_structVec();
 										}
@@ -3660,7 +3670,7 @@ public:
 		publishable_STRUCT_BasicTypes::compose( root.getComposer(), t.theAggregate );
 		::globalmq::marshalling::impl::publishableComposeLeafeStructEnd( root.getComposer() );
 	}
-	auto get4set_theAggregate() { return BasicTypes_RefWrapper4Set</*aaa*/decltype(T::theAggregate), RootT>(t.theAggregate, root, address, 1); }
+	auto get4set_theAggregate() { return BasicTypes_RefWrapper4Set<decltype(T::theAggregate), RootT>(t.theAggregate, root, address, 1); }
 	auto get_lastValue() { return t.lastValue; }
 	void set_lastValue( decltype(T::lastValue) val) { 
 		t.lastValue = val; 

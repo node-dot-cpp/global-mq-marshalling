@@ -82,6 +82,33 @@ public class BasicTypes : IBasicTypes, IEquatable<BasicTypes>
 	}
 } // class BasicTypes
 
+public struct BasicTypes_composer : IMessageCompose
+{
+	Int64 anInt;
+	UInt64 anUInt;
+	Double aReal;
+	String aString;
+	public BasicTypes_composer(Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		this.anInt = anInt;
+		this.anUInt = anUInt;
+		this.aReal = aReal;
+		this.aString = aString;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		BasicTypes_message.compose5(composer, anInt, anUInt, aReal, aString);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		BasicTypes_message.compose5(composer, anInt, anUInt, aReal, aString);
+	}
+	public static BasicTypes_composer make(Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		return new BasicTypes_composer(anInt, anUInt, aReal, aString);
+	}
+} // class BasicTypes_composer
+
 public class BasicTypes_message
 {
 	public static void compose(ComposerBase composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
@@ -110,6 +137,29 @@ public class BasicTypes_message
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		composer.composeSignedInteger(anInt);
+		composer.composeUnsignedInteger(anUInt);
+		composer.composeReal(aReal);
+		composer.composeString(aString);
+	}
+	public static void compose5(JsonComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("anInt");
+		composer.composeSignedInteger(anInt);
+		composer.append( ",\n  " );
+		composer.addNamePart("anUInt");
+		composer.composeUnsignedInteger(anUInt);
+		composer.append( ",\n  " );
+		composer.addNamePart("aReal");
+		composer.composeReal(aReal);
+		composer.append( ",\n  " );
+		composer.addNamePart("aString");
+		composer.composeString(aString);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
 	{
 		composer.composeSignedInteger(anInt);
 		composer.composeUnsignedInteger(anUInt);
@@ -343,6 +393,31 @@ public class CASE_one : Idu_one.ICASE_one, IEquatable<CASE_one>
 	}
 } // class CASE_one
 
+public struct CASE_one_composer : IMessageCompose
+{
+	Double D1;
+	Double D2;
+	Double D3;
+	public CASE_one_composer(Double D1, Double D2, Double D3)
+	{
+		this.D1 = D1;
+		this.D2 = D2;
+		this.D3 = D3;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		CASE_one_message.compose5(composer, D1, D2, D3);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		CASE_one_message.compose5(composer, D1, D2, D3);
+	}
+	public static CASE_one_composer make(Double D1, Double D2, Double D3)
+	{
+		return new CASE_one_composer(D1, D2, D3);
+	}
+} // class CASE_one_composer
+
 public class CASE_one_message
 {
 	public static void compose(ComposerBase composer, Double D1, Double D2, Double D3)
@@ -368,6 +443,25 @@ public class CASE_one_message
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, Double D1, Double D2, Double D3)
+	{
+		composer.composeReal(D1);
+		composer.composeReal(D2);
+		composer.composeReal(D3);
+	}
+	public static void compose5(JsonComposer composer, Double D1, Double D2, Double D3)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("D1");
+		composer.composeReal(D1);
+		composer.append( ",\n  " );
+		composer.addNamePart("D2");
+		composer.composeReal(D2);
+		composer.append( ",\n  " );
+		composer.addNamePart("D3");
+		composer.composeReal(D3);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, Double D1, Double D2, Double D3)
 	{
 		composer.composeReal(D1);
 		composer.composeReal(D2);
@@ -497,6 +591,26 @@ public class CASE_two : Idu_one.ICASE_two, IEquatable<CASE_two>
 	}
 } // class CASE_two
 
+public struct CASE_two_composer : IMessageCompose
+{
+	CollectionWrapperForComposing Data;	public CASE_two_composer(CollectionWrapperForComposing Data)
+	{
+		this.Data = Data;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		CASE_two_message.compose5(composer, Data);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		CASE_two_message.compose5(composer, Data);
+	}
+	public static CASE_two_composer make(CollectionWrapperForComposing Data)
+	{
+		return new CASE_two_composer(Data);
+	}
+} // class CASE_two_composer
+
 public class CASE_two_message
 {
 	public static void compose(ComposerBase composer, ICollectionCompose Data)
@@ -516,6 +630,17 @@ public class CASE_two_message
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, ICollectionCompose Data)
+	{
+		Data.composeGmq(composer);
+	}
+	public static void compose5(JsonComposer composer, CollectionWrapperForComposing Data)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("Data");
+		Data.composeJson(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, CollectionWrapperForComposing Data)
 	{
 		Data.composeGmq(composer);
 	}
@@ -568,6 +693,28 @@ public class CASE_two_message
 } // class CASE_two_message
 
 } // class du_one
+
+public struct du_one_composer : IMessageCompose
+{
+	int dummy;// TODO, same attributes as base type
+	public du_one_composer(int dummy)
+	{
+		this.dummy = dummy;// TODO
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		// TODO
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		// TODO
+	}
+	public static du_one_composer make(/* TODO */)
+	{
+		// TODO
+		return new du_one_composer(0);
+	}
+} // class du_one_composer
 
 public class du_one_message
 {
@@ -746,6 +893,31 @@ public class point3D : Ipoint3D, IEquatable<point3D>
 	}
 } // class point3D
 
+public struct point3D_composer : IMessageCompose
+{
+	Int64 x;
+	Int64 y;
+	Int64 z;
+	public point3D_composer(Int64 x, Int64 y, Int64 z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		point3D_message.compose5(composer, x, y, z);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		point3D_message.compose5(composer, x, y, z);
+	}
+	public static point3D_composer make(Int64 x, Int64 y, Int64 z)
+	{
+		return new point3D_composer(x, y, z);
+	}
+} // class point3D_composer
+
 public class point3D_message
 {
 	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
@@ -771,6 +943,25 @@ public class point3D_message
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, Int64 x, Int64 y, Int64 z)
+	{
+		composer.composeSignedInteger(x);
+		composer.composeSignedInteger(y);
+		composer.composeSignedInteger(z);
+	}
+	public static void compose5(JsonComposer composer, Int64 x, Int64 y, Int64 z)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("x");
+		composer.composeSignedInteger(x);
+		composer.append( ",\n  " );
+		composer.addNamePart("y");
+		composer.composeSignedInteger(y);
+		composer.append( ",\n  " );
+		composer.addNamePart("z");
+		composer.composeSignedInteger(z);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, Int64 x, Int64 y, Int64 z)
 	{
 		composer.composeSignedInteger(x);
 		composer.composeSignedInteger(y);
@@ -891,6 +1082,29 @@ public class point : Ipoint, IEquatable<point>
 	}
 } // class point
 
+public struct point_composer : IMessageCompose
+{
+	Int64 x;
+	Int64 y;
+	public point_composer(Int64 x, Int64 y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		point_message.compose5(composer, x, y);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		point_message.compose5(composer, x, y);
+	}
+	public static point_composer make(Int64 x, Int64 y)
+	{
+		return new point_composer(x, y);
+	}
+} // class point_composer
+
 public class point_message
 {
 	public static void compose(ComposerBase composer, Int64 x, Int64 y)
@@ -913,6 +1127,21 @@ public class point_message
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, Int64 x, Int64 y)
+	{
+		composer.composeSignedInteger(x);
+		composer.composeSignedInteger(y);
+	}
+	public static void compose5(JsonComposer composer, Int64 x, Int64 y)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("x");
+		composer.composeSignedInteger(x);
+		composer.append( ",\n  " );
+		composer.addNamePart("y");
+		composer.composeSignedInteger(y);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, Int64 x, Int64 y)
 	{
 		composer.composeSignedInteger(x);
 		composer.composeSignedInteger(y);
@@ -1044,6 +1273,31 @@ public class AggregateType : IAggregateType, IEquatable<AggregateType>
 	}
 } // class AggregateType
 
+public struct AggregateType_composer : IMessageCompose
+{
+	String name;
+	BasicTypes_composer theAggregate;
+	Int64 lastValue;
+	public AggregateType_composer(String name, BasicTypes_composer theAggregate, Int64 lastValue)
+	{
+		this.name = name;
+		this.theAggregate = theAggregate;
+		this.lastValue = lastValue;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		AggregateType_message.compose5(composer, name, theAggregate, lastValue);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		AggregateType_message.compose5(composer, name, theAggregate, lastValue);
+	}
+	public static AggregateType_composer make(String name, BasicTypes_composer theAggregate, Int64 lastValue)
+	{
+		return new AggregateType_composer(name, theAggregate, lastValue);
+	}
+} // class AggregateType_composer
+
 public class AggregateType_message
 {
 	public static void compose(ComposerBase composer, String name, IMessageCompose theAggregate, Int64 lastValue)
@@ -1062,7 +1316,7 @@ public class AggregateType_message
 		composer.composeString(name);
 		composer.append( ",\n  " );
 		composer.addNamePart("theAggregate");
-		theAggregate.compose(composer);
+		theAggregate.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("lastValue");
 		composer.composeSignedInteger(lastValue);
@@ -1071,7 +1325,26 @@ public class AggregateType_message
 	public static void compose(GmqComposer composer, String name, IMessageCompose theAggregate, Int64 lastValue)
 	{
 		composer.composeString(name);
-		theAggregate.compose(composer);
+		theAggregate.composeGmq(composer);
+		composer.composeSignedInteger(lastValue);
+	}
+	public static void compose5(JsonComposer composer, String name, BasicTypes_composer theAggregate, Int64 lastValue)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("name");
+		composer.composeString(name);
+		composer.append( ",\n  " );
+		composer.addNamePart("theAggregate");
+		theAggregate.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("lastValue");
+		composer.composeSignedInteger(lastValue);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, String name, BasicTypes_composer theAggregate, Int64 lastValue)
+	{
+		composer.composeString(name);
+		theAggregate.composeGmq(composer);
 		composer.composeSignedInteger(lastValue);
 	}
 	public static void parse(ParserBase parser, IAggregateType val)
@@ -1205,6 +1478,29 @@ public class struct_du : Istruct_du, IEquatable<struct_du>
 	}
 } // class struct_du
 
+public struct struct_du_composer : IMessageCompose
+{
+	point3D_composer pt;
+	du_one_composer disc_union;
+	public struct_du_composer(point3D_composer pt, du_one_composer disc_union)
+	{
+		this.pt = pt;
+		this.disc_union = disc_union;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		struct_du_message.compose5(composer, pt, disc_union);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		struct_du_message.compose5(composer, pt, disc_union);
+	}
+	public static struct_du_composer make(point3D_composer pt, du_one_composer disc_union)
+	{
+		return new struct_du_composer(pt, disc_union);
+	}
+} // class struct_du_composer
+
 public class struct_du_message
 {
 	public static void compose(ComposerBase composer, IMessageCompose pt, IMessageCompose disc_union)
@@ -1220,16 +1516,31 @@ public class struct_du_message
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("pt");
-		pt.compose(composer);
+		pt.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("disc_union");
-		disc_union.compose(composer);
+		disc_union.composeJson(composer);
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, IMessageCompose pt, IMessageCompose disc_union)
 	{
-		pt.compose(composer);
-		disc_union.compose(composer);
+		pt.composeGmq(composer);
+		disc_union.composeGmq(composer);
+	}
+	public static void compose5(JsonComposer composer, point3D_composer pt, du_one_composer disc_union)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("pt");
+		pt.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("disc_union");
+		disc_union.composeJson(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, point3D_composer pt, du_one_composer disc_union)
+	{
+		pt.composeGmq(composer);
+		disc_union.composeGmq(composer);
 	}
 	public static void parse(ParserBase parser, Istruct_du val)
 	{
@@ -1425,6 +1736,41 @@ public class struct_one : Istruct_one, IEquatable<struct_one>
 	}
 } // class struct_one
 
+public struct struct_one_composer : IMessageCompose
+{
+	Int64 firstParam;
+	CollectionWrapperForComposing secondParam;	CollectionComposer<point3D_composer> thirdParam;	UInt64 forthParam;
+	String fifthParam;
+	CollectionComposer<point_composer> sixthParam;	Double seventhParam;
+	point_composer eighthParam;
+	point3D_composer ninethParam;
+	CollectionWrapperForComposing tenthParam;	public struct_one_composer(Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
+	{
+		this.firstParam = firstParam;
+		this.secondParam = secondParam;
+		this.thirdParam = thirdParam;
+		this.forthParam = forthParam;
+		this.fifthParam = fifthParam;
+		this.sixthParam = sixthParam;
+		this.seventhParam = seventhParam;
+		this.eighthParam = eighthParam;
+		this.ninethParam = ninethParam;
+		this.tenthParam = tenthParam;
+	}
+	public void composeJson(JsonComposer composer)
+	{
+		struct_one_message.compose5(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+	}
+	public void composeGmq(GmqComposer composer)
+	{
+		struct_one_message.compose5(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+	}
+	public static struct_one_composer make(Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
+	{
+		return new struct_one_composer(firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+	}
+} // class struct_one_composer
+
 public class struct_one_message
 {
 	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
@@ -1461,10 +1807,10 @@ public class struct_one_message
 		composer.composeReal(seventhParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("eighthParam");
-		eighthParam.compose(composer);
+		eighthParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("ninethParam");
-		ninethParam.compose(composer);
+		ninethParam.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("tenthParam");
 		tenthParam.composeJson(composer);
@@ -1479,8 +1825,55 @@ public class struct_one_message
 		composer.composeString(fifthParam);
 		sixthParam.composeGmq(composer);
 		composer.composeReal(seventhParam);
-		eighthParam.compose(composer);
-		ninethParam.compose(composer);
+		eighthParam.composeGmq(composer);
+		ninethParam.composeGmq(composer);
+		tenthParam.composeGmq(composer);
+	}
+	public static void compose5(JsonComposer composer, Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("firstParam");
+		composer.composeSignedInteger(firstParam);
+		composer.append( ",\n  " );
+		composer.addNamePart("secondParam");
+		secondParam.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("thirdParam");
+		thirdParam.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("forthParam");
+		composer.composeUnsignedInteger(forthParam);
+		composer.append( ",\n  " );
+		composer.addNamePart("fifthParam");
+		composer.composeString(fifthParam);
+		composer.append( ",\n  " );
+		composer.addNamePart("sixthParam");
+		sixthParam.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("seventhParam");
+		composer.composeReal(seventhParam);
+		composer.append( ",\n  " );
+		composer.addNamePart("eighthParam");
+		eighthParam.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("ninethParam");
+		ninethParam.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("tenthParam");
+		tenthParam.composeJson(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
+	{
+		composer.composeSignedInteger(firstParam);
+		secondParam.composeGmq(composer);
+		thirdParam.composeGmq(composer);
+		composer.composeUnsignedInteger(forthParam);
+		composer.composeString(fifthParam);
+		sixthParam.composeGmq(composer);
+		composer.composeReal(seventhParam);
+		eighthParam.composeGmq(composer);
+		ninethParam.composeGmq(composer);
 		tenthParam.composeGmq(composer);
 	}
 	public static void parse(ParserBase parser, Istruct_one val)
@@ -1787,7 +2180,7 @@ public class message_four_message
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("pt");
-		pt.compose(composer);
+		pt.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("pts3d");
 		pts3d.composeJson(composer);
@@ -1795,7 +2188,22 @@ public class message_four_message
 	}
 	public static void compose(GmqComposer composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
-		pt.compose(composer);
+		pt.composeGmq(composer);
+		pts3d.composeGmq(composer);
+	}
+	public static void compose5(JsonComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("pt");
+		pt.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("pts3d");
+		pts3d.composeJson(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
+	{
+		pt.composeGmq(composer);
 		pts3d.composeGmq(composer);
 	}
 	public static message_four parse(ParserBase parser)
@@ -2048,7 +2456,7 @@ public class message_five_message
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("pt");
-		pt.compose(composer);
+		pt.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("pts3d");
 		pts3d.composeJson(composer);
@@ -2056,7 +2464,22 @@ public class message_five_message
 	}
 	public static void compose(GmqComposer composer, IMessageCompose pt, ICollectionCompose pts3d)
 	{
-		pt.compose(composer);
+		pt.composeGmq(composer);
+		pts3d.composeGmq(composer);
+	}
+	public static void compose5(JsonComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
+	{
+		composer.append( "{\n  ");
+		composer.addNamePart("pt");
+		pt.composeJson(composer);
+		composer.append( ",\n  " );
+		composer.addNamePart("pts3d");
+		pts3d.composeJson(composer);
+		composer.append( "\n}" );
+	}
+	public static void compose5(GmqComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
+	{
+		pt.composeGmq(composer);
 		pts3d.composeGmq(composer);
 	}
 	public static message_five parse(ParserBase parser)

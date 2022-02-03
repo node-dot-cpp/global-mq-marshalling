@@ -70,6 +70,19 @@ namespace TestProject1
             );
         }
 
+        private static void ComposeStructOne_5(JsonComposer composer, mtest.struct_one msg)
+        {
+            mtest.struct_one_message.compose5(composer,
+                thirdParam: CollectionComposer<mtest.point3D_composer>.make(msg.thirdParam.Count, (int ix) => { return mtest.point3D_composer.make(x: msg.thirdParam[ix].x, y: msg.thirdParam[ix].y, z: msg.thirdParam[ix].z); }),
+                firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
+                eighthParam: mtest.point_composer.make(x: msg.eighthParam.x, y: msg.eighthParam.y),
+                ninethParam: mtest.point3D_composer.make(x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z),
+                secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
+                tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam),
+                sixthParam: CollectionComposer<mtest.point_composer>.make(msg.sixthParam.Count, (int ix) => { return mtest.point_composer.make(x: msg.sixthParam[ix].x, y: msg.sixthParam[ix].y); })
+            );
+        }
+
         [Fact]
         public static void TestGmqCompose()
         {
@@ -96,6 +109,22 @@ namespace TestProject1
             JsonComposer composer = new JsonComposer(buffer);
 
             ComposeStructOne(composer, msg);
+
+            // uncomment to update file
+            //buffer.writeToFile(PathJson);
+
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
+        }
+
+        [Fact]
+        public static void TestJsonCompose_5()
+        {
+            mtest.struct_one msg = GetSampleData();
+
+            SimpleBuffer buffer = new SimpleBuffer();
+            JsonComposer composer = new JsonComposer(buffer);
+
+            ComposeStructOne_5(composer, msg);
 
             // uncomment to update file
             //buffer.writeToFile(PathJson);

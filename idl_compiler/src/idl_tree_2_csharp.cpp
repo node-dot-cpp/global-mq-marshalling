@@ -337,6 +337,41 @@ void generateCsharpStruct(FILE* header, Root& root, CompositeType& s)
 
 namespace {
 
+	const char* csharpMsg_getCSharpType(MessageParameterType::KIND kind)
+	{
+		switch (kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+			return "Int64";
+		case MessageParameterType::KIND::UINTEGER:
+			return "UInt64";
+		case MessageParameterType::KIND::REAL:
+			return "Double";
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return "String";
+		default:
+			assert(false);
+		}
+		return nullptr;
+	}
+
+	const char* csharpMsg_getMethodForKind(MessageParameterType::KIND kind)
+	{
+		switch (kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+			return "SignedInteger";
+		case MessageParameterType::KIND::UINTEGER:
+			return "UnsignedInteger";
+		case MessageParameterType::KIND::REAL:
+			return "Real";
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return "String";
+		default:
+			assert(false);
+		}
+		return nullptr;
+	}
 
 	void csharpMsg_generateScopeEnum(FILE* header, Scope& scope)
 	{
@@ -398,6 +433,73 @@ namespace {
 			}
 		}
 	}
+
+	void csharpMsg_generateComposeParamTypeList5(FILE* header, Root& root, CompositeType& s)
+	{
+		int count = 0;
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
+		{
+			assert(*it != nullptr);
+			MessageParameter& param = **it;
+
+			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+				continue;
+			++count;
+
+			if (it != mem.begin())
+				fprintf(header, ", ");
+
+			switch (param.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* type = csharpMsg_getCSharpType(param.type.kind);
+				fprintf(header, "%s %s", type, param.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "%s_composer %s", param.type.name.c_str(), param.name.c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+				switch (param.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type = csharpMsg_getCSharpType(param.type.vectorElemKind);
+					fprintf(header, "CollectionWrapperForComposing %s", param.name.c_str());
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(param.type.structIdx < root.structs.size());
+					const char* elem_type = root.structs[param.type.structIdx]->name.c_str();
+
+					fprintf(header, "CollectionComposer<%s_composer> %s", elem_type, param.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // unexpected
+					break;
+				}
+				break;
+
+				break;
+			default:
+				assert(false); // unexpected
+				break;
+			}
+		}
+	}
+
 
 	//void csharpMsg_generateParseParamTypeLIst(FILE* header, CompositeType& s)
 	//{
@@ -507,34 +609,21 @@ namespace {
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\tcomposer.composeSignedInteger(%s);\n", param.name.c_str());
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\tcomposer.composeUnsignedInteger(%s);\n", param.name.c_str());
-				break;
 			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				fprintf(header, "\t\tcomposer.composeReal(%s);\n", param.name.c_str());
+				const char* method = csharpMsg_getMethodForKind(param.type.kind);
+				fprintf(header, "\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
 				break;
 			}
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\tcomposer.composeString(%s);\n", param.name.c_str());
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\t\t%s.composeGmq(composer);\n", param.name.c_str());
 				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//	break;
-			//case MessageParameterType::KIND::BLOB:
-			//	break;
-			//case MessageParameterType::KIND::ENUM:
-			//	break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t%s.composeGmq(composer);\n", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::EXTENSION:
-				break; // TODO: treatment
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s.compose(composer);\n", param.name.c_str());
-				break; // TODO: treatment
 			default:
 				assert(false); // unexpected
 				break;
@@ -542,6 +631,54 @@ namespace {
 		}
 		fprintf(header, "\t}\n");
 	}
+
+	void csharpMsg_generateStructComposeGmq5(FILE* header, Root& root, CompositeType& s)
+	{
+		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+
+		fprintf(header, "\tpublic static void compose5(GmqComposer composer, ");
+
+		csharpMsg_generateComposeParamTypeList5(header, root, s);
+
+		fprintf(header, ")\n\t{\n");
+
+		int count = 0;
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
+		{
+			assert(*it != nullptr);
+
+			MessageParameter& param = **it;
+			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+				continue;
+			++count;
+
+			switch (param.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* method = csharpMsg_getMethodForKind(param.type.kind);
+				fprintf(header, "\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\t\t%s.composeGmq(composer);\n", param.name.c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+				fprintf(header, "\t\t%s.composeGmq(composer);\n", param.name.c_str());
+				break;
+			default:
+				assert(false); // unexpected
+				break;
+			}
+		}
+		fprintf(header, "\t}\n");
+	}
+
 	//void csharpMsg_generateStructParseGmq(FILE* header, CompositeType& s)
 	//{
 	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
@@ -742,35 +879,79 @@ namespace {
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\tcomposer.composeSignedInteger(%s);\n", param.name.c_str());
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\tcomposer.composeUnsignedInteger(%s);\n", param.name.c_str());
-				break;
 			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				fprintf(header, "\t\tcomposer.composeReal(%s);\n", param.name.c_str());
+				const char* method = csharpMsg_getMethodForKind(param.type.kind);
+				fprintf(header, "\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
 				break;
 			}
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\tcomposer.composeString(%s);\n", param.name.c_str());
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\t\t%s.composeJson(composer);\n", param.name.c_str());
 				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//	break;
-			//case MessageParameterType::KIND::BLOB:
-			//	break;
-			//case MessageParameterType::KIND::ENUM:
-			//	break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t%s.composeJson(composer);\n", param.name.c_str());
 				break;
-			case MessageParameterType::KIND::EXTENSION:
-				break; // TODO: ...
+			default:
+				assert(false); // unexpected
+				break;
+			}
+		}
+
+		fprintf(header, "\t\tcomposer.append( \"\\n}\" );\n");
+
+		fprintf(header, "\t}\n");
+	}
+
+	void csharpMsg_generateStructComposeJson5(FILE* header, Root& root, CompositeType& s)
+	{
+		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+
+		fprintf(header, "\tpublic static void compose5(JsonComposer composer, ");
+
+		csharpMsg_generateComposeParamTypeList5(header, root, s);
+
+		fprintf(header, ")\n"
+			"\t{\n");
+
+		fprintf(header, "\t\tcomposer.append( \"{\\n  \");\n");
+		int count = 0;
+		auto& mem = s.getMembers();
+		for (auto it = mem.begin(); it != mem.end(); ++it)
+		{
+			assert(*it != nullptr);
+
+			MessageParameter& param = **it;
+			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+				continue;
+			++count;
+
+			if (it != mem.begin())
+				fprintf(header, "\t\tcomposer.append( \",\\n  \" );\n");
+
+
+			fprintf(header, "\t\tcomposer.addNamePart(\"%s\");\n", param.name.c_str());
+			switch (param.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* method = csharpMsg_getMethodForKind(param.type.kind);
+				fprintf(header, "\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
+				break;
+			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s.compose(composer);\n", param.name.c_str());
-				break; // TODO: ...
-			default:
+				fprintf(header, "\t\t%s.composeJson(composer);\n", param.name.c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+				fprintf(header, "\t\t%s.composeJson(composer);\n", param.name.c_str());
+				break;
+   			default:
 				assert(false); // unexpected
 				break;
 			}
@@ -781,7 +962,6 @@ namespace {
 
 		fprintf(header, "\t}\n");
 	}
-
 
 
 	void csharpMsg_generateUnionCaseComposeJson(FILE* header, CompositeType& s, const char* scope_name)
@@ -1705,7 +1885,116 @@ namespace {
 		fprintf(header, "\t}\n\n");
 	}
 
-	void csharpMsg_generateStruct(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
+	void csharpMsg_generateStructComposer(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
+	{
+		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+
+
+		fprintf(header, "public struct %s_composer : IMessageCompose\n", type_name);
+		fprintf(header, "{\n");
+
+
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
+		{
+			auto& it = mem[i];
+			assert(it != nullptr);
+			auto& member = *it;
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* type_name = getCSharpType(member.type.kind);
+				fprintf(header, "\t%s %s;\n", type_name, member.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\t%s_composer %s;\n", member.type.name.c_str(), member.name.c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type = csharpMsg_getCSharpType(member.type.vectorElemKind);
+					fprintf(header, "\tCollectionWrapperForComposing %s;", member.name.c_str());
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					assert(member.type.structIdx < root.structs.size());
+					const char* elem_type = root.structs[member.type.structIdx]->name.c_str();
+
+					fprintf(header, "\tCollectionComposer<%s_composer> %s;", elem_type, member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+		}
+
+
+
+		fprintf(header, "\tpublic %s_composer(", type_name);
+		csharpMsg_generateComposeParamTypeList5(header, root, s);
+		fprintf(header, ")\n");
+
+		fprintf(header, "\t{\n");
+
+		for (auto& each : s.getMembers())
+		{
+			assert(each != nullptr);
+			auto& member = *each;
+
+			fprintf(header, "\t\tthis.%s = %s;\n", member.name.c_str(), member.name.c_str());
+		}
+
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void composeJson(JsonComposer composer)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\t%s_message.compose5(composer, ", type_name);
+		csharpMsg_generateCallerParamTypeLIst(header, s, false);
+		fprintf(header, ");\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void composeGmq(GmqComposer composer)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\t%s_message.compose5(composer, ", type_name);
+		csharpMsg_generateCallerParamTypeLIst(header, s, false);
+		fprintf(header, ");\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic static %s_composer make(", type_name);
+
+		csharpMsg_generateComposeParamTypeList5(header, root, s);
+		fprintf(header, ")\n");
+
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\treturn new %s_composer(", type_name);
+		csharpMsg_generateCallerParamTypeLIst(header, s, false);
+		fprintf(header, ");\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "} // class %s_composer\n\n", type_name);
+	}
+
+
+	void csharpMsg_generateStructMessage(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1740,6 +2029,8 @@ namespace {
 		csharpMsg_generateStructComposeBase(header, s);
 		csharpMsg_generateStructComposeJson(header, s);
 		csharpMsg_generateStructComposeGmq(header, s);
+		csharpMsg_generateStructComposeJson5(header, root, s);
+		csharpMsg_generateStructComposeGmq5(header, root, s);
 
 		//csharpMsg_generateStructParseBase2(header, s, type_name, false);
 
@@ -1754,6 +2045,7 @@ namespace {
 		csharpMsg_generateStructParseGmq3(header, s, interface_name);
 
 		fprintf(header, "} // class %s_message\n\n", type_name);
+
 	}
 
 
@@ -1875,10 +2167,41 @@ namespace {
 
 			csharpMsg_generateUnionCaseProperties(header, root, cs, false);
 			csharp_generateStructImpl(header, root, cs, case_type_name.c_str(), interface_name.c_str());
-			csharpMsg_generateStruct(header, root, cs, case_type_name.c_str(), interface_name.c_str());
+			csharpMsg_generateStructComposer(header, root, cs, case_type_name.c_str(), interface_name.c_str());
+			csharpMsg_generateStructMessage(header, root, cs, case_type_name.c_str(), interface_name.c_str());
 		}
 
 		fprintf(header, "} // class %s\n\n", s.name.c_str());
+
+		fprintf(header, "public struct %s_composer : IMessageCompose\n", type_name.c_str());
+
+		fprintf(header, "{\n");
+
+		fprintf(header, "\tint dummy;// TODO, same attributes as base type\n");
+
+		fprintf(header, "\tpublic %s_composer(int dummy)\n", type_name.c_str());
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\tthis.dummy = dummy;// TODO\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void composeJson(JsonComposer composer)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\t// TODO\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic void composeGmq(GmqComposer composer)\n");
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\t// TODO\n");
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "\tpublic static %s_composer make(/* TODO */)\n", type_name.c_str());
+		fprintf(header, "\t{\n");
+		fprintf(header, "\t\t// TODO\n");
+		fprintf(header, "\t\treturn new %s_composer(0);\n", type_name.c_str());
+		fprintf(header, "\t}\n");
+
+		fprintf(header, "} // class %s_composer\n\n", s.name.c_str());
+
 
 		fprintf(header, "public class %s_message\n", type_name.c_str());
 		fprintf(header, "{\n");
@@ -2081,7 +2404,8 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 				std::string interface_name = "I" + type_name;
 
 				generateCsharpStruct(header, s, *it);
-				csharpMsg_generateStruct(header, s, *it, type_name.c_str(), interface_name.c_str());
+				csharpMsg_generateStructComposer(header, s, *it, type_name.c_str(), interface_name.c_str());
+				csharpMsg_generateStructMessage(header, s, *it, type_name.c_str(), interface_name.c_str());
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
 				csharpMsg_generateUnion(header, s, *it);
@@ -2112,7 +2436,7 @@ void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, 
 				std::string interface_name = "I" + type_name;
 
 				generateCsharpStruct(header, s, *it);
-				csharpMsg_generateStruct(header, s, *it, type_name.c_str(), interface_name.c_str());
+				csharpMsg_generateStructMessage(header, s, *it, type_name.c_str(), interface_name.c_str());
 				csharpMsg_generateComposeMessageMethod(header, it->name, *it, scope->proto);
 			}
 			else

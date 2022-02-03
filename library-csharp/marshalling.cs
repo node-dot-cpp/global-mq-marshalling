@@ -302,9 +302,49 @@ namespace globalmq.marshalling
         // }
     };
 
+    public struct CollectionComposer<T> where T :  IMessageCompose
+    {
+        int size;
+        Func<int, T> makeComposer;
+
+        CollectionComposer(int size, Func<int, T> makeComposer)
+        {
+            this.size = size;
+            this.makeComposer = makeComposer;
+        }
+
+        public void composeJson(JsonComposer composer)
+        {
+            composer.append('[');
+            for (int i = 0; i < size; ++i)
+            {
+                if (i != 0)
+                    composer.append(", ");
+
+                T next = makeComposer(i);
+                next.composeJson(composer);
+            }
+            composer.append(']');
+        }
+        public void composeGmq(GmqComposer composer)
+        {
+            composer.composeUnsignedInteger((UInt64)size);
+            for (int i = 0; i < size; ++i)
+            {
+                T next = makeComposer(i);
+                next.composeGmq(composer);
+            }
+        }
+        public static CollectionComposer<T> make(int size, Func<int, T> makeComposer)
+        {
+            return new CollectionComposer<T>(size, makeComposer);
+        }
+    }
     public interface IMessageCompose
     {
-        public void compose(ComposerBase composer);
+        public void composeGmq(GmqComposer composer);
+        public void composeJson(JsonComposer composer);
+
     };
 
     public class MessageWrapperForComposing : IMessageCompose
@@ -315,15 +355,23 @@ namespace globalmq.marshalling
 
         public MessageWrapperForComposing(ComposeDelegate lcompose) { lcompose_ = lcompose; }
 
-        public void compose(ComposerBase composer)
+        public void composeGmq(GmqComposer composer)
         {
             lcompose_(composer);
         }
+        public void composeJson(JsonComposer composer)
+        {
+            lcompose_(composer);
+        }
+
+
     };
 
     public interface IMessageParse
     {
-        public void parse(ParserBase parser);
+        public void parseGmq(GmqParser parser);
+        public void parseJson(JsonParser parser);
+
     };
     public class MessageWrapperForParsing :IMessageParse
     {
@@ -333,7 +381,11 @@ namespace globalmq.marshalling
 
 
         public MessageWrapperForParsing(ParseDelegate lparse) { lparse_ = lparse; }
-        public void parse(ParserBase parser)
+        public void parseGmq(GmqParser parser)
+        {
+            lparse_(parser);
+        }
+        public void parseJson(JsonParser parser)
         {
             lparse_(parser);
         }
