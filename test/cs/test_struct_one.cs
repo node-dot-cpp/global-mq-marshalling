@@ -57,18 +57,6 @@ namespace TestProject1
             return msg;
         }
 
-        private static void ComposeStructOne(ComposerBase composer, mtest.struct_one msg)
-        {
-            mtest.struct_one_message.compose(composer,
-                thirdParam: new CollectionWrapperForComposing(() => { return msg.thirdParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point3D_message.compose(composer, x: msg.thirdParam[ordinal].x, y: msg.thirdParam[ordinal].y, z: msg.thirdParam[ordinal].z); }),
-                firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
-                eighthParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point_message.compose(composer, x: msg.eighthParam.x, y: msg.eighthParam.y); }),
-                ninethParam: new MessageWrapperForComposing((ComposerBase composer) => { mtest.point3D_message.compose(composer, x: msg.ninethParam.x, y: msg.ninethParam.y, z: msg.ninethParam.z); }),
-                secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
-                tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam),
-                sixthParam: new CollectionWrapperForComposing(() => { return msg.sixthParam.Count; }, (ComposerBase composer, int ordinal) => { mtest.point_message.compose(composer, x: msg.sixthParam[ordinal].x, y: msg.sixthParam[ordinal].y); })
-            );
-        }
 
         private static void ComposeStructOne_5(JsonComposer composer, mtest.struct_one msg)
         {
@@ -91,7 +79,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            ComposeStructOne(composer, msg);
+            mtest.struct_one_message.compose(composer, msg);
 
 
             // uncomment to update file
@@ -108,7 +96,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer);
 
-            ComposeStructOne(composer, msg);
+            mtest.struct_one_message.compose(composer, msg);
 
             // uncomment to update file
             //buffer.writeToFile(PathJson);
@@ -162,7 +150,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            ComposeStructOne(composer, msg);
+            mtest.struct_one_message.compose(composer, msg);
 
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
@@ -180,7 +168,7 @@ namespace TestProject1
             SimpleBuffer buffer = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer);
 
-            ComposeStructOne(composer, msg);
+            mtest.struct_one_message.compose(composer, msg);
 
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 

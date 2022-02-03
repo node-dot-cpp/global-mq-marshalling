@@ -253,56 +253,56 @@ namespace globalmq.marshalling
             return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
         }
 
-
-
-        // mb: delegate can't use ref params, so only IList and not array for parse
-        // public static CollectionWrapperForParsing makeParser(IList<sbyte> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { sbyte value; parser.parseSignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<short> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { short value; parser.parseSignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<int> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { int value; parser.parseSignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<long> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { long value; parser.parseSignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<byte> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { byte value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<ushort> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { ushort value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<uint> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { uint value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<ulong> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { ulong value; parser.parseUnsignedInteger(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<float> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { float value; parser.parseReal(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<double> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { double value; parser.parseReal(out value); coll.Add(value); });
-        // }
-        // public static CollectionWrapperForParsing makeParser(IList<string> coll)
-        // {
-        //     return new CollectionWrapperForParsing(null, (parser, ordinal) => { string value; parser.parseString(out value); coll.Add(value); });
-        // }
     };
 
-    public struct CollectionComposer<T> where T :  IMessageCompose
+    public struct JsonCollectionComposer<T> 
+    {
+        IList<T> elements;
+        Action<JsonComposer, T> composeFunction;
+
+        public JsonCollectionComposer(IList<T> elements, Action<JsonComposer, T> composeFunction)
+        {
+            this.elements = elements;
+            this.composeFunction = composeFunction;
+        }
+
+        public void composeJson(JsonComposer composer)
+        {
+            composer.append('[');
+            for (int i = 0; i < elements.Count; ++i)
+            {
+                if (i != 0)
+                    composer.append(", ");
+
+                composeFunction(composer, elements[i]);
+            }
+            composer.append(']');
+        }
+    }
+
+    public struct GmqCollectionComposer<T>
+    {
+        IList<T> elements;
+        Action<GmqComposer, T> composeFunction;
+
+        public GmqCollectionComposer(IList<T> elements, Action<GmqComposer, T> composeFunction)
+        {
+            this.elements = elements;
+            this.composeFunction = composeFunction;
+        }
+
+        public void composeGmq(GmqComposer composer)
+        {
+            composer.composeUnsignedInteger((UInt64)elements.Count);
+            for (int i = 0; i < elements.Count; ++i)
+            {
+                composeFunction(composer, elements[i]);
+            }
+        }
+    }
+
+    //TODO remove
+    public struct CollectionComposer<T> where T : IMessageCompose
     {
         int size;
         Func<int, T> makeComposer;
