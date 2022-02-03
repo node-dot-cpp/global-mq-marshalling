@@ -1,0 +1,10 @@
+
+STRUCT TestData {
+  INTEGER number;
+};
+
+PUBLISHABLE TestPub = 7 {
+	INTEGER number;
+    STRUCT TestData testData;
+	VECTOR<STRUCT TestData> vectorOfTestData;
+};

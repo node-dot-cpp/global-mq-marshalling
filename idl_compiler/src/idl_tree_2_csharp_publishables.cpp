@@ -1196,104 +1196,17 @@ namespace {
 		fprintf(header, "} // class %s_concentrator\n\n", type_name.c_str());
 	}
 
-
-	void csharpPub_generateStruct(FILE* header, Root& root, CompositeType& s)
+	void csharpPub_generateConcentratorFactory(FILE* header, Root& root)
 	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+		assert(!root.publishables.empty());
 
-		bool checked = impl_checkParamNameUniqueness(s);
-		checked = impl_checkFollowingExtensionRules(s) && checked;
-		if (!checked)
-			throw std::exception();
-
-		std::string name = csharpPub_getTypeName(s);
-
-		if(s.type == CompositeType::Type::publishable)
-			impl_generatePublishableCommentBlock(header, s);
-
-		//// base interface
-		//csharpPub_generateStructInterface(header, root, s, name);
-
-		//// default implementation
-		//csharpPub_generateStructImpl(header, root, s, name);
-
-		// wrapper for subscriber
-		csharpPub_generateStructSubs(header, root, s, name);
-
-		// wrapper for publisher
-		csharpPub_generateStructPubl(header, root, s, name);
-
-		// wrapper for concentrator
-		if (s.type == CompositeType::Type::publishable)
-			csharpPub_generateStructConcentrator(header, root, s, name);
-
-
-		fprintf(header, "\n");
-
-	}
-}
-
-
-
-
-void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
-{
-	vector<CompositeType*> structsOrderedByDependency;
-	std::unordered_set<size_t> collElementTypes;
-	orderStructsByDependency( s.structs, structsOrderedByDependency, collElementTypes );
-	
-
-	fprintf(header, "//////////////////////////////////////////////////////////////\n");
-	fprintf(header, "//\n");
-	fprintf(header, "//                 Publishables\n");
-	fprintf(header, "//\n");
-	fprintf(header, "//////////////////////////////////////////////////////////////\n\n");
-
-	//fprintf(header,
-		////"namespace publishable\n"
-		////"{\n"
-		//"\n");
-
-	//for ( auto& it : s.publishables )
-	//{
-	//	auto& obj_1 = it;
-	//	assert( obj_1 != nullptr );
-	//	assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-	//	assert( obj_1->type == CompositeType::Type::publishable );
-	//	generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), platformPrefix, classNotifierName );
-	//}
-
-	//fprintf( header, "//===============================================================================\n" );
-	//fprintf( header, "// Publishable c-structures\n" );
-	//fprintf( header, "// Use them as-is or copy and edit member types as necessary\n\n" );
-	for ( auto it : structsOrderedByDependency )
-	{
-		assert( it != nullptr );
-		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union);
-		if ( it->isStruct4Publishing )
-			csharpPub_generateStruct( header, s, *it);
-	}
-
-	for ( auto& it : s.publishables )
-	{
-		auto& obj_1 = it;
-		assert(it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert(it->type == CompositeType::Type::publishable );
-		generateCsharpStruct(header, s, *it);
-		csharpPub_generateStruct( header, s, *it );
-	}
-	//fprintf( header, "\n//===============================================================================\n\n" );
-
-	if (!s.publishables.empty())
-	{
 		fprintf(header, "public class StateConcentratorFactory : IStateConcentratorFactory\n");
 		fprintf(header, "{\n");
 		fprintf(header, "\tpublic IStateConcentrator createConcentrator(UInt64 typeID)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tswitch(typeID)\n");
 		fprintf(header, "\t\t{\n");
-		for (auto& it : s.publishables)
+		for (auto& it : root.publishables)
 		{
 			auto& obj_1 = it;
 			assert(it != nullptr);
@@ -1310,23 +1223,57 @@ void generateCsharpPublishables( const char* fileName, uint32_t fileChecksum, FI
 		fprintf(header, "\t}\n");
 		fprintf(header, "} // class StateConcentratorFactory\n\n");
 	}
+}
 
-	//	generateStateConcentratorFactory( header, s );
-	//	fprintf( header, "\n//===============================================================================\n\n" );
-	//}
 
-	//for ( auto& it : structsOrderedByDependency )
-	//{
-	//	assert( it != nullptr );
-	//	assert( typeid( *(it) ) == typeid( CompositeType ) );
-	//	assert( it->type == CompositeType::Type::structure );
-	//	if ( it->isStruct4Publishing )
-	//	{
-	//		impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//		impl_GeneratePublishableStructWrapper4Set( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-	//	}
-	//}
 
-	//fprintf(header, "\n} // namespace publishable\n\n");
+
+void generateCsharpPublishables( FILE* header, Root& root, const std::string& metascope )
+{
+	vector<CompositeType*> structsOrderedByDependency;
+	std::unordered_set<size_t> collElementTypes;
+	orderStructsByDependency( root.structs, structsOrderedByDependency, collElementTypes );
+	
+
+
+	for ( auto it : structsOrderedByDependency )
+	{
+		assert( it != nullptr );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union);
+		if ( it->isStruct4Publishing )
+		{
+			std::string name = csharpPub_getTypeName(*it);
+
+			csharpPub_generateStructSubs(header, root, *it, name);
+			csharpPub_generateStructPubl(header, root, *it, name);
+		}
+	}
+
+	for ( auto& it : root.publishables )
+	{
+		auto& obj_1 = it;
+		assert(it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert(it->type == CompositeType::Type::publishable );
+
+		checkCsharpStruct(*it);
+
+		std::string type_name = getCSharpTypeName(*it);
+		std::string interface_name = "I" + type_name;
+
+		generateCsharpStructInterface(header, root, *it, type_name.c_str());
+		generateCsharpStructImpl(header, root, *it, type_name.c_str(), interface_name.c_str());
+
+		impl_generatePublishableCommentBlock(header, *it);
+
+		csharpPub_generateStructSubs(header, root, *it, type_name);
+		csharpPub_generateStructPubl(header, root, *it, type_name);
+		csharpPub_generateStructConcentrator(header, root, *it, type_name);
+	}
+	//fprintf( header, "\n//===============================================================================\n\n" );
+
+	if (!root.publishables.empty())
+		csharpPub_generateConcentratorFactory(header, root);
+
 }
 

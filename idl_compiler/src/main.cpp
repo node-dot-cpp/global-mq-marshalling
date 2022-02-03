@@ -134,7 +134,7 @@ int main( int argc, char *argv[] )
 		if (!csharpFile.empty())
 		{
 			FILE* cs_file = fopen(csharpFile.c_str(), "wb");
-			generateCsharp(csharpFile.c_str(), chksm, cs_file, metascope.c_str(), platformPrefix, classNotifierName, *root);
+			generateCsharp(cs_file, *root, metascope.c_str() );
 		}
 	}
 	/*catch ( std::exception& x )

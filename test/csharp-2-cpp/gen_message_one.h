@@ -149,6 +149,14 @@ struct MESSAGE_message_one_json : public message_one {};
 
 //===============================================================================
 
+struct publishable_STRUCT_point3D;
+template<class T> class point3D_RefWrapper;
+template<class T, class RootT> class point3D_RefWrapper4Set;
+
+struct publishable_STRUCT_point;
+template<class T> class point_RefWrapper;
+template<class T, class RootT> class point_RefWrapper4Set;
+
 
 struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::StructType
 {
@@ -259,23 +267,6 @@ void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
-//**********************************************************************
-// MESSAGE "point3D_alias" Targets: GMQ (Alias of point3D)
-
-//**********************************************************************
-
-template<class ComposerT, typename ... Args>
-void MESSAGE_point3D_alias_compose(ComposerT& composer, Args&& ... args)
-{
-	STRUCT_point3D_compose(composer, std::forward<Args>( args )...);
-}
-
-template<class ParserT, typename ... Args>
-void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
-{
-	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
-}
-
 template<class ParserT>
 structures::point3D STRUCT_point3D_parse(ParserT& parser)
 {
@@ -293,29 +284,6 @@ structures::point3D STRUCT_point3D_parse(ParserT& parser)
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
-}
-
-template<class ParserT>
-structures::test_gmq::MESSAGE_point3D_alias MESSAGE_point3D_alias_parse(ParserT& p)
-{
-	return static_cast<structures::test_gmq::MESSAGE_point3D_alias>(STRUCT_point3D_parse(p));
-}
-
-//**********************************************************************
-// MESSAGE "message_one_gmq" Targets: GMQ (Alias of message_one)
-
-//**********************************************************************
-
-template<class ComposerT, typename ... Args>
-void MESSAGE_message_one_gmq_compose(ComposerT& composer, Args&& ... args)
-{
-	STRUCT_message_one_compose(composer, std::forward<Args>( args )...);
-}
-
-template<class ParserT, typename ... Args>
-void MESSAGE_message_one_gmq_parse(ParserT& p, Args&& ... args)
-{
-	STRUCT_message_one_parse(p, std::forward<Args>( args )...);
 }
 
 template<class ParserT>
@@ -357,6 +325,46 @@ structures::message_one STRUCT_message_one_parse(ParserT& parser)
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
+}
+
+//**********************************************************************
+// MESSAGE "point3D_alias" Targets: GMQ (Alias of point3D)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_point3D_alias_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_point3D_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_point3D_parse(p, std::forward<Args>( args )...);
+}
+
+template<class ParserT>
+structures::test_gmq::MESSAGE_point3D_alias MESSAGE_point3D_alias_parse(ParserT& p)
+{
+	return static_cast<structures::test_gmq::MESSAGE_point3D_alias>(STRUCT_point3D_parse(p));
+}
+
+//**********************************************************************
+// MESSAGE "message_one_gmq" Targets: GMQ (Alias of message_one)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_message_one_gmq_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_message_one_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_message_one_gmq_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_message_one_parse(p, std::forward<Args>( args )...);
 }
 
 template<class ParserT>
@@ -440,23 +448,6 @@ void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )
 template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
-//**********************************************************************
-// MESSAGE "point_alias" Targets: JSON (Alias of point)
-
-//**********************************************************************
-
-template<class ComposerT, typename ... Args>
-void MESSAGE_point_alias_compose(ComposerT& composer, Args&& ... args)
-{
-	STRUCT_point_compose(composer, std::forward<Args>( args )...);
-}
-
-template<class ParserT, typename ... Args>
-void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
-{
-	STRUCT_point_parse(p, std::forward<Args>( args )...);
-}
-
 template<class ParserT>
 structures::point STRUCT_point_parse(ParserT& parser)
 {
@@ -472,29 +463,6 @@ structures::point STRUCT_point_parse(ParserT& parser)
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
-}
-
-template<class ParserT>
-structures::test_json::MESSAGE_point_alias MESSAGE_point_alias_parse(ParserT& p)
-{
-	return static_cast<structures::test_json::MESSAGE_point_alias>(STRUCT_point_parse(p));
-}
-
-//**********************************************************************
-// MESSAGE "message_one_json" Targets: JSON (Alias of message_one)
-
-//**********************************************************************
-
-template<class ComposerT, typename ... Args>
-void MESSAGE_message_one_json_compose(ComposerT& composer, Args&& ... args)
-{
-	STRUCT_message_one_compose(composer, std::forward<Args>( args )...);
-}
-
-template<class ParserT, typename ... Args>
-void MESSAGE_message_one_json_parse(ParserT& p, Args&& ... args)
-{
-	STRUCT_message_one_parse(p, std::forward<Args>( args )...);
 }
 
 template<class ParserT>
@@ -536,6 +504,46 @@ structures::message_one STRUCT_message_one_parse(ParserT& parser)
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
+}
+
+//**********************************************************************
+// MESSAGE "point_alias" Targets: JSON (Alias of point)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_point_alias_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_point_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_point_parse(p, std::forward<Args>( args )...);
+}
+
+template<class ParserT>
+structures::test_json::MESSAGE_point_alias MESSAGE_point_alias_parse(ParserT& p)
+{
+	return static_cast<structures::test_json::MESSAGE_point_alias>(STRUCT_point_parse(p));
+}
+
+//**********************************************************************
+// MESSAGE "message_one_json" Targets: JSON (Alias of message_one)
+
+//**********************************************************************
+
+template<class ComposerT, typename ... Args>
+void MESSAGE_message_one_json_compose(ComposerT& composer, Args&& ... args)
+{
+	STRUCT_message_one_compose(composer, std::forward<Args>( args )...);
+}
+
+template<class ParserT, typename ... Args>
+void MESSAGE_message_one_json_parse(ParserT& p, Args&& ... args)
+{
+	STRUCT_message_one_parse(p, std::forward<Args>( args )...);
 }
 
 template<class ParserT>

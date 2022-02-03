@@ -15,7 +15,7 @@ namespace mtest
 
 //////////////////////////////////////////////////////////////
 //
-//                 Messages
+//                 Structures
 //
 //////////////////////////////////////////////////////////////
 
@@ -82,168 +82,390 @@ public class BasicTypes : IBasicTypes, IEquatable<BasicTypes>
 	}
 } // class BasicTypes
 
-public struct BasicTypes_composer : IMessageCompose
+public interface Ipoint3D
 {
-	Int64 anInt;
-	UInt64 anUInt;
-	Double aReal;
-	String aString;
-	public BasicTypes_composer(Int64 anInt, UInt64 anUInt, Double aReal, String aString)
-	{
-		this.anInt = anInt;
-		this.anUInt = anUInt;
-		this.aReal = aReal;
-		this.aString = aString;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		BasicTypes_message.compose5(composer, anInt, anUInt, aReal, aString);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		BasicTypes_message.compose5(composer, anInt, anUInt, aReal, aString);
-	}
-	public static BasicTypes_composer make(Int64 anInt, UInt64 anUInt, Double aReal, String aString)
-	{
-		return new BasicTypes_composer(anInt, anUInt, aReal, aString);
-	}
-} // class BasicTypes_composer
+	Int64 x { get; set; }
+	Int64 y { get; set; }
+	Int64 z { get; set; }
+} // interface point3D
 
-public class BasicTypes_message
+public class point3D : Ipoint3D, IEquatable<point3D>
 {
-	public static void compose(ComposerBase composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	public Int64 x { get; set; }
+	public Int64 y { get; set; }
+	public Int64 z { get; set; }
+	public override bool Equals(object obj)
 	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, anInt, anUInt, aReal, aString);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, anInt, anUInt, aReal, aString);
+		return Equals(obj as point3D);
+	}
+	public static bool operator ==(point3D left, point3D right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
 		else
-			throw new ArgumentException();
+			return left.Equals(right);
 	}
-	public static void compose(JsonComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	public static bool operator !=(point3D left, point3D right)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("anInt");
-		composer.composeSignedInteger(anInt);
-		composer.append( ",\n  " );
-		composer.addNamePart("anUInt");
-		composer.composeUnsignedInteger(anUInt);
-		composer.append( ",\n  " );
-		composer.addNamePart("aReal");
-		composer.composeReal(aReal);
-		composer.append( ",\n  " );
-		composer.addNamePart("aString");
-		composer.composeString(aString);
-		composer.append( "\n}" );
+		return !(left == right);
 	}
-	public static void compose(GmqComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	public override int GetHashCode()
 	{
-		composer.composeSignedInteger(anInt);
-		composer.composeUnsignedInteger(anUInt);
-		composer.composeReal(aReal);
-		composer.composeString(aString);
+		// TODO
+		throw new InvalidOperationException();
 	}
-	public static void compose5(JsonComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	public bool Equals(point3D other)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("anInt");
-		composer.composeSignedInteger(anInt);
-		composer.append( ",\n  " );
-		composer.addNamePart("anUInt");
-		composer.composeUnsignedInteger(anUInt);
-		composer.append( ",\n  " );
-		composer.addNamePart("aReal");
-		composer.composeReal(aReal);
-		composer.append( ",\n  " );
-		composer.addNamePart("aString");
-		composer.composeString(aString);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, Int64 anInt, UInt64 anUInt, Double aReal, String aString)
-	{
-		composer.composeSignedInteger(anInt);
-		composer.composeUnsignedInteger(anUInt);
-		composer.composeReal(aReal);
-		composer.composeString(aString);
-	}
-	public static void parse(ParserBase parser, IBasicTypes val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
 		else
-			throw new ArgumentException();
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
 	}
-	public static void parse(JsonParser parser, IBasicTypes val)	{
-		parser.skipDelimiter( '{' );
-		while (true)
+} // class point3D
+
+public interface Ipoint
+{
+	Int64 x { get; set; }
+	Int64 y { get; set; }
+} // interface point
+
+public class point : Ipoint, IEquatable<point>
+{
+	public Int64 x { get; set; }
+	public Int64 y { get; set; }
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as point);
+	}
+	public static bool operator ==(point left, point right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(point left, point right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(point other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y;
+	}
+} // class point
+
+public interface IAggregateType
+{
+	String name { get; set; }
+	IBasicTypes theAggregate { get; set; }
+	Int64 lastValue { get; set; }
+} // interface AggregateType
+
+public class AggregateType : IAggregateType, IEquatable<AggregateType>
+{
+	String _name = String.Empty;
+	public String name
+	{
+		get { return _name; }
+		set
 		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "anInt" )
-			{
-				Int64 tmp;
-				parser.parseSignedInteger(out tmp);
-				val.anInt = tmp;
-			}
-			else if ( key == "anUInt" )
-			{
-				UInt64 tmp;
-				parser.parseUnsignedInteger(out tmp);
-				val.anUInt = tmp;
-			}
-			else if ( key == "aReal" )
-			{
-				Double tmp;
-				parser.parseReal(out tmp);
-				val.aReal = tmp;
-			}
-			else if ( key == "aString" )
-			{
-				String tmp;
-				parser.parseString(out tmp);
-				val.aString = tmp;
-			}
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
+			if(value == null)
+				throw new ArgumentNullException();
+			_name = value;
 		}
 	}
-	protected static void parse(GmqParser parser, IBasicTypes val)
+	BasicTypes _theAggregate = new BasicTypes();
+	public IBasicTypes theAggregate
 	{
+		get { return _theAggregate; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_theAggregate = (BasicTypes)value;
+		}
+	}
+	public Int64 lastValue { get; set; }
+	public override bool Equals(object obj)
 	{
-		Int64 tmp;
-		parser.parseSignedInteger(out tmp);
-		val.anInt = tmp;
+		return Equals(obj as AggregateType);
 	}
+	public static bool operator ==(AggregateType left, AggregateType right)
 	{
-		UInt64 tmp;
-		parser.parseUnsignedInteger(out tmp);
-		val.anUInt = tmp;
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
 	}
+	public static bool operator !=(AggregateType left, AggregateType right)
 	{
-		Double tmp;
-		parser.parseReal(out tmp);
-		val.aReal = tmp;
+		return !(left == right);
 	}
+	public override int GetHashCode()
 	{
-		String tmp;
-		parser.parseString(out tmp);
-		val.aString = tmp;
+		// TODO
+		throw new InvalidOperationException();
 	}
+	public bool Equals(AggregateType other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.name == other.name &&
+				this.theAggregate.Equals(other.theAggregate) &&
+				this.lastValue == other.lastValue;
 	}
-} // class BasicTypes_message
+} // class AggregateType
+
+public interface Istruct_du
+{
+	Ipoint3D pt { get; set; }
+	Idu_one disc_union { get; set; }
+} // interface struct_du
+
+public class struct_du : Istruct_du, IEquatable<struct_du>
+{
+	point3D _pt = new point3D();
+	public Ipoint3D pt
+	{
+		get { return _pt; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_pt = (point3D)value;
+		}
+	}
+	du_one _disc_union = new du_one();
+	public Idu_one disc_union
+	{
+		get { return _disc_union; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_disc_union = (du_one)value;
+		}
+	}
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as struct_du);
+	}
+	public static bool operator ==(struct_du left, struct_du right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(struct_du left, struct_du right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(struct_du other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.pt.Equals(other.pt) &&
+				this.disc_union.Equals(other.disc_union);
+	}
+} // class struct_du
+
+public interface Istruct_one
+{
+	Int64 firstParam { get; set; }
+	IList<Int64> secondParam { get; set; }
+	IList<Ipoint3D> thirdParam { get; set; }
+	UInt64 forthParam { get; set; }
+	String fifthParam { get; set; }
+	IList<Ipoint> sixthParam { get; set; }
+	Double seventhParam { get; set; }
+	Ipoint eighthParam { get; set; }
+	Ipoint3D ninethParam { get; set; }
+	IList<Double> tenthParam { get; set; }
+} // interface struct_one
+
+public class struct_one : Istruct_one, IEquatable<struct_one>
+{
+	public Int64 firstParam { get; set; }
+	List<Int64> _secondParam = new List<Int64>();
+	public IList<Int64> secondParam
+	{
+		get { return _secondParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_secondParam = (List<Int64>)value;
+		}
+	}
+	List<Ipoint3D> _thirdParam = new List<Ipoint3D>();
+	public IList<Ipoint3D> thirdParam
+	{
+		get { return _thirdParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
+			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
+			_thirdParam = tmp;
+		}
+	}
+	public UInt64 forthParam { get; set; }
+	String _fifthParam = String.Empty;
+	public String fifthParam
+	{
+		get { return _fifthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_fifthParam = value;
+		}
+	}
+	List<Ipoint> _sixthParam = new List<Ipoint>();
+	public IList<Ipoint> sixthParam
+	{
+		get { return _sixthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			List<Ipoint> tmp = (List<Ipoint>)value;
+			tmp.ForEach((Ipoint each) => { if(!(each is point)) throw new InvalidCastException(); });
+			_sixthParam = tmp;
+		}
+	}
+	public Double seventhParam { get; set; }
+	point _eighthParam = new point();
+	public Ipoint eighthParam
+	{
+		get { return _eighthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_eighthParam = (point)value;
+		}
+	}
+	point3D _ninethParam = new point3D();
+	public Ipoint3D ninethParam
+	{
+		get { return _ninethParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_ninethParam = (point3D)value;
+		}
+	}
+	List<Double> _tenthParam = new List<Double>();
+	public IList<Double> tenthParam
+	{
+		get { return _tenthParam; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_tenthParam = (List<Double>)value;
+		}
+	}
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as struct_one);
+	}
+	public static bool operator ==(struct_one left, struct_one right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(struct_one left, struct_one right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(struct_one other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.firstParam == other.firstParam &&
+				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
+				Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
+				this.forthParam == other.forthParam &&
+				this.fifthParam == other.fifthParam &&
+				Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
+				this.seventhParam == other.seventhParam &&
+				this.eighthParam.Equals(other.eighthParam) &&
+				this.ninethParam.Equals(other.ninethParam) &&
+				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
+	}
+} // class struct_one
+
+//////////////////////////////////////////////////////////////
+//
+//                 Messages
+//
+//////////////////////////////////////////////////////////////
 
 //**********************************************************************
 // DISCRIMINATED_UNION "du_one" Targets: GMQ (2 cases)
@@ -843,56 +1065,6 @@ public class du_one_message
 	}
 } // class du_one_message
 
-public interface Ipoint3D
-{
-	Int64 x { get; set; }
-	Int64 y { get; set; }
-	Int64 z { get; set; }
-} // interface point3D
-
-public class point3D : Ipoint3D, IEquatable<point3D>
-{
-	public Int64 x { get; set; }
-	public Int64 y { get; set; }
-	public Int64 z { get; set; }
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as point3D);
-	}
-	public static bool operator ==(point3D left, point3D right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(point3D left, point3D right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(point3D other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.x == other.x &&
-				this.y == other.y &&
-				this.z == other.z;
-	}
-} // class point3D
-
 public struct point3D_composer : IMessageCompose
 {
 	Int64 x;
@@ -1035,53 +1207,6 @@ public class point3D_message
 	}
 } // class point3D_message
 
-public interface Ipoint
-{
-	Int64 x { get; set; }
-	Int64 y { get; set; }
-} // interface point
-
-public class point : Ipoint, IEquatable<point>
-{
-	public Int64 x { get; set; }
-	public Int64 y { get; set; }
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as point);
-	}
-	public static bool operator ==(point left, point right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(point left, point right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(point other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.x == other.x &&
-				this.y == other.y;
-	}
-} // class point
-
 public struct point_composer : IMessageCompose
 {
 	Int64 x;
@@ -1203,281 +1328,6 @@ public class point_message
 	}
 } // class point_message
 
-public interface IAggregateType
-{
-	String name { get; set; }
-	IBasicTypes theAggregate { get; set; }
-	Int64 lastValue { get; set; }
-} // interface AggregateType
-
-public class AggregateType : IAggregateType, IEquatable<AggregateType>
-{
-	String _name = String.Empty;
-	public String name
-	{
-		get { return _name; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_name = value;
-		}
-	}
-	BasicTypes _theAggregate = new BasicTypes();
-	public IBasicTypes theAggregate
-	{
-		get { return _theAggregate; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_theAggregate = (BasicTypes)value;
-		}
-	}
-	public Int64 lastValue { get; set; }
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as AggregateType);
-	}
-	public static bool operator ==(AggregateType left, AggregateType right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(AggregateType left, AggregateType right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(AggregateType other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.name == other.name &&
-				this.theAggregate.Equals(other.theAggregate) &&
-				this.lastValue == other.lastValue;
-	}
-} // class AggregateType
-
-public struct AggregateType_composer : IMessageCompose
-{
-	String name;
-	BasicTypes_composer theAggregate;
-	Int64 lastValue;
-	public AggregateType_composer(String name, BasicTypes_composer theAggregate, Int64 lastValue)
-	{
-		this.name = name;
-		this.theAggregate = theAggregate;
-		this.lastValue = lastValue;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		AggregateType_message.compose5(composer, name, theAggregate, lastValue);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		AggregateType_message.compose5(composer, name, theAggregate, lastValue);
-	}
-	public static AggregateType_composer make(String name, BasicTypes_composer theAggregate, Int64 lastValue)
-	{
-		return new AggregateType_composer(name, theAggregate, lastValue);
-	}
-} // class AggregateType_composer
-
-public class AggregateType_message
-{
-	public static void compose(ComposerBase composer, String name, IMessageCompose theAggregate, Int64 lastValue)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, name, theAggregate, lastValue);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, name, theAggregate, lastValue);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, String name, IMessageCompose theAggregate, Int64 lastValue)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("name");
-		composer.composeString(name);
-		composer.append( ",\n  " );
-		composer.addNamePart("theAggregate");
-		theAggregate.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("lastValue");
-		composer.composeSignedInteger(lastValue);
-		composer.append( "\n}" );
-	}
-	public static void compose(GmqComposer composer, String name, IMessageCompose theAggregate, Int64 lastValue)
-	{
-		composer.composeString(name);
-		theAggregate.composeGmq(composer);
-		composer.composeSignedInteger(lastValue);
-	}
-	public static void compose5(JsonComposer composer, String name, BasicTypes_composer theAggregate, Int64 lastValue)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("name");
-		composer.composeString(name);
-		composer.append( ",\n  " );
-		composer.addNamePart("theAggregate");
-		theAggregate.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("lastValue");
-		composer.composeSignedInteger(lastValue);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, String name, BasicTypes_composer theAggregate, Int64 lastValue)
-	{
-		composer.composeString(name);
-		theAggregate.composeGmq(composer);
-		composer.composeSignedInteger(lastValue);
-	}
-	public static void parse(ParserBase parser, IAggregateType val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
-	}
-	public static void parse(JsonParser parser, IAggregateType val)	{
-		parser.skipDelimiter( '{' );
-		while (true)
-		{
-			string key;
-			parser.readKeyFromJson( out key );
-			if ( key == "name" )
-			{
-				String tmp;
-				parser.parseString(out tmp);
-				val.name = tmp;
-			}
-			else if ( key == "theAggregate" )
-			{
-				BasicTypes_message.parse(parser, val.theAggregate);
-			}
-			else if ( key == "lastValue" )
-			{
-				Int64 tmp;
-				parser.parseSignedInteger(out tmp);
-				val.lastValue = tmp;
-			}
-
-			parser.skipSpacesEtc();
-			if ( parser.isDelimiter( ',' ) )
-			{
-				parser.skipDelimiter( ',' );
-				continue;
-			}
-			if ( parser.isDelimiter( '}' ) )
-			{
-				parser.skipDelimiter( '}' );
-				break;
-			}
-			throw new FormatException(); // bad format
-		}
-	}
-	protected static void parse(GmqParser parser, IAggregateType val)
-	{
-	{
-		String tmp;
-		parser.parseString(out tmp);
-		val.name = tmp;
-	}
-	{
-		BasicTypes_message.parse(parser, val.theAggregate);
-	}
-	{
-		Int64 tmp;
-		parser.parseSignedInteger(out tmp);
-		val.lastValue = tmp;
-	}
-	}
-} // class AggregateType_message
-
-public interface Istruct_du
-{
-	Ipoint3D pt { get; set; }
-	Idu_one disc_union { get; set; }
-} // interface struct_du
-
-public class struct_du : Istruct_du, IEquatable<struct_du>
-{
-	point3D _pt = new point3D();
-	public Ipoint3D pt
-	{
-		get { return _pt; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_pt = (point3D)value;
-		}
-	}
-	du_one _disc_union = new du_one();
-	public Idu_one disc_union
-	{
-		get { return _disc_union; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_disc_union = (du_one)value;
-		}
-	}
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as struct_du);
-	}
-	public static bool operator ==(struct_du left, struct_du right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(struct_du left, struct_du right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(struct_du other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.pt.Equals(other.pt) &&
-				this.disc_union.Equals(other.disc_union);
-	}
-} // class struct_du
-
 public struct struct_du_composer : IMessageCompose
 {
 	point3D_composer pt;
@@ -1590,151 +1440,6 @@ public class struct_du_message
 	}
 	}
 } // class struct_du_message
-
-public interface Istruct_one
-{
-	Int64 firstParam { get; set; }
-	IList<Int64> secondParam { get; set; }
-	IList<Ipoint3D> thirdParam { get; set; }
-	UInt64 forthParam { get; set; }
-	String fifthParam { get; set; }
-	IList<Ipoint> sixthParam { get; set; }
-	Double seventhParam { get; set; }
-	Ipoint eighthParam { get; set; }
-	Ipoint3D ninethParam { get; set; }
-	IList<Double> tenthParam { get; set; }
-} // interface struct_one
-
-public class struct_one : Istruct_one, IEquatable<struct_one>
-{
-	public Int64 firstParam { get; set; }
-	List<Int64> _secondParam = new List<Int64>();
-	public IList<Int64> secondParam
-	{
-		get { return _secondParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_secondParam = (List<Int64>)value;
-		}
-	}
-	List<Ipoint3D> _thirdParam = new List<Ipoint3D>();
-	public IList<Ipoint3D> thirdParam
-	{
-		get { return _thirdParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			List<Ipoint3D> tmp = (List<Ipoint3D>)value;
-			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
-			_thirdParam = tmp;
-		}
-	}
-	public UInt64 forthParam { get; set; }
-	String _fifthParam = String.Empty;
-	public String fifthParam
-	{
-		get { return _fifthParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_fifthParam = value;
-		}
-	}
-	List<Ipoint> _sixthParam = new List<Ipoint>();
-	public IList<Ipoint> sixthParam
-	{
-		get { return _sixthParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			List<Ipoint> tmp = (List<Ipoint>)value;
-			tmp.ForEach((Ipoint each) => { if(!(each is point)) throw new InvalidCastException(); });
-			_sixthParam = tmp;
-		}
-	}
-	public Double seventhParam { get; set; }
-	point _eighthParam = new point();
-	public Ipoint eighthParam
-	{
-		get { return _eighthParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_eighthParam = (point)value;
-		}
-	}
-	point3D _ninethParam = new point3D();
-	public Ipoint3D ninethParam
-	{
-		get { return _ninethParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_ninethParam = (point3D)value;
-		}
-	}
-	List<Double> _tenthParam = new List<Double>();
-	public IList<Double> tenthParam
-	{
-		get { return _tenthParam; }
-		set
-		{
-			if(value == null)
-				throw new ArgumentNullException();
-			_tenthParam = (List<Double>)value;
-		}
-	}
-	public override bool Equals(object obj)
-	{
-		return Equals(obj as struct_one);
-	}
-	public static bool operator ==(struct_one left, struct_one right)
-	{
-		if (ReferenceEquals(left, right))
-			return true;
-		else if (ReferenceEquals(left, null))
-			return false;
-		else if (ReferenceEquals(null, right))
-			return false;
-		else
-			return left.Equals(right);
-	}
-	public static bool operator !=(struct_one left, struct_one right)
-	{
-		return !(left == right);
-	}
-	public override int GetHashCode()
-	{
-		// TODO
-		throw new InvalidOperationException();
-	}
-	public bool Equals(struct_one other)
-	{
-		if (ReferenceEquals(this, other))
-			return true;
-		else if (ReferenceEquals(null, other))
-			return false;
-		else
-			return
-				this.firstParam == other.firstParam &&
-				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
-				Enumerable.SequenceEqual(this.thirdParam, other.thirdParam) &&
-				this.forthParam == other.forthParam &&
-				this.fifthParam == other.fifthParam &&
-				Enumerable.SequenceEqual(this.sixthParam, other.sixthParam) &&
-				this.seventhParam == other.seventhParam &&
-				this.eighthParam.Equals(other.eighthParam) &&
-				this.ninethParam.Equals(other.ninethParam) &&
-				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
-	}
-} // class struct_one
 
 public struct struct_one_composer : IMessageCompose
 {
@@ -2792,7 +2497,6 @@ public class BasicTypes_publisher : IBasicTypes
 	}
 } // class BasicTypes_publisher
 
-
 public class point3D_subscriber : Ipoint3D
 {
 
@@ -2977,7 +2681,6 @@ public class point3D_publisher : Ipoint3D
 		composer.composeInteger("z", t.z, false);
 	}
 } // class point3D_publisher
-
 
 public class AggregateType_subscriber : IAggregateType
 {
@@ -3187,7 +2890,6 @@ public class AggregateType_publisher : IAggregateType
 		composer.composeInteger("lastValue", t.lastValue, false);
 	}
 } // class AggregateType_publisher
-
 
 public interface IStructSix
 {
@@ -3570,7 +3272,6 @@ public class StructSix_concentrator : StructSix_subscriber, IStateConcentrator
 		composer.composeStructEnd();
 	}
 } // class StructSix_concentrator
-
 
 public interface Ipublishable_seven
 {
@@ -4268,7 +3969,6 @@ public class publishable_seven_concentrator : publishable_seven_subscriber, ISta
 		composer.composeStructEnd();
 	}
 } // class publishable_seven_concentrator
-
 
 public class StateConcentratorFactory : IStateConcentratorFactory
 {

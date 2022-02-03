@@ -32,12 +32,20 @@
 #include "idl_tree_serializer.h"
 
 //shared by message and publishables
-//void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const std::string& type_name);
-void generateCsharpStruct(FILE* header, Root& root, CompositeType& s);
+
+void checkCsharpStruct(CompositeType& s);
+std::string getCSharpTypeName(CompositeType& s);
+const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
+void generateCsharpStandardMethods(FILE* header, const char* type_name);
+void generateCsharpStructInterface(FILE* header, Root& root, CompositeType& s, const char* type_name);
+void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name);
+
+
 
 // code generation
-void generateCsharp( const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );
-void generateCsharpPublishables(const char* fileName, uint32_t fileChecksum, FILE* header, const std::string& metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s);
+void generateCsharp(FILE* header, Root& root, const std::string& metascope);
+void generateCsharpMessages(FILE* header, Root& root, const std::string& metascope);
+void generateCsharpPublishables(FILE* header, Root& root, const std::string& metascope);
 //void generateMessage( FILE* header, CompositeType& s );
 //void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
 //void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s );
