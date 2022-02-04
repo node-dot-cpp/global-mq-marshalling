@@ -381,8 +381,7 @@ namespace globalmq.marshalling
     {
         void composeKey(String name); //TODO remove
         void appendRaw(ReadIteratorT it, int size = int.MaxValue);
-        void startTick(BufferT buffer);
-        BufferT endTick();
+        BufferT getBuffer();
         void composeAddress(UInt64[] baseAddr, UInt64 last);
         void composeAddressEnd();
         void composeAction(UInt64 actionId, bool emptyData);
@@ -405,7 +404,6 @@ namespace globalmq.marshalling
     {
         JsonComposer composer;
 
-        public JsonPublishableComposer() { composer = new JsonComposer(null); }
         public JsonPublishableComposer(BufferT buffer) { composer = new JsonComposer(buffer); }
         public void composeKey(String name) //TODO remove
         {
@@ -416,13 +414,9 @@ namespace globalmq.marshalling
             composer.getBuffer().append(it, size);
         }
 
-        public void startTick(BufferT buffer)
+        public BufferT getBuffer()
         {
-            composer.startTick(buffer);
-        }
-        public BufferT endTick()
-        {
-            return composer.endTick();
+            return composer.getBuffer();
         }
 
         public void composeAddress(ulong[] baseAddr, ulong last)
@@ -537,7 +531,6 @@ namespace globalmq.marshalling
     {
         GmqComposer composer;
 
-        public GmqPublishableComposer() { composer = new GmqComposer(null); }
         public GmqPublishableComposer(BufferT buffer) { composer = new GmqComposer(buffer); }
 
         public void composeKey(String name) { }
@@ -545,14 +538,9 @@ namespace globalmq.marshalling
         {
             composer.getBuffer().append(it, size);
         }
-
-        public void startTick(BufferT buffer)
+        public BufferT getBuffer()
         {
-            composer.startTick(buffer);
-        }
-        public BufferT endTick()
-        {
-            return composer.endTick();
+            return composer.getBuffer();
         }
         public void composeAddress(ulong[] baseAddr, ulong last)
         {

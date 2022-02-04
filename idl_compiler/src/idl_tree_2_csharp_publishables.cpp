@@ -744,15 +744,14 @@ namespace {
 		fprintf(header, "\n\t/////////////////////////////////   end user override section  /////////////////////////////////\n\n\n");
 
 
-		fprintf(header, "\tinternal I%s data;\n", type_name.c_str());
+		fprintf(header, "\tprotected I%s data;\n", type_name.c_str());
 
 		csharpPub_generateAddressEnum(header, s);
 
 		if (s.type == CompositeType::Type::publishable)
-			fprintf(header, "\tpublic %s_subscriber() : this(new %s()) { }\n", type_name.c_str(), type_name.c_str());
-
-
-		fprintf(header, "\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name.c_str(), type_name.c_str());
+			fprintf(header, "\tpublic %s_subscriber() { this.data = new %s(); }\n", type_name.c_str(), type_name.c_str());
+		else
+			fprintf(header, "\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name.c_str(), type_name.c_str());
 
 
 		auto& mem = s.getMembers();
@@ -952,16 +951,18 @@ namespace {
 		fprintf(header, "\t\tcomposer.composeStructEnd();\n");
 		fprintf(header, "\t}\n");
 		
-		fprintf(header, "\tpublic void startTick(BufferT buff)\n");
+		fprintf(header, "\tpublic void startTick(IPublishableComposer composer)\n");
 		fprintf(header, "\t{\n");
-		fprintf(header, "\t\tcomposer.startTick(buff);\n");
+		fprintf(header, "\t\tthis.composer = composer;\n");
 		fprintf(header, "\t\tcomposer.composeStateUpdateMessageBegin();\n");
 		fprintf(header, "\t}\n");
 
-		fprintf(header, "\tpublic BufferT endTick()\n");
+		fprintf(header, "\tpublic IPublishableComposer endTick()\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tcomposer.composeStateUpdateMessageEnd();\n");
-		fprintf(header, "\t\treturn composer.endTick();\n");
+		fprintf(header, "\t\tIPublishableComposer tmp = composer;\n");
+		fprintf(header, "\t\tthis.composer = null;\n");
+		fprintf(header, "\t\treturn tmp;\n");
 		fprintf(header, "\t}\n");
 	}
 
@@ -974,7 +975,7 @@ namespace {
 		fprintf(header, "public class %s_publisher : I%s", type_name.c_str(), type_name.c_str());
 
 		if (s.type == CompositeType::Type::publishable)
-			fprintf(header, ", IStatePublisher");
+			fprintf(header, ", StatePublisherBase");
 
 		fprintf(header, "\n");
 
@@ -986,13 +987,24 @@ namespace {
 
 		csharpPub_generateAddressEnum(header, s);
 
-		fprintf(header, "\tpublic %s_publisher(I%s t, IPublishableComposer composer, UInt64[] address)\n", type_name.c_str(), type_name.c_str());
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\tthis.t = t;\n");
-		fprintf(header, "\t\tthis.composer = composer;\n");
-		fprintf(header, "\t\tthis.address = address;\n");
-		fprintf(header, "\t}\n");
-
+		if (s.type == CompositeType::Type::publishable)
+		{
+			fprintf(header, "\tpublic %s_publisher()\n", type_name.c_str());
+			fprintf(header, "\t{\n");
+			fprintf(header, "\t\tthis.t = new %s();\n", type_name.c_str());
+			fprintf(header, "\t\tthis.composer = null;\n");
+			fprintf(header, "\t\tthis.address = new UInt64[] { };\n");
+			fprintf(header, "\t}\n");
+		}
+		else
+		{
+			fprintf(header, "\tpublic %s_publisher(I%s t, IPublishableComposer composer, UInt64[] address)\n", type_name.c_str(), type_name.c_str());
+			fprintf(header, "\t{\n");
+			fprintf(header, "\t\tthis.t = t;\n");
+			fprintf(header, "\t\tthis.composer = composer;\n");
+			fprintf(header, "\t\tthis.address = address;\n");
+			fprintf(header, "\t}\n");
+		}
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)
 		{
@@ -1123,6 +1135,14 @@ namespace {
 		if (s.type == CompositeType::Type::publishable)
 			csharpPub_generateStatePublishableBase(header, s, type_name);
 
+
+		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+		fprintf(header, "\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
+
+		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+		fprintf(header, "\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name.c_str());
+
+
 		fprintf(header, "} // class %s_publisher\n\n", type_name.c_str());
 	}
 
@@ -1168,10 +1188,10 @@ namespace {
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
 
-		fprintf(header, "public class %s_concentrator : %s_subscriber, IStateConcentrator\n", type_name.c_str(), type_name.c_str());
+		fprintf(header, "public class %s_concentrator : %s_subscriber, StateConcentratorBase\n", type_name.c_str(), type_name.c_str());
 
 		////if (s.type == CompositeType::Type::publishable)
-		////	fprintf(header, " : IStateConcentrator");
+		////	fprintf(header, " : StateConcentratorBase");
 
 		//fprintf(header, "\n");
 
@@ -1205,7 +1225,7 @@ namespace {
 
 		fprintf(header, "public class StateConcentratorFactory : IStateConcentratorFactory\n");
 		fprintf(header, "{\n");
-		fprintf(header, "\tpublic IStateConcentrator createConcentrator(UInt64 typeID)\n");
+		fprintf(header, "\tpublic StateConcentratorBase createConcentrator(UInt64 typeID)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tswitch(typeID)\n");
 		fprintf(header, "\t\t{\n");
@@ -1237,8 +1257,6 @@ void generateCsharpPublishables( FILE* header, Root& root, const std::string& me
 	std::unordered_set<size_t> collElementTypes;
 	orderStructsByDependency( root.structs, structsOrderedByDependency, collElementTypes );
 	
-
-
 	for ( auto it : structsOrderedByDependency )
 	{
 		assert( it != nullptr );

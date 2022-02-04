@@ -13,6 +13,7 @@ add_custom_command(
 add_executable(test-interop1-cpp
     main.cpp
     idl_generated.h
+    test_gmqueue.cpp
     test_message_three.cpp
     test_message_two.cpp
     test_publishable_seven.cpp

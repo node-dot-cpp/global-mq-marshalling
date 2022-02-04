@@ -1928,7 +1928,7 @@ public class BasicTypes_subscriber : IBasicTypes
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
 
-	internal IBasicTypes data;
+	protected IBasicTypes data;
 	enum Address { anInt = 0, anUInt = 1, aReal = 2, aString = 3 };
 	public BasicTypes_subscriber(IBasicTypes data) { this.data = data; }
 	public Int64 anInt
@@ -2141,6 +2141,10 @@ public class BasicTypes_publisher : IBasicTypes
 		composer.composeReal("aReal", t.aReal, true);
 		composer.composeString("aString", t.aString, false);
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public IBasicTypes debugOnlyGetData() { return this.t; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IBasicTypes data) { this.t = data; }
 } // class BasicTypes_publisher
 
 public class point3D_subscriber : Ipoint3D
@@ -2155,7 +2159,7 @@ public class point3D_subscriber : Ipoint3D
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
 
-	internal Ipoint3D data;
+	protected Ipoint3D data;
 	enum Address { x = 0, y = 1, z = 2 };
 	public point3D_subscriber(Ipoint3D data) { this.data = data; }
 	public Int64 x
@@ -2326,6 +2330,10 @@ public class point3D_publisher : Ipoint3D
 		composer.composeInteger("y", t.y, true);
 		composer.composeInteger("z", t.z, false);
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public Ipoint3D debugOnlyGetData() { return this.t; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(Ipoint3D data) { this.t = data; }
 } // class point3D_publisher
 
 public class AggregateType_subscriber : IAggregateType
@@ -2341,7 +2349,7 @@ public class AggregateType_subscriber : IAggregateType
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
 
-	internal IAggregateType data;
+	protected IAggregateType data;
 	enum Address { name = 0, theAggregate = 1, lastValue = 2 };
 	public AggregateType_subscriber(IAggregateType data) { this.data = data; }
 	public String name
@@ -2535,6 +2543,10 @@ public class AggregateType_publisher : IAggregateType
 		composer.composePublishableStructEnd(true);
 		composer.composeInteger("lastValue", t.lastValue, false);
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public IAggregateType debugOnlyGetData() { return this.t; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IAggregateType data) { this.t = data; }
 } // class AggregateType_publisher
 
 public interface IStructSix
@@ -2646,10 +2658,9 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
 
-	internal IStructSix data;
+	protected IStructSix data;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_subscriber() : this(new StructSix()) { }
-	public StructSix_subscriber(IStructSix data) { this.data = data; }
+	public StructSix_subscriber() { this.data = new StructSix(); }
 	public String name
 	{
 		get { return data.name; }
@@ -2826,17 +2837,17 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	}
 } // class StructSix_subscriber
 
-public class StructSix_publisher : IStructSix, IStatePublisher
+public class StructSix_publisher : IStructSix, StatePublisherBase
 {
 	IStructSix t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { name = 0, basic = 1, aggregate = 2 };
-	public StructSix_publisher(IStructSix t, IPublishableComposer composer, UInt64[] address)
+	public StructSix_publisher()
 	{
-		this.t = t;
-		this.composer = composer;
-		this.address = address;
+		this.t = new StructSix();
+		this.composer = null;
+		this.address = new UInt64[] { };
 	}
 	public String name
 	{
@@ -2894,19 +2905,25 @@ public class StructSix_publisher : IStructSix, IStatePublisher
 		StructSix_publisher.compose(composer, this.t);
 		composer.composeStructEnd();
 	}
-	public void startTick(BufferT buff)
+	public void startTick(IPublishableComposer composer)
 	{
-		composer.startTick(buff);
+		this.composer = composer;
 		composer.composeStateUpdateMessageBegin();
 	}
-	public BufferT endTick()
+	public IPublishableComposer endTick()
 	{
 		composer.composeStateUpdateMessageEnd();
-		return composer.endTick();
+		IPublishableComposer tmp = composer;
+		this.composer = null;
+		return tmp;
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public IStructSix debugOnlyGetData() { return this.t; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IStructSix data) { this.t = data; }
 } // class StructSix_publisher
 
-public class StructSix_concentrator : StructSix_subscriber, IStateConcentrator
+public class StructSix_concentrator : StructSix_subscriber, StateConcentratorBase
 {
 	public static void compose(IPublishableComposer composer, IStructSix t)
 	{
@@ -3083,10 +3100,9 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	/////////////////////////////////   end user override section  /////////////////////////////////
 
 
-	internal Ipublishable_seven data;
+	protected Ipublishable_seven data;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_subscriber() : this(new publishable_seven()) { }
-	public publishable_seven_subscriber(Ipublishable_seven data) { this.data = data; }
+	public publishable_seven_subscriber() { this.data = new publishable_seven(); }
 	public IList<Int64> intVec
 	{
 		get { return new SubscriberVectorWrapper<Int64, Int64>(data.intVec); }
@@ -3473,17 +3489,17 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	}
 } // class publishable_seven_subscriber
 
-public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
+public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBase
 {
 	Ipublishable_seven t;
 	IPublishableComposer composer;
 	UInt64[] address;
 	enum Address { intVec = 0, uintVec = 1, realVec = 2, strVec = 3, structVec = 4 };
-	public publishable_seven_publisher(Ipublishable_seven t, IPublishableComposer composer, UInt64[] address)
+	public publishable_seven_publisher()
 	{
-		this.t = t;
-		this.composer = composer;
-		this.address = address;
+		this.t = new publishable_seven();
+		this.composer = null;
+		this.address = new UInt64[] { };
 	}
 	public IList<Int64> intVec
 	{
@@ -3601,19 +3617,25 @@ public class publishable_seven_publisher : Ipublishable_seven, IStatePublisher
 		publishable_seven_publisher.compose(composer, this.t);
 		composer.composeStructEnd();
 	}
-	public void startTick(BufferT buff)
+	public void startTick(IPublishableComposer composer)
 	{
-		composer.startTick(buff);
+		this.composer = composer;
 		composer.composeStateUpdateMessageBegin();
 	}
-	public BufferT endTick()
+	public IPublishableComposer endTick()
 	{
 		composer.composeStateUpdateMessageEnd();
-		return composer.endTick();
+		IPublishableComposer tmp = composer;
+		this.composer = null;
+		return tmp;
 	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public Ipublishable_seven debugOnlyGetData() { return this.t; }
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(Ipublishable_seven data) { this.t = data; }
 } // class publishable_seven_publisher
 
-public class publishable_seven_concentrator : publishable_seven_subscriber, IStateConcentrator
+public class publishable_seven_concentrator : publishable_seven_subscriber, StateConcentratorBase
 {
 	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
@@ -3634,7 +3656,7 @@ public class publishable_seven_concentrator : publishable_seven_subscriber, ISta
 
 public class StateConcentratorFactory : IStateConcentratorFactory
 {
-	public IStateConcentrator createConcentrator(UInt64 typeID)
+	public StateConcentratorBase createConcentrator(UInt64 typeID)
 	{
 		switch(typeID)
 		{

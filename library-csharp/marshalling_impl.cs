@@ -59,22 +59,6 @@ namespace globalmq.marshalling
 		{
 			return buff;
 		}
-		public void startTick(BufferT buffer)
-		{
-			Debug.Assert(buff == null);
-			Debug.Assert(buffer != null);
-
-			this.buff = buffer;
-		}
-		public BufferT endTick()
-		{
-			Debug.Assert(buff != null);
-
-			BufferT res = this.buff;
-			this.buff = null;
-			return res;
-		}
-
 		public void composeSignedInteger(sbyte num)
 		{
 			buff.appendAscii(num.ToString());
@@ -151,22 +135,6 @@ namespace globalmq.marshalling
 		public BufferT getBuffer()
 		{
 			return buff;
-		}
-
-		public void startTick(BufferT buffer)
-		{
-			Debug.Assert(buff == null);
-			Debug.Assert(buffer != null);
-
-			this.buff = buffer;
-		}
-		public BufferT endTick()
-		{
-			Debug.Assert(buff != null);
-
-			BufferT res = this.buff;
-			this.buff = null;
-			return res;
 		}
 
 		public void composeSignedInteger(sbyte num)

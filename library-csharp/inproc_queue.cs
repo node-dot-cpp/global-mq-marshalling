@@ -144,12 +144,12 @@ namespace globalmq.marshalling
         }
     };
 
-    public class ThreadQueuePostman : InProcessMessagePostmanBase
+    public class BasicQueuePostman : InProcessMessagePostmanBase
     {
         BasicMtQueue<ThreadQueueItem> msgQueue;
         int recipientID;
 
-        public ThreadQueuePostman(BasicMtQueue<ThreadQueueItem> msgQueue_, int recipientID_)
+        public BasicQueuePostman(BasicMtQueue<ThreadQueueItem> msgQueue_, int recipientID_)
         {
             this.msgQueue = msgQueue_;
             this.recipientID = recipientID_;
@@ -160,11 +160,11 @@ namespace globalmq.marshalling
         }
     };
 
-    public class GMQThreadQueueTransport : GMQTransportBase
-    {
+    //public class GMQThreadQueueTransport : GMQTransportBase
+    //{
 
-        public GMQThreadQueueTransport(GMQueue gmq, string name, BasicMtQueue<ThreadQueueItem> queue, int recipientID) : base(gmq, name, new ThreadQueuePostman(queue, recipientID)) { }
-        public GMQThreadQueueTransport(GMQueue gmq, BasicMtQueue<ThreadQueueItem> queue, int recipientID) : base(gmq, new ThreadQueuePostman(queue, recipientID)) { }
-    };
+    //    public GMQThreadQueueTransport(GMQueue gmq, string name, BasicMtQueue<ThreadQueueItem> queue, int recipientID) : base(gmq, name, new BasicQueuePostman(queue, recipientID)) { }
+    //    public GMQThreadQueueTransport(GMQueue gmq, BasicMtQueue<ThreadQueueItem> queue, int recipientID) : base(gmq, new BasicQueuePostman(queue, recipientID)) { }
+    //};
 
 } // namespace globalmq

@@ -71,9 +71,10 @@ namespace TestProject1
 
         internal static void TestComposeStateSync(IPlatformSupport platform, String fileName)
         {
-             mtest.StructSix data = GetPublishableSix();
 
-             mtest.StructSix_publisher publ = new  mtest.StructSix_publisher(data, null, new UInt64[] { });
+            mtest.StructSix_publisher publ = new  mtest.StructSix_publisher();
+            mtest.StructSix data = GetPublishableSix();
+            publ.debugOnlySetData(data);
 
             SimpleBuffer buffer = new SimpleBuffer();
             IPublishableComposer composer = platform.makePublishableComposer(buffer);
@@ -103,14 +104,14 @@ namespace TestProject1
 
         internal static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
         {
-             mtest.StructSix data = GetPublishableSix();
+            mtest.StructSix_publisher publ = new mtest.StructSix_publisher();
+            mtest.StructSix data = GetPublishableSix();
+            publ.debugOnlySetData(data);
 
-            IPublishableComposer composer = platform.makePublishableComposer(null);
-             mtest.StructSix_publisher publ = new  mtest.StructSix_publisher(data, composer, new UInt64[] { });
+            BufferT buffer = platform.makeBuffer();
+            IPublishableComposer composer = platform.makePublishableComposer(buffer);
 
-            SimpleBuffer buffer = new SimpleBuffer();
-
-            publ.startTick(buffer);
+            publ.startTick(composer);
 
             updateDelegate(publ);
 

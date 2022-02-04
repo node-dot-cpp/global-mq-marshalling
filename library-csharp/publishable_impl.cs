@@ -45,12 +45,12 @@ namespace globalmq.marshalling
         }
     };
 
-    public interface IStatePublisher
+    public interface StatePublisherBase
     {
         int idx { get; set; } // for use in pools, etc
         void generateStateSyncMessage(IPublishableComposer composer);
-        void startTick(BufferT buff);
-        BufferT endTick();
+        void startTick(IPublishableComposer composer);
+        IPublishableComposer endTick();
         String statePublisherName();
         UInt64 stateTypeID();
     };
@@ -58,11 +58,11 @@ namespace globalmq.marshalling
     public class StatePublisherData
     {
 
-        public IStatePublisher publisher = null;
+        public StatePublisherBase publisher = null;
         public List<StateSubscriberData> subscribers = new List<StateSubscriberData>();
         public int idx; // in pool
 
-        public StatePublisherData(int idx_, IStatePublisher publisher_)
+        public StatePublisherData(int idx_, StatePublisherBase publisher_)
         {
             Debug.Assert(publisher_ != null);
             this.publisher = publisher_;
@@ -71,7 +71,7 @@ namespace globalmq.marshalling
             //BufferT buff; // just empty
             //publisher.startTick(buff);
         }
-        public void setPublisher(IStatePublisher publisher_)
+        public void setPublisher(StatePublisherBase publisher_)
         {
             Debug.Assert(this.publisher == null);
             Debug.Assert(publisher_ != null);
@@ -80,7 +80,7 @@ namespace globalmq.marshalling
             //BufferT buff; // just empty
             //publisher.startTick(buff);
         }
-        public void setUnused(IStatePublisher publisher_)
+        public void setUnused(StatePublisherBase publisher_)
         {
             Debug.Assert(this.publisher == publisher_);
             this.publisher = null;
@@ -102,9 +102,9 @@ namespace globalmq.marshalling
         {
             publisher.generateStateSyncMessage(composer);
         }
-        public BufferT getStateUpdateBuff() { return publisher.endTick(); }
-        public void startTick(BufferT buff) { publisher.startTick(buff); }
-        BufferT endTick() { return publisher.endTick(); }
+        public BufferT getStateUpdateBuff() { return publisher.endTick().getBuffer(); }
+        public void startTick(IPublishableComposer composer) { publisher.startTick(composer); }
+        BufferT endTick() { return publisher.endTick().getBuffer(); }
     };
     class StatePublisherPool
     {
@@ -116,7 +116,7 @@ namespace globalmq.marshalling
         Dictionary<UInt64, (int, int)> ID2PublisherAndItsSubscriberMapping = new Dictionary<UInt64, (int, int)>();
         UInt64 publisherAndItsSubscriberBase = 0;
 
-        public int add(IStatePublisher publisher)
+        public int add(StatePublisherBase publisher)
         {
             for (int i = 0; i < publishers.Count; ++i)
             {
@@ -127,7 +127,8 @@ namespace globalmq.marshalling
                     name2publisherMapping.Add(publisher.statePublisherName(), (publishers[i]));
                     //assert(ins.second); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
                     BufferT buff2 = platform.makeBuffer();
-                    publisher.startTick(buff2);
+                    IPublishableComposer composer2 = platform.makePublishableComposer(buff2);
+                    publisher.startTick(composer2);
                     
                     return i;
                 }
@@ -138,11 +139,12 @@ namespace globalmq.marshalling
             name2publisherMapping.Add(publisher.statePublisherName(), data);
             //assert(ins.second); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
             BufferT buff = platform.makeBuffer();
-            publisher.startTick(buff);
+            IPublishableComposer composer = platform.makePublishableComposer(buff);
+            publisher.startTick(composer);
 
             return publishers.Count - 1;
         }
-        public void remove(IStatePublisher publisher)
+        public void remove(StatePublisherBase publisher)
         {
             bool res = name2publisherMapping.Remove(publisher.statePublisherName());
             Debug.Assert(res);
@@ -242,7 +244,8 @@ namespace globalmq.marshalling
                     transport.postMessage(msgForward);
                 }
                 BufferT newBuff = platform.makeBuffer(); // just empty
-                publisher.startTick(newBuff);
+                IPublishableComposer composerNew = platform.makePublishableComposer(newBuff);
+                publisher.startTick(composerNew);
             }
         }
     };
@@ -775,7 +778,7 @@ namespace globalmq.marshalling
         }
 
 
-        public void add(IStatePublisher obj)
+        public void add(StatePublisherBase obj)
         {
             pubPool.add(obj);
         }
@@ -789,7 +792,7 @@ namespace globalmq.marshalling
             cliPool.add(obj);
         }
 
-        public void remove(IStatePublisher obj)
+        public void remove(StatePublisherBase obj)
         {
             pubPool.remove(obj);
         }

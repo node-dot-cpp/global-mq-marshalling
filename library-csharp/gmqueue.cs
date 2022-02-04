@@ -172,9 +172,9 @@ namespace globalmq.marshalling
 
                         dummy = parser.parseUnsigned("ref_id_at_subscriber");
                         if (udata.update_ref_id_at_subscriber)
-                            composer.composeUnsigned("ref_id_at_subscriber", udata.ref_id_at_subscriber, false);
+                            composer.composeUnsigned("ref_id_at_subscriber", udata.ref_id_at_subscriber, true);
                         else
-                            composer.composeUnsigned("ref_id_at_subscriber", dummy, false);
+                            composer.composeUnsigned("ref_id_at_subscriber", dummy, true);
 
                         dummy = parser.parseUnsigned("ref_id_at_publisher");
                         if (udata.update_ref_id_at_publisher)
@@ -262,7 +262,7 @@ namespace globalmq.marshalling
             // TODO: check components
             StringBuilder ret = new StringBuilder();
             ret.Append("globalmq:");
-            if (components.authority != null)
+            if (components.authority != null && components.authority.Length != 0)
             {
                 ret.Append("//");
                 ret.Append(components.authority);
@@ -402,7 +402,7 @@ namespace globalmq.marshalling
             return true;
         }
     };
-    public interface IStateConcentrator : StateSubscriberBase
+    public interface StateConcentratorBase : StateSubscriberBase
     {
         //string stateSubscriberName();
         //UInt64 stateTypeID();
@@ -415,7 +415,7 @@ namespace globalmq.marshalling
 
     public interface IStateConcentratorFactory
     {
-        IStateConcentrator createConcentrator(UInt64 typeID);
+        StateConcentratorBase createConcentrator(UInt64 typeID);
 
     }
     public interface InProcessMessagePostmanBase
@@ -434,7 +434,7 @@ namespace globalmq.marshalling
             this.reincarnation = reincarnation;
         }
     };
-    public struct SlotIdx
+    public class SlotIdx
     {
         public static int invalid_idx = int.MaxValue;
         public static UInt64 invalid_reincarnation = UInt64.MaxValue;
@@ -517,7 +517,7 @@ namespace globalmq.marshalling
         {
             //friend class GMQueue<PlatformSupportT>;
 
-            IStateConcentrator ptr = null;
+            StateConcentratorBase ptr = null;
             bool subscriptionResponseReceived = false;
             UInt64 idAtPublisher; // one for all subscriber using this concentrator
 
@@ -529,7 +529,7 @@ namespace globalmq.marshalling
             };
             public List<SubscriberData> subscribers = new List<SubscriberData>();
 
-            public ConcentratorWrapper(IStateConcentrator ptr) { this.ptr = ptr; }
+            public ConcentratorWrapper(StateConcentratorBase ptr) { this.ptr = ptr; }
             //~ConcentratorWrapper() { if (ptr) delete ptr; }
 
             // Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
@@ -749,7 +749,7 @@ namespace globalmq.marshalling
             {
                 //Debug.Assert(!path.empty());
                 Debug.Assert(stateConcentratorFactory != null);
-                IStateConcentrator concentrator = stateConcentratorFactory.createConcentrator(stateTypeID);
+                StateConcentratorBase concentrator = stateConcentratorFactory.createConcentrator(stateTypeID);
                 Debug.Assert(concentrator != null);
                 ConcentratorWrapper cwrapper = new ConcentratorWrapper(concentrator);
                 /*auto ins = */
@@ -1181,7 +1181,7 @@ namespace globalmq.marshalling
             }
         }
 
-        public UInt64 add(string name, InProcessMessagePostmanBase postman, ref SlotIdx idx)
+        public UInt64 add(string name, InProcessMessagePostmanBase postman, out SlotIdx idx)
         {
             Debug.Assert(name.Length != 0);
 
@@ -1193,7 +1193,7 @@ namespace globalmq.marshalling
                 return addSender(idx);
             }
         }
-        public UInt64 add(InProcessMessagePostmanBase postman, ref SlotIdx idx)
+        public UInt64 add(InProcessMessagePostmanBase postman, out SlotIdx idx)
         {
             //std::unique_lock < std::mutex > lock (mx) ;
             lock (mx)
@@ -1241,7 +1241,7 @@ namespace globalmq.marshalling
         string name;
         SlotIdx idx = SlotIdx.Invalid;
         UInt64 id;
-        GMQTransportBase(GMQueue queue, string name_, SlotIdx idx_, UInt64 id_)
+        public GMQTransportBase(GMQueue queue, string name_, SlotIdx idx_, UInt64 id_)
         {
             this.gmq = queue;
             this.name = name_;
@@ -1261,20 +1261,20 @@ namespace globalmq.marshalling
         //    if (idx.isInitialized())
         //        gmq.remove(name, idx);
         //}
-        public GMQTransportBase(GMQueue queue, string name_, InProcessMessagePostmanBase postman)
-        {
+        //public GMQTransportBase(GMQueue queue, string name_, InProcessMessagePostmanBase postman)
+        //{
 
-            Debug.Assert(name_.Length != 0);
-            this.gmq = queue;
-            this.name = name_;
-            this.id = gmq.add(name, postman, ref idx);
-        }
-        public GMQTransportBase(GMQueue queue, InProcessMessagePostmanBase postman)
-        {
-            this.gmq = queue;
+        //    Debug.Assert(name_.Length != 0);
+        //    this.gmq = queue;
+        //    this.name = name_;
+        //    this.id = gmq.add(name, postman, out idx);
+        //}
+        //public GMQTransportBase(GMQueue queue, InProcessMessagePostmanBase postman)
+        //{
+        //    this.gmq = queue;
 
-            this.id = gmq.add(postman, ref idx);
-        }
+        //    this.id = gmq.add(postman, out idx);
+        //}
         public void postMessage(BufferT msg)
         {
             Debug.Assert(idx.isInitialized());
