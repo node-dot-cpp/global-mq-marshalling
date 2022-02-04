@@ -31,6 +31,13 @@ public class point3D : Ipoint3D, IEquatable<point3D>
 	public Int64 x { get; set; }
 	public Int64 y { get; set; }
 	public Int64 z { get; set; }
+	public point3D() { }
+	public point3D(Int64 x, Int64 y, Int64 z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point3D);
@@ -79,6 +86,12 @@ public class point : Ipoint, IEquatable<point>
 {
 	public Int64 x { get; set; }
 	public Int64 y { get; set; }
+	public point() { }
+	public point(Int64 x, Int64 y)
+	{
+		this.x = x;
+		this.y = y;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point);
@@ -216,6 +229,20 @@ public class message_one : Imessage_one, IEquatable<message_one>
 			_tenthParam = (List<Double>)value;
 		}
 	}
+	public message_one() { }
+	public message_one(Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
+	{
+		this.firstParam = firstParam;
+		this.secondParam = secondParam;
+		this.thirdParam = thirdParam;
+		this.forthParam = forthParam;
+		this.fifthParam = fifthParam;
+		this.sixthParam = sixthParam;
+		this.seventhParam = seventhParam;
+		this.eighthParam = eighthParam;
+		this.ninethParam = ninethParam;
+		this.tenthParam = tenthParam;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as message_one);
@@ -267,42 +294,8 @@ public class message_one : Imessage_one, IEquatable<message_one>
 //
 //////////////////////////////////////////////////////////////
 
-public struct point3D_composer : IMessageCompose
-{
-	Int64 x;
-	Int64 y;
-	Int64 z;
-	public point3D_composer(Int64 x, Int64 y, Int64 z)
-	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		point3D_message.compose5(composer, x, y, z);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		point3D_message.compose5(composer, x, y, z);
-	}
-	public static point3D_composer make(Int64 x, Int64 y, Int64 z)
-	{
-		return new point3D_composer(x, y, z);
-	}
-} // class point3D_composer
-
 public class point3D_message
 {
-	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, x, y, z);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, x, y, z);
-		else
-			throw new ArgumentException();
-	}
 	public static void compose(JsonComposer composer, Int64 x, Int64 y, Int64 z)
 	{
 		composer.append( "{\n  ");
@@ -322,33 +315,13 @@ public class point3D_message
 		composer.composeSignedInteger(y);
 		composer.composeSignedInteger(z);
 	}
-	public static void compose5(JsonComposer composer, Int64 x, Int64 y, Int64 z)
+	public static void compose(JsonComposer composer, Ipoint3D val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(y);
-		composer.append( ",\n  " );
-		composer.addNamePart("z");
-		composer.composeSignedInteger(z);
-		composer.append( "\n}" );
+		compose(composer, val.x, val.y, val.z);
 	}
-	public static void compose5(GmqComposer composer, Int64 x, Int64 y, Int64 z)
+	public static void compose(GmqComposer composer, Ipoint3D val)
 	{
-		composer.composeSignedInteger(x);
-		composer.composeSignedInteger(y);
-		composer.composeSignedInteger(z);
-	}
-	public static void parse(ParserBase parser, Ipoint3D val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.x, val.y, val.z);
 	}
 	public static void parse(JsonParser parser, Ipoint3D val)	{
 		parser.skipDelimiter( '{' );
@@ -389,7 +362,7 @@ public class point3D_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Ipoint3D val)
+	public static void parse(GmqParser parser, Ipoint3D val)
 	{
 	{
 		Int64 tmp;
@@ -409,40 +382,8 @@ public class point3D_message
 	}
 } // class point3D_message
 
-public struct point_composer : IMessageCompose
-{
-	Int64 x;
-	Int64 y;
-	public point_composer(Int64 x, Int64 y)
-	{
-		this.x = x;
-		this.y = y;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		point_message.compose5(composer, x, y);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		point_message.compose5(composer, x, y);
-	}
-	public static point_composer make(Int64 x, Int64 y)
-	{
-		return new point_composer(x, y);
-	}
-} // class point_composer
-
 public class point_message
 {
-	public static void compose(ComposerBase composer, Int64 x, Int64 y)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, x, y);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, x, y);
-		else
-			throw new ArgumentException();
-	}
 	public static void compose(JsonComposer composer, Int64 x, Int64 y)
 	{
 		composer.append( "{\n  ");
@@ -458,29 +399,13 @@ public class point_message
 		composer.composeSignedInteger(x);
 		composer.composeSignedInteger(y);
 	}
-	public static void compose5(JsonComposer composer, Int64 x, Int64 y)
+	public static void compose(JsonComposer composer, Ipoint val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(y);
-		composer.append( "\n}" );
+		compose(composer, val.x, val.y);
 	}
-	public static void compose5(GmqComposer composer, Int64 x, Int64 y)
+	public static void compose(GmqComposer composer, Ipoint val)
 	{
-		composer.composeSignedInteger(x);
-		composer.composeSignedInteger(y);
-	}
-	public static void parse(ParserBase parser, Ipoint val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.x, val.y);
 	}
 	public static void parse(JsonParser parser, Ipoint val)	{
 		parser.skipDelimiter( '{' );
@@ -515,7 +440,7 @@ public class point_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Ipoint val)
+	public static void parse(GmqParser parser, Ipoint val)
 	{
 	{
 		Int64 tmp;
@@ -530,63 +455,22 @@ public class point_message
 	}
 } // class point_message
 
-public struct message_one_composer : IMessageCompose
-{
-	Int64 firstParam;
-	CollectionWrapperForComposing secondParam;	CollectionComposer<point3D_composer> thirdParam;	UInt64 forthParam;
-	String fifthParam;
-	CollectionComposer<point_composer> sixthParam;	Double seventhParam;
-	point_composer eighthParam;
-	point3D_composer ninethParam;
-	CollectionWrapperForComposing tenthParam;	public message_one_composer(Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
-	{
-		this.firstParam = firstParam;
-		this.secondParam = secondParam;
-		this.thirdParam = thirdParam;
-		this.forthParam = forthParam;
-		this.fifthParam = fifthParam;
-		this.sixthParam = sixthParam;
-		this.seventhParam = seventhParam;
-		this.eighthParam = eighthParam;
-		this.ninethParam = ninethParam;
-		this.tenthParam = tenthParam;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		message_one_message.compose5(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		message_one_message.compose5(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public static message_one_composer make(Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
-	{
-		return new message_one_composer(firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-} // class message_one_composer
-
 public class message_one_message
 {
-	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		if (composer is GmqComposer gmqC)
-			compose(gmqC, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-		else if (composer is JsonComposer jsonC)
-			compose(jsonC, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-		else
-			throw new ArgumentException();
-	}
-	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(JsonComposer composer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("firstParam");
 		composer.composeSignedInteger(firstParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("secondParam");
-		secondParam.composeJson(composer);
+		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(secondParam);
+		secondParam_wrapper.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("thirdParam");
-		thirdParam.composeJson(composer);
+		JsonCollectionComposer<Ipoint3D> thirdParam_wrapper = new JsonCollectionComposer<Ipoint3D>(
+			thirdParam, point3D_message.compose);
+		thirdParam_wrapper.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("forthParam");
 		composer.composeUnsignedInteger(forthParam);
@@ -595,89 +479,50 @@ public class message_one_message
 		composer.composeString(fifthParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("sixthParam");
-		sixthParam.composeJson(composer);
+		JsonCollectionComposer<Ipoint> sixthParam_wrapper = new JsonCollectionComposer<Ipoint>(
+			sixthParam, point_message.compose);
+		sixthParam_wrapper.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("seventhParam");
 		composer.composeReal(seventhParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("eighthParam");
-		eighthParam.composeJson(composer);
+		point_message.compose(composer, eighthParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("ninethParam");
-		ninethParam.composeJson(composer);
+		point3D_message.compose(composer, ninethParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("tenthParam");
-		tenthParam.composeJson(composer);
+		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(tenthParam);
+		tenthParam_wrapper.composeJson(composer);
 		composer.append( "\n}" );
 	}
-	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void compose(GmqComposer composer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		composer.composeSignedInteger(firstParam);
-		secondParam.composeGmq(composer);
-		thirdParam.composeGmq(composer);
+		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(secondParam);
+		secondParam_wrapper.composeGmq(composer);
+		GmqCollectionComposer<Ipoint3D> thirdParam_wrapper = new GmqCollectionComposer<Ipoint3D>(
+			thirdParam, point3D_message.compose);
+		thirdParam_wrapper.composeGmq(composer);
 		composer.composeUnsignedInteger(forthParam);
 		composer.composeString(fifthParam);
-		sixthParam.composeGmq(composer);
+		GmqCollectionComposer<Ipoint> sixthParam_wrapper = new GmqCollectionComposer<Ipoint>(
+			sixthParam, point_message.compose);
+		sixthParam_wrapper.composeGmq(composer);
 		composer.composeReal(seventhParam);
-		eighthParam.composeGmq(composer);
-		ninethParam.composeGmq(composer);
-		tenthParam.composeGmq(composer);
+		point_message.compose(composer, eighthParam);
+		point3D_message.compose(composer, ninethParam);
+		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(tenthParam);
+		tenthParam_wrapper.composeGmq(composer);
 	}
-	public static void compose5(JsonComposer composer, Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
+	public static void compose(JsonComposer composer, Imessage_one val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("firstParam");
-		composer.composeSignedInteger(firstParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("secondParam");
-		secondParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("thirdParam");
-		thirdParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("forthParam");
-		composer.composeUnsignedInteger(forthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("fifthParam");
-		composer.composeString(fifthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("sixthParam");
-		sixthParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("seventhParam");
-		composer.composeReal(seventhParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("eighthParam");
-		eighthParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("ninethParam");
-		ninethParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("tenthParam");
-		tenthParam.composeJson(composer);
-		composer.append( "\n}" );
+		compose(composer, val.firstParam, val.secondParam, val.thirdParam, val.forthParam, val.fifthParam, val.sixthParam, val.seventhParam, val.eighthParam, val.ninethParam, val.tenthParam);
 	}
-	public static void compose5(GmqComposer composer, Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
+	public static void compose(GmqComposer composer, Imessage_one val)
 	{
-		composer.composeSignedInteger(firstParam);
-		secondParam.composeGmq(composer);
-		thirdParam.composeGmq(composer);
-		composer.composeUnsignedInteger(forthParam);
-		composer.composeString(fifthParam);
-		sixthParam.composeGmq(composer);
-		composer.composeReal(seventhParam);
-		eighthParam.composeGmq(composer);
-		ninethParam.composeGmq(composer);
-		tenthParam.composeGmq(composer);
-	}
-	public static void parse(ParserBase parser, Imessage_one val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.firstParam, val.secondParam, val.thirdParam, val.forthParam, val.fifthParam, val.sixthParam, val.seventhParam, val.eighthParam, val.ninethParam, val.tenthParam);
 	}
 	public static void parse(JsonParser parser, Imessage_one val)	{
 		parser.skipDelimiter( '{' );
@@ -693,16 +538,14 @@ public class message_one_message
 			}
 			else if ( key == "secondParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>					{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "thirdParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "forthParam" )
@@ -719,9 +562,8 @@ public class message_one_message
 			}
 			else if ( key == "sixthParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "seventhParam" )
@@ -740,9 +582,8 @@ public class message_one_message
 			}
 			else if ( key == "tenthParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -760,7 +601,7 @@ public class message_one_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Imessage_one val)
+	public static void parse(GmqParser parser, Imessage_one val)
 	{
 	{
 		Int64 tmp;
@@ -768,15 +609,15 @@ public class message_one_message
 		val.firstParam = tmp;
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
@@ -790,9 +631,9 @@ public class message_one_message
 		val.fifthParam = tmp;
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
@@ -807,9 +648,9 @@ public class message_one_message
 		point3D_message.parse(parser, val.ninethParam);
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
@@ -855,74 +696,44 @@ public class test_gmq
 		MessageHandler.gmq_handle( parser, handlers );
 	}
 
-//**********************************************************************
-// MESSAGE "point3D_alias" Targets: GMQ (0 parameters)
-//**********************************************************************
-
-public class point3D_alias_message
-{
-	public static point3D parse(ParserBase parser)
-	{
-		point3D tmp = new point3D();
-		point3D_message.parse(parser, tmp);
-		return tmp;
-	}
-	public static void compose(ComposerBase composer, Int64 x, Int64 y, Int64 z)
-	{
-		point3D_message.compose(composer, x, y, z);
-	}
-	public static void compose(GmqComposer composer, Int64 x, Int64 y, Int64 z)
-	{
-		point3D_message.compose(composer, x, y, z);
-	}
-	public static void compose(JsonComposer composer, Int64 x, Int64 y, Int64 z)
-	{
-		point3D_message.compose(composer, x, y, z);
-	}
-} // class point3D_alias
-
 	public static void composeMessage_point3D_alias(BufferT buffer, Int64 x, Int64 y, Int64 z)
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
 		composer.composeUnsignedInteger((UInt64)MsgId.point3D_alias);
-		point3D_alias_message.compose(composer, x, y, z);
+		point3D_message.compose(composer, x, y, z);
 	}
 
-//**********************************************************************
-// MESSAGE "message_one_gmq" Targets: GMQ (0 parameters)
-//**********************************************************************
-
-public class message_one_gmq_message
-{
-	public static message_one parse(ParserBase parser)
+	public static point3D parseMessage_point3D_alias(ParserBase parser)
 	{
-		message_one tmp = new message_one();
-		message_one_message.parse(parser, tmp);
+		point3D tmp = new point3D();
+		if (parser is GmqParser gmqP)
+			point3D_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			point3D_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
 		return tmp;
 	}
-	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-} // class message_one_gmq
-
-	public static void composeMessage_message_one_gmq(BufferT buffer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void composeMessage_message_one_gmq(BufferT buffer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		GmqComposer composer = new GmqComposer(buffer);
 
 		composer.composeUnsignedInteger((UInt64)MsgId.message_one_gmq);
-		message_one_gmq_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 
+	public static message_one parseMessage_message_one_gmq(ParserBase parser)
+	{
+		message_one tmp = new message_one();
+		if (parser is GmqParser gmqP)
+			message_one_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			message_one_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
+		return tmp;
+	}
 } // class test_gmq
 
 public class test_json
@@ -947,32 +758,6 @@ public class test_json
 		MessageHandler.json_handle( parser, handlers );
 	}
 
-//**********************************************************************
-// MESSAGE "point_alias" Targets: JSON (0 parameters)
-//**********************************************************************
-
-public class point_alias_message
-{
-	public static point parse(ParserBase parser)
-	{
-		point tmp = new point();
-		point_message.parse(parser, tmp);
-		return tmp;
-	}
-	public static void compose(ComposerBase composer, Int64 x, Int64 y)
-	{
-		point_message.compose(composer, x, y);
-	}
-	public static void compose(GmqComposer composer, Int64 x, Int64 y)
-	{
-		point_message.compose(composer, x, y);
-	}
-	public static void compose(JsonComposer composer, Int64 x, Int64 y)
-	{
-		point_message.compose(composer, x, y);
-	}
-} // class point_alias
-
 	public static void composeMessage_point_alias(BufferT buffer, Int64 x, Int64 y)
 	{
 		JsonComposer composer = new JsonComposer(buffer);
@@ -982,37 +767,22 @@ public class point_alias_message
 		composer.composeUnsignedInteger((UInt64)MsgId.point_alias);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
-		point_alias_message.compose(composer, x, y);
+		point_message.compose(composer, x, y);
 		composer.append("\n}");
 	}
 
-//**********************************************************************
-// MESSAGE "message_one_json" Targets: JSON (0 parameters)
-//**********************************************************************
-
-public class message_one_json_message
-{
-	public static message_one parse(ParserBase parser)
+	public static point parseMessage_point_alias(ParserBase parser)
 	{
-		message_one tmp = new message_one();
-		message_one_message.parse(parser, tmp);
+		point tmp = new point();
+		if (parser is GmqParser gmqP)
+			point_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			point_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
 		return tmp;
 	}
-	public static void compose(ComposerBase composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public static void compose(GmqComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public static void compose(JsonComposer composer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
-	{
-		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-} // class message_one_json
-
-	public static void composeMessage_message_one_json(BufferT buffer, Int64 firstParam, ICollectionCompose secondParam, ICollectionCompose thirdParam, UInt64 forthParam, String fifthParam, ICollectionCompose sixthParam, Double seventhParam, IMessageCompose eighthParam, IMessageCompose ninethParam, ICollectionCompose tenthParam)
+	public static void composeMessage_message_one_json(BufferT buffer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		JsonComposer composer = new JsonComposer(buffer);
 
@@ -1021,10 +791,21 @@ public class message_one_json_message
 		composer.composeUnsignedInteger((UInt64)MsgId.message_one_json);
 		composer.append(",\n  ");
 		composer.addNamePart("msgbody");
-		message_one_json_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
+		message_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 		composer.append("\n}");
 	}
 
+	public static message_one parseMessage_message_one_json(ParserBase parser)
+	{
+		message_one tmp = new message_one();
+		if (parser is GmqParser gmqP)
+			message_one_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			message_one_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
+		return tmp;
+	}
 } // class test_json
 
 //////////////////////////////////////////////////////////////

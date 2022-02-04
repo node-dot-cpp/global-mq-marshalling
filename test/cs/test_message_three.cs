@@ -73,7 +73,7 @@ namespace TestProject1
 
             mtest.test_json.handleMessage(buffer,
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (ParserBase parser) => {
-                    mtest.struct_one msg = mtest.test_json.message_three_message.parse(parser);
+                    mtest.struct_one msg = mtest.test_json.parseMessage_message_three(parser);
                     condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
                 mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
@@ -96,7 +96,7 @@ namespace TestProject1
                 {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
                     // TODO see what we should really do in that case
-                    mtest.test_json.message_three_message.parse(parser);
+                    mtest.test_json.parseMessage_message_three(parser);
                     condition = true;
                 })
             );

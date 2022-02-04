@@ -68,6 +68,71 @@ const char* getCSharpPrimitiveType(MessageParameterType::KIND kind)
 	return nullptr;
 }
 
+
+void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s)
+{
+	int count = 0;
+	auto& mem = s.getMembers();
+	for (size_t i = 0; i < mem.size(); ++i)
+	{
+		auto& it = mem[i];
+		assert(it != nullptr);
+		auto& member = *it;
+
+		if (member.type.kind == MessageParameterType::KIND::EXTENSION)
+			continue;
+		++count;
+
+		if (i != 0)
+			fprintf(header, ", ");
+
+
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			fprintf(header, "%s %s", getCSharpPrimitiveType(member.type.kind), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			fprintf(header, "I%s %s", member.type.name.c_str(), member.name.c_str());
+			break;
+		case MessageParameterType::KIND::VECTOR:
+		{
+			switch (member.type.vectorElemKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+				fprintf(header, "IList<%s> %s", elem_type_name, member.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			{
+				assert(member.type.structIdx < root.structs.size());
+				const std::string type_name = root.structs[member.type.structIdx]->name;
+				fprintf(header, "IList<I%s> %s", type_name.c_str(), member.name.c_str());
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+	}
+}
+
+
 void generateCsharpStandardMethods(FILE* header, const char* type_name)
 {
 
@@ -107,8 +172,6 @@ void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const char
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
 		s.type == CompositeType::Type::publishable);
-
-	generateCsharpStandardMethods(header, type_name);
 
 	fprintf(header, "\tpublic bool Equals(%s other)\n", type_name);
 	fprintf(header,
@@ -224,7 +287,6 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 	fprintf(header, "public class %s : %s, IEquatable<%s>\n", type_name, interface_name, type_name);
 	fprintf(header, "{\n");
 
-
 	auto& mem = s.getMembers();
 	for (size_t i = 0; i < mem.size(); ++i)
 	{
@@ -322,6 +384,28 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 		}
 	}
 
+
+	//default constructor
+	fprintf(header, "\tpublic %s() { }\n", type_name);
+
+	//constructor with all members
+	fprintf(header, "\tpublic %s(", type_name);
+	generateCsharpDeclParams(header, root, s);
+	fprintf(header, ")\n");
+
+	fprintf(header, "\t{\n");
+
+	for (auto& each : s.getMembers())
+	{
+		assert(each != nullptr);
+		auto& member = *each;
+
+		fprintf(header, "\t\tthis.%s = %s;\n", member.name.c_str(), member.name.c_str());
+	}
+	fprintf(header, "\t}\n");
+
+
+	generateCsharpStandardMethods(header, type_name);
 	generateCsharpStructEqualsMethod(header, s, type_name);
 
 	fprintf(header, "} // class %s\n\n", type_name);

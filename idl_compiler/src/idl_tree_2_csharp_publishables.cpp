@@ -221,13 +221,7 @@ namespace {
 				const char* parse_method = csharpPub_getParseMethod(member.type.kind);
 
 				fprintf(header, "\t\t\t%s newVal = parser.parse%s(\"%s\");\n", type_name, parse_method, member.name.c_str());
-				fprintf(header, "\t\t\tif(newVal != subscriber.data.%s)\n", member.name.c_str());
-				fprintf(header, "\t\t\t{\n");
-				fprintf(header, "\t\t\t\t%s oldVal = subscriber.data.%s;\n", type_name, member.name.c_str());
-				fprintf(header, "\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-				fprintf(header, "\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t\tsubscriber.notifyUpdated_%s(oldVal);\n", member.name.c_str());
-				fprintf(header, "\t\t\t}\n");
+				fprintf(header, "\t\t\tchanged = subscriber.update_%s(newVal) || changed;\n", member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
@@ -341,13 +335,7 @@ namespace {
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
 				fprintf(header, "\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", type_name, parse_method);
-				fprintf(header, "\t\t\t\tif(newVal != subscriber.data.%s)\n", member.name.c_str());
-				fprintf(header, "\t\t\t\t{\n");
-				fprintf(header, "\t\t\t\t\t%s oldVal = subscriber.data.%s;\n", type_name, member.name.c_str());
-				fprintf(header, "\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-				fprintf(header, "\t\t\t\t\tchanged = true;\n");
-				fprintf(header, "\t\t\t\t\tsubscriber.notifyUpdated_%s(oldVal);\n", member.name.c_str());
-				fprintf(header, "\t\t\t\t}\n");
+				fprintf(header, "\t\t\t\tchanged = subscriber.update_%s(newVal) || changed;\n", member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
@@ -779,12 +767,27 @@ namespace {
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\tpublic %s %s\n", csharpPub_getCSharpType(member.type.kind), member.name.c_str());
+			{
+				const char* type_name = csharpPub_getCSharpType(member.type.kind);
+				fprintf(header, "\tpublic %s %s\n", type_name, member.name.c_str());
 				fprintf(header, "\t{\n");
 				fprintf(header, "\t\tget { return data.%s; }\n", member.name.c_str());
 				fprintf(header, "\t\tset { throw new InvalidOperationException(); }\n");
 				fprintf(header, "\t}\n");
+				fprintf(header, "\tbool update_%s(%s newVal)\n", member.name.c_str(), csharpPub_getCSharpType(member.type.kind));
+				fprintf(header, "\t{\n");
+				fprintf(header, "\t\tif (newVal != data.%s)\n", member.name.c_str());
+				fprintf(header, "\t\t{\n");
+				fprintf(header, "\t\t\t%s oldVal = data.%s;\n", type_name, member.name.c_str());
+				fprintf(header, "\t\t\tdata.%s = newVal;\n", member.name.c_str());
+				fprintf(header, "\t\t\tnotifyUpdated_%s(oldVal);\n", member.name.c_str());
+				fprintf(header, "\t\t\treturn true;\n");
+				fprintf(header, "\t\t}\n");
+				fprintf(header, "\t\telse\n");
+				fprintf(header, "\t\t\treturn false;\n");
+				fprintf(header, "\t}\n");
 				break;
+			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t%s_subscriber %s_handler;\n", member.type.name.c_str(), member.name.c_str());

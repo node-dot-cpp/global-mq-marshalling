@@ -43,6 +43,14 @@ public class BasicTypes : IBasicTypes, IEquatable<BasicTypes>
 			_aString = value;
 		}
 	}
+	public BasicTypes() { }
+	public BasicTypes(Int64 anInt, UInt64 anUInt, Double aReal, String aString)
+	{
+		this.anInt = anInt;
+		this.anUInt = anUInt;
+		this.aReal = aReal;
+		this.aString = aString;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as BasicTypes);
@@ -94,6 +102,13 @@ public class point3D : Ipoint3D, IEquatable<point3D>
 	public Int64 x { get; set; }
 	public Int64 y { get; set; }
 	public Int64 z { get; set; }
+	public point3D() { }
+	public point3D(Int64 x, Int64 y, Int64 z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point3D);
@@ -142,6 +157,12 @@ public class point : Ipoint, IEquatable<point>
 {
 	public Int64 x { get; set; }
 	public Int64 y { get; set; }
+	public point() { }
+	public point(Int64 x, Int64 y)
+	{
+		this.x = x;
+		this.y = y;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as point);
@@ -211,6 +232,13 @@ public class AggregateType : IAggregateType, IEquatable<AggregateType>
 		}
 	}
 	public Int64 lastValue { get; set; }
+	public AggregateType() { }
+	public AggregateType(String name, IBasicTypes theAggregate, Int64 lastValue)
+	{
+		this.name = name;
+		this.theAggregate = theAggregate;
+		this.lastValue = lastValue;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as AggregateType);
@@ -278,6 +306,12 @@ public class struct_du : Istruct_du, IEquatable<struct_du>
 				throw new ArgumentNullException();
 			_disc_union = (du_one)value;
 		}
+	}
+	public struct_du() { }
+	public struct_du(Ipoint3D pt, Idu_one disc_union)
+	{
+		this.pt = pt;
+		this.disc_union = disc_union;
 	}
 	public override bool Equals(object obj)
 	{
@@ -415,6 +449,20 @@ public class struct_one : Istruct_one, IEquatable<struct_one>
 				throw new ArgumentNullException();
 			_tenthParam = (List<Double>)value;
 		}
+	}
+	public struct_one() { }
+	public struct_one(Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
+	{
+		this.firstParam = firstParam;
+		this.secondParam = secondParam;
+		this.thirdParam = thirdParam;
+		this.forthParam = forthParam;
+		this.fifthParam = fifthParam;
+		this.sixthParam = sixthParam;
+		this.seventhParam = seventhParam;
+		this.eighthParam = eighthParam;
+		this.ninethParam = ninethParam;
+		this.tenthParam = tenthParam;
 	}
 	public override bool Equals(object obj)
 	{
@@ -577,6 +625,13 @@ public class CASE_one : Idu_one.ICASE_one, IEquatable<CASE_one>
 	public Double D1 { get; set; }
 	public Double D2 { get; set; }
 	public Double D3 { get; set; }
+	public CASE_one() { }
+	public CASE_one(Double D1, Double D2, Double D3)
+	{
+		this.D1 = D1;
+		this.D2 = D2;
+		this.D3 = D3;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as CASE_one);
@@ -615,31 +670,6 @@ public class CASE_one : Idu_one.ICASE_one, IEquatable<CASE_one>
 	}
 } // class CASE_one
 
-public struct CASE_one_composer : IMessageCompose
-{
-	Double D1;
-	Double D2;
-	Double D3;
-	public CASE_one_composer(Double D1, Double D2, Double D3)
-	{
-		this.D1 = D1;
-		this.D2 = D2;
-		this.D3 = D3;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		CASE_one_message.compose5(composer, D1, D2, D3);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		CASE_one_message.compose5(composer, D1, D2, D3);
-	}
-	public static CASE_one_composer make(Double D1, Double D2, Double D3)
-	{
-		return new CASE_one_composer(D1, D2, D3);
-	}
-} // class CASE_one_composer
-
 public class CASE_one_message
 {
 	public static void compose(JsonComposer composer, Double D1, Double D2, Double D3)
@@ -663,50 +693,11 @@ public class CASE_one_message
 	}
 	public static void compose(JsonComposer composer, Idu_one.ICASE_one val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("D1");
-		composer.composeReal(val.D1);
-		composer.append( ",\n  " );
-		composer.addNamePart("D2");
-		composer.composeReal(val.D2);
-		composer.append( ",\n  " );
-		composer.addNamePart("D3");
-		composer.composeReal(val.D3);
-		composer.append( "\n}" );
+		compose(composer, val.D1, val.D2, val.D3);
 	}
 	public static void compose(GmqComposer composer, Idu_one.ICASE_one val)
 	{
-		composer.composeReal(val.D1);
-		composer.composeReal(val.D2);
-		composer.composeReal(val.D3);
-	}
-	public static void compose5(JsonComposer composer, Double D1, Double D2, Double D3)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("D1");
-		composer.composeReal(D1);
-		composer.append( ",\n  " );
-		composer.addNamePart("D2");
-		composer.composeReal(D2);
-		composer.append( ",\n  " );
-		composer.addNamePart("D3");
-		composer.composeReal(D3);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, Double D1, Double D2, Double D3)
-	{
-		composer.composeReal(D1);
-		composer.composeReal(D2);
-		composer.composeReal(D3);
-	}
-	public static void parse(ParserBase parser, Idu_one.ICASE_one val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.D1, val.D2, val.D3);
 	}
 	public static void parse(JsonParser parser, Idu_one.ICASE_one val)	{
 		parser.skipDelimiter( '{' );
@@ -747,7 +738,7 @@ public class CASE_one_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Idu_one.ICASE_one val)
+	public static void parse(GmqParser parser, Idu_one.ICASE_one val)
 	{
 	{
 		Double tmp;
@@ -787,6 +778,11 @@ public class CASE_two : Idu_one.ICASE_two, IEquatable<CASE_two>
 			_Data = (List<Double>)value;
 		}
 	}
+	public CASE_two() { }
+	public CASE_two(IList<Double> Data)
+	{
+		this.Data = Data;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as CASE_two);
@@ -823,26 +819,6 @@ public class CASE_two : Idu_one.ICASE_two, IEquatable<CASE_two>
 	}
 } // class CASE_two
 
-public struct CASE_two_composer : IMessageCompose
-{
-	CollectionWrapperForComposing Data;	public CASE_two_composer(CollectionWrapperForComposing Data)
-	{
-		this.Data = Data;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		CASE_two_message.compose5(composer, Data);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		CASE_two_message.compose5(composer, Data);
-	}
-	public static CASE_two_composer make(CollectionWrapperForComposing Data)
-	{
-		return new CASE_two_composer(Data);
-	}
-} // class CASE_two_composer
-
 public class CASE_two_message
 {
 	public static void compose(JsonComposer composer, IList<Double> Data)
@@ -860,36 +836,11 @@ public class CASE_two_message
 	}
 	public static void compose(JsonComposer composer, Idu_one.ICASE_two val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("Data");
-		CollectionWrapperForComposing Data_wrapper = SimpleTypeCollection.makeComposer(val.Data);
-		Data_wrapper.composeJson(composer);
-		composer.append( "\n}" );
+		compose(composer, val.Data);
 	}
 	public static void compose(GmqComposer composer, Idu_one.ICASE_two val)
 	{
-		CollectionWrapperForComposing Data_wrapper = SimpleTypeCollection.makeComposer(val.Data);
-		Data_wrapper.composeGmq(composer);
-	}
-	public static void compose5(JsonComposer composer, CollectionWrapperForComposing Data)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("Data");
-		Data.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, CollectionWrapperForComposing Data)
-	{
-		Data.composeGmq(composer);
-	}
-	public static void parse(ParserBase parser, Idu_one.ICASE_two val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.Data);
 	}
 	public static void parse(JsonParser parser, Idu_one.ICASE_two val)	{
 		parser.skipDelimiter( '{' );
@@ -899,9 +850,8 @@ public class CASE_two_message
 			parser.readKeyFromJson( out key );
 			if ( key == "Data" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Double t; parser.parseReal(out t); val.Data.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ Double t; parser.parseReal(out t); val.Data.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -919,12 +869,12 @@ public class CASE_two_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Idu_one.ICASE_two val)
+	public static void parse(GmqParser parser, Idu_one.ICASE_two val)
 	{
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Double t; parser.parseReal(out t); val.Data.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ Double t; parser.parseReal(out t); val.Data.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
@@ -956,16 +906,7 @@ public struct du_one_composer : IMessageCompose
 
 public class du_one_message
 {
-	public static void parse(ParserBase parser, Idu_one val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
-	}
-	protected static void parse(JsonParser parser, Idu_one val)
+	public static void parse(JsonParser parser, Idu_one val)
 	{
 		parser.skipDelimiter('{');
 		string key;
@@ -1002,7 +943,7 @@ public class du_one_message
 		parser.skipDelimiter('}');
 
 	}
-	protected static void parse(GmqParser parser, Idu_one val)
+	public static void parse(GmqParser parser, Idu_one val)
 	{
 		Int64 caseID;
 		parser.parseSignedInteger(out caseID);
@@ -1071,31 +1012,6 @@ public class du_one_message
 	}
 } // class du_one_message
 
-public struct point3D_composer : IMessageCompose
-{
-	Int64 x;
-	Int64 y;
-	Int64 z;
-	public point3D_composer(Int64 x, Int64 y, Int64 z)
-	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		point3D_message.compose5(composer, x, y, z);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		point3D_message.compose5(composer, x, y, z);
-	}
-	public static point3D_composer make(Int64 x, Int64 y, Int64 z)
-	{
-		return new point3D_composer(x, y, z);
-	}
-} // class point3D_composer
-
 public class point3D_message
 {
 	public static void compose(JsonComposer composer, Int64 x, Int64 y, Int64 z)
@@ -1119,50 +1035,11 @@ public class point3D_message
 	}
 	public static void compose(JsonComposer composer, Ipoint3D val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(val.x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(val.y);
-		composer.append( ",\n  " );
-		composer.addNamePart("z");
-		composer.composeSignedInteger(val.z);
-		composer.append( "\n}" );
+		compose(composer, val.x, val.y, val.z);
 	}
 	public static void compose(GmqComposer composer, Ipoint3D val)
 	{
-		composer.composeSignedInteger(val.x);
-		composer.composeSignedInteger(val.y);
-		composer.composeSignedInteger(val.z);
-	}
-	public static void compose5(JsonComposer composer, Int64 x, Int64 y, Int64 z)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(y);
-		composer.append( ",\n  " );
-		composer.addNamePart("z");
-		composer.composeSignedInteger(z);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, Int64 x, Int64 y, Int64 z)
-	{
-		composer.composeSignedInteger(x);
-		composer.composeSignedInteger(y);
-		composer.composeSignedInteger(z);
-	}
-	public static void parse(ParserBase parser, Ipoint3D val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.x, val.y, val.z);
 	}
 	public static void parse(JsonParser parser, Ipoint3D val)	{
 		parser.skipDelimiter( '{' );
@@ -1203,7 +1080,7 @@ public class point3D_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Ipoint3D val)
+	public static void parse(GmqParser parser, Ipoint3D val)
 	{
 	{
 		Int64 tmp;
@@ -1222,29 +1099,6 @@ public class point3D_message
 	}
 	}
 } // class point3D_message
-
-public struct point_composer : IMessageCompose
-{
-	Int64 x;
-	Int64 y;
-	public point_composer(Int64 x, Int64 y)
-	{
-		this.x = x;
-		this.y = y;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		point_message.compose5(composer, x, y);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		point_message.compose5(composer, x, y);
-	}
-	public static point_composer make(Int64 x, Int64 y)
-	{
-		return new point_composer(x, y);
-	}
-} // class point_composer
 
 public class point_message
 {
@@ -1265,42 +1119,11 @@ public class point_message
 	}
 	public static void compose(JsonComposer composer, Ipoint val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(val.x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(val.y);
-		composer.append( "\n}" );
+		compose(composer, val.x, val.y);
 	}
 	public static void compose(GmqComposer composer, Ipoint val)
 	{
-		composer.composeSignedInteger(val.x);
-		composer.composeSignedInteger(val.y);
-	}
-	public static void compose5(JsonComposer composer, Int64 x, Int64 y)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("x");
-		composer.composeSignedInteger(x);
-		composer.append( ",\n  " );
-		composer.addNamePart("y");
-		composer.composeSignedInteger(y);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, Int64 x, Int64 y)
-	{
-		composer.composeSignedInteger(x);
-		composer.composeSignedInteger(y);
-	}
-	public static void parse(ParserBase parser, Ipoint val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.x, val.y);
 	}
 	public static void parse(JsonParser parser, Ipoint val)	{
 		parser.skipDelimiter( '{' );
@@ -1335,7 +1158,7 @@ public class point_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Ipoint val)
+	public static void parse(GmqParser parser, Ipoint val)
 	{
 	{
 		Int64 tmp;
@@ -1349,29 +1172,6 @@ public class point_message
 	}
 	}
 } // class point_message
-
-public struct struct_du_composer : IMessageCompose
-{
-	point3D_composer pt;
-	du_one_composer disc_union;
-	public struct_du_composer(point3D_composer pt, du_one_composer disc_union)
-	{
-		this.pt = pt;
-		this.disc_union = disc_union;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		struct_du_message.compose5(composer, pt, disc_union);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		struct_du_message.compose5(composer, pt, disc_union);
-	}
-	public static struct_du_composer make(point3D_composer pt, du_one_composer disc_union)
-	{
-		return new struct_du_composer(pt, disc_union);
-	}
-} // class struct_du_composer
 
 public class struct_du_message
 {
@@ -1392,42 +1192,11 @@ public class struct_du_message
 	}
 	public static void compose(JsonComposer composer, Istruct_du val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		point3D_message.compose(composer, val.pt);
-		composer.append( ",\n  " );
-		composer.addNamePart("disc_union");
-		du_one_message.compose(composer, val.disc_union);
-		composer.append( "\n}" );
+		compose(composer, val.pt, val.disc_union);
 	}
 	public static void compose(GmqComposer composer, Istruct_du val)
 	{
-		point3D_message.compose(composer, val.pt);
-		du_one_message.compose(composer, val.disc_union);
-	}
-	public static void compose5(JsonComposer composer, point3D_composer pt, du_one_composer disc_union)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		pt.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("disc_union");
-		disc_union.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, point3D_composer pt, du_one_composer disc_union)
-	{
-		pt.composeGmq(composer);
-		disc_union.composeGmq(composer);
-	}
-	public static void parse(ParserBase parser, Istruct_du val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.pt, val.disc_union);
 	}
 	public static void parse(JsonParser parser, Istruct_du val)	{
 		parser.skipDelimiter( '{' );
@@ -1458,7 +1227,7 @@ public class struct_du_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Istruct_du val)
+	public static void parse(GmqParser parser, Istruct_du val)
 	{
 	{
 		point3D_message.parse(parser, val.pt);
@@ -1468,41 +1237,6 @@ public class struct_du_message
 	}
 	}
 } // class struct_du_message
-
-public struct struct_one_composer : IMessageCompose
-{
-	Int64 firstParam;
-	CollectionWrapperForComposing secondParam;	CollectionComposer<point3D_composer> thirdParam;	UInt64 forthParam;
-	String fifthParam;
-	CollectionComposer<point_composer> sixthParam;	Double seventhParam;
-	point_composer eighthParam;
-	point3D_composer ninethParam;
-	CollectionWrapperForComposing tenthParam;	public struct_one_composer(Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
-	{
-		this.firstParam = firstParam;
-		this.secondParam = secondParam;
-		this.thirdParam = thirdParam;
-		this.forthParam = forthParam;
-		this.fifthParam = fifthParam;
-		this.sixthParam = sixthParam;
-		this.seventhParam = seventhParam;
-		this.eighthParam = eighthParam;
-		this.ninethParam = ninethParam;
-		this.tenthParam = tenthParam;
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		struct_one_message.compose5(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		struct_one_message.compose5(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-	public static struct_one_composer make(Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
-	{
-		return new struct_one_composer(firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
-	}
-} // class struct_one_composer
 
 public class struct_one_message
 {
@@ -1567,118 +1301,11 @@ public class struct_one_message
 	}
 	public static void compose(JsonComposer composer, Istruct_one val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("firstParam");
-		composer.composeSignedInteger(val.firstParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("secondParam");
-		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(val.secondParam);
-		secondParam_wrapper.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("thirdParam");
-		JsonCollectionComposer<Ipoint3D> thirdParam_wrapper = new JsonCollectionComposer<Ipoint3D>(
-			val.thirdParam, point3D_message.compose);
-		thirdParam_wrapper.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("forthParam");
-		composer.composeUnsignedInteger(val.forthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("fifthParam");
-		composer.composeString(val.fifthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("sixthParam");
-		JsonCollectionComposer<Ipoint> sixthParam_wrapper = new JsonCollectionComposer<Ipoint>(
-			val.sixthParam, point_message.compose);
-		sixthParam_wrapper.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("seventhParam");
-		composer.composeReal(val.seventhParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("eighthParam");
-		point_message.compose(composer, val.eighthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("ninethParam");
-		point3D_message.compose(composer, val.ninethParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("tenthParam");
-		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(val.tenthParam);
-		tenthParam_wrapper.composeJson(composer);
-		composer.append( "\n}" );
+		compose(composer, val.firstParam, val.secondParam, val.thirdParam, val.forthParam, val.fifthParam, val.sixthParam, val.seventhParam, val.eighthParam, val.ninethParam, val.tenthParam);
 	}
 	public static void compose(GmqComposer composer, Istruct_one val)
 	{
-		composer.composeSignedInteger(val.firstParam);
-		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(val.secondParam);
-		secondParam_wrapper.composeGmq(composer);
-		GmqCollectionComposer<Ipoint3D> thirdParam_wrapper = new GmqCollectionComposer<Ipoint3D>(
-			val.thirdParam, point3D_message.compose);
-		thirdParam_wrapper.composeGmq(composer);
-		composer.composeUnsignedInteger(val.forthParam);
-		composer.composeString(val.fifthParam);
-		GmqCollectionComposer<Ipoint> sixthParam_wrapper = new GmqCollectionComposer<Ipoint>(
-			val.sixthParam, point_message.compose);
-		sixthParam_wrapper.composeGmq(composer);
-		composer.composeReal(val.seventhParam);
-		point_message.compose(composer, val.eighthParam);
-		point3D_message.compose(composer, val.ninethParam);
-		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(val.tenthParam);
-		tenthParam_wrapper.composeGmq(composer);
-	}
-	public static void compose5(JsonComposer composer, Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("firstParam");
-		composer.composeSignedInteger(firstParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("secondParam");
-		secondParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("thirdParam");
-		thirdParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("forthParam");
-		composer.composeUnsignedInteger(forthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("fifthParam");
-		composer.composeString(fifthParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("sixthParam");
-		sixthParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("seventhParam");
-		composer.composeReal(seventhParam);
-		composer.append( ",\n  " );
-		composer.addNamePart("eighthParam");
-		eighthParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("ninethParam");
-		ninethParam.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("tenthParam");
-		tenthParam.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, Int64 firstParam, CollectionWrapperForComposing secondParam, CollectionComposer<point3D_composer> thirdParam, UInt64 forthParam, String fifthParam, CollectionComposer<point_composer> sixthParam, Double seventhParam, point_composer eighthParam, point3D_composer ninethParam, CollectionWrapperForComposing tenthParam)
-	{
-		composer.composeSignedInteger(firstParam);
-		secondParam.composeGmq(composer);
-		thirdParam.composeGmq(composer);
-		composer.composeUnsignedInteger(forthParam);
-		composer.composeString(fifthParam);
-		sixthParam.composeGmq(composer);
-		composer.composeReal(seventhParam);
-		eighthParam.composeGmq(composer);
-		ninethParam.composeGmq(composer);
-		tenthParam.composeGmq(composer);
-	}
-	public static void parse(ParserBase parser, Istruct_one val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.firstParam, val.secondParam, val.thirdParam, val.forthParam, val.fifthParam, val.sixthParam, val.seventhParam, val.eighthParam, val.ninethParam, val.tenthParam);
 	}
 	public static void parse(JsonParser parser, Istruct_one val)	{
 		parser.skipDelimiter( '{' );
@@ -1694,16 +1321,14 @@ public class struct_one_message
 			}
 			else if ( key == "secondParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>					{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "thirdParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "forthParam" )
@@ -1720,9 +1345,8 @@ public class struct_one_message
 			}
 			else if ( key == "sixthParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "seventhParam" )
@@ -1741,9 +1365,8 @@ public class struct_one_message
 			}
 			else if ( key == "tenthParam" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -1761,7 +1384,7 @@ public class struct_one_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Istruct_one val)
+	public static void parse(GmqParser parser, Istruct_one val)
 	{
 	{
 		Int64 tmp;
@@ -1769,15 +1392,15 @@ public class struct_one_message
 		val.firstParam = tmp;
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
@@ -1791,9 +1414,9 @@ public class struct_one_message
 		val.fifthParam = tmp;
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	{
@@ -1808,9 +1431,9 @@ public class struct_one_message
 		point3D_message.parse(parser, val.ninethParam);
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
@@ -1857,20 +1480,6 @@ public class test_gmq
 		MessageHandler.gmq_handle( parser, handlers );
 	}
 
-//**********************************************************************
-// MESSAGE "message_two" Targets: GMQ (0 parameters)
-//**********************************************************************
-
-public class message_two_message
-{
-	public static struct_one parse(ParserBase parser)
-	{
-		struct_one tmp = new struct_one();
-		struct_one_message.parse(parser, tmp);
-		return tmp;
-	}
-} // class message_two
-
 	public static void composeMessage_message_two(BufferT buffer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		GmqComposer composer = new GmqComposer(buffer);
@@ -1879,6 +1488,17 @@ public class message_two_message
 		struct_one_message.compose(composer, firstParam, secondParam, thirdParam, forthParam, fifthParam, sixthParam, seventhParam, eighthParam, ninethParam, tenthParam);
 	}
 
+	public static struct_one parseMessage_message_two(ParserBase parser)
+	{
+		struct_one tmp = new struct_one();
+		if (parser is GmqParser gmqP)
+			struct_one_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			struct_one_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
+		return tmp;
+	}
 public interface Imessage_four
 {
 	Ipoint pt { get; set; }
@@ -1910,6 +1530,12 @@ public class message_four : Imessage_four, IEquatable<message_four>
 			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
 			_pts3d = tmp;
 		}
+	}
+	public message_four() { }
+	public message_four(Ipoint pt, IList<Ipoint3D> pts3d)
+	{
+		this.pt = pt;
+		this.pts3d = pts3d;
 	}
 	public override bool Equals(object obj)
 	{
@@ -1971,52 +1597,11 @@ public class message_four_message
 	}
 	public static void compose(JsonComposer composer, Imessage_four val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		point_message.compose(composer, val.pt);
-		composer.append( ",\n  " );
-		composer.addNamePart("pts3d");
-		JsonCollectionComposer<Ipoint3D> pts3d_wrapper = new JsonCollectionComposer<Ipoint3D>(
-			val.pts3d, point3D_message.compose);
-		pts3d_wrapper.composeJson(composer);
-		composer.append( "\n}" );
+		compose(composer, val.pt, val.pts3d);
 	}
 	public static void compose(GmqComposer composer, Imessage_four val)
 	{
-		point_message.compose(composer, val.pt);
-		GmqCollectionComposer<Ipoint3D> pts3d_wrapper = new GmqCollectionComposer<Ipoint3D>(
-			val.pts3d, point3D_message.compose);
-		pts3d_wrapper.composeGmq(composer);
-	}
-	public static void compose5(JsonComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		pt.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("pts3d");
-		pts3d.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
-	{
-		pt.composeGmq(composer);
-		pts3d.composeGmq(composer);
-	}
-	public static message_four parse(ParserBase parser)
-	{
-		message_four tmp = new message_four();
-		message_four_message.parse(parser, tmp);
-		return tmp;
-	}
-	public static void parse(ParserBase parser, Imessage_four val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.pt, val.pts3d);
 	}
 	public static void parse(JsonParser parser, Imessage_four val)	{
 		parser.skipDelimiter( '{' );
@@ -2030,9 +1615,8 @@ public class message_four_message
 			}
 			else if ( key == "pts3d" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -2050,15 +1634,15 @@ public class message_four_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Imessage_four val)
+	public static void parse(GmqParser parser, Imessage_four val)
 	{
 	{
 		point_message.parse(parser, val.pt);
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
@@ -2072,20 +1656,17 @@ public class message_four_message
 		message_four_message.compose(composer, pt, pts3d);
 	}
 
-//**********************************************************************
-// MESSAGE "message_du" Targets: GMQ (0 parameters)
-//**********************************************************************
-
-public class message_du_message
-{
-	public static struct_du parse(ParserBase parser)
+	public static message_four parseMessage_message_four(ParserBase parser)
 	{
-		struct_du tmp = new struct_du();
-		struct_du_message.parse(parser, tmp);
+		message_four tmp = new message_four();
+		if (parser is GmqParser gmqP)
+			message_four_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			message_four_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
 		return tmp;
 	}
-} // class message_du
-
 	public static void composeMessage_message_du(BufferT buffer, Ipoint3D pt, Idu_one disc_union)
 	{
 		GmqComposer composer = new GmqComposer(buffer);
@@ -2094,6 +1675,17 @@ public class message_du_message
 		struct_du_message.compose(composer, pt, disc_union);
 	}
 
+	public static struct_du parseMessage_message_du(ParserBase parser)
+	{
+		struct_du tmp = new struct_du();
+		if (parser is GmqParser gmqP)
+			struct_du_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			struct_du_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
+		return tmp;
+	}
 } // class test_gmq
 
 public class test_json
@@ -2118,20 +1710,6 @@ public class test_json
 		MessageHandler.json_handle( parser, handlers );
 	}
 
-//**********************************************************************
-// MESSAGE "message_three" Targets: JSON (0 parameters)
-//**********************************************************************
-
-public class message_three_message
-{
-	public static struct_one parse(ParserBase parser)
-	{
-		struct_one tmp = new struct_one();
-		struct_one_message.parse(parser, tmp);
-		return tmp;
-	}
-} // class message_three
-
 	public static void composeMessage_message_three(BufferT buffer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		JsonComposer composer = new JsonComposer(buffer);
@@ -2145,6 +1723,17 @@ public class message_three_message
 		composer.append("\n}");
 	}
 
+	public static struct_one parseMessage_message_three(ParserBase parser)
+	{
+		struct_one tmp = new struct_one();
+		if (parser is GmqParser gmqP)
+			struct_one_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			struct_one_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
+		return tmp;
+	}
 public interface Imessage_five
 {
 	Ipoint pt { get; set; }
@@ -2176,6 +1765,12 @@ public class message_five : Imessage_five, IEquatable<message_five>
 			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
 			_pts3d = tmp;
 		}
+	}
+	public message_five() { }
+	public message_five(Ipoint pt, IList<Ipoint3D> pts3d)
+	{
+		this.pt = pt;
+		this.pts3d = pts3d;
 	}
 	public override bool Equals(object obj)
 	{
@@ -2237,52 +1832,11 @@ public class message_five_message
 	}
 	public static void compose(JsonComposer composer, Imessage_five val)
 	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		point_message.compose(composer, val.pt);
-		composer.append( ",\n  " );
-		composer.addNamePart("pts3d");
-		JsonCollectionComposer<Ipoint3D> pts3d_wrapper = new JsonCollectionComposer<Ipoint3D>(
-			val.pts3d, point3D_message.compose);
-		pts3d_wrapper.composeJson(composer);
-		composer.append( "\n}" );
+		compose(composer, val.pt, val.pts3d);
 	}
 	public static void compose(GmqComposer composer, Imessage_five val)
 	{
-		point_message.compose(composer, val.pt);
-		GmqCollectionComposer<Ipoint3D> pts3d_wrapper = new GmqCollectionComposer<Ipoint3D>(
-			val.pts3d, point3D_message.compose);
-		pts3d_wrapper.composeGmq(composer);
-	}
-	public static void compose5(JsonComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
-	{
-		composer.append( "{\n  ");
-		composer.addNamePart("pt");
-		pt.composeJson(composer);
-		composer.append( ",\n  " );
-		composer.addNamePart("pts3d");
-		pts3d.composeJson(composer);
-		composer.append( "\n}" );
-	}
-	public static void compose5(GmqComposer composer, point_composer pt, CollectionComposer<point3D_composer> pts3d)
-	{
-		pt.composeGmq(composer);
-		pts3d.composeGmq(composer);
-	}
-	public static message_five parse(ParserBase parser)
-	{
-		message_five tmp = new message_five();
-		message_five_message.parse(parser, tmp);
-		return tmp;
-	}
-	public static void parse(ParserBase parser, Imessage_five val)
-	{
-		if (parser is GmqParser gmqP)
-			parse(gmqP, val);
-		else if (parser is JsonParser jsonP)
-			parse(jsonP, val);
-		else
-			throw new ArgumentException();
+		compose(composer, val.pt, val.pts3d);
 	}
 	public static void parse(JsonParser parser, Imessage_five val)	{
 		parser.skipDelimiter( '{' );
@@ -2296,9 +1850,8 @@ public class message_five_message
 			}
 			else if ( key == "pts3d" )
 			{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
+				JsonCollectionParser tmp = new JsonCollectionParser(
+					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -2316,15 +1869,15 @@ public class message_five_message
 			throw new FormatException(); // bad format
 		}
 	}
-	protected static void parse(GmqParser parser, Imessage_five val)
+	public static void parse(GmqParser parser, Imessage_five val)
 	{
 	{
 		point_message.parse(parser, val.pt);
 	}
 	{
-				ICollectionParse tmp = new CollectionWrapperForParsing(
-				() => { },
-				(ParserBase parser, int ordinal) => { point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
+				GmqCollectionParser tmp = new GmqCollectionParser(
+					(GmqParser parser, int ordinal) =>
+						{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseGmq(parser);
 	}
 	}
@@ -2343,6 +1896,17 @@ public class message_five_message
 		composer.append("\n}");
 	}
 
+	public static message_five parseMessage_message_five(ParserBase parser)
+	{
+		message_five tmp = new message_five();
+		if (parser is GmqParser gmqP)
+			message_five_message.parse(gmqP, tmp);
+		else if (parser is JsonParser jsonP)
+			message_five_message.parse(jsonP, tmp);
+		else
+			throw new ArgumentException();
+		return tmp;
+	}
 } // class test_json
 
 //////////////////////////////////////////////////////////////
@@ -2372,20 +1936,68 @@ public class BasicTypes_subscriber : IBasicTypes
 		get { return data.anInt; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_anInt(Int64 newVal)
+	{
+		if (newVal != data.anInt)
+		{
+			Int64 oldVal = data.anInt;
+			data.anInt = newVal;
+			notifyUpdated_anInt(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	public UInt64 anUInt
 	{
 		get { return data.anUInt; }
 		set { throw new InvalidOperationException(); }
+	}
+	bool update_anUInt(UInt64 newVal)
+	{
+		if (newVal != data.anUInt)
+		{
+			UInt64 oldVal = data.anUInt;
+			data.anUInt = newVal;
+			notifyUpdated_anUInt(oldVal);
+			return true;
+		}
+		else
+			return false;
 	}
 	public Double aReal
 	{
 		get { return data.aReal; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_aReal(Double newVal)
+	{
+		if (newVal != data.aReal)
+		{
+			Double oldVal = data.aReal;
+			data.aReal = newVal;
+			notifyUpdated_aReal(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	public String aString
 	{
 		get { return data.aString; }
 		set { throw new InvalidOperationException(); }
+	}
+	bool update_aString(String newVal)
+	{
+		if (newVal != data.aString)
+		{
+			String oldVal = data.aString;
+			data.aString = newVal;
+			notifyUpdated_aString(oldVal);
+			return true;
+		}
+		else
+			return false;
 	}
 	public static void parseForStateSync(IPublishableParser parser, BasicTypes_subscriber subscriber)
 	{
@@ -2399,43 +2011,19 @@ public class BasicTypes_subscriber : IBasicTypes
 		bool changed = false;
 		{
 			Int64 newVal = parser.parseInteger("anInt");
-			if(newVal != subscriber.data.anInt)
-			{
-				Int64 oldVal = subscriber.data.anInt;
-				subscriber.data.anInt = newVal;
-				changed = true;
-				subscriber.notifyUpdated_anInt(oldVal);
-			}
+			changed = subscriber.update_anInt(newVal) || changed;
 		}
 		{
 			UInt64 newVal = parser.parseUnsigned("anUInt");
-			if(newVal != subscriber.data.anUInt)
-			{
-				UInt64 oldVal = subscriber.data.anUInt;
-				subscriber.data.anUInt = newVal;
-				changed = true;
-				subscriber.notifyUpdated_anUInt(oldVal);
-			}
+			changed = subscriber.update_anUInt(newVal) || changed;
 		}
 		{
 			Double newVal = parser.parseReal("aReal");
-			if(newVal != subscriber.data.aReal)
-			{
-				Double oldVal = subscriber.data.aReal;
-				subscriber.data.aReal = newVal;
-				changed = true;
-				subscriber.notifyUpdated_aReal(oldVal);
-			}
+			changed = subscriber.update_aReal(newVal) || changed;
 		}
 		{
 			String newVal = parser.parseString("aString");
-			if(newVal != subscriber.data.aString)
-			{
-				String oldVal = subscriber.data.aString;
-				subscriber.data.aString = newVal;
-				changed = true;
-				subscriber.notifyUpdated_aString(oldVal);
-			}
+			changed = subscriber.update_aString(newVal) || changed;
 		}
 		return changed;
 	}
@@ -2449,13 +2037,7 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != subscriber.data.anInt)
-				{
-					Int64 oldVal = subscriber.data.anInt;
-					subscriber.data.anInt = newVal;
-					changed = true;
-					subscriber.notifyUpdated_anInt(oldVal);
-				}
+				changed = subscriber.update_anInt(newVal) || changed;
 			}
 			break;
 			case Address.anUInt:
@@ -2463,13 +2045,7 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				UInt64 newVal = parser.parseUnsigned("value");
-				if(newVal != subscriber.data.anUInt)
-				{
-					UInt64 oldVal = subscriber.data.anUInt;
-					subscriber.data.anUInt = newVal;
-					changed = true;
-					subscriber.notifyUpdated_anUInt(oldVal);
-				}
+				changed = subscriber.update_anUInt(newVal) || changed;
 			}
 			break;
 			case Address.aReal:
@@ -2477,13 +2053,7 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Double newVal = parser.parseReal("value");
-				if(newVal != subscriber.data.aReal)
-				{
-					Double oldVal = subscriber.data.aReal;
-					subscriber.data.aReal = newVal;
-					changed = true;
-					subscriber.notifyUpdated_aReal(oldVal);
-				}
+				changed = subscriber.update_aReal(newVal) || changed;
 			}
 			break;
 			case Address.aString:
@@ -2491,13 +2061,7 @@ public class BasicTypes_subscriber : IBasicTypes
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				String newVal = parser.parseString("value");
-				if(newVal != subscriber.data.aString)
-				{
-					String oldVal = subscriber.data.aString;
-					subscriber.data.aString = newVal;
-					changed = true;
-					subscriber.notifyUpdated_aString(oldVal);
-				}
+				changed = subscriber.update_aString(newVal) || changed;
 			}
 			break;
 			default:
@@ -2599,15 +2163,51 @@ public class point3D_subscriber : Ipoint3D
 		get { return data.x; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_x(Int64 newVal)
+	{
+		if (newVal != data.x)
+		{
+			Int64 oldVal = data.x;
+			data.x = newVal;
+			notifyUpdated_x(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	public Int64 y
 	{
 		get { return data.y; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_y(Int64 newVal)
+	{
+		if (newVal != data.y)
+		{
+			Int64 oldVal = data.y;
+			data.y = newVal;
+			notifyUpdated_y(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	public Int64 z
 	{
 		get { return data.z; }
 		set { throw new InvalidOperationException(); }
+	}
+	bool update_z(Int64 newVal)
+	{
+		if (newVal != data.z)
+		{
+			Int64 oldVal = data.z;
+			data.z = newVal;
+			notifyUpdated_z(oldVal);
+			return true;
+		}
+		else
+			return false;
 	}
 	public static void parseForStateSync(IPublishableParser parser, point3D_subscriber subscriber)
 	{
@@ -2620,33 +2220,15 @@ public class point3D_subscriber : Ipoint3D
 		bool changed = false;
 		{
 			Int64 newVal = parser.parseInteger("x");
-			if(newVal != subscriber.data.x)
-			{
-				Int64 oldVal = subscriber.data.x;
-				subscriber.data.x = newVal;
-				changed = true;
-				subscriber.notifyUpdated_x(oldVal);
-			}
+			changed = subscriber.update_x(newVal) || changed;
 		}
 		{
 			Int64 newVal = parser.parseInteger("y");
-			if(newVal != subscriber.data.y)
-			{
-				Int64 oldVal = subscriber.data.y;
-				subscriber.data.y = newVal;
-				changed = true;
-				subscriber.notifyUpdated_y(oldVal);
-			}
+			changed = subscriber.update_y(newVal) || changed;
 		}
 		{
 			Int64 newVal = parser.parseInteger("z");
-			if(newVal != subscriber.data.z)
-			{
-				Int64 oldVal = subscriber.data.z;
-				subscriber.data.z = newVal;
-				changed = true;
-				subscriber.notifyUpdated_z(oldVal);
-			}
+			changed = subscriber.update_z(newVal) || changed;
 		}
 		return changed;
 	}
@@ -2660,13 +2242,7 @@ public class point3D_subscriber : Ipoint3D
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != subscriber.data.x)
-				{
-					Int64 oldVal = subscriber.data.x;
-					subscriber.data.x = newVal;
-					changed = true;
-					subscriber.notifyUpdated_x(oldVal);
-				}
+				changed = subscriber.update_x(newVal) || changed;
 			}
 			break;
 			case Address.y:
@@ -2674,13 +2250,7 @@ public class point3D_subscriber : Ipoint3D
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != subscriber.data.y)
-				{
-					Int64 oldVal = subscriber.data.y;
-					subscriber.data.y = newVal;
-					changed = true;
-					subscriber.notifyUpdated_y(oldVal);
-				}
+				changed = subscriber.update_y(newVal) || changed;
 			}
 			break;
 			case Address.z:
@@ -2688,13 +2258,7 @@ public class point3D_subscriber : Ipoint3D
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != subscriber.data.z)
-				{
-					Int64 oldVal = subscriber.data.z;
-					subscriber.data.z = newVal;
-					changed = true;
-					subscriber.notifyUpdated_z(oldVal);
-				}
+				changed = subscriber.update_z(newVal) || changed;
 			}
 			break;
 			default:
@@ -2785,6 +2349,18 @@ public class AggregateType_subscriber : IAggregateType
 		get { return data.name; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_name(String newVal)
+	{
+		if (newVal != data.name)
+		{
+			String oldVal = data.name;
+			data.name = newVal;
+			notifyUpdated_name(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	BasicTypes_subscriber theAggregate_handler;
 	BasicTypes_subscriber lazy_theAggregate_handler()
 	{ // mb: MUST use lazy initialization
@@ -2802,6 +2378,18 @@ public class AggregateType_subscriber : IAggregateType
 		get { return data.lastValue; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_lastValue(Int64 newVal)
+	{
+		if (newVal != data.lastValue)
+		{
+			Int64 oldVal = data.lastValue;
+			data.lastValue = newVal;
+			notifyUpdated_lastValue(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	public static void parseForStateSync(IPublishableParser parser, AggregateType_subscriber subscriber)
 	{
 		subscriber.data.name = parser.parseString("name");
@@ -2815,13 +2403,7 @@ public class AggregateType_subscriber : IAggregateType
 		bool changed = false;
 		{
 			String newVal = parser.parseString("name");
-			if(newVal != subscriber.data.name)
-			{
-				String oldVal = subscriber.data.name;
-				subscriber.data.name = newVal;
-				changed = true;
-				subscriber.notifyUpdated_name(oldVal);
-			}
+			changed = subscriber.update_name(newVal) || changed;
 		}
 		{
 			parser.parsePublishableStructBegin("theAggregate");
@@ -2835,13 +2417,7 @@ public class AggregateType_subscriber : IAggregateType
 		}
 		{
 			Int64 newVal = parser.parseInteger("lastValue");
-			if(newVal != subscriber.data.lastValue)
-			{
-				Int64 oldVal = subscriber.data.lastValue;
-				subscriber.data.lastValue = newVal;
-				changed = true;
-				subscriber.notifyUpdated_lastValue(oldVal);
-			}
+			changed = subscriber.update_lastValue(newVal) || changed;
 		}
 		return changed;
 	}
@@ -2855,13 +2431,7 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				String newVal = parser.parseString("value");
-				if(newVal != subscriber.data.name)
-				{
-					String oldVal = subscriber.data.name;
-					subscriber.data.name = newVal;
-					changed = true;
-					subscriber.notifyUpdated_name(oldVal);
-				}
+				changed = subscriber.update_name(newVal) || changed;
 			}
 			break;
 			case Address.theAggregate:
@@ -2892,13 +2462,7 @@ public class AggregateType_subscriber : IAggregateType
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				Int64 newVal = parser.parseInteger("value");
-				if(newVal != subscriber.data.lastValue)
-				{
-					Int64 oldVal = subscriber.data.lastValue;
-					subscriber.data.lastValue = newVal;
-					changed = true;
-					subscriber.notifyUpdated_lastValue(oldVal);
-				}
+				changed = subscriber.update_lastValue(newVal) || changed;
 			}
 			break;
 			default:
@@ -3015,6 +2579,13 @@ public class StructSix : IStructSix, IEquatable<StructSix>
 			_aggregate = (AggregateType)value;
 		}
 	}
+	public StructSix() { }
+	public StructSix(String name, IBasicTypes basic, IAggregateType aggregate)
+	{
+		this.name = name;
+		this.basic = basic;
+		this.aggregate = aggregate;
+	}
 	public override bool Equals(object obj)
 	{
 		return Equals(obj as StructSix);
@@ -3084,6 +2655,18 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		get { return data.name; }
 		set { throw new InvalidOperationException(); }
 	}
+	bool update_name(String newVal)
+	{
+		if (newVal != data.name)
+		{
+			String oldVal = data.name;
+			data.name = newVal;
+			notifyUpdated_name(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
 	BasicTypes_subscriber basic_handler;
 	BasicTypes_subscriber lazy_basic_handler()
 	{ // mb: MUST use lazy initialization
@@ -3123,13 +2706,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		bool changed = false;
 		{
 			String newVal = parser.parseString("name");
-			if(newVal != subscriber.data.name)
-			{
-				String oldVal = subscriber.data.name;
-				subscriber.data.name = newVal;
-				changed = true;
-				subscriber.notifyUpdated_name(oldVal);
-			}
+			changed = subscriber.update_name(newVal) || changed;
 		}
 		{
 			parser.parsePublishableStructBegin("basic");
@@ -3163,13 +2740,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 				if(addr.Length != offset + 1)
 					throw new Exception();
 				String newVal = parser.parseString("value");
-				if(newVal != subscriber.data.name)
-				{
-					String oldVal = subscriber.data.name;
-					subscriber.data.name = newVal;
-					changed = true;
-					subscriber.notifyUpdated_name(oldVal);
-				}
+				changed = subscriber.update_name(newVal) || changed;
 			}
 			break;
 			case Address.basic:
@@ -3422,6 +2993,15 @@ public class publishable_seven : Ipublishable_seven, IEquatable<publishable_seve
 			tmp.ForEach((Ipoint3D each) => { if(!(each is point3D)) throw new InvalidCastException(); });
 			_structVec = tmp;
 		}
+	}
+	public publishable_seven() { }
+	public publishable_seven(IList<Int64> intVec, IList<UInt64> uintVec, IList<Double> realVec, IList<String> strVec, IList<Ipoint3D> structVec)
+	{
+		this.intVec = intVec;
+		this.uintVec = uintVec;
+		this.realVec = realVec;
+		this.strVec = strVec;
+		this.structVec = structVec;
 	}
 	public override bool Equals(object obj)
 	{
