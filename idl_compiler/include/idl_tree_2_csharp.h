@@ -38,6 +38,7 @@ std::string getCSharpTypeName(CompositeType& s);
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
 void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s);
 void generateCsharpStandardMethods(FILE* header, const char* type_name);
+void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeType& s, const char* type_name);
 void generateCsharpStructInterface(FILE* header, Root& root, CompositeType& s, const char* type_name);
 void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name);
 

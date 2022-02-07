@@ -19,7 +19,7 @@ namespace mtest
 //
 //////////////////////////////////////////////////////////////
 
-public interface IBasicTypes
+public interface IBasicTypes : IEquivalenceComparable<IBasicTypes>
 {
 	Int64 anInt { get; set; }
 	UInt64 anUInt { get; set; }
@@ -88,9 +88,22 @@ public class BasicTypes : IBasicTypes, IEquatable<BasicTypes>
 				this.aReal == other.aReal &&
 				this.aString == other.aString;
 	}
+	public bool isEquivalent(IBasicTypes other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.anInt == other.anInt &&
+				this.anUInt == other.anUInt &&
+				this.aReal == other.aReal &&
+				this.aString == other.aString;
+	}
 } // class BasicTypes
 
-public interface Ipoint3D
+public interface Ipoint3D : IEquivalenceComparable<Ipoint3D>
 {
 	Int64 x { get; set; }
 	Int64 y { get; set; }
@@ -145,9 +158,21 @@ public class point3D : Ipoint3D, IEquatable<point3D>
 				this.y == other.y &&
 				this.z == other.z;
 	}
+	public bool isEquivalent(Ipoint3D other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
+	}
 } // class point3D
 
-public interface Ipoint
+public interface Ipoint : IEquivalenceComparable<Ipoint>
 {
 	Int64 x { get; set; }
 	Int64 y { get; set; }
@@ -198,9 +223,20 @@ public class point : Ipoint, IEquatable<point>
 				this.x == other.x &&
 				this.y == other.y;
 	}
+	public bool isEquivalent(Ipoint other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y;
+	}
 } // class point
 
-public interface IAggregateType
+public interface IAggregateType : IEquivalenceComparable<IAggregateType>
 {
 	String name { get; set; }
 	IBasicTypes theAggregate { get; set; }
@@ -275,9 +311,21 @@ public class AggregateType : IAggregateType, IEquatable<AggregateType>
 				this.theAggregate.Equals(other.theAggregate) &&
 				this.lastValue == other.lastValue;
 	}
+	public bool isEquivalent(IAggregateType other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.name == other.name &&
+				this.theAggregate.isEquivalent(other.theAggregate) &&
+				this.lastValue == other.lastValue;
+	}
 } // class AggregateType
 
-public interface Istruct_du
+public interface Istruct_du : IEquivalenceComparable<Istruct_du>
 {
 	Ipoint3D pt { get; set; }
 	Idu_one disc_union { get; set; }
@@ -348,9 +396,20 @@ public class struct_du : Istruct_du, IEquatable<struct_du>
 				this.pt.Equals(other.pt) &&
 				this.disc_union.Equals(other.disc_union);
 	}
+	public bool isEquivalent(Istruct_du other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.pt.isEquivalent(other.pt) &&
+				this.disc_union.isEquivalent(other.disc_union);
+	}
 } // class struct_du
 
-public interface Istruct_one
+public interface Istruct_one : IEquivalenceComparable<Istruct_one>
 {
 	Int64 firstParam { get; set; }
 	IList<Int64> secondParam { get; set; }
@@ -507,6 +566,25 @@ public class struct_one : Istruct_one, IEquatable<struct_one>
 				this.ninethParam.Equals(other.ninethParam) &&
 				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
+	public bool isEquivalent(Istruct_one other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.firstParam == other.firstParam &&
+				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
+				EquivalenceComparer.areEquivalent(this.thirdParam, other.thirdParam) &&
+				this.forthParam == other.forthParam &&
+				this.fifthParam == other.fifthParam &&
+				EquivalenceComparer.areEquivalent(this.sixthParam, other.sixthParam) &&
+				this.seventhParam == other.seventhParam &&
+				this.eighthParam.isEquivalent(other.eighthParam) &&
+				this.ninethParam.isEquivalent(other.ninethParam) &&
+				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
+	}
 } // class struct_one
 
 //////////////////////////////////////////////////////////////
@@ -525,7 +603,7 @@ public class struct_one : Istruct_one, IEquatable<struct_one>
 //    1. VECTOR<REAL> Data (REQUIRED)
 //**********************************************************************
 
-public interface Idu_one
+public interface Idu_one : IEquivalenceComparable<Idu_one>
 {
 	public enum Variants { one = 1, two = 2, unknown };
 	Variants currentVariant();
@@ -536,7 +614,7 @@ public interface Idu_one
 	Double D1 { get; set; }
 	Double D2 { get; set; }
 	Double D3 { get; set; }
-public interface ICASE_one
+public interface ICASE_one : IEquivalenceComparable<ICASE_one>
 {
 	Double D1 { get; set; }
 	Double D2 { get; set; }
@@ -546,7 +624,7 @@ public interface ICASE_one
 
 	// IDL CASE two:
 	IList<Double> Data { get; set; }
-public interface ICASE_two
+public interface ICASE_two : IEquivalenceComparable<ICASE_two>
 {
 	IList<Double> Data { get; set; }
 } // interface CASE_two
@@ -589,6 +667,10 @@ public class du_one : Idu_one, IEquatable<du_one>
 			return false;
 		else
 			return this.mem.Equals(other.mem);
+	}
+	public bool isEquivalent(Idu_one other)
+	{
+		throw new NotImplementedException();
 	}
 	public Idu_one.Variants currentVariant()
 	{
@@ -662,6 +744,18 @@ public class CASE_one : Idu_one.ICASE_one, IEquatable<CASE_one>
 			return true;
 		else if (ReferenceEquals(null, other))
 			return false;
+		else
+			return
+				this.D1 == other.D1 &&
+				this.D2 == other.D2 &&
+				this.D3 == other.D3;
+	}
+	public bool isEquivalent(Idu_one.ICASE_one other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
 		else
 			return
 				this.D1 == other.D1 &&
@@ -813,6 +907,16 @@ public class CASE_two : Idu_one.ICASE_two, IEquatable<CASE_two>
 			return true;
 		else if (ReferenceEquals(null, other))
 			return false;
+		else
+			return
+				Enumerable.SequenceEqual(this.Data, other.Data);
+	}
+	public bool isEquivalent(Idu_one.ICASE_two other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
 		else
 			return
 				Enumerable.SequenceEqual(this.Data, other.Data);
@@ -1499,7 +1603,7 @@ public class test_gmq
 			throw new ArgumentException();
 		return tmp;
 	}
-public interface Imessage_four
+public interface Imessage_four : IEquivalenceComparable<Imessage_four>
 {
 	Ipoint pt { get; set; }
 	IList<Ipoint3D> pts3d { get; set; }
@@ -1571,6 +1675,17 @@ public class message_four : Imessage_four, IEquatable<message_four>
 			return
 				this.pt.Equals(other.pt) &&
 				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
+	}
+	public bool isEquivalent(Imessage_four other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.pt.isEquivalent(other.pt) &&
+				EquivalenceComparer.areEquivalent(this.pts3d, other.pts3d);
 	}
 } // class message_four
 
@@ -1734,7 +1849,7 @@ public class test_json
 			throw new ArgumentException();
 		return tmp;
 	}
-public interface Imessage_five
+public interface Imessage_five : IEquivalenceComparable<Imessage_five>
 {
 	Ipoint pt { get; set; }
 	IList<Ipoint3D> pts3d { get; set; }
@@ -1806,6 +1921,17 @@ public class message_five : Imessage_five, IEquatable<message_five>
 			return
 				this.pt.Equals(other.pt) &&
 				Enumerable.SequenceEqual(this.pts3d, other.pts3d);
+	}
+	public bool isEquivalent(Imessage_five other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.pt.isEquivalent(other.pt) &&
+				EquivalenceComparer.areEquivalent(this.pts3d, other.pts3d);
 	}
 } // class message_five
 
@@ -1999,6 +2125,19 @@ public class BasicTypes_subscriber : IBasicTypes
 		else
 			return false;
 	}
+	public bool isEquivalent(IBasicTypes other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.anInt == other.anInt &&
+				this.anUInt == other.anUInt &&
+				this.aReal == other.aReal &&
+				this.aString == other.aString;
+	}
 	public static void parseForStateSync(IPublishableParser parser, BasicTypes_subscriber subscriber)
 	{
 		subscriber.data.anInt = parser.parseInteger("anInt");
@@ -2070,8 +2209,6 @@ public class BasicTypes_subscriber : IBasicTypes
 		return changed;
 	}
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public IBasicTypes debugOnlyGetData() { return this.data; }
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(IBasicTypes data)
 	{
 		this.data = data;
@@ -2134,6 +2271,13 @@ public class BasicTypes_publisher : IBasicTypes
 			composer.composeAddressEnd();
 		}
 	}
+	public bool isEquivalent(IBasicTypes other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else
+			return t.isEquivalent(other);
+	}
 	public static void compose(IPublishableComposer composer, IBasicTypes t)
 	{
 		composer.composeInteger("anInt", t.anInt, true);
@@ -2141,8 +2285,6 @@ public class BasicTypes_publisher : IBasicTypes
 		composer.composeReal("aReal", t.aReal, true);
 		composer.composeString("aString", t.aString, false);
 	}
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public IBasicTypes debugOnlyGetData() { return this.t; }
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(IBasicTypes data) { this.t = data; }
 } // class BasicTypes_publisher
@@ -2213,6 +2355,18 @@ public class point3D_subscriber : Ipoint3D
 		else
 			return false;
 	}
+	public bool isEquivalent(Ipoint3D other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
+	}
 	public static void parseForStateSync(IPublishableParser parser, point3D_subscriber subscriber)
 	{
 		subscriber.data.x = parser.parseInteger("x");
@@ -2271,8 +2425,6 @@ public class point3D_subscriber : Ipoint3D
 		return changed;
 	}
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public Ipoint3D debugOnlyGetData() { return this.data; }
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(Ipoint3D data)
 	{
 		this.data = data;
@@ -2324,14 +2476,19 @@ public class point3D_publisher : Ipoint3D
 			composer.composeAddressEnd();
 		}
 	}
+	public bool isEquivalent(Ipoint3D other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else
+			return t.isEquivalent(other);
+	}
 	public static void compose(IPublishableComposer composer, Ipoint3D t)
 	{
 		composer.composeInteger("x", t.x, true);
 		composer.composeInteger("y", t.y, true);
 		composer.composeInteger("z", t.z, false);
 	}
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public Ipoint3D debugOnlyGetData() { return this.t; }
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(Ipoint3D data) { this.t = data; }
 } // class point3D_publisher
@@ -2397,6 +2554,18 @@ public class AggregateType_subscriber : IAggregateType
 		}
 		else
 			return false;
+	}
+	public bool isEquivalent(IAggregateType other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.name == other.name &&
+				this.theAggregate.isEquivalent(other.theAggregate) &&
+				this.lastValue == other.lastValue;
 	}
 	public static void parseForStateSync(IPublishableParser parser, AggregateType_subscriber subscriber)
 	{
@@ -2479,8 +2648,6 @@ public class AggregateType_subscriber : IAggregateType
 		return changed;
 	}
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public IAggregateType debugOnlyGetData() { return this.data; }
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(IAggregateType data)
 	{
 		this.data = data;
@@ -2535,6 +2702,13 @@ public class AggregateType_publisher : IAggregateType
 			composer.composeAddressEnd();
 		}
 	}
+	public bool isEquivalent(IAggregateType other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else
+			return t.isEquivalent(other);
+	}
 	public static void compose(IPublishableComposer composer, IAggregateType t)
 	{
 		composer.composeString("name", t.name, true);
@@ -2544,12 +2718,10 @@ public class AggregateType_publisher : IAggregateType
 		composer.composeInteger("lastValue", t.lastValue, false);
 	}
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public IAggregateType debugOnlyGetData() { return this.t; }
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(IAggregateType data) { this.t = data; }
 } // class AggregateType_publisher
 
-public interface IStructSix
+public interface IStructSix : IEquivalenceComparable<IStructSix>
 {
 	String name { get; set; }
 	IBasicTypes basic { get; set; }
@@ -2634,6 +2806,18 @@ public class StructSix : IStructSix, IEquatable<StructSix>
 				this.basic.Equals(other.basic) &&
 				this.aggregate.Equals(other.aggregate);
 	}
+	public bool isEquivalent(IStructSix other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.name == other.name &&
+				this.basic.isEquivalent(other.basic) &&
+				this.aggregate.isEquivalent(other.aggregate);
+	}
 } // class StructSix
 
 //**********************************************************************
@@ -2701,6 +2885,18 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	{
 		get { return lazy_aggregate_handler(); }
 		set { throw new InvalidOperationException(); }
+	}
+	public bool isEquivalent(IStructSix other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.name == other.name &&
+				this.basic.isEquivalent(other.basic) &&
+				this.aggregate.isEquivalent(other.aggregate);
 	}
 	public static void parseForStateSync(IPublishableParser parser, StructSix_subscriber subscriber)
 	{
@@ -2827,8 +3023,6 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 		this.notifyFullyUpdated();
 	}
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public IStructSix debugOnlyGetData() { return this.data; }
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(IStructSix data)
 	{
 		this.data = data;
@@ -2886,6 +3080,13 @@ public class StructSix_publisher : IStructSix, StatePublisherBase
 			composer.composeAddressEnd();
 		}
 	}
+	public bool isEquivalent(IStructSix other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else
+			return t.isEquivalent(other);
+	}
 	public static void compose(IPublishableComposer composer, IStructSix t)
 	{
 		composer.composeString("name", t.name, true);
@@ -2918,8 +3119,6 @@ public class StructSix_publisher : IStructSix, StatePublisherBase
 		return tmp;
 	}
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public IStructSix debugOnlyGetData() { return this.t; }
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(IStructSix data) { this.t = data; }
 } // class StructSix_publisher
 
@@ -2943,7 +3142,7 @@ public class StructSix_concentrator : StructSix_subscriber, StateConcentratorBas
 	}
 } // class StructSix_concentrator
 
-public interface Ipublishable_seven
+public interface Ipublishable_seven : IEquivalenceComparable<Ipublishable_seven>
 {
 	IList<Int64> intVec { get; set; }
 	IList<UInt64> uintVec { get; set; }
@@ -3058,6 +3257,20 @@ public class publishable_seven : Ipublishable_seven, IEquatable<publishable_seve
 				Enumerable.SequenceEqual(this.strVec, other.strVec) &&
 				Enumerable.SequenceEqual(this.structVec, other.structVec);
 	}
+	public bool isEquivalent(Ipublishable_seven other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				Enumerable.SequenceEqual(this.intVec, other.intVec) &&
+				Enumerable.SequenceEqual(this.uintVec, other.uintVec) &&
+				Enumerable.SequenceEqual(this.realVec, other.realVec) &&
+				Enumerable.SequenceEqual(this.strVec, other.strVec) &&
+				EquivalenceComparer.areEquivalent(this.structVec, other.structVec);
+	}
 } // class publishable_seven
 
 //**********************************************************************
@@ -3142,6 +3355,20 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		get { return new SubscriberVectorWrapper<Ipoint3D, point3D_subscriber>(lazy_structVec_handlers()); }
 		set { throw new InvalidOperationException(); }
 	}
+	public bool isEquivalent(Ipublishable_seven other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				Enumerable.SequenceEqual(this.intVec, other.intVec) &&
+				Enumerable.SequenceEqual(this.uintVec, other.uintVec) &&
+				Enumerable.SequenceEqual(this.realVec, other.realVec) &&
+				Enumerable.SequenceEqual(this.strVec, other.strVec) &&
+				EquivalenceComparer.areEquivalent(this.structVec, other.structVec);
+	}
 	public static void parseForStateSync(IPublishableParser parser, publishable_seven_subscriber subscriber)
 	{
 		parser.parseSimpleVector("intVec", Publishable.makeParser(subscriber.data.intVec));
@@ -3154,8 +3381,8 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				Ipoint3D val = new point3D();
 				point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 				point3D_subscriber.parseForStateSync(parser, handler);
-				subscriber.data.structVec.Add(val);
 				subscriber.lazy_structVec_handlers().Add(handler);
+				subscriber.data.structVec.Add(val);
 				parser.parseStructEnd();
 			}
 		);
@@ -3418,8 +3645,8 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 						Ipoint3D newVal = new point3D();
 						point3D_subscriber handler = subscriber.makeElementHandler_structVec(newVal);
 						point3D_subscriber.parse(parser, handler);
-						subscriber.data.structVec.Insert(index, newVal);
 						subscriber.lazy_structVec_handlers().Insert(index, handler);
+						subscriber.data.structVec.Insert(index, newVal);
 						parser.parsePublishableStructEnd();
 						currentChanged = true;
 						subscriber.notifyInserted_structVec(index);
@@ -3479,8 +3706,6 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		parser.parseStructEnd();
 		this.notifyFullyUpdated();
 	}
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public Ipublishable_seven debugOnlyGetData() { return this.data; }
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(Ipublishable_seven data)
 	{
@@ -3599,6 +3824,13 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 			composer.composeAddressEnd();
 		}
 	}
+	public bool isEquivalent(Ipublishable_seven other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else
+			return t.isEquivalent(other);
+	}
 	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
 		composer.composeSimpleVector("intVec", Publishable.makeComposer(t.intVec), true);
@@ -3629,8 +3861,6 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 		this.composer = null;
 		return tmp;
 	}
-	/// <summary>This method is for testing and debugging only. Do not use!</summary>
-	public Ipublishable_seven debugOnlyGetData() { return this.t; }
 	/// <summary>This method is for testing and debugging only. Do not use!</summary>
 	public void debugOnlySetData(Ipublishable_seven data) { this.t = data; }
 } // class publishable_seven_publisher

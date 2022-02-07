@@ -109,7 +109,8 @@ namespace TestProject1
 
             stub.applyStateSyncMessage(parserInitial);
 
-            Assert.Equal(test_publishable_seven.GetPublishableSeven(), ( mtest.publishable_seven)stub.debugOnlyGetData());
+            mtest.publishable_seven expected = test_publishable_seven.GetPublishableSeven();
+            Assert.True(expected.isEquivalent(stub));
 
             if (fileUpdate != null)
             {

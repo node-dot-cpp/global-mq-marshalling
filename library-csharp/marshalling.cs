@@ -30,6 +30,40 @@ using System.Collections.Generic;
 
 namespace globalmq.marshalling
 {
+    /// <summary>
+    /// Allows to compare for equivalence Messages, Publishers and Subscribers
+    /// </summary>
+    public interface IEquivalenceComparable<T>
+    {
+        bool isEquivalent(T other);
+    }
+
+    public class EquivalenceComparer
+    {
+        public static bool areEquivalent<T, U>(IList<T> left, IList<U> right) where T : IEquivalenceComparable<T> where U : T
+        {
+            if (left == null && right == null)
+                return true;
+            else if (left == null || right == null)
+                return false;
+            else if (ReferenceEquals(left, right))
+                return true;
+            else
+            {
+                if (left.Count != right.Count)
+                    return false;
+                for(int i = 0; i != left.Count; ++i)
+                {
+                    if (!left[i].isEquivalent(right[i]))
+                        return false;
+                }
+
+
+                return true;
+            }
+        }
+    }
+
     public interface ICollectionCompose
     {
         public void composeGmq(GmqComposer composer);

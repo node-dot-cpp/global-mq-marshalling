@@ -121,10 +121,10 @@ namespace TestProject1
 
             subs.applyStateSyncMessage(parser);
 
-            mtest.publishable_seven actual = (mtest.publishable_seven)subs.debugOnlyGetData();
+            //mtest.publishable_seven actual = (mtest.publishable_seven)subs.debugOnlyGetData();
             mtest.publishable_seven expected = GetPublishableSeven();
 
-            Assert.Equal(expected, actual);
+            Assert.True(expected.isEquivalent(subs));
         }
 
         static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
@@ -157,14 +157,14 @@ namespace TestProject1
 
             subs.applyMessageWithUpdates(parser);
 
-            mtest.publishable_seven actual = (mtest.publishable_seven)subs.debugOnlyGetData();
+            //mtest.publishable_seven actual = (mtest.publishable_seven)subs.debugOnlyGetData();
             mtest.publishable_seven expected = GetPublishableSeven();
 
-            Assert.NotEqual(expected, actual);
+            Assert.False(expected.isEquivalent(subs));
 
             updateDelegate(expected);
 
-            Assert.Equal(expected, actual);
+            Assert.True(expected.isEquivalent(subs));
         }
 
         static void doUpdate1(mtest.Ipublishable_seven data)

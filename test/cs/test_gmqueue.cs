@@ -177,9 +177,9 @@ namespace TestProject1
 
             
             mtest.StructSix_subscriber subs1 = new mtest.StructSix_subscriber();
-            mtest.StructSix data1 = (mtest.StructSix)subs1.debugOnlyGetData();
+            //mtest.StructSix data1 = (mtest.StructSix)subs1.debugOnlyGetData();
 
-            Assert.NotEqual(data, data1);
+            Assert.False(publ.isEquivalent(subs1));
 
             mp.add(subs1);
             mp.subscribe(subs1, path);
@@ -188,16 +188,16 @@ namespace TestProject1
             mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, null, ref msgCnt);
 
-            Assert.Equal(data, data1);
+            Assert.True(publ.isEquivalent(subs1));
 
             mtest.StructSix_subscriber subs2 = new mtest.StructSix_subscriber();
-            mtest.StructSix data2 = (mtest.StructSix)subs2.debugOnlyGetData();
+            //mtest.StructSix data2 = (mtest.StructSix)subs2.debugOnlyGetData();
 
             mp.add(subs2);
             mp.subscribe(subs2, path);
 
             mtest.StructSix_subscriber subs3 = new mtest.StructSix_subscriber();
-            mtest.StructSix data3 = (mtest.StructSix)subs3.debugOnlyGetData();
+            //mtest.StructSix data3 = (mtest.StructSix)subs3.debugOnlyGetData();
 
             mp.add(subs3);
             mp.subscribe(subs3, path);
@@ -205,21 +205,21 @@ namespace TestProject1
             mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, null, ref msgCnt);
 
-            Assert.Equal(data, data2);
-            Assert.Equal(data, data3);
+            Assert.True(publ.isEquivalent(subs2));
+            Assert.True(publ.isEquivalent(subs3));
 
             test_publishable_six.doUpdate1(publ);
 
-            Assert.NotEqual(data, data1);
-            Assert.NotEqual(data, data2);
-            Assert.NotEqual(data, data3);
+            Assert.False(publ.isEquivalent(subs1));
+            Assert.False(publ.isEquivalent(subs2));
+            Assert.False(publ.isEquivalent(subs3));
 
             mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, null, ref msgCnt);
 
-            Assert.Equal(data, data1);
-            Assert.Equal(data, data2);
-            Assert.Equal(data, data3);
+            Assert.True(publ.isEquivalent(subs1));
+            Assert.True(publ.isEquivalent(subs2));
+            Assert.True(publ.isEquivalent(subs3));
         }
 
         [Fact]

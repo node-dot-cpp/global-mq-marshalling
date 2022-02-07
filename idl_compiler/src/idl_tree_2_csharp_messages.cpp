@@ -898,7 +898,6 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
-		generateCsharpStandardMethods(header, type_name.c_str());
 
 		fprintf(header, "\tpublic bool Equals(%s other)\n", type_name.c_str());
 		fprintf(header,
@@ -909,6 +908,18 @@ namespace {
 			"\t\t\treturn false;\n"
 			"\t\telse\n"
 			"\t\t\treturn this.mem.Equals(other.mem);\n"
+			"\t}\n"
+		);
+	}
+
+	void csharpMsg_generateUnionEquivalentMethod(FILE* header, CompositeType& s, const std::string& type_name)
+	{
+		assert(s.type == CompositeType::Type::discriminated_union);
+
+		fprintf(header, "\tpublic bool isEquivalent(I%s other)\n", type_name.c_str());
+		fprintf(header,
+			"\t{\n"
+			"\t\tthrow new NotImplementedException();\n"
 			"\t}\n"
 		);
 	}
@@ -1016,7 +1027,7 @@ namespace {
 		std::string type_name = getCSharpTypeName(s);
 
 
-		fprintf(header, "public interface I%s\n", type_name.c_str());
+		fprintf(header, "public interface I%s : IEquivalenceComparable<I%s>\n", type_name.c_str(), type_name.c_str());
 		fprintf(header, "{\n");
 
 		fprintf(header, "\tpublic enum Variants { ");
@@ -1068,7 +1079,9 @@ namespace {
 		fprintf(header, "\n");
 
 
+		generateCsharpStandardMethods(header, type_name.c_str());
 		csharpMsg_generateUnionEqualsMethod(header, s, type_name);
+		csharpMsg_generateUnionEquivalentMethod(header, s, type_name);
 
 		// currentVariant()
 

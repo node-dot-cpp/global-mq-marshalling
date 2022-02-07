@@ -96,9 +96,9 @@ namespace TestProject1
 
             subs.applyStateSyncMessage(parser);
 
-             mtest.StructSix actual = ( mtest.StructSix)subs.debugOnlyGetData();
-             mtest.StructSix expected = GetPublishableSix();
-            Assert.Equal(expected, actual);
+             //mtest.StructSix actual = ( mtest.StructSix)subs.debugOnlyGetData();
+             //mtest.StructSix expected = GetPublishableSix();
+            Assert.True(subs.isEquivalent(GetPublishableSix()));
         }
 
 
@@ -132,18 +132,18 @@ namespace TestProject1
 
             subs.applyMessageWithUpdates(parser);
 
-             mtest.StructSix actual = ( mtest.StructSix)subs.debugOnlyGetData();
+             //mtest.StructSix actual = ( mtest.StructSix)subs.debugOnlyGetData();
              mtest.StructSix expected = GetPublishableSix();
 
             if(updateDelegate != null)
             {
                 // not equal yet
-                Assert.NotEqual(expected, actual);
+                Assert.False(subs.isEquivalent(expected));
 
                 updateDelegate(expected);
             }
 
-            Assert.Equal(expected, actual);
+            Assert.True(subs.isEquivalent(expected));
         }
 
         internal static void doUpdate1( mtest.IStructSix data)

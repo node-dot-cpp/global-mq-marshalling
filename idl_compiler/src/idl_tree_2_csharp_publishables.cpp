@@ -173,8 +173,8 @@ namespace {
 					fprintf(header, "\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
-					fprintf(header, "\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tsubscriber.lazy_%s_handlers().Add(handler);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
 					fprintf(header, "\t\t\t}\n");
 					fprintf(header, "\t\t);\n");
@@ -466,8 +466,8 @@ namespace {
 					fprintf(header, "\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber.parse(parser, handler);\n", elem_type_name);
-					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
+					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
 					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
 					fprintf(header, "\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
@@ -678,8 +678,8 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-		fprintf(header, "\tpublic I%s debugOnlyGetData() { return this.data; }\n", type_name.c_str());
+		//fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+		//fprintf(header, "\tpublic I%s debugOnlyGetData() { return this.data; }\n", type_name.c_str());
 
 		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 		fprintf(header, "\tpublic void debugOnlySetData(I%s data)\n", type_name.c_str());
@@ -856,6 +856,9 @@ namespace {
 				assert(false); // not implemented (yet)
 			}
 		}
+
+		std::string interface_name = "I" + type_name;
+		generateCsharpStructEquivalentMethod(header, root, s, interface_name.c_str());
 
 		csharpPub_generateParseStateSync(header, root, s, type_name);
 		csharpPub_generateParse1(header, root, s, type_name);
@@ -1130,14 +1133,26 @@ namespace {
 			}
 		}
 
+		fprintf(header, "\tpublic bool isEquivalent(I%s other)\n", type_name.c_str());
+		fprintf(header,
+			"\t{\n"
+			"\t\tif (ReferenceEquals(this, other))\n"
+			"\t\t\treturn true;\n"
+			"\t\telse\n"
+			"\t\t\treturn t.isEquivalent(other);\n"
+			"\t}\n"
+		);
+
+
+
 		csharpPub_generateCompose(header, root, s, type_name);
 
 		if (s.type == CompositeType::Type::publishable)
 			csharpPub_generateStatePublishableBase(header, s, type_name);
 
 
-		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-		fprintf(header, "\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
+		//fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+		//fprintf(header, "\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
 
 		fprintf(header, "\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 		fprintf(header, "\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name.c_str());
