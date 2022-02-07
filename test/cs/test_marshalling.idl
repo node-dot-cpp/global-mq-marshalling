@@ -74,6 +74,11 @@ STRUCT AggregateType{
   INTEGER lastValue;
 };
 
+PUBLISHABLE Mock = 5 {
+	CHARACTER-STRING name;
+	INTEGER id;
+};
+
 PUBLISHABLE StructSix = 6 {
 	CHARACTER-STRING name;
 	STRUCT BasicTypes basic;

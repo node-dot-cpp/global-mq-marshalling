@@ -94,13 +94,13 @@ namespace TestProject1
             Assert.Equal(buffer, buffer2);
         }
 
-        [Fact]
+        //[Fact]
         public static void TestGmqFile1()
         {
             TestGmqFile("struct_du_1.gmq");
         }
 
-        [Fact]
+        //[Fact]
         public static void TestGmqFile2()
         {
             TestGmqFile("struct_du_1.gmq");

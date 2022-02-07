@@ -158,7 +158,7 @@ namespace {
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
-					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", Publishable.makeParser(subscriber.data.%s));\n", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", subscriber.data.%s);\n", member.name.c_str(), member.name.c_str());
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
@@ -173,6 +173,7 @@ namespace {
 					fprintf(header, "\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
+					fprintf(header, "\t\t\t\t// mb: lazy initialization always first\n");
 					fprintf(header, "\t\t\t\tsubscriber.lazy_%s_handlers().Add(handler);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\tparser.parseStructEnd();\n");
@@ -247,7 +248,7 @@ namespace {
 					const char* elem_type_name = csharpPub_getCSharpType(member.type.vectorElemKind);
 
 					fprintf(header, "\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
-					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", Publishable.makeParser(newVal));\n", member.name.c_str());
+					fprintf(header, "\t\tparser.parseSimpleVector(\"%s\", newVal);\n", member.name.c_str());
 					fprintf(header, "\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
 					fprintf(header, "\t\t{\n");
 					fprintf(header, "\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
@@ -377,7 +378,7 @@ namespace {
 					fprintf(header, "\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
 					fprintf(header, "\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
-					fprintf(header, "\t\t\t\t\tparser.parseSimpleVector(\"value\", Publishable.makeParser(newVal));\n");
+					fprintf(header, "\t\t\t\t\tparser.parseSimpleVector(\"value\", newVal);\n");
 					fprintf(header, "\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t{\n");
 					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
@@ -466,6 +467,7 @@ namespace {
 					fprintf(header, "\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\t%s_subscriber.parse(parser, handler);\n", elem_type_name);
+					fprintf(header, "\t\t\t\t\t\t// mb: lazy initialization always first\n");
 					fprintf(header, "\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
@@ -478,7 +480,7 @@ namespace {
 
 					fprintf(header, "\t\t\t\t\tcase Publishable.ActionOnVector.remove_at:\n");
 					fprintf(header, "\t\t\t\t\t{\n");
-					fprintf(header, "\t\t\t\t\t\t// mb: reversed in case of lazy initialization\n");
+					fprintf(header, "\t\t\t\t\t\t// mb: lazy initialization always first\n");
 					fprintf(header, "\t\t\t\t\t\tsubscriber.lazy_%s_handlers().RemoveAt(index);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tsubscriber.data.%s.RemoveAt(index);\n", member.name.c_str());
 					fprintf(header, "\t\t\t\t\t\tcurrentChanged = true;\n");
@@ -791,7 +793,7 @@ namespace {
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				fprintf(header, "\t%s_subscriber %s_handler;\n", member.type.name.c_str(), member.name.c_str());
 				fprintf(header, "\t%s_subscriber lazy_%s_handler()\n", member.type.name.c_str(), member.name.c_str());
-				fprintf(header, "\t{ // mb: MUST use lazy initialization\n");
+				fprintf(header, "\t{ // mb: lazy because can't call virtual 'makeHandler' in ctor\n");
 				fprintf(header, "\t\tif (%s_handler == null)\n", member.name.c_str());
 				fprintf(header, "\t\t\t%s_handler = makeHandler_%s(data.%s);\n", member.name.c_str(), member.name.c_str(), member.name.c_str());
 				fprintf(header, "\t\treturn %s_handler;\n", member.name.c_str());
@@ -828,7 +830,7 @@ namespace {
 					const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
 					fprintf(header, "\tList<%s_subscriber> %s_handlers;\n", elem_type_name, member.name.c_str());
 					fprintf(header, "\tList<%s_subscriber> lazy_%s_handlers()\n", elem_type_name, member.name.c_str());
-					fprintf(header, "\t{ // mb: MUST use lazy initialization\n");
+					fprintf(header, "\t{ // mb: lazy because can't call virtual 'makeElementHandler' in ctor\n");
 					fprintf(header, "\t\tif (%s_handlers == null)\n", member.name.c_str());
 					fprintf(header, "\t\t{\n");
 					fprintf(header, "\t\t\t%s_handlers = new List<%s_subscriber>();\n", member.name.c_str(), elem_type_name);
@@ -912,7 +914,7 @@ namespace {
 				case MessageParameterType::KIND::UINTEGER:
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\tcomposer.composeSimpleVector(\"%s\", Publishable.makeComposer(t.%s), ", member.name.c_str(), member.name.c_str());
+					fprintf(header, "\t\tcomposer.composeSimpleVector(\"%s\", t.%s, ", member.name.c_str(), member.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
@@ -1083,7 +1085,7 @@ namespace {
 					fprintf(header, "\t\t{\n");
 					fprintf(header, "\t\t\tt.%s = value;\n", member.name.c_str());
 					fprintf(header, "\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-					fprintf(header, "\t\t\tcomposer.composeSimpleVector(\"value\", Publishable.makeComposer(value), false);\n");
+					fprintf(header, "\t\t\tcomposer.composeSimpleVector(\"value\", value, false);\n");
 					fprintf(header, "\t\t\tcomposer.composeAddressEnd();\n");
 					fprintf(header, "\t\t}\n");
 					fprintf(header, "\t}\n");

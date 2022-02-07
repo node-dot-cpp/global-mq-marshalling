@@ -106,6 +106,7 @@ namespace globalmq.marshalling
         public void startTick(IPublishableComposer composer) { publisher.startTick(composer); }
         BufferT endTick() { return publisher.endTick().getBuffer(); }
     };
+
     class StatePublisherPool
     {
         IPlatformSupport platform = null;

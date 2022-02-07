@@ -64,114 +64,76 @@ namespace globalmq.marshalling
         }
     }
 
-    public interface ICollectionCompose
-    {
-        public void composeGmq(GmqComposer composer);
-        public void composeJson(JsonComposer composer);
-    };
+    //public interface ICollectionCompose
+    //{
+    //    public void composeGmq(GmqComposer composer);
+    //    public void composeJson(JsonComposer composer);
+    //};
 
-    public class CollectionWrapperForComposing : ICollectionCompose
-    {
-        SizeDelegate lsize_;
-        NextDelegate lnext_;
+   
 
-        public delegate int SizeDelegate();
-        public delegate void NextDelegate(ComposerBase composer, int ordinal);
-        public CollectionWrapperForComposing(SizeDelegate lsize, NextDelegate lnext)
-        {
-            lsize_ = lsize;
-            lnext_ = lnext;
-        }
-        public void composeGmq(GmqComposer composer)
-        {
-            int collSz = lsize_();
-            composer.composeUnsignedInteger((uint)collSz);
-            for (int i = 0; i < collSz; ++i)
-                lnext_(composer, i);
-        }
-        public void composeJson(JsonComposer composer)
-        {
-            //composer.append('{');
-            //composer.addNamePart("size");
+        //};
+        //public interface ICollectionParse
+        //{
+        //    public void parseGmq(GmqParser parser);
+        //    public void parseJson(JsonParser parser);
+        //};
+        //public class CollectionWrapperForParsing : ICollectionParse
+        //{
+        //    MakeDelegate lmake;
+        //    NextDelegate lnext;
 
-            int collSz = lsize_();
-            //composer.composeUnsignedInteger((ulong)collSz);
-            //composer.append(", ");
-            //composer.addNamePart("data");
+        //    public delegate void MakeDelegate();
+        //    public delegate void NextDelegate(ParserBase parser, int ordinal);
 
-            composer.append('[');
-            for (int i = 0; i < collSz; ++i)
-            {
-                if (i != 0)
-                    composer.append(", ");
-                lnext_(composer, i);
-            }
-            composer.append(']');
-            //composer.append('}');
-        }
+        //    public CollectionWrapperForParsing(MakeDelegate lmake, NextDelegate lnext)
+        //    {
+                                                                         //        this.lmake = lmake;
+        //        this.lnext = lnext;
+        //    }
+        //    public CollectionWrapperForParsing(NextDelegate lnext)
+        //    /.,MNBVCXZzXCVBNM ,. C VVCBCBN 
+        //        this.lnext = lnext;
+        //    }
+        //    public void parseGmq(GmqParser parser)
+        //    {
+        //        if (lmake != null)
+        //            lmake();
+        //        int sz;
+        //        parser.parseUnsignedInteger(out sz);
+        //        for (int i = 0; i < sz; ++i)
+        //            lnext(parser, i);
+        //    }
+        //    public void parseJson(JsonParser parser)
+        //    {
+        //        if (lmake != null)
+        //            lmake();
+        //        parser.skipDelimiter('[');
 
-    };
-    public interface ICollectionParse
-    {
-        public void parseGmq(GmqParser parser);
-        public void parseJson(JsonParser parser);
-    };
-    public class CollectionWrapperForParsing : ICollectionParse
-    {
-        MakeDelegate lmake;
-        NextDelegate lnext;
+        //        if (!parser.isDelimiter(']')) // there are some items there
+        //        {
+        //            for (int i = 0; /*!newFormat || i < sz*/; ++i)
+        //            {
+        //                lnext(parser, i);
+        //                if (parser.isDelimiter(','))
+        //                {
+        //                    parser.skipDelimiter(',');
+        //                    continue;
+        //                }
+        //                if (parser.isDelimiter(']'))
+        //                {
+        //                    parser.skipDelimiter(']');
+        //                    break;
+        //                }
+        //            }
+        //        }
+        //        else
+        //            parser.skipDelimiter(']');
 
-        public delegate void MakeDelegate();
-        public delegate void NextDelegate(ParserBase parser, int ordinal);
+        //    }
+        //};
 
-        public CollectionWrapperForParsing(MakeDelegate lmake, NextDelegate lnext)
-        {
-            this.lmake = lmake;
-            this.lnext = lnext;
-        }
-        public CollectionWrapperForParsing(NextDelegate lnext)
-        {
-            this.lnext = lnext;
-        }
-        public void parseGmq(GmqParser parser)
-        {
-            if (lmake != null)
-                lmake();
-            int sz;
-            parser.parseUnsignedInteger(out sz);
-            for (int i = 0; i < sz; ++i)
-                lnext(parser, i);
-        }
-        public void parseJson(JsonParser parser)
-        {
-            if (lmake != null)
-                lmake();
-            parser.skipDelimiter('[');
-
-            if (!parser.isDelimiter(']')) // there are some items there
-            {
-                for (int i = 0; /*!newFormat || i < sz*/; ++i)
-                {
-                    lnext(parser, i);
-                    if (parser.isDelimiter(','))
-                    {
-                        parser.skipDelimiter(',');
-                        continue;
-                    }
-                    if (parser.isDelimiter(']'))
-                    {
-                        parser.skipDelimiter(']');
-                        break;
-                    }
-                }
-            }
-            else
-                parser.skipDelimiter(']');
-
-        }
-    };
-
-    public class JsonCollectionParser
+        public class JsonCollectionParser
     {
         NextDelegate lnext;
 
@@ -225,101 +187,101 @@ namespace globalmq.marshalling
         }
     };
 
-    public class SimpleTypeCollection
-    {
-        public static CollectionWrapperForComposing makeComposer(IList<sbyte> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<short> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<int> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<long> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(sbyte[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(short[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(int[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(long[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<byte> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<ushort> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<uint> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<ulong> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(byte[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(ushort[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(uint[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(ulong[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
+    //public class SimpleTypeCollection
+    //{
+    //    public static CollectionWrapperForComposing makeComposer(IList<sbyte> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<short> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<int> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<long> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(sbyte[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(short[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(int[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(long[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<byte> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<ushort> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<uint> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<ulong> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(byte[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(ushort[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(uint[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(ulong[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
+    //    }
 
-        public static CollectionWrapperForComposing makeComposer(IList<float> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<double> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(float[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(double[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<string> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(string[] coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
-        }
+    //    public static CollectionWrapperForComposing makeComposer(IList<float> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<double> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(float[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(double[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(IList<string> coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
+    //    }
+    //    public static CollectionWrapperForComposing makeComposer(string[] coll)
+    //    {
+    //        return new CollectionWrapperForComposing(() => { return coll.Length; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
+    //    }
 
-    };
+    //};
 
-    public struct JsonCollectionComposer<T> 
+    public struct JsonCollectionComposer<T>
     {
         IList<T> elements;
         Action<JsonComposer, T> composeFunction;
@@ -342,6 +304,23 @@ namespace globalmq.marshalling
             }
             composer.append(']');
         }
+
+        public static JsonCollectionComposer<Int64> make(IList<Int64> coll)
+        {
+            return new JsonCollectionComposer<Int64>(coll, (JsonComposer composer, Int64 val) => { composer.composeSignedInteger(val); });
+        }
+        public static JsonCollectionComposer<UInt64> make(IList<UInt64> coll)
+        {
+            return new JsonCollectionComposer<UInt64>(coll, (JsonComposer composer, UInt64 val) => { composer.composeUnsignedInteger(val); });
+        }
+        public static JsonCollectionComposer<Double> make(IList<Double> coll)
+        {
+            return new JsonCollectionComposer<Double>(coll, (JsonComposer composer, Double val) => { composer.composeReal(val); });
+        }
+        public static JsonCollectionComposer<String> make(IList<String> coll)
+        {
+            return new JsonCollectionComposer<String>(coll, (JsonComposer composer, String val) => { composer.composeString(val); });
+        }
     }
 
     public struct GmqCollectionComposer<T>
@@ -363,97 +342,115 @@ namespace globalmq.marshalling
                 composeFunction(composer, elements[i]);
             }
         }
+
+        public static GmqCollectionComposer<Int64> make(IList<Int64> coll)
+        {
+            return new GmqCollectionComposer<Int64>(coll, (GmqComposer composer, Int64 val) => { composer.composeSignedInteger(val); });
+        }
+        public static GmqCollectionComposer<UInt64> make(IList<UInt64> coll)
+        {
+            return new GmqCollectionComposer<UInt64>(coll, (GmqComposer composer, UInt64 val) => { composer.composeUnsignedInteger(val); });
+        }
+        public static GmqCollectionComposer<Double> make(IList<Double> coll)
+        {
+            return new GmqCollectionComposer<Double>(coll, (GmqComposer composer, Double val) => { composer.composeReal(val); });
+        }
+        public static GmqCollectionComposer<String> make(IList<String> coll)
+        {
+            return new GmqCollectionComposer<String>(coll, (GmqComposer composer, String val) => { composer.composeString(val); });
+        }
+
     }
 
     //TODO remove
-    public struct CollectionComposer<T> where T : IMessageCompose
-    {
-        int size;
-        Func<int, T> makeComposer;
+    //public struct CollectionComposer<T> where T : IMessageCompose
+    //{
+    //    int size;
+    //    Func<int, T> makeComposer;
 
-        CollectionComposer(int size, Func<int, T> makeComposer)
-        {
-            this.size = size;
-            this.makeComposer = makeComposer;
-        }
+    //    CollectionComposer(int size, Func<int, T> makeComposer)
+    //    {
+    //        this.size = size;
+    //        this.makeComposer = makeComposer;
+    //    }
 
-        public void composeJson(JsonComposer composer)
-        {
-            composer.append('[');
-            for (int i = 0; i < size; ++i)
-            {
-                if (i != 0)
-                    composer.append(", ");
+    //    public void composeJson(JsonComposer composer)
+    //    {
+    //        composer.append('[');
+    //        for (int i = 0; i < size; ++i)
+    //        {
+    //            if (i != 0)
+    //                composer.append(", ");
 
-                T next = makeComposer(i);
-                next.composeJson(composer);
-            }
-            composer.append(']');
-        }
-        public void composeGmq(GmqComposer composer)
-        {
-            composer.composeUnsignedInteger((UInt64)size);
-            for (int i = 0; i < size; ++i)
-            {
-                T next = makeComposer(i);
-                next.composeGmq(composer);
-            }
-        }
-        public static CollectionComposer<T> make(int size, Func<int, T> makeComposer)
-        {
-            return new CollectionComposer<T>(size, makeComposer);
-        }
-    }
-    public interface IMessageCompose
-    {
-        public void composeGmq(GmqComposer composer);
-        public void composeJson(JsonComposer composer);
+    //            T next = makeComposer(i);
+    //            next.composeJson(composer);
+    //        }
+    //        composer.append(']');
+    //    }
+    //    public void composeGmq(GmqComposer composer)
+    //    {
+    //        composer.composeUnsignedInteger((UInt64)size);
+    //        for (int i = 0; i < size; ++i)
+    //        {
+    //            T next = makeComposer(i);
+    //            next.composeGmq(composer);
+    //        }
+    //    }
+    //    public static CollectionComposer<T> make(int size, Func<int, T> makeComposer)
+    //    {
+    //        return new CollectionComposer<T>(size, makeComposer);
+    //    }
+    //}
+    //public interface IMessageCompose
+    //{
+    //    public void composeGmq(GmqComposer composer);
+    //    public void composeJson(JsonComposer composer);
 
-    };
+    //};
 
-    public class MessageWrapperForComposing : IMessageCompose
-    {
-        ComposeDelegate lcompose_;
+    //public class MessageWrapperForComposing : IMessageCompose
+    //{
+    //    ComposeDelegate lcompose_;
 
-        public delegate void ComposeDelegate(ComposerBase composer);
+    //    public delegate void ComposeDelegate(ComposerBase composer);
 
-        public MessageWrapperForComposing(ComposeDelegate lcompose) { lcompose_ = lcompose; }
+    //    public MessageWrapperForComposing(ComposeDelegate lcompose) { lcompose_ = lcompose; }
 
-        public void composeGmq(GmqComposer composer)
-        {
-            lcompose_(composer);
-        }
-        public void composeJson(JsonComposer composer)
-        {
-            lcompose_(composer);
-        }
-
-
-    };
-
-    public interface IMessageParse
-    {
-        public void parseGmq(GmqParser parser);
-        public void parseJson(JsonParser parser);
-
-    };
-    public class MessageWrapperForParsing :IMessageParse
-    {
-        ParseDelegate lparse_;
-
-        public delegate void ParseDelegate(ParserBase composer);
+    //    public void composeGmq(GmqComposer composer)
+    //    {
+    //        lcompose_(composer);
+    //    }
+    //    public void composeJson(JsonComposer composer)
+    //    {
+    //        lcompose_(composer);
+    //    }
 
 
-        public MessageWrapperForParsing(ParseDelegate lparse) { lparse_ = lparse; }
-        public void parseGmq(GmqParser parser)
-        {
-            lparse_(parser);
-        }
-        public void parseJson(JsonParser parser)
-        {
-            lparse_(parser);
-        }
-    };
+    //};
+
+    //public interface IMessageParse
+    //{
+    //    public void parseGmq(GmqParser parser);
+    //    public void parseJson(JsonParser parser);
+
+    //};
+    //public class MessageWrapperForParsing :IMessageParse
+    //{
+    //    ParseDelegate lparse_;
+
+    //    public delegate void ParseDelegate(ParserBase composer);
+
+
+    //    public MessageWrapperForParsing(ParseDelegate lparse) { lparse_ = lparse; }
+    //    public void parseGmq(GmqParser parser)
+    //    {
+    //        lparse_(parser);
+    //    }
+    //    public void parseJson(JsonParser parser)
+    //    {
+    //        lparse_(parser);
+    //    }
+    //};
 
     public class MessageHandler
     {

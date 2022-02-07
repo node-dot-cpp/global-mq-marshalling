@@ -42,39 +42,6 @@ namespace globalmq.marshalling
             address[baseAddress.Length] = last;
             return address;
         }
-        public static CollectionWrapperForComposing makeComposer(IList<Int64> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeSignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<UInt64> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeUnsignedInteger(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<Double> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeReal(coll[ordinal]); });
-        }
-        public static CollectionWrapperForComposing makeComposer(IList<String> coll)
-        {
-            return new CollectionWrapperForComposing(() => { return coll.Count; }, (composer, ordinal) => { composer.composeString(coll[ordinal]); });
-        }
-
-        public static CollectionWrapperForParsing makeParser(IList<Int64> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { Int64 val; parser.parseSignedInteger(out val); coll.Add(val); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<UInt64> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { UInt64 val; parser.parseUnsignedInteger(out val); coll.Add(val); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<Double> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { Double val; parser.parseReal(out val); coll.Add(val); });
-        }
-        public static CollectionWrapperForParsing makeParser(IList<String> coll)
-        {
-            return new CollectionWrapperForParsing(null, (parser, ordinal) => { String val; parser.parseString(out val); coll.Add(val); });
-        }
     }
     public interface IPublishableParser
     {
@@ -89,7 +56,10 @@ namespace globalmq.marshalling
         void parsePublishableStructBegin(String expectedName);
         void parsePublishableStructEnd();
         void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate);
-        void parseSimpleVector(String expectedName, CollectionWrapperForParsing simpleWrapper);
+        void parseSimpleVector(String expectedName, IList<Int64> collection);
+        void parseSimpleVector(String expectedName, IList<UInt64> collection);
+        void parseSimpleVector(String expectedName, IList<Double> collection);
+        void parseSimpleVector(String expectedName, IList<String> collection);
         void parseStructBegin();
         void parseStructEnd();
         void parseStateUpdateMessageBegin();
@@ -263,10 +233,72 @@ namespace globalmq.marshalling
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
         }
-        public void parseSimpleVector(String expectedName, CollectionWrapperForParsing simpleWrapper)
+        public void parseSimpleVector(String expectedName, IList<Int64> collection)
         {
+
             parseKey(expectedName);
-            simpleWrapper.parseJson(p);
+            JsonCollectionParser simple = new JsonCollectionParser(
+                    (JsonParser parser, int index) =>
+                    {
+                        Int64 val;
+                        p.parseSignedInteger(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseJson(p);
+
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
+        }
+
+        public void parseSimpleVector(String expectedName, IList<UInt64> collection)
+        {
+
+            parseKey(expectedName);
+            JsonCollectionParser simple = new JsonCollectionParser(
+                    (JsonParser parser, int index) =>
+                    {
+                        UInt64 val;
+                        p.parseUnsignedInteger(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseJson(p);
+
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
+        }
+
+        public void parseSimpleVector(String expectedName, IList<Double> collection)
+        {
+
+            parseKey(expectedName);
+            JsonCollectionParser simple = new JsonCollectionParser(
+                    (JsonParser parser, int index) =>
+                    {
+                        Double val;
+                        p.parseReal(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseJson(p);
+
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
+        }
+        public void parseSimpleVector(String expectedName, IList<String> collection)
+        {
+
+            parseKey(expectedName);
+            JsonCollectionParser simple = new JsonCollectionParser(
+                    (JsonParser parser, int index) =>
+                    {
+                        String val;
+                        p.parseString(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseJson(p);
 
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
@@ -360,9 +392,57 @@ namespace globalmq.marshalling
                 parseDelegate(this, i);
 
         }
-        public void parseSimpleVector(String expectedName, CollectionWrapperForParsing simpleWrapper)
+        public void parseSimpleVector(String expectedName, IList<Int64> collection)
         {
-            simpleWrapper.parseGmq(p);
+
+            GmqCollectionParser simple = new GmqCollectionParser(
+                    (GmqParser parser, int index) =>
+                    {
+                        Int64 val;
+                        p.parseSignedInteger(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseGmq(p);
+        }
+
+        public void parseSimpleVector(String expectedName, IList<UInt64> collection)
+        {
+
+            GmqCollectionParser simple = new GmqCollectionParser(
+                    (GmqParser parser, int index) =>
+                    {
+                        UInt64 val;
+                        p.parseUnsignedInteger(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseGmq(p);
+        }
+
+        public void parseSimpleVector(String expectedName, IList<Double> collection)
+        {
+            GmqCollectionParser simple = new GmqCollectionParser(
+                    (GmqParser parser, int index) =>
+                    {
+                        Double val;
+                        p.parseReal(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseGmq(p);
+        }
+        public void parseSimpleVector(String expectedName, IList<String> collection)
+        {
+            GmqCollectionParser simple = new GmqCollectionParser(
+                    (GmqParser parser, int index) =>
+                    {
+                        String val;
+                        p.parseString(out val);
+                        collection.Add(val);
+                    }
+            );
+            simple.parseGmq(p);
         }
 
         public void parseStructBegin() { }
@@ -392,7 +472,10 @@ namespace globalmq.marshalling
         void composePublishableStructBegin(String name);
         void composePublishableStructEnd(bool separator);
         void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator);
-        void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator);
+        void composeSimpleVector(String name, IList<Int64> collection, bool separator);
+        void composeSimpleVector(String name, IList<UInt64> collection, bool separator);
+        void composeSimpleVector(String name, IList<Double> collection, bool separator);
+        void composeSimpleVector(String name, IList<String> collection, bool separator);
 
         void composeStructBegin();
         void composeStructEnd();
@@ -499,10 +582,43 @@ namespace globalmq.marshalling
             if (separator)
                 composer.append(",");
         }
-        public void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator)
+        public void composeSimpleVector(String name, IList<Int64> collection, bool separator)
         {
             composer.addNamePart(name);
-            simpleWrapper.composeJson(composer);
+            JsonCollectionComposer<Int64> simple = new JsonCollectionComposer<Int64>(collection,
+                (JsonComposer c, Int64 val) => { composer.composeSignedInteger(val); }
+            );
+            simple.composeJson(composer);
+            if (separator)
+                composer.append(",");
+        }
+        public void composeSimpleVector(String name, IList<UInt64> collection, bool separator)
+        {
+            composer.addNamePart(name);
+            JsonCollectionComposer<UInt64> simple = new JsonCollectionComposer<UInt64>(collection,
+                (JsonComposer c, UInt64 val) => { composer.composeUnsignedInteger(val); }
+            );
+            simple.composeJson(composer);
+            if (separator)
+                composer.append(",");
+        }
+        public void composeSimpleVector(String name, IList<Double> collection, bool separator)
+        {
+            composer.addNamePart(name);
+            JsonCollectionComposer<Double> simple = new JsonCollectionComposer<Double>(collection,
+                (JsonComposer c, Double val) => { composer.composeReal(val); }
+            );
+            simple.composeJson(composer);
+            if (separator)
+                composer.append(",");
+        }
+        public void composeSimpleVector(String name, IList<String> collection, bool separator)
+        {
+            composer.addNamePart(name);
+            JsonCollectionComposer<String> simple = new JsonCollectionComposer<String>(collection,
+                (JsonComposer c, String val) => { composer.composeString(val); }
+            );
+            simple.composeJson(composer);
             if (separator)
                 composer.append(",");
         }
@@ -580,9 +696,33 @@ namespace globalmq.marshalling
             for (int i = 0; i < size; ++i)
                 composeDelegate(this, i);
         }
-        public void composeSimpleVector(String name, CollectionWrapperForComposing simpleWrapper, bool separator)
+        public void composeSimpleVector(String name, IList<Int64> collection, bool separator)
         {
-            simpleWrapper.composeGmq(composer);
+            GmqCollectionComposer<Int64> simple = new GmqCollectionComposer<Int64>(collection,
+                (GmqComposer c, Int64 val) => { composer.composeSignedInteger(val); }
+            );
+            simple.composeGmq(composer);
+        }
+        public void composeSimpleVector(String name, IList<UInt64> collection, bool separator)
+        {
+            GmqCollectionComposer<UInt64> simple = new GmqCollectionComposer<UInt64>(collection,
+                (GmqComposer c, UInt64 val) => { composer.composeUnsignedInteger(val); }
+            );
+            simple.composeGmq(composer);
+        }
+        public void composeSimpleVector(String name, IList<Double> collection, bool separator)
+        {
+            GmqCollectionComposer<Double> simple = new GmqCollectionComposer<Double>(collection,
+                (GmqComposer c, Double val) => { composer.composeReal(val); }
+            );
+            simple.composeGmq(composer);
+        }
+        public void composeSimpleVector(String name, IList<String> collection, bool separator)
+        {
+            GmqCollectionComposer<String> simple = new GmqCollectionComposer<String>(collection,
+                (GmqComposer c, String val) => { composer.composeString(val); }
+            );
+            simple.composeGmq(composer);
         }
 
         public void composeStructBegin() { }

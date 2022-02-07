@@ -929,13 +929,13 @@ public class CASE_two_message
 	{
 		composer.append( "{\n  ");
 		composer.addNamePart("Data");
-		CollectionWrapperForComposing Data_wrapper = SimpleTypeCollection.makeComposer(Data);
+		JsonCollectionComposer<Double> Data_wrapper = JsonCollectionComposer<Double>.make(Data);
 		Data_wrapper.composeJson(composer);
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, IList<Double> Data)
 	{
-		CollectionWrapperForComposing Data_wrapper = SimpleTypeCollection.makeComposer(Data);
+		GmqCollectionComposer<Double> Data_wrapper = GmqCollectionComposer<Double>.make(Data);
 		Data_wrapper.composeGmq(composer);
 	}
 	public static void compose(JsonComposer composer, Idu_one.ICASE_two val)
@@ -955,7 +955,8 @@ public class CASE_two_message
 			if ( key == "Data" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ Double t; parser.parseReal(out t); val.Data.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ Double t; parser.parseReal(out t); val.Data.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -985,28 +986,6 @@ public class CASE_two_message
 } // class CASE_two_message
 
 } // class du_one
-
-public struct du_one_composer : IMessageCompose
-{
-	int dummy;// TODO, same attributes as base type
-	public du_one_composer(int dummy)
-	{
-		this.dummy = dummy;// TODO
-	}
-	public void composeJson(JsonComposer composer)
-	{
-		// TODO
-	}
-	public void composeGmq(GmqComposer composer)
-	{
-		// TODO
-	}
-	public static du_one_composer make(/* TODO */)
-	{
-		// TODO
-		return new du_one_composer(0);
-	}
-} // class du_one_composer
 
 public class du_one_message
 {
@@ -1351,7 +1330,7 @@ public class struct_one_message
 		composer.composeSignedInteger(firstParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("secondParam");
-		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(secondParam);
+		JsonCollectionComposer<Int64> secondParam_wrapper = JsonCollectionComposer<Int64>.make(secondParam);
 		secondParam_wrapper.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("thirdParam");
@@ -1380,14 +1359,14 @@ public class struct_one_message
 		point3D_message.compose(composer, ninethParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("tenthParam");
-		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(tenthParam);
+		JsonCollectionComposer<Double> tenthParam_wrapper = JsonCollectionComposer<Double>.make(tenthParam);
 		tenthParam_wrapper.composeJson(composer);
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		composer.composeSignedInteger(firstParam);
-		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(secondParam);
+		GmqCollectionComposer<Int64> secondParam_wrapper = GmqCollectionComposer<Int64>.make(secondParam);
 		secondParam_wrapper.composeGmq(composer);
 		GmqCollectionComposer<Ipoint3D> thirdParam_wrapper = new GmqCollectionComposer<Ipoint3D>(
 			thirdParam, point3D_message.compose);
@@ -1400,7 +1379,7 @@ public class struct_one_message
 		composer.composeReal(seventhParam);
 		point_message.compose(composer, eighthParam);
 		point3D_message.compose(composer, ninethParam);
-		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(tenthParam);
+		GmqCollectionComposer<Double> tenthParam_wrapper = GmqCollectionComposer<Double>.make(tenthParam);
 		tenthParam_wrapper.composeGmq(composer);
 	}
 	public static void compose(JsonComposer composer, Istruct_one val)
@@ -1426,13 +1405,15 @@ public class struct_one_message
 			else if ( key == "secondParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>					{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+					{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "thirdParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "forthParam" )
@@ -1450,7 +1431,8 @@ public class struct_one_message
 			else if ( key == "sixthParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "seventhParam" )
@@ -1470,7 +1452,8 @@ public class struct_one_message
 			else if ( key == "tenthParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -1731,7 +1714,8 @@ public class message_four_message
 			else if ( key == "pts3d" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -1977,7 +1961,8 @@ public class message_five_message
 			else if ( key == "pts3d" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.pts3d.Add(t); });
 				tmp.parseJson(parser);
 			}
 
@@ -2528,7 +2513,7 @@ public class AggregateType_subscriber : IAggregateType
 	}
 	BasicTypes_subscriber theAggregate_handler;
 	BasicTypes_subscriber lazy_theAggregate_handler()
-	{ // mb: MUST use lazy initialization
+	{ // mb: lazy because can't call virtual 'makeHandler' in ctor
 		if (theAggregate_handler == null)
 			theAggregate_handler = makeHandler_theAggregate(data.theAggregate);
 		return theAggregate_handler;
@@ -2721,6 +2706,304 @@ public class AggregateType_publisher : IAggregateType
 	public void debugOnlySetData(IAggregateType data) { this.t = data; }
 } // class AggregateType_publisher
 
+public interface IMock : IEquivalenceComparable<IMock>
+{
+	String name { get; set; }
+	Int64 id { get; set; }
+} // interface Mock
+
+public class Mock : IMock, IEquatable<Mock>
+{
+	String _name = String.Empty;
+	public String name
+	{
+		get { return _name; }
+		set
+		{
+			if(value == null)
+				throw new ArgumentNullException();
+			_name = value;
+		}
+	}
+	public Int64 id { get; set; }
+	public Mock() { }
+	public Mock(String name, Int64 id)
+	{
+		this.name = name;
+		this.id = id;
+	}
+	public override bool Equals(object obj)
+	{
+		return Equals(obj as Mock);
+	}
+	public static bool operator ==(Mock left, Mock right)
+	{
+		if (ReferenceEquals(left, right))
+			return true;
+		else if (ReferenceEquals(left, null))
+			return false;
+		else if (ReferenceEquals(null, right))
+			return false;
+		else
+			return left.Equals(right);
+	}
+	public static bool operator !=(Mock left, Mock right)
+	{
+		return !(left == right);
+	}
+	public override int GetHashCode()
+	{
+		// TODO
+		throw new InvalidOperationException();
+	}
+	public bool Equals(Mock other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else if (ReferenceEquals(null, other))
+			return false;
+		else
+			return
+				this.name == other.name &&
+				this.id == other.id;
+	}
+	public bool isEquivalent(IMock other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.name == other.name &&
+				this.id == other.id;
+	}
+} // class Mock
+
+//**********************************************************************
+// PUBLISHABLE Mock (2 parameters)
+// 1. CHARACTER_STRING name
+// 2. INTEGER id
+//**********************************************************************
+
+public class Mock_subscriber : IMock, StateSubscriberBase
+{
+
+	/////////////////////////////////  begin user override section /////////////////////////////////
+
+	public virtual void notifyFullyUpdated() { }
+	public virtual void notifyUpdated_name(String old) { }
+	public virtual void notifyUpdated_id(Int64 old) { }
+
+	/////////////////////////////////   end user override section  /////////////////////////////////
+
+
+	protected IMock data;
+	enum Address { name = 0, id = 1 };
+	public Mock_subscriber() { this.data = new Mock(); }
+	public String name
+	{
+		get { return data.name; }
+		set { throw new InvalidOperationException(); }
+	}
+	bool update_name(String newVal)
+	{
+		if (newVal != data.name)
+		{
+			String oldVal = data.name;
+			data.name = newVal;
+			notifyUpdated_name(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
+	public Int64 id
+	{
+		get { return data.id; }
+		set { throw new InvalidOperationException(); }
+	}
+	bool update_id(Int64 newVal)
+	{
+		if (newVal != data.id)
+		{
+			Int64 oldVal = data.id;
+			data.id = newVal;
+			notifyUpdated_id(oldVal);
+			return true;
+		}
+		else
+			return false;
+	}
+	public bool isEquivalent(IMock other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.name == other.name &&
+				this.id == other.id;
+	}
+	public static void parseForStateSync(IPublishableParser parser, Mock_subscriber subscriber)
+	{
+		subscriber.data.name = parser.parseString("name");
+		subscriber.data.id = parser.parseInteger("id");
+	}
+	public static bool parse(IPublishableParser parser, Mock_subscriber subscriber)
+	{
+		bool changed = false;
+		{
+			String newVal = parser.parseString("name");
+			changed = subscriber.update_name(newVal) || changed;
+		}
+		{
+			Int64 newVal = parser.parseInteger("id");
+			changed = subscriber.update_id(newVal) || changed;
+		}
+		return changed;
+	}
+	public static bool parse(IPublishableParser parser, Mock_subscriber subscriber, UInt64[] addr, int offset)
+	{
+		bool changed = false;
+		switch ((Address)addr[offset])
+		{
+			case Address.name:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+				String newVal = parser.parseString("value");
+				changed = subscriber.update_name(newVal) || changed;
+			}
+			break;
+			case Address.id:
+			{
+				if(addr.Length != offset + 1)
+					throw new Exception();
+				Int64 newVal = parser.parseInteger("value");
+				changed = subscriber.update_id(newVal) || changed;
+			}
+			break;
+			default:
+				throw new Exception();
+		}
+		return changed;
+	}
+	public String stateSubscriberName() { return "Mock"; }
+	public UInt64 stateTypeID() { return 5; }
+	public void applyMessageWithUpdates(IPublishableParser parser)
+	{
+		parser.parseStateUpdateMessageBegin();
+		UInt64[] addr = null;
+		while(parser.parseAddress(ref addr))
+		{
+			Mock_subscriber.parse(parser, this, addr, 0);
+			parser.parseAddressEnd();
+			addr = null;
+		}
+		parser.parseStateUpdateMessageEnd();
+	}
+	public void applyStateSyncMessage(IPublishableParser parser)
+	{
+		parser.parseStructBegin();
+		Mock_subscriber.parseForStateSync(parser, this);
+		parser.parseStructEnd();
+		this.notifyFullyUpdated();
+	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IMock data)
+	{
+		this.data = data;
+	}
+} // class Mock_subscriber
+
+public class Mock_publisher : IMock, StatePublisherBase
+{
+	IMock t;
+	IPublishableComposer composer;
+	UInt64[] address;
+	enum Address { name = 0, id = 1 };
+	public Mock_publisher()
+	{
+		this.t = new Mock();
+		this.composer = null;
+		this.address = new UInt64[] { };
+	}
+	public String name
+	{
+		get { return t.name; }
+		set
+		{
+			t.name = value;
+			composer.composeAddress(address, (UInt64)Address.name);
+			composer.composeString("value", value, false);
+			composer.composeAddressEnd();
+		}
+	}
+	public Int64 id
+	{
+		get { return t.id; }
+		set
+		{
+			t.id = value;
+			composer.composeAddress(address, (UInt64)Address.id);
+			composer.composeInteger("value", value, false);
+			composer.composeAddressEnd();
+		}
+	}
+	public bool isEquivalent(IMock other)
+	{
+		if (ReferenceEquals(this, other))
+			return true;
+		else
+			return t.isEquivalent(other);
+	}
+	public static void compose(IPublishableComposer composer, IMock t)
+	{
+		composer.composeString("name", t.name, true);
+		composer.composeInteger("id", t.id, false);
+	}
+	public int idx { get; set; } // for use in pools, etc
+	public String statePublisherName() { return "Mock"; }
+	public UInt64 stateTypeID() { return 5; }
+	public void generateStateSyncMessage(IPublishableComposer composer)
+	{
+		composer.composeStructBegin();
+		Mock_publisher.compose(composer, this.t);
+		composer.composeStructEnd();
+	}
+	public void startTick(IPublishableComposer composer)
+	{
+		this.composer = composer;
+		composer.composeStateUpdateMessageBegin();
+	}
+	public IPublishableComposer endTick()
+	{
+		composer.composeStateUpdateMessageEnd();
+		IPublishableComposer tmp = composer;
+		this.composer = null;
+		return tmp;
+	}
+	/// <summary>This method is for testing and debugging only. Do not use!</summary>
+	public void debugOnlySetData(IMock data) { this.t = data; }
+} // class Mock_publisher
+
+public class Mock_concentrator : Mock_subscriber, StateConcentratorBase
+{
+	public static void compose(IPublishableComposer composer, IMock t)
+	{
+		composer.composeString("name", t.name, true);
+		composer.composeInteger("id", t.id, false);
+	}
+	public void generateStateSyncMessage(IPublishableComposer composer)
+	{
+		composer.composeStructBegin();
+		Mock_publisher.compose(composer, this.data);
+		composer.composeStructEnd();
+	}
+} // class Mock_concentrator
+
 public interface IStructSix : IEquivalenceComparable<IStructSix>
 {
 	String name { get; set; }
@@ -2864,7 +3147,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	}
 	BasicTypes_subscriber basic_handler;
 	BasicTypes_subscriber lazy_basic_handler()
-	{ // mb: MUST use lazy initialization
+	{ // mb: lazy because can't call virtual 'makeHandler' in ctor
 		if (basic_handler == null)
 			basic_handler = makeHandler_basic(data.basic);
 		return basic_handler;
@@ -2876,7 +3159,7 @@ public class StructSix_subscriber : IStructSix, StateSubscriberBase
 	}
 	AggregateType_subscriber aggregate_handler;
 	AggregateType_subscriber lazy_aggregate_handler()
-	{ // mb: MUST use lazy initialization
+	{ // mb: lazy because can't call virtual 'makeHandler' in ctor
 		if (aggregate_handler == null)
 			aggregate_handler = makeHandler_aggregate(data.aggregate);
 		return aggregate_handler;
@@ -3338,7 +3621,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	}
 	List<point3D_subscriber> structVec_handlers;
 	List<point3D_subscriber> lazy_structVec_handlers()
-	{ // mb: MUST use lazy initialization
+	{ // mb: lazy because can't call virtual 'makeElementHandler' in ctor
 		if (structVec_handlers == null)
 		{
 			structVec_handlers = new List<point3D_subscriber>();
@@ -3371,16 +3654,17 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 	}
 	public static void parseForStateSync(IPublishableParser parser, publishable_seven_subscriber subscriber)
 	{
-		parser.parseSimpleVector("intVec", Publishable.makeParser(subscriber.data.intVec));
-		parser.parseSimpleVector("uintVec", Publishable.makeParser(subscriber.data.uintVec));
-		parser.parseSimpleVector("realVec", Publishable.makeParser(subscriber.data.realVec));
-		parser.parseSimpleVector("strVec", Publishable.makeParser(subscriber.data.strVec));
+		parser.parseSimpleVector("intVec", subscriber.data.intVec);
+		parser.parseSimpleVector("uintVec", subscriber.data.uintVec);
+		parser.parseSimpleVector("realVec", subscriber.data.realVec);
+		parser.parseSimpleVector("strVec", subscriber.data.strVec);
 		parser.parseVector("structVec", (IPublishableParser parser, int index) =>
 			{
 				parser.parseStructBegin();
 				Ipoint3D val = new point3D();
 				point3D_subscriber handler = subscriber.makeElementHandler_structVec(val);
 				point3D_subscriber.parseForStateSync(parser, handler);
+				// mb: lazy initialization always first
 				subscriber.lazy_structVec_handlers().Add(handler);
 				subscriber.data.structVec.Add(val);
 				parser.parseStructEnd();
@@ -3392,7 +3676,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		bool changed = false;
 		{
 		IList<Int64> newVal = new List<Int64>();
-		parser.parseSimpleVector("intVec", Publishable.makeParser(newVal));
+		parser.parseSimpleVector("intVec", newVal);
 		if(!Enumerable.SequenceEqual(newVal, subscriber.data.intVec))
 		{
 			subscriber.data.intVec = newVal;
@@ -3402,7 +3686,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		{
 		IList<UInt64> newVal = new List<UInt64>();
-		parser.parseSimpleVector("uintVec", Publishable.makeParser(newVal));
+		parser.parseSimpleVector("uintVec", newVal);
 		if(!Enumerable.SequenceEqual(newVal, subscriber.data.uintVec))
 		{
 			subscriber.data.uintVec = newVal;
@@ -3412,7 +3696,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		{
 		IList<Double> newVal = new List<Double>();
-		parser.parseSimpleVector("realVec", Publishable.makeParser(newVal));
+		parser.parseSimpleVector("realVec", newVal);
 		if(!Enumerable.SequenceEqual(newVal, subscriber.data.realVec))
 		{
 			subscriber.data.realVec = newVal;
@@ -3422,7 +3706,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 		}
 		{
 		IList<String> newVal = new List<String>();
-		parser.parseSimpleVector("strVec", Publishable.makeParser(newVal));
+		parser.parseSimpleVector("strVec", newVal);
 		if(!Enumerable.SequenceEqual(newVal, subscriber.data.strVec))
 		{
 			subscriber.data.strVec = newVal;
@@ -3465,7 +3749,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(addr.Length == offset + 1) // full vector replace
 				{
 					IList<Int64> newVal = new List<Int64>();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
+					parser.parseSimpleVector("value", newVal);
 					if(!Enumerable.SequenceEqual(newVal, subscriber.data.intVec))
 					{
 						subscriber.data.intVec = newVal;
@@ -3499,7 +3783,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(addr.Length == offset + 1) // full vector replace
 				{
 					IList<UInt64> newVal = new List<UInt64>();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
+					parser.parseSimpleVector("value", newVal);
 					if(!Enumerable.SequenceEqual(newVal, subscriber.data.uintVec))
 					{
 						subscriber.data.uintVec = newVal;
@@ -3533,7 +3817,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(addr.Length == offset + 1) // full vector replace
 				{
 					IList<Double> newVal = new List<Double>();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
+					parser.parseSimpleVector("value", newVal);
 					if(!Enumerable.SequenceEqual(newVal, subscriber.data.realVec))
 					{
 						subscriber.data.realVec = newVal;
@@ -3567,7 +3851,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 				if(addr.Length == offset + 1) // full vector replace
 				{
 					IList<String> newVal = new List<String>();
-					parser.parseSimpleVector("value", Publishable.makeParser(newVal));
+					parser.parseSimpleVector("value", newVal);
 					if(!Enumerable.SequenceEqual(newVal, subscriber.data.strVec))
 					{
 						subscriber.data.strVec = newVal;
@@ -3645,6 +3929,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 						Ipoint3D newVal = new point3D();
 						point3D_subscriber handler = subscriber.makeElementHandler_structVec(newVal);
 						point3D_subscriber.parse(parser, handler);
+						// mb: lazy initialization always first
 						subscriber.lazy_structVec_handlers().Insert(index, handler);
 						subscriber.data.structVec.Insert(index, newVal);
 						parser.parsePublishableStructEnd();
@@ -3654,7 +3939,7 @@ public class publishable_seven_subscriber : Ipublishable_seven, StateSubscriberB
 					}
 					case Publishable.ActionOnVector.remove_at:
 					{
-						// mb: reversed in case of lazy initialization
+						// mb: lazy initialization always first
 						subscriber.lazy_structVec_handlers().RemoveAt(index);
 						subscriber.data.structVec.RemoveAt(index);
 						currentChanged = true;
@@ -3740,7 +4025,7 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 		{
 			t.intVec = value;
 			composer.composeAddress(address, (UInt64)Address.intVec);
-			composer.composeSimpleVector("value", Publishable.makeComposer(value), false);
+			composer.composeSimpleVector("value", value, false);
 			composer.composeAddressEnd();
 		}
 	}
@@ -3758,7 +4043,7 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 		{
 			t.uintVec = value;
 			composer.composeAddress(address, (UInt64)Address.uintVec);
-			composer.composeSimpleVector("value", Publishable.makeComposer(value), false);
+			composer.composeSimpleVector("value", value, false);
 			composer.composeAddressEnd();
 		}
 	}
@@ -3776,7 +4061,7 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 		{
 			t.realVec = value;
 			composer.composeAddress(address, (UInt64)Address.realVec);
-			composer.composeSimpleVector("value", Publishable.makeComposer(value), false);
+			composer.composeSimpleVector("value", value, false);
 			composer.composeAddressEnd();
 		}
 	}
@@ -3794,7 +4079,7 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 		{
 			t.strVec = value;
 			composer.composeAddress(address, (UInt64)Address.strVec);
-			composer.composeSimpleVector("value", Publishable.makeComposer(value), false);
+			composer.composeSimpleVector("value", value, false);
 			composer.composeAddressEnd();
 		}
 	}
@@ -3833,10 +4118,10 @@ public class publishable_seven_publisher : Ipublishable_seven, StatePublisherBas
 	}
 	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
-		composer.composeSimpleVector("intVec", Publishable.makeComposer(t.intVec), true);
-		composer.composeSimpleVector("uintVec", Publishable.makeComposer(t.uintVec), true);
-		composer.composeSimpleVector("realVec", Publishable.makeComposer(t.realVec), true);
-		composer.composeSimpleVector("strVec", Publishable.makeComposer(t.strVec), true);
+		composer.composeSimpleVector("intVec", t.intVec, true);
+		composer.composeSimpleVector("uintVec", t.uintVec, true);
+		composer.composeSimpleVector("realVec", t.realVec, true);
+		composer.composeSimpleVector("strVec", t.strVec, true);
 		composer.composeVector("structVec", t.structVec.Count,
 			(IPublishableComposer composer, int ordinal) => { point3D_publisher.compose(composer, t.structVec[ordinal]); }, false);
 	}
@@ -3869,10 +4154,10 @@ public class publishable_seven_concentrator : publishable_seven_subscriber, Stat
 {
 	public static void compose(IPublishableComposer composer, Ipublishable_seven t)
 	{
-		composer.composeSimpleVector("intVec", Publishable.makeComposer(t.intVec), true);
-		composer.composeSimpleVector("uintVec", Publishable.makeComposer(t.uintVec), true);
-		composer.composeSimpleVector("realVec", Publishable.makeComposer(t.realVec), true);
-		composer.composeSimpleVector("strVec", Publishable.makeComposer(t.strVec), true);
+		composer.composeSimpleVector("intVec", t.intVec, true);
+		composer.composeSimpleVector("uintVec", t.uintVec, true);
+		composer.composeSimpleVector("realVec", t.realVec, true);
+		composer.composeSimpleVector("strVec", t.strVec, true);
 		composer.composeVector("structVec", t.structVec.Count,
 			(IPublishableComposer composer, int ordinal) => { point3D_publisher.compose(composer, t.structVec[ordinal]); }, false);
 	}
@@ -3890,6 +4175,8 @@ public class StateConcentratorFactory : IStateConcentratorFactory
 	{
 		switch(typeID)
 		{
+		case 5:
+			return new Mock_concentrator();
 		case 6:
 			return new StructSix_concentrator();
 		case 7:

@@ -82,52 +82,52 @@ namespace {
 	}
 
 
-	void csharpMsg_generateComposeParamTypeLIst(FILE* header, CompositeType& s)
-	{
-		int count = 0;
-		auto& mem = s.getMembers();
-		for (auto it = mem.begin(); it != mem.end(); ++it)
-		{
-			assert(*it != nullptr);
+	//void csharpMsg_generateComposeParamTypeLIst(FILE* header, CompositeType& s)
+	//{
+	//	int count = 0;
+	//	auto& mem = s.getMembers();
+	//	for (auto it = mem.begin(); it != mem.end(); ++it)
+	//	{
+	//		assert(*it != nullptr);
 
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
-				continue;
-			++count;
+	//		MessageParameter& param = **it;
+	//		if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+	//			continue;
+	//		++count;
 
-			if (it != mem.begin())
-				fprintf(header, ", ");
+	//		if (it != mem.begin())
+	//			fprintf(header, ", ");
 
-			switch (param.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "Int64 %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "UInt64 %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::REAL:
-				fprintf(header, "Double %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "String %s", param.name.c_str());
-				break;
-			//case MessageParameterType::KIND::BYTE_ARRAY:
-			//case MessageParameterType::KIND::BLOB:
-			//case MessageParameterType::KIND::ENUM:
-			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "ICollectionCompose %s", param.name.c_str());
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "IMessageCompose %s", param.name.c_str());
-				break;
-			default:
-				assert(false); // unexpected
-				break;
-			}
-		}
-	}
+	//		switch (param.type.kind)
+	//		{
+	//		case MessageParameterType::KIND::INTEGER:
+	//			fprintf(header, "Int64 %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::UINTEGER:
+	//			fprintf(header, "UInt64 %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::REAL:
+	//			fprintf(header, "Double %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::CHARACTER_STRING:
+	//			fprintf(header, "String %s", param.name.c_str());
+	//			break;
+	//		//case MessageParameterType::KIND::BYTE_ARRAY:
+	//		//case MessageParameterType::KIND::BLOB:
+	//		//case MessageParameterType::KIND::ENUM:
+	//		case MessageParameterType::KIND::VECTOR:
+	//			fprintf(header, "ICollectionCompose %s", param.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::STRUCT:
+	//		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			fprintf(header, "IMessageCompose %s", param.name.c_str());
+	//			break;
+	//		default:
+	//			assert(false); // unexpected
+	//			break;
+	//		}
+	//	}
+	//}
 
 
 	void csharpMsg_generateCallerParamTypeLIst(FILE* header, CompositeType& s, bool valPrefix)
@@ -196,9 +196,12 @@ namespace {
 				case MessageParameterType::KIND::UINTEGER:
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\tCollectionWrapperForComposing %s_wrapper = SimpleTypeCollection.makeComposer(%s);\n", param.name.c_str(), param.name.c_str());
+				{
+					const char* elem_type_name = csharpMsg_getCSharpType(param.type.vectorElemKind);
+					fprintf(header, "\t\tGmqCollectionComposer<%s> %s_wrapper = GmqCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
 					fprintf(header, "\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
 					break;
+				}
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
@@ -373,6 +376,13 @@ namespace {
 				case MessageParameterType::KIND::UINTEGER:
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = csharpMsg_getCSharpType(param.type.vectorElemKind);
+					fprintf(header, "\t\tJsonCollectionComposer<%s> %s_wrapper = JsonCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
+					fprintf(header, "\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
+					break;
+				}
+
 					fprintf(header, "\t\tCollectionWrapperForComposing %s_wrapper = SimpleTypeCollection.makeComposer(%s);\n", param.name.c_str(), param.name.c_str());
 					fprintf(header, "\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
 					break;
@@ -522,7 +532,7 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				fprintf(header, "\t\t\t\tJsonCollectionParser tmp = new JsonCollectionParser(\n");
-				fprintf(header, "\t\t\t\t\t(JsonParser parser, int ordinal) =>");
+				fprintf(header, "\t\t\t\t\t(JsonParser parser, int ordinal) =>\n");
 				switch (param.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
@@ -699,38 +709,38 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeBase(FILE* header, CompositeType& s, bool add_sufix = false)
-	{
-		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+	//void csharpMsg_generateStructComposeBase(FILE* header, CompositeType& s, bool add_sufix = false)
+	//{
+	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		std::string funcName = add_sufix ? "compose_" + s.name : "compose";
+	//	std::string funcName = add_sufix ? "compose_" + s.name : "compose";
 
-		fprintf(header, "\tpublic static void %s(ComposerBase composer, ", funcName.c_str());
+	//	fprintf(header, "\tpublic static void %s(ComposerBase composer, ", funcName.c_str());
 
-		csharpMsg_generateComposeParamTypeLIst(header, s);
+	//	csharpMsg_generateComposeParamTypeLIst(header, s);
 
-		fprintf(header,	")\n\t{\n");
+	//	fprintf(header,	")\n\t{\n");
 
-		fprintf(header,
-			"\t\tif (composer is GmqComposer gmqC)\n"
-			"\t\t\t%s(gmqC, ", funcName.c_str());
+	//	fprintf(header,
+	//		"\t\tif (composer is GmqComposer gmqC)\n"
+	//		"\t\t\t%s(gmqC, ", funcName.c_str());
 
-		csharpMsg_generateCallerParamTypeLIst(header, s, false);
-		fprintf(header, ");\n");
+	//	csharpMsg_generateCallerParamTypeLIst(header, s, false);
+	//	fprintf(header, ");\n");
 
-		fprintf(header,
-			"\t\telse if (composer is JsonComposer jsonC)\n"
-			"\t\t\t%s(jsonC, ", funcName.c_str());
+	//	fprintf(header,
+	//		"\t\telse if (composer is JsonComposer jsonC)\n"
+	//		"\t\t\t%s(jsonC, ", funcName.c_str());
 
-		csharpMsg_generateCallerParamTypeLIst(header, s, false);
-		fprintf(header, ");\n");
+	//	csharpMsg_generateCallerParamTypeLIst(header, s, false);
+	//	fprintf(header, ");\n");
 
-		fprintf(header,
-			"\t\telse\n"
-			"\t\t\tthrow new ArgumentException();\n");
+	//	fprintf(header,
+	//		"\t\telse\n"
+	//		"\t\t\tthrow new ArgumentException();\n");
 
-		fprintf(header, "\t}\n");
-	}
+	//	fprintf(header, "\t}\n");
+	//}
 
 
 	void csharpMsg_generateStructMembers(FILE* header, Root& root, CompositeType& s)
@@ -1135,36 +1145,6 @@ namespace {
 		}
 
 		fprintf(header, "} // class %s\n\n", s.name.c_str());
-
-		fprintf(header, "public struct %s_composer : IMessageCompose\n", type_name.c_str());
-
-		fprintf(header, "{\n");
-
-		fprintf(header, "\tint dummy;// TODO, same attributes as base type\n");
-
-		fprintf(header, "\tpublic %s_composer(int dummy)\n", type_name.c_str());
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\tthis.dummy = dummy;// TODO\n");
-		fprintf(header, "\t}\n");
-
-		fprintf(header, "\tpublic void composeJson(JsonComposer composer)\n");
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\t// TODO\n");
-		fprintf(header, "\t}\n");
-
-		fprintf(header, "\tpublic void composeGmq(GmqComposer composer)\n");
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\t// TODO\n");
-		fprintf(header, "\t}\n");
-
-		fprintf(header, "\tpublic static %s_composer make(/* TODO */)\n", type_name.c_str());
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\t// TODO\n");
-		fprintf(header, "\t\treturn new %s_composer(0);\n", type_name.c_str());
-		fprintf(header, "\t}\n");
-
-		fprintf(header, "} // class %s_composer\n\n", s.name.c_str());
-
 
 		fprintf(header, "public class %s_message\n", type_name.c_str());
 		fprintf(header, "{\n");
