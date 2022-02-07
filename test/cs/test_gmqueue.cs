@@ -132,9 +132,9 @@ namespace TestProject1
                         String fileName = filePrefix + msgCnt + ".json";
 
                         // uncomment to update file
-                        buffer.writeToFile(fileName);
+                        //buffer.writeToFile(fileName);
 
-                        //Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+                        Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
                     }
                 }
             }
@@ -320,6 +320,58 @@ namespace TestProject1
             mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, "test_gmqueue2_", ref msgCnt);
         }
+
+        [Fact]
+        public static void TestGmQueueWithMock3()
+        {
+            IPlatformSupport platform = new DefaultJsonPlatformSupport();
+
+            GMQueue gmq = new GMQueue();
+            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory(), platform);
+            gmq.setAuthority(String.Empty);
+
+
+            BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
+            BasicQueuePostman postMan = new BasicQueuePostman(msgQueue, 1);
+
+            SlotIdx idx_;
+            UInt64 id_ = gmq.add("test_node", postMan, out idx_);
+            GMQTransportBase transport = new GMQTransportBase(gmq, "test_node", idx_, id_);
+
+            MetaPool mp = new MetaPool();
+
+            mp.setTransport(transport);
+            mp.setPlatform(platform);
+
+            //mtest.StructSix data = test_publishable_six.GetPublishableSix();
+            mtest.Mock_publisher publ = new mtest.Mock_publisher();
+
+            mp.add(publ);
+            mp.remove(publ);
+            mp.add(publ);
+
+            GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
+            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
+            pc.authority = "";
+            pc.nodeName = "test_node";
+            pc.statePublisherOrConnectionType = "Mock";
+            string path = GmqPathHelper.compose(pc);
+
+            mtest.Mock_subscriber subs1 = new mtest.Mock_subscriber();
+
+            mp.add(subs1);
+            mp.remove(subs1);
+            mp.add(subs1);
+            mp.subscribe(subs1, path);
+
+            int msgCnt = 0;
+            mp.postAllUpdates();
+            deliverAllMessages(mp, msgQueue, "test_gmqueue3_", ref msgCnt);
+
+            mp.postAllUpdates();
+            deliverAllMessages(mp, msgQueue, "test_gmqueue3_", ref msgCnt);
+        }
+
 
     }
 }
