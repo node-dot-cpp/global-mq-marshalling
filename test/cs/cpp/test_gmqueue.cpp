@@ -29,156 +29,43 @@
 #include "platforms/inproc_queue.h"
 
 
-std::string PathGmQueuePrefix1 = "test_gmqueue1_";
-std::string PathGmQueuePrefix2 = "test_gmqueue2_";
-
 
 template<class ComposerT>
-class Mock_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>
+class Mock_WrapperForPublisher : public mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT>
 {
-	using BufferT = typename ComposerT::BufferType;
-	BufferT buffer;
-	ComposerT composer;
-
-
+	typedef mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT> base;
 public:
-	static constexpr uint64_t numTypeID = 5;
-	static constexpr const char* stringTypeID = "Mock";
-
-	Mock_WrapperForPublisher() : composer( buffer ){}
-	ComposerT& getComposer() { return composer; }
-	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
-	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
-	const char* name() { return stringTypeID; }
-	virtual uint64_t stateTypeID() { return numTypeID; }
-
-	template<class ComposerType>
-	void compose( ComposerType& composer )
-	{
-		::globalmq::marshalling::impl::composeStructBegin( composer );
-		::globalmq::marshalling::impl::publishableStructComposeString( composer, "value", "TestStateSync", false );
-		::globalmq::marshalling::impl::composeStructEnd( composer );
-	}
-    virtual void generateStateSyncMessage(ComposerT& composer) { compose(composer); }
-
+    virtual void generateStateSyncMessage(ComposerT& composer) { base::compose(composer); }
 };
 
 template<class BufferT>
-class Mock_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
+class Mock_WrapperForSubscriber : public mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT>
 {
+	typedef mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT> base;
 public:
-	static constexpr uint64_t numTypeID = 5;
-	static constexpr const char* stringTypeID = "Mock";
-
-	Mock_WrapperForSubscriber() {}
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
-	virtual const char* name() { return stringTypeID; }
-	virtual uint64_t stateTypeID() { return numTypeID; }
-
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) 
 	{
-		parseStateSyncMessage(parser);
+		base::parseStateSyncMessage(parser);
 	}
 
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
 	{
-		parseStateSyncMessage(parser);
-	}
-
-	template<typename ParserT>
-	void applyMessageWithUpdates(ParserT& parser)
-	{
-		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
-		GMQ_COLL vector<size_t> addr;
-		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
-		{
-			addr.clear();
-		}
-	}
-
-
-	template<class ParserT>
-	void parseStateSyncMessage( ParserT& parser )
-	{
-		::globalmq::marshalling::impl::parseStructBegin( parser );
-
-        std::string value;
-		::globalmq::marshalling::impl::publishableParseString( parser, &value, "TestStateSync" );
-
-		::globalmq::marshalling::impl::parseStructEnd( parser );
+		base::parseStateSyncMessage(parser);
 	}
 };
 
-template<class InputBufferT, class ComposerT>
-class Mock_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
+
+GMQ_COLL string getSubcriptionAddress(const char* name)
 {
-	using BufferT = typename ComposerT::BufferType;
+	globalmq::marshalling::GmqPathHelper::PathComponents pc;
+	pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
+	pc.authority = "";
+	pc.nodeName = "test_node";
+	pc.statePublisherOrConnectionType = name;
 
-public:
-	static constexpr uint64_t numTypeID = 5;
+	return globalmq::marshalling::GmqPathHelper::compose(pc);
 
-	Mock_WrapperForConcentrator() {}
-	const char* name() {return "Mock";}
-	
-	// Acting as publisher
-	virtual void generateStateSyncMessage( ComposerT& composer ){ compose(composer); }
-	template<class ComposerType>
-	void compose( ComposerType& composer )
-	{
-		::globalmq::marshalling::impl::composeStructBegin( composer );
-
-		::globalmq::marshalling::impl::publishableStructComposeString( composer, "value", "TestStateSync", false );
-
-
-		::globalmq::marshalling::impl::composeStructEnd( composer );
-	}
-
-	// Acting as subscriber
-	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
-	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
-
-	template<typename ParserT>
-	void applyMessageWithUpdates(ParserT& parser)
-	{
-		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
-		GMQ_COLL vector<size_t> addr;
-		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
-		{
-			addr.clear();
-		}
-	}
-
-	template<class ParserT>
-	void parseStateSyncMessage( ParserT& parser )
-	{
-		::globalmq::marshalling::impl::parseStructBegin( parser );
-
-        std::string value;
-		::globalmq::marshalling::impl::publishableParseString( parser, &value, "TestStateSync" );
-
-		::globalmq::marshalling::impl::parseStructEnd( parser );
-	}
-};
-
-
-template<class InputBufferT, class ComposerT>
-class MockStateConcentratorFactory : public ::globalmq::marshalling::StateConcentratorFactoryBase<InputBufferT, ComposerT>
-{
-public:
-	virtual StateConcentratorBase<InputBufferT, ComposerT>* createConcentrator( uint64_t typeID )
-	{
-		switch( typeID )
-		{
-			case 5:
-				return new Mock_WrapperForConcentrator<InputBufferT, ComposerT>();
-			default:
-				return nullptr;
-		}
-	}
-};
+}
 
 template <class BufferT, class MetaPoolT, class MsgQueue>
 void deliverAllMessages(MetaPoolT& mp, MsgQueue& queue, const std::string &filePrefix, int &msgCnt, lest::env & lest_env)
@@ -201,7 +88,7 @@ void deliverAllMessages(MetaPoolT& mp, MsgQueue& queue, const std::string &fileP
                 std::string fileName = filePrefix + std::to_string(msgCnt) + ".json";
 
                 auto b2 = makeBuffer(fileName, lest_env);
-                EXPECT(messages[i].msg == b2);
+                EXPECT(b2 == messages[i].msg);
             }
         }
     }
@@ -216,7 +103,7 @@ const lest::test test_gmqueue[] =
 		using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
 
 		GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
-		gmqueue.template initStateConcentratorFactory<MockStateConcentratorFactory<BufferT, ComposerT>>();
+		gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 		gmqueue.setAuthority("");
 
 		using PostmanT = globalmq::marshalling::ThreadQueuePostman<BufferT>;
@@ -229,35 +116,32 @@ const lest::test test_gmqueue[] =
 		mp.setTransport(&transport);
 
 		Mock_WrapperForPublisher<ComposerT> publ;
+		// mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT> publ;
 		mp.add(&publ);
 
-		globalmq::marshalling::GmqPathHelper::PathComponents pc;
-		pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
-		pc.authority = "";
-		pc.nodeName = "test_node";
-		pc.statePublisherOrConnectionType = Mock_WrapperForPublisher<ComposerT>::stringTypeID;
-		GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose(pc);
+		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
 
 		Mock_WrapperForSubscriber<BufferT> subs;
+		// mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT> sub;
 		mp.add(&subs);
 		mp.subscribe(&subs, path);
 
 		int msgCnt = 0;
 
-		mp.postAllUpdates();
-		deliverAllMessages<BufferT>(mp, queue, PathGmQueuePrefix1, msgCnt, lest_env);
+		// mp.postAllUpdates();
+		deliverAllMessages<BufferT>(mp, queue, "test_gmqueue1_", msgCnt, lest_env);
 
 		mp.postAllUpdates();
-		deliverAllMessages<BufferT>(mp, queue, PathGmQueuePrefix1, msgCnt, lest_env);
+		deliverAllMessages<BufferT>(mp, queue, "test_gmqueue1_", msgCnt, lest_env);
 	},
-		lest_CASE("test_gmqueue.TestGmQueueWithMock2"){
+	lest_CASE("test_gmqueue.TestGmQueueWithMock2"){
 		// gmqueue
 		using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
 		using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
 		using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
 
 		GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
-		gmqueue.template initStateConcentratorFactory<MockStateConcentratorFactory<BufferT, ComposerT>>();
+		gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 		gmqueue.setAuthority("");
 
 		using PostmanT = globalmq::marshalling::ThreadQueuePostman<BufferT>;
@@ -272,12 +156,7 @@ const lest::test test_gmqueue[] =
 		Mock_WrapperForPublisher<ComposerT> publ;
 		mp.add(&publ);
 
-		globalmq::marshalling::GmqPathHelper::PathComponents pc;
-		pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
-		pc.authority = "";
-		pc.nodeName = "test_node";
-		pc.statePublisherOrConnectionType = Mock_WrapperForPublisher<ComposerT>::stringTypeID;
-		GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose(pc);
+		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
 
 		Mock_WrapperForSubscriber<BufferT> subs;
 		mp.add(&subs);
@@ -289,11 +168,51 @@ const lest::test test_gmqueue[] =
 
 		int msgCnt = 0;
 
-		mp.postAllUpdates();
-		deliverAllMessages<BufferT>(mp, queue, PathGmQueuePrefix2, msgCnt, lest_env);
+		// mp.postAllUpdates();
+		deliverAllMessages<BufferT>(mp, queue, "test_gmqueue2_", msgCnt, lest_env);
 
 		mp.postAllUpdates();
-		deliverAllMessages<BufferT>(mp, queue, PathGmQueuePrefix2, msgCnt, lest_env);
+		deliverAllMessages<BufferT>(mp, queue, "test_gmqueue2_", msgCnt, lest_env);
+	},
+	lest_CASE("test_gmqueue.TestGmQueueWithMock3"){
+		// gmqueue
+		using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
+		using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
+		using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
+
+		GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
+		gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
+		gmqueue.setAuthority("");
+
+		using PostmanT = globalmq::marshalling::ThreadQueuePostman<BufferT>;
+		typename PostmanT::MsgQueue queue;
+
+		globalmq::marshalling::GMQThreadQueueTransport<GMQueueStatePublisherSubscriberTypeInfo> transport(gmqueue, "test_node", queue, 1);
+
+		using MetaPoolT = globalmq::marshalling::MetaPool<GMQueueStatePublisherSubscriberTypeInfo>;
+		MetaPoolT mp;
+		mp.setTransport(&transport);
+
+		Mock_WrapperForPublisher<ComposerT> publ;
+		mp.add(&publ);
+		mp.remove(&publ);
+		mp.add(&publ);
+
+		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
+
+		Mock_WrapperForSubscriber<BufferT> subs;
+		mp.add(&subs);
+		mp.remove(&subs);
+		mp.add(&subs);
+		mp.subscribe(&subs, path);
+
+		int msgCnt = 0;
+
+		// mp.postAllUpdates();
+		deliverAllMessages<BufferT>(mp, queue, "test_gmqueue3_", msgCnt, lest_env);
+
+		mp.postAllUpdates();
+		deliverAllMessages<BufferT>(mp, queue, "test_gmqueue3_", msgCnt, lest_env);
 	}
 
 

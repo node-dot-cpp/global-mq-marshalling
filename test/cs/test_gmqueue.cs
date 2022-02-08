@@ -32,84 +32,6 @@ using Xunit;
 
 namespace TestProject1
 {
-    public class Mock_publisher : StatePublisherBase
-    {
-        IPublishableComposer composer;
-        public int idx { get; set; } // for use in pools, etc
-        public void generateStateSyncMessage(IPublishableComposer composer)
-        {
-            composer.composeStructBegin();
-            composer.composeString("TestStateSync", "value", false);
-            composer.composeStructEnd();
-        }
-        public void startTick(IPublishableComposer composer)
-        {
-            Assert.Null(this.composer);
-            this.composer = composer;
-            composer.composeStateUpdateMessageBegin();
-        }
-
-        public IPublishableComposer endTick()
-        {
-            composer.composeStateUpdateMessageEnd();
-            IPublishableComposer tmp = composer;
-            composer = null;
-            return tmp;
-        }
-
-        public String statePublisherName() { return "Mock"; }
-        public UInt64 stateTypeID() { return 5; }
-    };
-
-    public class Mock_subscriber : StateSubscriberBase
-    {
-        public void applyMessageWithUpdates(IPublishableParser parser)
-        {
-            parser.parseStateUpdateMessageBegin();
-            UInt64[] addr = null;
-            while (parser.parseAddress(ref addr))
-            {
-                parser.parseAddressEnd();
-                addr = null;
-            }
-            parser.parseStateUpdateMessageEnd();
-        }
-        public void applyStateSyncMessage(IPublishableParser parser)
-        {
-            parser.parseStructBegin();
-            String value = parser.parseString("TestStateSync");
-            Assert.Equal("value", value);
-            parser.parseStructEnd();
-        }
-    public String stateSubscriberName() { return "Mock"; }
-        public UInt64 stateTypeID() { return 5; }
-    };
-
-    public class Mock_concentrator : Mock_subscriber, StateConcentratorBase
-    {
-        public void generateStateSyncMessage(IPublishableComposer composer)
-        {
-            composer.composeStructBegin();
-            composer.composeString("TestStateSync", "value", false);
-            composer.composeStructEnd();
-        }
-    } // class StructSix_concentrator
-
-
-    public class MockStateConcentratorFactory : IStateConcentratorFactory
-    {
-        public StateConcentratorBase createConcentrator(UInt64 typeID)
-        {
-            switch (typeID)
-            {
-                case 5:
-                    return new Mock_concentrator();
-                default:
-                    Assert.True(false);
-                    return null;
-            }
-        }
-    } // class StateConcentratorFactory
 
     public class test_gmqueue
     {
@@ -140,8 +62,8 @@ namespace TestProject1
             }
 
         }
-        [Fact]
-        public static void TestGmQueueWithStructSix()
+
+        static MetaPool initializeGmQueue(BasicMtQueue<ThreadQueueItem> msgQueue)
         {
             IPlatformSupport platform = new DefaultJsonPlatformSupport();
 
@@ -150,16 +72,37 @@ namespace TestProject1
             gmq.setAuthority(String.Empty);
 
 
-            BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
+            //BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
             BasicQueuePostman postMan = new BasicQueuePostman(msgQueue, 1);
 
             SlotIdx idx_;
-            UInt64 id_ = gmq.add("myNode", postMan, out idx_);
-            GMQTransportBase transport = new GMQTransportBase(gmq, "myNode", idx_, id_);
+            UInt64 id_ = gmq.add("test_node", postMan, out idx_);
+            GMQTransportBase transport = new GMQTransportBase(gmq, "test_node", idx_, id_);
 
             MetaPool mp = new MetaPool();
+
             mp.setTransport(transport);
-            mp.setPlatform(platform); 
+            mp.setPlatform(platform);
+
+            return mp;
+        }
+
+        static String getSubscriptionAddress(String publisher)
+        {
+            GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
+            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
+            pc.nodeName = "test_node";
+            pc.statePublisherOrConnectionType = publisher;
+            string path = GmqPathHelper.compose(pc);
+
+            return path;
+        }
+
+        [Fact]
+        public static void TestGmQueueWithStructSix()
+        {
+            BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
+            MetaPool mp = initializeGmQueue(msgQueue);
 
             mtest.StructSix_publisher publ = new mtest.StructSix_publisher();
 
@@ -168,16 +111,9 @@ namespace TestProject1
 
             mp.add(publ);
 
-            GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
-            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
-            pc.authority = "";
-            pc.nodeName = "myNode";
-            pc.statePublisherOrConnectionType = "StructSix";
-            string path = GmqPathHelper.compose(pc);
-
+            string path = getSubscriptionAddress("StructSix");
             
             mtest.StructSix_subscriber subs1 = new mtest.StructSix_subscriber();
-            //mtest.StructSix data1 = (mtest.StructSix)subs1.debugOnlyGetData();
 
             Assert.False(publ.isEquivalent(subs1));
 
@@ -225,36 +161,14 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithMock1()
         {
-            IPlatformSupport platform = new DefaultJsonPlatformSupport();
-
-            GMQueue gmq = new GMQueue();
-            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory(), platform);
-            gmq.setAuthority(String.Empty);
-
-
             BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
-            BasicQueuePostman postMan = new BasicQueuePostman(msgQueue, 1);
+            MetaPool mp = initializeGmQueue(msgQueue);
 
-            SlotIdx idx_;
-            UInt64 id_ = gmq.add("test_node", postMan, out idx_);
-            GMQTransportBase transport = new GMQTransportBase(gmq, "test_node", idx_, id_);
-
-            MetaPool mp = new MetaPool();
-
-            mp.setTransport(transport);
-            mp.setPlatform(platform);
-
-            //mtest.StructSix data = test_publishable_six.GetPublishableSix();
             mtest.Mock_publisher publ = new mtest.Mock_publisher();
 
             mp.add(publ);
 
-            GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
-            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
-            pc.authority = "";
-            pc.nodeName = "test_node";
-            pc.statePublisherOrConnectionType = "Mock";
-            string path = GmqPathHelper.compose(pc);
+            string path = getSubscriptionAddress("Mock");
 
             mtest.Mock_subscriber subs1 = new mtest.Mock_subscriber();
 
@@ -262,7 +176,7 @@ namespace TestProject1
             mp.subscribe(subs1, path);
 
             int msgCnt = 0;
-            mp.postAllUpdates();
+            //mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, "test_gmqueue1_", ref msgCnt);
 
             mp.postAllUpdates();
@@ -272,36 +186,14 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithMock2()
         {
-            IPlatformSupport platform = new DefaultJsonPlatformSupport();
-
-            GMQueue gmq = new GMQueue();
-            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory(), platform);
-            gmq.setAuthority(String.Empty);
-
-
             BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
-            BasicQueuePostman postMan = new BasicQueuePostman(msgQueue, 1);
+            MetaPool mp = initializeGmQueue(msgQueue);
 
-            SlotIdx idx_;
-            UInt64 id_ = gmq.add("test_node", postMan, out idx_);
-            GMQTransportBase transport = new GMQTransportBase(gmq, "test_node", idx_, id_);
-
-            MetaPool mp = new MetaPool();
-
-            mp.setTransport(transport);
-            mp.setPlatform(platform);
-
-            //mtest.StructSix data = test_publishable_six.GetPublishableSix();
             mtest.Mock_publisher publ = new mtest.Mock_publisher();
 
             mp.add(publ);
 
-            GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
-            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
-            pc.authority = "";
-            pc.nodeName = "test_node";
-            pc.statePublisherOrConnectionType = "Mock";
-            string path = GmqPathHelper.compose(pc);
+            string path = getSubscriptionAddress("Mock");
 
             mtest.Mock_subscriber subs1 = new mtest.Mock_subscriber();
 
@@ -314,7 +206,7 @@ namespace TestProject1
             mp.subscribe(subs2, path);
 
             int msgCnt = 0;
-            mp.postAllUpdates();
+            //mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, "test_gmqueue2_", ref msgCnt);
 
             mp.postAllUpdates();
@@ -324,38 +216,16 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithMock3()
         {
-            IPlatformSupport platform = new DefaultJsonPlatformSupport();
-
-            GMQueue gmq = new GMQueue();
-            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory(), platform);
-            gmq.setAuthority(String.Empty);
-
-
             BasicMtQueue<ThreadQueueItem> msgQueue = new BasicMtQueue<ThreadQueueItem>();
-            BasicQueuePostman postMan = new BasicQueuePostman(msgQueue, 1);
+            MetaPool mp = initializeGmQueue(msgQueue);
 
-            SlotIdx idx_;
-            UInt64 id_ = gmq.add("test_node", postMan, out idx_);
-            GMQTransportBase transport = new GMQTransportBase(gmq, "test_node", idx_, id_);
-
-            MetaPool mp = new MetaPool();
-
-            mp.setTransport(transport);
-            mp.setPlatform(platform);
-
-            //mtest.StructSix data = test_publishable_six.GetPublishableSix();
             mtest.Mock_publisher publ = new mtest.Mock_publisher();
 
             mp.add(publ);
             mp.remove(publ);
             mp.add(publ);
 
-            GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
-            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
-            pc.authority = "";
-            pc.nodeName = "test_node";
-            pc.statePublisherOrConnectionType = "Mock";
-            string path = GmqPathHelper.compose(pc);
+            string path = getSubscriptionAddress("Mock");
 
             mtest.Mock_subscriber subs1 = new mtest.Mock_subscriber();
 
@@ -365,7 +235,7 @@ namespace TestProject1
             mp.subscribe(subs1, path);
 
             int msgCnt = 0;
-            mp.postAllUpdates();
+            //mp.postAllUpdates();
             deliverAllMessages(mp, msgQueue, "test_gmqueue3_", ref msgCnt);
 
             mp.postAllUpdates();

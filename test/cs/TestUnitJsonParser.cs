@@ -32,24 +32,30 @@ using Xunit;
 
 namespace TestProject1
 {
-
+    /// <summary>
+    /// Tests to match Json parser/composer from C# to C++
+    /// </summary>
     public class TestUnitJsonParser
     {
-        [Fact]
-        public static void TestParseAddress1()
+
+        [Theory]
+        [InlineData(" { \"addr\": [ 1, 2, 3],", new UInt64[] { 1, 2, 3 })]
+        [InlineData(" { \"addr\": [ ],", new UInt64[] { })]
+        public static void TestParseAddress(String asText, UInt64[] parsed)
         {
             SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" { \"addr\": [ 1, 2, 3],");
+            buffer.appendAscii(asText);
 
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
             UInt64[] addr = null;
             Assert.True(parser.parseAddress(ref addr));
-            Assert.Equal<UInt64>(addr, new UInt64[]{ 1, 2, 3});
+            Assert.Equal<UInt64>(parsed, addr);
         }
 
+
         [Fact]
-        public static void TestParseAddress2()
+        public static void TestParseEmptyAddress()
         {
             SimpleBuffer buffer = new SimpleBuffer();
             buffer.appendAscii(" { }");
@@ -59,28 +65,47 @@ namespace TestProject1
             UInt64[] addr = null;
             Assert.False(parser.parseAddress(ref addr));
         }
-        [Fact]
-        public static void TestParseAddress3()
+
+        [Theory]
+        [InlineData(" ] }")]
+        [InlineData(" { \"addr\": "
+            )]
+        public static void TestParseFail(String asText)
         {
             SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" { \"addr\": [ ],");
-
-            JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
-
-            UInt64[] addr = null;
-            Assert.True(parser.parseAddress(ref addr));
-            Assert.Equal<UInt64>(addr, new UInt64[] { });
-        }
-        [Fact]
-        public static void TestParseFail()
-        {
-            SimpleBuffer buffer = new SimpleBuffer();
-            buffer.appendAscii(" ] }");
+            buffer.appendAscii(asText);
 
             JsonPublishableParser parser = new JsonPublishableParser(buffer.getReadIterator());
 
             UInt64[] addr = null;
             Assert.Throws<Exception>(() => { parser.parseAddress(ref addr); });
+        }
+
+
+        [Theory]
+        [InlineData(0, "0 ")]
+        [InlineData(1, "1 ")]
+        [InlineData(1.1, "1.1 ")]
+        [InlineData(1.1e4, "11000 ")]
+        [InlineData(-1.1e4, "-11000 ")]
+        [InlineData(-1.1e-4, "-0.00011 ")]
+
+        public static void TestParseFloat(double value, String asText)
+        {
+            SimpleBuffer buffer = new SimpleBuffer();
+
+            JsonComposer composer = new JsonComposer(buffer);
+            composer.composeReal(value);
+            composer.append(' ');
+
+            Assert.Equal(asText, buffer.toDebugString());
+
+            JsonParser parser = new JsonParser(buffer.getReadIterator());
+
+            double res;
+            parser.parseReal(out res);
+
+            Assert.Equal(value, res);
         }
     }
 

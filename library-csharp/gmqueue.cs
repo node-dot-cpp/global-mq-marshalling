@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -246,34 +247,52 @@ namespace globalmq.marshalling
 			or (local)
 			globalmq:/lobbynode?sp=worldlist
 		*/
-        public class PathComponents
+        public class PathComponents : IEquatable<PathComponents>
         {
             public PublishableStateMessageHeader.MsgType type = PublishableStateMessageHeader.MsgType.undefined;
-            public string authority;
+            public string authority = String.Empty;
             public bool furtherResolution = false;
             public bool hasPort = false;
             public UInt16 port = 0xFFFF;
             public string nodeName;
             public string statePublisherOrConnectionType; // for subscription request
-        };
 
+            public bool Equals([AllowNull] PathComponents other)
+            {
+                if (ReferenceEquals(this, other))
+                    return true;
+                if (other == null)
+                    return false;
+                else
+                    return this.type == other.type &&
+                        this.authority == other.authority &&
+                        this.furtherResolution == other.furtherResolution &&
+                        this.hasPort == other.hasPort &&
+                        this.port == other.port &&
+                        this.nodeName == other.nodeName &&
+                        this.statePublisherOrConnectionType == other.statePublisherOrConnectionType;
+            }
+        }
         public static string compose(PathComponents components)
         {
-            // TODO: check components
+            if (components == null)
+                throw new ArgumentException();
+ 
             StringBuilder ret = new StringBuilder();
             ret.Append("globalmq:");
             if (components.authority != null && components.authority.Length != 0)
             {
                 ret.Append("//");
                 ret.Append(components.authority);
-            }
-            if (components.furtherResolution)
-                ret.Append("!gmq");
-            if (components.hasPort)
-            {
-                //auto str = fmt::format(, components.port);
-                ret.Append(":");
-                ret.Append(components.port);
+
+                if (components.furtherResolution)
+                    ret.Append("!gmq");
+                if (components.hasPort)
+                {
+                    //auto str = fmt::format(, components.port);
+                    ret.Append(":");
+                    ret.Append(components.port);
+                }
             }
             ret.Append('/');
             ret.Append(localPart(components));
@@ -282,8 +301,11 @@ namespace globalmq.marshalling
 
         public static string localPart(PathComponents components)
         {
-            Debug.Assert(components.nodeName.Length != 0);
-            Debug.Assert(components.statePublisherOrConnectionType.Length != 0);
+            if (components.nodeName == null || components.nodeName.Length == 0)
+                throw new ArgumentException();
+            if (components.statePublisherOrConnectionType == null || components.statePublisherOrConnectionType.Length == 0)
+                throw new ArgumentException();
+
             switch (components.type)
             {
                 case PublishableStateMessageHeader.MsgType.subscriptionRequest:
@@ -291,7 +313,7 @@ namespace globalmq.marshalling
                 case PublishableStateMessageHeader.MsgType.connectionRequest:
                     return String.Format("{0}?ct={1}", components.nodeName, components.statePublisherOrConnectionType);
                 default:
-                    throw new Exception();
+                    throw new ArgumentException();
             }
         }
 
@@ -390,7 +412,7 @@ namespace globalmq.marshalling
                     pos5 += 3; /* "sp=" */;
                     break;
                 default:
-                    throw new Exception();
+                    throw new ArgumentException();
             }
             //if (pos5 == GMQ_COLL string::npos )
             //			return false;

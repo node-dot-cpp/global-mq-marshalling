@@ -1,5 +1,5 @@
-#ifndef _idl_generated_h_9da7e31a_guard
-#define _idl_generated_h_9da7e31a_guard
+#ifndef _idl_generated_h_a6faf3fb_guard
+#define _idl_generated_h_a6faf3fb_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -105,6 +105,7 @@ template<typename T> concept has_aggregate_member = requires { { T::aggregate };
 template<typename T> concept has_anInt_member = requires { { T::anInt }; };
 template<typename T> concept has_anUInt_member = requires { { T::anUInt }; };
 template<typename T> concept has_basic_member = requires { { T::basic }; };
+template<typename T> concept has_id_member = requires { { T::id }; };
 template<typename T> concept has_intVec_member = requires { { T::intVec }; };
 template<typename T> concept has_lastValue_member = requires { { T::lastValue }; };
 template<typename T> concept has_name_member = requires { { T::name }; };
@@ -135,6 +136,8 @@ template<typename T> concept has_void_update_notifier_call_for_basic = requires(
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_basic = requires { { std::declval<StateT>().notifyUpdated_basic(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_currentVariant = requires(T t) { { t.notifyUpdated_currentVariant() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_currentVariant = requires { { std::declval<StateT>().notifyUpdated_currentVariant(std::declval<MemberT>()) }; };
+template<typename T> concept has_void_update_notifier_call_for_id = requires(T t) { { t.notifyUpdated_id() }; };
+template<typename StateT, typename MemberT> concept has_update_notifier_call_for_id = requires { { std::declval<StateT>().notifyUpdated_id(std::declval<MemberT>()) }; };
 template<typename T> concept has_void_update_notifier_call_for_intVec = requires(T t) { { t.notifyUpdated_intVec() }; };
 template<typename StateT, typename MemberT> concept has_update_notifier_call_for_intVec = requires { { std::declval<StateT>().notifyUpdated_intVec(std::declval<MemberT>()) }; };
 template<typename T> concept has_element_updated_void_notifier_call_for_intVec = requires(T t) { { t.notifyElementUpdated_intVec() }; };
@@ -442,6 +445,12 @@ struct MESSAGE_message_five
 namespace test_gmq {
 struct MESSAGE_message_du : public struct_du {};
 } // namespace test_gmq
+
+struct Mock
+{
+	GMQ_COLL string name;
+	int64_t id;
+};
 
 struct StructSix
 {
@@ -1761,6 +1770,253 @@ void composeMessage( BufferT& buffer, Args&& ... args )
 }
 
 } // namespace test_json 
+
+//**********************************************************************
+// PUBLISHABLE Mock (2 parameters)
+// 1. CHARACTER_STRING name
+// 2. INTEGER id
+//**********************************************************************
+
+template<class T, class ComposerT>
+class Mock_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>
+{
+	T t;
+	using BufferT = typename ComposerT::BufferType;
+	BufferT buffer;
+	ComposerT composer;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_id = has_id_member<T>;
+	static_assert( has_id, "type T must have member T::id of a type corresponding to IDL type INTEGER" );
+
+
+public:
+	static constexpr uint64_t numTypeID = 5;
+	static constexpr const char* stringTypeID = "Mock";
+
+	template<class ... ArgsT>
+	Mock_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}
+	const T& getState() { return t; }
+	ComposerT& getComposer() { return composer; }
+	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
+	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
+	const char* name() { return stringTypeID; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
+	const auto& get_name() { return t.name; }
+	void set_name( decltype(T::name) val) { 
+		t.name = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 0 );
+		::globalmq::marshalling::impl::publishableComposeLeafeString( composer, t.name );
+	}
+	auto get_id() { return t.id; }
+	void set_id( decltype(T::id) val) { 
+		t.id = val; 
+		::globalmq::marshalling::impl::composeAddressInPublishable( composer, GMQ_COLL vector<size_t>(), 1 );
+		::globalmq::marshalling::impl::publishableComposeLeafeInteger( composer, t.id );
+	}
+
+	template<class ComposerType>
+	void compose( ComposerType& composer )
+	{
+		::globalmq::marshalling::impl::composeStructBegin( composer );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.id, "id", false );
+
+
+		::globalmq::marshalling::impl::composeStructEnd( composer );
+	}
+};
+
+template<class T, class BufferT>
+class Mock_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>
+{
+	T t;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_id = has_id_member<T>;
+	static_assert( has_id, "type T must have member T::id of a type corresponding to IDL type INTEGER" );
+
+	static constexpr bool has_void_update_notifier_for_name = has_void_update_notifier_call_for_name<T>;
+	static constexpr bool has_update_notifier_for_name = has_update_notifier_call_for_name<T, decltype(T::name)>;
+	static constexpr bool has_any_notifier_for_name = has_void_update_notifier_for_name || has_update_notifier_for_name;
+	static constexpr bool has_void_update_notifier_for_id = has_void_update_notifier_call_for_id<T>;
+	static constexpr bool has_update_notifier_for_id = has_update_notifier_call_for_id<T, decltype(T::id)>;
+	static constexpr bool has_any_notifier_for_id = has_void_update_notifier_for_id || has_update_notifier_for_id;
+	static constexpr bool has_full_update_notifier = has_full_update_notifier_call<T>;
+
+public:
+	static constexpr uint64_t numTypeID = 5;
+	static constexpr const char* stringTypeID = "Mock";
+
+	template<class ... ArgsT>
+	Mock_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}
+	const T& getState() { return t; }
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual const char* name() { return stringTypeID; }
+	virtual uint64_t stateTypeID() { return numTypeID; }
+
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser)
+	{
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_name )
+					{
+						decltype(T::name) oldVal = t.name;
+						::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+						bool currentChanged = oldVal != t.name;
+						if ( currentChanged )
+						{
+							if constexpr ( has_void_update_notifier_for_name )
+								t.notifyUpdated_name();
+							if constexpr ( has_update_notifier_for_name )
+								t.notifyUpdated_name( oldVal );
+						}
+					}
+					else
+						::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				case 1:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					if constexpr( has_any_notifier_for_id )
+					{
+						decltype(T::id) oldVal = t.id;
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::id)>( parser, &(t.id) );
+						bool currentChanged = oldVal != t.id;
+						if ( currentChanged )
+						{
+							if constexpr ( has_void_update_notifier_for_id )
+								t.notifyUpdated_id();
+							if constexpr ( has_update_notifier_for_id )
+								t.notifyUpdated_id( oldVal );
+						}
+					}
+					else
+						::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::id)>( parser, &(t.id) );
+					break;
+				}
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
+
+
+	template<class ParserT>
+	void parseStateSyncMessage( ParserT& parser )
+	{
+		::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::id)>( parser, &(t.id), "id" );
+
+		::globalmq::marshalling::impl::parseStructEnd( parser );
+
+		if constexpr ( has_full_update_notifier )
+			t.notifyFullyUpdated();
+	}
+	const auto& get_name() { return t.name; }
+	auto get_id() { return t.id; }
+};
+
+template<class T, class InputBufferT, class ComposerT>
+class Mock_WrapperForConcentrator : public globalmq::marshalling::StateConcentratorBase<InputBufferT, ComposerT>
+{
+	T t;
+	using BufferT = typename ComposerT::BufferType;
+	static constexpr bool has_name = has_name_member<T>;
+	static_assert( has_name, "type T must have member T::name of a type corresponding to IDL type CHARACTER_STRING" );
+	static constexpr bool has_id = has_id_member<T>;
+	static_assert( has_id, "type T must have member T::id of a type corresponding to IDL type INTEGER" );
+
+
+public:
+	static constexpr uint64_t numTypeID = 5;
+
+	Mock_WrapperForConcentrator() {}
+	const char* name() {return "Mock";}
+	
+	// Acting as publisher
+	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
+	template<class ComposerType>
+	void compose( ComposerType& composer )
+	{
+		::globalmq::marshalling::impl::composeStructBegin( composer );
+
+		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
+
+		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.id, "id", false );
+
+
+		::globalmq::marshalling::impl::composeStructEnd( composer );
+	}
+
+	// Acting as subscriber
+	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
+	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
+	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) { parseStateSyncMessage(parser); }
+
+	template<typename ParserT>
+	void applyMessageWithUpdates(ParserT& parser)
+	{
+		::globalmq::marshalling::impl::parseStateUpdateMessageBegin( parser );
+		GMQ_COLL vector<size_t> addr;
+		while( ::globalmq::marshalling::impl::parseAddressInPublishable<ParserT, GMQ_COLL vector<size_t>>( parser, addr ) )
+		{
+			GMQ_ASSERT( addr.size() );
+			switch ( addr[0] )
+			{
+				case 0:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeString<ParserT, decltype(T::name)>( parser, &(t.name) );
+					break;
+				}
+				case 1:
+				{
+					if ( addr.size() > 1 )
+						throw std::exception(); // bad format, TODO: ...
+					::globalmq::marshalling::impl::publishableParseLeafeInteger<ParserT, decltype(T::id)>( parser, &(t.id) );
+					break;
+				}
+				default:
+					throw std::exception(); // bad format, TODO: ...
+			}
+			addr.clear();
+		}
+	}
+
+	template<class ParserT>
+	void parseStateSyncMessage( ParserT& parser )
+	{
+		::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::id)>( parser, &(t.id), "id" );
+
+		::globalmq::marshalling::impl::parseStructEnd( parser );
+	}
+};
 
 //**********************************************************************
 // PUBLISHABLE StructSix (3 parameters)
@@ -3479,6 +3735,8 @@ public:
 	{
 		switch( typeID )
 		{
+			case 5:
+				return new Mock_WrapperForConcentrator<structures::Mock, InputBufferT, ComposerT>;
 			case 6:
 				return new StructSix_WrapperForConcentrator<structures::StructSix, InputBufferT, ComposerT>;
 			case 7:
@@ -3912,4 +4170,4 @@ void STRUCT_struct_du_compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _idl_generated_h_9da7e31a_guard
+#endif // _idl_generated_h_a6faf3fb_guard
