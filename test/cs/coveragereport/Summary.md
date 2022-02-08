@@ -1,26 +1,26 @@
 ﻿# Summary
 |||
 |:---|:---|
-| Generated on: | 8/2/2022 - 11:36:33 |
+| Generated on: | 8/2/2022 - 16:09:49 |
 | Parser: | CoberturaParser |
 | Assemblies: | 1 |
 | Classes: | 41 |
 | Files: | 7 |
-| Covered lines: | 1694 |
-| Uncovered lines: | 744 |
-| Coverable lines: | 2438 |
-| Total lines: | 4420 |
-| Line coverage: | 69.4% (1694 of 2438) |
-| Covered branches: | 324 |
-| Total branches: | 515 |
-| Branch coverage: | 62.9% (324 of 515) |
-| Covered methods: | 273 |
-| Total methods: | 401 |
-| Method coverage: | 68% (273 of 401) |
+| Covered lines: | 1732 |
+| Uncovered lines: | 602 |
+| Coverable lines: | 2334 |
+| Total lines: | 4244 |
+| Line coverage: | 74.2% (1732 of 2334) |
+| Covered branches: | 349 |
+| Total branches: | 525 |
+| Branch coverage: | 66.4% (349 of 525) |
+| Covered methods: | 271 |
+| Total methods: | 361 |
+| Method coverage: | 75% (271 of 361) |
 
 |**Name**|**Covered**|**Uncovered**|**Coverable**|**Total**|**Line coverage**|**Covered**|**Total**|**Branch coverage**|**Covered**|**Total**|**Method coverage**|
 |:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-|**global-mq-csharp**|**1694**|**744**|**2438**|**32286**|**69.4%**|**324**|**515**|**62.9%**|**273**|**401**|**68%**|
+|**global-mq-csharp**|**1732**|**602**|**2334**|**31582**|**74.2%**|**349**|**525**|**66.4%**|**271**|**361**|**75%**|
 |globalmq.marshalling.AddressableLocation|5|0|5|1339|100%|0|0||1|1|100%|
 |globalmq.marshalling.AddressableLocations|11|10|21|1339|52.3%|1|4|25%|3|4|75%|
 |globalmq.marshalling.BasicMtQueue`1|29|11|40|170|72.5%|9|12|75%|3|4|75%|
@@ -33,8 +33,8 @@
 |globalmq.marshalling.EquivalenceComparer|13|4|17|276|76.4%|10|16|62.5%|1|1|100%|
 |globalmq.marshalling.GmqCollectionComposer`1|17|6|23|276|73.9%|6|10|60%|4|6|66.6%|
 |globalmq.marshalling.GmqCollectionParser|9|0|9|276|100%|2|2|100%|2|2|100%|
-|globalmq.marshalling.GmqComposer|17|21|38|550|44.7%|0|0||6|13|46.1%|
-|globalmq.marshalling.GmqParser|24|43|67|550|35.8%|4|12|33.3%|6|18|33.3%|
+|globalmq.marshalling.GmqComposer|14|3|17|374|82.3%|0|0||5|6|83.3%|
+|globalmq.marshalling.GmqParser|24|4|28|374|85.7%|4|6|66.6%|6|7|85.7%|
 |globalmq.marshalling.GmqPathHelper|110|14|124|1339|88.7%|48|70|68.5%|5|5|100%|
 |globalmq.marshalling.GmqPublishableComposer|61|7|68|954|89.7%|4|4|100%|19|22|86.3%|
 |globalmq.marshalling.GmqPublishableParser|87|4|91|954|95.6%|6|6|100%|19|21|90.4%|
@@ -42,8 +42,8 @@
 |globalmq.marshalling.GMQueue|252|154|406|1339|62%|35|77|45.4%|26|35|74.2%|
 |globalmq.marshalling.JsonCollectionComposer`1|20|6|26|276|76.9%|8|12|66.6%|4|6|66.6%|
 |globalmq.marshalling.JsonCollectionParser|22|1|23|276|95.6%|5|6|83.3%|2|2|100%|
-|globalmq.marshalling.JsonComposer|31|21|52|550|59.6%|0|0||9|16|56.2%|
-|globalmq.marshalling.JsonParser|96|78|174|550|55.1%|49|70|70%|14|29|48.2%|
+|globalmq.marshalling.JsonComposer|59|0|59|374|100%|14|14|100%|9|9|100%|
+|globalmq.marshalling.JsonParser|109|14|123|374|88.6%|60|72|83.3%|13|14|92.8%|
 |globalmq.marshalling.JsonPublishableComposer|126|1|127|954|99.2%|27|28|96.4%|22|22|100%|
 |globalmq.marshalling.JsonPublishableParser|170|5|175|954|97.1%|31|36|86.1%|21|21|100%|
 |globalmq.marshalling.MessageHandler|46|4|50|276|92%|10|14|71.4%|7|7|100%|

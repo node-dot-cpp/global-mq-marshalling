@@ -18,14 +18,16 @@ add_subdirectory(library)
 #-------------------------------------------------------------------------------------------
 # Tests and samples
 #-------------------------------------------------------------------------------------------
+
+# by default only when not a subproject
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(GLOBAL_MQ_TEST ON CACHE BOOL "Enable global-mq tests")
 else()
   set(GLOBAL_MQ_TEST OFF CACHE BOOL "Enable global-mq tests")
 endif()
 
+
 if(GLOBAL_MQ_TEST)
-  # only when not a subproject
   add_subdirectory(test/cpp)
   add_subdirectory(test/cs)
   add_subdirectory(test/csharp-2-cpp)
