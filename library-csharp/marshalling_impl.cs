@@ -34,69 +34,29 @@ namespace globalmq.marshalling
 {
 	enum Proto { GMQ, JSON };
 
-	public interface ComposerBase
-	{
-		public void composeSignedInteger(sbyte num);
-		public void composeSignedInteger(short num);
-		public void composeSignedInteger(int num);
-		public void composeSignedInteger(long num);
-		public void composeUnsignedInteger(byte num);
-		public void composeUnsignedInteger(ushort num);
-		public void composeUnsignedInteger(uint num);
-		public void composeUnsignedInteger(ulong num);
-		public void composeReal(float num);
-		public void composeReal(double num);
-		public void composeString(string str);
-	}
+	public interface ComposerBase {	}
 	public class JsonComposer : ComposerBase
 	{
 		BufferT buff;
 
 		// mb: this is needed to make float format independant of locale
 		NumberFormatInfo nfi = new NumberFormatInfo();
+		Char[] escapeChars = new Char[] { '\\', '\n', '\r', '\t', '\"' };
 		public JsonComposer(BufferT buff_) { buff = buff_; nfi.NumberDecimalSeparator = "."; }
 		public BufferT getBuffer()
 		{
 			return buff;
-		}
-		public void composeSignedInteger(sbyte num)
-		{
-			buff.appendAscii(num.ToString());
-		}
-		public void composeSignedInteger(short num)
-		{
-			buff.appendAscii(num.ToString());
-		}
-		public void composeSignedInteger(int num)
-		{
-			buff.appendAscii(num.ToString());
 		}
 		public void composeSignedInteger(long num)
 		{
 			buff.appendAscii(num.ToString());
 		}
 
-		public void composeUnsignedInteger(byte num)
-		{
-			buff.appendAscii(num.ToString());
-		}
-		public void composeUnsignedInteger(ushort num)
-		{
-			buff.appendAscii(num.ToString());
-		}
-		public void composeUnsignedInteger(uint num)
-		{
-			buff.appendAscii(num.ToString());
-		}
 		public void composeUnsignedInteger(ulong num)
 		{
 			buff.appendAscii(num.ToString());
 		}
 
-		public void composeReal(float num)
-		{
-			buff.appendAscii(num.ToString(nfi));
-		}
 		public void composeReal(double num)
 		{
 			buff.appendAscii(num.ToString(nfi));
@@ -104,7 +64,42 @@ namespace globalmq.marshalling
 		public void composeString(string str)
 		{
 			buff.appendUint8('\"');
-			buff.appendAscii(str);
+			if(str.IndexOfAny(escapeChars) == -1)
+				buff.appendAscii(str);
+            else
+            {
+				// go char by char
+				foreach(Char ch in str)
+                {
+					switch (ch)
+					{
+						case '\\':
+							buff.appendUint8('\\');
+							buff.appendUint8('\\');
+							break;
+						case '\n':
+							buff.appendUint8('\\');
+							buff.appendUint8('n');
+							break;
+						case '\r':
+							buff.appendUint8('\\');
+							buff.appendUint8('r');
+							break;
+						case '\t':
+							buff.appendUint8('\\');
+							buff.appendUint8('t');
+							break;
+						case '\"':
+							buff.appendUint8('\\');
+							buff.appendUint8('\"');
+							break;
+						default:
+							buff.appendUint8(ch);
+							break;
+					}
+
+				}
+			}
 			buff.appendUint8('\"');
 
 		}
@@ -137,44 +132,16 @@ namespace globalmq.marshalling
 			return buff;
 		}
 
-		public void composeSignedInteger(sbyte num)
-		{
-			composeSignedInteger((long)num);
-		}
-		public void composeSignedInteger(short num)
-		{
-			composeSignedInteger((long)num);
-		}
-		public void composeSignedInteger(int num)
-		{
-			composeSignedInteger((long)num);
-		}
 		public void composeSignedInteger(long num)
 		{
 			buff.append(BitConverter.GetBytes(num));
 		}
 
-		public void composeUnsignedInteger(byte num)
-		{
-			composeUnsignedInteger((ulong)num);
-		}
-		public void composeUnsignedInteger(ushort num)
-		{
-			composeUnsignedInteger((ulong)num);
-		}
-		public void composeUnsignedInteger(uint num)
-		{
-			composeUnsignedInteger((ulong)num);
-		}
 		public void composeUnsignedInteger(ulong num)
 		{
 			buff.append(BitConverter.GetBytes(num));
 		}
 
-		public void composeReal(float num)
-		{
-			composeReal((double)num);
-		}
 		public void composeReal(double num)
 		{
 			buff.append(BitConverter.GetBytes(num));
@@ -194,26 +161,7 @@ namespace globalmq.marshalling
 namespace globalmq.marshalling
 {
 
-    public interface ParserBase
-    {
-        public void parseSignedInteger(out sbyte num);
-        public void parseSignedInteger(out short num);
-        public void parseSignedInteger(out int num);
-        public void parseSignedInteger(out long num);
-        public void skipSignedInteger();
-
-        public void parseUnsignedInteger(out byte num);
-        public void parseUnsignedInteger(out ushort num);
-        public void parseUnsignedInteger(out uint num);
-        public void parseUnsignedInteger(out ulong num);
-        public void parseUnsignedInteger(out int num);
-        public void skipUnsignedInteger();
-        public void parseReal(out float num);
-        public void parseReal(out double num);
-		public void skipReal();
-        public void parseString(out string s);
-        public void skipString();
-    }
+    public interface ParserBase { }
     public class GmqParser : ParserBase
 	{
 		ReadIteratorT riter;
@@ -224,38 +172,9 @@ namespace globalmq.marshalling
         {
 			return riter;
         }
-		public void parseSignedInteger(out sbyte num)
-		{
-			num = (sbyte)BitConverter.ToInt64(riter.read(8));
-		}
-		public void parseSignedInteger(out short num)
-		{
-			num = (short)BitConverter.ToInt64(riter.read(8));
-		}
-		public void parseSignedInteger(out int num)
-		{
-			num = (int)BitConverter.ToInt64(riter.read(8));
-		}
 		public void parseSignedInteger(out long num)
 		{
 			num = BitConverter.ToInt64(riter.read(8));
-		}
-		public void skipSignedInteger()
-		{
-			riter.skip(8);
-		}
-
-		public void parseUnsignedInteger(out byte num)
-		{
-			num = (byte)BitConverter.ToUInt64(riter.read(8));
-		}
-		public void parseUnsignedInteger(out ushort num)
-		{
-			num = (ushort)BitConverter.ToUInt64(riter.read(8));
-		}
-		public void parseUnsignedInteger(out uint num)
-		{
-			num = (uint)BitConverter.ToUInt64(riter.read(8));
 		}
 		public void parseUnsignedInteger(out ulong num)
 		{
@@ -265,22 +184,9 @@ namespace globalmq.marshalling
 		{
 			num = (int)BitConverter.ToUInt64(riter.read(8));
 		}
-		public void skipUnsignedInteger()
-		{
-			riter.skip(8);
-		}
-
-		public void parseReal(out float num)
-		{
-			num = (float)BitConverter.ToDouble(riter.read(8));
-		}
 		public void parseReal(out double num)
 		{
 			num = BitConverter.ToDouble(riter.read(8));
-		}
-		public void skipReal()
-		{
-			riter.skip(8);
 		}
 		public void parseString(out string s)
 		{
@@ -296,16 +202,6 @@ namespace globalmq.marshalling
 
 			s = sb.ToString();
 		}
-		public void skipString()
-		{
-			while (riter.isData() && riter.getChar() != '\0')
-			{
-				riter.inc();
-			}
-			if (!riter.isData())
-				throw new Exception(); // TODO
-			riter.inc();
-		}
 	};
 	public class JsonParser : ParserBase
 	{
@@ -320,32 +216,6 @@ namespace globalmq.marshalling
 		{
 			return riter;
 		}
-		void impl_skipBlockFromJson(char left, char right)
-		{
-			// mb: TODO this needs more work
-			 
-			skipSpacesEtc();
-			if (riter.getChar() != left)
-				throw new Exception(); // TODO
-			riter.inc();
-			ulong ctr = 1;
-			while (riter.isData())
-			{
-				if (riter.getChar() == left)
-					++ctr;
-				else if (riter.getChar() == right)
-				{
-					--ctr;
-					if (ctr == 0)
-					{
-						riter.inc();
-						return;
-					}
-				}
-				riter.inc();
-			}
-		}
-
 		public void skipSpacesEtc()
 		{
 			while (riter.isData() && (riter.getChar() == ' ' || riter.getChar() == '\t' || riter.getChar() == '\r' || riter.getChar() == '\n'))
@@ -370,42 +240,77 @@ namespace globalmq.marshalling
 				throw new Exception(); // TODO
 			riter.inc();
 			StringBuilder sb = new StringBuilder();
-			while (riter.isData() && riter.getChar() != '\"')
+
+			bool done = false;
+			while ((!done) && riter.isData())
 			{
-				sb.Append(riter.getChar());
-				riter.inc();
-			}
-			if (!riter.isData())
+				switch (riter.getChar())
+				{
+                case '\"':
+                    done = true;
+                    break;
+                case '\\':
+                    riter.inc();
+                    if (!riter.isData())
+                        throw new Exception(); ; // TODO
+                    switch (riter.getChar())
+                    {
+                    case '\\':
+                        sb.Append('\\');
+                        break;
+                    case 't':
+                        sb.Append('\t');
+                        break;
+                    case 'r':
+                        sb.Append('\r');
+                        break;
+                    case 'n':
+                        sb.Append('\n');
+                        break;
+                    case '\"':
+                        sb.Append('\"');
+                        break;
+                    default:
+                        throw new Exception(); // TODO (unexpected)
+                    }
+                    riter.inc();
+                    break;
+                default:
+                    sb.Append(riter.getChar());
+                    riter.inc();
+                    break;
+                }
+            }
+
+            if (!riter.isData())
 				throw new Exception(); // TODO
 			riter.inc();
 			return sb;
 		}
-
 		public void parseString(out string s)
 		{
 			StringBuilder sb = impl_readStringFromJson();
 			s = sb.ToString();
 		}
-		public void skipString()
-		{
-			impl_readStringFromJson();
-		}
-
-		public void skipVectorFromJson()
-		{
-			impl_skipBlockFromJson('[', ']');
-		}
-		public void skipMessageFromJson()
-		{
-			impl_skipBlockFromJson('{', '}');
-		}
-
-		StringBuilder impl_readUnsignedIntegerFromJson()
+		StringBuilder impl_readIntegerFromJson(bool allowNegative)
 		{
 			skipSpacesEtc();
-			if (riter.getChar() == '-')
-				throw new Exception(); // TODO: (negative is unexpected)
 			StringBuilder sb = new StringBuilder();
+			if (riter.getChar() == '-')
+			{
+				if (allowNegative)
+				{
+					sb.Append(riter.getChar());
+					riter.inc();
+				}
+				else
+					throw new Exception(); // negative is unexpected
+			}
+			else if (riter.getChar() == '+')
+			{
+				riter.inc();
+			}
+
 			while (riter.isData() && (riter.getChar() >= '0' && riter.getChar() <= '9'))
 			{
 				sb.Append(riter.getChar());
@@ -416,80 +321,20 @@ namespace globalmq.marshalling
 
 			return sb;
 		}
-
-		public void parseUnsignedInteger(out byte num)
-		{
-			StringBuilder sb = impl_readUnsignedIntegerFromJson();
-			num = byte.Parse(sb.ToString());
-		}
-		public void parseUnsignedInteger(out ushort num)
-		{
-			StringBuilder sb = impl_readUnsignedIntegerFromJson();
-			num = ushort.Parse(sb.ToString());
-		}
-		public void parseUnsignedInteger(out uint num)
-		{
-			StringBuilder sb = impl_readUnsignedIntegerFromJson();
-			num = uint.Parse(sb.ToString());
-		}
 		public void parseUnsignedInteger(out ulong num)
 		{
-			StringBuilder sb = impl_readUnsignedIntegerFromJson();
+			StringBuilder sb = impl_readIntegerFromJson(false);
 			num = ulong.Parse(sb.ToString());
 		}
 		public void parseUnsignedInteger(out int num)
 		{
-			StringBuilder sb = impl_readUnsignedIntegerFromJson();
-			num = int.Parse(sb.ToString());
-		}
-
-		public void skipUnsignedInteger()
-		{
-			impl_readUnsignedIntegerFromJson();
-		}
-
-		StringBuilder impl_readSignedIntegerFromJson()
-		{
-			skipSpacesEtc();
-			StringBuilder sb = new StringBuilder();
-			if (riter.getChar() == '-')
-			{
-				sb.Append(riter.getChar());
-				riter.inc();
-			}
-			while (riter.isData() && (riter.getChar() >= '0' && riter.getChar() <= '9'))
-			{
-				sb.Append(riter.getChar());
-				riter.inc();
-			}
-			if (!riter.isData())
-				throw new Exception(); // TODO
-
-			return sb;
-		}
-		public void parseSignedInteger(out sbyte num)
-		{
-			StringBuilder sb = impl_readSignedIntegerFromJson();
-			num = sbyte.Parse(sb.ToString());
-		}
-		public void parseSignedInteger(out short num)
-		{
-			StringBuilder sb = impl_readSignedIntegerFromJson();
-			num = short.Parse(sb.ToString());
-		}
-		public void parseSignedInteger(out int num)
-		{
-			StringBuilder sb = impl_readSignedIntegerFromJson();
+			StringBuilder sb = impl_readIntegerFromJson(false);
 			num = int.Parse(sb.ToString());
 		}
 		public void parseSignedInteger(out long num)
 		{
-			StringBuilder sb = impl_readSignedIntegerFromJson();
+			StringBuilder sb = impl_readIntegerFromJson(true);
 			num = long.Parse(sb.ToString());
-		}
-		public void skipSignedInteger()
-		{
-			impl_readSignedIntegerFromJson();
 		}
 		StringBuilder impl_readRealFromJson()
 		{
@@ -507,25 +352,13 @@ namespace globalmq.marshalling
 
 			return sb;
 		}
-
-		public void parseReal(out float num)
-		{
-			StringBuilder sb = impl_readRealFromJson();
-			num = float.Parse(sb.ToString(),NumberStyles.Float, nfi);
-		}
 		public void parseReal(out double num)
 		{
 			StringBuilder sb = impl_readRealFromJson();
 			num = double.Parse(sb.ToString(), NumberStyles.Float, nfi);
 		}
-		public void skipReal()
-		{
-			impl_readRealFromJson();
-		}
-
 		public void readKeyFromJson(out string s)
 		{
-			//s->clear();
 			skipSpacesEtc();
 			parseString(out s);
 			skipSpacesEtc();
@@ -533,18 +366,6 @@ namespace globalmq.marshalling
 				throw new Exception(); // TODO (expected ':')
 			riter.inc();
 		}
-		/*void readKey(GMQ_COLL string_view* s)
-		{
-			skipSpacesEtc();
-			readStringFromJson(s);
-			skipSpacesEtc();
-			if ( *riter != ':' )
-				throw std::exception(); // TODO (expected ':')
-			++riter;
-		}*/
-
 	};
 
 } // namespace globalmq::marshalling
-
-//#endif // COMPOSE_AND_PARSE_IMPL_H

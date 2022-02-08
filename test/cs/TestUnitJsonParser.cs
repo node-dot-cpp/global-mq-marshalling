@@ -107,6 +107,28 @@ namespace TestProject1
 
             Assert.Equal(value, res);
         }
+
+        [Theory]
+        [InlineData("hola mundo!", "\"hola mundo!\"")]
+        [InlineData("hola \"mundo\"!", "\"hola \\\"mundo\\\"!\"")]
+        [InlineData("hola\r\n\tmundo!", "\"hola\\r\\n\\tmundo!\"")]
+        [InlineData("hola\\mundo!", "\"hola\\\\mundo!\"")]
+        public static void TestEscapeString(String value, String escaped)
+        {
+            SimpleBuffer buffer = new SimpleBuffer();
+
+            JsonComposer composer = new JsonComposer(buffer);
+            composer.composeString(value);
+
+            Assert.Equal(escaped, buffer.toDebugString());
+
+            JsonParser parser = new JsonParser(buffer.getReadIterator());
+
+            String res;
+            parser.parseString(out res);
+
+            Assert.Equal(value, res);
+        }
     }
 
 }
