@@ -1,0 +1,9 @@
+# to run test coverage tools:
+
+dotnet test --collect:"XPlat Code Coverage"
+
+reportgenerator -reports:"TestResults\{guid}\coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+reportgenerator -reports:"TestResults\coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:MarkdownSummary
+
+dotnet tool install -g dotnet-reportgenerator-globaltool
+

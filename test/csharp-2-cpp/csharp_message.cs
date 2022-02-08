@@ -45,21 +45,15 @@ namespace csharp_message
 
 			mtest.message_one_message.compose(composer,
 				firstParam: msg.firstParam,
-				secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
-				thirdParam: new CollectionWrapperForComposing(
-					() => { return msg.thirdParam.Count; },
-					(ComposerBase composer, int ordinal) => { mtest.point3D_message.compose(composer, msg.thirdParam[ordinal].x, msg.thirdParam[ordinal].y, msg.thirdParam[ordinal].z); }),
+				secondParam: msg.secondParam,
+				thirdParam: msg.thirdParam,
 				forthParam: msg.forthParam,
 				fifthParam: msg.fifthParam,
-				sixthParam: new CollectionWrapperForComposing(
-					() => { return msg.sixthParam.Count; },
-					(ComposerBase composer, int ordinal) => { mtest.point_message.compose(composer, msg.sixthParam[ordinal].x, msg.sixthParam[ordinal].y); }),
+				sixthParam: msg.sixthParam,
 				seventhParam: msg.seventhParam,
-				eighthParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { mtest.point_message.compose(composer, msg.eighthParam.x, msg.eighthParam.y); }),
-				ninethParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { mtest.point3D_message.compose(composer, msg.ninethParam.x, msg.ninethParam.y, msg.ninethParam.z); }),
-				tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
+				eighthParam: msg.eighthParam,
+				ninethParam: msg.ninethParam,
+				tenthParam: msg.tenthParam
 			);
 
 			buffer2.writeToFile(output);
@@ -78,21 +72,15 @@ namespace csharp_message
 
 			mtest.message_one_message.compose(composer,
 				firstParam: msg.firstParam,
-				secondParam: SimpleTypeCollection.makeComposer(msg.secondParam),
-				thirdParam: new CollectionWrapperForComposing(
-					() => { return msg.thirdParam.Count; },
-					(ComposerBase composer, int ordinal) => { mtest.point3D_message.compose(composer, msg.thirdParam[ordinal].x, msg.thirdParam[ordinal].y, msg.thirdParam[ordinal].z); }),
+				secondParam: msg.secondParam,
+				thirdParam: msg.thirdParam,
 				forthParam: msg.forthParam,
 				fifthParam: msg.fifthParam,
-				sixthParam: new CollectionWrapperForComposing(
-					() => { return msg.sixthParam.Count; },
-					(ComposerBase composer, int ordinal) => { mtest.point_message.compose(composer, msg.sixthParam[ordinal].x, msg.sixthParam[ordinal].y); }),
+				sixthParam: msg.sixthParam,
 				seventhParam: msg.seventhParam,
-				eighthParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { mtest.point_message.compose(composer, msg.eighthParam.x, msg.eighthParam.y); }),
-				ninethParam: new MessageWrapperForComposing(
-					(ComposerBase composer) => { mtest.point3D_message.compose(composer, msg.ninethParam.x, msg.ninethParam.y, msg.ninethParam.z); }),
-				tenthParam: SimpleTypeCollection.makeComposer(msg.tenthParam)
+				eighthParam: msg.eighthParam,
+				ninethParam: msg.ninethParam,
+				tenthParam: msg.tenthParam
 			);
 
 			buffer2.writeToFile(output);

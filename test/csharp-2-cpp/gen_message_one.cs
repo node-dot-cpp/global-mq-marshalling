@@ -19,7 +19,7 @@ namespace mtest
 //
 //////////////////////////////////////////////////////////////
 
-public interface Ipoint3D
+public interface Ipoint3D : IEquivalenceComparable<Ipoint3D>
 {
 	Int64 x { get; set; }
 	Int64 y { get; set; }
@@ -74,9 +74,21 @@ public class point3D : Ipoint3D, IEquatable<point3D>
 				this.y == other.y &&
 				this.z == other.z;
 	}
+	public bool isEquivalent(Ipoint3D other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y &&
+				this.z == other.z;
+	}
 } // class point3D
 
-public interface Ipoint
+public interface Ipoint : IEquivalenceComparable<Ipoint>
 {
 	Int64 x { get; set; }
 	Int64 y { get; set; }
@@ -127,9 +139,20 @@ public class point : Ipoint, IEquatable<point>
 				this.x == other.x &&
 				this.y == other.y;
 	}
+	public bool isEquivalent(Ipoint other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.x == other.x &&
+				this.y == other.y;
+	}
 } // class point
 
-public interface Imessage_one
+public interface Imessage_one : IEquivalenceComparable<Imessage_one>
 {
 	Int64 firstParam { get; set; }
 	IList<Int64> secondParam { get; set; }
@@ -284,6 +307,25 @@ public class message_one : Imessage_one, IEquatable<message_one>
 				this.seventhParam == other.seventhParam &&
 				this.eighthParam.Equals(other.eighthParam) &&
 				this.ninethParam.Equals(other.ninethParam) &&
+				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
+	}
+	public bool isEquivalent(Imessage_one other)
+	{
+		if (other == null)
+			return false;
+		else if (ReferenceEquals(this, other))
+			return true;
+		else
+			return
+				this.firstParam == other.firstParam &&
+				Enumerable.SequenceEqual(this.secondParam, other.secondParam) &&
+				EquivalenceComparer.areEquivalent(this.thirdParam, other.thirdParam) &&
+				this.forthParam == other.forthParam &&
+				this.fifthParam == other.fifthParam &&
+				EquivalenceComparer.areEquivalent(this.sixthParam, other.sixthParam) &&
+				this.seventhParam == other.seventhParam &&
+				this.eighthParam.isEquivalent(other.eighthParam) &&
+				this.ninethParam.isEquivalent(other.ninethParam) &&
 				Enumerable.SequenceEqual(this.tenthParam, other.tenthParam);
 	}
 } // class message_one
@@ -464,7 +506,7 @@ public class message_one_message
 		composer.composeSignedInteger(firstParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("secondParam");
-		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(secondParam);
+		JsonCollectionComposer<Int64> secondParam_wrapper = JsonCollectionComposer<Int64>.make(secondParam);
 		secondParam_wrapper.composeJson(composer);
 		composer.append( ",\n  " );
 		composer.addNamePart("thirdParam");
@@ -493,14 +535,14 @@ public class message_one_message
 		point3D_message.compose(composer, ninethParam);
 		composer.append( ",\n  " );
 		composer.addNamePart("tenthParam");
-		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(tenthParam);
+		JsonCollectionComposer<Double> tenthParam_wrapper = JsonCollectionComposer<Double>.make(tenthParam);
 		tenthParam_wrapper.composeJson(composer);
 		composer.append( "\n}" );
 	}
 	public static void compose(GmqComposer composer, Int64 firstParam, IList<Int64> secondParam, IList<Ipoint3D> thirdParam, UInt64 forthParam, String fifthParam, IList<Ipoint> sixthParam, Double seventhParam, Ipoint eighthParam, Ipoint3D ninethParam, IList<Double> tenthParam)
 	{
 		composer.composeSignedInteger(firstParam);
-		CollectionWrapperForComposing secondParam_wrapper = SimpleTypeCollection.makeComposer(secondParam);
+		GmqCollectionComposer<Int64> secondParam_wrapper = GmqCollectionComposer<Int64>.make(secondParam);
 		secondParam_wrapper.composeGmq(composer);
 		GmqCollectionComposer<Ipoint3D> thirdParam_wrapper = new GmqCollectionComposer<Ipoint3D>(
 			thirdParam, point3D_message.compose);
@@ -513,7 +555,7 @@ public class message_one_message
 		composer.composeReal(seventhParam);
 		point_message.compose(composer, eighthParam);
 		point3D_message.compose(composer, ninethParam);
-		CollectionWrapperForComposing tenthParam_wrapper = SimpleTypeCollection.makeComposer(tenthParam);
+		GmqCollectionComposer<Double> tenthParam_wrapper = GmqCollectionComposer<Double>.make(tenthParam);
 		tenthParam_wrapper.composeGmq(composer);
 	}
 	public static void compose(JsonComposer composer, Imessage_one val)
@@ -539,13 +581,15 @@ public class message_one_message
 			else if ( key == "secondParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>					{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+					{ Int64 t; parser.parseSignedInteger(out t); val.secondParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "thirdParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ point3D t = new point3D(); point3D_message.parse(parser, t); val.thirdParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "forthParam" )
@@ -563,7 +607,8 @@ public class message_one_message
 			else if ( key == "sixthParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ point t = new point(); point_message.parse(parser, t); val.sixthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 			else if ( key == "seventhParam" )
@@ -583,7 +628,8 @@ public class message_one_message
 			else if ( key == "tenthParam" )
 			{
 				JsonCollectionParser tmp = new JsonCollectionParser(
-					(JsonParser parser, int ordinal) =>				{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
+					(JsonParser parser, int ordinal) =>
+				{ Double t; parser.parseReal(out t); val.tenthParam.Add(t); });
 				tmp.parseJson(parser);
 			}
 
