@@ -40,9 +40,12 @@ namespace globalmq.marshalling
 		BufferT buff;
 
 		// mb: this is needed to make float format independant of locale
-		NumberFormatInfo nfi = new NumberFormatInfo();
+		NumberFormatInfo nfi = CultureInfo.InvariantCulture.NumberFormat;
 		Char[] escapeChars = new Char[] { '\\', '\n', '\r', '\t', '\"' };
-		public JsonComposer(BufferT buff_) { buff = buff_; nfi.NumberDecimalSeparator = "."; }
+		public JsonComposer(BufferT buff_)
+		{
+			buff = buff_;
+		}
 		public BufferT getBuffer()
 		{
 			return buff;
