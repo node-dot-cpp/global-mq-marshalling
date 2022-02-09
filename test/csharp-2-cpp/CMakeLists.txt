@@ -19,7 +19,11 @@ add_executable(cpp-2-csharp
 
 target_link_libraries(cpp-2-csharp global-mq)
 
-#add_executable(csharp-message
-#    csharp_message.cs
-#    ${IDL_CSHARP}
-#)
+if(MSVC)
+    add_custom_target(cshrp-2-cpp ALL dotnet build
+                        --output ${CMAKE_CURRENT_BINARY_DIR}/Release
+                        --configuration Release
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    DEPENDS ${IDL_CSHARP}
+    )
+endif()
