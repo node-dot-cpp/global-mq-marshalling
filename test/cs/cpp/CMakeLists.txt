@@ -22,7 +22,8 @@ add_executable(test-interop1-cpp
     test_struct_one.cpp
 )
 
-target_link_libraries(test-interop1-cpp global-mq)
+target_compile_definitions(test-interop1-cpp PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_link_libraries(test-interop1-cpp global-mq) 
 
 add_test(NAME interop1-cpp COMMAND test-interop1-cpp --pass-zen)
 

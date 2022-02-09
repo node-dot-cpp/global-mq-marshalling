@@ -8,8 +8,8 @@ cd build\vs2019
 cmake -DGLOBAL_MQ_TEST=ON -G "Visual Studio 16 2019" ..\..
 @if ERRORLEVEL 1 exit /b %ERRORLEVEL%
 
-cmake --build . --config Debug
+cmake --build . --config Release
 @if ERRORLEVEL 1 exit /b %ERRORLEVEL%
 
-ctest --output-on-failure -C Debug
+ctest --output-on-failure -C Release
 @if ERRORLEVEL 1 exit /b %ERRORLEVEL%

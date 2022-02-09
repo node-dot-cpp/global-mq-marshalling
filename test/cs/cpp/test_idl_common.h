@@ -32,7 +32,6 @@
 #include "../../3rdparty/lest/include/lest/lest.hpp"
 #include "idl_generated.h"
 
-inline
 lest::tests& specification();
 
 inline
