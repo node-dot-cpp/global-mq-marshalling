@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_f36bc8bd_guard
-#define _test_marshalling_h_f36bc8bd_guard
+#ifndef _test_marshalling_h_f545c797_guard
+#define _test_marshalling_h_f545c797_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -79,7 +79,6 @@ DefaultMessageHandler<LambdaHandler> makeDefaultMessageHandler( LambdaHandler &&
 using CharacterParam_Type = NamedParameter<struct CharacterParam_Struct>;
 using ID_Type = NamedParameter<struct ID_Struct>;
 using Level_Type = NamedParameter<struct Level_Struct>;
-using LineMap_Type = NamedParameter<struct LineMap_Struct>;
 using Points_Type = NamedParameter<struct Points_Struct>;
 using Size_Type = NamedParameter<struct Size_Struct>;
 using X_Type = NamedParameter<struct X_Struct>;
@@ -101,10 +100,10 @@ using forthParam_Type = NamedParameter<struct forthParam_Struct>;
 using i_1_Type = NamedParameter<struct i_1_Struct>;
 using i_2_Type = NamedParameter<struct i_2_Struct>;
 using jumpMap_Type = NamedParameter<struct jumpMap_Struct>;
+using lineMap_Type = NamedParameter<struct lineMap_Struct>;
 using ninethParam_Type = NamedParameter<struct ninethParam_Struct>;
 using num2stringDictionary_Type = NamedParameter<struct num2stringDictionary_Struct>;
 using obstacleMap_Type = NamedParameter<struct obstacleMap_Struct>;
-using point_Type = NamedParameter<struct point_Struct>;
 using polygonMap_Type = NamedParameter<struct polygonMap_Struct>;
 using polygonSpeed_Type = NamedParameter<struct polygonSpeed_Struct>;
 using portalMap_Type = NamedParameter<struct portalMap_Struct>;
@@ -123,7 +122,6 @@ using z_Type = NamedParameter<struct z_Struct>;
 constexpr CharacterParam_Type::TypeConverter CharacterParam;
 constexpr ID_Type::TypeConverter ID;
 constexpr Level_Type::TypeConverter Level;
-constexpr LineMap_Type::TypeConverter LineMap;
 constexpr Points_Type::TypeConverter Points;
 constexpr Size_Type::TypeConverter Size;
 constexpr X_Type::TypeConverter X;
@@ -145,10 +143,10 @@ constexpr forthParam_Type::TypeConverter forthParam;
 constexpr i_1_Type::TypeConverter i_1;
 constexpr i_2_Type::TypeConverter i_2;
 constexpr jumpMap_Type::TypeConverter jumpMap;
+constexpr lineMap_Type::TypeConverter lineMap;
 constexpr ninethParam_Type::TypeConverter ninethParam;
 constexpr num2stringDictionary_Type::TypeConverter num2stringDictionary;
 constexpr obstacleMap_Type::TypeConverter obstacleMap;
-constexpr point_Type::TypeConverter point;
 constexpr polygonMap_Type::TypeConverter polygonMap;
 constexpr polygonSpeed_Type::TypeConverter polygonSpeed;
 constexpr portalMap_Type::TypeConverter portalMap;
@@ -689,7 +687,7 @@ struct Line
 
 struct LineMap
 {
-	GMQ_COLL vector<Line> LineMap;
+	GMQ_COLL vector<Line> lineMap;
 };
 
 struct POINT3DREAL
@@ -784,7 +782,7 @@ struct MESSAGE_message_one
 namespace infrastructural {
 struct MESSAGE_point
 {
-	point point;
+	point pt;
 };
 } // namespace infrastructural
 
@@ -1932,7 +1930,7 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 			::globalmq::marshalling::impl::copyDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( t.properties, oldDictionaryVal );
 			::globalmq::marshalling::impl::parseKey( parser, "properties" );
 			PublishableDictionaryProcessor::parse<ParserT, decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( parser, t.properties );
-			bool currentChanged = !::globalmq::marshalling::impl::isSameDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( oldDictionaryVal, t.properties );
+			bool currentChanged = !::globalmq::marshalling::impl::isSameDictionary<decltype(T::properties), ::globalmq::marshalling::impl::StringType>( oldDictionaryVal, t.properties );
 			changed = changed || currentChanged;
 		}
 		else
@@ -2933,8 +2931,8 @@ struct publishable_STRUCT_LineMap : public ::globalmq::marshalling::impl::Struct
 	static
 	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
-		::globalmq::marshalling::impl::parseKey( parser, "LineMap" );
-		PublishableVectorProcessor::parse<ParserT, decltype(T::LineMap), publishable_STRUCT_Line, true>( parser, t.LineMap );
+		::globalmq::marshalling::impl::parseKey( parser, "lineMap" );
+		PublishableVectorProcessor::parse<ParserT, decltype(T::lineMap), publishable_STRUCT_Line, true>( parser, t.lineMap );
 
 	}
 
@@ -4242,7 +4240,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 // MESSAGE "LevelTraceData" Targets: JSON (2 parameters)
 //  1. STRUCT CharacterParamStruct CharacterParam (REQUIRED)
 //  2. VECTOR< STRUCT POINT3DREAL> Points (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4357,7 +4354,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 //  4. VECTOR< STRUCT LineMap> portalMap (REQUIRED)
 //  5. VECTOR< STRUCT LineMap> jumpMap (REQUIRED)
 //  6. REAL polygonSpeed (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4424,8 +4420,7 @@ structures::infrastructural::MESSAGE_PolygonSt MESSAGE_PolygonSt_parse(ParserT& 
 
 //**********************************************************************
 // MESSAGE "point" NONEXTENDABLE Targets: GMQ (1 parameters)
-//  1. STRUCT point point (REQUIRED)
-
+//  1. STRUCT point pt (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4433,7 +4428,7 @@ void MESSAGE_point_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, point_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, pt_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -4454,8 +4449,8 @@ structures::infrastructural::MESSAGE_point MESSAGE_point_parse(ParserT& parser)
 	T t;
 	::globalmq::marshalling::impl::parseStructBegin( parser );
 
-		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "point" );
-		publishable_STRUCT_point::parseForStateSyncOrMessageInDepth( parser, t.point );
+		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "pt" );
+		publishable_STRUCT_point::parseForStateSyncOrMessageInDepth( parser, t.pt );
 		::globalmq::marshalling::impl::parsePublishableStructEnd( parser );
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
@@ -4467,7 +4462,6 @@ structures::infrastructural::MESSAGE_point MESSAGE_point_parse(ParserT& parser)
 //  1. STRUCT point3D pt (REQUIRED)
 //  2. DISCRIMINATED_UNION du_one du_one_instance (REQUIRED)
 //  3. DICTIONARY num2stringDictionary (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4586,7 +4580,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 //  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
 //  9. STRUCT point3D ninethParam (REQUIRED)
 //  10. VECTOR<REAL> tenthParam (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4757,7 +4750,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 //  8. STRUCT NONEXTENDABLE point eighthParam (REQUIRED)
 //  9. STRUCT point3D ninethParam (REQUIRED)
 //  10. VECTOR<REAL> tenthParam (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -4934,7 +4926,6 @@ void composeMessage( BufferT& buffer, Args&& ... args );
 //**********************************************************************
 // MESSAGE "Level" Targets: JSON (1 parameters)
 //  1. VECTOR< STRUCT PolygonSt> Level (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7521,7 +7512,6 @@ public:
 // STRUCT "CharacterParamStruct" Targets: JSON (2 parameters)
 //  1. INTEGER ID (REQUIRED)
 //  2. STRUCT SIZE Size (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7552,7 +7542,6 @@ void STRUCT_CharacterParamStruct_compose(ComposerT& composer, Args&& ... args)
 //  1. REAL X (REQUIRED)
 //  2. REAL Y (REQUIRED)
 //  3. REAL Z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7587,7 +7576,6 @@ void STRUCT_SIZE_compose(ComposerT& composer, Args&& ... args)
 //  1. REAL X (REQUIRED)
 //  2. REAL Y (REQUIRED)
 //  3. REAL Z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7619,8 +7607,7 @@ void STRUCT_POINT3DREAL_compose(ComposerT& composer, Args&& ... args)
 
 //**********************************************************************
 // STRUCT "LineMap" Targets: GMQ (1 parameters)
-//  1. VECTOR< STRUCT Line> LineMap (REQUIRED)
-
+//  1. VECTOR< STRUCT Line> lineMap (REQUIRED)
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7628,7 +7615,7 @@ void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 {
 	static_assert( std::is_base_of<ComposerBase, ComposerT>::value, "Composer must be one of GmqComposer<> or JsonComposer<>" );
 
-	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, LineMap_Type::Name>;
+	using arg_1_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, lineMap_Type::Name>;
 
 	constexpr size_t matchCount = isMatched(arg_1_type::nameAndTypeID, Args::nameAndTypeID...);
 	constexpr size_t argCount = sizeof ... (Args);
@@ -7644,7 +7631,6 @@ void STRUCT_LineMap_compose(ComposerT& composer, Args&& ... args)
 // STRUCT "Line" Targets: GMQ (2 parameters)
 //  1. VECTOR<NONEXTENDABLE STRUCT Vertex> a (REQUIRED)
 //  2. VECTOR<NONEXTENDABLE STRUCT Vertex> b (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7670,7 +7656,6 @@ void STRUCT_Line_compose(ComposerT& composer, Args&& ... args)
 //**********************************************************************
 // STRUCT "ObstacleMap" Targets: GMQ (1 parameters)
 //  1. VECTOR< STRUCT PolygonMap> _ObstacleMap (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7693,7 +7678,6 @@ void STRUCT_ObstacleMap_compose(ComposerT& composer, Args&& ... args)
 //**********************************************************************
 // STRUCT "PolygonMap" Targets: GMQ (1 parameters)
 //  1. VECTOR<NONEXTENDABLE STRUCT Vertex> _PolygonMap (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7718,7 +7702,6 @@ void STRUCT_PolygonMap_compose(ComposerT& composer, Args&& ... args)
 //  1. INTEGER x (REQUIRED)
 //  2. INTEGER y (REQUIRED)
 //  3. INTEGER z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7762,7 +7745,6 @@ void STRUCT_Vertex_compose(ComposerT& composer, Args&& ... args)
 // STRUCT "point" NONEXTENDABLE Targets: JSON GMQ (2 parameters)
 //  1. INTEGER x (REQUIRED)
 //  2. INTEGER y (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7802,7 +7784,6 @@ void STRUCT_point_compose(ComposerT& composer, Args&& ... args)
 //  1. INTEGER x (REQUIRED)
 //  2. INTEGER y (REQUIRED)
 //  3. INTEGER z (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7850,7 +7831,6 @@ void STRUCT_point3D_compose(ComposerT& composer, Args&& ... args)
 //  CASE two (2 parameters)(2 parameters)
 //    1. INTEGER i_2 (REQUIRED)
 //    2. VECTOR<REAL> vp_2 (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7883,7 +7863,6 @@ void DISCRIMINATED_UNION_du_one_compose(ComposerT& composer, Args&& ... args)
 // STRUCT "PolygonSt" Targets: JSON (2 parameters)
 //  1. VECTOR< STRUCT Line_> portalMap (REQUIRED)
 //  2. STRUCT AnimZone animZones (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7913,7 +7892,6 @@ void STRUCT_PolygonSt_compose(ComposerT& composer, Args&& ... args)
 // STRUCT "AnimZone" Targets: JSON (2 parameters)
 //  1. VECTOR< STRUCT Line_> animVector (REQUIRED)
 //  2. VECTOR<REAL> animSpeed (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7943,7 +7921,6 @@ void STRUCT_AnimZone_compose(ComposerT& composer, Args&& ... args)
 // STRUCT "Line_" Targets: JSON (2 parameters)
 //  1. STRUCT Vertex a (REQUIRED)
 //  2. STRUCT Vertex b (REQUIRED)
-
 //**********************************************************************
 
 template<class ComposerT, typename ... Args>
@@ -7972,4 +7949,4 @@ void STRUCT_Line__compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_f36bc8bd_guard
+#endif // _test_marshalling_h_f545c797_guard

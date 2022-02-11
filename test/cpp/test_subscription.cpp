@@ -979,6 +979,8 @@ struct HtmlTagSampleWithNotifiers
 
 	SampleNode& processingNode;
 	HtmlTagSampleWithNotifiers( SampleNode& node_ ) : processingNode( node_ ) {}
+	void notifyUpdated_tag() const { fmt::print( "HtmlTagSampleWithNotifiers::notifyUpdated_tag()\n" ); }
+	void notifyFullyUpdated() { fmt::print( "ROOT HAS BEEN UPDATED!\n" ); }
 };
 
 void publishableTestTwo()
