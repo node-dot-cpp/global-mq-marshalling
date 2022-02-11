@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>interop_csharp_exe</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\library-csharp\global-mq-csharp.csproj" />
+    <ProjectReference Include="..\interop-buffer-dotnet\interop-buffer-dotnet.vcxproj" />
+  </ItemGroup>
+
+</Project>

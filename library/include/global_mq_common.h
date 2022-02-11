@@ -53,6 +53,13 @@ namespace globalmq::marshalling {
 
 	static constexpr size_t MIN_BUFFER = 1024;
 
+	struct BufferMemento
+	{
+		uint64_t size;
+		uint64_t capacity;
+		uint8_t* buffer;
+	};
+
 	class Buffer {
 	public:
 		class ReadIter
@@ -175,6 +182,26 @@ namespace globalmq::marshalling {
 		}
 		Buffer(const Buffer&) = delete;
 		Buffer& operator = (const Buffer& p) = delete;
+
+		static Buffer makeFromMemento(BufferMemento memento)
+		{
+			Buffer tmp;
+			tmp._size = memento.size;
+			tmp._capacity = memento.capacity;
+			tmp._data.reset(memento.buffer);
+
+			return tmp;
+		}
+
+		BufferMemento releaseToMemento()
+		{
+			BufferMemento memento{ _size ,_capacity, _data.release() };
+			// _data = nullptr;
+			_size = 0;
+			_capacity = 0;
+
+			return memento;
+		}
 
 		size_t size() const { return _size; }
 		bool empty() const { return _size == 0; }

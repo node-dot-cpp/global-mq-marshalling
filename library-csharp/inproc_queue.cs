@@ -36,13 +36,11 @@ namespace globalmq.marshalling
 {
 
 
-    public class ThreadQueueItem
+    public struct ThreadQueueItem
     {
-        const int invalidRecipientID = int.MaxValue;
         public BufferT msg;
-        int recipientID = invalidRecipientID;
-        public ThreadQueueItem() { }
-        public ThreadQueueItem(BufferT msg_, int recipientID_)
+        public UInt64 recipientID;
+        public ThreadQueueItem(BufferT msg_, UInt64 recipientID_)
         {
             this.msg = msg_;
             this.recipientID = recipientID_;
@@ -147,9 +145,9 @@ namespace globalmq.marshalling
     public class BasicQueuePostman : InProcessMessagePostmanBase
     {
         BasicMtQueue<ThreadQueueItem> msgQueue;
-        int recipientID;
+        UInt64 recipientID;
 
-        public BasicQueuePostman(BasicMtQueue<ThreadQueueItem> msgQueue_, int recipientID_)
+        public BasicQueuePostman(BasicMtQueue<ThreadQueueItem> msgQueue_, UInt64 recipientID_)
         {
             this.msgQueue = msgQueue_;
             this.recipientID = recipientID_;

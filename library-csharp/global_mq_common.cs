@@ -42,9 +42,6 @@ namespace globalmq.marshalling
         char getChar();
         void inc();
         ReadOnlySpan<byte> read(int size);
-        //public ReadOnlySpan<byte> fromBeginToCurrent();
-        //ReadOnlySpan<byte> fromCurrentToEnd();
-
         void skip(int size);
         int offset();
         ReadIteratorT shallowClone();
