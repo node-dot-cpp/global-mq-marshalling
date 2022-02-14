@@ -486,63 +486,6 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	if ( member.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
 		fprintf( header, "%s\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-#if 0 // TODO: reimplement for dictionary
-		fprintf( header, "%s\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\ttypename %s::value_type oldValue;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		switch ( member.type.dictionaryValueKind )
-		{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%s\t\t\toldValue = value;\n", offset.c_str() );
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf( header, "%s\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str() );
-				break;
-			default:
-				fprintf( header, "%s\t\t\t\tstatic_assert(false);\n", offset.c_str() );
-				break;
-		}
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
-		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-		fprintf( header, "%s\t\t}\n", offset.c_str() );
-
-		fprintf( header, "%s\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
-		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\tt.notifyElementUpdated_%s( pos );\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-		fprintf( header, "%s\t\t}\n", offset.c_str() );
-
-		fprintf( header, "%s\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
-		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
-		fprintf( header, "%s\t\t}\n", offset.c_str() );
-
-		fprintf( header, "%s\t\telse\n", offset.c_str() );
-		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\tcurrentChanged = %s::parse<ParserT, typename %s::value_type, bool>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
-		fprintf( header, "%s\t\t\telse\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\t%s::parse<ParserT, typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), impl_generatePublishableStructName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
-		fprintf( header, "%s\t\t}\n", offset.c_str() );
-#endif
 	}
 	else
 		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
@@ -583,17 +526,6 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "%s\t\t\t\t\tthrow std::exception();\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type& value = f->second;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-
-#if 0 // TODO reimplement for dictionary
-	fprintf( header, "%s\t\t\t\tPublishableDictionaryProcessor::parseValue<ParserT, %s, %s>( parser, value );\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::key_type oldVal;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\toldVal = f->second;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tf->second = value;\n", offset.c_str() );
-#endif
-#if 0 // TODO reimplement for dictionary
-	fprintf( header, "%s\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-#endif
 
 	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type oldValue;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 	switch ( member.type.dictionaryValueKind )
