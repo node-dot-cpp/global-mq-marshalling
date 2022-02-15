@@ -176,10 +176,10 @@ void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const char
 	fprintf(header, "\tpublic bool Equals(%s other)\n", type_name);
 	fprintf(header,
 		"\t{\n"
-		"\t\tif (ReferenceEquals(this, other))\n"
-		"\t\t\treturn true;\n"
-		"\t\telse if (ReferenceEquals(null, other))\n"
+		"\t\tif (ReferenceEquals(other, null))\n"
 		"\t\t\treturn false;\n"
+		"\t\telse if (ReferenceEquals(this, other))\n"
+		"\t\t\treturn true;\n"
 		"\t\telse\n"
 		"\t\t\treturn\n");
 
@@ -216,21 +216,11 @@ void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const char
 	fprintf(header, ";\n\t}\n");
 }
 
-void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeType& s, const char* type_name)
+void generateCsharpStructEquivalentExpression(FILE* header, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
 		s.type == CompositeType::Type::publishable);
-
-	fprintf(header, "\tpublic bool isEquivalent(%s other)\n", type_name);
-	fprintf(header,
-		"\t{\n"
-		"\t\tif (other == null)\n"
-		"\t\t\treturn false;\n"
-		"\t\telse if (ReferenceEquals(this, other))\n"
-		"\t\t\treturn true;\n"
-		"\t\telse\n"
-		"\t\t\treturn\n");
 
 	auto& mem = s.getMembers();
 	for (auto it = mem.begin(); it != mem.end(); ++it)
@@ -256,30 +246,51 @@ void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeTyp
 			fprintf(header, "\t\t\t\tthis.%s.isEquivalent(other.%s)", member.name.c_str(), member.name.c_str());
 			break;
 		case MessageParameterType::KIND::VECTOR:
+		{
+			switch (member.type.vectorElemKind)
 			{
-				switch (member.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-				case MessageParameterType::KIND::UINTEGER:
-				case MessageParameterType::KIND::REAL:
-				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
-					break;
-				case MessageParameterType::KIND::STRUCT:
-				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					fprintf(header, "\t\t\t\tEquivalenceComparer.areEquivalent(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
-					break;
-				default:
-					assert(false); // not implemented (yet)
-				}
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				fprintf(header, "\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
 				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf(header, "\t\t\t\tEquivalenceComparer.areEquivalent(this.%s, other.%s)", member.name.c_str(), member.name.c_str());
+				break;
+			default:
+				assert(false); // not implemented (yet)
 			}
-
 			break;
+		}
+
+		break;
 		default:
 			assert(false); // not implemented (yet)
 		}
 	}
+}
+
+
+void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeType& s, const char* type_name)
+{
+	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+		s.type == CompositeType::Type::discriminated_union_case ||
+		s.type == CompositeType::Type::publishable);
+
+	fprintf(header, "\tpublic bool isEquivalent(%s other)\n", type_name);
+	fprintf(header,
+		"\t{\n"
+		"\t\tif (ReferenceEquals(other, null))\n"
+		"\t\t\treturn false;\n"
+		"\t\telse if (ReferenceEquals(this, other))\n"
+		"\t\t\treturn true;\n"
+		"\t\telse\n"
+		"\t\t\treturn\n");
+
+	generateCsharpStructEquivalentExpression(header, s);
+
 	fprintf(header, ";\n\t}\n");
 }
 
@@ -351,7 +362,10 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 		s.type == CompositeType::Type::discriminated_union_case ||
 		s.type == CompositeType::Type::publishable);
 
-	fprintf(header, "public class %s : %s, IEquatable<%s>\n", type_name, interface_name, type_name);
+	if(interface_name)
+		fprintf(header, "public class %s : %s, IEquatable<%s>\n", type_name, interface_name, type_name);
+	else
+		fprintf(header, "public class %s : IEquatable<%s>\n", type_name, type_name);
 	fprintf(header, "{\n");
 
 	auto& mem = s.getMembers();
@@ -474,7 +488,8 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 
 	generateCsharpStandardMethods(header, type_name);
 	generateCsharpStructEqualsMethod(header, s, type_name);
-	generateCsharpStructEquivalentMethod(header, root, s, interface_name);
+	if (interface_name)
+		generateCsharpStructEquivalentMethod(header, root, s, interface_name);
 
 	fprintf(header, "} // class %s\n\n", type_name);
 }

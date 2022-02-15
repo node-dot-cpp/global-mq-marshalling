@@ -1143,7 +1143,9 @@ namespace {
 		fprintf(header, "\tpublic bool isEquivalent(I%s other)\n", type_name.c_str());
 		fprintf(header,
 			"\t{\n"
-			"\t\tif (ReferenceEquals(this, other))\n"
+			"\t\tif (ReferenceEquals(other, null))\n"
+			"\t\t\treturn false;\n"
+			"\t\telse if (ReferenceEquals(this, other))\n"
 			"\t\t\treturn true;\n"
 			"\t\telse\n"
 			"\t\t\treturn t.isEquivalent(other);\n"
