@@ -542,13 +542,16 @@ namespace {
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
 		fprintf(header, "\t\tUInt64[] addr = null;\n");
+		fprintf(header, "\t\tbool changed = false;\n");
 		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
 		fprintf(header, "\t\t{\n");
-		fprintf(header, "\t\t\t%s_subscriber.parse(parser, this, addr, 0);\n", type_name.c_str());
+		fprintf(header, "\t\t\tchanged = %s_subscriber.parse(parser, this, addr, 0) || changed;\n", type_name.c_str());
 		fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
 		fprintf(header, "\t\t\taddr = null;\n");
 		fprintf(header, "\t\t}\n");
 		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
+		fprintf(header, "\t\tif(changed)\n");
+		fprintf(header, "\t\t\tthis.notifyAnyUpdated();\n");
 		fprintf(header, "\t}\n");
 
 		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
@@ -565,8 +568,10 @@ namespace {
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
 		if (s.type == CompositeType::Type::publishable)
+		{
 			fprintf(header, "\tpublic virtual void notifyFullyUpdated() { }\n");
-
+			fprintf(header, "\tpublic virtual void notifyAnyUpdated() { }\n");
+		}
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)
 		{

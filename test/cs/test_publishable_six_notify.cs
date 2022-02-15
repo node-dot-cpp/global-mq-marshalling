@@ -38,7 +38,8 @@ namespace TestProject1
         public enum Events {
             notifyUpdated_anInt, notifyUpdated_anUInt, notifyUpdated_aReal, notifyUpdated_aString,
             notifyUpdated_name, notifyUpdated_theAggregate, notifyUpdated_lastValue,
-            notifyUpdated_basic, notifyUpdated_aggregate, notifyFullyUpdated };
+            notifyUpdated_basic, notifyUpdated_aggregate, notifyAnyUpdated, notifyFullyUpdated
+        };
         public class BasicTypes_stub :   mtest.BasicTypes_subscriber
         {
             List<Events> handled;
@@ -86,6 +87,7 @@ namespace TestProject1
             public override   mtest.AggregateType_subscriber makeHandler_aggregate(  mtest.IAggregateType data) { return new AggregateType_stub(data, handled); }
 
             public override void notifyFullyUpdated() { handled.Add(Events.notifyFullyUpdated); }
+            public override void notifyAnyUpdated() { handled.Add(Events.notifyAnyUpdated); }
             public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_name); }
             public override void notifyUpdated_basic() { handled.Add(Events.notifyUpdated_basic); }
             public override void notifyUpdated_aggregate() { handled.Add(Events.notifyUpdated_aggregate); }
@@ -117,7 +119,7 @@ namespace TestProject1
 
             stub.applyMessageWithUpdates(parser);
 
-            Assert.Equal(handled.ToArray(), events);
+            Assert.Equal(events, handled.ToArray());
         }
 
         [Fact]
@@ -126,7 +128,8 @@ namespace TestProject1
             TestJsonParseUpdate(test_publishable_six.Path1, new Events[] {
                 Events.notifyUpdated_anInt,
                 Events.notifyUpdated_theAggregate,
-                Events.notifyUpdated_aggregate
+                Events.notifyUpdated_aggregate,
+                Events.notifyAnyUpdated
             });
         }
 
@@ -149,7 +152,14 @@ namespace TestProject1
                 Events.notifyUpdated_aString,
                 Events.notifyUpdated_theAggregate,
                 Events.notifyUpdated_aggregate,
+                Events.notifyAnyUpdated
             });
+        }
+
+        [Fact]
+        public static void TestJsonNotifyUpdate3()
+        {
+            TestJsonParseUpdate(test_publishable_six.Path3, new Events[] { });
         }
 
     }
