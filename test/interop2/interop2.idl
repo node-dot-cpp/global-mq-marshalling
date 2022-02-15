@@ -1,5 +1,0 @@
-
-PUBLISHABLE TestInterop2 = 2 {
-  INTEGER number;
-  CHARACTER-STRING name;
-};
