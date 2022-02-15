@@ -82,7 +82,7 @@ namespace TestProject1
             publ.generateStateSyncMessage(composer);
 
             // uncomment to update file
-            //buffer.writeToFile(Path);
+            //buffer.writeToFile(fileName);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
@@ -96,8 +96,6 @@ namespace TestProject1
 
             subs.applyStateSyncMessage(parser);
 
-             //mtest.StructSix actual = ( mtest.StructSix)subs.debugOnlyGetData();
-             //mtest.StructSix expected = GetPublishableSix();
             Assert.True(subs.isEquivalent(GetPublishableSix()));
         }
 
@@ -108,7 +106,7 @@ namespace TestProject1
             mtest.StructSix data = GetPublishableSix();
             publ.debugOnlySetData(data);
 
-            BufferT buffer = platform.makeBuffer();
+            SimpleBuffer buffer = new SimpleBuffer();
             IPublishableComposer composer = platform.makePublishableComposer(buffer);
 
             publ.startTick(composer);
@@ -118,7 +116,7 @@ namespace TestProject1
             publ.endTick();
 
             // uncomment to update file
-            //buffer.writeToFile(Path1);
+            //buffer.writeToFile(fileName);
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }

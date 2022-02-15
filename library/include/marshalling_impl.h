@@ -158,6 +158,64 @@ struct StringLiteralForComposing
 	constexpr StringLiteralForComposing( const char* const str_, const size_t size_ ) : str( str_ ), size( size_ ) {}
 };
 
+struct IntegralVlq
+{
+	template<typename ComposerT> 
+	static void writeVlqIntegral(ComposerT& composer, uint64_t val)
+	{
+		uint8_t intTemp[10];
+		int ix = 0;
+		uint8_t current = (uint8_t)(val & 0x7f);
+		val >>= 7;
+		intTemp[ix] = current;
+		bool done = val == 0;
+
+		while (!done)
+		{
+
+			current = (uint8_t)(val & 0x7f);
+			current += 0x80;
+			val >>= 7;
+			++ix;
+			intTemp[ix] = current;
+			done = val == 0;
+		}
+
+		while(ix != 0)
+		{
+			composer.buff.appendUint8(intTemp[ix]);
+			--ix;
+		}
+		composer.buff.appendUint8(intTemp[0]);
+	}
+
+	static uint64_t zigzagEncode(int64_t i)
+	{
+		return ((uint64_t)(i >> 63)) ^ ((uint64_t)(i << 1));
+	}
+
+	template<typename RiterT>
+	static uint64_t readVlqIntegral(RiterT& riter)
+	{
+		uint64_t result = 0;
+		bool done = false;
+		while (!done && riter.isData())
+		{
+			uint8_t current = *riter;
+			++riter;
+			done = current < 0x80;
+			uint64_t promoted = (uint64_t)current & 0x7f;
+			result <<= 7;
+			result = result | promoted;
+		}
+		return result;
+	}
+
+	static int64_t zigzagDecode(uint64_t i)
+	{
+		return ((int64_t)(i >> 1)) ^ (-(int64_t)(i & 1));
+	}
+};
 
 // composing
 
@@ -170,8 +228,10 @@ void composeSignedInteger(ComposerT& composer, T num )
 		GMQ_ASSERT( num <= INT64_MAX );
 	}
 	/*temporary solution TODO: actual implementation*/ { 
-		int64_t val = num; 
-		composer.buff.append( &val, sizeof( val ) );
+		// int64_t val = num; 
+		// composer.buff.append( &val, sizeof( val ) );
+		uint64_t asUint = IntegralVlq::zigzagEncode(num);
+		IntegralVlq::writeVlqIntegral(composer, asUint);
 	}
 }
 
@@ -183,8 +243,9 @@ void composeUnsignedInteger(ComposerT& composer, T num )
 		GMQ_ASSERT( num >= 0 );
 	}
 	/*temporary solution TODO: actual implementation*/ { 
-		uint64_t val = num; 
-		composer.buff.append( &val, sizeof( val ) );
+		// uint64_t val = num; 
+		// composer.buff.append( &val, sizeof( val ) );
+		IntegralVlq::writeVlqIntegral(composer, num);
 	}
 }
 
@@ -411,7 +472,11 @@ public:
 	{
 		static_assert( sizeof( T ) <= impl::integer_max_size );
 		static_assert( std::is_integral<T>::value );
-		/*temporary solution TODO: actual implementation*/ int64_t val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
+
+		//int64_t val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
+		uint64_t asUnsigned = impl::IntegralVlq::readVlqIntegral(riter);
+		int64_t val = impl::IntegralVlq::zigzagDecode(asUnsigned);
+
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 		if constexpr ( std::is_signed< T >::value )
 		{
@@ -463,7 +528,8 @@ public:
 	}
 	void skipSignedInteger()
 	{
-		/*temporary solution TODO: actual implementation*/ size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
+		//size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
+		impl::IntegralVlq::readVlqIntegral(riter);
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 	}
 
@@ -472,7 +538,8 @@ public:
 	{
 		static_assert( sizeof( T ) <= impl::integer_max_size );
 		static_assert( std::is_integral<T>::value );
-		/*temporary solution TODO: actual implementation*/ uint64_t val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
+		// uint64_t val; size_t dsz = riter.read( &val, sizeof( val ) ); GMQ_ASSERT( dsz == sizeof( val ) );
+		uint64_t val = impl::IntegralVlq::readVlqIntegral(riter);
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 		if constexpr ( std::is_unsigned< T >::value )
 		{
@@ -524,7 +591,8 @@ public:
 	}
 	void skipUnsignedInteger()
 	{
-		/*temporary solution TODO: actual implementation*/ size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
+		//size_t skipSz = riter.skip( impl::integer_max_size ); GMQ_ASSERT( skipSz == impl::integer_max_size );
+		impl::IntegralVlq::readVlqIntegral(riter);
 		static_assert( impl::integer_max_size == 8, "revise implementation otherwise" );
 	}
 

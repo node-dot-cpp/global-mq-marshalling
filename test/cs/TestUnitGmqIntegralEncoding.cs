@@ -32,65 +32,50 @@ using Xunit;
 
 namespace TestProject1
 {
-
-    public class test_publishable_six2
+    /// <summary>
+    /// Tests to match Json parser/composer from C# to C++
+    /// </summary>
+    public class TestUnitGmqIntegralEncoding
     {
-        private const string Path = "test_publishable_six2.gmq";
-        private const string Path1 = "test_publishable_six2_update1.gmq";
-        private const string Path2 = "test_publishable_six2_update2.gmq";
-        private const string Path3 = "test_publishable_six2_update3.gmq";
 
-        static IPlatformSupport gmqFactory = new DefaultGmqPlatformSupport();
-
-
-        [Fact]
-        public static void TestGmqComposeStateSync()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(126)]
+        [InlineData(127)]
+        [InlineData(128)]
+        [InlineData(UInt64.MaxValue)]
+        public static void TestVlqEncoding(UInt64 val)
         {
-            test_publishable_six.TestComposeStateSync(gmqFactory, Path);
+            SimpleBuffer buffer = new SimpleBuffer();
+            IntegralVlq.writeVlqIntegral(buffer, val);
+
+            UInt64 result = IntegralVlq.readVlqIntegral(buffer.getReadIterator());
+
+            Assert.Equal<UInt64>(val, result);
         }
 
-        [Fact]
-        public static void TestGmqParseStateSync()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(126)]
+        [InlineData(127)]
+        [InlineData(128)]
+        [InlineData(Int64.MaxValue)]
+        [InlineData(Int64.MinValue)]
+        [InlineData(-128)]
+        [InlineData(-127)]
+        [InlineData(-1)]
+        public static void TestZigZagEncoding(Int64 val)
         {
-            test_publishable_six.TestParseStateSync(gmqFactory, Path);
+            UInt64 uns = IntegralVlq.zigzagEncode(val);
+            Int64 result = IntegralVlq.zigzagDecode(uns);
+
+            Assert.Equal<Int64>(val, result);
         }
 
-
-        [Fact]
-        public static void TestGmqComposeUpdate1()
-        {
-            test_publishable_six.TestComposeUpdate(gmqFactory, Path1, test_publishable_six.doUpdate1);
-        }
-
-        [Fact]
-        public static void TestGmqParseUpdate1()
-        {
-            test_publishable_six.TestParseUpdate(gmqFactory, Path1, test_publishable_six.doUpdate1);
-        }
-
-        [Fact]
-        public static void TestGmqComposeUpdate2()
-        {
-            test_publishable_six.TestComposeUpdate(gmqFactory, Path2, test_publishable_six.doUpdate2);
-        }
-
-        [Fact]
-        public static void TestGmqParseUpdate2()
-        {
-            test_publishable_six.TestParseUpdate(gmqFactory, Path2, test_publishable_six.doUpdate2);
-        }
-
-        [Fact]
-        public static void TestComposeNoChangeUpdate3()
-        {
-            test_publishable_six.TestComposeUpdate(gmqFactory, Path3, test_publishable_six.doNothing);
-        }
-
-        [Fact]
-        public static void TestGmqParseNoChangeUpdate3()
-        {
-            test_publishable_six.TestParseUpdate(gmqFactory, Path3, null);
-        }
     }
 
 }

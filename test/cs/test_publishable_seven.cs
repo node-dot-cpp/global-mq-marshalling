@@ -133,7 +133,7 @@ namespace TestProject1
             mtest.publishable_seven data = GetPublishableSeven();
             publ.debugOnlySetData(data);
 
-            BufferT buffer = platform.makeBuffer();
+            SimpleBuffer buffer = new SimpleBuffer();
             IPublishableComposer composer = platform.makePublishableComposer(buffer);
 
             publ.startTick(composer);

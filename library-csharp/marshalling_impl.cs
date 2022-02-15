@@ -33,7 +33,65 @@ using System.Text;
 namespace globalmq.marshalling
 {
 	enum Proto { GMQ, JSON };
+	public class IntegralVlq
+	{
+		public static void writeVlqIntegral(BufferT buff, UInt64 val)
+		{
+			byte[] intTemp = new byte[10];
 
+			int ix = 0;
+			byte current = (byte)(val & 0x7f);
+			val >>= 7;
+			intTemp[ix] = current;
+			bool done = val == 0;
+
+			while (!done)
+			{
+
+				current = (byte)(val & 0x7f);
+				current += 0x80;
+				val >>= 7;
+				++ix;
+				intTemp[ix] = current;
+				done = val == 0;
+			}
+
+			while (ix != 0)
+			{
+				buff.appendUint8(intTemp[ix]);
+				--ix;
+			}
+			buff.appendUint8(intTemp[0]);
+		}
+
+		public static UInt64 zigzagEncode(Int64 i)
+		{
+			return ((UInt64)(i >> 63)) ^ ((UInt64)(i << 1));
+		}
+
+		public static UInt64 readVlqIntegral(ReadIteratorT riter)
+		{
+			UInt64 result = 0;
+			bool done = false;
+			while (!done && riter.isData())
+			{
+				byte current = riter.get();
+				riter.inc();
+				done = current < 128;
+				UInt64 promoted = (UInt64)current & 0x7f;
+				result <<= 7;
+				result = result | promoted;
+			}
+			return result;
+		}
+
+		public static Int64 zigzagDecode(UInt64 i)
+		{
+			return ((Int64)(i >> 1)) ^ (-(Int64)(i & 1));
+		}
+
+
+	}
 	public interface ComposerBase {	}
 	public class JsonComposer : ComposerBase
 	{
@@ -129,20 +187,21 @@ namespace globalmq.marshalling
 	{
 		BufferT buff;
 
+
 		public GmqComposer(BufferT buff_) { buff = buff_; }
 		public BufferT getBuffer()
 		{
 			return buff;
 		}
 
-		public void composeSignedInteger(long num)
+		public void composeSignedInteger(Int64 num)
 		{
-			buff.append(BitConverter.GetBytes(num));
+			IntegralVlq.writeVlqIntegral(buff, IntegralVlq.zigzagEncode(num));
 		}
 
-		public void composeUnsignedInteger(ulong num)
+		public void composeUnsignedInteger(UInt64 num)
 		{
-			buff.append(BitConverter.GetBytes(num));
+			IntegralVlq.writeVlqIntegral(buff, num);
 		}
 
 		public void composeReal(double num)
@@ -175,17 +234,20 @@ namespace globalmq.marshalling
         {
 			return riter;
         }
-		public void parseSignedInteger(out long num)
+
+
+
+		public void parseSignedInteger(out Int64 num)
 		{
-			num = BitConverter.ToInt64(riter.read(8));
+			num = IntegralVlq.zigzagDecode(IntegralVlq.readVlqIntegral(riter));
 		}
-		public void parseUnsignedInteger(out ulong num)
+		public void parseUnsignedInteger(out UInt64 num)
 		{
-			num = BitConverter.ToUInt64(riter.read(8));
+			num = IntegralVlq.readVlqIntegral(riter);
 		}
-		public void parseUnsignedInteger(out int num)
+		public void parseUnsignedInteger(out Int32 num)
 		{
-			num = (int)BitConverter.ToUInt64(riter.read(8));
+			num = (int)IntegralVlq.readVlqIntegral(riter);
 		}
 		public void parseReal(out double num)
 		{
