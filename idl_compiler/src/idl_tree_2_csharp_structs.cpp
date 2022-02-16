@@ -133,6 +133,30 @@ void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s)
 }
 
 
+void generateCsharpCallerParams(FILE* header, CompositeType& s, bool valPrefix)
+{
+	int count = 0;
+	auto& mem = s.getMembers();
+	for (auto it = mem.begin(); it != mem.end(); ++it)
+	{
+		assert(*it != nullptr);
+
+		MessageParameter& param = **it;
+		if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+			continue;
+		++count;
+
+		if (it != mem.begin())
+			fprintf(header, ", ");
+
+		if (valPrefix)
+			fprintf(header, "val.");
+
+		fprintf(header, "%s", param.name.c_str());
+	}
+}
+
+
 void generateCsharpStandardMethods(FILE* header, const char* type_name)
 {
 
@@ -544,7 +568,10 @@ void generateCsharp(FILE* header, Root& root, const std::string& metascope)
 				generateCsharpStructImpl(header, root, *it, type_name.c_str(), interface_name.c_str());
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
-				;//nothing yet
+			{
+				generateCsharpUnionInterface(header, root, *it);
+				generateCsharpUnionImpl(header, root, *it);
+			}
 			else
 				assert(false);
 		}

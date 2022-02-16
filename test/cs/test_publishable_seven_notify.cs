@@ -43,7 +43,7 @@ namespace TestProject1
             notifyUpdated_realVec, notifyElementUpdated_realVec, notifyInserted_realVec, notifyErased_realVec,
             notifyUpdated_strVec, notifyElementUpdated_strVec, notifyInserted_strVec, notifyErased_strVec,
             notifyUpdated_structVec, notifyElementUpdated_structVec, notifyInserted_structVec, notifyErased_structVec,
-            notifyAnyUpdated, notifyFullyUpdated
+            notifyUpdated, notifyFullyUpdated
         };
 
         class point3D_stub :  mtest.point3D_subscriber
@@ -74,7 +74,7 @@ namespace TestProject1
 
 
             public override void notifyFullyUpdated() { handled.Add(Events.notifyFullyUpdated); }
-            public override void notifyAnyUpdated() { handled.Add(Events.notifyAnyUpdated); }
+            public override void notifyUpdated() { handled.Add(Events.notifyUpdated); }
             public override void notifyUpdated_intVec() { handled.Add(Events.notifyUpdated_intVec); }
             public override void notifyElementUpdated_intVec(int index, Int64 old) { handled.Add(Events.notifyElementUpdated_intVec); }
             public override void notifyInserted_intVec(int index) { handled.Add(Events.notifyInserted_intVec); }
@@ -146,7 +146,7 @@ namespace TestProject1
                     Events.notifyFullyUpdated,
                     Events.notifyUpdated_y,
                     Events.notifyUpdated_structVec,
-                    Events.notifyAnyUpdated
+                    Events.notifyUpdated
                 }
             );
         }
@@ -172,7 +172,7 @@ namespace TestProject1
                     Events.notifyUpdated_z,
                     Events.notifyElementUpdated_structVec,
                     Events.notifyUpdated_structVec,
-                    Events.notifyAnyUpdated
+                    Events.notifyUpdated
                 }
             );
         }
@@ -187,7 +187,7 @@ namespace TestProject1
                     Events.notifyUpdated_strVec,
                     Events.notifyUpdated_realVec,
                     Events.notifyUpdated_structVec,
-                    Events.notifyAnyUpdated
+                    Events.notifyUpdated
                 }
             );
         }
@@ -206,7 +206,7 @@ namespace TestProject1
                     Events.notifyUpdated_realVec,
                     Events.notifyErased_structVec,
                     Events.notifyUpdated_structVec,
-                    Events.notifyAnyUpdated
+                    Events.notifyUpdated
                 }
             );
         }
@@ -232,7 +232,7 @@ namespace TestProject1
                     Events.notifyUpdated_z,
                     Events.notifyInserted_structVec,
                     Events.notifyUpdated_structVec,
-                    Events.notifyAnyUpdated
+                    Events.notifyUpdated
                 }
             );
         }

@@ -37,12 +37,17 @@ void checkCsharpStruct(CompositeType& s);
 std::string getCSharpTypeName(CompositeType& s);
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
 void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s);
+void generateCsharpCallerParams(FILE* header, CompositeType& s, bool valPrefix);
 void generateCsharpStandardMethods(FILE* header, const char* type_name);
 void generateCsharpStructEquivalentExpression(FILE* header, CompositeType& s);
 void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeType& s, const char* type_name);
 void generateCsharpStructInterface(FILE* header, Root& root, CompositeType& s, const char* type_name);
 void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name);
-
+void generateCsharpStructMessage(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpUnionInterface(FILE* header, Root& root, CompositeType& s);
+void generateCsharpUnionImpl(FILE* header, Root& root, CompositeType& s);
+void generateCsharpUnionMessage(FILE* header, Root& root, CompositeType& s);
+void generateCsharpUnionSubscriber(FILE* header, Root& root, CompositeType& s, const char* type_name);
 
 
 // code generation

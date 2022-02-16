@@ -222,7 +222,7 @@ namespace {
 				const char* parse_method = csharpPub_getParseMethod(member.type.kind);
 
 				fprintf(header, "\t\t\t%s newVal = parser.parse%s(\"%s\");\n", type_name, parse_method, member.name.c_str());
-				fprintf(header, "\t\t\tchanged = subscriber.update_%s(newVal) || changed;\n", member.name.c_str());
+				fprintf(header, "\t\t\tchanged = subscriber.update_%s(newVal) | changed;\n", member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
@@ -336,7 +336,7 @@ namespace {
 				fprintf(header, "\t\t\t\tif(addr.Length != offset + 1)\n");
 				fprintf(header, "\t\t\t\t\tthrow new Exception();\n");
 				fprintf(header, "\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", type_name, parse_method);
-				fprintf(header, "\t\t\t\tchanged = subscriber.update_%s(newVal) || changed;\n", member.name.c_str());
+				fprintf(header, "\t\t\t\tchanged = subscriber.update_%s(newVal) | changed;\n", member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
@@ -545,13 +545,13 @@ namespace {
 		fprintf(header, "\t\tbool changed = false;\n");
 		fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
 		fprintf(header, "\t\t{\n");
-		fprintf(header, "\t\t\tchanged = %s_subscriber.parse(parser, this, addr, 0) || changed;\n", type_name.c_str());
+		fprintf(header, "\t\t\tchanged = %s_subscriber.parse(parser, this, addr, 0) | changed;\n", type_name.c_str());
 		fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
 		fprintf(header, "\t\t\taddr = null;\n");
 		fprintf(header, "\t\t}\n");
 		fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
 		fprintf(header, "\t\tif(changed)\n");
-		fprintf(header, "\t\t\tthis.notifyAnyUpdated();\n");
+		fprintf(header, "\t\t\tthis.notifyUpdated();\n");
 		fprintf(header, "\t}\n");
 
 		fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
@@ -570,7 +570,7 @@ namespace {
 		if (s.type == CompositeType::Type::publishable)
 		{
 			fprintf(header, "\tpublic virtual void notifyFullyUpdated() { }\n");
-			fprintf(header, "\tpublic virtual void notifyAnyUpdated() { }\n");
+			fprintf(header, "\tpublic virtual void notifyUpdated() { }\n");
 		}
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)
@@ -1174,29 +1174,6 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		//fprintf(header, "\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
-		//fprintf(header, "\tpublic UInt64 stateTypeID() { return %lld; }\n", s.numID);
-
-		//fprintf(header, "\tpublic void applyMessageWithUpdates(IPublishableParser parser)\n");
-		//fprintf(header, "\t{\n");
-		//fprintf(header, "\t\tparser.parseStateUpdateMessageBegin();\n");
-		//fprintf(header, "\t\tUInt64[] addr = null;\n");
-		//fprintf(header, "\t\twhile(parser.parseAddress(ref addr))\n");
-		//fprintf(header, "\t\t{\n");
-		//fprintf(header, "\t\t\t%s_subscriber.parse(parser, this, addr, 0);\n", type_name.c_str());
-		//fprintf(header, "\t\t\tparser.parseAddressEnd();\n");
-		//fprintf(header, "\t\t\taddr = null;\n");
-		//fprintf(header, "\t\t}\n");
-		//fprintf(header, "\t\tparser.parseStateUpdateMessageEnd();\n");
-		//fprintf(header, "\t}\n");
-
-		//fprintf(header, "\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
-		//fprintf(header, "\t{\n");
-		//fprintf(header, "\t\tparser.parseStructBegin();\n");
-		//fprintf(header, "\t\t%s_subscriber.parseForStateSync(parser, this.data);\n", type_name.c_str());
-		//fprintf(header, "\t\tparser.parseStructEnd();\n");
-		//fprintf(header, "\t}\n");
-
 		fprintf(header, "\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
 		fprintf(header, "\t{\n");
 		fprintf(header, "\t\tcomposer.composeStructBegin();\n");
@@ -1214,30 +1191,8 @@ namespace {
 
 		fprintf(header, "public class %s_concentrator : %s_subscriber, StateConcentratorBase\n", type_name.c_str(), type_name.c_str());
 
-		////if (s.type == CompositeType::Type::publishable)
-		////	fprintf(header, " : StateConcentratorBase");
-
-		//fprintf(header, "\n");
-
-
 		fprintf(header, "{\n");
-		//fprintf(header, "\tI%s data = new %s_impl();\n", type_name.c_str(), type_name.c_str());
-
-		//csharpPub_generateAddressEnum(header, s);
-
-		//fprintf(header, "\tpublic %s_concentrator(I%s t)\n", type_name.c_str(), type_name.c_str());
-		//fprintf(header, "\t{\n");
-		//fprintf(header, "\t\tthis.t = t;\n");
-		//fprintf(header, "\t}\n");
-
-
 		csharpPub_generateCompose(header, root, s, type_name);
-		//csharpPub_generateParseStateSync(header, root, s, type_name);
-		//csharpPub_generateParse1(header, root, s, type_name);
-		//csharpPub_generateParse2(header, root, s, type_name);
-
-
-		//if (s.type == CompositeType::Type::publishable)
 		csharpPub_generateStateConcentratorBase(header, s, type_name);
 
 		fprintf(header, "} // class %s_concentrator\n\n", type_name.c_str());
