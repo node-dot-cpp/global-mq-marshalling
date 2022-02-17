@@ -36,19 +36,30 @@
 void checkCsharpStruct(CompositeType& s);
 std::string getCSharpTypeName(CompositeType& s);
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
-void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s);
+const char* getIdlPrimitiveType(MessageParameterType::KIND kind);
+void generateCsharpDeclParams(FILE* header, CompositeType& s);
 void generateCsharpCallerParams(FILE* header, CompositeType& s, bool valPrefix);
 void generateCsharpStandardMethods(FILE* header, const char* type_name);
 void generateCsharpStructEquivalentExpression(FILE* header, CompositeType& s);
-void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeType& s, const char* type_name);
-void generateCsharpStructInterface(FILE* header, Root& root, CompositeType& s, const char* type_name);
-void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name);
-void generateCsharpStructMessage(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name);
-void generateCsharpUnionInterface(FILE* header, Root& root, CompositeType& s);
-void generateCsharpUnionImpl(FILE* header, Root& root, CompositeType& s);
-void generateCsharpUnionMessage(FILE* header, Root& root, CompositeType& s);
-void generateCsharpUnionSubscriber(FILE* header, Root& root, CompositeType& s, const char* type_name);
-
+void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const char* type_name);
+void generateCsharpSimpleEquivalentMethod(FILE* header, const char* type_name, const char* member_name);
+void generateCsharpInterfaceMember(FILE* header, MessageParameter& member);
+void generateCsharpStructInterface(FILE* header, CompositeType& s, const char* type_name);
+void generateCsharpStructImpl(FILE* header, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpStructMessage(FILE* header, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpUnionInterface(FILE* header, CompositeType& s);
+void generateCsharpUnionImpl(FILE* header, CompositeType& s);
+void generateCsharpUnionMessage(FILE* header, CompositeType& s);
+void generateCsharpSubscriberFactoryMethod(FILE* header, MessageParameter& member);
+void generateCsharpSubscriberEventHandler(FILE* header, MessageParameter& member);
+void generateCsharpSubscriberMember(FILE* header, MessageParameter& member);
+void generateCsharpPublisherMember(FILE* header, MessageParameter& member);
+void generateCsharpPublisherCompose(FILE* header, CompositeType& s);
+void generateCsharpSubscriberParseForStateSync(FILE* header, CompositeType& s);
+void generateCsharpSubscriberParse1(FILE* header, CompositeType& s);
+void generateCsharpSubscriberParse2(FILE* header, CompositeType& s);
+void generateCsharpUnionSubscriber(FILE* header, CompositeType& s, const char* type_name);
+void generateCsharpUnionPublisher(FILE* header, CompositeType& s, const char* type_name);
 
 // code generation
 void generateCsharp(FILE* header, Root& root, const std::string& metascope);

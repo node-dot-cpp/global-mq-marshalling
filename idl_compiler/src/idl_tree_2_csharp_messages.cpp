@@ -82,13 +82,13 @@ namespace {
 	}
 
 
-	void csharpMsg_generateStructComposeGmq(FILE* header, Root& root, CompositeType& s)
+	void csharpMsg_generateStructComposeGmq(FILE* header, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
 		fprintf(header, "\tpublic static void compose(GmqComposer composer, ");
 
-		generateCsharpDeclParams(header, root, s);
+		generateCsharpDeclParams(header, s);
 
 		fprintf(header, ")\n\t{\n");
 
@@ -134,8 +134,7 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(param.type.structIdx < root.structs.size());
-					const char* elem_type_name = root.structs[param.type.structIdx]->name.c_str();
+					const char* elem_type_name = param.type.name.c_str();
 
 					fprintf(header, "\t\tGmqCollectionComposer<I%s> %s_wrapper = new GmqCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
 					fprintf(header, "\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
@@ -155,7 +154,7 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeGmq2(FILE* header, Root& root, CompositeType& s, const char* type_name)
+	void csharpMsg_generateStructComposeGmq2(FILE* header, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -255,13 +254,13 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeJson(FILE* header, Root& root, CompositeType& s)
+	void csharpMsg_generateStructComposeJson(FILE* header, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
 		fprintf(header, "\tpublic static void compose(JsonComposer composer, ");
 
-		generateCsharpDeclParams(header, root, s);
+		generateCsharpDeclParams(header, s);
 
 		fprintf(header, ")\n"
 			"\t{\n");
@@ -318,8 +317,7 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(param.type.structIdx < root.structs.size());
-					const char* elem_type_name = root.structs[param.type.structIdx]->name.c_str();
+					const char* elem_type_name = param.type.name.c_str();
 
 					fprintf(header, "\t\tJsonCollectionComposer<I%s> %s_wrapper = new JsonCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
 					fprintf(header, "\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
@@ -342,7 +340,7 @@ namespace {
 		fprintf(header, "\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeJson2(FILE* header, Root& root, CompositeType& s, const char* type_name)
+	void csharpMsg_generateStructComposeJson2(FILE* header, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -530,9 +528,8 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					assert(member.type.structIdx < root.structs.size());
-					const char* type_name = root.structs[member.type.structIdx]->name.c_str();
-					fprintf(header, "\tpublic List<%s> %s = new List<%s>();\n", type_name, member.name.c_str(), type_name);
+					const char* elem_type_name = member.type.name.c_str();
+					fprintf(header, "\tpublic List<%s> %s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
 					break;
 				}
 				default:
@@ -546,14 +543,14 @@ namespace {
 		}
 	}
 
-	void csharpMsg_generateComposeMessageMethod(FILE* header, Root& root, CompositeType& s, const std::string& msgName, Proto proto)
+	void csharpMsg_generateComposeMessageMethod(FILE* header, CompositeType& s, const std::string& msgName, Proto proto)
 	{
 		// when message is an alias we feed structure here
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure);
 
 		fprintf(header, "\tpublic static void composeMessage_%s(BufferT buffer, ", msgName.c_str());
 
-		generateCsharpDeclParams(header, root, s);
+		generateCsharpDeclParams(header, s);
 
 		fprintf(header, ")\n\t{\n");
 
@@ -613,11 +610,11 @@ namespace {
 	}
 
 
-	void csharpMsg_generateMessageAliasMethods(FILE* header, Root& root, CompositeType& target, const char* composerType, const char* parserType)
+	void csharpMsg_generateMessageAliasMethods(FILE* header, CompositeType& target, const char* composerType, const char* parserType)
 	{
 
 		fprintf(header, "\tpublic static void compose(%s composer, ", composerType);
-		generateCsharpDeclParams(header, root, target);
+		generateCsharpDeclParams(header, target);
 		fprintf(header, ")\n\t{\n");
 
 		fprintf(header, "\t\t%s_message.compose(composer, ", target.name.c_str());
@@ -708,7 +705,7 @@ namespace {
 	}
 }
 
-void generateCsharpStructMessage(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
+void generateCsharpStructMessage(FILE* header, CompositeType& s, const char* type_name, const char* interface_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -716,10 +713,10 @@ void generateCsharpStructMessage(FILE* header, Root& root, CompositeType& s, con
 	fprintf(header, "{\n");
 
 	//csharpMsg_generateStructComposeBase(header, s);
-	csharpMsg_generateStructComposeJson(header, root, s);
-	csharpMsg_generateStructComposeGmq(header, root, s);
-	csharpMsg_generateStructComposeJson2(header, root, s, interface_name);
-	csharpMsg_generateStructComposeGmq2(header, root, s, interface_name);
+	csharpMsg_generateStructComposeJson(header, s);
+	csharpMsg_generateStructComposeGmq(header, s);
+	csharpMsg_generateStructComposeJson2(header, s, interface_name);
+	csharpMsg_generateStructComposeGmq2(header, s, interface_name);
 
 	csharpMsg_generateStructParseJson3(header, s, interface_name);
 	csharpMsg_generateStructParseGmq3(header, s, interface_name);
@@ -749,10 +746,10 @@ void generateCsharpMessages(FILE* header, Root& root, const std::string& metasco
 				std::string type_name = getCSharpTypeName(*it);
 				std::string interface_name = "I" + type_name;
 
-				generateCsharpStructMessage(header, root, *it, type_name.c_str(), interface_name.c_str());
+				generateCsharpStructMessage(header, *it, type_name.c_str(), interface_name.c_str());
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
-				generateCsharpUnionMessage(header, root, *it);
+				generateCsharpUnionMessage(header, *it);
 			else
 				assert(false);
 		}
@@ -782,10 +779,10 @@ void generateCsharpMessages(FILE* header, Root& root, const std::string& metasco
 				std::string type_name = getCSharpTypeName(*it);
 				std::string interface_name = "I" + type_name;
 
-				generateCsharpStructInterface(header, root, *it, type_name.c_str());
-				generateCsharpStructImpl(header, root, *it, type_name.c_str(), interface_name.c_str());
-				generateCsharpStructMessage(header, root, *it, type_name.c_str(), interface_name.c_str());
-				csharpMsg_generateComposeMessageMethod(header, root, *it, it->name, scope->proto);
+				generateCsharpStructInterface(header, *it, type_name.c_str());
+				generateCsharpStructImpl(header, *it, type_name.c_str(), interface_name.c_str());
+				generateCsharpStructMessage(header, *it, type_name.c_str(), interface_name.c_str());
+				csharpMsg_generateComposeMessageMethod(header, *it, it->name, scope->proto);
 				csharpMsg_generateParseMessageMethod(header, type_name.c_str(), type_name.c_str());
 			}
 			else
@@ -793,7 +790,7 @@ void generateCsharpMessages(FILE* header, Root& root, const std::string& metasco
 				assert(it->aliasIdx < root.structs.size());
 				auto& alias = root.structs[static_cast<decltype(root.structs)::size_type>(it->aliasIdx)];
 
-				csharpMsg_generateComposeMessageMethod(header, root, *alias, it->name, scope->proto);
+				csharpMsg_generateComposeMessageMethod(header, *alias, it->name, scope->proto);
 				csharpMsg_generateParseMessageMethod(header, it->name.c_str(), alias->name.c_str());
 			}
 

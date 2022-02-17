@@ -68,8 +68,25 @@ const char* getCSharpPrimitiveType(MessageParameterType::KIND kind)
 	return nullptr;
 }
 
+const char* getIdlPrimitiveType(MessageParameterType::KIND kind)
+{
+	switch (kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+		return "Integer";
+	case MessageParameterType::KIND::UINTEGER:
+		return "Unsigned";
+	case MessageParameterType::KIND::REAL:
+		return "Real";
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		return "String";
+	default:
+		assert(false);
+	}
+	return nullptr;
+}
 
-void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s)
+void generateCsharpDeclParams(FILE* header, CompositeType& s)
 {
 	int count = 0;
 	auto& mem = s.getMembers();
@@ -116,9 +133,8 @@ void generateCsharpDeclParams(FILE* header, Root& root, CompositeType& s)
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 			{
-				assert(member.type.structIdx < root.structs.size());
-				const std::string type_name = root.structs[member.type.structIdx]->name;
-				fprintf(header, "IList<I%s> %s", type_name.c_str(), member.name.c_str());
+				const char* elem_type_name = member.type.name.c_str();
+				fprintf(header, "IList<I%s> %s", elem_type_name, member.name.c_str());
 				break;
 			}
 			default:
@@ -296,8 +312,7 @@ void generateCsharpStructEquivalentExpression(FILE* header, CompositeType& s)
 	}
 }
 
-
-void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeType& s, const char* type_name)
+void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -318,7 +333,67 @@ void generateCsharpStructEquivalentMethod(FILE* header, Root& root, CompositeTyp
 	fprintf(header, ";\n\t}\n");
 }
 
-void generateCsharpStructInterface(FILE* header, Root& root, CompositeType& s, const char* type_name)
+void generateCsharpSimpleEquivalentMethod(FILE* header, const char* type_name, const char* member_name)
+{
+	fprintf(header, "\tpublic bool isEquivalent(I%s other)\n", type_name);
+	fprintf(header,
+		"\t{\n"
+		"\t\tif (ReferenceEquals(other, null))\n"
+		"\t\t\treturn false;\n"
+		"\t\telse if (ReferenceEquals(this, other))\n"
+		"\t\t\treturn true;\n"
+		"\t\telse\n"
+		"\t\t\treturn %s.isEquivalent(other);\n"
+		"\t}\n", member_name
+	);
+}
+
+void generateCsharpInterfaceMember(FILE* header, MessageParameter& member)
+{
+	switch (member.type.kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		fprintf(header, "\t%s %s { get; set; }\n", getCSharpPrimitiveType(member.type.kind), member.name.c_str());
+		break;
+	case MessageParameterType::KIND::STRUCT:
+	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		fprintf(header, "\tI%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
+		break;
+	case MessageParameterType::KIND::VECTOR:
+	{
+		switch (member.type.vectorElemKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+		{
+			const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+			fprintf(header, "\tIList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+			break;
+		}
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		{
+			const char* elem_type_name = member.type.name.c_str();
+			fprintf(header, "\tIList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+		break;
+	}
+	default:
+		assert(false); // not implemented (yet)
+	}
+}
+
+
+void generateCsharpStructInterface(FILE* header, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -334,53 +409,13 @@ void generateCsharpStructInterface(FILE* header, Root& root, CompositeType& s, c
 		auto& it = mem[i];
 		assert(it != nullptr);
 		auto& member = *it;
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			fprintf(header, "\t%s %s { get; set; }\n", getCSharpPrimitiveType(member.type.kind), member.name.c_str());
-			break;
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			fprintf(header, "\tI%s %s { get; set; }\n", member.type.name.c_str(), member.name.c_str());
-			break;
-		case MessageParameterType::KIND::VECTOR:
-		{
-			switch (member.type.vectorElemKind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-			{
-				const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
-				fprintf(header, "\tIList<%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
-				break;
-			}
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			{
-				assert(member.type.structIdx < root.structs.size());
-				const std::string type_name = root.structs[member.type.structIdx]->name;
-				fprintf(header, "\tIList<I%s> %s { get; set; }\n", type_name.c_str(), member.name.c_str());
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-			break;
-		}
-		default:
-			assert(false); // not implemented (yet)
-		}
+		generateCsharpInterfaceMember(header, *it);
 	}
 
 	fprintf(header, "} // interface %s\n\n", type_name);
 }
 
-void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const char* type_name, const char* interface_name)
+void generateCsharpStructImpl(FILE* header, CompositeType& s, const char* type_name, const char* interface_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -461,8 +496,7 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 			{
-				assert(member.type.structIdx < root.structs.size());
-				const char* elem_type_name = root.structs[member.type.structIdx]->name.c_str();
+				const char* elem_type_name = member.type.name.c_str();
 				fprintf(header, "\tList<I%s> _%s = new List<I%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
 				fprintf(header, "\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
 				fprintf(header, "\t{\n");
@@ -495,7 +529,7 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 
 	//constructor with all members
 	fprintf(header, "\tpublic %s(", type_name);
-	generateCsharpDeclParams(header, root, s);
+	generateCsharpDeclParams(header, s);
 	fprintf(header, ")\n");
 
 	fprintf(header, "\t{\n");
@@ -513,7 +547,7 @@ void generateCsharpStructImpl(FILE* header, Root& root, CompositeType& s, const 
 	generateCsharpStandardMethods(header, type_name);
 	generateCsharpStructEqualsMethod(header, s, type_name);
 	if (interface_name)
-		generateCsharpStructEquivalentMethod(header, root, s, interface_name);
+		generateCsharpStructEquivalentMethod(header, s, interface_name);
 
 	fprintf(header, "} // class %s\n\n", type_name);
 }
@@ -564,13 +598,13 @@ void generateCsharp(FILE* header, Root& root, const std::string& metascope)
 				std::string type_name = getCSharpTypeName(*it);
 				std::string interface_name = "I" + type_name;
 
-				generateCsharpStructInterface(header, root, *it, type_name.c_str());
-				generateCsharpStructImpl(header, root, *it, type_name.c_str(), interface_name.c_str());
+				generateCsharpStructInterface(header, *it, type_name.c_str());
+				generateCsharpStructImpl(header, *it, type_name.c_str(), interface_name.c_str());
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
 			{
-				generateCsharpUnionInterface(header, root, *it);
-				generateCsharpUnionImpl(header, root, *it);
+				generateCsharpUnionInterface(header, *it);
+				generateCsharpUnionImpl(header, *it);
 			}
 			else
 				assert(false);

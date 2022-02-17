@@ -13,6 +13,7 @@ add_executable(idl_compiler
     src/idl_tree_2_csharp_messages.cpp
     src/idl_tree_2_csharp_publishables.cpp
     src/idl_tree_2_csharp_structs.cpp
+    src/idl_tree_2_csharp_unions.cpp
     src/main.cpp
 )
 

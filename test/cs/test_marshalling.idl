@@ -93,3 +93,8 @@ PUBLISHABLE publishable_seven = 7 {
 	VECTOR<CHARACTER-STRING> strVec;
 	VECTOR<STRUCT point3D> structVec;
 };
+
+ //PUBLISHABLE publishable_eight = 8 {
+ //	CHARACTER-STRING name;
+ //	DISCRIMINATED_UNION du_one disc_union;
+ //};
