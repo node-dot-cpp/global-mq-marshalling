@@ -64,10 +64,6 @@ const char* getIdlPrimitiveType2(MessageParameterType::KIND kind);
 std::string generateCsharpDeclParams(CompositeType& s);
 std::string generateCsharpCallerParams(CompositeType& s, bool valPrefix);
 
-void generateCsharpDeclParams(FILE* header, CompositeType& s);
-void generateCsharpCallerParams(FILE* header, CompositeType& s, bool valPrefix);
-
-
 void generateCsharpStandardMethods(FILE* header, const char* type_name);
 void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeType& s);
 void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const char* type_name);

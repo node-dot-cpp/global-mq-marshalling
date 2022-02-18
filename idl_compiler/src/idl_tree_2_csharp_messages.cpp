@@ -61,11 +61,12 @@ namespace {
 
 		CsharpFileWritter f(header, 0);
 
-		f.write("\tpublic static void compose(GmqComposer composer, ");
+		string decl = generateCsharpDeclParams(s);
+		f.write("\tpublic static void compose(GmqComposer composer, %s)\n", decl.c_str());
 
-		generateCsharpDeclParams(header, s);
+		
 
-		f.write(")\n\t{\n");
+		f.write("\t{\n");
 
 		int count = 0;
 		auto& mem = s.getMembers();
@@ -138,9 +139,8 @@ namespace {
 		f.write("\tpublic static void compose(GmqComposer composer, %s val)\n", type_name);
 		f.write("\t{\n");
 
-		f.write("\t\tcompose(composer, ");
-		generateCsharpCallerParams(header, s, true);
-		f.write(");\n");
+		string caller = generateCsharpCallerParams(s, true);
+		f.write("\t\tcompose(composer, %s);\n", caller.c_str());
 
 		f.write("\t}\n");
 	}
@@ -239,11 +239,8 @@ namespace {
 
 		CsharpFileWritter f(header, 0);
 
-		f.write("\tpublic static void compose(JsonComposer composer, ");
-
-		generateCsharpDeclParams(header, s);
-
-		f.write(")\n");
+		string decl = generateCsharpDeclParams(s);
+		f.write("\tpublic static void compose(JsonComposer composer, %s)\n", decl.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tcomposer.append( \"{\\n  \");\n");
@@ -332,10 +329,9 @@ namespace {
 
 		f.write("\t{\n");
 		
-		f.write("\t\tcompose(composer, ");
-		generateCsharpCallerParams(header, s, true);
-		f.write(");\n");
-
+		string caller = generateCsharpCallerParams(s, true);
+		f.write("\t\tcompose(composer, %s);\n", caller.c_str());
+		
 		f.write("\t}\n");
 	}
 
@@ -534,11 +530,9 @@ namespace {
 
 		CsharpFileWritter f(header, 0);
 
-		f.write("\tpublic static void composeMessage_%s(BufferT buffer, ", msgName.c_str());
-
-		generateCsharpDeclParams(header, s);
-
-		f.write(")\n\t{\n");
+		string decl = generateCsharpDeclParams(s);
+		f.write("\tpublic static void composeMessage_%s(BufferT buffer, %s)\n", msgName.c_str(), decl.c_str());
+		f.write("\t{\n");
 
 		if (proto == Proto::gmq)
 		{
