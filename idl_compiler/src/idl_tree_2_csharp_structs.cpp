@@ -199,9 +199,9 @@ string generateCsharpCallerParams(CompositeType& s, bool valPrefix)
 }
 
 
-void generateCsharpStandardMethods(FILE* header, const char* type_name)
+void generateCsharpStandardMethods(CsharpFileWritter& f, const char* type_name)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	f.write("\tpublic override bool Equals(object obj)\n");
 	f.write("\t{\n");
@@ -233,13 +233,13 @@ void generateCsharpStandardMethods(FILE* header, const char* type_name)
 
 }
 
-void generateCsharpStructEqualsMethod(FILE* header, CompositeType& s, const char* type_name)
+void generateCsharpStructEqualsMethod(CsharpFileWritter& f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
 		s.type == CompositeType::Type::publishable);
 
-	CsharpFileWritter f(header, 0);
+
 
 	f.write("\tpublic bool Equals(%s other)\n", type_name);
 	f.write("\t{\n");
@@ -340,13 +340,13 @@ void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeTyp
 	}
 }
 
-void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const char* type_name)
+void generateCsharpStructEquivalentMethod(CsharpFileWritter& f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
 		s.type == CompositeType::Type::publishable);
 
-	CsharpFileWritter f(header, 0);
+
 
 	f.write("\tpublic bool isEquivalent(%s other)\n", type_name);
 	f.write("\t{\n");
@@ -361,9 +361,9 @@ void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const 
 	f.write("\t}\n");
 }
 
-void generateCsharpSimpleEquivalentMethod(FILE* header, const char* type_name, const char* member_name)
+void generateCsharpSimpleEquivalentMethod(CsharpFileWritter& f, const char* type_name, const char* member_name)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	f.write("\tpublic bool isEquivalent(I%s other)\n", type_name);
 	f.write("\t{\n");
@@ -376,9 +376,9 @@ void generateCsharpSimpleEquivalentMethod(FILE* header, const char* type_name, c
 	f.write("\t}\n");
 }
 
-void generateCsharpInterfaceMember(FILE* header, MessageParameter& member)
+void generateCsharpInterfaceMember(CsharpFileWritter& f, MessageParameter& member)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	switch (member.type.kind)
 	{
@@ -423,13 +423,13 @@ void generateCsharpInterfaceMember(FILE* header, MessageParameter& member)
 }
 
 
-void generateCsharpStructInterface(FILE* header, CompositeType& s, const char* type_name)
+void generateCsharpStructInterface(CsharpFileWritter& f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
 		s.type == CompositeType::Type::publishable);
 
-	CsharpFileWritter f(header, 0);
+
 
 	f.write("public interface I%s : IEquivalenceComparable<I%s>\n", type_name, type_name);
 	f.write("{\n");
@@ -441,13 +441,13 @@ void generateCsharpStructInterface(FILE* header, CompositeType& s, const char* t
 		auto& it = mem[i];
 		assert(it != nullptr);
 		auto& member = *it;
-		generateCsharpInterfaceMember(header, *it);
+		generateCsharpInterfaceMember(f, *it);
 	}
 
 	f.write("} // interface %s\n\n", type_name);
 }
 
-void generateCsharpStructImpl(FILE* header, CompositeType& s, const char* type_name, const char* interface_name)
+void generateCsharpStructImpl(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -456,7 +456,7 @@ void generateCsharpStructImpl(FILE* header, CompositeType& s, const char* type_n
 	//interface_name is nullptr for discriminated_union_case only
 	assert(interface_name != nullptr || s.type == CompositeType::Type::discriminated_union_case);
 
-	CsharpFileWritter f(header, 0);
+
 
 	if(s.type == CompositeType::Type::discriminated_union_case)
 		f.write("public class %s : IEquatable<%s>\n", type_name, type_name);
@@ -580,10 +580,10 @@ void generateCsharpStructImpl(FILE* header, CompositeType& s, const char* type_n
 	f.write("\t}\n");
 
 
-	generateCsharpStandardMethods(header, type_name);
-	generateCsharpStructEqualsMethod(header, s, type_name);
+	generateCsharpStandardMethods(f, type_name);
+	generateCsharpStructEqualsMethod(f, s, type_name);
 	if (s.type != CompositeType::Type::discriminated_union_case)
-		generateCsharpStructEquivalentMethod(header, s, interface_name);
+		generateCsharpStructEquivalentMethod(f, s, interface_name);
 
 	f.write("} // class %s\n\n", type_name);
 }

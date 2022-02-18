@@ -40,6 +40,7 @@ class CsharpFileWritter
 public:
 	CsharpFileWritter(FILE* file, size_t initialIndent) : file(file), currentIndent(initialIndent, '\t') {}
 
+	FILE* getFile() { return file; }
 	void increment();
 	void decrement();
 	// mb: make variadic only if real necesity
@@ -64,32 +65,32 @@ const char* getIdlPrimitiveType2(MessageParameterType::KIND kind);
 std::string generateCsharpDeclParams(CompositeType& s);
 std::string generateCsharpCallerParams(CompositeType& s, bool valPrefix);
 
-void generateCsharpStandardMethods(FILE* header, const char* type_name);
+void generateCsharpStandardMethods(CsharpFileWritter& f, const char* type_name);
 void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const char* type_name);
-void generateCsharpSimpleEquivalentMethod(FILE* header, const char* type_name, const char* member_name);
-void generateCsharpInterfaceMember(FILE* header, MessageParameter& member);
-void generateCsharpStructInterface(FILE* header, CompositeType& s, const char* type_name);
-void generateCsharpStructImpl(FILE* header, CompositeType& s, const char* type_name, const char* interface_name);
-void generateCsharpStructMessage(FILE* header, CompositeType& s, const char* type_name, const char* interface_name);
-void generateCsharpUnionInterface(FILE* header, CompositeType& s);
-void generateCsharpUnionImpl(FILE* header, CompositeType& s);
-void generateCsharpUnionMessage(FILE* header, CompositeType& s);
-void generateCsharpSubscriberFactoryMethod(FILE* header, MessageParameter& member);
-void generateCsharpSubscriberEventHandler(FILE* header, MessageParameter& member);
-void generateCsharpSubscriberMember(FILE* header, MessageParameter& member);
-void generateCsharpPublisherMember(FILE* header, MessageParameter& member);
-void generateCsharpPublisherCompose(FILE* header, CompositeType& s);
-void generateCsharpSubscriberParseForStateSync(FILE* header, CompositeType& s);
-void generateCsharpSubscriberParse1(FILE* header, CompositeType& s);
-void generateCsharpSubscriberParse2(FILE* header, CompositeType& s);
-void generateCsharpUnionSubscriber(FILE* header, CompositeType& s, const char* type_name);
-void generateCsharpUnionPublisher(FILE* header, CompositeType& s, const char* type_name);
+void generateCsharpStructEquivalentMethod(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpSimpleEquivalentMethod(CsharpFileWritter& f, const char* type_name, const char* member_name);
+void generateCsharpInterfaceMember(CsharpFileWritter& f, MessageParameter& member);
+void generateCsharpStructInterface(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpStructImpl(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpStructMessage(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpUnionInterface(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpUnionMessage(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParameter& member);
+void generateCsharpSubscriberEventHandler(CsharpFileWritter& f, MessageParameter& member);
+void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& member);
+void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& member);
+void generateCsharpPublisherCompose(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpSubscriberParseForStateSync(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpSubscriberParse1(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpSubscriberParse2(CsharpFileWritter& f, CompositeType& s);
+void generateCsharpUnionSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpUnionPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name);
 
 // code generation
-void generateCsharp(FILE* header, Root& root, const std::string& metascope);
-void generateCsharpMessages(FILE* header, Root& root, const std::string& metascope);
-void generateCsharpPublishables(FILE* header, Root& root, const std::string& metascope);
+void generateCsharp(FILE* file, Root& root, const std::string& metascope);
+void generateCsharpMessages(CsharpFileWritter& f, Root& root, const std::string& metascope);
+void generateCsharpPublishables(CsharpFileWritter& f, Root& root, const std::string& metascope);
 
 
 

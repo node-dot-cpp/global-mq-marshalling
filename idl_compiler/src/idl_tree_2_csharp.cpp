@@ -109,9 +109,9 @@ void CsharpFileWritter::write(const char* format, const char* arg0, const char* 
 
 
 
-void generateCsharp(FILE* header, Root& root, const std::string& metascope)
+void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 {
-	CsharpFileWritter f(header, 0);
+	CsharpFileWritter f(file, 0);
 
 	f.write("//////////////////////////////////////////////////////////////\n");
 	f.write("//\n");
@@ -154,13 +154,13 @@ void generateCsharp(FILE* header, Root& root, const std::string& metascope)
 				std::string type_name = getCSharpTypeName(*it);
 				std::string interface_name = "I" + type_name;
 
-				generateCsharpStructInterface(header, *it, type_name.c_str());
-				generateCsharpStructImpl(header, *it, type_name.c_str(), interface_name.c_str());
+				generateCsharpStructInterface(f, *it, type_name.c_str());
+				generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
 			{
-				generateCsharpUnionInterface(header, *it);
-				generateCsharpUnionImpl(header, *it);
+				generateCsharpUnionInterface(f, *it);
+				generateCsharpUnionImpl(f, *it);
 			}
 			else
 				assert(false);
@@ -173,7 +173,7 @@ void generateCsharp(FILE* header, Root& root, const std::string& metascope)
 	f.write("//\n");
 	f.write("//////////////////////////////////////////////////////////////\n\n");
 
-	generateCsharpMessages(header, root, metascope);
+	generateCsharpMessages(f, root, metascope);
 
 	f.write("//////////////////////////////////////////////////////////////\n");
 	f.write("//\n");
@@ -181,7 +181,7 @@ void generateCsharp(FILE* header, Root& root, const std::string& metascope)
 	f.write("//\n");
 	f.write("//////////////////////////////////////////////////////////////\n\n");
 
-	generateCsharpPublishables(header, root, metascope);
+	generateCsharpPublishables(f, root, metascope);
 
 	f.write("\n} // namespace %s\n\n", metascope.c_str());
 }

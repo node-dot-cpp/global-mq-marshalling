@@ -34,11 +34,11 @@
 
 namespace {
 
-	void csharpPub_generateAddressEnum(FILE* header, CompositeType& s)
+	void csharpPub_generateAddressEnum(CsharpFileWritter& f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tenum Address\n");
 		f.write("\t{\n");
@@ -59,59 +59,59 @@ namespace {
 		f.write("}\n");
 	}
 
-	void csharpPub_generateParseStateSync(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParseStateSync(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, %s_subscriber subscriber)\n", type_name.c_str());
 		f.write("\t{\n");
 
-		generateCsharpSubscriberParseForStateSync(header, s);
+		generateCsharpSubscriberParseForStateSync(f, s);
 		
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParse1(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse1(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber)\n", type_name.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tbool changed = false;\n");
 
-		generateCsharpSubscriberParse1(header, s);
+		generateCsharpSubscriberParse1(f, s);
 
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParse2(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse2(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber, UInt64[] addr, int offset)\n", type_name.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tbool changed = false;\n");
 
-		generateCsharpSubscriberParse2(header, s);
+		generateCsharpSubscriberParse2(f, s);
 
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateStateSubscriberBase(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStateSubscriberBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic String stateSubscriberName() { return \"%s\"; }\n", s.name.c_str());
 
@@ -143,11 +143,11 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateEventHandlerSubs(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateEventHandlerSubs(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		if (s.type == CompositeType::Type::publishable)
 		{
@@ -159,13 +159,13 @@ namespace {
 		{
 			auto& it = mem[i];
 			assert(it != nullptr);
-			generateCsharpSubscriberEventHandler(header, *it);
+			generateCsharpSubscriberEventHandler(f, *it);
 		}
 	}
 
 
 
-	void csharpPub_generateFactoryMethodSubs(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateFactoryMethodSubs(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -174,15 +174,15 @@ namespace {
 		{
 			auto& it = mem[i];
 			assert(it != nullptr);
-			generateCsharpSubscriberFactoryMethod(header, *it);
+			generateCsharpSubscriberFactoryMethod(f, *it);
 		}
 	}
 
-	void csharpPub_generateSubscriberResetHandlers(FILE* header, CompositeType& s)
+	void csharpPub_generateSubscriberResetHandlers(CsharpFileWritter& f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic void reset_handlers()\n");
 		f.write("\t{\n");
@@ -226,11 +226,11 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateStructSubs(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStructSubs(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		if(s.type == CompositeType::Type::publishable)
 			f.write("public class %s_subscriber : I%s, StateSubscriberBase\n", type_name.c_str(), type_name.c_str());
@@ -244,8 +244,8 @@ namespace {
 		f.write("\t/////////////////////////////////  begin user override section /////////////////////////////////\n");
 		f.write("\n");
 
-		csharpPub_generateFactoryMethodSubs(header, s, type_name);
-		csharpPub_generateEventHandlerSubs(header, s, type_name);
+		csharpPub_generateFactoryMethodSubs(f, s, type_name);
+		csharpPub_generateEventHandlerSubs(f, s, type_name);
 
 		f.write("\n");
 		f.write("\t/////////////////////////////////   end user override section  /////////////////////////////////\n");
@@ -255,7 +255,7 @@ namespace {
 
 		f.write("\tprotected I%s data;\n", type_name.c_str());
 
-		csharpPub_generateAddressEnum(header, s);
+		csharpPub_generateAddressEnum(f, s);
 
 		if (s.type == CompositeType::Type::publishable)
 			f.write("\tpublic %s_subscriber() { this.data = new %s(); }\n", type_name.c_str(), type_name.c_str());
@@ -268,19 +268,19 @@ namespace {
 		{
 			auto& it = mem[i];
 			assert(it != nullptr);
-			generateCsharpSubscriberMember(header, *it);
+			generateCsharpSubscriberMember(f, *it);
 		}
 
-		generateCsharpSimpleEquivalentMethod(header, type_name.c_str(), "data");
+		generateCsharpSimpleEquivalentMethod(f, type_name.c_str(), "data");
 
-		csharpPub_generateParseStateSync(header, s, type_name);
-		csharpPub_generateParse1(header, s, type_name);
-		csharpPub_generateParse2(header, s, type_name);
+		csharpPub_generateParseStateSync(f, s, type_name);
+		csharpPub_generateParse1(f, s, type_name);
+		csharpPub_generateParse2(f, s, type_name);
 
 		if (s.type == CompositeType::Type::publishable)
-			csharpPub_generateStateSubscriberBase(header, s, type_name);
+			csharpPub_generateStateSubscriberBase(f, s, type_name);
 
-		csharpPub_generateSubscriberResetHandlers(header, s);
+		csharpPub_generateSubscriberResetHandlers(f, s);
 
 		f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 		f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name.c_str());
@@ -293,26 +293,26 @@ namespace {
 		f.write("} // class %s_subscriber\n\n", type_name.c_str());
 	}
 
-	void csharpPub_generateCompose(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateCompose(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic static void compose(IPublishableComposer composer, I%s t)\n", type_name.c_str());
 		f.write("\t{\n");
 
-		generateCsharpPublisherCompose(header, s);
+		generateCsharpPublisherCompose(f, s);
 
 		f.write("\t}\n");
 	}
 
 
-	void csharpPub_generateStatePublishableBase(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStatePublishableBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic int idx { get; set; } // for use in pools, etc\n");
 		f.write("\tpublic String statePublisherName() { return \"%s\"; }\n", s.name.c_str());
@@ -342,11 +342,11 @@ namespace {
 	}
 
 
-	void csharpPub_generateStructPubl(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStructPubl(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		if (s.type == CompositeType::Type::publishable)
 			f.write("public class %s_publisher : I%s, StatePublisherBase\n", type_name.c_str(), type_name.c_str());
@@ -362,7 +362,7 @@ namespace {
 		f.write("\tIPublishableComposer composer;\n");
 		f.write("\tUInt64[] address;\n");
 
-		csharpPub_generateAddressEnum(header, s);
+		csharpPub_generateAddressEnum(f, s);
 
 		if (s.type == CompositeType::Type::publishable)
 		{
@@ -387,15 +387,15 @@ namespace {
 		{
 			auto& it = mem[i];
 			assert(it != nullptr);
-			generateCsharpPublisherMember(header, *it);
+			generateCsharpPublisherMember(f, *it);
 		}
 
-		generateCsharpSimpleEquivalentMethod(header, type_name.c_str(), "t");
+		generateCsharpSimpleEquivalentMethod(f, type_name.c_str(), "t");
 
-		csharpPub_generateCompose(header, s, type_name);
+		csharpPub_generateCompose(f, s, type_name);
 
 		if (s.type == CompositeType::Type::publishable)
-			csharpPub_generateStatePublishableBase(header, s, type_name);
+			csharpPub_generateStatePublishableBase(f, s, type_name);
 
 
 		//f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
@@ -408,11 +408,11 @@ namespace {
 		f.write("} // class %s_publisher\n\n", type_name.c_str());
 	}
 
-	void csharpPub_generateStateConcentratorBase(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStateConcentratorBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
 		f.write("\t{\n");
@@ -424,26 +424,26 @@ namespace {
 	}
 
 
-	void csharpPub_generateStructConcentrator(FILE* header, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStructConcentrator(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("public class %s_concentrator : %s_subscriber, StateConcentratorBase\n", type_name.c_str(), type_name.c_str());
 
 		f.write("{\n");
-		csharpPub_generateCompose(header, s, type_name);
-		csharpPub_generateStateConcentratorBase(header, s, type_name);
+		csharpPub_generateCompose(f, s, type_name);
+		csharpPub_generateStateConcentratorBase(f, s, type_name);
 
 		f.write("} // class %s_concentrator\n\n", type_name.c_str());
 	}
 
-	void csharpPub_generateConcentratorFactory(FILE* header, Root& root)
+	void csharpPub_generateConcentratorFactory(CsharpFileWritter& f, Root& root)
 	{
 		assert(!root.publishables.empty());
 
-		CsharpFileWritter f(header, 0);
+
 
 		f.write("public class StateConcentratorFactory : IStateConcentratorFactory\n");
 		f.write("{\n");
@@ -470,9 +470,9 @@ namespace {
 	}
 }
 
-void generateCsharpSubscriberFactoryMethod(FILE* header, MessageParameter& member)
+void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParameter& member)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	switch (member.type.kind)
 	{
@@ -511,9 +511,9 @@ void generateCsharpSubscriberFactoryMethod(FILE* header, MessageParameter& membe
 	}
 }
 
-void generateCsharpSubscriberEventHandler(FILE* header, MessageParameter& member)
+void generateCsharpSubscriberEventHandler(CsharpFileWritter& f, MessageParameter& member)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	switch (member.type.kind)
 	{
@@ -565,9 +565,9 @@ void generateCsharpSubscriberEventHandler(FILE* header, MessageParameter& member
 	}
 }
 
-void generateCsharpSubscriberMember(FILE* header, MessageParameter& member)
+void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& member)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	switch (member.type.kind)
 	{
@@ -665,9 +665,9 @@ void generateCsharpSubscriberMember(FILE* header, MessageParameter& member)
 	}
 }
 
-void generateCsharpPublisherMember(FILE* header, MessageParameter& member)
+void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& member)
 {
-	CsharpFileWritter f(header, 0);
+
 
 	switch (member.type.kind)
 	{
@@ -787,12 +787,12 @@ void generateCsharpPublisherMember(FILE* header, MessageParameter& member)
 }
 
 
-void generateCsharpPublisherCompose(FILE* header, CompositeType& s)
+void generateCsharpPublisherCompose(CsharpFileWritter& f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case);
 
-	CsharpFileWritter f(header, 0);
+
 
 	auto& mem = s.getMembers();
 	for (size_t i = 0; i < mem.size(); ++i)
@@ -851,12 +851,12 @@ void generateCsharpPublisherCompose(FILE* header, CompositeType& s)
 	}
 }
 
-void generateCsharpSubscriberParseForStateSync(FILE* header, CompositeType& s)
+void generateCsharpSubscriberParseForStateSync(CsharpFileWritter& f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case);
 
-	CsharpFileWritter f(header, 0);
+
 
 	auto& mem = s.getMembers();
 	for (size_t i = 0; i < mem.size(); ++i)
@@ -926,12 +926,12 @@ void generateCsharpSubscriberParseForStateSync(FILE* header, CompositeType& s)
 	}
 }
 
-void generateCsharpSubscriberParse1(FILE* header, CompositeType& s)
+void generateCsharpSubscriberParse1(CsharpFileWritter& f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case);
 
-	CsharpFileWritter f(header, 0);
+
 
 	auto& mem = s.getMembers();
 	for (size_t i = 0; i < mem.size(); ++i)
@@ -1028,12 +1028,12 @@ void generateCsharpSubscriberParse1(FILE* header, CompositeType& s)
 	}
 }
 
-void generateCsharpSubscriberParse2(FILE* header, CompositeType& s)
+void generateCsharpSubscriberParse2(CsharpFileWritter& f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case);
 
-	CsharpFileWritter f(header, 0);
+
 
 	f.write("\t\tswitch ((Address)addr[offset])\n");
 	f.write("\t\t{\n");
@@ -1255,13 +1255,13 @@ void generateCsharpSubscriberParse2(FILE* header, CompositeType& s)
 }
 
 
-void generateCsharpPublishables( FILE* header, Root& root, const std::string& metascope )
+void generateCsharpPublishables(CsharpFileWritter& f, Root& root, const std::string& metascope )
 {
 	vector<CompositeType*> structsOrderedByDependency;
 	std::unordered_set<size_t> collElementTypes;
 	orderStructsByDependency( root.structs, structsOrderedByDependency, collElementTypes );
 
-	CsharpFileWritter f(header, 0);
+
 
 	for ( auto it : structsOrderedByDependency )
 	{
@@ -1270,14 +1270,14 @@ void generateCsharpPublishables( FILE* header, Root& root, const std::string& me
 		{
 			if (it->type == CompositeType::Type::structure)
 			{
-				csharpPub_generateStructSubs(header, *it, it->name);
-				csharpPub_generateStructPubl(header, *it, it->name);
+				csharpPub_generateStructSubs(f, *it, it->name);
+				csharpPub_generateStructPubl(f, *it, it->name);
 
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
 			{
-				generateCsharpUnionSubscriber(header, *it, it->name.c_str());
-				generateCsharpUnionPublisher(header, *it, it->name.c_str());
+				generateCsharpUnionSubscriber(f, *it, it->name.c_str());
+				generateCsharpUnionPublisher(f, *it, it->name.c_str());
 			}
 			else
 				assert(false);
@@ -1296,18 +1296,18 @@ void generateCsharpPublishables( FILE* header, Root& root, const std::string& me
 		std::string type_name = getCSharpTypeName(*it);
 		std::string interface_name = "I" + type_name;
 
-		generateCsharpStructInterface(header, *it, type_name.c_str());
-		generateCsharpStructImpl(header, *it, type_name.c_str(), interface_name.c_str());
+		generateCsharpStructInterface(f, *it, type_name.c_str());
+		generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
 
-		impl_generatePublishableCommentBlock(header, *it);
+		impl_generatePublishableCommentBlock(f.getFile(), *it);
 
-		csharpPub_generateStructSubs(header, *it, type_name);
-		csharpPub_generateStructPubl(header, *it, type_name);
-		csharpPub_generateStructConcentrator(header, *it, type_name);
+		csharpPub_generateStructSubs(f, *it, type_name);
+		csharpPub_generateStructPubl(f, *it, type_name);
+		csharpPub_generateStructConcentrator(f, *it, type_name);
 	}
 
 	if (!root.publishables.empty())
-		csharpPub_generateConcentratorFactory(header, root);
+		csharpPub_generateConcentratorFactory(f, root);
 
 }
 
