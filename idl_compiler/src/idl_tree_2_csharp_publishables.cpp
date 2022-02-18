@@ -61,21 +61,88 @@ namespace {
 
 	void csharpPub_generateParseStateSync(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
+			s.type == CompositeType::Type::discriminated_union_case);
 
 
 
 		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, %s_subscriber subscriber)\n", type_name.c_str());
 		f.write("\t{\n");
 
-		generateCsharpSubscriberParseForStateSync(f, s);
-		
+
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
+		{
+			auto& it = mem[i];
+			assert(it != nullptr);
+			auto& member = *it;
+
+
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				f.write("\t\tsubscriber.update_%s(parser, \"%s\", false);\n", member.name.c_str(), member.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
+				f.write("\t\t%s_subscriber.parseForStateSync(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
+				f.write("\t\tparser.parsePublishableStructEnd();\n");
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+					f.write("\t\tparser.parseSimpleVector(\"%s\", subscriber.data.%s);\n", member.name.c_str(), member.name.c_str());
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* elem_type_name = member.type.name.c_str();
+
+					f.write("\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
+					f.write("\t\t\t{\n");
+					f.write("\t\t\t\tparser.parseStructBegin();\n");
+					f.write("\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
+					f.write("\t\t\t\t// mb: lazy initialization always first\n");
+					f.write("\t\t\t\tsubscriber.lazy_%s_handlers().Add(handler);\n", member.name.c_str());
+					f.write("\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
+					f.write("\t\t\t\tparser.parseStructEnd();\n");
+					f.write("\t\t\t}\n");
+					f.write("\t\t);\n");
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+		}
+
 		f.write("\t}\n");
 	}
 
 	void csharpPub_generateParse1(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
+			s.type == CompositeType::Type::discriminated_union_case);
 
 
 
@@ -84,7 +151,99 @@ namespace {
 
 		f.write("\t\tbool changed = false;\n");
 
-		generateCsharpSubscriberParse1(f, s);
+
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
+		{
+			auto& it = mem[i];
+			assert(it != nullptr);
+			auto& member = *it;
+
+			f.write("\t\t{\n");
+
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* type_name = getCSharpPrimitiveType(member.type.kind);
+				const char* parse_method = getIdlPrimitiveType(member.type.kind);
+
+				f.write("\t\t\tchanged = subscriber.update_%s(parser, \"%s\", true) | changed;\n", member.name.c_str(), member.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
+				f.write("\t\t\tbool currentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
+				f.write("\t\t\tparser.parsePublishableStructEnd();\n");
+				f.write("\t\t\tif(currentChanged)\n");
+				f.write("\t\t\t{\n");
+				f.write("\t\t\t\t\tchanged = true;\n");
+				f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+				f.write("\t\t\t}\n");
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+
+					f.write("\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
+					f.write("\t\tparser.parseSimpleVector(\"%s\", newVal);\n", member.name.c_str());
+					f.write("\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
+					f.write("\t\t{\n");
+					f.write("\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\tchanged = true;\n");
+					f.write("\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t}\n");
+
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* elem_type_name = member.type.name.c_str();
+
+					f.write("\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
+					f.write("\t\tList<%s_subscriber> newHandlers = new List<%s_subscriber>();\n", elem_type_name, elem_type_name);
+					f.write("\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
+					f.write("\t\t\t{\n");
+					f.write("\t\t\t\tparser.parseStructBegin();\n");
+					f.write("\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
+					f.write("\t\t\t\tnewVal.Add(val);\n");
+					f.write("\t\t\t\tnewHandlers.Add(handler);\n");
+					f.write("\t\t\t\tparser.parseStructEnd();\n");
+					f.write("\t\t\t}\n");
+					f.write("\t\t);\n");
+					f.write("\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
+					f.write("\t\t{\n");
+					f.write("\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\tsubscriber.%s_handlers = newHandlers;\n", member.name.c_str());
+					f.write("\t\t\tchanged = true;\n");
+					f.write("\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t}\n");
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			f.write("\t\t}\n");
+		}
 
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
@@ -92,7 +251,8 @@ namespace {
 
 	void csharpPub_generateParse2(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
+			s.type == CompositeType::Type::discriminated_union_case);
 
 
 
@@ -101,7 +261,222 @@ namespace {
 
 		f.write("\t\tbool changed = false;\n");
 
-		generateCsharpSubscriberParse2(f, s);
+		f.write("\t\tswitch ((Address)addr[offset])\n");
+		f.write("\t\t{\n");
+
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
+		{
+			auto& it = mem[i];
+			assert(it != nullptr);
+			auto& member = *it;
+
+
+			f.write("\t\t\tcase Address.%s:\n", member.name.c_str());
+			f.write("\t\t\t{\n");
+
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* type_name = getCSharpPrimitiveType(member.type.kind);
+				const char* parse_method = getIdlPrimitiveType(member.type.kind);
+
+				f.write("\t\t\t\tif(addr.Length != offset + 1)\n");
+				f.write("\t\t\t\t\tthrow new Exception();\n");
+				f.write("\t\t\t\tchanged = subscriber.update_%s(parser, \"value\", true) | changed;\n", member.name.c_str());
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\t\t\tbool currentChanged = false;\n");
+				f.write("\t\t\t\tif(addr.Length == offset + 1) // full element replace\n");
+				f.write("\t\t\t\t{\n");
+				f.write("\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
+				f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
+				f.write("\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+				f.write("\t\t\t\t}\n");
+				f.write("\t\t\t\telse if(addr.Length > offset + 1) // let child continue parsing\n");
+				f.write("\t\t\t\t{\n");
+				f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler(), addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
+				f.write("\t\t\t\t}\n");
+				f.write("\t\t\t\telse\n");
+				f.write("\t\t\t\t\tthrow new Exception();\n\n");
+
+				f.write("\t\t\t\tif(currentChanged)\n");
+				f.write("\t\t\t\t{\n");
+				f.write("\t\t\t\t\tchanged = true;\n");
+				f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+				f.write("\t\t\t\t}\n");
+
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+					const char* parse_method = getIdlPrimitiveType(member.type.vectorElemKind);
+
+					f.write("\t\t\t\tbool currentChanged = false;\n");
+					f.write("\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\tparser.parseSimpleVector(\"value\", newVal);\n");
+					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t}\n");
+
+					f.write("\t\t\t\t}\n");
+					f.write("\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
+					f.write("\t\t\t\t\tcurrentChanged = SubscriberVectorHelper.parseVectorPrimitive<%s>(\n", elem_type_name);
+					f.write("\t\t\t\t\t\tparser, subscriber.data.%s, index,\n", member.name.c_str());
+					f.write("\t\t\t\t\t\t(IPublishableParser parser) => { return parser.parse%s(\"value\"); },\n", parse_method);
+					f.write("\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s,\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s,\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s\n", member.name.c_str());
+					f.write("\t\t\t\t\t);\n");
+					f.write("\t\t\t\t}\n");
+					f.write("\t\t\t\telse // simple type can't handle deeper address\n");
+					f.write("\t\t\t\t\tthrow new Exception();\n\n");
+
+					f.write("\t\t\t\tif(currentChanged)\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tchanged = true;\n");
+					f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t\t\t}\n");
+
+					break;
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* elem_type_name = member.type.name.c_str();
+
+					f.write("\t\t\t\tbool currentChanged = false;\n");
+					f.write("\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\tList<%s_subscriber> newHandlers = new List<%s_subscriber>();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\tparser.parseVector(\"value\",\n");
+					f.write("\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
+					f.write("\t\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t\tparser.parseStructBegin();\n");
+					f.write("\t\t\t\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
+					f.write("\t\t\t\t\t\t\tnewVal.Add(val);\n");
+					f.write("\t\t\t\t\t\t\tnewHandlers.Add(handler);\n");
+					f.write("\t\t\t\t\t\t\tparser.parseStructEnd();\n");
+					f.write("\t\t\t\t\t\t}\n");
+					f.write("\t\t\t\t\t);\n");
+
+					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.%s_handlers = newHandlers;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t}\n");
+
+					f.write("\t\t\t\t}\n");
+					f.write("\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
+					f.write("\t\t\t\t\tPublishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();\n");
+
+					f.write("\t\t\t\t\tswitch (action)\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\tcase Publishable.ActionOnVector.update_at:\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
+					f.write("\t\t\t\t\t\tbool elemChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handlers()[index]);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+					f.write("\t\t\t\t\t\tif (elemChanged)\n");
+					f.write("\t\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\t}\n");
+					f.write("\t\t\t\t\t\tbreak;\n");
+					f.write("\t\t\t\t\t}\n");
+
+
+					f.write("\t\t\t\t\tcase Publishable.ActionOnVector.insert_single_before:\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
+					f.write("\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, handler);\n", elem_type_name);
+					f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
+					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tbreak;\n");
+					f.write("\t\t\t\t\t}\n");
+
+
+
+					f.write("\t\t\t\t\tcase Publishable.ActionOnVector.remove_at:\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
+					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().RemoveAt(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.data.%s.RemoveAt(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tbreak;\n");
+					f.write("\t\t\t\t\t}\n");
+					f.write("\t\t\t\t\tdefault:\n");
+					f.write("\t\t\t\t\t\tthrow new Exception();\n");
+					f.write("\t\t\t\t\t}\n");
+
+
+					f.write("\t\t\t\t}\n");
+					f.write("\t\t\t\telse if(addr.Length > offset + 2) // let child continue parsing\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
+					f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handlers()[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t}\n");
+					f.write("\t\t\t\telse\n");
+					f.write("\t\t\t\t\tthrow new Exception();\n\n");
+
+					f.write("\t\t\t\tif(currentChanged)\n");
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tchanged = true;\n");
+					f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t\t\t}\n");
+
+
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			f.write("\t\t\t}\n");
+			f.write("\t\t\tbreak;\n");
+
+		}
+
+		f.write("\t\t\tdefault:\n");
+		f.write("\t\t\t\tthrow new Exception();\n");
+
+		f.write("\t\t}\n");
 
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
@@ -226,83 +601,67 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateStructSubs(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
-	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
-
-
-
-		if(s.type == CompositeType::Type::publishable)
-			f.write("public class %s_subscriber : I%s, StateSubscriberBase\n", type_name.c_str(), type_name.c_str());
-		else
-			f.write("public class %s_subscriber : I%s\n", type_name.c_str(), type_name.c_str());
-
-
-		f.write("{\n");
-
-		f.write("\n");
-		f.write("\t/////////////////////////////////  begin user override section /////////////////////////////////\n");
-		f.write("\n");
-
-		csharpPub_generateFactoryMethodSubs(f, s, type_name);
-		csharpPub_generateEventHandlerSubs(f, s, type_name);
-
-		f.write("\n");
-		f.write("\t/////////////////////////////////   end user override section  /////////////////////////////////\n");
-		f.write("\n");
-		f.write("\n");
-
-
-		f.write("\tprotected I%s data;\n", type_name.c_str());
-
-		csharpPub_generateAddressEnum(f, s);
-
-		if (s.type == CompositeType::Type::publishable)
-			f.write("\tpublic %s_subscriber() { this.data = new %s(); }\n", type_name.c_str(), type_name.c_str());
-		else
-			f.write("\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name.c_str(), type_name.c_str());
-
-
-		auto& mem = s.getMembers();
-		for (size_t i = 0; i < mem.size(); ++i)
-		{
-			auto& it = mem[i];
-			assert(it != nullptr);
-			generateCsharpSubscriberMember(f, *it);
-		}
-
-		generateCsharpSimpleEquivalentMethod(f, type_name.c_str(), "data");
-
-		csharpPub_generateParseStateSync(f, s, type_name);
-		csharpPub_generateParse1(f, s, type_name);
-		csharpPub_generateParse2(f, s, type_name);
-
-		if (s.type == CompositeType::Type::publishable)
-			csharpPub_generateStateSubscriberBase(f, s, type_name);
-
-		csharpPub_generateSubscriberResetHandlers(f, s);
-
-		f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-		f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name.c_str());
-		f.write("\t{\n");
-		f.write("\t\tthis.data = data;\n");
-		f.write("\t\treset_handlers();\n");
-		f.write("\t}\n");
-
-
-		f.write("} // class %s_subscriber\n\n", type_name.c_str());
-	}
 
 	void csharpPub_generateCompose(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
+			s.type == CompositeType::Type::discriminated_union_case);
 
 
 
 		f.write("\tpublic static void compose(IPublishableComposer composer, I%s t)\n", type_name.c_str());
 		f.write("\t{\n");
 
-		generateCsharpPublisherCompose(f, s);
+		auto& mem = s.getMembers();
+		for (size_t i = 0; i < mem.size(); ++i)
+		{
+			auto& it = mem[i];
+			assert(it != nullptr);
+			auto& member = *it;
+
+			const char* last = (i == mem.size() - 1) ? "false" : "true";
+
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("\t\tcomposer.compose%s(\"%s\", t.%s, %s);\n", getIdlPrimitiveType(member.type.kind), member.name.c_str(), member.name.c_str(), last);
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\tcomposer.composePublishableStructBegin(\"%s\");\n", member.name.c_str());
+				f.write("\t\t%s_publisher.compose(composer, t.%s);\n", member.type.name.c_str(), member.name.c_str());
+				f.write("\t\tcomposer.composePublishableStructEnd(%s);\n", last);
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				switch (member.type.vectorElemKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					f.write("\t\tcomposer.composeSimpleVector(\"%s\", t.%s, %s);\n", member.name.c_str(), member.name.c_str(), last);
+					break;
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* elem_type_name = member.type.name.c_str();
+					f.write("\t\tcomposer.composeVector(\"%s\", t.%s.Count,\n", member.name.c_str(), member.name.c_str());
+					f.write("\t\t\t(IPublishableComposer composer, int ordinal) => { %s_publisher.compose(composer, t.%s[ordinal]); }, %s);\n", elem_type_name, member.name.c_str(), last);
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+		}
 
 		f.write("\t}\n");
 	}
@@ -342,71 +701,6 @@ namespace {
 	}
 
 
-	void csharpPub_generateStructPubl(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
-	{
-		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
-
-
-
-		if (s.type == CompositeType::Type::publishable)
-			f.write("public class %s_publisher : I%s, StatePublisherBase\n", type_name.c_str(), type_name.c_str());
-		else
-			f.write("public class %s_publisher : I%s\n", type_name.c_str(), type_name.c_str());
-
-
-		f.write("\n");
-
-
-		f.write("{\n");
-		f.write("\tI%s t;\n", type_name.c_str());
-		f.write("\tIPublishableComposer composer;\n");
-		f.write("\tUInt64[] address;\n");
-
-		csharpPub_generateAddressEnum(f, s);
-
-		if (s.type == CompositeType::Type::publishable)
-		{
-			f.write("\tpublic %s_publisher()\n", type_name.c_str());
-			f.write("\t{\n");
-			f.write("\t\tthis.t = new %s();\n", type_name.c_str());
-			f.write("\t\tthis.composer = null;\n");
-			f.write("\t\tthis.address = new UInt64[] { };\n");
-			f.write("\t}\n");
-		}
-		else
-		{
-			f.write("\tpublic %s_publisher(I%s t, IPublishableComposer composer, UInt64[] address)\n", type_name.c_str(), type_name.c_str());
-			f.write("\t{\n");
-			f.write("\t\tthis.t = t;\n");
-			f.write("\t\tthis.composer = composer;\n");
-			f.write("\t\tthis.address = address;\n");
-			f.write("\t}\n");
-		}
-		auto& mem = s.getMembers();
-		for (size_t i = 0; i < mem.size(); ++i)
-		{
-			auto& it = mem[i];
-			assert(it != nullptr);
-			generateCsharpPublisherMember(f, *it);
-		}
-
-		generateCsharpSimpleEquivalentMethod(f, type_name.c_str(), "t");
-
-		csharpPub_generateCompose(f, s, type_name);
-
-		if (s.type == CompositeType::Type::publishable)
-			csharpPub_generateStatePublishableBase(f, s, type_name);
-
-
-		//f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-		//f.write("\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
-
-		f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-		f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name.c_str());
-
-
-		f.write("} // class %s_publisher\n\n", type_name.c_str());
-	}
 
 	void csharpPub_generateStateConcentratorBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
 	{
@@ -439,35 +733,6 @@ namespace {
 		f.write("} // class %s_concentrator\n\n", type_name.c_str());
 	}
 
-	void csharpPub_generateConcentratorFactory(CsharpFileWritter& f, Root& root)
-	{
-		assert(!root.publishables.empty());
-
-
-
-		f.write("public class StateConcentratorFactory : IStateConcentratorFactory\n");
-		f.write("{\n");
-		f.write("\tpublic StateConcentratorBase createConcentrator(UInt64 typeID)\n");
-		f.write("\t{\n");
-		f.write("\t\tswitch(typeID)\n");
-		f.write("\t\t{\n");
-		for (auto& it : root.publishables)
-		{
-			auto& obj_1 = it;
-			assert(it != nullptr);
-			assert(typeid(*(it)) == typeid(CompositeType));
-			assert(it->type == CompositeType::Type::publishable);
-			string number = std::to_string(it->numID);
-			f.write("\t\tcase %s:\n", number.c_str());
-			f.write("\t\t\treturn new %s_concentrator();\n", it->name.c_str());
-		}
-		f.write("\t\tdefault:\n");
-		f.write("\t\t\treturn null;\n");
-		f.write("\t\t}\n");
-
-		f.write("\t}\n");
-		f.write("} // class StateConcentratorFactory\n\n");
-	}
 }
 
 void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParameter& member)
@@ -577,18 +842,21 @@ void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& memb
 	case MessageParameterType::KIND::CHARACTER_STRING:
 	{
 		const char* type_name = getCSharpPrimitiveType(member.type.kind);
+		const char* idl_name = getIdlPrimitiveType(member.type.kind);
 		f.write("\tpublic %s %s\n", type_name, member.name.c_str());
 		f.write("\t{\n");
 		f.write("\t\tget { return data.%s; }\n", member.name.c_str());
 		f.write("\t\tset { throw new InvalidOperationException(); }\n");
 		f.write("\t}\n");
-		f.write("\tbool update_%s(%s newVal)\n", member.name.c_str(), getCSharpPrimitiveType(member.type.kind));
+		f.write("\tbool update_%s(IPublishableParser parser, String name, bool notifyUpdate)\n", member.name.c_str());
 		f.write("\t{\n");
+		f.write("\t\t%s newVal = parser.parse%s(name);\n", type_name, idl_name);
 		f.write("\t\tif (newVal != data.%s)\n", member.name.c_str());
 		f.write("\t\t{\n");
 		f.write("\t\t\t%s oldVal = data.%s;\n", type_name, member.name.c_str());
 		f.write("\t\t\tdata.%s = newVal;\n", member.name.c_str());
-		f.write("\t\t\tnotifyUpdated_%s(oldVal);\n", member.name.c_str());
+		f.write("\t\t\tif(notifyUpdate)\n", member.name.c_str());
+		f.write("\t\t\t\tnotifyUpdated_%s(oldVal);\n", member.name.c_str());
 		f.write("\t\t\treturn true;\n");
 		f.write("\t\t}\n");
 		f.write("\t\telse\n");
@@ -786,12 +1054,71 @@ void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& membe
 	}
 }
 
-
-void generateCsharpPublisherCompose(CsharpFileWritter& f, CompositeType& s)
+void generateCsharpCaseSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name)
 {
-	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
-		s.type == CompositeType::Type::discriminated_union_case);
+	assert(s.type == CompositeType::Type::discriminated_union_case);
 
+	// for DU CASE, only the static methods
+
+	f.write("public class %s_subscriber\n", type_name);
+	f.write("{\n");
+
+	csharpPub_generateParseStateSync(f, s, du_name);
+	csharpPub_generateParse1(f, s, du_name);
+	csharpPub_generateParse2(f, s, du_name);
+
+	f.write("} // class %s_subscriber\n\n", type_name);
+}
+
+void generateCsharpCasePublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name)
+{
+	assert(s.type == CompositeType::Type::discriminated_union_case);
+
+	// for DU CASE, only the static methods
+
+	f.write("public class %s_publisher\n", type_name);
+	f.write("{\n");
+
+	csharpPub_generateCompose(f, s, du_name);
+
+	f.write("} // class %s_publisher\n\n", type_name);
+}
+
+void generateCsharpStructSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+{
+	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
+
+
+
+	if (s.type == CompositeType::Type::publishable)
+		f.write("public class %s_subscriber : I%s, StateSubscriberBase\n", type_name, type_name);
+	else
+		f.write("public class %s_subscriber : I%s\n", type_name, type_name);
+
+
+	f.write("{\n");
+
+	f.write("\n");
+	f.write("\t/////////////////////////////////  begin user override section /////////////////////////////////\n");
+	f.write("\n");
+
+	csharpPub_generateFactoryMethodSubs(f, s, type_name);
+	csharpPub_generateEventHandlerSubs(f, s, type_name);
+
+	f.write("\n");
+	f.write("\t/////////////////////////////////   end user override section  /////////////////////////////////\n");
+	f.write("\n");
+	f.write("\n");
+
+
+	f.write("\tprotected I%s data;\n", type_name);
+
+	csharpPub_generateAddressEnum(f, s);
+
+	if (s.type == CompositeType::Type::publishable)
+		f.write("\tpublic %s_subscriber() { this.data = new %s(); }\n", type_name, type_name);
+	else
+		f.write("\tpublic %s_subscriber(I%s data) { this.data = data; }\n", type_name, type_name);
 
 
 	auto& mem = s.getMembers();
@@ -799,515 +1126,139 @@ void generateCsharpPublisherCompose(CsharpFileWritter& f, CompositeType& s)
 	{
 		auto& it = mem[i];
 		assert(it != nullptr);
-		auto& member = *it;
-
-
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			f.write("\t\tcomposer.compose%s(\"%s\", t.%s, ", getIdlPrimitiveType(member.type.kind), member.name.c_str(), member.name.c_str());
-			break;
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\t\tcomposer.composePublishableStructBegin(\"%s\");\n", member.name.c_str());
-			f.write("\t\t%s_publisher.compose(composer, t.%s);\n", member.type.name.c_str(), member.name.c_str());
-			f.write("\t\tcomposer.composePublishableStructEnd(");
-			break;
-		case MessageParameterType::KIND::VECTOR:
-		{
-			switch (member.type.vectorElemKind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				f.write("\t\tcomposer.composeSimpleVector(\"%s\", t.%s, ", member.name.c_str(), member.name.c_str());
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			{
-				const char* elem_type_name = member.type.name.c_str();
-				f.write("\t\tcomposer.composeVector(\"%s\", t.%s.Count,\n", member.name.c_str(), member.name.c_str());
-				f.write("\t\t\t(IPublishableComposer composer, int ordinal) => { %s_publisher.compose(composer, t.%s[ordinal]); }, ", elem_type_name, member.name.c_str());
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-			break;
-		}
-		default:
-			assert(false); // not implemented (yet)
-		}
-
-		if (i == mem.size() - 1)
-			f.write("false);\n");
-		else
-			f.write("true);\n");
-
+		generateCsharpSubscriberMember(f, *it);
 	}
+
+	generateCsharpSimpleEquivalentMethod(f, type_name, "data");
+
+	csharpPub_generateParseStateSync(f, s, type_name);
+	csharpPub_generateParse1(f, s, type_name);
+	csharpPub_generateParse2(f, s, type_name);
+
+	if (s.type == CompositeType::Type::publishable)
+		csharpPub_generateStateSubscriberBase(f, s, type_name);
+
+	csharpPub_generateSubscriberResetHandlers(f, s);
+
+	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+	f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name);
+	f.write("\t{\n");
+	f.write("\t\tthis.data = data;\n");
+	f.write("\t\treset_handlers();\n");
+	f.write("\t}\n");
+
+
+	f.write("} // class %s_subscriber\n\n", type_name);
 }
 
-void generateCsharpSubscriberParseForStateSync(CsharpFileWritter& f, CompositeType& s)
+void generateCsharpStructPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name)
 {
-	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
-		s.type == CompositeType::Type::discriminated_union_case);
+	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
 
 
+	if (s.type == CompositeType::Type::publishable)
+		f.write("public class %s_publisher : I%s, StatePublisherBase\n", type_name, type_name);
+	else
+		f.write("public class %s_publisher : I%s\n", type_name, type_name);
+
+
+	f.write("\n");
+
+
+	f.write("{\n");
+	f.write("\tI%s t;\n", type_name);
+	f.write("\tIPublishableComposer composer;\n");
+	f.write("\tUInt64[] address;\n");
+
+	csharpPub_generateAddressEnum(f, s);
+
+	if (s.type == CompositeType::Type::publishable)
+	{
+		f.write("\tpublic %s_publisher()\n", type_name);
+		f.write("\t{\n");
+		f.write("\t\tthis.t = new %s();\n", type_name);
+		f.write("\t\tthis.composer = null;\n");
+		f.write("\t\tthis.address = new UInt64[] { };\n");
+		f.write("\t}\n");
+	}
+	else
+	{
+		f.write("\tpublic %s_publisher(I%s t, IPublishableComposer composer, UInt64[] address)\n", type_name, type_name);
+		f.write("\t{\n");
+		f.write("\t\tthis.t = t;\n");
+		f.write("\t\tthis.composer = composer;\n");
+		f.write("\t\tthis.address = address;\n");
+		f.write("\t}\n");
+	}
 	auto& mem = s.getMembers();
 	for (size_t i = 0; i < mem.size(); ++i)
 	{
 		auto& it = mem[i];
 		assert(it != nullptr);
-		auto& member = *it;
-
-
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-		{
-			const char* parse_method = getIdlPrimitiveType(member.type.kind);
-			f.write("\t\tsubscriber.data.%s = parser.parse%s(\"%s\");\n", member.name.c_str(), parse_method, member.name.c_str());
-			break;
-		}
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
-			f.write("\t\t%s_subscriber.parseForStateSync(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
-			f.write("\t\tparser.parsePublishableStructEnd();\n");
-			break;
-		case MessageParameterType::KIND::VECTOR:
-		{
-			switch (member.type.vectorElemKind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-			{
-				const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
-				f.write("\t\tparser.parseSimpleVector(\"%s\", subscriber.data.%s);\n", member.name.c_str(), member.name.c_str());
-				break;
-			}
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			{
-				const char* elem_type_name = member.type.name.c_str();
-
-				f.write("\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
-				f.write("\t\t\t{\n");
-				f.write("\t\t\t\tparser.parseStructBegin();\n");
-				f.write("\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
-				f.write("\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
-				f.write("\t\t\t\t// mb: lazy initialization always first\n");
-				f.write("\t\t\t\tsubscriber.lazy_%s_handlers().Add(handler);\n", member.name.c_str());
-				f.write("\t\t\t\tsubscriber.data.%s.Add(val);\n", member.name.c_str());
-				f.write("\t\t\t\tparser.parseStructEnd();\n");
-				f.write("\t\t\t}\n");
-				f.write("\t\t);\n");
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-			break;
-		}
-		default:
-			assert(false); // not implemented (yet)
-		}
+		generateCsharpPublisherMember(f, *it);
 	}
+
+	generateCsharpSimpleEquivalentMethod(f, type_name, "t");
+
+	csharpPub_generateCompose(f, s, type_name);
+
+	if (s.type == CompositeType::Type::publishable)
+		csharpPub_generateStatePublishableBase(f, s, type_name);
+
+
+	//f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+	//f.write("\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
+
+	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
+	f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name);
+
+
+	f.write("} // class %s_publisher\n\n", type_name);
 }
 
-void generateCsharpSubscriberParse1(CsharpFileWritter& f, CompositeType& s)
+void generateCsharpStructConcentrator(CsharpFileWritter& f, CompositeType& s, const char* type_name)
 {
-	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
-		s.type == CompositeType::Type::discriminated_union_case);
+	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
 
 
-	auto& mem = s.getMembers();
-	for (size_t i = 0; i < mem.size(); ++i)
-	{
-		auto& it = mem[i];
-		assert(it != nullptr);
-		auto& member = *it;
+	f.write("public class %s_concentrator : %s_subscriber, StateConcentratorBase\n", type_name, type_name);
 
-		f.write("\t\t{\n");
+	f.write("{\n");
+	csharpPub_generateCompose(f, s, type_name);
+	csharpPub_generateStateConcentratorBase(f, s, type_name);
 
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-		{
-			const char* type_name = getCSharpPrimitiveType(member.type.kind);
-			const char* parse_method = getIdlPrimitiveType(member.type.kind);
-
-			f.write("\t\t\t%s newVal = parser.parse%s(\"%s\");\n", type_name, parse_method, member.name.c_str());
-			f.write("\t\t\tchanged = subscriber.update_%s(newVal) | changed;\n", member.name.c_str());
-			break;
-		}
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
-			f.write("\t\t\tbool currentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
-			f.write("\t\t\tparser.parsePublishableStructEnd();\n");
-			f.write("\t\t\tif(currentChanged)\n");
-			f.write("\t\t\t{\n");
-			f.write("\t\t\t\t\tchanged = true;\n");
-			f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
-			f.write("\t\t\t}\n");
-			break;
-		case MessageParameterType::KIND::VECTOR:
-		{
-			switch (member.type.vectorElemKind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-			{
-				const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
-
-				f.write("\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
-				f.write("\t\tparser.parseSimpleVector(\"%s\", newVal);\n", member.name.c_str());
-				f.write("\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
-				f.write("\t\t{\n");
-				f.write("\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-				f.write("\t\t\tchanged = true;\n");
-				f.write("\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
-				f.write("\t\t}\n");
-
-				break;
-			}
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			{
-				const char* elem_type_name = member.type.name.c_str();
-
-				f.write("\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
-				f.write("\t\tList<%s_subscriber> newHandlers = new List<%s_subscriber>();\n", elem_type_name, elem_type_name);
-				f.write("\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
-				f.write("\t\t\t{\n");
-				f.write("\t\t\t\tparser.parseStructBegin();\n");
-				f.write("\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
-				f.write("\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
-				f.write("\t\t\t\tnewVal.Add(val);\n");
-				f.write("\t\t\t\tnewHandlers.Add(handler);\n");
-				f.write("\t\t\t\tparser.parseStructEnd();\n");
-				f.write("\t\t\t}\n");
-				f.write("\t\t);\n");
-				f.write("\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
-				f.write("\t\t{\n");
-				f.write("\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-				f.write("\t\t\tsubscriber.%s_handlers = newHandlers;\n", member.name.c_str());
-				f.write("\t\t\tchanged = true;\n");
-				f.write("\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
-				f.write("\t\t}\n");
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-			break;
-		}
-		default:
-			assert(false); // not implemented (yet)
-		}
-		f.write("\t\t}\n");
-	}
+	f.write("} // class %s_concentrator\n\n", type_name);
 }
 
-void generateCsharpSubscriberParse2(CsharpFileWritter& f, CompositeType& s)
+void generateCsharpConcentratorFactory(CsharpFileWritter& f, Root& root)
 {
-	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
-		s.type == CompositeType::Type::discriminated_union_case);
+	assert(!root.publishables.empty());
 
 
 
-	f.write("\t\tswitch ((Address)addr[offset])\n");
+	f.write("public class StateConcentratorFactory : IStateConcentratorFactory\n");
+	f.write("{\n");
+	f.write("\tpublic StateConcentratorBase createConcentrator(UInt64 typeID)\n");
+	f.write("\t{\n");
+	f.write("\t\tswitch(typeID)\n");
 	f.write("\t\t{\n");
-
-	auto& mem = s.getMembers();
-	for (size_t i = 0; i < mem.size(); ++i)
-	{
-		auto& it = mem[i];
-		assert(it != nullptr);
-		auto& member = *it;
-
-
-		f.write("\t\t\tcase Address.%s:\n", member.name.c_str());
-		f.write("\t\t\t{\n");
-
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-		{
-			const char* type_name = getCSharpPrimitiveType(member.type.kind);
-			const char* parse_method = getIdlPrimitiveType(member.type.kind);
-
-			f.write("\t\t\t\tif(addr.Length != offset + 1)\n");
-			f.write("\t\t\t\t\tthrow new Exception();\n");
-			f.write("\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", type_name, parse_method);
-			f.write("\t\t\t\tchanged = subscriber.update_%s(newVal) | changed;\n", member.name.c_str());
-			break;
-		}
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\t\t\t\tbool currentChanged = false;\n");
-			f.write("\t\t\t\tif(addr.Length == offset + 1) // full element replace\n");
-			f.write("\t\t\t\t{\n");
-			f.write("\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-			f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
-			f.write("\t\t\t\t\tparser.parsePublishableStructEnd();\n");
-			f.write("\t\t\t\t}\n");
-			f.write("\t\t\t\telse if(addr.Length > offset + 1) // let child continue parsing\n");
-			f.write("\t\t\t\t{\n");
-			f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler(), addr, offset + 1);\n", member.type.name.c_str(), member.name.c_str());
-			f.write("\t\t\t\t}\n");
-			f.write("\t\t\t\telse\n");
-			f.write("\t\t\t\t\tthrow new Exception();\n\n");
-
-			f.write("\t\t\t\tif(currentChanged)\n");
-			f.write("\t\t\t\t{\n");
-			f.write("\t\t\t\t\tchanged = true;\n");
-			f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
-			f.write("\t\t\t\t}\n");
-
-			break;
-		case MessageParameterType::KIND::VECTOR:
-		{
-			switch (member.type.vectorElemKind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-			{
-				const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
-				const char* parse_method = getIdlPrimitiveType(member.type.vectorElemKind);
-
-				f.write("\t\t\t\tbool currentChanged = false;\n");
-				f.write("\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t\tparser.parseSimpleVector(\"value\", newVal);\n");
-				f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
-				f.write("\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
-				f.write("\t\t\t\t\t}\n");
-
-				f.write("\t\t\t\t}\n");
-				f.write("\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-				f.write("\t\t\t\t\tcurrentChanged = SubscriberVectorHelper.parseVectorPrimitive<%s>(\n", elem_type_name);
-				f.write("\t\t\t\t\t\tparser, subscriber.data.%s, index,\n", member.name.c_str());
-				f.write("\t\t\t\t\t\t(IPublishableParser parser) => { return parser.parse%s(\"value\"); },\n", parse_method);
-				f.write("\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s,\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s,\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s\n", member.name.c_str());
-				f.write("\t\t\t\t\t);\n");
-				f.write("\t\t\t\t}\n");
-				f.write("\t\t\t\telse // simple type can't handle deeper address\n");
-				f.write("\t\t\t\t\tthrow new Exception();\n\n");
-
-				f.write("\t\t\t\tif(currentChanged)\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tchanged = true;\n");
-				f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
-				f.write("\t\t\t\t}\n");
-
-				break;
-			}
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			{
-				const char* elem_type_name = member.type.name.c_str();
-
-				f.write("\t\t\t\tbool currentChanged = false;\n");
-				f.write("\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t\tList<%s_subscriber> newHandlers = new List<%s_subscriber>();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t\tparser.parseVector(\"value\",\n");
-				f.write("\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
-				f.write("\t\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\t\tparser.parseStructBegin();\n");
-				f.write("\t\t\t\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
-				f.write("\t\t\t\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
-				f.write("\t\t\t\t\t\t\tnewVal.Add(val);\n");
-				f.write("\t\t\t\t\t\t\tnewHandlers.Add(handler);\n");
-				f.write("\t\t\t\t\t\t\tparser.parseStructEnd();\n");
-				f.write("\t\t\t\t\t\t}\n");
-				f.write("\t\t\t\t\t);\n");
-
-				f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
-				f.write("\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tsubscriber.%s_handlers = newHandlers;\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
-				f.write("\t\t\t\t\t}\n");
-
-				f.write("\t\t\t\t}\n");
-				f.write("\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-				f.write("\t\t\t\t\tPublishable.ActionOnVector action = (Publishable.ActionOnVector)parser.parseActionInPublishable();\n");
-
-				f.write("\t\t\t\t\tswitch (action)\n");
-				f.write("\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\tcase Publishable.ActionOnVector.update_at:\n");
-				f.write("\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-				f.write("\t\t\t\t\t\tbool elemChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handlers()[index]);\n", elem_type_name, member.name.c_str());
-				f.write("\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
-				f.write("\t\t\t\t\t\tif (elemChanged)\n");
-				f.write("\t\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\t\tcurrentChanged = true;\n");
-				f.write("\t\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s(index);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\t}\n");
-				f.write("\t\t\t\t\t\tbreak;\n");
-				f.write("\t\t\t\t\t}\n");
-
-
-				f.write("\t\t\t\t\tcase Publishable.ActionOnVector.insert_single_before:\n");
-				f.write("\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-				f.write("\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
-				f.write("\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
-				f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, handler);\n", elem_type_name);
-				f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
-				f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tsubscriber.data.%s.Insert(index, newVal);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
-				f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
-				f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tbreak;\n");
-				f.write("\t\t\t\t\t}\n");
-
-
-
-				f.write("\t\t\t\t\tcase Publishable.ActionOnVector.remove_at:\n");
-				f.write("\t\t\t\t\t{\n");
-				f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
-				f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().RemoveAt(index);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tsubscriber.data.%s.RemoveAt(index);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
-				f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s(index);\n", member.name.c_str());
-				f.write("\t\t\t\t\t\tbreak;\n");
-				f.write("\t\t\t\t\t}\n");
-				f.write("\t\t\t\t\tdefault:\n");
-				f.write("\t\t\t\t\t\tthrow new Exception();\n");
-				f.write("\t\t\t\t\t}\n");
-
-
-				f.write("\t\t\t\t}\n");
-				f.write("\t\t\t\telse if(addr.Length > offset + 2) // let child continue parsing\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-				f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handlers()[index], addr, offset + 2);\n", elem_type_name, member.name.c_str());
-				f.write("\t\t\t\t}\n");
-				f.write("\t\t\t\telse\n");
-				f.write("\t\t\t\t\tthrow new Exception();\n\n");
-
-				f.write("\t\t\t\tif(currentChanged)\n");
-				f.write("\t\t\t\t{\n");
-				f.write("\t\t\t\t\tchanged = true;\n");
-				f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
-				f.write("\t\t\t\t}\n");
-
-
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-			break;
-		}
-		default:
-			assert(false); // not implemented (yet)
-		}
-		f.write("\t\t\t}\n");
-		f.write("\t\t\tbreak;\n");
-
-	}
-
-	f.write("\t\t\tdefault:\n");
-	f.write("\t\t\t\tthrow new Exception();\n");
-
-	f.write("\t\t}\n");
-}
-
-
-void generateCsharpPublishables(CsharpFileWritter& f, Root& root, const std::string& metascope )
-{
-	vector<CompositeType*> structsOrderedByDependency;
-	std::unordered_set<size_t> collElementTypes;
-	orderStructsByDependency( root.structs, structsOrderedByDependency, collElementTypes );
-
-
-
-	for ( auto it : structsOrderedByDependency )
-	{
-		assert( it != nullptr );
-		if ( it->isStruct4Publishing )
-		{
-			if (it->type == CompositeType::Type::structure)
-			{
-				csharpPub_generateStructSubs(f, *it, it->name);
-				csharpPub_generateStructPubl(f, *it, it->name);
-
-			}
-			else if (it->type == CompositeType::Type::discriminated_union)
-			{
-				generateCsharpUnionSubscriber(f, *it, it->name.c_str());
-				generateCsharpUnionPublisher(f, *it, it->name.c_str());
-			}
-			else
-				assert(false);
-		}
-	}
-
-	for ( auto& it : root.publishables )
+	for (auto& it : root.publishables)
 	{
 		auto& obj_1 = it;
-		assert(it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert(it->type == CompositeType::Type::publishable );
-
-		checkCsharpStruct(*it);
-
-		std::string type_name = getCSharpTypeName(*it);
-		std::string interface_name = "I" + type_name;
-
-		generateCsharpStructInterface(f, *it, type_name.c_str());
-		generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
-
-		impl_generatePublishableCommentBlock(f.getFile(), *it);
-
-		csharpPub_generateStructSubs(f, *it, type_name);
-		csharpPub_generateStructPubl(f, *it, type_name);
-		csharpPub_generateStructConcentrator(f, *it, type_name);
+		assert(it != nullptr);
+		assert(typeid(*(it)) == typeid(CompositeType));
+		assert(it->type == CompositeType::Type::publishable);
+		string number = std::to_string(it->numID);
+		f.write("\t\tcase %s:\n", number.c_str());
+		f.write("\t\t\treturn new %s_concentrator();\n", it->name.c_str());
 	}
+	f.write("\t\tdefault:\n");
+	f.write("\t\t\treturn null;\n");
+	f.write("\t\t}\n");
 
-	if (!root.publishables.empty())
-		csharpPub_generateConcentratorFactory(f, root);
-
+	f.write("\t}\n");
+	f.write("} // class StateConcentratorFactory\n\n");
 }
 

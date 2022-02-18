@@ -43,12 +43,10 @@ void checkCsharpStruct(CompositeType& s)
 		throw std::exception();
 }
 
-std::string getCSharpTypeName(CompositeType& s)
+std::string getCaseTypeName(CompositeType& s)
 {
-	if (s.type == CompositeType::Type::discriminated_union_case)
-		return fmt::format("{}_{}", s.type2string(), s.name);
-	else
-		return s.name;
+	assert(s.type == CompositeType::Type::discriminated_union_case);
+	return fmt::format("CASE_{}", s.name);
 }
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind)
 {

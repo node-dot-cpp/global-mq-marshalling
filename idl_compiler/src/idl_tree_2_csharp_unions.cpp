@@ -36,7 +36,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
-		std::string type_name = getCSharpTypeName(s);
+		std::string type_name = s.name;
 
 		f.write("\tpublic static void parse(JsonParser parser, I%s val)\n", type_name.c_str());
 
@@ -65,7 +65,7 @@ namespace {
 			assert(duit != nullptr);
 			auto& cs = *duit;
 
-			std::string case_name = getCSharpTypeName(cs);
+			std::string case_name = getCaseTypeName(cs);
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t{\n");
@@ -87,7 +87,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
-		std::string type_name = getCSharpTypeName(s);
+		std::string type_name = s.name;
 
 		f.write("\tpublic static void parse(GmqParser parser, I%s val)\n", type_name.c_str());
 
@@ -107,7 +107,7 @@ namespace {
 			assert(duit != nullptr);
 			auto& cs = *duit;
 
-			std::string case_name = getCSharpTypeName(cs);
+			std::string case_name = getCaseTypeName(cs);
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t{\n");
@@ -148,7 +148,7 @@ namespace {
 			assert(duit != nullptr);
 			auto& cs = *duit;
 
-			std::string case_name = getCSharpTypeName(cs);
+			std::string case_name = getCaseTypeName(cs);
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
 			f.write("\t\t\t{\n");
@@ -186,7 +186,7 @@ namespace {
 			assert(duit != nullptr);
 			auto& cs = *duit;
 
-			std::string case_name = getCSharpTypeName(cs);
+			std::string case_name = getCaseTypeName(cs);
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
 			f.write("\t\t\t{\n");
@@ -206,7 +206,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::discriminated_union_case);
 
-		std::string case_name = getCSharpTypeName(s);
+		std::string case_name = getCaseTypeName(s);
 
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)
@@ -305,7 +305,7 @@ namespace {
 			CompositeType& cs = *it;
 			assert(cs.type == CompositeType::Type::discriminated_union_case);
 
-			std::string case_type_name = getCSharpTypeName(cs);
+			std::string case_type_name = getCaseTypeName(cs);
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
 			f.increment();
@@ -382,10 +382,14 @@ namespace {
 		f.write("\t{\n");
 		f.write("\t\tCurrentVariant = 0,\n");
 
-		for (auto& duit : s.getDiscriminatedUnionCases())
+		size_t dusz = s.getDiscriminatedUnionCases().size();
+		for(size_t j = 0; j != dusz; ++j)
 		{
+			auto& duit = s.getDiscriminatedUnionCases()[j];
 			assert(duit != nullptr);
 			assert(duit->type == CompositeType::Type::discriminated_union_case);
+
+			f.write("\n\t// IDL CASE %s:\n", duit->name.c_str());
 
 			size_t sz = duit->getMembers().size();
 			for (size_t i = 0; i != sz; ++i)
@@ -396,10 +400,10 @@ namespace {
 				// use i + 1, sice 0 is already used by CurrentVariant
 				string number = std::to_string(i + 1);
 
-				if(i != sz - 1)
-					f.write("\t\t%s = %s,\n", it->name.c_str(), number.c_str());
-				else
+				if(i == sz - 1 && j == dusz - 1)
 					f.write("\t\t%s = %s\n", it->name.c_str(), number.c_str());
+				else
+					f.write("\t\t%s = %s,\n", it->name.c_str(), number.c_str());
 			}
 		}
 		f.write("\t};\n");
@@ -431,15 +435,11 @@ namespace {
 			assert(duit != nullptr);
 			assert(duit->type == CompositeType::Type::discriminated_union_case);
 
-			std::string case_type_name = getCSharpTypeName(*duit);
+			std::string case_type_name = getCaseTypeName(*duit);
 
 			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
-			f.write("\t\t\t\t{\n");
-
-			generateCsharpPublisherCompose(f, *duit);
-
-			f.write("\t\t\t\t}\n");
-			f.write("\t\t\t\tbreak;\n");
+			f.write("\t\t\t\t\t%s_publisher.compose(composer, t);\n", case_type_name.c_str());
+			f.write("\t\t\t\t\tbreak;\n");
 
 		}
 
@@ -458,7 +458,7 @@ namespace {
 
 		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, %s_subscriber subscriber)\n", type_name);
 		f.write("\t{\n");
-		f.write("\t\tsubscriber.parse_CurrentVariant(parser, \"caseId\", true);\n");
+		f.write("\t\tsubscriber.update_CurrentVariant(parser, \"caseId\", false);\n");
 		f.write("\t\tI%s.Variants c = subscriber.currentVariant();\n", type_name);
 		f.write("\t\tif(  c != I%s.Variants.unknown)\n", type_name);
 		f.write("\t\t{\n");
@@ -472,15 +472,11 @@ namespace {
 			assert(duit != nullptr);
 			assert(duit->type == CompositeType::Type::discriminated_union_case);
 
-			std::string case_type_name = getCSharpTypeName(*duit);
+			std::string case_type_name = getCaseTypeName(*duit);
 
 			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
-			f.write("\t\t\t\t{\n");
-
-			generateCsharpSubscriberParseForStateSync(f, *duit);
-
-			f.write("\t\t\t\t}\n");
-			f.write("\t\t\t\tbreak;\n");
+			f.write("\t\t\t\t\t%s_subscriber.parseForStateSync(parser, subscriber);\n", case_type_name.c_str());
+			f.write("\t\t\t\t\tbreak;\n");
 
 		}
 		f.write("\t\t\t\tdefault:\n");
@@ -498,7 +494,7 @@ namespace {
 		f.write("\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber)\n", type_name);
 		f.write("\t{\n");
 
-		f.write("\t\tbool changed = subscriber.parse_CurrentVariant(parser, \"caseId\", false);\n");
+		f.write("\t\tbool changed = subscriber.update_CurrentVariant(parser, \"caseId\", true);\n");
 		f.write("\t\tI%s.Variants c = subscriber.currentVariant();\n", type_name);
 
 		f.write("\t\tif( c != I%s.Variants.unknown)\n", type_name);
@@ -513,15 +509,11 @@ namespace {
 			assert(duit != nullptr);
 			assert(duit->type == CompositeType::Type::discriminated_union_case);
 
-			std::string case_type_name = getCSharpTypeName(*duit);
+			std::string case_type_name = getCaseTypeName(*duit);
 
 			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
-			f.write("\t\t\t\t{\n");
-
-			generateCsharpSubscriberParse1(f, *duit);
-
-			f.write("\t\t\t\t}\n");
-			f.write("\t\t\t\tbreak;\n");
+			f.write("\t\t\t\t\tchanged = %s_subscriber.parse(parser, subscriber) | changed;\n", case_type_name.c_str());
+			f.write("\t\t\t\t\tbreak;\n");
 
 		}
 		f.write("\t\t\t\tdefault:\n");
@@ -548,7 +540,7 @@ namespace {
 		f.write("\t\t{\n");
 		f.write("\t\t\tif(addr.Length != offset + 1)\n");
 		f.write("\t\t\t\tthrow new Exception();\n");
-		f.write("\t\t\tchanged = subscriber.parse_CurrentVariant(parser, \"value\", false) | changed;\n");
+		f.write("\t\t\tchanged = subscriber.update_CurrentVariant(parser, \"value\", true) | changed;\n");
 		f.write("\t\t}\n");
 
 		f.write("\t\telse\n");
@@ -562,17 +554,13 @@ namespace {
 			assert(duit != nullptr);
 			assert(duit->type == CompositeType::Type::discriminated_union_case);
 
-			std::string case_type_name = getCSharpTypeName(*duit);
+			std::string case_type_name = getCaseTypeName(*duit);
 
 			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
-			f.write("\t\t\t\t{\n");
-
-			generateCsharpSubscriberParse2(f, *duit);
-
-			f.write("\t\t\t\t}\n");
-			f.write("\t\t\t\tbreak;\n");
-
+			f.write("\t\t\t\t\tchanged = %s_subscriber.parse(parser, subscriber, addr, offset) | changed;\n", case_type_name.c_str());
+			f.write("\t\t\t\t\tbreak;\n");
 		}
+
 		f.write("\t\t\t\tdefault:\n");
 		f.write("\t\t\t\t\tthrow new Exception();\n");
 		f.write("\t\t\t}\n");
@@ -589,7 +577,7 @@ namespace {
 
 void generateCsharpUnionInterface(CsharpFileWritter& f, CompositeType& s)
 {
-	assert(s.isDiscriminatedUnion());
+	assert(s.type == CompositeType::Type::discriminated_union);
 
 	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
@@ -601,7 +589,7 @@ void generateCsharpUnionInterface(CsharpFileWritter& f, CompositeType& s)
 
 
 	
-	std::string type_name = getCSharpTypeName(s);
+	std::string type_name = s.name;
 
 
 	f.write("public interface I%s : IEquivalenceComparable<I%s>\n", type_name.c_str(), type_name.c_str());
@@ -651,11 +639,11 @@ void generateCsharpUnionInterface(CsharpFileWritter& f, CompositeType& s)
 
 void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s)
 {
-	assert(s.isDiscriminatedUnion());
+	assert(s.type == CompositeType::Type::discriminated_union);
 
 
 
-	std::string type_name = getCSharpTypeName(s);
+	std::string type_name = s.name;
 
 	f.write("public class %s : I%s, IEquatable<%s>\n", type_name.c_str(), type_name.c_str(), type_name.c_str());
 
@@ -684,7 +672,7 @@ void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s)
 		CompositeType& cs = *it;
 		assert(cs.type == CompositeType::Type::discriminated_union_case);
 
-		std::string case_type_name = getCSharpTypeName(cs);
+		std::string case_type_name = getCaseTypeName(cs);
 		f.write("\t\telse if(this.mem is %s)\n", case_type_name.c_str());
 		f.write("\t\t\treturn I%s.Variants.%s;\n", type_name.c_str(), cs.name.c_str());
 	}
@@ -704,7 +692,7 @@ void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s)
 		CompositeType& cs = *it;
 		assert(cs.type == CompositeType::Type::discriminated_union_case);
 
-		std::string case_type_name = getCSharpTypeName(cs);
+		std::string case_type_name = getCaseTypeName(cs);
 
 		f.write("\t\tcase I%s.Variants.%s: this.mem = new %s(); break;\n", type_name.c_str(), cs.name.c_str(), case_type_name.c_str());
 	}
@@ -730,7 +718,7 @@ void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s)
 		assert(cs.type == CompositeType::Type::discriminated_union_case);
 		f.write("\n\t// IDL CASE %s:\n", cs.name.c_str());
 
-		std::string case_type_name = getCSharpTypeName(cs);
+		std::string case_type_name = getCaseTypeName(cs);
 
 		generateCsharpStructImpl(f, cs, case_type_name.c_str(), nullptr);
 		//csharpDu_generateStructMessage(f, root, cs, case_type_name.c_str(), interface_name.c_str());
@@ -741,11 +729,11 @@ void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s)
 
 void generateCsharpUnionMessage(CsharpFileWritter& f, CompositeType& s)
 {
-	assert(s.isDiscriminatedUnion());
+	assert(s.type == CompositeType::Type::discriminated_union);
 
 
 
-	std::string type_name = getCSharpTypeName(s);
+	std::string type_name = s.name;
 
 	f.write("public class %s_message\n", type_name.c_str());
 	f.write("{\n");
@@ -764,7 +752,7 @@ void generateCsharpUnionMessage(CsharpFileWritter& f, CompositeType& s)
 		assert(cs.type == CompositeType::Type::discriminated_union_case);
 		f.write("\n\t// IDL CASE %s:\n", cs.name.c_str());
 
-		std::string case_type_name = getCSharpTypeName(cs);
+		std::string case_type_name = getCaseTypeName(cs);
 		std::string interface_name = "I" + type_name;
 
 		generateCsharpStructMessage(f, cs, case_type_name.c_str(), interface_name.c_str());
@@ -829,22 +817,17 @@ void generateCsharpUnionSubscriber(CsharpFileWritter& f, CompositeType& s, const
 	f.write("\tpublic I%s.Variants currentVariant() { return data.currentVariant(); }\n", type_name);
 	f.write("\tpublic void setCurrentVariant(I%s.Variants v) { throw new InvalidOperationException(); }\n", type_name);
 
-	f.write("\tbool parse_CurrentVariant(IPublishableParser parser, String name, bool forceUpdate)\n");
+	f.write("\tbool update_CurrentVariant(IPublishableParser parser, String name, bool notifyUpdate)\n");
 	f.write("\t{\n");
 	f.write("\t\tI%s.Variants newVal = (I%s.Variants)parser.parseUnsigned(name);\n", type_name, type_name);
 						
-	f.write("\t\tif (forceUpdate)\n");
-	f.write("\t\t{\n");
-	f.write("\t\t\tdata.setCurrentVariant(newVal);\n");
-	f.write("\t\t\treset_handlers();\n");
-	f.write("\t\t\treturn true;\n");
-	f.write("\t\t}\n");
-	f.write("\t\telse if (newVal != data.currentVariant())\n");
+	f.write("\t\tif (newVal != data.currentVariant())\n");
 	f.write("\t\t{\n");
 	f.write("\t\t\tI%s.Variants oldVal = data.currentVariant();\n", type_name);
 	f.write("\t\t\tdata.setCurrentVariant(newVal);\n");
 	f.write("\t\t\treset_handlers();\n");
-	f.write("\t\t\tnotifyUpdated_CurrentVariant(oldVal);\n");
+	f.write("\t\t\tif(notifyUpdate)\n");
+	f.write("\t\t\t\tnotifyUpdated_CurrentVariant(oldVal);\n");
 	f.write("\t\t\treturn true;\n");
 	f.write("\t\t}\n");
 	f.write("\t\telse\n");
@@ -873,27 +856,21 @@ void generateCsharpUnionSubscriber(CsharpFileWritter& f, CompositeType& s, const
 
 	csharpDu_generateUnionResetHandlers(f, s);
 
-	//for (auto& duit : s.getDiscriminatedUnionCases())
-	//{
-	//	assert(duit != nullptr);
-	//	auto& cs = *duit;
-	//	assert(cs.type == CompositeType::Type::discriminated_union_case);
-	//	f.write("\n\t// IDL CASE %s:\n", cs.name.c_str());
-
-	//	std::string case_type_name = getCSharpTypeName(cs);
-
-	//	generateCsharpStructSubscriberForUnionCase(f, cs, case_type_name.c_str());
-	//}
-
-
-
-	//csharpPub_generateDebugMethodSubs type_name);
 	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 	f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name);
 	f.write("\t{\n");
 	f.write("\t\tthis.data = data;\n");
 	f.write("\t\treset_handlers();\n");
 	f.write("\t}\n");
+
+	for (auto& duit : s.getDiscriminatedUnionCases())
+	{
+		assert(duit != nullptr);
+		assert(duit->type == CompositeType::Type::discriminated_union_case);
+		f.write("\n\t// IDL CASE %s:\n", duit->name.c_str());
+		std::string case_type_name = getCaseTypeName(*duit);
+		generateCsharpCaseSubscriber(f, *duit, case_type_name.c_str(), type_name);
+	}
 
 
 	f.write("} // class %s_subscriber\n\n", type_name);
@@ -955,6 +932,18 @@ void generateCsharpUnionPublisher(CsharpFileWritter& f, CompositeType& s, const 
 
 	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 	f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name);
+
+
+
+	for (auto& duit : s.getDiscriminatedUnionCases())
+	{
+		assert(duit != nullptr);
+		assert(duit->type == CompositeType::Type::discriminated_union_case);
+		f.write("\n\t// IDL CASE %s:\n", duit->name.c_str());
+		std::string case_type_name = getCaseTypeName(*duit);
+		generateCsharpCasePublisher(f, *duit, case_type_name.c_str(), type_name);
+
+	}
 
 	f.write("} // class %s_publisher\n\n", type_name);
 }

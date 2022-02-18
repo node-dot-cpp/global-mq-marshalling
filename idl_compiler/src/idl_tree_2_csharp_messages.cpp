@@ -694,81 +694,44 @@ void generateCsharpStructMessage(CsharpFileWritter& f, CompositeType& s, const c
 
 }
 
-
-void generateCsharpMessages(CsharpFileWritter& f, Root& root, const std::string& metascope)
+void generateCsharpMessageScope(CsharpFileWritter& f, Root& root, Scope& scope)
 {
-	vector<CompositeType*> structsOrderedByDependency;
-	std::unordered_set<size_t> collElementTypes;
-	orderStructsByDependency( root.structs, structsOrderedByDependency, collElementTypes );
+	f.write("public class %s\n", scope.name.c_str());
+	f.write("{\n");
 
+	csharpMsg_generateScopeEnum(f, scope);
+	f.write("\n");
+	csharpMsg_generateScopeHandler(f, scope);
+	f.write("\n");
 
-
-	for (auto& it : structsOrderedByDependency)
+	for (auto it : scope.objectList)
 	{
 		assert(it != nullptr);
-		assert(typeid(*(it)) == typeid(CompositeType));
+		assert(it->type == CompositeType::Type::message);
 
-		if (it->isStruct4Messaging)
+		checkCsharpStruct(*it);
+
+		if (!it->isAlias)
 		{
-			checkCsharpStruct(*it);
-			if (it->type == CompositeType::Type::structure)
-			{
+			std::string type_name = it->name;
+			std::string interface_name = "I" + type_name;
 
-				std::string type_name = getCSharpTypeName(*it);
-				std::string interface_name = "I" + type_name;
-
-				generateCsharpStructMessage(f, *it, type_name.c_str(), interface_name.c_str());
-			}
-			else if (it->type == CompositeType::Type::discriminated_union)
-				generateCsharpUnionMessage(f, *it);
-			else
-				assert(false);
+			generateCsharpStructInterface(f, *it, type_name.c_str());
+			generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
+			generateCsharpStructMessage(f, *it, type_name.c_str(), interface_name.c_str());
+			csharpMsg_generateComposeMessageMethod(f, *it, it->name, scope.proto);
+			csharpMsg_generateParseMessageMethod(f, type_name.c_str(), type_name.c_str());
 		}
-	}
-
-	impl_insertScopeList(f.getFile(), root);
-
-
-	for ( auto& scope : root.scopes )
-	{
-		f.write("public class %s\n", scope->name.c_str() );
-		f.write("{\n");
-
-		csharpMsg_generateScopeEnum(f, *scope);
-		f.write("\n");
-		csharpMsg_generateScopeHandler( f, *scope );
-		f.write("\n");
-
-		for ( auto it : scope->objectList )
+		else
 		{
-			assert( it != nullptr );
-			assert( it->type == CompositeType::Type::message );
+			assert(it->aliasIdx < root.structs.size());
+			auto& alias = root.structs[static_cast<decltype(root.structs)::size_type>(it->aliasIdx)];
 
-			checkCsharpStruct(*it);
-
-			if (!it->isAlias)
-			{
-				std::string type_name = getCSharpTypeName(*it);
-				std::string interface_name = "I" + type_name;
-
-				generateCsharpStructInterface(f, *it, type_name.c_str());
-				generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
-				generateCsharpStructMessage(f, *it, type_name.c_str(), interface_name.c_str());
-				csharpMsg_generateComposeMessageMethod(f, *it, it->name, scope->proto);
-				csharpMsg_generateParseMessageMethod(f, type_name.c_str(), type_name.c_str());
-			}
-			else
-			{
-				assert(it->aliasIdx < root.structs.size());
-				auto& alias = root.structs[static_cast<decltype(root.structs)::size_type>(it->aliasIdx)];
-
-				csharpMsg_generateComposeMessageMethod(f, *alias, it->name, scope->proto);
-				csharpMsg_generateParseMessageMethod(f, it->name.c_str(), alias->name.c_str());
-			}
-
+			csharpMsg_generateComposeMessageMethod(f, *alias, it->name, scope.proto);
+			csharpMsg_generateParseMessageMethod(f, it->name.c_str(), alias->name.c_str());
 		}
 
-		f.write("} // class %s\n\n", scope->name.c_str());
 	}
+
+	f.write("} // class %s\n\n", scope.name.c_str());
 }
-

@@ -151,7 +151,7 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 			if (it->type == CompositeType::Type::structure)
 			{
 
-				std::string type_name = getCSharpTypeName(*it);
+				std::string type_name = it->name;
 				std::string interface_name = "I" + type_name;
 
 				generateCsharpStructInterface(f, *it, type_name.c_str());
@@ -173,7 +173,31 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 	f.write("//\n");
 	f.write("//////////////////////////////////////////////////////////////\n\n");
 
-	generateCsharpMessages(f, root, metascope);
+	for (auto& it : structsOrderedByDependency)
+	{
+		assert(it != nullptr);
+
+		if (it->isStruct4Messaging)
+		{
+			checkCsharpStruct(*it);
+			if (it->type == CompositeType::Type::structure)
+			{
+				std::string interface_name = "I" + it->name;
+				generateCsharpStructMessage(f, *it, it->name.c_str(), interface_name.c_str());
+			}
+			else if (it->type == CompositeType::Type::discriminated_union)
+				generateCsharpUnionMessage(f, *it);
+			else
+				assert(false);
+		}
+	}
+
+	impl_insertScopeList(f.getFile(), root);
+
+	for (auto& scope : root.scopes)
+	{
+		generateCsharpMessageScope(f, root, *scope);
+	}
 
 	f.write("//////////////////////////////////////////////////////////////\n");
 	f.write("//\n");
@@ -181,7 +205,49 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 	f.write("//\n");
 	f.write("//////////////////////////////////////////////////////////////\n\n");
 
-	generateCsharpPublishables(f, root, metascope);
+	for (auto it : structsOrderedByDependency)
+	{
+		assert(it != nullptr);
+		if (it->isStruct4Publishing)
+		{
+			if (it->type == CompositeType::Type::structure)
+			{
+				generateCsharpStructSubscriber(f, *it, it->name.c_str());
+				generateCsharpStructPublisher(f, *it, it->name.c_str());
+
+			}
+			else if (it->type == CompositeType::Type::discriminated_union)
+			{
+				generateCsharpUnionSubscriber(f, *it, it->name.c_str());
+				generateCsharpUnionPublisher(f, *it, it->name.c_str());
+			}
+			else
+				assert(false);
+		}
+	}
+
+	for (auto& it : root.publishables)
+	{
+		assert(it != nullptr);
+		assert(it->type == CompositeType::Type::publishable);
+
+		checkCsharpStruct(*it);
+
+		std::string type_name = it->name;
+		std::string interface_name = "I" + type_name;
+
+		generateCsharpStructInterface(f, *it, type_name.c_str());
+		generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
+
+		impl_generatePublishableCommentBlock(f.getFile(), *it);
+
+		generateCsharpStructSubscriber(f, *it, type_name.c_str());
+		generateCsharpStructPublisher(f, *it, type_name.c_str());
+		generateCsharpStructConcentrator(f, *it, type_name.c_str());
+	}
+
+	if (!root.publishables.empty())
+		generateCsharpConcentratorFactory(f, root);
 
 	f.write("\n} // namespace %s\n\n", metascope.c_str());
 }

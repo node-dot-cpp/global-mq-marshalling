@@ -57,7 +57,7 @@ public:
 //shared by message and publishables
 
 void checkCsharpStruct(CompositeType& s);
-std::string getCSharpTypeName(CompositeType& s);
+std::string getCaseTypeName(CompositeType& s);
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
 const char* getIdlPrimitiveType(MessageParameterType::KIND kind);
 const char* getIdlPrimitiveType2(MessageParameterType::KIND kind);
@@ -80,17 +80,22 @@ void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParamete
 void generateCsharpSubscriberEventHandler(CsharpFileWritter& f, MessageParameter& member);
 void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& member);
 void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& member);
-void generateCsharpPublisherCompose(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpSubscriberParseForStateSync(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpSubscriberParse1(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpSubscriberParse2(CsharpFileWritter& f, CompositeType& s);
+
+void generateCsharpCaseSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name);
+void generateCsharpCasePublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name);
+
+void generateCsharpStructSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpStructPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpStructConcentrator(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpConcentratorFactory(CsharpFileWritter& f, Root& root);
+
 void generateCsharpUnionSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name);
 void generateCsharpUnionPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name);
 
 // code generation
 void generateCsharp(FILE* file, Root& root, const std::string& metascope);
-void generateCsharpMessages(CsharpFileWritter& f, Root& root, const std::string& metascope);
-void generateCsharpPublishables(CsharpFileWritter& f, Root& root, const std::string& metascope);
+void generateCsharpMessageScope(CsharpFileWritter& f, Root& root, Scope& scope);
+
 
 
 
