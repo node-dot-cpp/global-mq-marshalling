@@ -32,53 +32,26 @@
 
 namespace {
 
-	const char* csharpMsg_getCSharpType(MessageParameterType::KIND kind)
-	{
-		switch (kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-			return "Int64";
-		case MessageParameterType::KIND::UINTEGER:
-			return "UInt64";
-		case MessageParameterType::KIND::REAL:
-			return "Double";
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			return "String";
-		default:
-			assert(false);
-		}
-		return nullptr;
-	}
-
-	const char* csharpMsg_getMethodForKind(MessageParameterType::KIND kind)
-	{
-		switch (kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-			return "SignedInteger";
-		case MessageParameterType::KIND::UINTEGER:
-			return "UnsignedInteger";
-		case MessageParameterType::KIND::REAL:
-			return "Real";
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			return "String";
-		default:
-			assert(false);
-		}
-		return nullptr;
-	}
-
 	void csharpMsg_generateScopeEnum(FILE* header, Scope& scope)
 	{
-		fprintf(header, "\tpublic enum MsgId { ");
-		for (auto msg = scope.objectList.begin(); msg != scope.objectList.end(); ++msg)
-		{
-			if(msg != scope.objectList.begin())
-				fprintf(header, ", ");
+		CsharpFileWritter f(header, 0);
 
-			fprintf(header, "%s = %lld", (*msg)->name.c_str(), (*msg)->numID);
+		f.write("\tpublic enum MsgId\n");
+		f.write("\t{\n");
+
+		size_t sz = scope.objectList.size();
+		for (size_t i = 0; i != sz; ++i)
+		{
+			auto& msg = scope.objectList[i];
+			assert(msg != nullptr);
+
+			string num = std::to_string(msg->numID);
+			if(i != sz - 1)
+				f.write("\t\t%s = %s,\n", msg->name.c_str(), num.c_str());
+			else
+				f.write("\t\t%s = %s\n", msg->name.c_str(), num.c_str());
 		}
-		fprintf(header, " }\n");
+		f.write("\t}\n");
 	}
 
 
@@ -86,11 +59,13 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void compose(GmqComposer composer, ");
+		CsharpFileWritter f(header, 0);
+
+		f.write("\tpublic static void compose(GmqComposer composer, ");
 
 		generateCsharpDeclParams(header, s);
 
-		fprintf(header, ")\n\t{\n");
+		f.write(")\n\t{\n");
 
 		int count = 0;
 		auto& mem = s.getMembers();
@@ -110,13 +85,13 @@ namespace {
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				const char* method = csharpMsg_getMethodForKind(param.type.kind);
-				fprintf(header, "\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
+				const char* method = getIdlPrimitiveType2(param.type.kind);
+				f.write("\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s_message.compose(composer, %s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t%s_message.compose(composer, %s);\n", param.type.name.c_str(), param.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				switch (param.type.vectorElemKind)
@@ -126,9 +101,9 @@ namespace {
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
-					const char* elem_type_name = csharpMsg_getCSharpType(param.type.vectorElemKind);
-					fprintf(header, "\t\tGmqCollectionComposer<%s> %s_wrapper = GmqCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
-					fprintf(header, "\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
+					const char* elem_type_name = getCSharpPrimitiveType(param.type.vectorElemKind);
+					f.write("\t\tGmqCollectionComposer<%s> %s_wrapper = GmqCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
+					f.write("\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
@@ -136,9 +111,9 @@ namespace {
 				{
 					const char* elem_type_name = param.type.name.c_str();
 
-					fprintf(header, "\t\tGmqCollectionComposer<I%s> %s_wrapper = new GmqCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
-					fprintf(header, "\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
-					fprintf(header, "\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
+					f.write("\t\tGmqCollectionComposer<I%s> %s_wrapper = new GmqCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
+					f.write("\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
+					f.write("\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
 					break;
 				}
 				default:
@@ -151,30 +126,34 @@ namespace {
 				break;
 			}
 		}
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 	void csharpMsg_generateStructComposeGmq2(FILE* header, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void compose(GmqComposer composer, %s val)\n", type_name);
-		fprintf(header, "\t{\n");
+		CsharpFileWritter f(header, 0);
 
-		fprintf(header, "\t\tcompose(composer, ");
+		f.write("\tpublic static void compose(GmqComposer composer, %s val)\n", type_name);
+		f.write("\t{\n");
+
+		f.write("\t\tcompose(composer, ");
 		generateCsharpCallerParams(header, s, true);
-		fprintf(header, ");\n");
+		f.write(");\n");
 
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 	void csharpMsg_generateStructParseGmq3(FILE* header, CompositeType& s, const char* name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void parse(GmqParser parser, %s val)\n", name);
+		CsharpFileWritter f(header, 0);
 
-		fprintf(header, "\t{\n");
+		f.write("\tpublic static void parse(GmqParser parser, %s val)\n", name);
+
+		f.write("\t{\n");
 
 		int count = 0;
 		for (auto& it : s.getMembers())
@@ -186,86 +165,88 @@ namespace {
 				continue;
 			++count;
 
-			fprintf(header, "\t{\n");
+			f.write("\t{\n");
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\tInt64 tmp;\n");
-				fprintf(header, "\t\tparser.parseSignedInteger(out tmp);\n");
-				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tInt64 tmp;\n");
+				f.write("\t\tparser.parseSignedInteger(out tmp);\n");
+				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\tUInt64 tmp;\n");
-				fprintf(header, "\t\tparser.parseUnsignedInteger(out tmp);\n");
-				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tUInt64 tmp;\n");
+				f.write("\t\tparser.parseUnsignedInteger(out tmp);\n");
+				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\t\tDouble tmp;\n");
-				fprintf(header, "\t\tparser.parseReal(out tmp);\n");
-				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tDouble tmp;\n");
+				f.write("\t\tparser.parseReal(out tmp);\n");
+				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\tString tmp;\n");
-				fprintf(header, "\t\tparser.parseString(out tmp);\n");
-				fprintf(header, "\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tString tmp;\n");
+				f.write("\t\tparser.parseString(out tmp);\n");
+				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 
-				fprintf(header, "\t\t\t\tGmqCollectionParser tmp = new GmqCollectionParser(\n");
-				fprintf(header, "\t\t\t\t\t(GmqParser parser, int ordinal) =>\n");
+				f.write("\t\t\t\tGmqCollectionParser tmp = new GmqCollectionParser(\n");
+				f.write("\t\t\t\t\t(GmqParser parser, int ordinal) =>\n");
 
 				switch (param.type.vectorElemKind)
 				{
 
 				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\t\t\t\t\t\t{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\t\t\t\t\t\t{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\t\t\t\t\t\t{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\t\t\t\t\t{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					fprintf(header, "\t\t\t\t\t\t{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					f.write("\t\t\t\t\t\t{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
 					break;
 				}
 
-				fprintf(header, "\t\t\t\ttmp.parseGmq(parser);\n");
+				f.write("\t\t\t\ttmp.parseGmq(parser);\n");
 				break;
 
 			default:
 				assert(false); // unexpected
 				break;
 			}
-			fprintf(header, "\t}\n");
+			f.write("\t}\n");
 		}
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 	void csharpMsg_generateStructComposeJson(FILE* header, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void compose(JsonComposer composer, ");
+		CsharpFileWritter f(header, 0);
+
+		f.write("\tpublic static void compose(JsonComposer composer, ");
 
 		generateCsharpDeclParams(header, s);
 
-		fprintf(header, ")\n"
-			"\t{\n");
+		f.write(")\n");
+		f.write("\t{\n");
 
-		fprintf(header, "\t\tcomposer.append( \"{\\n  \");\n");
+		f.write("\t\tcomposer.append( \"{\\n  \");\n");
 		int count = 0;
 		auto& mem = s.getMembers();
 		for (auto it = mem.begin(); it != mem.end(); ++it)
@@ -278,10 +259,10 @@ namespace {
 			++count;
 
 			if(it != mem.begin())
-				fprintf(header, "\t\tcomposer.append( \",\\n  \" );\n");
+				f.write("\t\tcomposer.append( \",\\n  \" );\n");
 
 
-			fprintf(header, "\t\tcomposer.addNamePart(\"%s\");\n", param.name.c_str());
+			f.write("\t\tcomposer.addNamePart(\"%s\");\n", param.name.c_str());
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
@@ -289,13 +270,13 @@ namespace {
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				const char* method = csharpMsg_getMethodForKind(param.type.kind);
-				fprintf(header, "\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
+				const char* method = getIdlPrimitiveType2(param.type.kind);
+				f.write("\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t%s_message.compose(composer, %s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t%s_message.compose(composer, %s);\n", param.type.name.c_str(), param.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				switch (param.type.vectorElemKind)
@@ -305,23 +286,23 @@ namespace {
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
-					const char* elem_type_name = csharpMsg_getCSharpType(param.type.vectorElemKind);
-					fprintf(header, "\t\tJsonCollectionComposer<%s> %s_wrapper = JsonCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
-					fprintf(header, "\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
+					const char* elem_type_name = getCSharpPrimitiveType(param.type.vectorElemKind);
+					f.write("\t\tJsonCollectionComposer<%s> %s_wrapper = JsonCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
+					f.write("\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
 					break;
 				}
 
-					fprintf(header, "\t\tCollectionWrapperForComposing %s_wrapper = SimpleTypeCollection.makeComposer(%s);\n", param.name.c_str(), param.name.c_str());
-					fprintf(header, "\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
+					f.write("\t\tCollectionWrapperForComposing %s_wrapper = SimpleTypeCollection.makeComposer(%s);\n", param.name.c_str(), param.name.c_str());
+					f.write("\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
 					const char* elem_type_name = param.type.name.c_str();
 
-					fprintf(header, "\t\tJsonCollectionComposer<I%s> %s_wrapper = new JsonCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
-					fprintf(header, "\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
-					fprintf(header, "\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
+					f.write("\t\tJsonCollectionComposer<I%s> %s_wrapper = new JsonCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
+					f.write("\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
+					f.write("\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
 					break;
 				}
 				default:
@@ -335,9 +316,9 @@ namespace {
 			}
 		}
 
-		fprintf(header, "\t\tcomposer.append( \"\\n}\" );\n");
+		f.write("\t\tcomposer.append( \"\\n}\" );\n");
 
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 	void csharpMsg_generateStructComposeJson2(FILE* header, CompositeType& s, const char* type_name)
@@ -345,15 +326,17 @@ namespace {
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void compose(JsonComposer composer, %s val)\n", type_name);
+		CsharpFileWritter f(header, 0);
 
-		fprintf(header, "\t{\n");
+		f.write("\tpublic static void compose(JsonComposer composer, %s val)\n", type_name);
+
+		f.write("\t{\n");
 		
-		fprintf(header, "\t\tcompose(composer, ");
+		f.write("\t\tcompose(composer, ");
 		generateCsharpCallerParams(header, s, true);
-		fprintf(header, ");\n");
+		f.write(");\n");
 
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 
@@ -362,17 +345,19 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		fprintf(header, "\tpublic static void parse(JsonParser parser, %s val)", name);
+		CsharpFileWritter f(header, 0);
+
+		f.write("\tpublic static void parse(JsonParser parser, %s val)", name);
 
 
-		fprintf(header, "\t{\n");
+		f.write("\t{\n");
 
 
-		fprintf(header, "\t\tparser.skipDelimiter( \'{\' );\n");
-		fprintf(header, "\t\twhile (true)\n");
-		fprintf(header, "\t\t{\n");
-		fprintf(header, "\t\t\tstring key;\n");
-		fprintf(header, "\t\t\tparser.readKeyFromJson( out key );\n");
+		f.write("\t\tparser.skipDelimiter( \'{\' );\n");
+		f.write("\t\twhile (true)\n");
+		f.write("\t\t{\n");
+		f.write("\t\t\tstring key;\n");
+		f.write("\t\t\tparser.readKeyFromJson( out key );\n");
 
 		int count = 0;
 		auto& mem = s.getMembers();
@@ -385,93 +370,93 @@ namespace {
 				continue;
 			++count;
 
-			fprintf(header, "\t\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str());
+			f.write("\t\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str());
 
-			fprintf(header, "\t\t\t{\n");
+			f.write("\t\t\t{\n");
 
 			switch (param.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\t\t\t\tInt64 tmp;\n");
-				fprintf(header, "\t\t\t\tparser.parseSignedInteger(out tmp);\n");
-				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tInt64 tmp;\n");
+				f.write("\t\t\t\tparser.parseSignedInteger(out tmp);\n");
+				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\t\t\t\tUInt64 tmp;\n");
-				fprintf(header, "\t\t\t\tparser.parseUnsignedInteger(out tmp);\n");
-				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tUInt64 tmp;\n");
+				f.write("\t\t\t\tparser.parseUnsignedInteger(out tmp);\n");
+				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\t\t\t\tDouble tmp;\n");
-				fprintf(header, "\t\t\t\tparser.parseReal(out tmp);\n");
-				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tDouble tmp;\n");
+				f.write("\t\t\t\tparser.parseReal(out tmp);\n");
+				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\t\t\t\tString tmp;\n");
-				fprintf(header, "\t\t\t\tparser.parseString(out tmp);\n");
-				fprintf(header, "\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tString tmp;\n");
+				f.write("\t\t\t\tparser.parseString(out tmp);\n");
+				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf(header, "\t\t\t\tJsonCollectionParser tmp = new JsonCollectionParser(\n");
-				fprintf(header, "\t\t\t\t\t(JsonParser parser, int ordinal) =>\n");
+				f.write("\t\t\t\tJsonCollectionParser tmp = new JsonCollectionParser(\n");
+				f.write("\t\t\t\t\t(JsonParser parser, int ordinal) =>\n");
 				switch (param.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\t\t\t\t\t{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\t\t\t\t{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\t\t\t\t{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\t\t\t\t{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					fprintf(header, "\t\t\t\t{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					f.write("\t\t\t\t{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
 					break;
 				}
-				fprintf(header, "\t\t\t\ttmp.parseJson(parser);\n");
+				f.write("\t\t\t\ttmp.parseJson(parser);\n");
 				break;
 
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\t\t\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
 				break; // TODO: ...
 			default:
 				assert(false); // unexpected
 				break;
 			}
 
-			fprintf(header, "\t\t\t}\n");
+			f.write("\t\t\t}\n");
 		}
 
 		//TODO if unknown it should be skipped
-		fprintf(header, "\n");
+		f.write("\n");
 
-		fprintf(header, "\t\t\tparser.skipSpacesEtc();\n");
-		fprintf(header, "\t\t\tif ( parser.isDelimiter( \',\' ) )\n");
-		fprintf(header, "\t\t\t{\n");
-		fprintf(header, "\t\t\t\tparser.skipDelimiter( \',\' );\n");
-		fprintf(header, "\t\t\t\tcontinue;\n");
-		fprintf(header, "\t\t\t}\n");
-		fprintf(header, "\t\t\tif ( parser.isDelimiter( \'}\' ) )\n");
-		fprintf(header, "\t\t\t{\n");
-		fprintf(header, "\t\t\t\tparser.skipDelimiter( \'}\' );\n");
-		fprintf(header, "\t\t\t\tbreak;\n");
-		fprintf(header, "\t\t\t}\n");
-		fprintf(header, "\t\t\tthrow new FormatException(); // bad format\n");
+		f.write("\t\t\tparser.skipSpacesEtc();\n");
+		f.write("\t\t\tif ( parser.isDelimiter( \',\' ) )\n");
+		f.write("\t\t\t{\n");
+		f.write("\t\t\t\tparser.skipDelimiter( \',\' );\n");
+		f.write("\t\t\t\tcontinue;\n");
+		f.write("\t\t\t}\n");
+		f.write("\t\t\tif ( parser.isDelimiter( \'}\' ) )\n");
+		f.write("\t\t\t{\n");
+		f.write("\t\t\t\tparser.skipDelimiter( \'}\' );\n");
+		f.write("\t\t\t\tbreak;\n");
+		f.write("\t\t\t}\n");
+		f.write("\t\t\tthrow new FormatException(); // bad format\n");
 
-		fprintf(header, "\t\t}\n");
+		f.write("\t\t}\n");
 
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 
@@ -479,8 +464,7 @@ namespace {
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-		//fprintf(header, "struct %s\n", s.name.c_str());
-		//fprintf(header, "{\n");
+		CsharpFileWritter f(header, 0);
 
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)
@@ -491,36 +475,36 @@ namespace {
 			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf(header, "\tpublic Int64 %s;\n", member.name.c_str());
+				f.write("\tpublic Int64 %s;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf(header, "\tpublic UInt64 %s;\n", member.name.c_str());
+				f.write("\tpublic UInt64 %s;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf(header, "\tpublic Double %s;\n", member.name.c_str());
+				f.write("\tpublic Double %s;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf(header, "\tpublic String %s = String.Empty;\n", member.name.c_str());
+				f.write("\tpublic String %s = String.Empty;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf(header, "\tpublic %s %s = new %s();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
+				f.write("\tpublic %s %s = new %s();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
 				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					fprintf(header, "\tpublic List<Int64> %s = new List<Int64>();\n", member.name.c_str());
+					f.write("\tpublic List<Int64> %s = new List<Int64>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					fprintf(header, "\tpublic List<UInt64> %s = new List<UInt64>();\n", member.name.c_str());
+					f.write("\tpublic List<UInt64> %s = new List<UInt64>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					fprintf(header, "\tpublic List<Double> %s = new List<Double>();\n", member.name.c_str());
+					f.write("\tpublic List<Double> %s = new List<Double>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					fprintf(header, "\tpublic List<String> %s = new List<String>();\n", member.name.c_str());
+					f.write("\tpublic List<String> %s = new List<String>();\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::VECTOR:
 					assert(false); // unexpected
@@ -529,7 +513,7 @@ namespace {
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
 					const char* elem_type_name = member.type.name.c_str();
-					fprintf(header, "\tpublic List<%s> %s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
+					f.write("\tpublic List<%s> %s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
 					break;
 				}
 				default:
@@ -548,44 +532,42 @@ namespace {
 		// when message is an alias we feed structure here
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure);
 
-		fprintf(header, "\tpublic static void composeMessage_%s(BufferT buffer, ", msgName.c_str());
+		CsharpFileWritter f(header, 0);
+
+		f.write("\tpublic static void composeMessage_%s(BufferT buffer, ", msgName.c_str());
 
 		generateCsharpDeclParams(header, s);
 
-		fprintf(header, ")\n\t{\n");
+		f.write(")\n\t{\n");
 
 		if (proto == Proto::gmq)
 		{
-			fprintf(header,
-				"\t\tGmqComposer composer = new GmqComposer(buffer);\n\n"
-				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
-				"\t\t%s_message.compose(composer, ", msgName.c_str(), s.name.c_str());
+			f.write("\t\tGmqComposer composer = new GmqComposer(buffer);\n\n");
+			f.write("\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n", msgName.c_str());
 
-
-			generateCsharpCallerParams(header, s, false);
-			fprintf(header,");\n");
+			string caller = generateCsharpCallerParams(s, false);
+			f.write("\t\t%s_message.compose(composer, %s);\n", s.name.c_str(), caller.c_str());
 		}
 		else if (proto == Proto::json)
 		{
-			fprintf(header,
-				"\t\tJsonComposer composer = new JsonComposer(buffer);\n\n"
-				"\t\tcomposer.append(\"{\\n  \");\n"
-				"\t\tcomposer.addNamePart(\"msgid\");\n"
-				"\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n"
-				"\t\tcomposer.append(\",\\n  \");\n"
-				"\t\tcomposer.addNamePart(\"msgbody\");\n"
-				"\t\t%s_message.compose(composer, ", msgName.c_str(), s.name.c_str());
+			f.write("\t\tJsonComposer composer = new JsonComposer(buffer);\n\n");
+			f.write("\t\tcomposer.append(\"{\\n  \");\n");
+			f.write("\t\tcomposer.addNamePart(\"msgid\");\n");
+			f.write("\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n", msgName.c_str());
+			f.write("\t\tcomposer.append(\",\\n  \");\n");
+			f.write("\t\tcomposer.addNamePart(\"msgbody\");\n");
 
-			generateCsharpCallerParams(header, s, false);
-			fprintf(header,	");\n"
-				"\t\tcomposer.append(\"\\n}\");\n");
+			string caller = generateCsharpCallerParams(s, false);
+			f.write("\t\t%s_message.compose(composer, %s);\n", s.name.c_str(), caller.c_str());
+
+			f.write("\t\tcomposer.append(\"\\n}\");\n");
 		}
 		else
 		{
 			assert(false);
 		}
 
-		fprintf(header, "\t}\n\n");
+		f.write("\t}\n\n");
 	}
 
 
@@ -593,115 +575,106 @@ namespace {
 	{
 		// when message is an alias we feed structure here
 
-		fprintf(header, "\tpublic static %s parseMessage_%s(ParserBase parser)\n", type_name, msg_name);
+		CsharpFileWritter f(header, 0);
+
+		f.write("\tpublic static %s parseMessage_%s(ParserBase parser)\n", type_name, msg_name);
 
 
-		fprintf(header, "\t{\n");
-		fprintf(header, "\t\t%s tmp = new %s();\n", type_name, type_name);
-		fprintf(header, "\t\tif (parser is GmqParser gmqP)\n");
-		fprintf(header, "\t\t\t%s_message.parse(gmqP, tmp);\n", type_name);
-		fprintf(header, "\t\telse if (parser is JsonParser jsonP)\n");
-		fprintf(header, "\t\t\t%s_message.parse(jsonP, tmp);\n", type_name);
-		fprintf(header, "\t\telse\n");
-		fprintf(header, "\t\t\tthrow new ArgumentException();\n");
-		fprintf(header, "\t\treturn tmp;\n");
-		fprintf(header, "\t}\n");
+		f.write("\t{\n");
+		f.write("\t\t%s tmp = new %s();\n", type_name, type_name);
+		f.write("\t\tif (parser is GmqParser gmqP)\n");
+		f.write("\t\t\t%s_message.parse(gmqP, tmp);\n", type_name);
+		f.write("\t\telse if (parser is JsonParser jsonP)\n");
+		f.write("\t\t\t%s_message.parse(jsonP, tmp);\n", type_name);
+		f.write("\t\telse\n");
+		f.write("\t\t\tthrow new ArgumentException();\n");
+		f.write("\t\treturn tmp;\n");
+		f.write("\t}\n");
 
 	}
 
 
 	void csharpMsg_generateMessageAliasMethods(FILE* header, CompositeType& target, const char* composerType, const char* parserType)
 	{
+		CsharpFileWritter f(header, 0);
 
-		fprintf(header, "\tpublic static void compose(%s composer, ", composerType);
-		generateCsharpDeclParams(header, target);
-		fprintf(header, ")\n\t{\n");
+		string decls = generateCsharpDeclParams(target);
+		f.write("\tpublic static void compose(%s composer, %s)\n", composerType, decls.c_str());
+		
+		f.write("\t{\n");
 
-		fprintf(header, "\t\t%s_message.compose(composer, ", target.name.c_str());
-		generateCsharpCallerParams(header, target, false);
-		fprintf(header, ");\n");
+		string caller = generateCsharpCallerParams(target, false);
+		f.write("\t\t%s_message.compose(composer, %s);\n", target.name.c_str(), caller.c_str());
 
-
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 	void csharpMsg_generateScopeHandler(FILE* header, Scope& scope)
 	{
-		fprintf(header,
-			"\tpublic static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )\n"
-			"\t{\n"
-			"\t\treturn new MessageHandler((ulong)id, handler);\n"
-			"\t}\n");
-		fprintf(header,
-			"\tpublic static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)\n"
-			"\t{\n"
-			"\t\treturn new MessageHandler(MessageHandler.DefaultHandler, handler);\n"
-			"\t}\n");
+		CsharpFileWritter f(header, 0);
 
-		fprintf(header,
-			"\tpublic static void handleMessage( BufferT buffer, params MessageHandler[] handlers )\n"
-			"\t{\n"
-			"\t\thandleMessage(buffer.getReadIterator(), handlers);\n"
-			"\t}\n");
+		f.write("\tpublic static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )\n");
+		f.write("\t{\n");
+		f.write("\t\treturn new MessageHandler((ulong)id, handler);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)\n");
+		f.write("\t{\n");
+		f.write("\t\treturn new MessageHandler(MessageHandler.DefaultHandler, handler);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static void handleMessage( BufferT buffer, params MessageHandler[] handlers )\n");
+		f.write("\t{\n");
+		f.write("\t\thandleMessage(buffer.getReadIterator(), handlers);\n");
+		f.write("\t}\n");
 
 
-		fprintf(header,
-			"\tpublic static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )\n"
-			"\t{\n"
-		);
+		f.write("\tpublic static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )\n");
+		f.write("\t{\n");
 		switch (scope.proto)
 		{
 		case Proto::gmq:
-			fprintf(header,
-				"\t\tGmqParser parser = new GmqParser( riter );\n"
-				"\t\tMessageHandler.gmq_handle( parser, handlers );\n"
-			);
+			f.write("\t\tGmqParser parser = new GmqParser( riter );\n");
+			f.write("\t\tMessageHandler.gmq_handle( parser, handlers );\n");
 			break;
 		case Proto::json:
-			fprintf(header,
-				"\t\tJsonParser parser = new JsonParser( riter );\n"
-				"\t\tMessageHandler.json_handle( parser, handlers );\n"
-			);
+			f.write("\t\tJsonParser parser = new JsonParser( riter );\n");
+			f.write("\t\tMessageHandler.json_handle( parser, handlers );\n");
 			break;
 		default:
 			assert(false);
 		}
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 
 	
 	void csharpMsg_generateScopeComposer(FILE* header, Scope& scope)
 	{
-		fprintf(header,
-			"\tpublic static void composeMessage( BufferT buffer, MessageHandlerArray handlers )\n"
-			"\t{\n"
-			"\t\tReadIteratorT riter = buffer.getReadIterator();\n"
-			"\t\thandleMessage(riter, handlers);\n"
-			"\t}\n");
+		CsharpFileWritter f(header, 0);
+
+		f.write("\tpublic static void composeMessage( BufferT buffer, MessageHandlerArray handlers )\n");
+		f.write("\t{\n");
+		f.write("\t\tReadIteratorT riter = buffer.getReadIterator();\n");
+		f.write("\t\thandleMessage(riter, handlers);\n");
+		f.write("\t}\n");
 
 
-		fprintf(header,
-			"\tpublic static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n"
-			"\t{\n"
-		);
+		f.write("\tpublic static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n");
+		f.write("\t{\n");
 		switch (scope.proto)
 		{
 		case Proto::gmq:
-			fprintf(header,
-				"\t\tGmqParser parser = new GmqParser( riter );\n"
-				"\t\thandlers.gmq_handle(parser);\n"
-			);
+				f.write("\t\tGmqParser parser = new GmqParser( riter );\n");
+				f.write("\t\thandlers.gmq_handle(parser);\n");
 			break;
 		case Proto::json:
-			fprintf(header,
-				"\t\tJsonParser parser = new JsonParser( riter );\n"
-				"\t\thandlers.json_handle(parser);\n"
-			);
+				f.write("\t\tJsonParser parser = new JsonParser( riter );\n");
+				f.write("\t\thandlers.json_handle(parser);\n");
 			break;
 		default:
 			assert(false);
 		}
-		fprintf(header, "\t}\n");
+		f.write("\t}\n");
 	}
 }
 
@@ -709,8 +682,10 @@ void generateCsharpStructMessage(FILE* header, CompositeType& s, const char* typ
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
-	fprintf(header, "public class %s_message\n", type_name);
-	fprintf(header, "{\n");
+	CsharpFileWritter f(header, 0);
+
+	f.write("public class %s_message\n", type_name);
+	f.write("{\n");
 
 	//csharpMsg_generateStructComposeBase(header, s);
 	csharpMsg_generateStructComposeJson(header, s);
@@ -721,7 +696,7 @@ void generateCsharpStructMessage(FILE* header, CompositeType& s, const char* typ
 	csharpMsg_generateStructParseJson3(header, s, interface_name);
 	csharpMsg_generateStructParseGmq3(header, s, interface_name);
 
-	fprintf(header, "} // class %s_message\n\n", type_name);
+	f.write("} // class %s_message\n\n", type_name);
 
 }
 
@@ -731,6 +706,8 @@ void generateCsharpMessages(FILE* header, Root& root, const std::string& metasco
 	vector<CompositeType*> structsOrderedByDependency;
 	std::unordered_set<size_t> collElementTypes;
 	orderStructsByDependency( root.structs, structsOrderedByDependency, collElementTypes );
+
+	CsharpFileWritter f(header, 0);
 
 	for (auto& it : structsOrderedByDependency)
 	{
@@ -760,12 +737,13 @@ void generateCsharpMessages(FILE* header, Root& root, const std::string& metasco
 
 	for ( auto& scope : root.scopes )
 	{
-		fprintf( header, "public class %s\n{\n", scope->name.c_str() );
+		f.write("public class %s\n", scope->name.c_str() );
+		f.write("{\n");
 
 		csharpMsg_generateScopeEnum(header, *scope);
-		fprintf(header, "\n");
+		f.write("\n");
 		csharpMsg_generateScopeHandler( header, *scope );
-		fprintf(header, "\n");
+		f.write("\n");
 
 		for ( auto it : scope->objectList )
 		{
@@ -796,7 +774,7 @@ void generateCsharpMessages(FILE* header, Root& root, const std::string& metasco
 
 		}
 
-		fprintf(header, "} // class %s\n\n", scope->name.c_str());
+		f.write("} // class %s\n\n", scope->name.c_str());
 	}
 }
 

@@ -31,16 +31,45 @@
 #include "idl_tree.h"
 #include "idl_tree_serializer.h"
 
+/// small wrapper to migrate from old fprintf to fmt::fprintf, and add basic auto-indent
+class CsharpFileWritter
+{
+	FILE* file = nullptr;
+	std::string currentIndent;
+
+public:
+	CsharpFileWritter(FILE* file, size_t initialIndent) : file(file), currentIndent(initialIndent, '\t') {}
+
+	void increment();
+	void decrement();
+	// mb: make variadic only if real necesity
+	void writeBr(char brace);
+	void write(const char* text);
+	void write(const char* format, const char* arg0);
+	void write(const char* format, const char* arg0, const char* arg1);
+	void write(const char* format, const char* arg0, const char* arg1, const char* arg2);
+	void write(const char* format, const char* arg0, const char* arg1, const char* arg2, const char* arg3);
+	void write(const char* format, const char* arg0, const char* arg1, const char* arg2, const char* arg3, const char* arg4);
+};
+
+
 //shared by message and publishables
 
 void checkCsharpStruct(CompositeType& s);
 std::string getCSharpTypeName(CompositeType& s);
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
 const char* getIdlPrimitiveType(MessageParameterType::KIND kind);
+const char* getIdlPrimitiveType2(MessageParameterType::KIND kind);
+
+std::string generateCsharpDeclParams(CompositeType& s);
+std::string generateCsharpCallerParams(CompositeType& s, bool valPrefix);
+
 void generateCsharpDeclParams(FILE* header, CompositeType& s);
 void generateCsharpCallerParams(FILE* header, CompositeType& s, bool valPrefix);
+
+
 void generateCsharpStandardMethods(FILE* header, const char* type_name);
-void generateCsharpStructEquivalentExpression(FILE* header, CompositeType& s);
+void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeType& s);
 void generateCsharpStructEquivalentMethod(FILE* header, CompositeType& s, const char* type_name);
 void generateCsharpSimpleEquivalentMethod(FILE* header, const char* type_name, const char* member_name);
 void generateCsharpInterfaceMember(FILE* header, MessageParameter& member);
@@ -65,20 +94,8 @@ void generateCsharpUnionPublisher(FILE* header, CompositeType& s, const char* ty
 void generateCsharp(FILE* header, Root& root, const std::string& metascope);
 void generateCsharpMessages(FILE* header, Root& root, const std::string& metascope);
 void generateCsharpPublishables(FILE* header, Root& root, const std::string& metascope);
-//void generateMessage( FILE* header, CompositeType& s );
-//void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
-//void generatePublishableAsCStruct( FILE* header, Root& root, CompositeType& s );
-//void generateMessageAlias( FILE* header, CompositeType& s );
-//void generateMessageParameter( FILE* header, MessageParameter& s );
-//void generateMessageMembers( FILE* header, CompositeType& s );
-//void generateLimit( FILE* header, Limit& s );
-//void generateLocation( FILE* header, Location& s );
-//void generateDataType( FILE* header, MessageParameterType& s );
-//void generate__unique_ptr_DataType( FILE* header, unique_ptr<MessageParameterType>& s );
-//void generate__unique_ptr_MessageParameter( FILE* header, unique_ptr<MessageParameter>& s );
-//
-//void generateDataType( FILE* header, MessageParameterType& s );
-//void generateLimit( FILE* header, Limit& s );
-//void generateVariant( FILE* header, Variant& s );
+
+
+
 
 #endif // IDL_TREE_2_CSHARP_H

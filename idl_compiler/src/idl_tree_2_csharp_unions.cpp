@@ -295,20 +295,22 @@ namespace {
 	void csharpDu_generateUnionEquivalentMethod(FILE* header, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
-		fprintf(header, "\tpublic bool isEquivalent(I%s other)\n", type_name);
-		fprintf(header,
-			"\t{\n"
-			"\t\tif (ReferenceEquals(other, null))\n"
-			"\t\t\treturn false;\n"
-			"\t\telse if (ReferenceEquals(this, other))\n"
-			"\t\t\treturn true;\n"
-			"\t\telse if (currentVariant() != other.currentVariant())\n"
-			"\t\t\treturn false;\n"
-			"\t\telse\n"
-			"\t\t{\n");
 
-		fprintf(header, "\t\t\tswitch(currentVariant())\n");
-		fprintf(header, "\t\t\t{\n");
+		CsharpFileWritter f(header, 0);
+
+		fprintf(header, "\tpublic bool isEquivalent(I%s other)\n", type_name);
+		f.write("\t{\n");
+		f.write("\t\tif (ReferenceEquals(other, null))\n");
+		f.write("\t\t\treturn false;\n");
+		f.write("\t\telse if (ReferenceEquals(this, other))\n");
+		f.write("\t\t\treturn true;\n");
+		f.write("\t\telse if (currentVariant() != other.currentVariant())\n");
+		f.write("\t\t\treturn false;\n");
+		f.write("\t\telse\n");
+		f.write("\t\t{\n");
+
+		f.write("\t\t\tswitch(currentVariant())\n");
+		f.write("\t\t\t{\n");
 
 		for (auto& it : s.getDiscriminatedUnionCases())
 		{
@@ -318,15 +320,15 @@ namespace {
 
 			std::string case_type_name = getCSharpTypeName(cs);
 
-			fprintf(header, "\t\t\tcase I%s.Variants.%s: return\n", type_name, cs.name.c_str());
-			generateCsharpStructEquivalentExpression(header, cs);
-			fprintf(header, ";\n");
-
+			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
+			f.increment();
+			generateCsharpStructEquivalentExpression(f, cs);
+			f.decrement();
 		}
-		fprintf(header, "\t\t\tdefault: return false;\n");
-		fprintf(header, "\t\t\t}\n");
-		fprintf(header, "\t\t}\n");
-		fprintf(header, "\t}\n");
+		f.write("\t\t\tdefault: return false;\n");
+		f.write("\t\t\t}\n");
+		f.write("\t\t}\n");
+		f.write("\t}\n");
 	}
 
 	void csharpDu_generateUnionResetHandlers(FILE* header, CompositeType& s)
@@ -818,11 +820,11 @@ void generateCsharpUnionSubscriber(FILE* header, CompositeType& s, const char* t
 	fprintf(header, "\tpublic I%s.Variants currentVariant() { return data.currentVariant(); }\n", type_name);
 	fprintf(header, "\tpublic void setCurrentVariant(I%s.Variants v) { throw new InvalidOperationException(); }\n", type_name);
 
-	fprintf(header, "\tbool parse_CurrentVariant(IPublishableParser parser, String name, bool forceChange)\n");
+	fprintf(header, "\tbool parse_CurrentVariant(IPublishableParser parser, String name, bool forceUpdate)\n");
 	fprintf(header, "\t{\n");
 	fprintf(header, "\t\tI%s.Variants newVal = (I%s.Variants)parser.parseUnsigned(name);\n", type_name, type_name);
 						
-	fprintf(header, "\t\tif (forceChange)\n");
+	fprintf(header, "\t\tif (forceUpdate)\n");
 	fprintf(header, "\t\t{\n");
 	fprintf(header, "\t\t\tdata.setCurrentVariant(newVal);\n");
 	fprintf(header, "\t\t\treset_handlers();\n");
