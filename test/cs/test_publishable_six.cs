@@ -84,7 +84,10 @@ namespace TestProject1
             // uncomment to update file
             //buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            if(fileName.EndsWith(".json"))
+                Assert.True(buffer.EqualsIgnoreEol(SimpleBuffer.readFromFile(fileName)));
+            else
+                Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
 
         internal static void TestParseStateSync(IPlatformSupport platform, String fileName)
@@ -118,7 +121,10 @@ namespace TestProject1
             // uncomment to update file
             //buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            if(fileName.EndsWith(".json"))
+                Assert.True(buffer.EqualsIgnoreEol(SimpleBuffer.readFromFile(fileName)));
+            else
+                Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
         internal static void TestParseUpdate(IPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
         {

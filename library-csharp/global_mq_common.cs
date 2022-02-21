@@ -81,7 +81,7 @@ namespace globalmq.marshalling
             {
                 int cp = Math.Max(sz, MIN_BUFFER);
                 byte[] tmp = new byte[cp];
-                Buffer.BlockCopy(_data, 0, tmp, 0, _size);
+                Array.Copy(_data, tmp, _size);
                 //_capacity = cp;
                 _data = tmp;
             }
@@ -107,22 +107,13 @@ namespace globalmq.marshalling
         }
         public void writeToFile(string path)
         {
-            using (FileStream fs = File.OpenWrite(path))
-            {
-                fs.Write(_data, 0, _size);
-            }
+            Array.Resize(ref this._data, this._size);
+            File.WriteAllBytes(path, this._data);
         }
         public static SimpleBuffer readFromFile(string path)
         {
-            using (FileStream fs = File.OpenRead(path))
-            {
-                SimpleBuffer b = new SimpleBuffer();
-                int sz = (int)fs.Length;
-                b.reserve(sz);
-                fs.Read(b._data, 0, sz);
-                b._size = sz;
-                return b;
-            }
+            byte[] arr = File.ReadAllBytes(path);
+            return new SimpleBuffer(arr, arr.Length);
         }
         public int size() { return _size; }
         public bool empty() { return _size == 0; }
@@ -130,7 +121,7 @@ namespace globalmq.marshalling
         public void append(byte[] dt) // NOTE: may invalidate pointers
         {
             ensureCapacity(_size + dt.Length);
-            Buffer.BlockCopy(dt, 0, _data, _size, dt.Length);
+            Array.Copy(dt, 0, _data, _size, dt.Length);
             _size += dt.Length;
         }
         void append(ReadOnlySpan<byte> dt)
@@ -181,6 +172,39 @@ namespace globalmq.marshalling
                 return true;
             }
             return false;
+        }
+
+        public bool EqualsIgnoreEol(SimpleBuffer other)
+        {
+            if (_size != other._size)
+                return false;
+
+            int i = 0;
+            int j = 0;
+            while(i < _size && j < other._size)
+            {
+                if(_data[i] == '\r')
+                {
+                    if(other._data[j] != '\r')
+                        return false;
+                    
+                    ++i;
+                    ++j;
+                    if(_data[i] == '\n')
+                        ++i;
+                    if(other._data[j] == '\n')
+                        ++j;
+                }
+                else
+                {
+                    if (_data[i] != other._data[j])
+                        return false;
+
+                    ++i;
+                    ++j;
+                }
+            }
+            return i == _size && j == other._size;
         }
 
         public override int GetHashCode()

@@ -227,4 +227,38 @@ bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
     return it1.isData() == it2.isData();
 }
 
+inline
+bool EqualsIgnoreEol(const mtest::Buffer& l, const mtest::Buffer& r)
+{
+    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
+    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
+
+    while(it1.isData() && it2.isData()) {
+
+        if(*it1 == '\r')
+        {
+            if(*it2 != '\r')
+                return false;
+
+            ++it1;
+            ++it2;
+            if(*it1 == '\n')
+                ++it1;
+            if(*it2 == '\n')
+                ++it2;
+        }
+        else 
+        {
+            if(*it1 != *it2)
+                return false;
+
+            ++it1;
+            ++it2;
+        }
+    
+    }
+
+    return it1.isData() == it2.isData();
+}
+
 #endif // TEST_IDL_COMMON_H_INCLUDED

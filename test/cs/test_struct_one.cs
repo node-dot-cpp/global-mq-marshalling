@@ -87,7 +87,7 @@ namespace TestProject1
             // uncomment to update file
             //buffer.writeToFile(PathJson);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
+            Assert.True(buffer.EqualsIgnoreEol(SimpleBuffer.readFromFile(PathJson)));
         }
 
         [Fact]

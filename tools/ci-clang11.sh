@@ -8,7 +8,7 @@ cd build/clang11
 export CC=clang-11
 export CXX=clang++-11
 
-cmake -DCMAKE_BUILD_TYPE=Release -DGLOBAL_MQ_TEST=ON -G Makefile ../..
+cmake -DCMAKE_BUILD_TYPE=Release -DGLOBAL_MQ_TEST=ON -G "Unix Makefiles" ../..
 
 cmake --build .
 

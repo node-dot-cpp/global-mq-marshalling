@@ -132,7 +132,7 @@ const lest::test test_publishable_seven[] =
         publ.generateStateSyncMessage(composer);
 
         auto b2 = makeBuffer(PathPubSevenJson, lest_env);
-        EXPECT(b == b2);
+        EXPECT(EqualsIgnoreEol(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseStateSync" )
     {
@@ -167,7 +167,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenJson1, lest_env);
-        EXPECT(b == b2);
+        EXPECT(EqualsIgnoreEol(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate1" )
     {
@@ -212,7 +212,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenJson2, lest_env);
-        EXPECT(b == b2);
+        EXPECT(EqualsIgnoreEol(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate2" )
     {
@@ -266,7 +266,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenJson3, lest_env);
-        EXPECT(b == b2);
+        EXPECT(EqualsIgnoreEol(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate3" )
     {
@@ -319,7 +319,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenJson4, lest_env);
-        EXPECT(b == b2);
+        EXPECT(EqualsIgnoreEol(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate4" )
     {
@@ -374,7 +374,7 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
         auto b2 = makeBuffer(PathPubSevenJson5, lest_env);
-        EXPECT(b == b2);
+        EXPECT(EqualsIgnoreEol(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate5" )
     {

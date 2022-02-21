@@ -85,7 +85,7 @@ namespace TestProject1
             // uncomment to update file
             //buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            Assert.True(buffer.EqualsIgnoreEol(SimpleBuffer.readFromFile(fileName)));
         }
 
         static void TestGmqCompose(Func<mtest.struct_du> sampleData, string fileName)
