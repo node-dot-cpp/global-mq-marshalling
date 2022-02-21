@@ -224,7 +224,7 @@ bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
         if(*it1 == '\r' && *it2 == '\n')
         {
             ++it1;
-            if(*it1 != '\n')
+            if(!it1.isData() || *it1 != '\n')
                 return false;
 
         }
@@ -232,7 +232,7 @@ bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
         else if(*it1 == '\n' && *it2 == '\r')
         {
             ++it2;
-            if(*it2 != '\n')
+            if(!it2.isData() || *it2 != '\n')
                 return false;
 
         }

@@ -179,9 +179,6 @@ namespace globalmq.marshalling
 
         public bool EqualsIgnoreEol(SimpleBuffer other)
         {
-            if (this._size != other._size)
-                return false;
-
             int i = 0;
             int j = 0;
             while (i < this._size && j < other._size)
@@ -190,7 +187,7 @@ namespace globalmq.marshalling
                 if (this._data[i] == '\r' && other._data[j] == '\n')
                 {
                     ++i;
-                    if (this._data[i] != '\n')
+                    if (i == this._size || this._data[i] != '\n')
                         return false;
 
                 }
@@ -198,7 +195,7 @@ namespace globalmq.marshalling
                 else if (this._data[i] == '\n' && other._data[j] == '\r')
                 {
                     ++j;
-                    if (other._data[j] != '\n')
+                    if (j == other._size || other._data[j] != '\n')
                         return false;
 
                 }
