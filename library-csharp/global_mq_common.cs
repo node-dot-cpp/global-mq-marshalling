@@ -171,16 +171,45 @@ namespace globalmq.marshalling
 
         public override bool Equals(object obj)
         {
-            if (obj is SimpleBuffer buffer && _size == buffer._size)
-            {
-                for (int i = 0; i < _size; ++i)
-                {
-                    if (_data[i] != buffer._data[i])
-                        return false;
-                }
-                return true;
-            }
+            if (obj is SimpleBuffer buffer)
+                return EqualsIgnoreEol(buffer);
+
             return false;
+        }
+
+        public bool EqualsIgnoreEol(SimpleBuffer other)
+        {
+            if (this._size != other._size)
+                return false;
+
+            int i = 0;
+            int j = 0;
+            while (i < this._size && j < other._size)
+            {
+                // \r\n == \n
+                if (this._data[i] == '\r' && other._data[j] == '\n')
+                {
+                    ++i;
+                    if (this._data[i] != '\n')
+                        return false;
+
+                }
+                // \n == \r\n
+                else if (this._data[i] == '\n' && other._data[j] == '\r')
+                {
+                    ++j;
+                    if (other._data[j] != '\n')
+                        return false;
+
+                }
+                else if (this._data[i] != other._data[j])
+                    return false;
+
+                ++i;
+                ++j;
+            }
+
+            return i == _size && j == other._size;
         }
 
         public override int GetHashCode()

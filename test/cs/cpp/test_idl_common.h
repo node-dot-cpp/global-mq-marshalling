@@ -210,21 +210,41 @@ bool operator==(const mtest::structures::StructSix& l, const mtest::structures::
             (l.aggregate.lastValue == r.aggregate.lastValue);
 }
 
+/// equality op that ignores eol differences
 inline
 bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
 {
+
     auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
     auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
 
-    while(it1.isData() && it2.isData()) {
-        if(*it1 != *it2)
+    while(it1.isData() && it2.isData())
+    {
+        // \r\n == \n
+        if(*it1 == '\r' && *it2 == '\n')
+        {
+            ++it1;
+            if(*it1 != '\n')
+                return false;
+
+        }
+        // \n == \r\n
+        else if(*it1 == '\n' && *it2 == '\r')
+        {
+            ++it2;
+            if(*it2 != '\n')
+                return false;
+
+        }
+        else if(*it1 != *it2)
             return false;
-    
+
         ++it1;
         ++it2;
     }
 
-    return it1.isData() == it2.isData();
+    return !it1.isData() && !it2.isData();
 }
+
 
 #endif // TEST_IDL_COMMON_H_INCLUDED
