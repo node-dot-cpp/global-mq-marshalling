@@ -13,3 +13,4 @@ cmake -DCMAKE_BUILD_TYPE=Release -DGLOBAL_MQ_TEST=ON -G Makefile ../..
 cmake --build .
 
 ctest --output-on-failure
+
