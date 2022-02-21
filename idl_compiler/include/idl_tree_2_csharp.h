@@ -31,20 +31,25 @@
 #include "idl_tree.h"
 #include "idl_tree_serializer.h"
 
-/// small wrapper to migrate from old fprintf to fmt::fprintf, and add basic auto-indent
-class CsharpFileWritter
+/// Small wrapper to migrate from old fprintf to fmt::fprintf, and add basic auto-indent.
+/// Intent is to be relaxed and help the user. Current limitation is that we don't detect for
+/// EOL '\n', in text, but need user calling one 'write' for each line. that is a call to 'write'
+/// has a one to one relationship with a line of source code.
+/// Such limitation can be easily relaxed by scanning the text for '\n' but so far has not been
+/// required.
+
+class CsharpWritter
 {
 	FILE* file = nullptr;
 	std::string currentIndent;
 
 public:
-	CsharpFileWritter(FILE* file, size_t initialIndent) : file(file), currentIndent(initialIndent, '\t') {}
+	CsharpWritter(FILE* file, size_t initialIndent) : file(file), currentIndent(initialIndent, '\t') {}
 
 	FILE* getFile() { return file; }
-	void increment();
-	void decrement();
+
+	CsharpWritter indent(size_t i = 1);
 	// mb: make variadic only if real necesity
-	void writeBr(char brace);
 	void write(const char* text);
 	void write(const char* format, const char* arg0);
 	void write(const char* format, const char* arg0, const char* arg1);
@@ -65,36 +70,36 @@ const char* getIdlPrimitiveType2(MessageParameterType::KIND kind);
 std::string generateCsharpDeclParams(CompositeType& s);
 std::string generateCsharpCallerParams(CompositeType& s, bool valPrefix);
 
-void generateCsharpStandardMethods(CsharpFileWritter& f, const char* type_name);
-void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpStructEquivalentMethod(CsharpFileWritter& f, CompositeType& s, const char* type_name);
-void generateCsharpSimpleEquivalentMethod(CsharpFileWritter& f, const char* type_name, const char* member_name);
-void generateCsharpInterfaceMember(CsharpFileWritter& f, MessageParameter& member);
-void generateCsharpStructInterface(CsharpFileWritter& f, CompositeType& s, const char* type_name);
-void generateCsharpStructImpl(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name);
-void generateCsharpStructMessage(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name);
-void generateCsharpUnionInterface(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpUnionImpl(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpUnionMessage(CsharpFileWritter& f, CompositeType& s);
-void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParameter& member);
-void generateCsharpSubscriberEventHandler(CsharpFileWritter& f, MessageParameter& member);
-void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& member);
-void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& member);
+void generateCsharpStandardMethods(CsharpWritter f, const char* type_name);
+void generateCsharpStructEquivalentExpression(CsharpWritter f, CompositeType& s);
+void generateCsharpStructEquivalentMethod(CsharpWritter f, CompositeType& s, const char* type_name);
+void generateCsharpSimpleEquivalentMethod(CsharpWritter f, const char* type_name, const char* member_name);
+void generateCsharpInterfaceMember(CsharpWritter f, MessageParameter& member);
+void generateCsharpStructInterface(CsharpWritter f, CompositeType& s, const char* type_name);
+void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s);
+void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s);
+void generateCsharpUnionMessage(CsharpWritter f, CompositeType& s);
+void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& member);
+void generateCsharpSubscriberEventHandler(CsharpWritter f, MessageParameter& member);
+void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member);
+void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member);
 
-void generateCsharpCaseSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name);
-void generateCsharpCasePublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name);
+void generateCsharpCaseSubscriber(CsharpWritter f, CompositeType& s, const char* type_name, const char* du_name);
+void generateCsharpCasePublisher(CsharpWritter f, CompositeType& s, const char* type_name, const char* du_name);
 
-void generateCsharpStructSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name);
-void generateCsharpStructPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name);
-void generateCsharpStructConcentrator(CsharpFileWritter& f, CompositeType& s, const char* type_name);
-void generateCsharpConcentratorFactory(CsharpFileWritter& f, Root& root);
+void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const char* type_name);
+void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char* type_name);
+void generateCsharpStructConcentrator(CsharpWritter f, CompositeType& s, const char* type_name);
+void generateCsharpConcentratorFactory(CsharpWritter f, Root& root);
 
-void generateCsharpUnionSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name);
-void generateCsharpUnionPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name);
+void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char* type_name);
+void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char* type_name);
 
 // code generation
 void generateCsharp(FILE* file, Root& root, const std::string& metascope);
-void generateCsharpMessageScope(CsharpFileWritter& f, Root& root, Scope& scope);
+void generateCsharpMessageScope(CsharpWritter f, Root& root, Scope& scope);
 
 
 

@@ -34,7 +34,7 @@
 
 namespace {
 
-	void csharpPub_generateAddressEnum(CsharpFileWritter& f, CompositeType& s)
+	void csharpPub_generateAddressEnum(CsharpWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -52,14 +52,14 @@ namespace {
 
 			string number = std::to_string(i);
 			if(i != sz - 1)
-				f.write("%s = %s,\n", member->name.c_str(), number.c_str());
+				f.write("\t\t%s = %s,\n", member->name.c_str(), number.c_str());
 			else
-				f.write("%s = %s\n", member->name.c_str(), number.c_str());
+				f.write("\t\t%s = %s\n", member->name.c_str(), number.c_str());
 		}
-		f.write("}\n");
+		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParseStateSync(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParseStateSync(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -139,7 +139,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParse1(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse1(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -159,7 +159,6 @@ namespace {
 			assert(it != nullptr);
 			auto& member = *it;
 
-			f.write("\t\t{\n");
 
 			switch (member.type.kind)
 			{
@@ -171,11 +170,12 @@ namespace {
 				const char* type_name = getCSharpPrimitiveType(member.type.kind);
 				const char* parse_method = getIdlPrimitiveType(member.type.kind);
 
-				f.write("\t\t\tchanged = subscriber.update_%s(parser, \"%s\", true) | changed;\n", member.name.c_str(), member.name.c_str());
+				f.write("\t\tchanged = subscriber.update_%s(parser, \"%s\", true) | changed;\n", member.name.c_str(), member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\t{\n");
 				f.write("\t\t\tparser.parsePublishableStructBegin(\"%s\");\n", member.name.c_str());
 				f.write("\t\t\tbool currentChanged = %s_subscriber.parse(parser, subscriber.lazy_%s_handler());\n", member.type.name.c_str(), member.name.c_str());
 				f.write("\t\t\tparser.parsePublishableStructEnd();\n");
@@ -184,6 +184,7 @@ namespace {
 				f.write("\t\t\t\t\tchanged = true;\n");
 				f.write("\t\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
 				f.write("\t\t\t}\n");
+				f.write("\t\t}\n");
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			{
@@ -196,13 +197,15 @@ namespace {
 				{
 					const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
 
-					f.write("\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
-					f.write("\t\tparser.parseSimpleVector(\"%s\", newVal);\n", member.name.c_str());
-					f.write("\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
 					f.write("\t\t{\n");
-					f.write("\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-					f.write("\t\t\tchanged = true;\n");
-					f.write("\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t\tIList<%s> newVal = new List<%s>();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\tparser.parseSimpleVector(\"%s\", newVal);\n", member.name.c_str());
+					f.write("\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
+					f.write("\t\t\t{\n");
+					f.write("\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\tchanged = true;\n");
+					f.write("\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t\t}\n");
 					f.write("\t\t}\n");
 
 					break;
@@ -212,25 +215,27 @@ namespace {
 				{
 					const char* elem_type_name = member.type.name.c_str();
 
-					f.write("\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
-					f.write("\t\tList<%s_subscriber> newHandlers = new List<%s_subscriber>();\n", elem_type_name, elem_type_name);
-					f.write("\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
-					f.write("\t\t\t{\n");
-					f.write("\t\t\t\tparser.parseStructBegin();\n");
-					f.write("\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
-					f.write("\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
-					f.write("\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
-					f.write("\t\t\t\tnewVal.Add(val);\n");
-					f.write("\t\t\t\tnewHandlers.Add(handler);\n");
-					f.write("\t\t\t\tparser.parseStructEnd();\n");
-					f.write("\t\t\t}\n");
-					f.write("\t\t);\n");
-					f.write("\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
 					f.write("\t\t{\n");
-					f.write("\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
-					f.write("\t\t\tsubscriber.%s_handlers = newHandlers;\n", member.name.c_str());
-					f.write("\t\t\tchanged = true;\n");
-					f.write("\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\tList<%s_subscriber> newHandlers = new List<%s_subscriber>();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\tparser.parseVector(\"%s\", (IPublishableParser parser, int index) =>\n", member.name.c_str());
+					f.write("\t\t\t\t{\n");
+					f.write("\t\t\t\t\tparser.parseStructBegin();\n");
+					f.write("\t\t\t\t\tI%s val = new %s();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t\t%s_subscriber.parseForStateSync(parser, handler);\n", elem_type_name);
+					f.write("\t\t\t\t\tnewVal.Add(val);\n");
+					f.write("\t\t\t\t\tnewHandlers.Add(handler);\n");
+					f.write("\t\t\t\t\tparser.parseStructEnd();\n");
+					f.write("\t\t\t\t}\n");
+					f.write("\t\t\t);\n");
+					f.write("\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.data.%s))\n", member.name.c_str());
+					f.write("\t\t\t{\n");
+					f.write("\t\t\t\tsubscriber.data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\tsubscriber.%s_handlers = newHandlers;\n", member.name.c_str());
+					f.write("\t\t\t\tchanged = true;\n");
+					f.write("\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
+					f.write("\t\t\t}\n");
 					f.write("\t\t}\n");
 					break;
 				}
@@ -242,14 +247,13 @@ namespace {
 			default:
 				assert(false); // not implemented (yet)
 			}
-			f.write("\t\t}\n");
 		}
 
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParse2(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse2(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -468,8 +472,8 @@ namespace {
 			default:
 				assert(false); // not implemented (yet)
 			}
+			f.write("\t\t\t\tbreak;\n");
 			f.write("\t\t\t}\n");
-			f.write("\t\t\tbreak;\n");
 
 		}
 
@@ -482,7 +486,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateStateSubscriberBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStateSubscriberBase(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
@@ -518,7 +522,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateEventHandlerSubs(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateEventHandlerSubs(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -540,7 +544,7 @@ namespace {
 
 
 
-	void csharpPub_generateFactoryMethodSubs(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateFactoryMethodSubs(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -553,7 +557,7 @@ namespace {
 		}
 	}
 
-	void csharpPub_generateSubscriberResetHandlers(CsharpFileWritter& f, CompositeType& s)
+	void csharpPub_generateSubscriberResetHandlers(CsharpWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -602,7 +606,7 @@ namespace {
 	}
 
 
-	void csharpPub_generateCompose(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateCompose(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -667,7 +671,7 @@ namespace {
 	}
 
 
-	void csharpPub_generateStatePublishableBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStatePublishableBase(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
@@ -702,7 +706,7 @@ namespace {
 
 
 
-	void csharpPub_generateStateConcentratorBase(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStateConcentratorBase(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
@@ -718,7 +722,7 @@ namespace {
 	}
 
 
-	void csharpPub_generateStructConcentrator(CsharpFileWritter& f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStructConcentrator(CsharpWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -735,7 +739,7 @@ namespace {
 
 }
 
-void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParameter& member)
+void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& member)
 {
 
 
@@ -776,7 +780,7 @@ void generateCsharpSubscriberFactoryMethod(CsharpFileWritter& f, MessageParamete
 	}
 }
 
-void generateCsharpSubscriberEventHandler(CsharpFileWritter& f, MessageParameter& member)
+void generateCsharpSubscriberEventHandler(CsharpWritter f, MessageParameter& member)
 {
 
 
@@ -830,7 +834,7 @@ void generateCsharpSubscriberEventHandler(CsharpFileWritter& f, MessageParameter
 	}
 }
 
-void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& member)
+void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 {
 
 
@@ -933,7 +937,7 @@ void generateCsharpSubscriberMember(CsharpFileWritter& f, MessageParameter& memb
 	}
 }
 
-void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& member)
+void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 {
 
 
@@ -1054,7 +1058,7 @@ void generateCsharpPublisherMember(CsharpFileWritter& f, MessageParameter& membe
 	}
 }
 
-void generateCsharpCaseSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name)
+void generateCsharpCaseSubscriber(CsharpWritter f, CompositeType& s, const char* type_name, const char* du_name)
 {
 	assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1070,7 +1074,7 @@ void generateCsharpCaseSubscriber(CsharpFileWritter& f, CompositeType& s, const 
 	f.write("} // class %s_subscriber\n\n", type_name);
 }
 
-void generateCsharpCasePublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* du_name)
+void generateCsharpCasePublisher(CsharpWritter f, CompositeType& s, const char* type_name, const char* du_name)
 {
 	assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1084,7 +1088,7 @@ void generateCsharpCasePublisher(CsharpFileWritter& f, CompositeType& s, const c
 	f.write("} // class %s_publisher\n\n", type_name);
 }
 
-void generateCsharpStructSubscriber(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1151,7 +1155,7 @@ void generateCsharpStructSubscriber(CsharpFileWritter& f, CompositeType& s, cons
 	f.write("} // class %s_subscriber\n\n", type_name);
 }
 
-void generateCsharpStructPublisher(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1217,7 +1221,7 @@ void generateCsharpStructPublisher(CsharpFileWritter& f, CompositeType& s, const
 	f.write("} // class %s_publisher\n\n", type_name);
 }
 
-void generateCsharpStructConcentrator(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+void generateCsharpStructConcentrator(CsharpWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1232,7 +1236,7 @@ void generateCsharpStructConcentrator(CsharpFileWritter& f, CompositeType& s, co
 	f.write("} // class %s_concentrator\n\n", type_name);
 }
 
-void generateCsharpConcentratorFactory(CsharpFileWritter& f, Root& root)
+void generateCsharpConcentratorFactory(CsharpWritter f, Root& root)
 {
 	assert(!root.publishables.empty());
 

@@ -32,7 +32,7 @@
 
 namespace {
 
-	void csharpMsg_generateScopeEnum(CsharpFileWritter& f, Scope& scope)
+	void csharpMsg_generateScopeEnum(CsharpWritter f, Scope& scope)
 	{
 
 
@@ -55,7 +55,7 @@ namespace {
 	}
 
 
-	void csharpMsg_generateStructComposeGmq(CsharpFileWritter& f, CompositeType& s)
+	void csharpMsg_generateStructComposeGmq(CsharpWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -130,7 +130,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeGmq2(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+	void csharpMsg_generateStructComposeGmq2(CsharpWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -145,7 +145,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateStructParseGmq3(CsharpFileWritter& f, CompositeType& s, const char* name)
+	void csharpMsg_generateStructParseGmq3(CsharpWritter f, CompositeType& s, const char* name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -233,7 +233,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeJson(CsharpFileWritter& f, CompositeType& s)
+	void csharpMsg_generateStructComposeJson(CsharpWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -318,7 +318,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateStructComposeJson2(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+	void csharpMsg_generateStructComposeJson2(CsharpWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -337,7 +337,7 @@ namespace {
 
 
 
-	void csharpMsg_generateStructParseJson3(CsharpFileWritter& f, CompositeType& s, const char* name)
+	void csharpMsg_generateStructParseJson3(CsharpWritter f, CompositeType& s, const char* name)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -456,7 +456,7 @@ namespace {
 	}
 
 
-	void csharpMsg_generateStructMembers(CsharpFileWritter& f, Root& root, CompositeType& s)
+	void csharpMsg_generateStructMembers(CsharpWritter f, Root& root, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -523,7 +523,7 @@ namespace {
 		}
 	}
 
-	void csharpMsg_generateComposeMessageMethod(CsharpFileWritter& f, CompositeType& s, const std::string& msgName, Proto proto)
+	void csharpMsg_generateComposeMessageMethod(CsharpWritter f, CompositeType& s, const std::string& msgName, Proto proto)
 	{
 		// when message is an alias we feed structure here
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure);
@@ -565,7 +565,7 @@ namespace {
 	}
 
 
-	void csharpMsg_generateParseMessageMethod(CsharpFileWritter& f, const char* msg_name, const char* type_name)
+	void csharpMsg_generateParseMessageMethod(CsharpWritter f, const char* msg_name, const char* type_name)
 	{
 		// when message is an alias we feed structure here
 
@@ -588,7 +588,7 @@ namespace {
 	}
 
 
-	void csharpMsg_generateMessageAliasMethods(CsharpFileWritter& f, CompositeType& target, const char* composerType, const char* parserType)
+	void csharpMsg_generateMessageAliasMethods(CsharpWritter f, CompositeType& target, const char* composerType, const char* parserType)
 	{
 
 
@@ -603,7 +603,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateScopeHandler(CsharpFileWritter& f, Scope& scope)
+	void csharpMsg_generateScopeHandler(CsharpWritter f, Scope& scope)
 	{
 
 
@@ -642,7 +642,7 @@ namespace {
 	}
 
 	
-	void csharpMsg_generateScopeComposer(CsharpFileWritter& f, Scope& scope)
+	void csharpMsg_generateScopeComposer(CsharpWritter f, Scope& scope)
 	{
 
 
@@ -672,7 +672,7 @@ namespace {
 	}
 }
 
-void generateCsharpStructMessage(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name)
+void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
@@ -694,7 +694,7 @@ void generateCsharpStructMessage(CsharpFileWritter& f, CompositeType& s, const c
 
 }
 
-void generateCsharpMessageScope(CsharpFileWritter& f, Root& root, Scope& scope)
+void generateCsharpMessageScope(CsharpWritter f, Root& root, Scope& scope)
 {
 	f.write("public class %s\n", scope.name.c_str());
 	f.write("{\n");
@@ -716,9 +716,9 @@ void generateCsharpMessageScope(CsharpFileWritter& f, Root& root, Scope& scope)
 			std::string type_name = it->name;
 			std::string interface_name = "I" + type_name;
 
-			generateCsharpStructInterface(f, *it, type_name.c_str());
-			generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
-			generateCsharpStructMessage(f, *it, type_name.c_str(), interface_name.c_str());
+			generateCsharpStructInterface(f.indent(), *it, type_name.c_str());
+			generateCsharpStructImpl(f.indent(), *it, type_name.c_str(), interface_name.c_str());
+			generateCsharpStructMessage(f.indent(), *it, type_name.c_str(), interface_name.c_str());
 			csharpMsg_generateComposeMessageMethod(f, *it, it->name, scope.proto);
 			csharpMsg_generateParseMessageMethod(f, type_name.c_str(), type_name.c_str());
 		}

@@ -197,7 +197,7 @@ string generateCsharpCallerParams(CompositeType& s, bool valPrefix)
 }
 
 
-void generateCsharpStandardMethods(CsharpFileWritter& f, const char* type_name)
+void generateCsharpStandardMethods(CsharpWritter f, const char* type_name)
 {
 
 
@@ -231,7 +231,7 @@ void generateCsharpStandardMethods(CsharpFileWritter& f, const char* type_name)
 
 }
 
-void generateCsharpStructEqualsMethod(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+void generateCsharpStructEqualsMethod(CsharpWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -280,7 +280,7 @@ void generateCsharpStructEqualsMethod(CsharpFileWritter& f, CompositeType& s, co
 	f.write("\t}\n");
 }
 
-void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeType& s)
+void generateCsharpStructEquivalentExpression(CsharpWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -338,7 +338,7 @@ void generateCsharpStructEquivalentExpression(CsharpFileWritter& f, CompositeTyp
 	}
 }
 
-void generateCsharpStructEquivalentMethod(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+void generateCsharpStructEquivalentMethod(CsharpWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -359,7 +359,7 @@ void generateCsharpStructEquivalentMethod(CsharpFileWritter& f, CompositeType& s
 	f.write("\t}\n");
 }
 
-void generateCsharpSimpleEquivalentMethod(CsharpFileWritter& f, const char* type_name, const char* member_name)
+void generateCsharpSimpleEquivalentMethod(CsharpWritter f, const char* type_name, const char* member_name)
 {
 
 
@@ -374,7 +374,7 @@ void generateCsharpSimpleEquivalentMethod(CsharpFileWritter& f, const char* type
 	f.write("\t}\n");
 }
 
-void generateCsharpInterfaceMember(CsharpFileWritter& f, MessageParameter& member)
+void generateCsharpInterfaceMember(CsharpWritter f, MessageParameter& member)
 {
 
 
@@ -421,7 +421,7 @@ void generateCsharpInterfaceMember(CsharpFileWritter& f, MessageParameter& membe
 }
 
 
-void generateCsharpStructInterface(CsharpFileWritter& f, CompositeType& s, const char* type_name)
+void generateCsharpStructInterface(CsharpWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -445,7 +445,7 @@ void generateCsharpStructInterface(CsharpFileWritter& f, CompositeType& s, const
 	f.write("} // interface %s\n\n", type_name);
 }
 
-void generateCsharpStructImpl(CsharpFileWritter& f, CompositeType& s, const char* type_name, const char* interface_name)
+void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
