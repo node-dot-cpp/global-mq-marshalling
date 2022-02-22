@@ -160,6 +160,33 @@ string generateCsharpDeclParams(CompositeType& s)
 			}
 			break;
 		}
+		case MessageParameterType::KIND::DICTIONARY:
+		{
+			const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+				result += fmt::format("IDictionary<{}, {}> {}", key, value, member.name.c_str());
+
+				break;
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			{
+				const char* value = member.type.name.c_str();
+				result += fmt::format("IDictionary<{}, I{}> {}", key, value, member.name.c_str());
+				break;
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			break;
+		}
 		default:
 			assert(false); // not implemented (yet)
 		}
@@ -271,6 +298,7 @@ void generateCsharpStructEqualsMethod(CsharpWritter f, CompositeType& s, const c
 			f.write("\t\t\t\tthis.%s.Equals(other.%s)%s\n", member.name.c_str(), member.name.c_str(), tail);
 			break;
 		case MessageParameterType::KIND::VECTOR:
+		case MessageParameterType::KIND::DICTIONARY:
 			f.write("\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)%s\n", member.name.c_str(), member.name.c_str(), tail);
 			break;
 		default:
@@ -330,8 +358,25 @@ void generateCsharpStructEquivalentExpression(CsharpWritter f, CompositeType& s)
 			}
 			break;
 		}
-
-		break;
+		case MessageParameterType::KIND::DICTIONARY:
+		{
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("\t\t\t\tEnumerable.SequenceEqual(this.%s, other.%s)%s\n", member.name.c_str(), member.name.c_str(), tail);
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\t\t\tEquivalenceComparer.areEquivalent(this.%s, other.%s)%s\n", member.name.c_str(), member.name.c_str(), tail);
+				break;
+			default:
+				assert(false); // not implemented (yet)
+			}
+			break;
+		}
 		default:
 			assert(false); // not implemented (yet)
 		}
@@ -408,6 +453,32 @@ void generateCsharpInterfaceMember(CsharpWritter f, MessageParameter& member)
 		{
 			const char* elem_type_name = member.type.name.c_str();
 			f.write("\tIList<I%s> %s { get; set; }\n", elem_type_name, member.name.c_str());
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+		break;
+	}
+	case MessageParameterType::KIND::DICTIONARY:
+	{
+		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+		switch (member.type.dictionaryValueKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+		{
+			const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+			f.write("\tIDictionary<%s, %s> %s { get; set; }\n", key, value, member.name.c_str());
+			break;
+		}
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		{
+			const char* value = member.type.name.c_str();
+			f.write("\tIDictionary<%s, I%s> %s { get; set; }\n", key, value, member.name.c_str());
 			break;
 		}
 		default:
@@ -554,6 +625,61 @@ void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* typ
 			}
 			break;
 		}
+		case MessageParameterType::KIND::DICTIONARY:
+		{
+			const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+				f.write("\tDictionary<%s, %s> _%s = new Dictionary<%s, %s>();\n", key, value, member.name.c_str(), key, value);
+				f.write("\tpublic IDictionary<%s, %s> %s\n", key, value, member.name.c_str());
+				f.write("\t{\n");
+				f.write("\t\tget { return _%s; }\n", member.name.c_str());
+				f.write("\t\tset\n");
+				f.write("\t\t{\n");
+				f.write("\t\t\tif(value == null)\n");
+				f.write("\t\t\t\tthrow new ArgumentNullException();\n");
+				f.write("\t\t\t_%s = (Dictionary<%s, %s>)value;\n", member.name.c_str(), key, value);
+				f.write("\t\t}\n");
+				f.write("\t}\n");
+				break;
+
+			}
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			{
+				const char* value = member.type.name.c_str();
+				f.write("\tDictionary<%s, I%s> _%s = new Dictionary<%s, I%s>();\n", key, value, member.name.c_str(), key, value);
+				f.write("\tpublic IDictionary<%s, I%s> %s\n", key, value, member.name.c_str());
+				f.write("\t{\n");
+				f.write("\t\tget { return _%s; }\n", member.name.c_str());
+				f.write("\t\tset\n");
+				f.write("\t\t{\n");
+				f.write("\t\t\tif(value == null)\n");
+				f.write("\t\t\t\tthrow new ArgumentNullException();\n");
+
+				f.write("\t\t\tDictionary<%s, I%s> tmp = (Dictionary<%s, I%s>)value;\n", key, value, key, value);
+				f.write("\t\t\tforeach (I%s each in tmp.Values)\n", value);
+
+				f.write("\t\t\t\tif(!(each is %s))\n", value);
+				f.write("\t\t\t\t\tthrow new InvalidCastException();\n");
+				f.write("\t\t\t_%s = tmp;\n", member.name.c_str());
+				f.write("\t\t}\n");
+				f.write("\t}\n");
+				break;
+
+			}
+			default:
+				assert(false); // not implemented (yet)
+			}
+			break;
+		}
+
 		default:
 			assert(false); // not implemented (yet)
 		}

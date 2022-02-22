@@ -98,3 +98,13 @@ PUBLISHABLE publishable_seven = 7 {
  	CHARACTER-STRING name;
  	DISCRIMINATED_UNION du_one disc_union;
  };
+
+
+ STRUCT struct_four {
+  DICTIONARY<UINTEGER, CHARACTER-STRING> dictioUintStr;
+  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictioStrStr;
+};
+
+
+ MESSAGE test_gmq : message_four_gmq = 4 = STRUCT struct_four;
+ MESSAGE test_json : message_four_json = 4 = STRUCT struct_four;

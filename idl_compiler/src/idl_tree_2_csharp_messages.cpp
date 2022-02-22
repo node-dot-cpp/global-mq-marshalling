@@ -74,47 +74,48 @@ namespace {
 		{
 			assert(*it != nullptr);
 
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+			MessageParameter& member = **it;
+			if (member.type.kind == MessageParameterType::KIND::EXTENSION)
 				continue;
 			++count;
 
-			switch (param.type.kind)
+			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				const char* method = getIdlPrimitiveType2(param.type.kind);
-				f.write("\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
+				const char* method = getIdlPrimitiveType2(member.type.kind);
+				f.write("\t\tcomposer.compose%s(%s);\n", method, member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("\t\t%s_message.compose(composer, %s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t%s_message.compose(composer, %s);\n", member.type.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				switch (param.type.vectorElemKind)
+			{
+				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
 				case MessageParameterType::KIND::UINTEGER:
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
-					const char* elem_type_name = getCSharpPrimitiveType(param.type.vectorElemKind);
-					f.write("\t\tGmqCollectionComposer<%s> %s_wrapper = GmqCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
-					f.write("\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
+					const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+					f.write("\t\tGmqCollectionComposer<%s> %s_wrapper = GmqCollectionComposer<%s>.make(%s);\n", elem_type_name, member.name.c_str(), elem_type_name, member.name.c_str());
+					f.write("\t\t%s_wrapper.composeGmq(composer);\n", member.name.c_str());
 					break;
 				}
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					const char* elem_type_name = param.type.name.c_str();
+					const char* elem_type_name = member.type.name.c_str();
 
-					f.write("\t\tGmqCollectionComposer<I%s> %s_wrapper = new GmqCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
-					f.write("\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
-					f.write("\t\t%s_wrapper.composeGmq(composer);\n", param.name.c_str());
+					f.write("\t\tGmqCollectionComposer<I%s> %s_wrapper = new GmqCollectionComposer<I%s>(\n", elem_type_name, member.name.c_str(), elem_type_name);
+					f.write("\t\t\t%s, %s_message.compose);\n", member.name.c_str(), elem_type_name);
+					f.write("\t\t%s_wrapper.composeGmq(composer);\n", member.name.c_str());
 					break;
 				}
 				default:
@@ -122,6 +123,34 @@ namespace {
 					break;
 				}
 				break;
+			}
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+				switch (member.type.dictionaryValueKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+					f.write("\t\tIDictionary_%s_%s_message.compose(composer, %s);\n", key, value, member.name.c_str());
+					break;
+
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* value = member.type.name.c_str();
+					f.write("\t\tIDictionary_%s_I%s_message.compose(composer, %s);\n", key, value, member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
 			default:
 				assert(false); // unexpected
 				break;
@@ -160,61 +189,61 @@ namespace {
 		{
 			assert(it != nullptr);
 
-			MessageParameter& param = *it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+			MessageParameter& member = *it;
+			if (member.type.kind == MessageParameterType::KIND::EXTENSION)
 				continue;
 			++count;
 
 			f.write("\t{\n");
-			switch (param.type.kind)
+			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
 				f.write("\t\tInt64 tmp;\n");
 				f.write("\t\tparser.parseSignedInteger(out tmp);\n");
-				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
 				f.write("\t\tUInt64 tmp;\n");
 				f.write("\t\tparser.parseUnsignedInteger(out tmp);\n");
-				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
 				f.write("\t\tDouble tmp;\n");
 				f.write("\t\tparser.parseReal(out tmp);\n");
-				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				f.write("\t\tString tmp;\n");
 				f.write("\t\tparser.parseString(out tmp);\n");
-				f.write("\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t%s_message.parse(parser, val.%s);\n", member.type.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
-
+			{
 				f.write("\t\t\t\tGmqCollectionParser tmp = new GmqCollectionParser(\n");
 				f.write("\t\t\t\t\t(GmqParser p, int ix) =>\n");
 
-				switch (param.type.vectorElemKind)
+				switch (member.type.vectorElemKind)
 				{
 
 				case MessageParameterType::KIND::INTEGER:
-					f.write("\t\t\t\t\t\t{ Int64 t; p.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ Int64 t; p.parseSignedInteger(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					f.write("\t\t\t\t\t\t{ UInt64 t; p.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ UInt64 t; p.parseUnsignedInteger(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					f.write("\t\t\t\t\t\t{ Double t; p.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ Double t; p.parseReal(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					f.write("\t\t\t\t\t\t{ String t; p.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ String t; p.parseString(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					f.write("\t\t\t\t\t\t{ %s t = new %s(); %s_message.parse(p, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					f.write("\t\t\t\t\t\t{ %s t = new %s(); %s_message.parse(p, t); val.%s.Add(t); });\n", member.type.name.c_str(), member.type.name.c_str(), member.type.name.c_str(), member.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
@@ -223,6 +252,34 @@ namespace {
 
 				f.write("\t\t\t\ttmp.parseGmq(parser);\n");
 				break;
+			}
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+				switch (member.type.dictionaryValueKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+					f.write("\t\t\t\tIDictionary_%s_%s_message.parse(parser, val.%s);\n", key, value, member.name.c_str());
+					break;
+
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* value = member.type.name.c_str();
+					f.write("\t\t\t\tIDictionary_%s_I%s_message.parse(parser, val.%s);\n", key, value, member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
 
 			default:
 				assert(false); // unexpected
@@ -250,8 +307,8 @@ namespace {
 		{
 			assert(*it != nullptr);
 
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+			MessageParameter& member = **it;
+			if (member.type.kind == MessageParameterType::KIND::EXTENSION)
 				continue;
 			++count;
 
@@ -259,47 +316,48 @@ namespace {
 				f.write("\t\tcomposer.append( \",\\n  \" );\n");
 
 
-			f.write("\t\tcomposer.addNamePart(\"%s\");\n", param.name.c_str());
-			switch (param.type.kind)
+			f.write("\t\tcomposer.addNamePart(\"%s\");\n", member.name.c_str());
+			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				const char* method = getIdlPrimitiveType2(param.type.kind);
-				f.write("\t\tcomposer.compose%s(%s);\n", method, param.name.c_str());
+				const char* method = getIdlPrimitiveType2(member.type.kind);
+				f.write("\t\tcomposer.compose%s(%s);\n", method, member.name.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("\t\t%s_message.compose(composer, %s);\n", param.type.name.c_str(), param.name.c_str());
+				f.write("\t\t%s_message.compose(composer, %s);\n", member.type.name.c_str(), member.name.c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				switch (param.type.vectorElemKind)
+			{
+				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
 				case MessageParameterType::KIND::UINTEGER:
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
-					const char* elem_type_name = getCSharpPrimitiveType(param.type.vectorElemKind);
-					f.write("\t\tJsonCollectionComposer<%s> %s_wrapper = JsonCollectionComposer<%s>.make(%s);\n", elem_type_name, param.name.c_str(), elem_type_name, param.name.c_str());
-					f.write("\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
+					const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
+					f.write("\t\tJsonCollectionComposer<%s> %s_wrapper = JsonCollectionComposer<%s>.make(%s);\n", elem_type_name, member.name.c_str(), elem_type_name, member.name.c_str());
+					f.write("\t\t%s_wrapper.composeJson(composer);\n", member.name.c_str());
 					break;
 				}
 
-					f.write("\t\tCollectionWrapperForComposing %s_wrapper = SimpleTypeCollection.makeComposer(%s);\n", param.name.c_str(), param.name.c_str());
-					f.write("\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
-					break;
+				f.write("\t\tCollectionWrapperForComposing %s_wrapper = SimpleTypeCollection.makeComposer(%s);\n", member.name.c_str(), member.name.c_str());
+				f.write("\t\t%s_wrapper.composeJson(composer);\n", member.name.c_str());
+				break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					const char* elem_type_name = param.type.name.c_str();
+					const char* elem_type_name = member.type.name.c_str();
 
-					f.write("\t\tJsonCollectionComposer<I%s> %s_wrapper = new JsonCollectionComposer<I%s>(\n", elem_type_name, param.name.c_str(), elem_type_name);
-					f.write("\t\t\t%s, %s_message.compose);\n", param.name.c_str(), elem_type_name);
-					f.write("\t\t%s_wrapper.composeJson(composer);\n", param.name.c_str());
+					f.write("\t\tJsonCollectionComposer<I%s> %s_wrapper = new JsonCollectionComposer<I%s>(\n", elem_type_name, member.name.c_str(), elem_type_name);
+					f.write("\t\t\t%s, %s_message.compose);\n", member.name.c_str(), elem_type_name);
+					f.write("\t\t%s_wrapper.composeJson(composer);\n", member.name.c_str());
 					break;
 				}
 				default:
@@ -307,6 +365,35 @@ namespace {
 					break;
 				}
 				break;
+			}
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+				switch (member.type.dictionaryValueKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+					f.write("\t\tIDictionary_%s_%s_message.compose(composer, %s);\n", key, value, member.name.c_str());
+					break;
+
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* value = member.type.name.c_str();
+					f.write("\t\tIDictionary_%s_I%s_message.compose(composer, %s);\n", key, value, member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+
 			default:
 				assert(false); // unexpected
 				break;
@@ -361,57 +448,61 @@ namespace {
 		{
 			assert(*it != nullptr);
 
-			MessageParameter& param = **it;
-			if (param.type.kind == MessageParameterType::KIND::EXTENSION)
+			MessageParameter& member = **it;
+			if (member.type.kind == MessageParameterType::KIND::EXTENSION)
 				continue;
 			++count;
 
-			f.write("\t\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", param.name.c_str());
+			f.write("\t\t\t%s( key == \"%s\" )\n", count == 1 ? "if " : "else if ", member.name.c_str());
 
 			f.write("\t\t\t{\n");
 
-			switch (param.type.kind)
+			switch (member.type.kind)
 			{
 			case MessageParameterType::KIND::INTEGER:
 				f.write("\t\t\t\tInt64 tmp;\n");
 				f.write("\t\t\t\tparser.parseSignedInteger(out tmp);\n");
-				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::UINTEGER:
 				f.write("\t\t\t\tUInt64 tmp;\n");
 				f.write("\t\t\t\tparser.parseUnsignedInteger(out tmp);\n");
-				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::REAL:
 				f.write("\t\t\t\tDouble tmp;\n");
 				f.write("\t\t\t\tparser.parseReal(out tmp);\n");
-				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				f.write("\t\t\t\tString tmp;\n");
 				f.write("\t\t\t\tparser.parseString(out tmp);\n");
-				f.write("\t\t\t\tval.%s = tmp;\n", param.name.c_str());
+				f.write("\t\t\t\tval.%s = tmp;\n", member.name.c_str());
 				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\t\t\t%s_message.parse(parser, val.%s);\n", member.type.name.c_str(), member.name.c_str());
+				break; // TODO: ...
 			case MessageParameterType::KIND::VECTOR:
 				f.write("\t\t\t\tJsonCollectionParser tmp = new JsonCollectionParser(\n");
 				f.write("\t\t\t\t\t(JsonParser p, int ix) =>\n");
-				switch (param.type.vectorElemKind)
+				switch (member.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					f.write("\t\t\t\t\t{ Int64 t; p.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t{ Int64 t; p.parseSignedInteger(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					f.write("\t\t\t\t{ UInt64 t; p.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ UInt64 t; p.parseUnsignedInteger(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					f.write("\t\t\t\t{ Double t; p.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ Double t; p.parseReal(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					f.write("\t\t\t\t{ String t; p.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ String t; p.parseString(out t); val.%s.Add(t); });\n", member.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					f.write("\t\t\t\t{ %s t = new %s(); %s_message.parse(p, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					f.write("\t\t\t\t{ %s t = new %s(); %s_message.parse(p, t); val.%s.Add(t); });\n", member.type.name.c_str(), member.type.name.c_str(), member.type.name.c_str(), member.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
@@ -419,13 +510,34 @@ namespace {
 				}
 				f.write("\t\t\t\ttmp.parseJson(parser);\n");
 				break;
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+				switch (member.type.dictionaryValueKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+				{
+					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+					f.write("\t\t\t\tIDictionary_%s_%s_message.parse(parser, val.%s);\n", key, value, member.name.c_str());
+					break;
 
-			case MessageParameterType::KIND::EXTENSION:
-				break; // TODO: ...
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("\t\t\t\t%s_message.parse(parser, val.%s);\n", param.type.name.c_str(), param.name.c_str());
-				break; // TODO: ...
+				}
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				{
+					const char* value = member.type.name.c_str();
+					f.write("\t\t\t\tIDictionary_%s_I%s_message.parse(parser, val.%s);\n", key, value, member.name.c_str());
+					break;
+				}
+				default:
+					assert(false); // not implemented (yet)
+				}
+				break;
+			}
+
 			default:
 				assert(false); // unexpected
 				break;
@@ -456,72 +568,72 @@ namespace {
 	}
 
 
-	void csharpMsg_generateStructMembers(CsharpWritter f, Root& root, CompositeType& s)
-	{
-		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
+	//void csharpMsg_generateStructMembers(CsharpWritter f, Root& root, CompositeType& s)
+	//{
+	//	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case);
 
 
 
-		auto& mem = s.getMembers();
-		for (size_t i = 0; i < mem.size(); ++i)
-		{
-			auto& it = mem[i];
-			assert(it != nullptr);
-			auto& member = *it;
-			switch (member.type.kind)
-			{
-			case MessageParameterType::KIND::INTEGER:
-				f.write("\tpublic Int64 %s;\n", member.name.c_str());
-				break;
-			case MessageParameterType::KIND::UINTEGER:
-				f.write("\tpublic UInt64 %s;\n", member.name.c_str());
-				break;
-			case MessageParameterType::KIND::REAL:
-				f.write("\tpublic Double %s;\n", member.name.c_str());
-				break;
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				f.write("\tpublic String %s = String.Empty;\n", member.name.c_str());
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("\tpublic %s %s = new %s();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
-				break;
-			case MessageParameterType::KIND::VECTOR:
-			{
-				switch (member.type.vectorElemKind)
-				{
-				case MessageParameterType::KIND::INTEGER:
-					f.write("\tpublic List<Int64> %s = new List<Int64>();\n", member.name.c_str());
-					break;
-				case MessageParameterType::KIND::UINTEGER:
-					f.write("\tpublic List<UInt64> %s = new List<UInt64>();\n", member.name.c_str());
-					break;
-				case MessageParameterType::KIND::REAL:
-					f.write("\tpublic List<Double> %s = new List<Double>();\n", member.name.c_str());
-					break;
-				case MessageParameterType::KIND::CHARACTER_STRING:
-					f.write("\tpublic List<String> %s = new List<String>();\n", member.name.c_str());
-					break;
-				case MessageParameterType::KIND::VECTOR:
-					assert(false); // unexpected
-					break;
-				case MessageParameterType::KIND::STRUCT:
-				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				{
-					const char* elem_type_name = member.type.name.c_str();
-					f.write("\tpublic List<%s> %s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
-					break;
-				}
-				default:
-					assert(false); // not implemented (yet)
-				}
-				break;
-			}
-			default:
-				assert(false); // not implemented (yet)
-			}
-		}
-	}
+	//	auto& mem = s.getMembers();
+	//	for (size_t i = 0; i < mem.size(); ++i)
+	//	{
+	//		auto& it = mem[i];
+	//		assert(it != nullptr);
+	//		auto& member = *it;
+	//		switch (member.type.kind)
+	//		{
+	//		case MessageParameterType::KIND::INTEGER:
+	//			f.write("\tpublic Int64 %s;\n", member.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::UINTEGER:
+	//			f.write("\tpublic UInt64 %s;\n", member.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::REAL:
+	//			f.write("\tpublic Double %s;\n", member.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::CHARACTER_STRING:
+	//			f.write("\tpublic String %s = String.Empty;\n", member.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::STRUCT:
+	//		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			f.write("\tpublic %s %s = new %s();\n", member.type.name.c_str(), member.name.c_str(), member.type.name.c_str());
+	//			break;
+	//		case MessageParameterType::KIND::VECTOR:
+	//		{
+	//			switch (member.type.vectorElemKind)
+	//			{
+	//			case MessageParameterType::KIND::INTEGER:
+	//				f.write("\tpublic List<Int64> %s = new List<Int64>();\n", member.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::UINTEGER:
+	//				f.write("\tpublic List<UInt64> %s = new List<UInt64>();\n", member.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::REAL:
+	//				f.write("\tpublic List<Double> %s = new List<Double>();\n", member.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::CHARACTER_STRING:
+	//				f.write("\tpublic List<String> %s = new List<String>();\n", member.name.c_str());
+	//				break;
+	//			case MessageParameterType::KIND::VECTOR:
+	//				assert(false); // unexpected
+	//				break;
+	//			case MessageParameterType::KIND::STRUCT:
+	//			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	//			{
+	//				const char* elem_type_name = member.type.name.c_str();
+	//				f.write("\tpublic List<%s> %s = new List<%s>();\n", elem_type_name, member.name.c_str(), elem_type_name);
+	//				break;
+	//			}
+	//			default:
+	//				assert(false); // not implemented (yet)
+	//			}
+	//			break;
+	//		}
+	//		default:
+	//			assert(false); // not implemented (yet)
+	//		}
+	//	}
+	//}
 
 	void csharpMsg_generateComposeMessageMethod(CsharpWritter f, CompositeType& s, const std::string& msgName, Proto proto)
 	{
@@ -670,6 +782,125 @@ namespace {
 		}
 		f.write("\t}\n");
 	}
+
+	void csharpMsg_generateDictionaryMessage(CsharpWritter f, MessageParameter& member)
+	{
+		assert(member.type.kind == MessageParameterType::KIND::DICTIONARY);
+
+		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+		const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+
+		f.write("public class IDictionary_%s_%s_message\n", key, value);
+		f.write("{\n");
+
+		std::string type = fmt::format("IDictionary<{},{}>", key, value);
+
+		f.write("\tpublic static void compose(JsonComposer composer, %s val)\n", type.c_str());
+		f.write("\t{\n");
+
+		f.write("\t\tcomposer.append( \"{\\n  \");\n");
+		f.write("\t\tint i = 0;\n");
+		f.write("\t\tforeach(KeyValuePair<%s, %s> each in val)\n", key, value);
+		f.write("\t\t{\n");
+		f.write("\t\t\tcomposer.append('{');\n");
+		const char* idlKey = getIdlPrimitiveType2(member.type.dictionaryKeyKind);
+		f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
+		f.write("\t\t\tcomposer.append(',');\n");
+
+		int count = 0;
+		switch (member.type.dictionaryValueKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+		{
+			const char* idlValue = getIdlPrimitiveType2(member.type.dictionaryValueKind);
+			f.write("\t\t\tcomposer.compose%s(each.Value);\n", idlValue);
+			break;
+
+		}
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		{
+			const char* value = member.type.name.c_str();
+			f.write("\t\t\tcomposer.append('{');\n");
+			f.write("\t\t\t%s_message.compose(composer, each.Value);\n",  value);
+			f.write("\t\t\tcomposer.append('}');\n");
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+
+		f.write("\t\t\tcomposer.append('}');\n");
+		f.write("\t\t\tif (i != val.Count - 1)\n");
+		f.write("\t\t\t\tcomposer.append(\",\\n  \");\n");
+		f.write("\t\t\t++i;\n");
+		f.write("\t\t}\n");
+
+		f.write("\t\tcomposer.append(\"\\n}\");\n");
+
+		f.write("\t}\n");
+
+
+		f.write("\tpublic static void compose(GmqComposer composer, %s val)\n", type.c_str());
+		f.write("\t{\n");
+		f.write("\t\tcomposer.composeUnsignedInteger((UInt64)val.Count);\n");
+		f.write("\t\tforeach(KeyValuePair<%s, %s> each in val)\n", key, value);
+		f.write("\t\t{\n");
+
+		f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
+
+		switch (member.type.dictionaryValueKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+		{
+			const char* idlValue = getIdlPrimitiveType2(member.type.dictionaryValueKind);
+			f.write("\t\t\tcomposer.compose%s(each.Value);\n", idlValue);
+			break;
+
+		}
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		{
+			const char* value = member.type.name.c_str();
+			f.write("\t\t\t%s_message.compose(composer, each.Value);\n", value);
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+		f.write("\t\t}\n");
+		f.write("\t}\n");
+
+
+		f.write("\tpublic static void parse(JsonParser parser, %s val)", type.c_str());
+		f.write("\t{\n");
+		f.write("\t\t// TODO\n");
+		f.write("\t}\n");
+
+
+		f.write("\tpublic static void parse(GmqParser parser, %s val)\n", type.c_str());
+		f.write("\t{\n");
+		f.write("\t\t// TODO\n");
+		f.write("\t}\n");
+
+		//csharpMsg_generateStructComposeJson(f, s);
+		//csharpMsg_generateStructComposeGmq(f, s);
+		//csharpMsg_generateStructComposeJson2(f, s, interface_name);
+		//csharpMsg_generateStructComposeGmq2(f, s, interface_name);
+
+		//csharpMsg_generateStructParseJson3(f, s, interface_name);
+		//csharpMsg_generateStructParseGmq3(f, s, interface_name);
+
+		f.write("} // class IDictionary_%s_%s_message\n\n", key, value);
+
+	}
+
 }
 
 void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name)
@@ -691,6 +922,35 @@ void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* 
 	csharpMsg_generateStructParseGmq3(f, s, interface_name);
 
 	f.write("} // class %s_message\n\n", type_name);
+
+
+	auto& mem = s.getMembers();
+	for (auto it = mem.begin(); it != mem.end(); ++it)
+	{
+		assert(*it != nullptr);
+
+		MessageParameter& member = **it;
+		if (member.type.kind == MessageParameterType::KIND::EXTENSION)
+			continue;
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			break;
+		case MessageParameterType::KIND::VECTOR:
+			break;
+		case MessageParameterType::KIND::DICTIONARY:
+			csharpMsg_generateDictionaryMessage(f, member);
+			break;
+		default:
+			break;
+		}
+	}
 
 }
 
