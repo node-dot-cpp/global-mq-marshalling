@@ -28,7 +28,7 @@
 
 %{
 #include "global_mq_parser_helper.h"
-#include "global_mq_idl.tab.h"
+#include "global_mq_IDL.tab.h"
 #include <stdlib.h>
 
 void jumpToState(int state)
