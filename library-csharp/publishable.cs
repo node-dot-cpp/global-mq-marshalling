@@ -46,7 +46,7 @@ namespace globalmq.marshalling
     public interface IPublishableParser
     {
         void parseKey(String expectedName); //TODO remove, make private
-        public ReadIteratorT getIterator();
+        ReadIteratorT getIterator();
         bool parseAddress(ref UInt64[] addr);
         void parseAddressEnd();
         Int64 parseInteger(String expectedName);

@@ -251,7 +251,8 @@ namespace globalmq.marshalling
 		}
 		public void parseReal(out double num)
 		{
-			num = BitConverter.ToDouble(riter.read(8));
+			byte[] arr = riter.read(8);
+			num = BitConverter.ToDouble(arr, 0);
 		}
 		public void parseString(out string s)
 		{

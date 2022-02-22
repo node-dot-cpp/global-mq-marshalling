@@ -195,26 +195,26 @@ namespace {
 			case MessageParameterType::KIND::VECTOR:
 
 				f.write("\t\t\t\tGmqCollectionParser tmp = new GmqCollectionParser(\n");
-				f.write("\t\t\t\t\t(GmqParser parser, int ordinal) =>\n");
+				f.write("\t\t\t\t\t(GmqParser p, int ix) =>\n");
 
 				switch (param.type.vectorElemKind)
 				{
 
 				case MessageParameterType::KIND::INTEGER:
-					f.write("\t\t\t\t\t\t{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ Int64 t; p.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					f.write("\t\t\t\t\t\t{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ UInt64 t; p.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					f.write("\t\t\t\t\t\t{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ Double t; p.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					f.write("\t\t\t\t\t\t{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t\t{ String t; p.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					f.write("\t\t\t\t\t\t{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					f.write("\t\t\t\t\t\t{ %s t = new %s(); %s_message.parse(p, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected
@@ -394,24 +394,24 @@ namespace {
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				f.write("\t\t\t\tJsonCollectionParser tmp = new JsonCollectionParser(\n");
-				f.write("\t\t\t\t\t(JsonParser parser, int ordinal) =>\n");
+				f.write("\t\t\t\t\t(JsonParser p, int ix) =>\n");
 				switch (param.type.vectorElemKind)
 				{
 				case MessageParameterType::KIND::INTEGER:
-					f.write("\t\t\t\t\t{ Int64 t; parser.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t\t{ Int64 t; p.parseSignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::UINTEGER:
-					f.write("\t\t\t\t{ UInt64 t; parser.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ UInt64 t; p.parseUnsignedInteger(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::REAL:
-					f.write("\t\t\t\t{ Double t; parser.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ Double t; p.parseReal(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::CHARACTER_STRING:
-					f.write("\t\t\t\t{ String t; parse.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
+					f.write("\t\t\t\t{ String t; p.parseString(out t); val.%s.Add(t); });\n", param.name.c_str());
 					break;
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
-					f.write("\t\t\t\t{ %s t = new %s(); %s_message.parse(parser, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
+					f.write("\t\t\t\t{ %s t = new %s(); %s_message.parse(p, t); val.%s.Add(t); });\n", param.type.name.c_str(), param.type.name.c_str(), param.type.name.c_str(), param.name.c_str());
 					break;
 				default:
 					assert(false); // unexpected

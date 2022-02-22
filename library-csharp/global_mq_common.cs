@@ -41,7 +41,8 @@ namespace globalmq.marshalling
         byte get();
         char getChar();
         void inc();
-        ReadOnlySpan<byte> read(int size);
+        //mb: ReadOnlySpan is not supported on .NET 4.7
+        byte[] read(int size);
         void skip(int size);
         int offset();
         ReadIteratorT shallowClone();
@@ -134,20 +135,13 @@ namespace globalmq.marshalling
             Buffer.BlockCopy(dt, 0, _data, _size, dt.Length);
             _size += dt.Length;
         }
-        void append(ReadOnlySpan<byte> dt)
-        {
-            ensureCapacity(_size + dt.Length);
-            dt.CopyTo(new Span<byte>(_data, _size, dt.Length));
-            _size += dt.Length;
-        }
-
         public void append(ReadIteratorT it, int size)
         {
             while(size > 0 && it.isData())
             {
                 int avail = it.directlyAvailableSize();
                 int toRead = Math.Min(size, avail);
-                ReadOnlySpan<byte> sp = it.read(toRead);
+                byte[] sp = it.read(toRead);
                 append(sp);
                 size -= sp.Length;
             }
@@ -212,7 +206,7 @@ namespace globalmq.marshalling
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(_size, _data);
+            throw new NotImplementedException();
         }
         public string toDebugString()
         {
@@ -253,11 +247,14 @@ namespace globalmq.marshalling
             {
                 ++currentOffset;
             }
-            public ReadOnlySpan<byte> read(int size)
+            public byte[] read(int size)
             {
+
                 Debug.Assert(isData());
-                size = Math.Min(size, (_size - currentOffset));
-                ReadOnlySpan<byte> res = new ReadOnlySpan<byte>(_data, currentOffset, size);
+                Debug.Assert(size <= _size - currentOffset);
+
+                byte[] res = new byte[size];
+                Array.Copy(_data, currentOffset, res, 0, size);
                 currentOffset += size;
                 return res;
             }

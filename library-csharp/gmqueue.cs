@@ -257,7 +257,7 @@ namespace globalmq.marshalling
             public string nodeName;
             public string statePublisherOrConnectionType; // for subscription request
 
-            public bool Equals([AllowNull] PathComponents other)
+            public bool Equals(PathComponents other)
             {
                 if (ReferenceEquals(this, other))
                     return true;
