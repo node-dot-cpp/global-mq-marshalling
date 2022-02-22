@@ -79,10 +79,9 @@ namespace globalmq.marshalling
             }
             else if (sz > _data.Length)
             {
-                int cp = Math.Max(sz, MIN_BUFFER);
+                int cp = calculateNextSize(sz);
                 byte[] tmp = new byte[cp];
-                Buffer.BlockCopy(_data, 0, tmp, 0, _size);
-                //_capacity = cp;
+                Array.Copy(_data, tmp, _size);
                 _data = tmp;
             }
         }
@@ -93,11 +92,22 @@ namespace globalmq.marshalling
             //Debug.Assert(_capacity == 0);
             Debug.Assert(_data == null);
 
-            int cp = Math.Max(sz, MIN_BUFFER);
+            int cp = calculateNextSize(sz);
             byte[] tmp = new byte[cp];
 
             //_capacity = cp;
             _data = tmp;
+        }
+
+        int calculateNextSize(int sz)
+        {
+            int buffSz = (_data != null) ? _data.Length : MIN_BUFFER;
+
+            while (buffSz < sz)
+            {
+                buffSz += MIN_BUFFER;
+            }
+            return buffSz;
         }
         public SimpleBuffer() { }
         public SimpleBuffer(byte[] _data, int _size)
@@ -107,22 +117,13 @@ namespace globalmq.marshalling
         }
         public void writeToFile(string path)
         {
-            using (FileStream fs = File.OpenWrite(path))
-            {
-                fs.Write(_data, 0, _size);
-            }
+            Array.Resize(ref _data, _size);
+            File.WriteAllBytes(path, _data);
         }
         public static SimpleBuffer readFromFile(string path)
         {
-            using (FileStream fs = File.OpenRead(path))
-            {
-                SimpleBuffer b = new SimpleBuffer();
-                int sz = (int)fs.Length;
-                b.reserve(sz);
-                fs.Read(b._data, 0, sz);
-                b._size = sz;
-                return b;
-            }
+            byte[] arr = File.ReadAllBytes(path);
+            return new SimpleBuffer(arr, arr.Length);
         }
         public int size() { return _size; }
         public bool empty() { return _size == 0; }
