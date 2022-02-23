@@ -48,6 +48,7 @@ std::string getCaseTypeName(CompositeType& s)
 	assert(s.type == CompositeType::Type::discriminated_union_case);
 	return fmt::format("CASE_{}", s.name);
 }
+
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind)
 {
 	switch (kind)
@@ -64,6 +65,102 @@ const char* getCSharpPrimitiveType(MessageParameterType::KIND kind)
 		assert(false);
 	}
 	return nullptr;
+}
+
+std::string getCSharpElementInterfaceType(MessageParameterType::KIND kind, const std::string name)
+{
+	switch (kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		return getCSharpPrimitiveType(kind);
+	case MessageParameterType::KIND::STRUCT:
+	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		return fmt::format("I{}", name);
+	default:
+		assert(false);
+	}
+	return "";
+}
+
+std::string getCSharpInterfaceType(MessageParameterType& type)
+{
+	switch (type.kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		return getCSharpPrimitiveType(type.kind);
+	case MessageParameterType::KIND::STRUCT:
+	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		return fmt::format("I{}", type.name);
+	case MessageParameterType::KIND::VECTOR:
+		return fmt::format("IList<{}>", getCSharpElementInterfaceType(type.vectorElemKind, type.name));
+	case MessageParameterType::KIND::DICTIONARY:
+		return fmt::format("IDictionary<{}, {}>", getCSharpPrimitiveType(type.dictionaryKeyKind), getCSharpElementInterfaceType(type.dictionaryValueKind, type.name));
+	default:
+		assert(false);
+	}
+	return "";
+}
+
+
+std::string getCSharpPrefixByType(MessageParameterType& type)
+{
+	switch (type.kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		return getCSharpPrimitiveType(type.kind);
+
+	case MessageParameterType::KIND::STRUCT:
+	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		return type.name;
+		break;
+	case MessageParameterType::KIND::VECTOR:
+		switch (type.vectorElemKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return fmt::format("List_{}", getCSharpPrimitiveType(type.vectorElemKind));
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			return fmt::format("List_{}", type.name);
+			break;
+		default:
+			assert(false); // unexpected
+			break;
+		}
+		break;
+	case MessageParameterType::KIND::DICTIONARY:
+	{
+		const char* key = getCSharpPrimitiveType(type.dictionaryKeyKind);
+		switch (type.dictionaryValueKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return fmt::format("Dictionary_{}_{}", key, getCSharpPrimitiveType(type.dictionaryValueKind));
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			return fmt::format("Dictionary_{}_{}", key, type.name);
+		default:
+			assert(false); // not implemented (yet)
+		}
+		break;
+	}
+	default:
+		assert(false);
+	}
+	return "";
 }
 
 const char* getIdlPrimitiveType(MessageParameterType::KIND kind)
