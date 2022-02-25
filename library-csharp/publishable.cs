@@ -28,13 +28,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace globalmq.marshalling
 {
     public class Publishable
     {
         public enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
-
+        public enum ActionOnDictionary { update_value = 1, insert = 2, remove = 3 };
         public static UInt64[] makeAddress(UInt64[] baseAddress, ulong last)
         {
             UInt64[] address = new UInt64[baseAddress.Length + 1];
@@ -45,7 +46,7 @@ namespace globalmq.marshalling
     }
     public interface IPublishableParser
     {
-        void parseKey(String expectedName); //TODO remove, make private
+        void parseKey(String expectedName);
         ReadIteratorT getIterator();
         bool parseAddress(ref UInt64[] addr);
         void parseAddressEnd();
@@ -53,13 +54,9 @@ namespace globalmq.marshalling
         UInt64 parseUnsigned(String expectedName);
         Double parseReal(String expectedName);
         String parseString(String expectedName);
-        void parsePublishableStructBegin(String expectedName);
-        void parsePublishableStructEnd();
-        void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate);
-        void parseSimpleVector(String expectedName, IList<Int64> collection);
-        void parseSimpleVector(String expectedName, IList<UInt64> collection);
-        void parseSimpleVector(String expectedName, IList<Double> collection);
-        void parseSimpleVector(String expectedName, IList<String> collection);
+        void parseDictionary<K, V>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, V> parseValueDelegate);
+        void parseVector2<T>(String expectedName, IList<T> collection, Func<IPublishableParser, T> parseDelegate);
+
         void parseStructBegin();
         void parseStructEnd();
         void parseStateUpdateMessageBegin();
@@ -80,10 +77,13 @@ namespace globalmq.marshalling
 
         public void parseKey(String expectedName)
         {
-            String key;
-            p.readKeyFromJson(out key);
-            if (key != expectedName)
-                throw new Exception(); // bad format
+            if(!String.IsNullOrEmpty(expectedName))
+            {
+                String key;
+                p.readKeyFromJson(out key);
+                if (key != expectedName)
+                    throw new Exception(); // bad format
+            }
         }
         public bool parseAddress(ref UInt64[] addr)
         {
@@ -193,20 +193,45 @@ namespace globalmq.marshalling
 
             return val;
         }
-        public void parsePublishableStructBegin(String expectedName)
+        public void parseDictionary<K, V>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, V> parseValueDelegate)
         {
+            Debug.Assert(collection.Count == 0);
             parseKey(expectedName);
             p.skipDelimiter('{');
-        }
-        public void parsePublishableStructEnd()
-        {
-            p.skipDelimiter('}');
+
+            if (!p.isDelimiter('}')) // there are some items there
+            {
+                for (int i = 0; /*!newFormat || i < sz*/; ++i)
+                {
+                    p.skipDelimiter('{');
+                    K k = parseKeyDelegate(this);
+                    p.skipDelimiter(',');
+                    V v = parseValueDelegate(this);
+                    p.skipDelimiter('}');
+
+                    collection.Add(k, v);
+                    if (p.isDelimiter(','))
+                    {
+                        p.skipDelimiter(',');
+                        continue;
+                    }
+                    if (p.isDelimiter('}'))
+                    {
+                        p.skipDelimiter('}');
+                        break;
+                    }
+                }
+            }
+            else
+                p.skipDelimiter('}');
 
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
         }
-        public void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate)
+
+        public void parseVector2<T>(String expectedName, IList<T> collection, Func<IPublishableParser, T> parseDelegate)
         {
+            Debug.Assert(collection.Count == 0);
             parseKey(expectedName);
             p.skipDelimiter('[');
 
@@ -214,7 +239,8 @@ namespace globalmq.marshalling
             {
                 for (int i = 0; /*!newFormat || i < sz*/; ++i)
                 {
-                    parseDelegate(this, i);
+                    T t = parseDelegate(this);
+                    collection.Add(t);
                     if (p.isDelimiter(','))
                     {
                         p.skipDelimiter(',');
@@ -233,76 +259,6 @@ namespace globalmq.marshalling
             if (p.isDelimiter(','))
                 p.skipDelimiter(',');
         }
-        public void parseSimpleVector(String expectedName, IList<Int64> collection)
-        {
-
-            parseKey(expectedName);
-            JsonCollectionParser simple = new JsonCollectionParser(
-                    (JsonParser parser, int index) =>
-                    {
-                        Int64 val;
-                        p.parseSignedInteger(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseJson(p);
-
-            if (p.isDelimiter(','))
-                p.skipDelimiter(',');
-        }
-
-        public void parseSimpleVector(String expectedName, IList<UInt64> collection)
-        {
-
-            parseKey(expectedName);
-            JsonCollectionParser simple = new JsonCollectionParser(
-                    (JsonParser parser, int index) =>
-                    {
-                        UInt64 val;
-                        p.parseUnsignedInteger(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseJson(p);
-
-            if (p.isDelimiter(','))
-                p.skipDelimiter(',');
-        }
-
-        public void parseSimpleVector(String expectedName, IList<Double> collection)
-        {
-
-            parseKey(expectedName);
-            JsonCollectionParser simple = new JsonCollectionParser(
-                    (JsonParser parser, int index) =>
-                    {
-                        Double val;
-                        p.parseReal(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseJson(p);
-
-            if (p.isDelimiter(','))
-                p.skipDelimiter(',');
-        }
-        public void parseSimpleVector(String expectedName, IList<String> collection)
-        {
-
-            parseKey(expectedName);
-            JsonCollectionParser simple = new JsonCollectionParser(
-                    (JsonParser parser, int index) =>
-                    {
-                        String val;
-                        p.parseString(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseJson(p);
-
-            if (p.isDelimiter(','))
-                p.skipDelimiter(',');
-        }
 
         public void parseStructBegin()
         {
@@ -311,6 +267,9 @@ namespace globalmq.marshalling
         public void parseStructEnd()
         {
             p.skipDelimiter('}');
+
+            if (p.isData() && p.isDelimiter(','))
+                p.skipDelimiter(',');
         }
         public void parseStateUpdateMessageBegin()
         {
@@ -380,69 +339,29 @@ namespace globalmq.marshalling
             p.parseString(out val);
             return val;
         }
-
-        public void parsePublishableStructBegin(String expectedName) { }
-        public void parsePublishableStructEnd() { }
-
-        public void parseVector(String expectedName, Action<IPublishableParser, int> parseDelegate)
+        public void parseDictionary<K, V>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, V> parseValueDelegate)
         {
+            Debug.Assert(collection.Count == 0);
             int sz;
             p.parseUnsignedInteger(out sz);
             for (int i = 0; i < sz; ++i)
-                parseDelegate(this, i);
-
+            {
+                K k = parseKeyDelegate(this);
+                V v = parseValueDelegate(this);
+                collection.Add(k, v);
+            }
         }
-        public void parseSimpleVector(String expectedName, IList<Int64> collection)
+        public void parseVector2<T>(String expectedName, IList<T> collection, Func<IPublishableParser, T> parseDelegate)
         {
+            Debug.Assert(collection.Count == 0);
+            int sz;
+            p.parseUnsignedInteger(out sz);
+            for (int i = 0; i < sz; ++i)
+            {
+                T t = parseDelegate(this);
+                collection.Add(t);
+            }
 
-            GmqCollectionParser simple = new GmqCollectionParser(
-                    (GmqParser parser, int index) =>
-                    {
-                        Int64 val;
-                        p.parseSignedInteger(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseGmq(p);
-        }
-
-        public void parseSimpleVector(String expectedName, IList<UInt64> collection)
-        {
-
-            GmqCollectionParser simple = new GmqCollectionParser(
-                    (GmqParser parser, int index) =>
-                    {
-                        UInt64 val;
-                        p.parseUnsignedInteger(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseGmq(p);
-        }
-
-        public void parseSimpleVector(String expectedName, IList<Double> collection)
-        {
-            GmqCollectionParser simple = new GmqCollectionParser(
-                    (GmqParser parser, int index) =>
-                    {
-                        Double val;
-                        p.parseReal(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseGmq(p);
-        }
-        public void parseSimpleVector(String expectedName, IList<String> collection)
-        {
-            GmqCollectionParser simple = new GmqCollectionParser(
-                    (GmqParser parser, int index) =>
-                    {
-                        String val;
-                        p.parseString(out val);
-                        collection.Add(val);
-                    }
-            );
-            simple.parseGmq(p);
         }
 
         public void parseStructBegin() { }
@@ -459,7 +378,8 @@ namespace globalmq.marshalling
 
     public interface IPublishableComposer
     {
-        void composeKey(String name); //TODO remove
+        void composeKey(String name);
+        void addSeparator(bool separator);
         void appendRaw(ReadIteratorT it, int size = int.MaxValue);
         BufferT getBuffer();
         void composeAddress(UInt64[] baseAddr, UInt64 last);
@@ -471,11 +391,8 @@ namespace globalmq.marshalling
         void composeString(String name, String value, bool separator);
         void composePublishableStructBegin(String name);
         void composePublishableStructEnd(bool separator);
-        void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator);
-        void composeSimpleVector(String name, IList<Int64> collection, bool separator);
-        void composeSimpleVector(String name, IList<UInt64> collection, bool separator);
-        void composeSimpleVector(String name, IList<Double> collection, bool separator);
-        void composeSimpleVector(String name, IList<String> collection, bool separator);
+        void composeVector2<T>(String name, IList<T> collection, Action<IPublishableComposer, T> composeDelegate, bool separator);
+        void composeDictionary<K, V>(String name, IDictionary<K, V> collection, Action<IPublishableComposer, K> composeKeyDelegate, Action<IPublishableComposer, V> composeValueDelegate, bool separator);
 
         void composeStructBegin();
         void composeStructEnd();
@@ -488,10 +405,17 @@ namespace globalmq.marshalling
         JsonComposer composer;
 
         public JsonPublishableComposer(BufferT buffer) { composer = new JsonComposer(buffer); }
-        public void composeKey(String name) //TODO remove
+        public void composeKey(String name)
         {
             composer.addNamePart(name);
         }
+        public void addSeparator(bool separator)
+        {
+            if (separator)
+                composer.append(",");
+
+        }
+
         public void appendRaw(ReadIteratorT it, int size = int.MaxValue)
         {
             composer.getBuffer().append(it, size);
@@ -565,66 +489,47 @@ namespace globalmq.marshalling
             if (separator)
                 composer.append(",");
         }
-        public void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator)
+        public void composeVector2<T>(String name, IList<T> collection, Action<IPublishableComposer, T> composeDelegate, bool separator)
         {
             composer.addNamePart(name);
             composer.append('[');
-            for (int i = 0; i < size; ++i)
+            int i = 0;
+            foreach (T t in collection)
             {
                 if (i != 0)
                     composer.append(", ");
 
-                composer.append("{");
-                composeDelegate(this, i);
-                composer.append("}");
+                composeDelegate(this, t);
+                ++i;
             }
             composer.append(']');
             if (separator)
                 composer.append(",");
         }
-        public void composeSimpleVector(String name, IList<Int64> collection, bool separator)
+        public void composeDictionary<K, V>(String name, IDictionary<K, V> collection, Action<IPublishableComposer, K> composeKeyDelegate, Action<IPublishableComposer, V> composeValueDelegate, bool separator)
         {
             composer.addNamePart(name);
-            JsonCollectionComposer<Int64> simple = new JsonCollectionComposer<Int64>(collection,
-                (JsonComposer c, Int64 val) => { composer.composeSignedInteger(val); }
-            );
-            simple.composeJson(composer);
-            if (separator)
-                composer.append(",");
-        }
-        public void composeSimpleVector(String name, IList<UInt64> collection, bool separator)
-        {
-            composer.addNamePart(name);
-            JsonCollectionComposer<UInt64> simple = new JsonCollectionComposer<UInt64>(collection,
-                (JsonComposer c, UInt64 val) => { composer.composeUnsignedInteger(val); }
-            );
-            simple.composeJson(composer);
-            if (separator)
-                composer.append(",");
-        }
-        public void composeSimpleVector(String name, IList<Double> collection, bool separator)
-        {
-            composer.addNamePart(name);
-            JsonCollectionComposer<Double> simple = new JsonCollectionComposer<Double>(collection,
-                (JsonComposer c, Double val) => { composer.composeReal(val); }
-            );
-            simple.composeJson(composer);
-            if (separator)
-                composer.append(",");
-        }
-        public void composeSimpleVector(String name, IList<String> collection, bool separator)
-        {
-            composer.addNamePart(name);
-            JsonCollectionComposer<String> simple = new JsonCollectionComposer<String>(collection,
-                (JsonComposer c, String val) => { composer.composeString(val); }
-            );
-            simple.composeJson(composer);
+            composer.append('{');
+
+            int i = 0;
+            foreach (KeyValuePair<K, V> each in collection)
+            {
+                if (i != 0)
+                    composer.append(", ");
+
+                composer.append('{');
+                composeKeyDelegate(this, each.Key);
+                composer.append(", ");
+                composeValueDelegate(this, each.Value);
+                composer.append('}');
+                ++i;
+            }
+            composer.append('}');
             if (separator)
                 composer.append(",");
         }
 
-
-        public void composeStructBegin()
+public void composeStructBegin()
         {
             composer.append('{');
         }
@@ -650,6 +555,8 @@ namespace globalmq.marshalling
         public GmqPublishableComposer(BufferT buffer) { composer = new GmqComposer(buffer); }
 
         public void composeKey(String name) { }
+        public void addSeparator(bool separator) { }
+
         public void appendRaw(ReadIteratorT it, int size = int.MaxValue)
         {
             composer.getBuffer().append(it, size);
@@ -690,39 +597,20 @@ namespace globalmq.marshalling
         }
         public void composePublishableStructBegin(String name) { }
         public void composePublishableStructEnd(bool separator) { }
-        public void composeVector(String name, int size, Action<IPublishableComposer, int> composeDelegate, bool separator)
+        public void composeVector2<T>(String name, IList<T> collection, Action<IPublishableComposer, T> composeDelegate, bool separator)
         {
-            composer.composeUnsignedInteger((UInt64)size);
-            for (int i = 0; i < size; ++i)
-                composeDelegate(this, i);
+            composer.composeUnsignedInteger((UInt64)collection.Count);
+            for (int i = 0; i < collection.Count; ++i)
+                composeDelegate(this, collection[i]);
         }
-        public void composeSimpleVector(String name, IList<Int64> collection, bool separator)
+        public void composeDictionary<K, V>(String name, IDictionary<K, V> collection, Action<IPublishableComposer, K> composeKeyDelegate, Action<IPublishableComposer, V> composeValueDelegate, bool separator)
         {
-            GmqCollectionComposer<Int64> simple = new GmqCollectionComposer<Int64>(collection,
-                (GmqComposer c, Int64 val) => { composer.composeSignedInteger(val); }
-            );
-            simple.composeGmq(composer);
-        }
-        public void composeSimpleVector(String name, IList<UInt64> collection, bool separator)
-        {
-            GmqCollectionComposer<UInt64> simple = new GmqCollectionComposer<UInt64>(collection,
-                (GmqComposer c, UInt64 val) => { composer.composeUnsignedInteger(val); }
-            );
-            simple.composeGmq(composer);
-        }
-        public void composeSimpleVector(String name, IList<Double> collection, bool separator)
-        {
-            GmqCollectionComposer<Double> simple = new GmqCollectionComposer<Double>(collection,
-                (GmqComposer c, Double val) => { composer.composeReal(val); }
-            );
-            simple.composeGmq(composer);
-        }
-        public void composeSimpleVector(String name, IList<String> collection, bool separator)
-        {
-            GmqCollectionComposer<String> simple = new GmqCollectionComposer<String>(collection,
-                (GmqComposer c, String val) => { composer.composeString(val); }
-            );
-            simple.composeGmq(composer);
+            composer.composeUnsignedInteger((UInt64)collection.Count);
+            foreach(KeyValuePair<K, V> each in collection)
+            {
+                composeKeyDelegate(this, each.Key);
+                composeValueDelegate(this, each.Value);
+            }
         }
 
         public void composeStructBegin() { }
@@ -736,9 +624,6 @@ namespace globalmq.marshalling
 
     public class PublisherVectorWrapper<T> : IList<T>
     {
-        //public delegate void ComposeDelegate(IPublishableComposer composer, T val);
-        //public delegate T ElementWrapperDelegate(T val, IPublishableComposer composer, UInt64[] address);
-
         IList<T> t;
         IPublishableComposer composer;
         UInt64[] address;
@@ -775,11 +660,11 @@ namespace globalmq.marshalling
         }
         public int Count => t.Count;
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly => t.IsReadOnly;
 
         public void Add(T item)
         {
-            throw new NotImplementedException();
+            this.Insert(Count, item);
         }
 
         public void Clear()
@@ -799,7 +684,7 @@ namespace globalmq.marshalling
 
         public IEnumerator<T> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return t.GetEnumerator();
         }
 
         public int IndexOf(T item)
@@ -818,9 +703,15 @@ namespace globalmq.marshalling
 
         public bool Remove(T item)
         {
-            throw new NotImplementedException();
+            int ix = t.IndexOf(item);
+            if (ix == -1)
+                return false;
+            else
+            {
+                this.RemoveAt(ix);
+                return true;
+            }
         }
-
         public void RemoveAt(int index)
         {
             t.RemoveAt(index);
@@ -831,16 +722,16 @@ namespace globalmq.marshalling
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return ((IEnumerable)t).GetEnumerator();
         }
 
     }
 
-    public class SubscriberVectorWrapper<T, U> : IList<T> where U : T
+    public class SubscriberVectorWrapper<T> : IList<T>// where U : T
     {
-        IList<U> t;
+        IList<T> t;
 
-        public SubscriberVectorWrapper(IList<U> t)
+        public SubscriberVectorWrapper(IList<T> t)
         {
             this.t = t;
         }
@@ -848,7 +739,7 @@ namespace globalmq.marshalling
         //{
         //    this.t = new List<T>();
         //}
-        public T this[int index] { get => t[index]; set => throw new InvalidOperationException(); }
+        public T this[int index] { get => t[index]; set => throw new NotSupportedException(); }
 
         public int Count => t.Count;
 
@@ -856,52 +747,52 @@ namespace globalmq.marshalling
 
         public void Add(T item)
         {
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
 
         public void Clear()
         {
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
 
         public bool Contains(T item)
         {
-            return item is U ? t.Contains((U)item) : false;
+            return t.Contains(item);
         }
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            t.CopyTo(array, arrayIndex);
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return t.GetEnumerator();
         }
 
         public int IndexOf(T item)
         {
-            return item is U ? t.IndexOf((U)item) : -1;
+            return t.IndexOf(item);
         }
 
         public void Insert(int index, T item)
         {
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
 
         public bool Remove(T item)
         {
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
 
         public void RemoveAt(int index)
         {
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return ((IEnumerable)t).GetEnumerator();
         }
     }
 
@@ -951,4 +842,201 @@ namespace globalmq.marshalling
         }
 
     }
+
+    public class PublisherDictionaryWrapper<K, V> : IDictionary<K, V>
+    {
+        IDictionary<K, V> t;
+        IPublishableComposer composer;
+        UInt64[] address;
+        Action<IPublishableComposer, K, bool> composeKeyDelegate;
+        Action<IPublishableComposer, V> composeValueDelegate;
+        Func<V, IPublishableComposer, UInt64[], V> valueWrapperDelegate;
+
+
+        public PublisherDictionaryWrapper(IDictionary<K, V> t, IPublishableComposer composer, UInt64[] address,
+            Action<IPublishableComposer, K, bool> composeKeyDelegate, Action<IPublishableComposer, V> composeValueDelegate,
+            Func<V, IPublishableComposer, UInt64[], V> valueWrapperDelegate)
+        {
+            this.t = t;
+            this.composer = composer;
+            this.address = address;
+            this.composeKeyDelegate = composeKeyDelegate;
+            this.composeValueDelegate = composeValueDelegate;
+            this.valueWrapperDelegate = valueWrapperDelegate;
+        }
+        public V this[K key]
+        {
+            get
+            {
+                if (valueWrapperDelegate != null)
+                    throw new NotSupportedException();
+                //return valueWrapperDelegate(t[key], composer, Publishable.makeAddress(address, keyToAddress(key)));
+                else
+                    return t[key];
+            }
+            set
+            {
+                if (t.ContainsKey(key))
+                    updateValue(key, value);
+                else
+                    Add(key, value);
+            }
+        }
+        public int Count => t.Count;
+        public ICollection<K> Keys => t.Keys;
+        public ICollection<V> Values => t.Values;
+        bool ICollection<KeyValuePair<K, V>>.IsReadOnly => ((ICollection<KeyValuePair<K, V>>)t).IsReadOnly;
+        void updateValue(K key, V value)
+        {
+            Debug.Assert(t.ContainsKey(key));
+            t[key] = value;
+            composer.composeAddress(address, 0);
+            composer.composeAction((UInt64)Publishable.ActionOnDictionary.update_value, false);
+            composeKeyDelegate(composer, key, true);
+            composeValueDelegate(composer, value);
+            composer.composeAddressEnd();
+        }
+        public void Add(K key, V value)
+        {
+            t.Add(key, value);
+            composer.composeAddress(address, 0);
+            composer.composeAction((UInt64)Publishable.ActionOnDictionary.insert, false);
+            composeKeyDelegate(composer, key, true);
+            composeValueDelegate(composer, value);
+            composer.composeAddressEnd();
+        }
+        public void Add(KeyValuePair<K, V> item)
+        {
+            throw new NotImplementedException();
+        }
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool ContainsKey(K key)
+        {
+            return t.ContainsKey(key);
+        }
+
+        public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
+        {
+            return t.GetEnumerator();
+        }
+
+        public bool Remove(K key)
+        {
+            bool res = t.Remove(key);
+            if (res)
+            {
+                composer.composeAddress(address, 0);
+                composer.composeAction((UInt64)Publishable.ActionOnDictionary.remove, false);
+                composeKeyDelegate(composer, key, false);
+                composer.composeAddressEnd();
+            }
+            return res;
+        }
+
+        public bool Remove(KeyValuePair<K, V> item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryGetValue(K key, out V value)
+        {
+            return t.TryGetValue(key, out value);
+        }
+
+        bool ICollection<KeyValuePair<K, V>>.Contains(KeyValuePair<K, V> item)
+        {
+            return ((ICollection<KeyValuePair<K, V>>)t).Contains(item);
+        }
+
+        void ICollection<KeyValuePair<K, V>>.CopyTo(KeyValuePair<K, V>[] array, int arrayIndex)
+        {
+            ((ICollection<KeyValuePair<K, V>>)t).CopyTo(array, arrayIndex);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)t).GetEnumerator();
+        }
+    }
+
+    public class SubscriberDictionaryWrapper<K, V> : IDictionary<K, V>
+    {
+        IDictionary<K, V> t;
+
+        public SubscriberDictionaryWrapper(IDictionary<K, V> t)
+        {
+            this.t = t;
+        }
+        public V this[K key]
+        {
+            get { return t[key]; }
+            set { throw new NotSupportedException(); }
+        }
+        public int Count => t.Count;
+        public ICollection<K> Keys => t.Keys;
+        public ICollection<V> Values => t.Values;
+        bool ICollection<KeyValuePair<K, V>>.IsReadOnly => ((ICollection<KeyValuePair<K, V>>)t).IsReadOnly;
+        public void Add(K key, V value)
+        {
+            throw new NotSupportedException();
+        }
+        public void Add(KeyValuePair<K, V> item)
+        {
+            throw new NotSupportedException();
+        }
+        public void Clear()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool ContainsKey(K key)
+        {
+            return t.ContainsKey(key);
+        }
+
+        public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
+        {
+            return t.GetEnumerator();
+        }
+
+        public bool Remove(K key)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(KeyValuePair<K, V> item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool TryGetValue(K key, out V value)
+        {
+            return t.TryGetValue(key, out value);
+        }
+
+        bool ICollection<KeyValuePair<K, V>>.Contains(KeyValuePair<K, V> item)
+        {
+            return ((ICollection<KeyValuePair<K, V>>)t).Contains(item);
+        }
+
+        void ICollection<KeyValuePair<K, V>>.CopyTo(KeyValuePair<K, V>[] array, int arrayIndex)
+        {
+            ((ICollection<KeyValuePair<K, V>>)t).CopyTo(array, arrayIndex);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)t).GetEnumerator();
+        }
+
+        public bool UpdateValue(K key, V value)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
 } // namespace globalmq::marshalling

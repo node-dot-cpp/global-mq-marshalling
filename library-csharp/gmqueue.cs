@@ -81,7 +81,8 @@ namespace globalmq.marshalling
         };
         public void parse(IPublishableParser parser)
         {
-            parser.parsePublishableStructBegin("hdr");
+            parser.parseKey("hdr");
+            parser.parseStructBegin();
 
             UInt64 msgType = parser.parseUnsigned("msg_type");
             switch ((MsgType)msgType)
@@ -118,13 +119,14 @@ namespace globalmq.marshalling
                 default:
                     throw new Exception(); // TODO: ... (unknown msg type)
             }
-            parser.parsePublishableStructEnd();
+            parser.parseStructEnd();
         }
 
         public static void parseAndUpdate(ReadIteratorT msgStart, IPublishableParser parser, IPublishableComposer composer, UpdatedData udata)
         {
             //		ParserT parser2 = parser;
-            parser.parsePublishableStructBegin("hdr");
+            parser.parseKey("hdr");
+            parser.parseStructBegin();
             //size_t msgType;
             UInt64 msgType = parser.parseUnsigned("msg_type");
             UInt64 dummy;

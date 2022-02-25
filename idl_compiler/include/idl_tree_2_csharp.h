@@ -67,7 +67,8 @@ const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
 const char* getIdlPrimitiveType(MessageParameterType::KIND kind);
 const char* getIdlPrimitiveType2(MessageParameterType::KIND kind);
 std::string getCSharpInterfaceType(MessageParameterType& type);
-std::string getCSharpElementInterfaceType(MessageParameterType::KIND kind, const std::string name);
+std::string getCSharpElementInterfaceType(MessageParameterType::KIND kind, const std::string& name);
+std::string getCSharpElementType(MessageParameterType::KIND kind, const std::string& name);
 std::string getCSharpPrefixByType(MessageParameterType& type);
 
 std::string generateCsharpDeclParams(CompositeType& s);

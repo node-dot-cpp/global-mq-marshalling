@@ -167,10 +167,13 @@ namespace globalmq.marshalling
 
 		public void addNamePart(string name)
 		{
-			buff.appendUint8('\"');
-			buff.appendAscii(name);
-			buff.appendUint8('\"');
-			buff.appendUint8(':');
+			if(!String.IsNullOrEmpty(name))
+            {
+				buff.appendUint8('\"');
+				buff.appendAscii(name);
+				buff.appendUint8('\"');
+				buff.appendUint8(':');
+			}
 		}
 
 		public void append(string str)
@@ -292,6 +295,11 @@ namespace globalmq.marshalling
 			skipSpacesEtc();
 			return riter.getChar() == delim;
 		}
+		public bool isData()
+		{
+			return riter.isData();
+		}
+
 		public void skipDelimiter(char delim)
 		{
 			skipSpacesEtc();

@@ -67,7 +67,7 @@ const char* getCSharpPrimitiveType(MessageParameterType::KIND kind)
 	return nullptr;
 }
 
-std::string getCSharpElementInterfaceType(MessageParameterType::KIND kind, const std::string name)
+std::string getCSharpElementInterfaceType(MessageParameterType::KIND kind, const std::string& name)
 {
 	switch (kind)
 	{
@@ -84,6 +84,25 @@ std::string getCSharpElementInterfaceType(MessageParameterType::KIND kind, const
 	}
 	return "";
 }
+
+std::string getCSharpElementType(MessageParameterType::KIND kind, const std::string& name)
+{
+	switch (kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		return getCSharpPrimitiveType(kind);
+	case MessageParameterType::KIND::STRUCT:
+	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		return name;
+	default:
+		assert(false);
+	}
+	return "";
+}
+
 
 std::string getCSharpInterfaceType(MessageParameterType& type)
 {

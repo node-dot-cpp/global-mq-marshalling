@@ -100,11 +100,16 @@ PUBLISHABLE publishable_seven = 7 {
  };
 
 
- STRUCT struct_four {
+ STRUCT struct_nine {
   DICTIONARY<UINTEGER, CHARACTER-STRING> dictioUintStr;
   DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictioStrStr;
 };
 
 
- MESSAGE test_gmq : message_four_gmq = 4 = STRUCT struct_four;
- MESSAGE test_json : message_four_json = 4 = STRUCT struct_four;
+ MESSAGE test_gmq : message_nine_gmq = 9 = STRUCT struct_nine;
+ MESSAGE test_json : message_nine_json = 9 = STRUCT struct_nine;
+
+ //PUBLISHABLE publishable_nine = 9 {
+	// CHARACTER-STRING name;
+	// STRUCT struct_four data;
+ //};

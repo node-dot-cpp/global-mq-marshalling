@@ -897,9 +897,8 @@ void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* 
 	csharpMsg_generateStructParseJson3(f, s, interface_name);
 	csharpMsg_generateStructParseGmq3(f, s, interface_name);
 
-	f.write("} // class %s_message\n\n", type_name);
-
-
+	// this should be made only once for each type, and
+	// put at namespace scope
 	auto& mem = s.getMembers();
 	for (auto it = mem.begin(); it != mem.end(); ++it)
 	{
@@ -928,6 +927,11 @@ void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* 
 			break;
 		}
 	}
+
+
+	f.write("} // class %s_message\n\n", type_name);
+
+
 
 }
 
