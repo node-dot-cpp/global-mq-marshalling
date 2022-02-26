@@ -81,9 +81,12 @@ void generateCsharpSimpleEquivalentMethod(CsharpWritter f, const char* type_name
 void generateCsharpInterfaceMember(CsharpWritter f, MessageParameter& member);
 void generateCsharpStructInterface(CsharpWritter f, CompositeType& s, const char* type_name);
 void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name);
+void generateCsharpReadOnlyMember(CsharpWritter f, MessageParameter& member);
+void generateCsharpStructReadOnly(CsharpWritter f, CompositeType& s);
 void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name);
 void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s);
 void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s);
+void generateCsharpUnionReadOnly(CsharpWritter f, CompositeType& s);
 void generateCsharpUnionMessage(CsharpWritter f, CompositeType& s);
 void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& member);
 void generateCsharpSubscriberEventHandler(CsharpWritter f, MessageParameter& member);

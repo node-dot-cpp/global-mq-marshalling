@@ -70,8 +70,8 @@ namespace TestProject1
         [InlineData(-1)]
         public static void TestZigZagEncoding(Int64 val)
         {
-            UInt64 uns = IntegralVlq.zigzagEncode(val);
-            Int64 result = IntegralVlq.zigzagDecode(uns);
+            UInt64 uns = ZigZag.encode(val);
+            Int64 result = ZigZag.decode(uns);
 
             Assert.Equal<Int64>(val, result);
         }

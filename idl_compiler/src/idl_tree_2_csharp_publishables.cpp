@@ -340,7 +340,6 @@ namespace {
 			{
 				const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
 				const char* idlKey = getIdlPrimitiveType(member.type.dictionaryKeyKind);
-				string value = getCSharpElementType(member.type.dictionaryValueKind, member.type.name);
 
 				switch (member.type.dictionaryValueKind)
 				{
@@ -349,10 +348,11 @@ namespace {
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
 				{
+					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
 					const char* idlValue = getIdlPrimitiveType(member.type.dictionaryValueKind);
 
 					f.write("\t\t{\n");
-					f.write("\t\t\tDictionary<%s, %s> newVal = new Dictionary<%s, %s>();\n", key, value.c_str(), key, value.c_str());
+					f.write("\t\t\tDictionary<%s, %s> newVal = new Dictionary<%s, %s>();\n", key, value, key, value);
 			
 					f.write("\t\tparser.parseDictionary(\"%s\", newVal,\n", member.name.c_str());
 					f.write("\t\t\t(IPublishableParser p) => { return p.parse%s(null); },\n", idlKey);
@@ -382,7 +382,7 @@ namespace {
 				case MessageParameterType::KIND::STRUCT:
 				case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				{
-					const char* elem_type_name = member.type.name.c_str();
+					const char* value = member.type.name.c_str();
 
 					f.write("\t\t{\n");
 					//f.write("\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
@@ -396,10 +396,10 @@ namespace {
 					//f.write("\t\t\t}\n");
 					//f.write("\t\t);\n");
 
-					f.write("\t\t\tDictionary<%s, %s> newVal = new Dictionary<%s, %s>();\n", key, value.c_str(), key, value.c_str());
+					f.write("\t\t\tDictionary<%s, I%s> newVal = new Dictionary<%s, I%s>();\n", key, value, key, value);
 					f.write("\t\t\tparser.parseDictionary(\"%s\", newVal,\n", member.name.c_str());
 					f.write("\t\t\t\t(IPublishableParser p) => { return p.parse%s(null); },\n", idlKey);
-					f.write("\t\t\t\t%s_subscriber.parseForStateSync\n", value.c_str());
+					f.write("\t\t\t\t%s_subscriber.parseForStateSync\n", value);
 					//f.write("\t\t\t(IPublishableParser p) =>\n");
 					//f.write("\t\t\t{\n");
 					//f.write("\t\t\t\t%s v = new %s();\n", value.c_str(), value.c_str());
@@ -861,7 +861,7 @@ namespace {
 					}
 					else if (member.type.dictionaryKeyKind == MessageParameterType::KIND::INTEGER)
 					{
-						f.write("\t\t\t\t\t%s key = (%s)addr[offset + 1];\n", key, key);
+						f.write("\t\t\t\t\t%s key = ZigZag.decode(addr[offset + 1]);\n", key, key);
 						f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[index]), addr, offset + 2);\n", value, value, member.name.c_str());
 					}
 					else
@@ -1238,147 +1238,6 @@ namespace {
 	}
 
 
-	void csharpPub_generateVectorSubscriber(CsharpWritter f, MessageParameter& member)
-	{
-		assert(member.type.kind == MessageParameterType::KIND::VECTOR);
-
-		string prefix = getCSharpPrefixByType(member.type);
-		string type = getCSharpInterfaceType(member.type);
-
-		string value = getCSharpElementInterfaceType(member.type.vectorElemKind, member.name);
-
-		f.write("public class %s_subscriber\n", prefix.c_str());
-		f.write("{\n");
-
-
-		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, %s res)\n", type.c_str());
-		f.write("\t{\n");
-		f.write("\t\t//TODO\n");
-
-		f.write("\t}\n");
-
-
-
-		f.write("\tpublic static bool parse(IPublishableParser parser, %s res)\n", type.c_str());
-		f.write("\t{\n");
-
-		f.write("\t\tbool changed = false;\n");
-
-		f.write("\t\t//TODO\n");
-
-		f.write("\t\treturn changed;\n");
-		f.write("\t}\n");
-
-
-		f.write("\tpublic static bool parse(IPublishableParser parser, %s res, UInt64[] addr, int offset)\n", type.c_str());
-		f.write("\t{\n");
-
-		f.write("\t\tbool changed = false;\n");
-
-		f.write("\t\t//TODO\n");
-
-		f.write("\t\treturn changed;\n");
-		f.write("\t}\n");
-
-
-		f.write("} // class %s_subscriber\n\n", prefix.c_str());
-	}
-
-	void csharpPub_generateVectorPublisher(CsharpWritter f, MessageParameter& member)
-	{
-		assert(member.type.kind == MessageParameterType::KIND::VECTOR);
-
-		string prefix = getCSharpPrefixByType(member.type);
-		string type = getCSharpInterfaceType(member.type);
-
-		string value = getCSharpElementInterfaceType(member.type.vectorElemKind, member.name);
-
-		f.write("public class %s_publisher\n", prefix.c_str());
-		f.write("{\n");
-
-		f.write("\tpublic static void compose(IPublishableComposer composer, %s val)\n", type.c_str());
-		f.write("\t{\n");
-
-		f.write("\t\t//TODO\n");
-
-		f.write("\t}\n");
-
-
-		f.write("} // class %s_publisher\n\n", prefix.c_str());
-	}
-
-
-	void csharpPub_generateDictionarySubscriber(CsharpWritter f, MessageParameter& member)
-	{
-		assert(member.type.kind == MessageParameterType::KIND::DICTIONARY);
-
-		string prefix = getCSharpPrefixByType(member.type);
-		string type = getCSharpInterfaceType(member.type);
-
-		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
-		string value = getCSharpElementInterfaceType(member.type.dictionaryValueKind, member.name);
-
-		f.write("public class %s_subscriber\n", prefix.c_str());
-		f.write("{\n");
-
-
-		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, %s res)\n", type.c_str());
-		f.write("\t{\n");
-		f.write("\t\t//TODO\n");
-
-		f.write("\t}\n");
-
-
-
-		f.write("\tpublic static bool parse(IPublishableParser parser, %s res)\n", type.c_str());
-		f.write("\t{\n");
-
-		f.write("\t\tbool changed = false;\n");
-
-		f.write("\t\t//TODO\n");
-
-		f.write("\t\treturn changed;\n");
-		f.write("\t}\n");
-
-
-		f.write("\tpublic static bool parse(IPublishableParser parser, %s res, UInt64[] addr, int offset)\n", type.c_str());
-		f.write("\t{\n");
-
-		f.write("\t\tbool changed = false;\n");
-
-		f.write("\t\t//TODO\n");
-
-		f.write("\t\treturn changed;\n");
-		f.write("\t}\n");
-
-
-		f.write("} // class %s_subscriber\n\n", prefix.c_str());
-	}
-
-	void csharpPub_generateDictionaryPublisher(CsharpWritter f, MessageParameter& member)
-	{
-		assert(member.type.kind == MessageParameterType::KIND::DICTIONARY);
-
-		string prefix = getCSharpPrefixByType(member.type);
-		string type = getCSharpInterfaceType(member.type);
-
-		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
-		string value = getCSharpElementInterfaceType(member.type.dictionaryValueKind, member.name);
-
-		f.write("public class %s_publisher\n", prefix.c_str());
-		f.write("{\n");
-
-		f.write("\tpublic static void compose(IPublishableComposer composer, %s t)\n", type.c_str());
-		f.write("\t{\n");
-
-		f.write("\t\t//TODO\n");
-
-		f.write("\t}\n");
-
-
-		f.write("} // class %s_publisher\n\n", prefix.c_str());
-	}
-
 }
 
 void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& member)
@@ -1590,7 +1449,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			const char* elem_type_name = getCSharpPrimitiveType(member.type.vectorElemKind);
 			f.write("\tpublic IList<%s> %s\n", elem_type_name, member.name.c_str());
 			f.write("\t{\n");
-			f.write("\t\tget { return new SubscriberVectorWrapper<%s>(this._data.%s); }\n", elem_type_name, member.name.c_str());
+			f.write("\t\tget { return new ReadOnlyCollection<%s>(this._data.%s); }\n", elem_type_name, member.name.c_str());
 			f.write("\t\tset { throw new InvalidOperationException(); }\n");
 			f.write("\t}\n");
 			break;
@@ -1615,7 +1474,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t}\n");
 			f.write("\tpublic IList<I%s> %s\n", elem_type_name, member.name.c_str());
 			f.write("\t{\n");
-			f.write("\t\tget { return new SubscriberVectorWrapper<I%s>(lazy_%s_handlers()); }\n", elem_type_name, member.name.c_str());
+			f.write("\t\tget { return new ReadOnlyCollection<I%s>(lazy_%s_handlers()); }\n", elem_type_name, member.name.c_str());
 			f.write("\t\tset { throw new InvalidOperationException(); }\n");
 			f.write("\t}\n");
 			break;
@@ -1639,7 +1498,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 		{
 			f.write("\tpublic IDictionary<%s, %s> %s\n", key, value.c_str(), member.name.c_str());
 			f.write("\t{\n");
-			f.write("\t\tget { return new SubscriberDictionaryWrapper<%s, %s>(this._data.%s); }\n", key, value.c_str(), member.name.c_str());
+			f.write("\t\tget { return new ReadOnlyDictionary<%s, %s>(this._data.%s); }\n", key, value.c_str(), member.name.c_str());
 			f.write("\t\tset { throw new InvalidOperationException(); }\n");
 			f.write("\t}\n");
 			break;
@@ -1653,7 +1512,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t{ // mb: lazy because can't call virtual 'makeElementHandler' in ctor\n");
 			f.write("\t\tif (%s_handlers == null)\n", member.name.c_str());
 			f.write("\t\t{\n");
-			f.write("\t\t\t%s_handlers = new Dictionary<%s, %s>();\n", key, value.c_str(), elem_type_name);
+			f.write("\t\t\t%s_handlers = new Dictionary<%s, %s>();\n", member.name.c_str(), key, value.c_str());
 			f.write("\t\t\tforeach(KeyValuePair<%s, %s> each in this._data.%s)\n", key, value.c_str(), member.name.c_str());
 			f.write("\t\t\t{\n");
 			f.write("\t\t\t\t%s_subscriber handler = makeElementHandler_%s(each.Value);\n", elem_type_name, member.name.c_str(), member.name.c_str());
@@ -1664,7 +1523,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t}\n");
 			f.write("\tpublic IDictionary<%s, %s> %s\n", key, value.c_str(), member.name.c_str());
 			f.write("\t{\n");
-			f.write("\t\tget { return new SubscriberDictionaryWrapper<%s, %s>(lazy_%s_handlers()); }\n", key, value.c_str(), member.name.c_str());
+			f.write("\t\tget { return new ReadOnlyDictionary<%s, %s>(lazy_%s_handlers()); }\n", key, value.c_str(), member.name.c_str());
 			f.write("\t\tset { throw new InvalidOperationException(); }\n");
 			f.write("\t}\n");
 			break;
@@ -1772,13 +1631,13 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t\t\treturn new PublisherVectorWrapper<I%s>(t.%s, composer,\n", elem_type_name, member.name.c_str());
 			f.write("\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
 			f.write("\t\t\t\t(IPublishableComposer composer, I%s val) =>\n", elem_type_name);
-			f.write("\t\t\t\t{\n");
-			//f.write("\t\t\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
-			f.write("\t\t\t\t\t%s_publisher.compose(composer, \"value\", val, false);\n", elem_type_name);
+		/*	f.write("\t\t\t\t{\n");
+		*/	//f.write("\t\t\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
+			f.write("\t\t\t\t\t{ %s_publisher.compose(composer, \"value\", val, false); },\n", elem_type_name);
 			//f.write("\t\t\t\t\tcomposer.composePublishableStructEnd(false);\n");
-			f.write("\t\t\t\t},\n");
+			//f.write("\t\t\t\t},\n");
 			f.write("\t\t\t\t(I%s val, IPublishableComposer composer, UInt64[] addr) =>\n", elem_type_name);
-			f.write("\t\t\t\t{ return new %s_publisher(val, composer, addr); }\n", elem_type_name);
+			f.write("\t\t\t\t\t{ return new %s_publisher(val, composer, addr); }\n", elem_type_name);
 			f.write("\t\t\t);\n");
 			f.write("\t\t}\n");
 			f.write("\t\tset\n");
@@ -1861,11 +1720,24 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 
 			f.write("\t\tget\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\treturn new PublisherDictionaryWrapper<%s,%s>(t.%s, composer,\n", key, value, member.name.c_str());
+			f.write("\t\t\treturn new PublisherDictionaryWrapper<%s,I%s>(t.%s, composer,\n", key, value, member.name.c_str());
 			f.write("\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
 			f.write("\t\t\t\t(IPublishableComposer composer, %s k, bool s) => { composer.compose%s(\"key\", k, s); },\n", key, idlKey);
 			f.write("\t\t\t\t(IPublishableComposer composer, I%s v) => { %s_publisher.compose(composer, \"value\", v, false); },\n", value, value);
-			f.write("\t\t\t\t(%s v, IPublishableComposer composer, UInt64[] addr) => { return new %s_publisher(v, composer, addr); }\n", value, value);
+
+			if (member.type.dictionaryKeyKind == MessageParameterType::KIND::UINTEGER)
+			{
+				f.write("\t\t\t\t(%s k, I%s v, IPublishableComposer composer, UInt64[] addr) =>\n", key, value);
+				f.write("\t\t\t\t\t{ return new %s_publisher(v, composer, Publishable.makeAddress(addr, k)); }\n", value);
+			}
+			else if (member.type.dictionaryKeyKind == MessageParameterType::KIND::INTEGER)
+			{
+				f.write("\t\t\t\t(%s k, I%s v, IPublishableComposer composer, UInt64[] addr) =>\n", key, value);
+				f.write("\t\t\t\t\t{ return new %s_publisher(v, composer, Publishable.makeAddress(addr, ZigZag.encode(k))); }\n", value);
+			}
+			else
+				f.write("\t\t\t\t(%s k, I%s v, IPublishableComposer composer, UInt64[] addr) => { return new %s_readonly(v); }\n", key, value, value);
+
 			f.write("\t\t\t);\n");
 			f.write("\t\t}\n");
 
@@ -1876,7 +1748,7 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 
 			f.write("\t\t\tcomposer.composeDictionary(\"value\", value,\n");
 			f.write("\t\t\t\t(IPublishableComposer composer, %s k) => { composer.compose%s(null, k, false); },\n", key, idlKey);
-			f.write("\t\t\t\t(IPublishableComposer composer, %s v) => { %s_publisher.compose(composer, null, v, false); },\n", value, value);
+			f.write("\t\t\t\t(IPublishableComposer composer, I%s v) => { %s_publisher.compose(composer, null, v, false); },\n", value, value);
 			f.write("\t\t\t\tfalse);\n");
 
 			f.write("\t\t\tcomposer.composeAddressEnd();\n");
@@ -1991,38 +1863,6 @@ void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const cha
 
 	f.write("} // class %s_subscriber\n\n", type_name);
 
-
-	// this should be made only once for each type, and
-	// put at namespace scope
-	for (auto it = mem.begin(); it != mem.end(); ++it)
-	{
-		assert(*it != nullptr);
-
-		MessageParameter& member = **it;
-		if (member.type.kind == MessageParameterType::KIND::EXTENSION)
-			continue;
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			break;
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			break;
-		case MessageParameterType::KIND::VECTOR:
-			csharpPub_generateVectorSubscriber(f, member);
-			break;
-		case MessageParameterType::KIND::DICTIONARY:
-			csharpPub_generateDictionarySubscriber(f, member);
-			break;
-		default:
-			break;
-		}
-	}
-
-
 }
 
 void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char* type_name)
@@ -2089,37 +1929,6 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 
 
 	f.write("} // class %s_publisher\n\n", type_name);
-
-	// this should be made only once for each type, and
-	// put at namespace scope
-	for (auto it = mem.begin(); it != mem.end(); ++it)
-	{
-		assert(*it != nullptr);
-
-		MessageParameter& member = **it;
-		if (member.type.kind == MessageParameterType::KIND::EXTENSION)
-			continue;
-		switch (member.type.kind)
-		{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			break;
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			break;
-		case MessageParameterType::KIND::VECTOR:
-			csharpPub_generateVectorPublisher(f, member);
-			break;
-		case MessageParameterType::KIND::DICTIONARY:
-			csharpPub_generateDictionaryPublisher(f, member);
-			break;
-		default:
-			break;
-		}
-	}
-
 }
 
 void generateCsharpStructConcentrator(CsharpWritter f, CompositeType& s, const char* type_name)

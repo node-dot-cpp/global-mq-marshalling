@@ -828,4 +828,135 @@ void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* typ
 	f.write("} // class %s\n\n", type_name);
 }
 
+void generateCsharpReadOnlyMember(CsharpWritter f, MessageParameter& member)
+{
+	const char* name = member.name.c_str();
+
+	switch (member.type.kind)
+	{
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+	case MessageParameterType::KIND::CHARACTER_STRING:
+	{
+		const char* type = getCSharpPrimitiveType(member.type.kind);
+		f.write("\tpublic %s %s\n", type, name);
+		f.write("\t{\n");
+		f.write("\t\tget { return this._data.%s; }\n", name);
+		f.write("\t\tset { throw new InvalidOperationException(); }\n");
+		f.write("\t}\n");
+		break;
+	}
+	case MessageParameterType::KIND::STRUCT:
+	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	{
+		const char* type = member.type.name.c_str();
+		f.write("\tpublic I%s %s\n", type, name);
+		f.write("\t{\n");
+		f.write("\t\tget { return new %s_readonly(this._data.%s); }\n", type, name);
+		f.write("\t\tset { throw new InvalidOperationException(); }\n");
+		f.write("\t}\n");
+		break;
+	}
+	case MessageParameterType::KIND::VECTOR:
+	{
+		switch (member.type.vectorElemKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+		{
+			const char* elem = getCSharpPrimitiveType(member.type.vectorElemKind);
+			f.write("\tpublic IList<%s> %s\n", elem, name);
+			f.write("\t{\n");
+			f.write("\t\tget { return new VectorWrapper<%s>(this._data.%s, null); }\n", elem, name);
+			f.write("\t\tset { throw new InvalidOperationException(); }\n");
+			f.write("\t}\n");
+			break;
+		}
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		{
+			const char* elem = member.type.name.c_str();
+
+			f.write("\tpublic IList<I%s> %s\n", elem, name);
+			f.write("\t{\n");
+			f.write("\t\tget { return new VectorWrapper<I%s>(this._data.%s, (I%s t) => { return new %s_readonly(t); }); }\n", elem, name, elem, elem);
+			f.write("\t\tset { throw new InvalidOperationException(); }\n");
+			f.write("\t}\n");
+
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+		break;
+	}
+	case MessageParameterType::KIND::DICTIONARY:
+	{
+		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
+		string value = getCSharpElementInterfaceType(member.type.dictionaryValueKind, member.type.name);
+
+		switch (member.type.dictionaryValueKind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+		{
+			const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
+			f.write("\tpublic IDictionary<%s, %s> %s\n", key, value, name);
+			f.write("\t{\n");
+			f.write("\t\tget { return new DictionaryWrapper<%s, %s>(this._data.%s, null); }\n", key, value, name);
+			f.write("\t\tset { throw new InvalidOperationException(); }\n");
+			f.write("\t}\n");
+			break;
+		}
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		{
+			const char* value = member.type.name.c_str();
+			f.write("\tpublic IDictionary<%s, I%s> %s\n", key, value, name);
+			f.write("\t{\n");
+			f.write("\t\tget { return new DictionaryWrapper<%s, I%s>(this._data.%s, (I%s t) => { return new %s_readonly(t); }); }\n", key, value, name, value, value);
+			f.write("\t\tset { throw new InvalidOperationException(); }\n");
+			f.write("\t}\n");
+			break;
+		}
+		default:
+			assert(false); // not implemented (yet)
+		}
+		break;
+	}
+	default:
+		assert(false); // not implemented (yet)
+	}
+}
+
+
+void generateCsharpStructReadOnly(CsharpWritter f, CompositeType& s)
+{
+	assert(s.type == CompositeType::Type::structure);
+
+	const char* type_name = s.name.c_str();
+
+	f.write("public class %s_readonly : I%s\n", type_name, type_name);
+	f.write("{\n");
+
+	f.write("\tprotected I%s _data;\n", type_name);
+	f.write("\tpublic %s_readonly(I%s data) { this._data = data; }\n", type_name, type_name);
+
+	auto& mem = s.getMembers();
+	for (size_t i = 0; i < mem.size(); ++i)
+	{
+		auto& it = mem[i];
+		assert(it != nullptr);
+		generateCsharpReadOnlyMember(f, *it);
+	}
+
+	generateCsharpSimpleEquivalentMethod(f, type_name, "_data");
+
+	f.write("} // class %s_readonly\n\n", type_name);
+}
 

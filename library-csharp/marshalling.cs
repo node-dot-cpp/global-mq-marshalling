@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace globalmq.marshalling
 {
@@ -40,7 +41,18 @@ namespace globalmq.marshalling
 
     public class EquivalenceComparer
     {
-        public static bool areEquivalent<T, U>(IList<T> left, IList<U> right) where T : IEquivalenceComparable<T> where U : T
+        public static bool areEquivalent<T>(T left, T right) where T : IEquivalenceComparable<T>
+        {
+            if (left == null && right == null)
+                return true;
+            else if (left == null || right == null)
+                return false;
+            else if (ReferenceEquals(left, right))
+                return true;
+            else
+                return left.isEquivalent(right);
+        }
+        public static bool areEquivalent<T>(ICollection<T> left, ICollection<T> right) where T : IEquivalenceComparable<T>
         {
             if (left == null && right == null)
                 return true;
@@ -52,16 +64,66 @@ namespace globalmq.marshalling
             {
                 if (left.Count != right.Count)
                     return false;
-                for(int i = 0; i != left.Count; ++i)
+
+                IEnumerator<T> itl = left.GetEnumerator();
+                IEnumerator<T> itr = right.GetEnumerator();
+
+                while(itl.MoveNext())
                 {
-                    if (!left[i].isEquivalent(right[i]))
+                    if (!itr.MoveNext())
+                        return false;
+                    if (!areEquivalent(itl.Current, itr.Current))
                         return false;
                 }
 
+                // if right still has more elements
+                if (itr.MoveNext())
+                    return false;
 
                 return true;
             }
         }
+
+        public static bool areEquivalent<K, V>(IDictionary<K, V> left, IDictionary<K, V> right) where V : IEquivalenceComparable<V>
+        {
+            if (left == null && right == null)
+                return true;
+            else if (left == null || right == null)
+                return false;
+            else if (ReferenceEquals(left, right))
+                return true;
+            else
+            {
+                if (left.Count != right.Count)
+                    return false;
+                if(!Enumerable.SequenceEqual(left.Keys, right.Keys))
+                    return false;
+
+                return areEquivalent(left.Values, right.Values);
+            }
+        }
+        //public static bool areEquivalent<T, U>(IList<T> left, IList<U> right) where T : IEquivalenceComparable<T> where U : T
+        //{
+        //    if (left == null && right == null)
+        //        return true;
+        //    else if (left == null || right == null)
+        //        return false;
+        //    else if (ReferenceEquals(left, right))
+        //        return true;
+        //    else
+        //    {
+        //        if (left.Count != right.Count)
+        //            return false;
+        //        for(int i = 0; i != left.Count; ++i)
+        //        {
+        //            if (!left[i].isEquivalent(right[i]))
+        //                return false;
+        //        }
+
+
+        //        return true;
+        //    }
+        //}
     }
     public class MessageHandler
     {

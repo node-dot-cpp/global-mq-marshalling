@@ -33,6 +33,18 @@ using System.Text;
 namespace globalmq.marshalling
 {
 	enum Proto { GMQ, JSON };
+
+	public class ZigZag
+    {
+		public static UInt64 encode(Int64 i)
+		{
+			return ((UInt64)(i >> 63)) ^ ((UInt64)(i << 1));
+		}
+		public static Int64 decode(UInt64 i)
+		{
+			return ((Int64)(i >> 1)) ^ (-(Int64)(i & 1));
+		}
+	}
 	public class IntegralVlq
 	{
 		public static void writeVlqIntegral(BufferT buff, UInt64 val)
@@ -64,10 +76,6 @@ namespace globalmq.marshalling
 			buff.appendUint8(intTemp[0]);
 		}
 
-		public static UInt64 zigzagEncode(Int64 i)
-		{
-			return ((UInt64)(i >> 63)) ^ ((UInt64)(i << 1));
-		}
 
 		public static UInt64 readVlqIntegral(ReadIteratorT riter)
 		{
@@ -85,10 +93,6 @@ namespace globalmq.marshalling
 			return result;
 		}
 
-		public static Int64 zigzagDecode(UInt64 i)
-		{
-			return ((Int64)(i >> 1)) ^ (-(Int64)(i & 1));
-		}
 
 
 	}
@@ -199,7 +203,7 @@ namespace globalmq.marshalling
 
 		public void composeSignedInteger(Int64 num)
 		{
-			IntegralVlq.writeVlqIntegral(buff, IntegralVlq.zigzagEncode(num));
+			IntegralVlq.writeVlqIntegral(buff, ZigZag.encode(num));
 		}
 
 		public void composeUnsignedInteger(UInt64 num)
@@ -242,7 +246,7 @@ namespace globalmq.marshalling
 
 		public void parseSignedInteger(out Int64 num)
 		{
-			num = IntegralVlq.zigzagDecode(IntegralVlq.readVlqIntegral(riter));
+			num = ZigZag.decode(IntegralVlq.readVlqIntegral(riter));
 		}
 		public void parseUnsignedInteger(out UInt64 num)
 		{

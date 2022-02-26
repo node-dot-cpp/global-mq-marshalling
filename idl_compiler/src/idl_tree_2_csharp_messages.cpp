@@ -491,25 +491,20 @@ namespace {
 		assert(member.type.kind == MessageParameterType::KIND::DICTIONARY);
 
 		string prefix = getCSharpPrefixByType(member.type);
-		string type = getCSharpInterfaceType(member.type);
-
-		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
-		string value = getCSharpElementInterfaceType(member.type.dictionaryValueKind, member.name);
+		string iface = getCSharpInterfaceType(member.type);
 
 		f.write("public class %s_message\n", prefix.c_str());
 		f.write("{\n");
 
-		f.write("\tpublic static void compose(JsonComposer composer, %s val)\n", type.c_str());
+		f.write("\tpublic static void compose(JsonComposer composer, %s val)\n", iface.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tcomposer.append( \"{\\n  \");\n");
 		f.write("\t\tint i = 0;\n");
-		f.write("\t\tforeach(KeyValuePair<%s, %s> each in val)\n", key, value.c_str());
-		f.write("\t\t{\n");
-		f.write("\t\t\tcomposer.append('{');\n");
+
+		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
 		const char* idlKey = getIdlPrimitiveType2(member.type.dictionaryKeyKind);
-		f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
-		f.write("\t\t\tcomposer.append(',');\n");
+
 
 		int count = 0;
 		switch (member.type.dictionaryValueKind)
@@ -519,8 +514,19 @@ namespace {
 		case MessageParameterType::KIND::REAL:
 		case MessageParameterType::KIND::CHARACTER_STRING:
 		{
+			const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
 			const char* idlValue = getIdlPrimitiveType2(member.type.dictionaryValueKind);
+			f.write("\t\tforeach(KeyValuePair<%s, %s> each in val)\n", key, value);
+			f.write("\t\t{\n");
+			f.write("\t\t\tif (i != 0)\n");
+			f.write("\t\t\t\tcomposer.append(\", \\n  \");\n");
+			f.write("\t\t\tcomposer.append('{');\n");
+			f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
+			f.write("\t\t\tcomposer.append(',');\n");
 			f.write("\t\t\tcomposer.compose%s(each.Value);\n", idlValue);
+			f.write("\t\t\tcomposer.append('}');\n");
+			f.write("\t\t\t++i;\n");
+			f.write("\t\t}\n");
 			break;
 
 		}
@@ -528,31 +534,32 @@ namespace {
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 		{
 			const char* value = member.type.name.c_str();
+			f.write("\t\tforeach(KeyValuePair<%s, I%s> each in val)\n", key, value);
+			f.write("\t\t{\n");
+			f.write("\t\t\tif (i != 0)\n");
+			f.write("\t\t\t\tcomposer.append(\", \\n  \");\n");
+			f.write("\t\t\tcomposer.append('{');\n");
+			f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
+			f.write("\t\t\tcomposer.append(',');\n");
 			f.write("\t\t\t%s_message.compose(composer, each.Value);\n",  value);
+			f.write("\t\t\tcomposer.append('}');\n");
+			f.write("\t\t\t++i;\n");
+			f.write("\t\t}\n");
 			break;
 		}
 		default:
 			assert(false); // not implemented (yet)
 		}
 
-		f.write("\t\t\tcomposer.append('}');\n");
-		f.write("\t\t\tif (i != val.Count - 1)\n");
-		f.write("\t\t\t\tcomposer.append(\", \\n  \");\n");
-		f.write("\t\t\t++i;\n");
-		f.write("\t\t}\n");
 
 		f.write("\t\tcomposer.append(\"\\n}\");\n");
 
 		f.write("\t}\n");
 
 
-		f.write("\tpublic static void compose(GmqComposer composer, %s val)\n", type.c_str());
+		f.write("\tpublic static void compose(GmqComposer composer, %s val)\n", iface.c_str());
 		f.write("\t{\n");
 		f.write("\t\tcomposer.composeUnsignedInteger((UInt64)val.Count);\n");
-		f.write("\t\tforeach(KeyValuePair<%s, %s> each in val)\n", key, value.c_str());
-		f.write("\t\t{\n");
-
-		f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
 
 		switch (member.type.dictionaryValueKind)
 		{
@@ -561,8 +568,13 @@ namespace {
 		case MessageParameterType::KIND::REAL:
 		case MessageParameterType::KIND::CHARACTER_STRING:
 		{
+			const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
 			const char* idlValue = getIdlPrimitiveType2(member.type.dictionaryValueKind);
+			f.write("\t\tforeach(KeyValuePair<%s, %s> each in val)\n", key, value);
+			f.write("\t\t{\n");
+			f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
 			f.write("\t\t\tcomposer.compose%s(each.Value);\n", idlValue);
+			f.write("\t\t}\n");
 			break;
 
 		}
@@ -570,17 +582,21 @@ namespace {
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 		{
 			const char* value = member.type.name.c_str();
+			f.write("\t\tforeach(KeyValuePair<%s, I%s> each in val)\n", key, value);
+			f.write("\t\t{\n");
+			f.write("\t\t\tcomposer.compose%s(each.Key);\n", idlKey);
 			f.write("\t\t\t%s_message.compose(composer, each.Value);\n", value);
+			f.write("\t\t}\n");
 			break;
 		}
 		default:
 			assert(false); // not implemented (yet)
 		}
-		f.write("\t\t}\n");
+
 		f.write("\t}\n");
 
 
-		f.write("\tpublic static void parse(JsonParser parser, %s res)\n", type.c_str());
+		f.write("\tpublic static void parse(JsonParser parser, %s res)\n", iface.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tparser.skipDelimiter('{');\n");
@@ -647,7 +663,7 @@ namespace {
 		f.write("\t}\n");
 
 
-		f.write("\tpublic static void parse(GmqParser parser, %s res)\n", type.c_str());
+		f.write("\tpublic static void parse(GmqParser parser, %s res)\n", iface.c_str());
 		f.write("\t{\n");
 		f.write("\t\tint sz;\n");
 		f.write("\t\tparser.parseUnsignedInteger(out sz);\n");

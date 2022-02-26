@@ -93,6 +93,7 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 	f0.write("using globalmq.marshalling;\n");
 	f0.write("using System;\n");
 	f0.write("using System.Collections.Generic;\n");
+	f0.write("using System.Collections.ObjectModel;\n");
 	f0.write("using System.Diagnostics;\n");
 	f0.write("using System.Linq;\n");
 	f0.write("\n");
@@ -133,11 +134,13 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 
 				generateCsharpStructInterface(f, *it, type_name.c_str());
 				generateCsharpStructImpl(f, *it, type_name.c_str(), interface_name.c_str());
+				generateCsharpStructReadOnly(f, *it);
 			}
 			else if (it->type == CompositeType::Type::discriminated_union)
 			{
 				generateCsharpUnionInterface(f, *it);
 				generateCsharpUnionImpl(f, *it);
+				generateCsharpUnionReadOnly(f, *it);
 			}
 			else
 				assert(false);

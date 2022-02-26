@@ -727,19 +727,22 @@ public void composeStructBegin()
 
     }
 
-    public class SubscriberVectorWrapper<T> : IList<T>// where U : T
+    public class VectorWrapper<T> : IList<T>// where U : T
     {
         IList<T> t;
+        Func<T, T> elementWrapperDelegate;
 
-        public SubscriberVectorWrapper(IList<T> t)
+
+        public VectorWrapper(IList<T> t, Func<T, T> elementWrapperDelegate)
         {
             this.t = t;
+            this.elementWrapperDelegate = elementWrapperDelegate;
         }
-        //public SubscriberVectorWrapper()
-        //{
-        //    this.t = new List<T>();
-        //}
-        public T this[int index] { get => t[index]; set => throw new NotSupportedException(); }
+        public T this[int index]
+        {
+            get => elementWrapperDelegate != null ? elementWrapperDelegate(t[index]) : t[index];
+            set => throw new NotSupportedException();
+        }
 
         public int Count => t.Count;
 
@@ -850,12 +853,12 @@ public void composeStructBegin()
         UInt64[] address;
         Action<IPublishableComposer, K, bool> composeKeyDelegate;
         Action<IPublishableComposer, V> composeValueDelegate;
-        Func<V, IPublishableComposer, UInt64[], V> valueWrapperDelegate;
+        Func<K, V, IPublishableComposer, UInt64[], V> valueWrapperDelegate;
 
 
         public PublisherDictionaryWrapper(IDictionary<K, V> t, IPublishableComposer composer, UInt64[] address,
             Action<IPublishableComposer, K, bool> composeKeyDelegate, Action<IPublishableComposer, V> composeValueDelegate,
-            Func<V, IPublishableComposer, UInt64[], V> valueWrapperDelegate)
+            Func<K, V, IPublishableComposer, UInt64[], V> valueWrapperDelegate)
         {
             this.t = t;
             this.composer = composer;
@@ -963,18 +966,20 @@ public void composeStructBegin()
         }
     }
 
-    public class SubscriberDictionaryWrapper<K, V> : IDictionary<K, V>
+    public class DictionaryWrapper<K, V> : IDictionary<K, V>
     {
         IDictionary<K, V> t;
+        Func<V, V> valueWrapperDelegate;
 
-        public SubscriberDictionaryWrapper(IDictionary<K, V> t)
+        public DictionaryWrapper(IDictionary<K, V> t, Func<V, V> valueWrapperDelegate)
         {
             this.t = t;
+            this.valueWrapperDelegate = valueWrapperDelegate;
         }
         public V this[K key]
         {
-            get { return t[key]; }
-            set { throw new NotSupportedException(); }
+            get => valueWrapperDelegate != null ? valueWrapperDelegate(t[key]) : t[key];
+            set => throw new NotSupportedException();
         }
         public int Count => t.Count;
         public ICollection<K> Keys => t.Keys;

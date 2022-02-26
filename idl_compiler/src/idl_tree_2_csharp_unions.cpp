@@ -764,6 +764,42 @@ void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
 	f.write("} // class %s\n\n", s.name.c_str());
 }
 
+void generateCsharpUnionReadOnly(CsharpWritter f, CompositeType& s)
+{
+	assert(s.type == CompositeType::Type::discriminated_union);
+
+	const char* type_name = s.name.c_str();
+
+	f.write("public class %s_readonly : I%s\n", type_name, type_name);
+	f.write("{\n");
+
+	f.write("\tprotected I%s _data;\n", type_name);
+	f.write("\tpublic %s_readonly(I%s data) { this._data = data; }\n", type_name, type_name);
+
+	f.write("\tpublic I%s.Variants currentVariant() { return this._data.currentVariant(); }\n", type_name);
+	f.write("\tpublic void setCurrentVariant(I%s.Variants v) { throw new InvalidOperationException(); }\n", type_name);
+
+	for (auto& duit : s.getDiscriminatedUnionCases())
+	{
+		assert(duit != nullptr);
+		assert(duit->type == CompositeType::Type::discriminated_union_case);
+		f.write("\n");
+		f.write("\t// IDL CASE %s:\n", duit->name.c_str());
+
+		for (auto& it : duit->getMembers())
+		{
+			assert(it != nullptr);
+
+			generateCsharpReadOnlyMember(f, *it);
+		}
+	}
+
+	generateCsharpSimpleEquivalentMethod(f, type_name, "_data");
+
+	f.write("} // class %s_readonly\n\n", type_name);
+}
+
+
 void generateCsharpUnionMessage(CsharpWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);

@@ -68,7 +68,7 @@ STRUCT BasicTypes {
   CHARACTER-STRING aString;
 };
 
-STRUCT AggregateType{
+STRUCT AggregateType {
   CHARACTER-STRING name;
   STRUCT BasicTypes theAggregate;
   INTEGER lastValue;
@@ -101,15 +101,19 @@ PUBLISHABLE publishable_seven = 7 {
 
 
  STRUCT struct_nine {
-  DICTIONARY<UINTEGER, CHARACTER-STRING> dictioUintStr;
-  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictioStrStr;
+  STRUCT AggregateType dummyFixDependencyDetection;
+  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictio_one;
+  DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
+  DICTIONARY<INTEGER, STRUCT struct_du> dictio_three;
+  DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
 };
 
 
  MESSAGE test_gmq : message_nine_gmq = 9 = STRUCT struct_nine;
  MESSAGE test_json : message_nine_json = 9 = STRUCT struct_nine;
 
- //PUBLISHABLE publishable_nine = 9 {
-	// CHARACTER-STRING name;
-	// STRUCT struct_four data;
- //};
+PUBLISHABLE publishable_nine = 9 {
+  STRUCT struct_du dummyFixDependencyDetection;
+  CHARACTER-STRING name;
+  STRUCT struct_nine data;
+};
