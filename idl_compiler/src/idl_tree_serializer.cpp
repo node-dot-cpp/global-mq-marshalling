@@ -1154,7 +1154,6 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 //		if ( it->type == CompositeType::Type::structure && it->isStruct4Publishing )
 		{
-//fmt::print( "    ---->> calling impl_generatePublishableStructForwardDeclaration() for {}\n", it->name );
 			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
 			impl_GeneratePublishableStructWrapper4SetForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
@@ -1167,7 +1166,6 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( it != nullptr );
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-//fmt::print( "    ---->> calling impl_generatePublishableStructForwardDeclaration() for {}\n", it->name );
 		if ( it->type == CompositeType::Type::structure && it->isStruct4Publishing )
 		{
 			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
@@ -1186,7 +1184,6 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 //		if ( it->isStruct4Publishing )
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-//fmt::print( "    ---->> calling impl_generatePublishableStruct() for {}\n", it->name );
 	}
 
 	for ( auto& scope : s.scopes )

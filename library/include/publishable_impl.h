@@ -716,7 +716,7 @@ class DictionaryOfSimpleTypeRefWrapper
 	DictionaryT& b;
 public:
 	using key_type = typename DictionaryT::key_type;
-	using value_type = typename DictionaryT::value_type;
+	using value_type = typename DictionaryT::mapped_type;
 public:
 	DictionaryOfSimpleTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
 	size_t size() { return b.size(); }
@@ -738,7 +738,7 @@ class DictionaryOfCompositeTypeRefWrapper
 	DictionaryT& b;
 public:
 	using key_type = typename DictionaryT::key_type;
-	using value_type = typename DictionaryT::value_type;
+	using value_type = typename DictionaryT::mapped_type;
 public:
 	DictionaryOfCompositeTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
 	size_t size() { return b.size(); }
@@ -760,7 +760,7 @@ class DictionaryOfStructRefWrapper
 	DictionaryT& b;
 public:
 	using key_type = typename DictionaryT::key_type;
-	using value_type = typename DictionaryT::value_type;
+	using value_type = typename DictionaryT::mapped_type;
 public:
 	DictionaryOfStructRefWrapper( DictionaryT& actual ) : b( actual ) {}
 	size_t size() { return b.size(); }

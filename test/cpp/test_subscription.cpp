@@ -824,6 +824,7 @@ public:
 	void notifyUpdated_str() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_str(), new str = \"{}\"\n", str() ); }
 	void notifyUpdated_str(GMQ_COLL string oldStr) const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_str(), old str = \"{}\", new str = \"{}\"\n", oldStr, str() ); }
 	void notifyUpdated_tags() const { assert( getCurrentNode() != nullptr ); fmt::print( "HtmlTextOrTags::notifyUpdated_tags()\n" ); }
+	void notifyUpdated() { fmt::print( "HtmlTextOrTags::notifyUpdated()\n" ); }
 public:
 	enum Variants { text=21, taglists=22, unknown };
 private:
@@ -968,6 +969,7 @@ struct HtmlTag
 		else
 			fmt::print( "HtmlTag::notifyUpdated_tags(), {} tags in taglist\n", tags.tags().size() );
 	}
+	void notifyUpdated() { fmt::print( "HtmlTag::notifyUpdated()\n" ); }
 	// TODO: add other notifiers here, if necessary
 };
 static constexpr bool has_void_update_notifier_for_name = mtest::has_void_update_notifier_call_for_name<HtmlTag>;
@@ -979,6 +981,9 @@ struct HtmlTagSampleWithNotifiers
 
 	SampleNode& processingNode;
 	HtmlTagSampleWithNotifiers( SampleNode& node_ ) : processingNode( node_ ) {}
+	void notifyUpdated_tag() const { fmt::print( "HtmlTagSampleWithNotifiers::notifyUpdated_tag()\n" ); }
+	void notifyFullyUpdated() { fmt::print( "ROOT HAS BEEN UPDATED (as a result of state sync)!\n" ); }
+	void notifyUpdated() { fmt::print( "ROOT HAS BEEN UPDATED (as something inside is updated)!\n" ); }
 };
 
 void publishableTestTwo()
@@ -1018,11 +1023,13 @@ void publishableTestTwo()
 	pc.statePublisherOrConnectionType = mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSample, MetaPoolT>::stringTypeID;
 	GMQ_COLL string path = globalmq::marshalling::GmqPathHelper::compose( pc );
 
-	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave1( mp, node );
-	htmlTagWrapperSlave1.subscribe( path );
-
 	constexpr size_t maxMsg = 1000;
 	ThreadQueueItem<StatePublisherSubscriberPoolInfo::BufferT> messages[maxMsg];
+
+	fmt::print( "[1] ------------------------------------\n" );
+
+	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave1( mp, node );
+	htmlTagWrapperSlave1.subscribe( path );
 
 	mp.postAllUpdates();
 	size_t msgCnt = queue.pop_front( messages, maxMsg, 0 );
@@ -1031,6 +1038,8 @@ void publishableTestTwo()
 //		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
 		mp.onMessage( messages[i].msg );
 	}
+
+	fmt::print( "2] ------------------------------------\n" );
 
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave2( mp, node );
 	htmlTagWrapperSlave2.subscribe( path );
@@ -1042,6 +1051,8 @@ void publishableTestTwo()
 //		fmt::print( "msg = \"{}\"\n", messages[i].msg.begin() );
 		mp.onMessage( messages[i].msg );
 	}
+
+	fmt::print( "[3] ------------------------------------\n" );
 
 	mtest::publishable_html_tag_NodecppWrapperForSubscriber<HtmlTagSampleWithNotifiers, MetaPoolT> htmlTagWrapperSlave3( mp, node );
 	htmlTagWrapperSlave3.subscribe( path );
@@ -1057,6 +1068,8 @@ void publishableTestTwo()
 	// quick test for getting right after ctoring
 	auto& hn = htmlTagWrapper.get_tag();
 	assert( hn.tags.currentVariant() == mtest::structures::HtmlTextOrTags::Variants::unknown );
+
+	fmt::print( "[4] ------------------------------------\n" );
 
 	auto g4s_hn = htmlTagWrapper.get4set_tag();
 	auto g4s_hn_tags = g4s_hn.get4set_tags();
@@ -1074,6 +1087,8 @@ void publishableTestTwo()
 	assert( htmlTagWrapper.get_tag().tags.currentVariant() == htmlTagWrapperSlave1.get_tag().tags.currentVariant() );
 	assert( htmlTagWrapperSlave1.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
 	assert( htmlTagWrapperSlave3.get_tag().tags.currentVariant() == htmlTagWrapperSlave2.get_tag().tags.currentVariant() );
+
+	fmt::print( "[5] ------------------------------------\n" );
 
 	g4s_hn_tags.set_currentVariant( mtest::structures::HtmlTextOrTags::Variants::taglists );
 	mtest::structures::HtmlTag newTag;
@@ -1100,6 +1115,8 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_value" );
 
+	fmt::print( "[6] ------------------------------------\n" );
+
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().update_value( "some_key", "some_new_value" );
 	g4s_hn_tags.get4set_tags().get4set_at(0).set_name( "html" );
 
@@ -1115,6 +1132,8 @@ void publishableTestTwo()
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.size() == 1 );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.contains( "some_key" ) );
 	assert( htmlTagWrapperSlave3.get_tag().tags.tags()[0].properties.find( "some_key" )->second == "some_new_value" );
+
+	fmt::print( "[7] ------------------------------------\n" );
 
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().insert( "key_2", "value_2" );
 	g4s_hn_tags.get4set_tags().get4set_at(0).get4set_properties().update_value( "key_2", "value_2_2" );
