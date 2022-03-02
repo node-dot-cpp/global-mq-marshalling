@@ -362,6 +362,33 @@ bool impl_processCompositeTypeNamesInParams(Root& s, CompositeType& parent, Mess
 			}
 		}
 	}
+	else if (param.type.kind == MessageParameterType::KIND::DICTIONARY)
+	{
+		if (param.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || param.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION) // existance and extentability
+		{
+			param.type.structIdx = (size_t)(-1);
+			for (size_t i = 0; i < s.structs.size(); ++i)
+			{
+				if (param.type.name == s.structs[i]->name)
+				{
+					param.type.structIdx = i;
+					if (param.type.isNonExtendable && !s.structs[i]->isNonExtendable)
+					{
+						fprintf(stderr, "%s, line %d: %s \"%s\" is not declared as NONEXTENDABLE (see %s declaration at %s, line %d)\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString(param.type.kind), param.type.name.c_str(), parent.type2string(), s.messages[i]->location.fileName.c_str(), s.messages[i]->location.lineNumber);
+						ok = false;
+					}
+					impl_propagateParentPropsToStruct(parent, *(s.structs[i]));
+					//					impl_processCompositeTypeNamesInMessagesAndPublishables(s, *(s.structs[i]), stack, true );
+					break;
+				}
+			}
+			if (param.type.structIdx == (size_t)(-1))
+			{
+				fprintf(stderr, "%s, line %d: %s name \"%s\" not found\n", param.location.fileName.c_str(), param.location.lineNumber, impl_kindToString(MessageParameterType::KIND::STRUCT), param.type.name.c_str());
+				ok = false;
+			}
+		}
+	}
 	else if ( param.type.kind == MessageParameterType::KIND::STRUCT || param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // extentability only
 	{
 		param.type.structIdx = (size_t)(-1);
@@ -598,6 +625,16 @@ void orderStructsByDependency( std::vector<unique_ptr<CompositeType>> &structs, 
 							structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
 						}
 					}
+					else if (member->type.kind == MessageParameterType::KIND::DICTIONARY)
+					{
+						if (member->type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member->type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION)
+						{
+							assert(member->type.structIdx < structs.size());
+							collElementTypes.insert(member->type.structIdx);
+							structs[member->type.structIdx]->isStruct4Publishing = structs[member->type.structIdx]->isStruct4Publishing || s->isStruct4Publishing;
+							structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
+						}
+					}
 				}
 			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 )
 				for ( auto& cs : s->getDiscriminatedUnionCases() )
@@ -615,7 +652,17 @@ void orderStructsByDependency( std::vector<unique_ptr<CompositeType>> &structs, 
 								structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
 							}
 						}
-//						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+						else if (member->type.kind == MessageParameterType::KIND::DICTIONARY)
+						{
+							if (member->type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member->type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION)
+							{
+								assert(member->type.structIdx < structs.size());
+								collElementTypes.insert(member->type.structIdx);
+								structs[member->type.structIdx]->isStruct4Publishing = structs[member->type.structIdx]->isStruct4Publishing || s->isStruct4Publishing;
+								structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
+							}
+						}
+						//						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
 //							structs[member->type.structIdx]->dependsOnCnt = 1;
 					}
 		for ( auto& s : structs )

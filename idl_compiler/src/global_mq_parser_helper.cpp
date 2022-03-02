@@ -1049,7 +1049,7 @@ YYSTYPE createDictionaryWithCharStringValue(YYSTYPE token) { return createDictio
 YYSTYPE createDictionaryWithBLOBValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::BLOB ); }
 YYSTYPE createDictionaryWithByteArrayValue(YYSTYPE token) { return createDictionaryWithSimpleValueBase( token, MessageParameterType::BYTE_ARRAY ); }
 
-YYSTYPE createDictionaryWithCompositeValueType(YYSTYPE token, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
+YYSTYPE createDictionaryWithCompositeValueType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
 {
 	unique_ptr<YyBase> d1(compositeTypeName);
 
@@ -1059,14 +1059,15 @@ YYSTYPE createDictionaryWithCompositeValueType(YYSTYPE token, YYSTYPE compositeT
 	assert( yy->dataType->dictionaryKeyKind != MessageParameterType::UNDEFINED );
 	assert( yy->dataType->isNonExtendable );
 	yy->dataType->dictionaryValueKind = kind;
+	yy->dataType->isNonExtendable = isNonExtendable;
 
 	yy->dataType->name = nameFromYyIdentifier(compositeTypeName);
 
 	return yy;
 }
 
-YYSTYPE createDictionaryWithStructValue(YYSTYPE token, YYSTYPE structName) { return createDictionaryWithCompositeValueType( token, structName, MessageParameterType::STRUCT ); }
-YYSTYPE createDictionaryWithDiscriminatedUnionValue(YYSTYPE token, YYSTYPE structName) { return createDictionaryWithCompositeValueType( token, structName, MessageParameterType::DISCRIMINATED_UNION ); }
+YYSTYPE createDictionaryWithStructValue(YYSTYPE token, bool isNonExtendable, YYSTYPE structName) { return createDictionaryWithCompositeValueType( token, isNonExtendable, structName, MessageParameterType::STRUCT ); }
+YYSTYPE createDictionaryWithDiscriminatedUnionValue(YYSTYPE token, bool isNonExtendable, YYSTYPE structName) { return createDictionaryWithCompositeValueType( token, isNonExtendable, structName, MessageParameterType::DISCRIMINATED_UNION ); }
 
 YYSTYPE createCompositeType(YYSTYPE token, bool isNonExtendable, YYSTYPE compositeTypeName, MessageParameterType::KIND kind)
 {

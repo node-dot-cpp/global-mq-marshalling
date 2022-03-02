@@ -137,8 +137,8 @@ YYSTYPE createDictionaryWithRealValue(YYSTYPE token);
 YYSTYPE createDictionaryWithCharStringValue(YYSTYPE token);
 YYSTYPE createDictionaryWithBLOBValue(YYSTYPE token);
 YYSTYPE createDictionaryWithByteArrayValue(YYSTYPE token);
-YYSTYPE createDictionaryWithStructValue(YYSTYPE token, YYSTYPE structName);
-YYSTYPE createDictionaryWithDiscriminatedUnionValue(YYSTYPE token, YYSTYPE structName);
+YYSTYPE createDictionaryWithStructValue(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
+YYSTYPE createDictionaryWithDiscriminatedUnionValue(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 
 YYSTYPE createStructType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);
 YYSTYPE createDiscriminatedUnionType(YYSTYPE token, bool isNonExtendable, YYSTYPE structName);

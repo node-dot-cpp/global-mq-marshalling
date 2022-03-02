@@ -80,7 +80,7 @@ public:
 	uint32_t arrayFixedaxSize = 0; // BYTE_ARRAY
 
 	KIND vectorElemKind = UNDEFINED; // VECTOR
-	bool isNonExtendable = false; // VECTOR
+	bool isNonExtendable = false; // VECTOR or DICTIONARY
 
 	KIND dictionaryKeyKind = UNDEFINED; // DICTIONARY
 	KIND dictionaryValueKind = UNDEFINED; // DICTIONARY

@@ -301,8 +301,12 @@ dictionary_type
 	| dictionary_type_begin ',' KW_REAL '>' { $$ = createDictionaryWithRealValue($1); releaseYys3($2, $3, $4); }
 	| dictionary_type_begin ',' KW_BLOB '>' { $$ = createDictionaryWithBLOBValue($1); releaseYys3($2, $3, $4); }
 	| dictionary_type_begin ',' KW_BYTE_ARRAY '>' { $$ = createDictionaryWithByteArrayValue($1); releaseYys3($2, $3, $4); }
-	| dictionary_type_begin ',' KW_STRUCT IDENTIFIER '>' { $$ = createDictionaryWithStructValue($1,$4); releaseYys3($2, $3, $5); }
-	| dictionary_type_begin ',' KW_DISCRIMINATED_UNION IDENTIFIER '>' { $$ = createDictionaryWithDiscriminatedUnionValue($1,$4); releaseYys3($2, $3, $5); }
+	| dictionary_type_begin ',' KW_STRUCT IDENTIFIER '>' { $$ = createDictionaryWithStructValue($1, false, $4); releaseYys3($2, $3, $5); }
+	| dictionary_type_begin ',' KW_STRUCT KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createDictionaryWithStructValue($1, true, $5); releaseYys4($2, $3, $4, $6); }
+	| dictionary_type_begin ',' KW_NONEXTENDABLE KW_STRUCT IDENTIFIER '>' { $$ = createDictionaryWithStructValue($1, true, $5); releaseYys4($2, $3, $4, $6); }
+	| dictionary_type_begin ',' KW_DISCRIMINATED_UNION IDENTIFIER '>' { $$ = createDictionaryWithDiscriminatedUnionValue($1, false, $4); releaseYys3($2, $3, $5); }
+	| dictionary_type_begin ',' KW_DISCRIMINATED_UNION KW_NONEXTENDABLE IDENTIFIER '>' { $$ = createDictionaryWithDiscriminatedUnionValue($1, true, $5); releaseYys4($2, $3, $4, $6); }
+	| dictionary_type_begin ',' KW_NONEXTENDABLE KW_DISCRIMINATED_UNION IDENTIFIER '>' { $$ = createDictionaryWithDiscriminatedUnionValue($1, true, $5); releaseYys4($2, $3, $4, $6); }
 
 struct_type
 	: KW_STRUCT IDENTIFIER { $$ = createStructType($1, false, $2); }
