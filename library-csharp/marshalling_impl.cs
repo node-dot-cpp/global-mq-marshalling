@@ -45,6 +45,36 @@ namespace globalmq.marshalling
 			return ((Int64)(i >> 1)) ^ (-(Int64)(i & 1));
 		}
 	}
+	public class AsciiAddress
+	{
+		public static UInt64[] encode(UInt64[] baseAddr, String str)
+		{
+			byte[] ascii = Encoding.ASCII.GetBytes(str);
+
+			UInt64[] res = new UInt64[baseAddr.Length + ascii.Length];
+			baseAddr.CopyTo(res, 0);
+			
+			for(int i = 0; i != ascii.Length; ++i)
+            {
+				res[baseAddr.Length + i] = ascii[i];
+            }
+
+			return res;
+		}
+		public static String decode(UInt64[] addr, ref int index)
+		{
+			StringBuilder sb = new StringBuilder();
+			while(addr[index] != 0)
+            {
+				sb.Append((Char)addr[index]);
+				index++;
+            }
+
+			// skip nul char
+			++index;
+			return sb.ToString();
+		}
+	}
 	public class IntegralVlq
 	{
 		public static void writeVlqIntegral(BufferT buff, UInt64 val)

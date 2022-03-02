@@ -476,7 +476,14 @@ namespace {
 		f.write("\t\tparseForStateSync(parser, data);\n");
 		f.write("\t}\n");
 
-		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, I%s data)\n", type_name);
+		f.write("\tpublic static %s parseForStateSync(IPublishableParser parser)\n", type_name);
+		f.write("\t{\n");
+		f.write("\t\t%s data = new %s();\n", type_name, type_name);
+		f.write("\t\tparseForStateSync(parser, data);\n");
+		f.write("\t\treturn data;\n");
+		f.write("\t}\n");
+
+		f.write("\tstatic void parseForStateSync(IPublishableParser parser, I%s data)\n", type_name);
 		f.write("\t{\n");
 
 		f.write("\t\tparser.parseStructBegin();\n");

@@ -78,7 +78,7 @@ namespace {
 		f.write("\t\treturn data;\n");
 		f.write("\t}\n");
 
-		f.write("\tpublic static void parseForStateSync(IPublishableParser parser, I%s data)\n", type_name.c_str());
+		f.write("\tstatic void parseForStateSync(IPublishableParser parser, I%s data)\n", type_name.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tparser.parseStructBegin();\n");
@@ -715,8 +715,6 @@ namespace {
 					f.write("\t\t\t\t\t\t(IPublishableParser p) => { return p.parse%s(null); }\n", idlValue);
 					f.write("\t\t\t\t\t);\n");
 
-
-
 					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber._data.%s))\n", member.name.c_str());
 					f.write("\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
@@ -726,15 +724,47 @@ namespace {
 					f.write("\t\t\t\t}\n");
 					f.write("\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
 					f.write("\t\t\t\t{\n");
-					f.write("\t\t\t\t\t//TODO\n");
-					//f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-					//f.write("\t\t\t\t\tcurrentChanged = SubscriberVectorHelper.parseVectorPrimitive<%s>(\n", elem_type_name);
-					//f.write("\t\t\t\t\t\tparser, subscriber._data.%s, index,\n", member.name.c_str());
-					//f.write("\t\t\t\t\t\t(IPublishableParser parser) => { return parser.parse%s(\"value\"); },\n", idl);
-					//f.write("\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s,\n", member.name.c_str());
-					//f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s,\n", member.name.c_str());
-					//f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s\n", member.name.c_str());
-					//f.write("\t\t\t\t\t);\n");
+					f.write("\t\t\t\t\tPublishable.ActionOnDictionary action = (Publishable.ActionOnDictionary)addr[offset + 1];\n");
+					f.write("\t\t\t\t\tswitch (action)\n");
+					f.write("\t\t\t\t\t{\n");
+
+					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.update_value:\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
+					f.write("\t\t\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", value, idlValue);
+					f.write("\t\t\t\t\t\t%s oldVal = subscriber._data.%s[key];\n", value, member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber._data.%s[key] = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tif (newVal != oldVal)\n");
+					f.write("\t\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t\t\tsubscriber.notifyValueUpdated_%s(key, oldVal);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\t}\n");
+					f.write("\t\t\t\t\t\tbreak;\n");
+					f.write("\t\t\t\t\t}\n");
+
+					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.insert:\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
+					f.write("\t\t\t\t\t\t%s newVal = parser.parse%s(\"value\");\n", value, idlValue);
+					f.write("\t\t\t\t\t\tsubscriber._data.%s.Add(key, newVal);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(key, newVal);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tbreak;\n");
+					f.write("\t\t\t\t\t}\n");
+
+					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.remove:\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
+					f.write("\t\t\t\t\t\t%s oldVal = subscriber._data.%s[key];\n", value, member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber._data.%s.Remove(key);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
+					f.write("\t\t\t\t\t\tsubscriber.notifyRemoved_%s(key, oldVal);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tbreak;\n");
+					f.write("\t\t\t\t\t}\n");
+					f.write("\t\t\t\t\tdefault:\n");
+					f.write("\t\t\t\t\t\tthrow new Exception();\n");
+					f.write("\t\t\t\t\t}\n");
+
 					f.write("\t\t\t\t}\n");
 					f.write("\t\t\t\telse // simple type can't handle deeper address\n");
 					f.write("\t\t\t\t\tthrow new Exception();\n\n");
@@ -755,41 +785,11 @@ namespace {
 					f.write("\t\t\t\tbool currentChanged = false;\n");
 					f.write("\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
 					f.write("\t\t\t\t{\n");
-					//f.write("\t\t\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
-					//f.write("\t\t\t\t\tList<I%s> newHandlers = new List<I%s>();\n", elem_type_name, elem_type_name);
-
-					//f.write("\t\t\t\t\tparser.parseVector2(\"value\", newVal, %s_subscriber.parseForStateSync);\n", member.name.c_str(), elem_type_name);
 					f.write("\t\t\t\t\tDictionary<%s, I%s> newVal = new Dictionary<%s, I%s>();\n", key, value, key, value);
-					//f.write("\t\t\t\t\tparser.parseSimpleVector(\"value\", newVal);\n");
-					//f.write("\t\tparser.parseSimpleVector(\"%s\", data.%s);\n", member.name.c_str(), member.name.c_str());
 					f.write("\t\t\t\t\tparser.parseDictionary(\"value\", newVal,\n");
 					f.write("\t\t\t\t\t\t(IPublishableParser p) => { return p.parse%s(null); },\n", idlKey);
 					f.write("\t\t\t\t\t\t%s_subscriber.parseForStateSync\n", value);
 					f.write("\t\t\t\t\t);\n");
-
-					//f.write("\t\t\t{\n");
-					////f.write("\t\t\t\tparser.parseStructBegin();\n");
-					//f.write("\t\t\t\t%s val = new %s();\n", elem_type_name, elem_type_name);
-					//f.write("\t\t\t\t%s_subscriber.parseForStateSync(p, val);\n", elem_type_name);
-					//f.write("\t\t\t\treturn val;\n", member.name.c_str());
-					////f.write("\t\t\t\tparser.parseStructEnd();\n");
-					//f.write("\t\t\t}\n");
-					//f.write("\t\t);\n");
-
-
-					//f.write("\t\t\t\t\tparser.parseVector(\"value\",\n");
-					//f.write("\t\t\t\t\t\t(IPublishableParser parser, int index) =>\n");
-					//f.write("\t\t\t\t\t\t{\n");
-					////f.write("\t\t\t\t\t\t\tparser.parseStructBegin();\n");
-					//f.write("\t\t\t\t\t\t\t%s val = new %s();\n", elem_type_name, elem_type_name);
-					////f.write("\t\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(val);\n", elem_type_name, member.name.c_str());
-					//f.write("\t\t\t\t\t\t\t%s_subscriber.parseForStateSync(parser, val);\n", elem_type_name);
-					//f.write("\t\t\t\t\t\t\tnewVal.Add(val);\n");
-					////f.write("\t\t\t\t\t\t\tnewHandlers.Add(handler);\n");
-					////f.write("\t\t\t\t\t\t\tparser.parseStructEnd();\n");
-					//f.write("\t\t\t\t\t\t}\n");
-					//f.write("\t\t\t\t\t);\n");
-
 					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber._data.%s))\n", member.name.c_str());
 					f.write("\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
@@ -800,20 +800,22 @@ namespace {
 					f.write("\t\t\t\t}\n");
 					f.write("\t\t\t\telse if(addr.Length == offset + 2) // action over one of the elements\n");
 					f.write("\t\t\t\t{\n");
-					f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
-					f.write("\t\t\t\t\tPublishable.ActionOnDictionary action = (Publishable.ActionOnDictionary)parser.parseActionInPublishable();\n");
-
+					f.write("\t\t\t\t\tPublishable.ActionOnDictionary action = (Publishable.ActionOnDictionary)addr[offset + 1];\n");
 					f.write("\t\t\t\t\tswitch (action)\n");
 					f.write("\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.update_value:\n");
 					f.write("\t\t\t\t\t{\n");
-					//f.write("\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-					f.write("\t\t\t\t\t\tbool elemChanged = %s_subscriber.parse(parser, \"value\", (%s_subscriber)(subscriber.lazy_%s_handlers()[index]));\n", value, value, member.name.c_str());
-					//f.write("\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
-					f.write("\t\t\t\t\t\tif (elemChanged)\n");
+					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
+					f.write("\t\t\t\t\t\tI%s v = new %s();\n", value, value);
+					f.write("\t\t\t\t\t\t%s_subscriber newVal = subscriber.makeValueHandler_%s(v);\n", value, member.name.c_str());
+					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, \"value\", newVal);\n", value);
+					f.write("\t\t\t\t\t\tI%s oldValue = subscriber.lazy_%s_handlers()[key];\n", value, member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers()[key] = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber._data.%s[key] = v;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tif (!newVal.isEquivalent(oldValue))\n");
 					f.write("\t\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\t\t\tcurrentChanged = true;\n");
-					f.write("\t\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\t\tsubscriber.notifyValueUpdated_%s(key, oldValue);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\t}\n");
 					f.write("\t\t\t\t\t\tbreak;\n");
 					f.write("\t\t\t\t\t}\n");
@@ -821,16 +823,14 @@ namespace {
 
 					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.insert:\n");
 					f.write("\t\t\t\t\t{\n");
-					//f.write("\t\t\t\t\t\tparser.parsePublishableStructBegin(\"value\");\n");
-					f.write("\t\t\t\t\t\t%s newVal = new %s();\n", value, value);
-					f.write("\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", value, member.name.c_str());
-					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, \"value\", handler);\n", value);
-					f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
-					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s.Insert(index, newVal);\n", member.name.c_str());
-					//f.write("\t\t\t\t\t\tparser.parsePublishableStructEnd();\n");
+					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
+					f.write("\t\t\t\t\t\tI%s v = new %s();\n", value, value);
+					f.write("\t\t\t\t\t\t%s_subscriber newVal = subscriber.makeValueHandler_%s(v);\n", value, member.name.c_str());
+					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, \"value\", newVal);\n", value);
+					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Add(key, newVal);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber._data.%s.Add(key, v);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
-					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(key);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tbreak;\n");
 					f.write("\t\t\t\t\t}\n");
 
@@ -838,11 +838,12 @@ namespace {
 
 					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.remove:\n");
 					f.write("\t\t\t\t\t{\n");
-					f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
-					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().RemoveAt(index);\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s.RemoveAt(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
+					f.write("\t\t\t\t\t\tI%s oldVal = subscriber.lazy_%s_handlers()[key];\n", value, member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Remove(key);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber._data.%s.Remove(key);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
-					f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.notifyRemoved_%s(key, oldVal);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tbreak;\n");
 					f.write("\t\t\t\t\t}\n");
 					f.write("\t\t\t\t\tdefault:\n");
@@ -857,12 +858,18 @@ namespace {
 					if (member.type.dictionaryKeyKind == MessageParameterType::KIND::UINTEGER)
 					{
 						f.write("\t\t\t\t\t%s key = addr[offset + 1];\n", key);
-						f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[index]), addr, offset + 2);\n", value, value, member.name.c_str());
+						f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[key]), addr, offset + 2);\n", value, value, member.name.c_str());
 					}
 					else if (member.type.dictionaryKeyKind == MessageParameterType::KIND::INTEGER)
 					{
 						f.write("\t\t\t\t\t%s key = ZigZag.decode(addr[offset + 1]);\n", key, key);
-						f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[index]), addr, offset + 2);\n", value, value, member.name.c_str());
+						f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[key]), addr, offset + 2);\n", value, value, member.name.c_str());
+					}
+					else if (member.type.dictionaryKeyKind == MessageParameterType::KIND::CHARACTER_STRING)
+					{
+						f.write("\t\t\t\t\tint newOffset = offset + 1;\n", key, key);
+						f.write("\t\t\t\t\t%s key = AsciiAddress.decode(addr, ref newOffset);\n", key, key);
+						f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[key]), addr, newOffset);\n", value, value, member.name.c_str());
 					}
 					else
 					{
@@ -1289,7 +1296,7 @@ void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& me
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 		{
 			const char* elem_type_name = member.type.name.c_str();
-			f.write("\tpublic virtual %s_subscriber makeElementHandler_%s(I%s data) { return new %s_subscriber(data); }\n", elem_type_name, member.name.c_str(), elem_type_name, elem_type_name);
+			f.write("\tpublic virtual %s_subscriber makeValueHandler_%s(I%s data) { return new %s_subscriber(data); }\n", elem_type_name, member.name.c_str(), elem_type_name, elem_type_name);
 			break;
 		}
 		default:
@@ -1371,10 +1378,11 @@ void generateCsharpSubscriberEventHandler(CsharpWritter f, MessageParameter& mem
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 		{
+			const char* value = member.type.name.c_str();
 			f.write("\tpublic virtual void notifyUpdated_%s() { }\n", member.name.c_str());
-			f.write("\tpublic virtual void notifyValueUpdated_%s(%s key) { }\n", member.name.c_str(), key);
+			f.write("\tpublic virtual void notifyValueUpdated_%s(%s key, I%s oldValue) { }\n", member.name.c_str(), key, value);
 			f.write("\tpublic virtual void notifyInserted_%s(%s key) { }\n", member.name.c_str(), key);
-			f.write("\tpublic virtual void notifyRemoved_%s(%s key) { }\n", member.name.c_str(), key);
+			f.write("\tpublic virtual void notifyRemoved_%s(%s key, I%s oldValue) { }\n", member.name.c_str(), key, value);
 			break;
 		}
 		default:
@@ -1509,13 +1517,13 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			const char* elem_type_name = member.type.name.c_str();
 			f.write("\tDictionary<%s, %s> %s_handlers;\n", key, value.c_str(), member.name.c_str());
 			f.write("\tDictionary<%s, %s> lazy_%s_handlers()\n", key, value.c_str(), member.name.c_str());
-			f.write("\t{ // mb: lazy because can't call virtual 'makeElementHandler' in ctor\n");
+			f.write("\t{ // mb: lazy because can't call virtual 'makeValueHandler' in ctor\n");
 			f.write("\t\tif (%s_handlers == null)\n", member.name.c_str());
 			f.write("\t\t{\n");
 			f.write("\t\t\t%s_handlers = new Dictionary<%s, %s>();\n", member.name.c_str(), key, value.c_str());
 			f.write("\t\t\tforeach(KeyValuePair<%s, %s> each in this._data.%s)\n", key, value.c_str(), member.name.c_str());
 			f.write("\t\t\t{\n");
-			f.write("\t\t\t\t%s_subscriber handler = makeElementHandler_%s(each.Value);\n", elem_type_name, member.name.c_str(), member.name.c_str());
+			f.write("\t\t\t\t%s_subscriber handler = makeValueHandler_%s(each.Value);\n", elem_type_name, member.name.c_str(), member.name.c_str());
 			f.write("\t\t\t\t%s_handlers.Add(each.Key, handler);\n", member.name.c_str());
 			f.write("\t\t\t}\n");
 			f.write("\t\t}\n");
@@ -1734,6 +1742,11 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			{
 				f.write("\t\t\t\t(%s k, I%s v, IPublishableComposer composer, UInt64[] addr) =>\n", key, value);
 				f.write("\t\t\t\t\t{ return new %s_publisher(v, composer, Publishable.makeAddress(addr, ZigZag.encode(k))); }\n", value);
+			}
+			else if (member.type.dictionaryKeyKind == MessageParameterType::KIND::CHARACTER_STRING)
+			{
+				f.write("\t\t\t\t(%s k, I%s v, IPublishableComposer composer, UInt64[] addr) =>\n", key, value);
+				f.write("\t\t\t\t\t{ return new %s_publisher(v, composer, AsciiAddress.encode(addr, k)); }\n", value);
 			}
 			else
 				f.write("\t\t\t\t(%s k, I%s v, IPublishableComposer composer, UInt64[] addr) => { return new %s_readonly(v); }\n", key, value, value);
