@@ -3,8 +3,8 @@
 SCOPE test_gmq PROTO = GMQ;
 SCOPE test_json PROTO = JSON;
 
-MESSAGE test_gmq : message_two = 2 = STRUCT struct_one;
-MESSAGE test_json : message_three = 3 = STRUCT struct_one;
+MESSAGE NONEXTENDABLE test_gmq : message_two = 2 = STRUCT struct_one;
+MESSAGE NONEXTENDABLE test_json : message_three = 3 = STRUCT struct_one;
 
 MESSAGE NONEXTENDABLE test_gmq : message_four = 4 {
 	STRUCT point pt;
@@ -21,72 +21,72 @@ STRUCT NONEXTENDABLE point {
   INTEGER y;
 };
 
-STRUCT point3D {
+STRUCT NONEXTENDABLE point3D {
   INTEGER x;
   INTEGER y;
   INTEGER z;
 };
 
-STRUCT struct_one {
+STRUCT NONEXTENDABLE struct_one {
   INTEGER firstParam;
   VECTOR<INTEGER> secondParam;
   VECTOR<STRUCT point3D> thirdParam;
   UINTEGER forthParam;
   CHARACTER-STRING fifthParam;
-  VECTOR<STRUCT NONEXTENDABLE point> sixthParam;
+  VECTOR<STRUCT point> sixthParam;
   REAL seventhParam;
-  STRUCT NONEXTENDABLE point eighthParam;
+  STRUCT point eighthParam;
   STRUCT point3D ninethParam;
   VECTOR<REAL> tenthParam;
 };
 
 
 
-DISCRIMINATED_UNION du_one{
-	CASE one=1: { 
-		REAL D1;
-		REAL D2;
-		REAL D3;
-	}
-	CASE two=2: { 
-		VECTOR<REAL> Data;
-	}
-};
+//DISCRIMINATED_UNION du_one{
+//	CASE one=1: { 
+//		REAL D1;
+//		REAL D2;
+//		REAL D3;
+//	}
+//	CASE two=2: { 
+//		VECTOR<REAL> Data;
+//	}
+//};
+//
+//STRUCT struct_du {
+//	STRUCT point3D pt;
+//	DISCRIMINATED_UNION du_one disc_union;
+//};
 
-STRUCT struct_du {
-	STRUCT point3D pt;
-	DISCRIMINATED_UNION du_one disc_union;
-};
-
-MESSAGE test_gmq : message_du = 5 = STRUCT struct_du;
+//MESSAGE test_gmq : message_du = 5 = STRUCT struct_du;
 
 
-STRUCT BasicTypes {
+STRUCT NONEXTENDABLE BasicTypes {
   INTEGER anInt;
   UINTEGER anUInt;
   REAL aReal;
   CHARACTER-STRING aString;
 };
 
-STRUCT AggregateType {
+STRUCT NONEXTENDABLE AggregateType {
   CHARACTER-STRING name;
   STRUCT BasicTypes theAggregate;
   INTEGER lastValue;
 };
 
-PUBLISHABLE Mock = 5 {
+PUBLISHABLE NONEXTENDABLE Mock = 5 {
 	CHARACTER-STRING name;
 	INTEGER id;
 };
 
-PUBLISHABLE StructSix = 6 {
+PUBLISHABLE NONEXTENDABLE StructSix = 6 {
 	CHARACTER-STRING name;
 	STRUCT BasicTypes basic;
 	STRUCT AggregateType aggregate;
 };
 
 
-PUBLISHABLE publishable_seven = 7 {
+PUBLISHABLE NONEXTENDABLE publishable_seven = 7 {
 	VECTOR<INTEGER> intVec;
 	VECTOR<UINTEGER> uintVec;
 	VECTOR<REAL> realVec;
@@ -94,26 +94,24 @@ PUBLISHABLE publishable_seven = 7 {
 	VECTOR<STRUCT point3D> structVec;
 };
 
- PUBLISHABLE publishable_eight = 8 {
- 	CHARACTER-STRING name;
- 	DISCRIMINATED_UNION du_one disc_union;
- };
+ //PUBLISHABLE publishable_eight = 8 {
+ //	CHARACTER-STRING name;
+ //	DISCRIMINATED_UNION du_one disc_union;
+ //};
 
 
- STRUCT struct_nine {
-  STRUCT AggregateType dummyFixDependencyDetection;
-  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictio_one;
-  DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
-  DICTIONARY<INTEGER, STRUCT struct_du> dictio_three;
-  DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
-};
+// STRUCT struct_nine {
+//  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictio_one;
+//  DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
+//  DICTIONARY<INTEGER, STRUCT struct_du> dictio_three;
+//  DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
+//};
 
 
- MESSAGE test_gmq : message_nine_gmq = 9 = STRUCT struct_nine;
- MESSAGE test_json : message_nine_json = 9 = STRUCT struct_nine;
-
-PUBLISHABLE publishable_nine = 9 {
-  STRUCT struct_du dummyFixDependencyDetection;
-  CHARACTER-STRING name;
-  STRUCT struct_nine data;
-};
+//MESSAGE test_gmq : message_nine_gmq = 9 = STRUCT struct_nine;
+//MESSAGE test_json : message_nine_json = 9 = STRUCT struct_nine;
+//
+//PUBLISHABLE publishable_nine = 9 {
+//  CHARACTER-STRING name;
+//  STRUCT struct_nine data;
+//};

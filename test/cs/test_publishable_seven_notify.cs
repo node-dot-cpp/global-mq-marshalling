@@ -76,25 +76,25 @@ namespace TestProject1
             public override void notifyFullyUpdated() { handled.Add(Events.notifyFullyUpdated); }
             public override void notifyUpdated() { handled.Add(Events.notifyUpdated); }
             public override void notifyUpdated_intVec() { handled.Add(Events.notifyUpdated_intVec); }
-            public override void notifyElementUpdated_intVec(int index, Int64 old) { handled.Add(Events.notifyElementUpdated_intVec); }
+            public override void notifyElementUpdated_intVec(int index, Int64 oldVal) { handled.Add(Events.notifyElementUpdated_intVec); }
             public override void notifyInserted_intVec(int index) { handled.Add(Events.notifyInserted_intVec); }
-            public override void notifyErased_intVec(int index) { handled.Add(Events.notifyErased_intVec); }
+            public override void notifyErased_intVec(int index, Int64 oldVal) { handled.Add(Events.notifyErased_intVec); }
             public override void notifyUpdated_uintVec() { handled.Add(Events.notifyUpdated_uintVec); }
-            public override void notifyElementUpdated_uintVec(int index, UInt64 old) { handled.Add(Events.notifyElementUpdated_uintVec); }
+            public override void notifyElementUpdated_uintVec(int index, UInt64 oldVal) { handled.Add(Events.notifyElementUpdated_uintVec); }
             public override void notifyInserted_uintVec(int index) { handled.Add(Events.notifyInserted_uintVec); }
-            public override void notifyErased_uintVec(int index) { handled.Add(Events.notifyErased_uintVec); }
+            public override void notifyErased_uintVec(int index, UInt64 oldVal) { handled.Add(Events.notifyErased_uintVec); }
             public override void notifyUpdated_realVec() { handled.Add(Events.notifyUpdated_realVec); }
-            public override void notifyElementUpdated_realVec(int index, Double old) { handled.Add(Events.notifyElementUpdated_realVec); }
+            public override void notifyElementUpdated_realVec(int index, Double oldVal) { handled.Add(Events.notifyElementUpdated_realVec); }
             public override void notifyInserted_realVec(int index) { handled.Add(Events.notifyInserted_realVec); }
-            public override void notifyErased_realVec(int index) { handled.Add(Events.notifyErased_realVec); }
+            public override void notifyErased_realVec(int index, Double oldVal) { handled.Add(Events.notifyErased_realVec); }
             public override void notifyUpdated_strVec() { handled.Add(Events.notifyUpdated_strVec); }
-            public override void notifyElementUpdated_strVec(int index, String old) { handled.Add(Events.notifyElementUpdated_strVec); }
+            public override void notifyElementUpdated_strVec(int index, String oldVal) { handled.Add(Events.notifyElementUpdated_strVec); }
             public override void notifyInserted_strVec(int index) { handled.Add(Events.notifyInserted_strVec); }
-            public override void notifyErased_strVec(int index) { handled.Add(Events.notifyErased_strVec); }
+            public override void notifyErased_strVec(int index, String oldVal) { handled.Add(Events.notifyErased_strVec); }
             public override void notifyUpdated_structVec() { handled.Add(Events.notifyUpdated_structVec); }
             public override void notifyElementUpdated_structVec(int index) { handled.Add(Events.notifyElementUpdated_structVec); }
             public override void notifyInserted_structVec(int index) { handled.Add(Events.notifyInserted_structVec); }
-            public override void notifyErased_structVec(int index) { handled.Add(Events.notifyErased_structVec); }
+            public override void notifyErased_structVec(int index, mtest.Ipoint3D oldVal) { handled.Add(Events.notifyErased_structVec); }
 
         }
 

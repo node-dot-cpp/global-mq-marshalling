@@ -96,34 +96,27 @@ namespace globalmq.marshalling
             {
                 if (left.Count != right.Count)
                     return false;
-                if(!Enumerable.SequenceEqual(left.Keys, right.Keys))
+
+                IEnumerator<KeyValuePair<K, V>> itl = left.GetEnumerator();
+                IEnumerator<KeyValuePair<K, V>> itr = right.GetEnumerator();
+
+                while (itl.MoveNext())
+                {
+                    if (!itr.MoveNext())
+                        return false;
+                    if (!itl.Current.Key.Equals(itr.Current.Key))
+                        return false;
+                    if (!areEquivalent(itl.Current.Value, itr.Current.Value))
+                        return false;
+                }
+
+                // if right still has more elements
+                if (itr.MoveNext())
                     return false;
 
-                return areEquivalent(left.Values, right.Values);
+                return true;
             }
         }
-        //public static bool areEquivalent<T, U>(IList<T> left, IList<U> right) where T : IEquivalenceComparable<T> where U : T
-        //{
-        //    if (left == null && right == null)
-        //        return true;
-        //    else if (left == null || right == null)
-        //        return false;
-        //    else if (ReferenceEquals(left, right))
-        //        return true;
-        //    else
-        //    {
-        //        if (left.Count != right.Count)
-        //            return false;
-        //        for(int i = 0; i != left.Count; ++i)
-        //        {
-        //            if (!left[i].isEquivalent(right[i]))
-        //                return false;
-        //        }
-
-
-        //        return true;
-        //    }
-        //}
     }
     public class MessageHandler
     {

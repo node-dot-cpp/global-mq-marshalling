@@ -476,4 +476,35 @@ namespace globalmq.marshalling
 		}
 	};
 
+
+	public class UInt64_subscriber
+	{
+		public static UInt64 parseForStateSync(IPublishableParser parser)
+		{
+			return parser.parseUnsigned(null);
+		}
+	}
+
+	public class Int64_subscriber
+	{
+		public static Int64 parseForStateSync(IPublishableParser parser)
+		{
+			return parser.parseInteger(null);
+		}
+	}
+	public class Double_subscriber
+	{
+		public static Double parseForStateSync(IPublishableParser parser)
+		{
+			return parser.parseReal(null);
+		}
+	}
+	public class String_subscriber
+	{
+		public static String parseForStateSync(IPublishableParser parser)
+		{
+			return parser.parseString(null);
+		}
+	}
+
 } // namespace globalmq::marshalling
