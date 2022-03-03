@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "test-interop2-csharp": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\project\\node-dot-cpp\\global-mq-marshalling\\global-mq-marshalling\\test\\interop2"
+    }
+  }
+}
