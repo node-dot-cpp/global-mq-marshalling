@@ -131,8 +131,8 @@ const lest::test test_publishable_seven[] =
 
         publ.generateStateSyncMessage(composer);
 
-        auto b2 = makeBuffer(PathPubSevenJson, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathPubSevenJson, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseStateSync" )
     {
@@ -165,9 +165,8 @@ const lest::test test_publishable_seven[] =
         publ.get4set_structVec().get4set_at(0).set_y(505);
         mtest::Buffer b = publ.endTick();
 
-
-        auto b2 = makeBuffer(PathPubSevenJson1, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathPubSevenJson1, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate1" )
     {
@@ -211,8 +210,8 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
 
-        auto b2 = makeBuffer(PathPubSevenJson2, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathPubSevenJson2, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate2" )
     {
@@ -265,8 +264,8 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
 
-        auto b2 = makeBuffer(PathPubSevenJson3, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathPubSevenJson3, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate3" )
     {
@@ -317,9 +316,8 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = publ.endTick();
 
-
-        auto b2 = makeBuffer(PathPubSevenJson4, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathPubSevenJson4, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate4" )
     {
@@ -373,8 +371,8 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = publ.endTick();
 
-        auto b2 = makeBuffer(PathPubSevenJson5, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathPubSevenJson5, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate5" )
     {

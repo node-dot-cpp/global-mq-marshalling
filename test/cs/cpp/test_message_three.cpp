@@ -54,8 +54,8 @@ const lest::test test_message_three[] =
 
         ComposeMessageThree(b, msg);
 
-        auto b2 = makeBuffer(PathMsg3Json, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathMsg3Json, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "TestJsonHandle" )
     {

@@ -56,8 +56,8 @@ const lest::test test_struct_one[] =
 
         ComposeStructOne(composer, msg);
 
-        auto b2 = makeBuffer(PathJson, lest_env);
-        EXPECT(b == b2);
+        auto expected = makeBuffer(PathJson, lest_env);
+        EXPECT(AreEqualIgnoreEol(expected, b));
     },
     lest_CASE( "TestJsonParse" )
     {
