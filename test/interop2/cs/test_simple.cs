@@ -30,15 +30,13 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace TestInterop2
+namespace test_interop2_csharp
 {
-
     public class test_simple
     {
-        private const string PathPrefix = "../../../../data/";
 
-        private const string PathJson = PathPrefix + "simple/sample_1.json";
-        private const string PathGmq = PathPrefix + "simple/sample_1.gmq";
+        private const string PathJson = TestCommon.DataPathPrefix + "simple/sample_1.json";
+        private const string PathGmq = TestCommon.DataPathPrefix + "simple/sample_1.gmq";
 
         static mtest.SimpleStruct GetSample1()
         {

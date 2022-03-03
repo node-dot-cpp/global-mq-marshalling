@@ -69,9 +69,9 @@ STRUCT NONEXTENDABLE AggregateType {
   INTEGER lastValue;
 };
 
- PUBLISHABLE publishable_eight = 8 {
+ PUBLISHABLE publishable_dunion = 8 {
  	CHARACTER-STRING name;
- 	DISCRIMINATED_UNION du_one disc_union;
+ 	DISCRIMINATED_UNION du_one anUnion;
  };
 
 
