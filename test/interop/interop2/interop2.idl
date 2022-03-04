@@ -75,18 +75,18 @@ STRUCT NONEXTENDABLE AggregateType {
  };
 
 
-// STRUCT struct_nine {
-//  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictio_one;
-//  DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
-// //  DICTIONARY<INTEGER, DISCRIMINATED_UNION du_one> dictio_three;
-//  DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
-// };
+STRUCT NONEXTENDABLE struct_dictionary {
+ DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictionary_one;
+// DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
+// DICTIONARY<INTEGER, DISCRIMINATED_UNION  > dictio_three;
+// DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
+};
 
 
-// MESSAGE gmq_scope : message_nine_gmq = 9 = STRUCT struct_nine;
-// MESSAGE json_scope : message_nine_json = 9 = STRUCT struct_nine;
+MESSAGE gmq_scope : message_dictionary_gmq = 9 = STRUCT struct_dictionary;
+MESSAGE json_scope : message_dictionary_json = 9 = STRUCT struct_dictionary;
 
-// PUBLISHABLE publishable_nine = 9 {
-//  CHARACTER-STRING name;
-//  STRUCT struct_nine data;
-// };
+PUBLISHABLE publishable_dictionary = 9 {
+ CHARACTER-STRING name;
+ STRUCT struct_dictionary data;
+};

@@ -205,7 +205,10 @@ namespace globalmq.marshalling
                 {
                     p.skipDelimiter('{');
                     K k = parseKeyDelegate(this);
-                    p.skipDelimiter(',');
+    
+                    if(p.isDelimiter(',')) // usually eaten by parseKeyDelegate
+                        p.skipDelimiter(',');
+
                     V v = parseValueDelegate(this);
                     p.skipDelimiter('}');
 
@@ -872,8 +875,7 @@ public void composeStructBegin()
             get
             {
                 if (valueWrapperDelegate != null)
-                    throw new NotSupportedException();
-                //return valueWrapperDelegate(t[key], composer, Publishable.makeAddress(address, keyToAddress(key)));
+                    return valueWrapperDelegate(key, t[key], composer, address);
                 else
                     return t[key];
             }
@@ -893,8 +895,8 @@ public void composeStructBegin()
         {
             Debug.Assert(t.ContainsKey(key));
             t[key] = value;
-            composer.composeAddress(address, 0);
-            composer.composeAction((UInt64)Publishable.ActionOnDictionary.update_value, false);
+            composer.composeAddress(address, (UInt64)Publishable.ActionOnDictionary.update_value);
+            //composer.composeAction((UInt64)Publishable.ActionOnDictionary.update_value, false);
             composeKeyDelegate(composer, key, true);
             composeValueDelegate(composer, value);
             composer.composeAddressEnd();
@@ -902,8 +904,8 @@ public void composeStructBegin()
         public void Add(K key, V value)
         {
             t.Add(key, value);
-            composer.composeAddress(address, 0);
-            composer.composeAction((UInt64)Publishable.ActionOnDictionary.insert, false);
+            composer.composeAddress(address, (UInt64)Publishable.ActionOnDictionary.insert);
+            //composer.composeAction((UInt64)Publishable.ActionOnDictionary.insert, false);
             composeKeyDelegate(composer, key, true);
             composeValueDelegate(composer, value);
             composer.composeAddressEnd();
@@ -932,8 +934,8 @@ public void composeStructBegin()
             bool res = t.Remove(key);
             if (res)
             {
-                composer.composeAddress(address, 0);
-                composer.composeAction((UInt64)Publishable.ActionOnDictionary.remove, false);
+                composer.composeAddress(address, (UInt64)Publishable.ActionOnDictionary.remove);
+                //composer.composeAction((UInt64)Publishable.ActionOnDictionary.remove, false);
                 composeKeyDelegate(composer, key, false);
                 composer.composeAddressEnd();
             }
