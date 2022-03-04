@@ -34,8 +34,9 @@ int main( int argc, char *argv[] )
 	if ( argc < 3 )
 	{
 		fmt::print( "Usage:\n" );
-		fmt::print( "generator path/to/idl path/to/header[ -m=metascopename]\n" );
+		fmt::print( "generator path/to/idl path/to/header [--csharp] [-m=metascopename]\n" );
 		fmt::print( "  -m : defines metascope name (default=m)\n" );
+		fmt::print( "  --csharp : generate C# code (default is C++)\n");
 		return 0;
 	}
 
@@ -45,56 +46,56 @@ int main( int argc, char *argv[] )
 	std::string platformPrefix;
 	std::string classNotifierName;
 	std::string csharpFile;
+	bool isCsharp = false;
 	for ( int i=3; i<argc; ++i )
 	{
 		std::string entry = argv[i];
-		size_t separPos = entry.find_first_of( "=" );
-		if ( separPos == std::string::npos )
+		if (entry == "--csharp")
 		{
-			fmt::print( "unexpected parameter {}\n", entry );
-			return 0;
-		}
-		string key = entry.substr( 0, separPos );
-		if ( key == "-m" )
-		{
-			metascope = entry.substr( separPos + 1 );
-			if ( metascope == "" )
-			{
-				fmt::print( "metascope (-m) option, if specified, must not be empty {}\n", key );
-				return 0;
-			}
-		}
-		else if ( key == "-p" )
-		{
-			platformPrefix = entry.substr( separPos + 1 );
-			if ( platformPrefix == "" )
-			{
-				fmt::print( "platformprefix (-p) option, if specified, must not be empty {}\n", key );
-				return 0;
-			}
-		}
-		else if ( key == "-c" )
-		{
-			classNotifierName = entry.substr( separPos + 1 );
-			if ( classNotifierName == "" )
-			{
-				fmt::print( "notifier class name (-c) option, if specified, must not be empty {}\n", key );
-				return 0;
-			}
-		}
-		else if (key == "-csharp")
-		{
-			csharpFile = entry.substr(separPos + 1);
-			if (csharpFile == "")
-			{
-				fmt::print("output C# file name (-csharp) option, if specified, must not be empty {}\n", key);
-				return 0;
-			}
+			isCsharp = true;
 		}
 		else
 		{
-			fmt::print( "unexpected parameter {}\n", key );
-			return 0;
+			size_t separPos = entry.find_first_of("=");
+			if ( separPos == std::string::npos )
+			{
+				fmt::print( "unexpected parameter {}\n", entry );
+				return 0;
+			}
+
+			string key = entry.substr( 0, separPos );
+			if ( key == "-m" )
+			{
+				metascope = entry.substr( separPos + 1 );
+				if ( metascope == "" )
+				{
+					fmt::print( "metascope (-m) option, if specified, must not be empty {}\n", key );
+					return 0;
+				}
+			}
+			else if ( key == "-p" )
+			{
+				platformPrefix = entry.substr( separPos + 1 );
+				if ( platformPrefix == "" )
+				{
+					fmt::print( "platformprefix (-p) option, if specified, must not be empty {}\n", key );
+					return 0;
+				}
+			}
+			else if ( key == "-c" )
+			{
+				classNotifierName = entry.substr( separPos + 1 );
+				if ( classNotifierName == "" )
+				{
+					fmt::print( "notifier class name (-c) option, if specified, must not be empty {}\n", key );
+					return 0;
+				}
+			}
+			else
+			{
+				fmt::print( "unexpected parameter {}\n", key );
+				return 0;
+			}
 		}
 	}
 
@@ -128,14 +129,13 @@ int main( int argc, char *argv[] )
 
 		preprocessRoot( *root );
 
-		FILE* header = fopen( targetPath.c_str(), "wb" );
-		generateRoot( fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root );
+		FILE* header = fopen(targetPath.c_str(), "wb");
 
-		if (!csharpFile.empty())
-		{
-			FILE* cs_file = fopen(csharpFile.c_str(), "wb");
-			generateCsharp(cs_file, *root, metascope.c_str() );
-		}
+		if (!isCsharp)
+			generateRoot(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
+		else
+			generateCsharp(header, *root, metascope.c_str() );
+
 	}
 	/*catch ( std::exception& x )
 	{
