@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\library-csharp\global-mq-csharp.csproj" />
+    <ProjectReference Include="..\..\..\..\library-csharp\global-mq-csharp.csproj" />
   </ItemGroup>
 
 </Project>
