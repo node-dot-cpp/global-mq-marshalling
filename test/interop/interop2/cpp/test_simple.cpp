@@ -65,8 +65,8 @@ const lest::test test_simple[] =
                 mtest::STRUCT_SimpleStruct_compose(c, mtest::id = msg.id, mtest::name = msg.name);
         }));
 
-        auto b2 = makeBuffer(PathJson, lest_env);
-        EXPECT(b2 == b);
+        auto expect = makeBuffer(PathJson, lest_env);
+        EXPECT(AreEqualIgnoreEol(expect, b));
     },
     lest_CASE( "TestJsonParse" )
     {
@@ -76,8 +76,8 @@ const lest::test test_simple[] =
 
         auto msg = mtest::json_scope::MESSAGE_SimpleJsonMessage_parse(parser);
 
-        auto msg2 = GetSample1();
-        EXPECT(msg2 == msg.data);
+        auto expect = GetSample1();
+        EXPECT(expect == msg.data);
     },
 
     lest_CASE( "TestGmqCompose" )
@@ -92,8 +92,8 @@ const lest::test test_simple[] =
                 mtest::STRUCT_SimpleStruct_compose(c, mtest::id = msg.id, mtest::name = msg.name);
         }));
 
-        auto b2 = makeBuffer(PathGmq, lest_env);
-        EXPECT(b2 == b);
+        auto expect = makeBuffer(PathGmq, lest_env);
+        EXPECT(expect == b);
     },
     lest_CASE( "TestGmqParse" )
     {
@@ -103,8 +103,8 @@ const lest::test test_simple[] =
 
         auto msg = mtest::gmq_scope::MESSAGE_SimpleGmqMessage_parse(parser);
 
-        auto msg2 = GetSample1();
-        EXPECT(msg2 == msg.data);
+        auto expect = GetSample1();
+        EXPECT(expect == msg.data);
     },
 };
 
