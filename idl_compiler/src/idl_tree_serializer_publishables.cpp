@@ -1637,7 +1637,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 	if ( obj.isDiscriminatedUnion() )
 	{
 		fprintf( header, "\t\tuint64_t caseId;\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseId\" );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), \"caseId\" );\n" );
 		fprintf( header, "\t\tt.initAs( (typename T::Variants)(caseId) );\n" );
 		fprintf( header, "\t\tif ( caseId != T::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
@@ -1729,7 +1729,7 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 	if ( obj.isDiscriminatedUnion() )
 	{
 		fprintf( header, "\t\tuint64_t caseId;\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), \"caseid\" );\n" );
+		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), \"caseId\" );\n" );
 		fprintf( header, "\t\tt.initAs( (typename T::Variants)(caseId) );\n" );
 		fprintf( header, "\t\tif ( caseId != T::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
