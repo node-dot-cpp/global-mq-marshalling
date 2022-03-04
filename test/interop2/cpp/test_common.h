@@ -121,5 +121,75 @@ bool AreEqualIgnoreEol(const mtest::Buffer& l, const mtest::Buffer& r)
     return !it1.isData() && !it2.isData();
 }
 
+template<typename Types>
+void testPublishableComposeStateSync(std::string fileName, std::function<typename Types::DataT()> getState, lest::env & lest_env)
+{
+        auto data = getState();
+
+        typename Types::PublishableT publ(data);
+
+        mtest::Buffer b;
+        typename Types::ComposerT composer(b);
+
+        publ.generateStateSyncMessage(composer);
+
+        auto expected = makeBuffer(fileName, lest_env);
+        EXPECT(Types::AreEqual(expected, b));
+}
+
+template<typename Types>
+void testPublishableParseStateSync(std::string fileName, std::function<typename Types::DataT()> getState, lest::env & lest_env)
+{
+
+        typename Types::DataT data;
+        typename Types::SubscriberT subs(data);
+
+        mtest::Buffer b = makeBuffer(fileName, lest_env);
+        auto it = b.getReadIter();
+        typename Types::ParserT parser(it);
+
+        subs.parseStateSyncMessage(parser);
+
+        auto expected = getState();
+        EXPECT(expected == subs.getState());
+}
+
+template<typename Types>
+void testPublishableComposeUpdate(std::string fileName, std::function<typename Types::DataT()> getInitState,
+                        std::function<void(typename Types::PublishableT&)> doUpdate, lest::env & lest_env)
+{
+    auto data = getInitState();
+
+    typename Types::PublishableT publ(data);
+
+    publ.startTick(mtest::Buffer());
+    doUpdate(publ);
+    mtest::Buffer b = publ.endTick();
+
+    auto expected = makeBuffer(fileName, lest_env);
+    EXPECT(Types::AreEqual(expected, b));
+}
+
+template<typename Types>
+void testPublishableParseUpdate(std::string fileName, std::function<typename Types::DataT()> getInitState,
+                        std::function<void(typename Types::DataT&)> doUpdate, lest::env & lest_env)
+{
+
+        auto data = getInitState();
+
+        typename Types::SubscriberT subs(data);
+
+        mtest::Buffer b = makeBuffer(fileName, lest_env);
+        auto it = b.getReadIter();
+        typename Types::ParserT parser(it);
+
+        subs.applyMessageWithUpdates(parser);
+
+        auto data2 = getInitState();
+        EXPECT_NOT(subs.getState() == data2);
+
+        doUpdate(data2);
+        EXPECT(subs.getState() == data2);
+}
 
 #endif // TEST_IDL_COMMON_H_INCLUDED

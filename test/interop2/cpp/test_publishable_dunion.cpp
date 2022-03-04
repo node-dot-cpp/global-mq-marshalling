@@ -43,7 +43,7 @@ std::string GmqPath_s2 = Prefix + "state_sync_2.gmq";
 std::string GmqPath_u1 = Prefix + "update_1.gmq";
 std::string GmqPath_u2 = Prefix + "update_2.gmq";
 
- enum Protocol { Json, Gmq };
+
 
 template<class T, class ComposerT>
 class publishable_dunion_for_test :
@@ -92,7 +92,7 @@ bool operator==(const mtest::structures::publishable_dunion& l, const mtest::str
     else if(l.anUnion.currentVariant() == mtest::structures::du_one::Variants::two)
         return l.anUnion.Data() == r.anUnion.Data();
     else
-        return false;
+        return true;
 }
 
 
@@ -115,7 +115,7 @@ void doUpdate1(mtest::structures::publishable_dunion& data)
 }
 
 template<class T>
-void doUpdate1(T& publ)
+void doUpdatePublisher1(T& publ)
 {
     //modify substructure inside vector
     publ.get4set_anUnion().set_currentVariant(mtest::structures::du_one::Variants::one);
@@ -124,6 +124,7 @@ void doUpdate1(T& publ)
     publ.get4set_anUnion().set_D2(-3.14);
     publ.get4set_anUnion().set_D3(-3.14e-20);
 }
+
 
 mtest::structures::publishable_dunion GetPublishableUnion_1()
 {
@@ -142,7 +143,7 @@ void doUpdate2(mtest::structures::publishable_dunion& data)
 }
 
 template<class T>
-void doUpdate2(T& publ)
+void doUpdatePublisher2(T& publ)
 {
     publ.get4set_anUnion().set_currentVariant(mtest::structures::du_one::Variants::two);
 
@@ -161,181 +162,120 @@ mtest::structures::publishable_dunion GetPublishableUnion_2()
     return data;
 }
 
+class publishable_dunion_json
+{
+    public:
+    using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+    using ParserT = mtest::JsonParser<mtest::Buffer>;
+    using DataT = mtest::structures::publishable_dunion;
+    using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
+    using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
+
+    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+    {
+        return AreEqualIgnoreEol(l, r);
+    }
+};
+
+class publishable_dunion_gmq
+{
+    public:
+    using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+    using ParserT = mtest::GmqParser<mtest::Buffer>;
+    using DataT = mtest::structures::publishable_dunion;
+    using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
+    using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
+
+    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+    {
+        return operator==(l, r);
+    }
+};
+
+
 const lest::test test_publishable_dunion[] =
 {
     lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync0" )
     {
-        auto data = GetPublishableUnion_0();
-
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
-        using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
-
-        PublishableT publ(data);
-
-        mtest::Buffer b;
-        ComposerT composer(b);
-
-        publ.generateStateSyncMessage(composer);
-
-        auto expected = makeBuffer(JsonPath_s0, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
-    },
-    lest_CASE( "test_publishable_seven.TestJsonParseStateSync0" )
-    {
-        using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
-
-        mtest::structures::publishable_dunion data;
-        SubscriberT subs(data);
-
-        mtest::Buffer b = makeBuffer(JsonPath_s0, lest_env);
-        auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
-
-        subs.applyJsonStateSyncMessage(parser);
-
-        auto expected = GetPublishableUnion_0();
-        EXPECT(expected != subs.getState());
+        testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
     },
     lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync1" )
     {
-        auto data = GetPublishableUnion_1();
-
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
-        using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
-
-        PublishableT publ(data);
-
-        mtest::Buffer b;
-        ComposerT composer(b);
-
-        publ.generateStateSyncMessage(composer);
-
-        auto expected = makeBuffer(JsonPath_s1, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync2" )
+    {
+        testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s2, GetPublishableUnion_2, lest_env);
+    },
+    lest_CASE( "test_publishable_seven.TestJsonParseStateSync0" )
+    {
+        testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
     },
     lest_CASE( "test_publishable_seven.TestJsonParseStateSync1" )
     {
-        using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
-
-        mtest::structures::publishable_dunion data;
-        SubscriberT subs(data);
-
-        mtest::Buffer b = makeBuffer(JsonPath_s1, lest_env);
-        auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
-
-        subs.applyJsonStateSyncMessage(parser);
-
-        auto expected = GetPublishableUnion_1();
-        EXPECT(expected == subs.getState());
-    },
-
-    lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync2" )
-    {
-        auto data = GetPublishableUnion_2();
-
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
-        using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
-
-        PublishableT publ(data);
-
-        mtest::Buffer b;
-        ComposerT composer(b);
-
-        publ.generateStateSyncMessage(composer);
-
-        auto expected = makeBuffer(JsonPath_s2, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
     },
     lest_CASE( "test_publishable_seven.TestJsonParseStateSync2" )
     {
-        using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
-
-        mtest::structures::publishable_dunion data;
-        SubscriberT subs(data);
-
-        mtest::Buffer b = makeBuffer(JsonPath_s2, lest_env);
-        auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
-
-        subs.applyJsonStateSyncMessage(parser);
-
-        auto expected = GetPublishableUnion_2();
-        EXPECT(expected == subs.getState());
+        testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s2, GetPublishableUnion_2, lest_env);
     },
     lest_CASE( "test_publishable_dunion.TestJsonComposeUpdate1" )
     {
-        auto data = GetPublishableUnion_0();
-
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
-        using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
-
-        PublishableT publ(data);
-
-        publ.startTick(mtest::Buffer());
-        doUpdate1(publ);
-        mtest::Buffer b = publ.endTick();
-
-        auto expected = makeBuffer(JsonPath_u1, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
-    },
-    lest_CASE( "test_publishable_dunion.TestJsonParseUpdate1" )
-    {
-        using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
-
-        auto data = GetPublishableUnion_0();
-
-        SubscriberT subs(data);
-
-        mtest::Buffer b = makeBuffer(JsonPath_u1, lest_env);
-        auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
-
-        subs.applyJsonMessageWithUpdates(parser);
-
-        auto data2 = GetPublishableUnion_0();
-        EXPECT_NOT(subs.getState() == data2);
-
-        doUpdate1(data2);
-        EXPECT(subs.getState() == data2);
+        testPublishableComposeUpdate<publishable_dunion_json>(JsonPath_u1, GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dunion_json::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dunion.TestJsonComposeUpdate2" )
     {
-        auto data = GetPublishableUnion_1();
-
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
-        using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
-
-        PublishableT publ(data);
-
-        publ.startTick(mtest::Buffer());
-        doUpdate2(publ);
-        mtest::Buffer b = publ.endTick();
-
-        auto expected = makeBuffer(JsonPath_u2, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        testPublishableComposeUpdate<publishable_dunion_json>(JsonPath_u2, GetPublishableUnion_2, doUpdatePublisher2<typename publishable_dunion_json::PublishableT>, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestJsonParseUpdate1" )
+    {
+        testPublishableParseUpdate<publishable_dunion_json>(JsonPath_u1, GetPublishableUnion_0, doUpdate1, lest_env);
     },
     lest_CASE( "test_publishable_dunion.TestJsonParseUpdate2" )
     {
-        using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
-
-        auto data = GetPublishableUnion_1();
-
-        SubscriberT subs(data);
-
-        mtest::Buffer b = makeBuffer(JsonPath_u2, lest_env);
-        auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
-
-        subs.applyJsonMessageWithUpdates(parser);
-
-        auto data2 = GetPublishableUnion_1();
-        EXPECT_NOT(subs.getState() == data2);
-
-        doUpdate2(data2);
-        EXPECT(subs.getState() == data2);
+        testPublishableParseUpdate<publishable_dunion_json>(JsonPath_u2, GetPublishableUnion_1, doUpdate2, lest_env);
     },
-
+////////////////////////
+    lest_CASE( "test_publishable_dunion.TestGmqComposeStateSync0" )
+    {
+        testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestGmqComposeStateSync1" )
+    {
+        testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestGmqComposeStateSync2" )
+    {
+        testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s2, GetPublishableUnion_2, lest_env);
+    },
+    lest_CASE( "test_publishable_seven.TestGmqParseStateSync0" )
+    {
+        testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
+    },
+    lest_CASE( "test_publishable_seven.TestGmqParseStateSync1" )
+    {
+        testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
+    },
+    lest_CASE( "test_publishable_seven.TestGmqParseStateSync2" )
+    {
+        testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s2, GetPublishableUnion_2, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestGmqComposeUpdate1" )
+    {
+        testPublishableComposeUpdate<publishable_dunion_gmq>(GmqPath_u1, GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dunion_gmq::PublishableT>, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestGmqComposeUpdate2" )
+    {
+        testPublishableComposeUpdate<publishable_dunion_gmq>(GmqPath_u2, GetPublishableUnion_2, doUpdatePublisher2<typename publishable_dunion_gmq::PublishableT>, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestGmqParseUpdate1" )
+    {
+        testPublishableParseUpdate<publishable_dunion_gmq>(GmqPath_u1, GetPublishableUnion_0, doUpdate1, lest_env);
+    },
+    lest_CASE( "test_publishable_dunion.TestGmqParseUpdate2" )
+    {
+        testPublishableParseUpdate<publishable_dunion_gmq>(GmqPath_u2, GetPublishableUnion_1, doUpdate2, lest_env);
+    },
 };
 
 lest_MODULE(specification(), test_publishable_dunion);
