@@ -4,15 +4,16 @@
 
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cs/generated_interop2.cs ${CMAKE_CURRENT_SOURCE_DIR}/cpp/generated_interop2.h
     COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop2.idl ${CMAKE_CURRENT_SOURCE_DIR}/cpp/generated_interop2.h -csharp=${CMAKE_CURRENT_SOURCE_DIR}/cs/generated_interop2.cs -m=mtest
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/interop2.idl
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cs/generated_interop2.cs ${CMAKE_CURRENT_SOURCE_DIR}/cpp/generated_interop2.h
+    DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop2.idl
 )
 
 add_executable(test-interop2-cpp
     cpp/generated_interop2.h
     cpp/main.cpp
     cpp/test_common.h
+    cpp/test_publishable_dunion.cpp
     cpp/test_simple.cpp
 )
 

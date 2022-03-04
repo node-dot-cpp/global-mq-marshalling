@@ -1,1 +1,1 @@
-{"changes":[{"addr":[1, 0],"value":2},{"addr":[1, 1, 0],"action":2,"value":3.14},{"addr":[1, 1, 1],"action":2,"value":-3.14},{"addr":[1, 1, 2],"action":2,"value":-3.14E-20},{}]}
+{"changes":[{"addr":[1, 0],"value":2},{"addr":[1, 1, 0],"action":2,"value":3.14},{"addr":[1, 1, 1],"action":2,"value":-3.14},{"addr":[1, 1, 2],"action":2,"value":-3.14e-20},{}]}

@@ -309,7 +309,7 @@ namespace {
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
 			generateCsharpStructEquivalentExpression(f.indent(1), cs);
 		}
-		f.write("\t\t\tdefault: return false;\n");
+		f.write("\t\t\tdefault: return true; // both unknown\n");
 		f.write("\t\t\t}\n");
 		f.write("\t\t}\n");
 		f.write("\t}\n");
@@ -431,15 +431,12 @@ namespace {
 		f.write("\t\tcomposer.composeStructBegin();\n");
 
 		f.write("\t\tI%s.Variants c = t.currentVariant();\n", type_name);
-		f.write("\t\tif( c == I%s.Variants.unknown)\n", type_name);
-		//f.write("\t\t{\n");
+		//f.write("\t\tif( c == I%s.Variants.unknown)\n", type_name);
 
-		f.write("\t\t\tcomposer.composeUnsigned(\"caseId\", (UInt64)c, false);\n");
-		//f.write("\t\t}\n");
-		f.write("\t\telse\n");
-		f.write("\t\t{\n");
+		//f.write("\t\t\tcomposer.composeUnsigned(\"caseId\", (UInt64)c, false);\n");
+		//f.write("\t\telse\n");
+		//f.write("\t\t{\n");
 		f.write("\t\t\tcomposer.composeUnsigned(\"caseId\", (UInt64)c, true);\n");
-		//f.write("\t\t\tcomposer.composePublishableStructBegin(\"caseData\");\n");
 		f.write("\t\t\tswitch(c)\n");
 		f.write("\t\t\t{\n");
 
@@ -457,11 +454,10 @@ namespace {
 		}
 
 		f.write("\t\t\t\tdefault:\n");
-		f.write("\t\t\t\t\tthrow new Exception();\n");
+		f.write("\t\t\t\t\tbreak;\n");
 		f.write("\t\t\t}\n");
 
-		//f.write("\t\t\tcomposer.composePublishableStructEnd(false);\n");
-		f.write("\t\t}\n");
+		//f.write("\t\t}\n");
 		f.write("\t\tcomposer.composeStructEnd();\n");
 		f.write("\t}\n");
 	}
@@ -491,11 +487,11 @@ namespace {
 		f.write("\t\tI%s.Variants newVal = (I%s.Variants)parser.parseUnsigned(\"caseId\");\n", type_name, type_name);
 		f.write("\t\tdata.setCurrentVariant(newVal);\n");
 
-		f.write("\t\tif( newVal != I%s.Variants.unknown)\n", type_name);
-		f.write("\t\t{\n");
-		//f.write("\t\t\tparser.parsePublishableStructBegin(\"caseData\");\n");
+		//f.write("\t\tif( newVal != I%s.Variants.unknown)\n", type_name);
+		//f.write("\t\t{\n");
 
-		f.write("\t\t\tswitch(newVal)\n");
+		f.write("\t\t\t// mb: get it back from data, in case is an unknown value\n");
+		f.write("\t\t\tswitch(data.currentVariant())\n");
 		f.write("\t\t\t{\n");
 
 		for (auto& duit : s.getDiscriminatedUnionCases())
@@ -511,11 +507,10 @@ namespace {
 
 		}
 		f.write("\t\t\t\tdefault:\n");
-		f.write("\t\t\t\t\tthrow new Exception();\n");
+		f.write("\t\t\t\t\tbreak; //TODO: actually skip any caseData\n");
 		f.write("\t\t\t}\n");
 
-		//f.write("\t\t\tparser.parsePublishableStructEnd();\n");
-		f.write("\t\t}\n");
+		//f.write("\t\t}\n");
 
 		f.write("\t\tparser.parseStructEnd();\n");
 
@@ -532,13 +527,13 @@ namespace {
 		f.write("\t\tparser.parseStructBegin();\n");
 
 		f.write("\t\tbool changed = subscriber.update_CurrentVariant(parser, \"caseId\");\n");
-		f.write("\t\tI%s.Variants c = subscriber.currentVariant();\n", type_name);
+		//f.write("\t\tI%s.Variants c = subscriber.currentVariant();\n", type_name);
 
-		f.write("\t\tif( c != I%s.Variants.unknown)\n", type_name);
-		f.write("\t\t{\n");
+		//f.write("\t\tif( c != I%s.Variants.unknown)\n", type_name);
+		//f.write("\t\t{\n");
 		//f.write("\t\t\tparser.parsePublishableStructBegin(\"caseData\");\n");
 
-		f.write("\t\t\tswitch(c)\n");
+		f.write("\t\t\tswitch(subscriber.currentVariant())\n");
 		f.write("\t\t\t{\n");
 
 		for (auto& duit : s.getDiscriminatedUnionCases())
@@ -554,11 +549,10 @@ namespace {
 
 		}
 		f.write("\t\t\t\tdefault:\n");
-		f.write("\t\t\t\t\tthrow new Exception();\n");
+		f.write("\t\t\t\t\tbreak; //TODO: actually skip any caseData\n");
 		f.write("\t\t\t}\n");
 
-		//f.write("\t\t\tparser.parsePublishableStructEnd();\n");
-		f.write("\t\t}\n");
+		//f.write("\t\t}\n");
 
 		f.write("\t\tparser.parseStructEnd();\n");
 
@@ -601,7 +595,7 @@ namespace {
 		}
 
 		f.write("\t\t\t\tdefault:\n");
-		f.write("\t\t\t\t\tthrow new Exception();\n");
+		f.write("\t\t\t\t\tbreak; //TODO: actually skip any deeper data\n");
 		f.write("\t\t\t}\n");
 
 		f.write("\t\t}\n");
@@ -636,7 +630,7 @@ void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
 
 	f.write("\tpublic enum Variants\n");
 	f.write("\t{\n");
-	f.write("\t\tunknown = 0,\n");
+	//f.write("\t\tunknown = 0,\n");
 
 	size_t sz = s.getDiscriminatedUnionCases().size();
 	for (size_t i = 0; i != sz; ++i)
@@ -648,11 +642,12 @@ void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
 
 		string number = std::to_string(it->numID);
 
-		if(i != sz - 1)
+		//if(i != sz - 1)
 			f.write("\t\t%s = %s,\n", it->name.c_str(), number.c_str());
-		else
-			f.write("\t\t%s = %s\n", it->name.c_str(), number.c_str());
+		//else
+		//	f.write("\t\t%s = %s\n", it->name.c_str(), number.c_str());
 	}
+	f.write("\t\tunknown\n");
 
 	f.write("\t}\n");
 
@@ -738,7 +733,9 @@ void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
 		f.write("\t\t\tthis.mem = new %s();\n", case_type_name.c_str());
 		f.write("\t\t\tbreak;\n");
 	}
-	f.write("\t\tdefault: throw new Exception();\n");
+	f.write("\t\tdefault:\n");
+	f.write("\t\t\tthis.mem = null;\n");
+	f.write("\t\t\tbreak;\n");
 	f.write("\t\t}\n");
 	f.write("\t}\n");
 

@@ -198,11 +198,11 @@ namespace test_interop2_csharp
             TestComposeStateSync(Protocol.Json, JsonPath_s0, GetPublishableUnion_0);
         }
 
-        //[Fact]
-        //public static void TestJsonParseStateSync0()
-        //{
-        //    TestParseStateSync(Protocol.Json, JsonPath_s0, GetPublishableUnion_0);
-        //}
+        [Fact]
+        public static void TestJsonParseStateSync0()
+        {
+            TestParseStateSync(Protocol.Json, JsonPath_s0, GetPublishableUnion_0);
+        }
         [Fact]
         public static void TestJsonComposeStateSync1()
         {
@@ -260,11 +260,11 @@ namespace test_interop2_csharp
             TestComposeStateSync(Protocol.Gmq, GmqPath_s0, GetPublishableUnion_0);
         }
 
-        //[Fact]
-        //public static void TestGmqParseStateSync0()
-        //{
-        //    TestParseStateSync(Protocol.Gmq, GmqPath_s0, GetPublishableUnion_0);
-        //}
+        [Fact]
+        public static void TestGmqParseStateSync0()
+        {
+            TestParseStateSync(Protocol.Gmq, GmqPath_s0, GetPublishableUnion_0);
+        }
         [Fact]
         public static void TestGmqComposeStateSync1()
         {

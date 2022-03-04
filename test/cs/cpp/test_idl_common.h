@@ -210,7 +210,6 @@ bool operator==(const mtest::structures::StructSix& l, const mtest::structures::
             (l.aggregate.lastValue == r.aggregate.lastValue);
 }
 
-/// equality op that ignores eol differences
 inline
 bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
 {

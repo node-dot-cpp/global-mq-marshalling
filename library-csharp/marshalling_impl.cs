@@ -132,7 +132,7 @@ namespace globalmq.marshalling
 		BufferT buff;
 
 		// mb: this is needed to make float format independant of locale
-		NumberFormatInfo nfi = CultureInfo.InvariantCulture.NumberFormat;
+		//NumberFormatInfo nfi = CultureInfo.InvariantCulture.NumberFormat;
 		Char[] escapeChars = new Char[] { '\\', '\n', '\r', '\t', '\"' };
 		public JsonComposer(BufferT buff_)
 		{
@@ -154,7 +154,7 @@ namespace globalmq.marshalling
 
 		public void composeReal(double num)
 		{
-			buff.appendAscii(num.ToString(nfi));
+			buff.appendAscii(num.ToString("g", CultureInfo.InvariantCulture));
 		}
 		public void composeString(string str)
 		{

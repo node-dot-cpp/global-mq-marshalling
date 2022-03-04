@@ -1,1 +1,1 @@
-{"changes":[{"addr":[1, 0],"value":1},{"addr":[1, 1],"value":3.14},{"addr":[1, 2],"value":-3.14},{"addr":[1, 3],"value":-3.14E-20},{}]}
+{"changes":[{"addr":[1, 0],"value":1},{"addr":[1, 1],"value":3.14},{"addr":[1, 2],"value":-3.14},{"addr":[1, 3],"value":-3.14e-20},{}]}
