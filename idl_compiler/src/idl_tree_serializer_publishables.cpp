@@ -1148,8 +1148,8 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tauto get4set_%s() { return globalmq::marshalling::VectorRefWrapper4Set<%s, %s, %s>(t.%s, *this, GMQ_COLL vector<size_t>(), %zd); }\n", 
-					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), libType, rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), idx );
+				fprintf( header, "\tauto get4set_%s() { return globalmq::marshalling::VectorRefWrapper4Set<%s, %s, %s>(t.%s, %s, %s, %zd); }\n", 
+					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), libType, rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idx );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION: // TODO: revise DU (lib kw: VectorOfStructRefWrapper4Set and around)

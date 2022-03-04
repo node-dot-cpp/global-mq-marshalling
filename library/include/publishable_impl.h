@@ -117,7 +117,7 @@ public:
 		impl::composeActionInPublishable( root.getComposer(), ActionOnVector::remove_at, true );
 	}
 
-	void insert_before( size_t idx, typename VectorT::value_type& what ) { 
+	void insert_before( size_t idx, typename VectorT::value_type what ) { 
 		GMQ_ASSERT( idx <= b.size());
 		b.insert( b.begin() + idx, what );
 		impl::composeAddressInPublishable( root.getComposer(), address, idx );
