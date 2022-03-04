@@ -1,0 +1,92 @@
+//-------------------------------------------------------------------------------------------
+// Copyright (c) 2022, OLogN Technologies AG
+//-------------------------------------------------------------------------------------------
+
+SCOPE gmq_scope PROTO = GMQ;
+SCOPE json_scope PROTO = JSON;
+
+STRUCT NONEXTENDABLE SimpleStruct {
+  INTEGER id;
+  CHARACTER-STRING name;
+};
+
+PUBLISHABLE NONEXTENDABLE SimplePublisher = 1 {
+	STRUCT SimpleStruct data;
+};
+
+MESSAGE NONEXTENDABLE gmq_scope : SimpleGmqMessage = 1 {
+	STRUCT SimpleStruct data;
+};
+
+MESSAGE NONEXTENDABLE json_scope : SimpleJsonMessage = 1 {
+	STRUCT SimpleStruct data;
+};
+
+
+
+STRUCT NONEXTENDABLE point {
+  INTEGER x;
+  INTEGER y;
+};
+
+STRUCT NONEXTENDABLE point3D {
+  INTEGER x;
+  INTEGER y;
+  INTEGER z;
+};
+
+DISCRIMINATED_UNION du_one{
+	CASE one=1: { 
+		REAL D1;
+		REAL D2;
+		REAL D3;
+	}
+	CASE two=2: { 
+		VECTOR<REAL> Data;
+	}
+};
+
+STRUCT struct_du {
+	STRUCT point3D pt;
+	DISCRIMINATED_UNION du_one disc_union;
+};
+
+
+// MESSAGE gmq_scope : message_du = 5 = STRUCT struct_du;
+// MESSAGE json_scope : message_du = 5 = STRUCT struct_du;
+
+
+STRUCT NONEXTENDABLE BasicTypes {
+  INTEGER anInt;
+  UINTEGER anUInt;
+  REAL aReal;
+  CHARACTER-STRING aString;
+};
+
+STRUCT NONEXTENDABLE AggregateType {
+  CHARACTER-STRING name;
+  STRUCT BasicTypes theAggregate;
+  INTEGER lastValue;
+};
+
+ PUBLISHABLE publishable_dunion = 8 {
+ 	CHARACTER-STRING name;
+ 	DISCRIMINATED_UNION du_one anUnion;
+ };
+
+
+STRUCT NONEXTENDABLE struct_dictionary {
+ DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictionary_one;
+// DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
+// DICTIONARY<INTEGER, DISCRIMINATED_UNION  > dictio_three;
+// DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
+};
+
+
+MESSAGE gmq_scope : message_dictionary_gmq = 9 = STRUCT struct_dictionary;
+MESSAGE json_scope : message_dictionary_json = 9 = STRUCT struct_dictionary;
+
+PUBLISHABLE publishable_dictionary = 9 {
+ CHARACTER-STRING name;
+ STRUCT struct_dictionary data;
+};
