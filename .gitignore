@@ -29,6 +29,7 @@ obj/
 /library-csharp/Debug
 /test/csharp-2-cpp/build/cpp-2-csharp.vcxproj.filters
 /test/csharp-2-cpp/build/Debug
+/test/csharp-2-cpp/build/x64
 /test/interop2/Debug/
 /test/interop2/x64/
 /test/interop2/interop-buffer-dotnet/Debug/

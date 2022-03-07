@@ -30,7 +30,10 @@ add_executable(test-interop2-cpp
 target_compile_definitions(test-interop2-cpp PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(test-interop2-cpp global-mq) 
 
-add_test(NAME interop2-cpp COMMAND test-interop2-cpp --pass-zen WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
+add_test(NAME interop2-cpp
+    COMMAND test-interop2-cpp --pass-zen
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 
 

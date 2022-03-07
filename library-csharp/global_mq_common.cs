@@ -166,42 +166,91 @@ namespace globalmq.marshalling
 
         public override bool Equals(object obj)
         {
-            if (obj is SimpleBuffer buffer)
-                return EqualsIgnoreEol(buffer);
-
-            return false;
+            if (obj is SimpleBuffer other)
+                return AreEqual(this, other);
+            else
+                return false;
         }
 
-        public bool EqualsIgnoreEol(SimpleBuffer other)
+        public static bool AreEqual(BufferT left, BufferT right)
         {
-            int i = 0;
-            int j = 0;
-            while (i < this._size && j < other._size)
+            if (ReferenceEquals(left, right))
+                return true;
+            else if (left == null)
+                return false;
+            else if (right == null)
+                return false;
+
+            ReadIteratorT l = left.getReadIterator();
+            ReadIteratorT r = right.getReadIterator();
+
+            while (l.isData() && r.isData())
+            {
+                //// \r\n == \n
+                //if (l.getChar() == '\r' && r.getChar() == '\n')
+                //{
+                //    l.inc();
+                //    if (!l.isData() || l.getChar() != '\n')
+                //        return false;
+
+                //}
+                //// \n == \r\n
+                //else if (l.getChar() == '\n' && r.getChar() == '\r')
+                //{
+                //    r.inc();
+                //    if (!r.isData() || r.getChar() != '\n')
+                //        return false;
+
+                //}
+                //else 
+                if (l.getChar() != r.getChar())
+                    return false;
+
+                l.inc();
+                r.inc();
+            }
+
+            return !l.isData() && !r.isData();
+        }
+
+        public static bool AreEqualIgnoreEol(BufferT left, BufferT right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+            else if (left == null)
+                return false;
+            else if (right ==  null)
+                return false;
+
+            ReadIteratorT l = left.getReadIterator();
+            ReadIteratorT r = right.getReadIterator();
+
+            while(l.isData() && r.isData())
             {
                 // \r\n == \n
-                if (this._data[i] == '\r' && other._data[j] == '\n')
+                if (l.getChar() == '\r' && r.getChar() == '\n')
                 {
-                    ++i;
-                    if (i == this._size || this._data[i] != '\n')
+                    l.inc();
+                    if (!l.isData() || l.getChar() != '\n')
                         return false;
 
                 }
                 // \n == \r\n
-                else if (this._data[i] == '\n' && other._data[j] == '\r')
+                else if (l.getChar() == '\n' && r.getChar() == '\r')
                 {
-                    ++j;
-                    if (j == other._size || other._data[j] != '\n')
+                    r.inc();
+                    if (!r.isData() || r.getChar() != '\n')
                         return false;
 
                 }
-                else if (this._data[i] != other._data[j])
+                else if (l.getChar() != r.getChar())
                     return false;
 
-                ++i;
-                ++j;
+                l.inc();
+                r.inc();
             }
 
-            return i == _size && j == other._size;
+            return !l.isData() && !r.isData();
         }
 
         public override int GetHashCode()

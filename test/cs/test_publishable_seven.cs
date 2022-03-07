@@ -35,24 +35,26 @@ namespace TestProject1
 
     public class test_publishable_seven
     {
-        internal const string JsonPath = "test_publishable_seven.json";
-        internal const string JsonPath1 = "test_publishable_seven_u1.json";
-        internal const string JsonPath2 = "test_publishable_seven_u2.json";
-        internal const string JsonPath3 = "test_publishable_seven_u3.json";
-        internal const string JsonPath4 = "test_publishable_seven_u4.json";
-        internal const string JsonPath5 = "test_publishable_seven_u5.json";
+        private const string Prefix = TestCommon.DataPathPrefix + "";
 
-        private const string GmqPath = "test_publishable_seven.gmq";
-        private const string GmqPath1 = "test_publishable_seven_u1.gmq";
-        private const string GmqPath2 = "test_publishable_seven_u2.gmq";
-        private const string GmqPath3 = "test_publishable_seven_u3.gmq";
-        private const string GmqPath4 = "test_publishable_seven_u4.gmq";
-        private const string GmqPath5 = "test_publishable_seven_u5.gmq";
+        internal const string JsonPath = Prefix + "test_publishable_seven.json";
+        internal const string JsonPath1 = Prefix + "test_publishable_seven_u1.json";
+        internal const string JsonPath2 = Prefix + "test_publishable_seven_u2.json";
+        internal const string JsonPath3 = Prefix + "test_publishable_seven_u3.json";
+        internal const string JsonPath4 = Prefix + "test_publishable_seven_u4.json";
+        internal const string JsonPath5 = Prefix + "test_publishable_seven_u5.json";
 
-        static IPlatformSupport JsonFactory = new DefaultJsonPlatformSupport();
-        static IPlatformSupport GmqFactory = new DefaultGmqPlatformSupport();
+        private const string GmqPath = Prefix + "test_publishable_seven.gmq";
+        private const string GmqPath1 = Prefix + "test_publishable_seven_u1.gmq";
+        private const string GmqPath2 = Prefix + "test_publishable_seven_u2.gmq";
+        private const string GmqPath3 = Prefix + "test_publishable_seven_u3.gmq";
+        private const string GmqPath4 = Prefix + "test_publishable_seven_u4.gmq";
+        private const string GmqPath5 = Prefix + "test_publishable_seven_u5.gmq";
 
-
+        static bool WriteFiles = false;
+        static ITestPlatformSupport JsonFactory = new TestJsonPlatform();
+        static ITestPlatformSupport GmqFactory = new TestGmqPlatform();
+       
         public static mtest.publishable_seven GetPublishableSeven()
         {
             mtest.publishable_seven data = new mtest.publishable_seven();
@@ -94,7 +96,7 @@ namespace TestProject1
             return data;
         }
 
-        static void TestComposeStateSync(IPlatformSupport platform, String fileName)
+        static void TestComposeStateSync(ITestPlatformSupport platform, String fileName)
         {
 
             mtest.publishable_seven_publisher publ = new mtest.publishable_seven_publisher();
@@ -106,13 +108,15 @@ namespace TestProject1
             
             publ.generateStateSyncMessage(composer);
 
-            // uncomment to update file
-            //buffer.writeToFile(fileName);
+            if(WriteFiles)
+                buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            Assert.True(platform.AreEqual(expected, buffer));
         }
 
-        static void TestParseStateSync(IPlatformSupport platform, String fileName)
+        static void TestParseStateSync(ITestPlatformSupport platform, String fileName)
         {
             mtest.publishable_seven_subscriber subs = new mtest.publishable_seven_subscriber();
 
@@ -127,7 +131,7 @@ namespace TestProject1
             Assert.True(expected.isEquivalent(subs));
         }
 
-        static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
+        static void TestComposeUpdate(ITestPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable_seven_publisher publ = new mtest.publishable_seven_publisher();
             mtest.publishable_seven data = GetPublishableSeven();
@@ -142,12 +146,13 @@ namespace TestProject1
 
             publ.endTick();
 
-            // uncomment to update files
-            //buffer.writeToFile(fileName);
+            if(WriteFiles)
+                buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            Assert.True(platform.AreEqual(expected, buffer));
         }
-        static void TestParseUpdate(IPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
+        static void TestParseUpdate(ITestPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable_seven_subscriber subs = new mtest.publishable_seven_subscriber();
             subs.debugOnlySetData(GetPublishableSeven());

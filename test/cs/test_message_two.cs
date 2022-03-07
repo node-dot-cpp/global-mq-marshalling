@@ -35,7 +35,7 @@ namespace TestProject1
 
     public class test_message_two
     {
-        private const string PathGmq = "test_message_two.gmq";
+        private const string PathGmq = TestCommon.DataPathPrefix + "test_message_two.gmq";
         private static void ComposeMessageTwo(BufferT buffer, mtest.struct_one msg)
         {
             mtest.test_gmq.composeMessage_message_two(buffer,

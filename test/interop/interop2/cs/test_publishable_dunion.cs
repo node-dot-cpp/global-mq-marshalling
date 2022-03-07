@@ -133,7 +133,7 @@ namespace test_interop2_csharp
 
             SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
             if (proto == Protocol.Json)
-                Assert.Equal(expected, buffer);
+                Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == Protocol.Gmq)
                 Assert.Equal(expected, buffer);
         }
@@ -170,7 +170,11 @@ namespace test_interop2_csharp
             if (WriteFiles)
                 buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            if (proto == Protocol.Json)
+                Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
+            else if (proto == Protocol.Gmq)
+                Assert.Equal(expected, buffer);
         }
         static void TestParseUpdate(Protocol proto, String fileName, Func<mtest.publishable_dunion> getState, Action<mtest.Ipublishable_dunion> updateDelegate)
         {

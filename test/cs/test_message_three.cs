@@ -35,7 +35,7 @@ namespace TestProject1
 
     public class test_message_three
     {
-        private const string PathJson = "test_message_three.json";
+        private const string PathJson = TestCommon.DataPathPrefix + "test_message_three.json";
         private static void ComposeMessageThree(BufferT buffer, mtest.struct_one msg)
         {
             mtest.test_json.composeMessage_message_three(buffer,
@@ -61,7 +61,8 @@ namespace TestProject1
             // uncomment to update file
             //buffer.writeToFile(PathJson);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(PathJson);
+            Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
         }
 
         [Fact]

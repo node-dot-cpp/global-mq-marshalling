@@ -35,13 +35,22 @@ namespace TestProject1
 
     public class test_publishable_six
     {
-        internal const string Path = "test_publishable_six.json";
-        internal const string Path1 = "test_publishable_six_update1.json";
-        internal const string Path2 = "test_publishable_six_update2.json";
-        internal const string Path3 = "test_publishable_six_update3.json";
+        private const string Prefix = TestCommon.DataPathPrefix + "";
+
+        internal const string Path = Prefix + "test_publishable_six.json";
+        internal const string Path1 = Prefix + "test_publishable_six_update1.json";
+        internal const string Path2 = Prefix + "test_publishable_six_update2.json";
+        internal const string Path3 = Prefix + "test_publishable_six_update3.json";
+
+        internal const string GmqPath_s0 = Prefix + "test_publishable_six2.gmq";
+        internal const string GmqPath_u1 = Prefix + "test_publishable_six2_update1.gmq";
+        internal const string GmqPath_u2 = Prefix + "test_publishable_six2_update2.gmq";
+        internal const string GmqPath_u3 = Prefix + "test_publishable_six2_update3.gmq";
 
 
-        static IPlatformSupport jsonFactory = new DefaultJsonPlatformSupport();
+        static bool WriteFiles = false;
+        static ITestPlatformSupport JsonPlatform = new TestJsonPlatform();
+        static ITestPlatformSupport GmqPlatform = new TestGmqPlatform();
 
         internal static  mtest.StructSix GetPublishableSix()
         {
@@ -69,7 +78,7 @@ namespace TestProject1
         }
 
 
-        internal static void TestComposeStateSync(IPlatformSupport platform, String fileName)
+        internal static void TestComposeStateSync(ITestPlatformSupport platform, String fileName)
         {
 
             mtest.StructSix_publisher publ = new  mtest.StructSix_publisher();
@@ -81,13 +90,14 @@ namespace TestProject1
 
             publ.generateStateSyncMessage(composer);
 
-            // uncomment to update file
-            //buffer.writeToFile(fileName);
+            if (WriteFiles)
+                buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            Assert.True(platform.AreEqual(expected, buffer));
         }
 
-        internal static void TestParseStateSync(IPlatformSupport platform, String fileName)
+        internal static void TestParseStateSync(ITestPlatformSupport platform, String fileName)
         {
              mtest.StructSix_subscriber subs = new  mtest.StructSix_subscriber();
 
@@ -100,7 +110,7 @@ namespace TestProject1
         }
 
 
-        internal static void TestComposeUpdate(IPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
+        internal static void TestComposeUpdate(ITestPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
         {
             mtest.StructSix_publisher publ = new mtest.StructSix_publisher();
             mtest.StructSix data = GetPublishableSix();
@@ -115,12 +125,13 @@ namespace TestProject1
 
             publ.endTick();
 
-            // uncomment to update file
-            //buffer.writeToFile(fileName);
+            if (WriteFiles)
+                buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            Assert.True(platform.AreEqual(expected, buffer));
         }
-        internal static void TestParseUpdate(IPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
+        internal static void TestParseUpdate(ITestPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
         {
              mtest.StructSix_subscriber subs = new  mtest.StructSix_subscriber();
             subs.debugOnlySetData(GetPublishableSix());
@@ -171,50 +182,99 @@ namespace TestProject1
         [Fact]
         public static void TestJsonComposeStateSync()
         {
-            TestComposeStateSync(jsonFactory, Path);
+            TestComposeStateSync(JsonPlatform, Path);
         }
 
         [Fact]
         public static void TestJsonParseStateSync()
         {
-            TestParseStateSync(jsonFactory, Path);
+            TestParseStateSync(JsonPlatform, Path);
         }
 
         [Fact]
         public static void TestJsonComposeUpdate1()
         {
-            TestComposeUpdate(jsonFactory, Path1, doUpdate1);
+            TestComposeUpdate(JsonPlatform, Path1, doUpdate1);
         }
 
         [Fact]
         public static void TestJsonParseUpdate1()
         {
-            TestParseUpdate(jsonFactory, Path1, doUpdate1);
+            TestParseUpdate(JsonPlatform, Path1, doUpdate1);
         }
 
         [Fact]
         public static void TestJsonComposeUpdate2()
         {
-            TestComposeUpdate(jsonFactory, Path2, doUpdate2);
+            TestComposeUpdate(JsonPlatform, Path2, doUpdate2);
         }
 
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            TestParseUpdate(jsonFactory, Path2, doUpdate2);
+            TestParseUpdate(JsonPlatform, Path2, doUpdate2);
         }
 
 
         [Fact]
         public static void TestJsonComposeNoChangeUpdate3()
         {
-            TestComposeUpdate(jsonFactory, Path3, doNothing);
+            TestComposeUpdate(JsonPlatform, Path3, doNothing);
         }
 
         [Fact]
         public static void TestJsonParseNoChangeUpdate3()
         {
-            TestParseUpdate(jsonFactory, Path3, null);
+            TestParseUpdate(JsonPlatform, Path3, null);
+        }
+//////////////////////
+        [Fact]
+        public static void TestGmqComposeStateSync()
+        {
+            TestComposeStateSync(GmqPlatform, GmqPath_s0);
+        }
+
+        [Fact]
+        public static void TestGmqParseStateSync()
+        {
+            TestParseStateSync(GmqPlatform, GmqPath_s0);
+        }
+
+        [Fact]
+        public static void TestGmqComposeUpdate1()
+        {
+            TestComposeUpdate(GmqPlatform, GmqPath_u1, doUpdate1);
+        }
+
+        [Fact]
+        public static void TestGmqParseUpdate1()
+        {
+            TestParseUpdate(GmqPlatform, GmqPath_u1, doUpdate1);
+        }
+
+        [Fact]
+        public static void TestGmqComposeUpdate2()
+        {
+            TestComposeUpdate(GmqPlatform, GmqPath_u2, doUpdate2);
+        }
+
+        [Fact]
+        public static void TestGmqParseUpdate2()
+        {
+            TestParseUpdate(GmqPlatform, GmqPath_u2, doUpdate2);
+        }
+
+
+        [Fact]
+        public static void TestGmqComposeNoChangeUpdate3()
+        {
+            TestComposeUpdate(GmqPlatform, GmqPath_u3, doNothing);
+        }
+
+        [Fact]
+        public static void TestGmqParseNoChangeUpdate3()
+        {
+            TestParseUpdate(GmqPlatform, GmqPath_u3, null);
         }
     }
 }

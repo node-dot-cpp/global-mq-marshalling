@@ -50,7 +50,7 @@ namespace test_interop2_csharp
         private const string GmqPath_u3 = Prefix + "update_3.gmq";
 
 
-        public static bool WriteFiles = false;
+        static bool WriteFiles = false;
         public enum Protocol { Json, Gmq };
         public static BufferT makeBuffer() { return new SimpleBuffer(); }
         public static IPublishableComposer makePublishableComposer(Protocol proto, BufferT buffer)
@@ -123,7 +123,7 @@ namespace test_interop2_csharp
 
             SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
             if (proto == Protocol.Json)
-                Assert.Equal(expected, buffer);
+                Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == Protocol.Gmq)
                 Assert.Equal(expected, buffer);
         }

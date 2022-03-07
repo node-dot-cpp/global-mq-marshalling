@@ -35,8 +35,14 @@ namespace TestProject1
 
     public class test_struct_one
     {
-        private const string PathJson = "test_struct_one.json";
-        private const string PathGmq = "test_struct_one.gmq";
+        private const string Prefix = TestCommon.DataPathPrefix + "";
+        private const string PathJson = Prefix + "test_struct_one.json";
+        private const string PathGmq = Prefix + "test_struct_one.gmq";
+
+        static bool WriteFiles = false;
+        static ITestPlatformSupport JsonPlatform = new TestJsonPlatform();
+        static ITestPlatformSupport GmqPlatform = new TestGmqPlatform();
+
         public static mtest.struct_one GetSampleData()
         {
             //create some sample data to be written to message
@@ -69,9 +75,11 @@ namespace TestProject1
 
 
             // uncomment to update file
-            //buffer.writeToFile(PathGmq);
+            if(WriteFiles)
+                buffer.writeToFile(PathGmq);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathGmq));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(PathGmq);
+            Assert.True(GmqPlatform.AreEqual(expected, buffer));
         }
 
         [Fact]
@@ -85,9 +93,11 @@ namespace TestProject1
             mtest.struct_one_message.compose(composer, msg);
 
             // uncomment to update file
-            //buffer.writeToFile(PathJson);
+            if(WriteFiles)
+                buffer.writeToFile(PathJson);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(PathJson);
+            Assert.True(JsonPlatform.AreEqual(expected, buffer));
         }
 
         [Fact]

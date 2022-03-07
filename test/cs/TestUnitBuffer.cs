@@ -50,7 +50,7 @@ namespace TestProject1
             left.appendAscii(l);
             right.appendAscii(r);
 
-            Assert.Equal(left, right);
+            Assert.True(SimpleBuffer.AreEqualIgnoreEol(left, right));
         }
     }
 

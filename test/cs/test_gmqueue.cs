@@ -51,12 +51,13 @@ namespace TestProject1
                     if (filePrefix != null)
                     {
                         SimpleBuffer buffer = (SimpleBuffer)messages[i].msg;
-                        String fileName = filePrefix + msgCnt + ".json";
+                        String fileName = TestCommon.DataPathPrefix + filePrefix + msgCnt + ".json";
 
                         // uncomment to update file
                         //buffer.writeToFile(fileName);
 
-                        Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+                        SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+                        Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
                     }
                 }
             }

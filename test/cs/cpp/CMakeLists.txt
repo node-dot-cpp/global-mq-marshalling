@@ -8,16 +8,6 @@ add_custom_command(
     DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/../test_marshalling.idl
 )
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../IdlGenerated.cs
-    COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/../test_marshalling.idl ${CMAKE_CURRENT_SOURCE_DIR}/../IdlGenerated.cs --csharp -m=mtest
-    DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/../test_marshalling.idl
-)
-
-add_custom_target(test-interop1-cs-idl ALL
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../IdlGenerated.cs
-)
-
 add_executable(test-interop1-cpp
     main.cpp
     idl_generated.h
@@ -33,11 +23,8 @@ add_executable(test-interop1-cpp
 target_compile_definitions(test-interop1-cpp PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(test-interop1-cpp global-mq) 
 
-add_test(NAME interop1-cpp COMMAND test-interop1-cpp --pass-zen)
-
-file(GLOB JSON_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/../*.json")
-file(GLOB GMQ_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/../*.gmq")
-
-file(COPY ${JSON_TEST_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${GMQ_TEST_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME interop1-cpp
+    COMMAND test-interop1-cpp --pass-zen
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
 
