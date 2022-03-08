@@ -62,8 +62,9 @@ namespace test_interop2_csharp
             // uncomment to update file
             //buffer.writeToFile(PathJson);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathJson));
-         }
+            SimpleBuffer expected = SimpleBuffer.readFromFile(PathJson);
+            Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
+        }
 
         [Fact]
         public static void TestJsonParse()
