@@ -30,18 +30,20 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace test_interop2_csharp
+namespace test_interop2_csharp_todo
 {
 
     public class test_struct_du
     {
-        private const string Prefix = TestCommon.DataPathPrefix + "message_dunion/";
+        private const string Prefix = TestCommon.DataPathPrefix + "struct_dunion/";
         private const string PathJson0 = Prefix + "test_struct_du_0.json";
         private const string PathJson1 = Prefix + "test_struct_du_1.json";
         private const string PathJson2 = Prefix + "test_struct_du_2.json";
         private const string PathGmq0 = Prefix + "test_struct_du_0.gmq";
         private const string PathGmq1 = Prefix + "test_struct_du_1.gmq";
         private const string PathGmq2 = Prefix + "test_struct_du_2.gmq";
+
+        public static bool WriteFiles = false;
 
         static mtest.struct_du GetStructDu0()
         {
@@ -83,10 +85,11 @@ namespace test_interop2_csharp
 
             mtest.struct_du_message.compose(composer, msg);
 
-            // uncomment to update file
-            //buffer.writeToFile(fileName);
+            if(WriteFiles)
+                buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
         }
 
         static void TestGmqCompose(Func<mtest.struct_du> sampleData, string fileName)
@@ -99,10 +102,11 @@ namespace test_interop2_csharp
             mtest.struct_du_message.compose(composer, msg);
 
 
-            // uncomment to update file
-            //buffer.writeToFile(fileName);
+            if (WriteFiles)
+                buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
+            Assert.Equal(expected, buffer);
         }
 
         static void TestJsonParse(Func<mtest.struct_du> sampleData, string fileName)
@@ -127,11 +131,11 @@ namespace test_interop2_csharp
             Assert.Equal(sampleData(), msg);
         }
 
-        //[Fact]
-        //public static void TestJsonCompose0()
-        //{
-        //    TestJsonCompose(GetStructDu0, PathJson0);
-        //}
+        [Fact]
+        public static void TestJsonCompose0()
+        {
+            TestJsonCompose(GetStructDu0, PathJson0);
+        }
         [Fact]
         public static void TestJsonCompose1()
         {
@@ -144,11 +148,11 @@ namespace test_interop2_csharp
             TestJsonCompose(GetStructDu2, PathJson2);
         }
 
-        //[Fact]
-        //public static void TestGmqCompose0()
-        //{
-        //    TestGmqCompose(GetStructDu0, PathGmq0);
-        //}
+        [Fact]
+        public static void TestGmqCompose0()
+        {
+            TestGmqCompose(GetStructDu0, PathGmq0);
+        }
         [Fact]
         public static void TestGmqCompose1()
         {

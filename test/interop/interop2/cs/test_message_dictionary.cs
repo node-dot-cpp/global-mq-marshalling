@@ -81,11 +81,11 @@ namespace test_interop2_csharp
             SimpleBuffer buffer = SimpleBuffer.readFromFile(JsonPath_0);
 
             mtest.json_scope.handleMessage(buffer,
-                mtest.json_scope.makeMessageHandler(mtest.json_scope.MsgId.message_dictionary_json, (ParserBase parser) => {
+                mtest.json_scope.makeMessageHandler(mtest.json_scope.MsgId.message_dictionary_json, (JsonParser parser, ulong id) => {
                     mtest.struct_dictionary msg = mtest.json_scope.parseMessage_message_dictionary_json(parser);
                     condition = msg.isEquivalent(GetDictionary_0());
                 }),
-                mtest.json_scope.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
+                mtest.json_scope.makeDefaultMessageHandler((JsonParser parser, ulong id) => { Assert.True(false); })
             );
 
             Assert.True(condition);
@@ -115,11 +115,11 @@ namespace test_interop2_csharp
             bool condition = false;
 
             mtest.gmq_scope.handleMessage(buffer,
-                mtest.gmq_scope.makeMessageHandler(mtest.gmq_scope.MsgId.message_dictionary_gmq, (ParserBase parser) => {
+                mtest.gmq_scope.makeMessageHandler(mtest.gmq_scope.MsgId.message_dictionary_gmq, (GmqParser parser, ulong id) => {
                     mtest.struct_dictionary msg = mtest.gmq_scope.parseMessage_message_dictionary_gmq(parser);
                     condition = msg.Equals(GetDictionary_0());
                 }),
-                mtest.gmq_scope.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
+                mtest.gmq_scope.makeDefaultMessageHandler((GmqParser parser, ulong id) => { Assert.True(false); })
             );
 
             Assert.True(condition);

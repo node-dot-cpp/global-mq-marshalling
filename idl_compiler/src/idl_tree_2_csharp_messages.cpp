@@ -338,7 +338,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateComposeMessageMethod(CsharpWritter f, CompositeType& s, const std::string& msgName, Proto proto)
+	void csharpMsg_generateComposeMessageMethod(CsharpWritter f, CompositeType& s, const std::string& msgName, Scope& scope)
 	{
 		// when message is an alias we feed structure here
 		assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure);
@@ -349,7 +349,7 @@ namespace {
 		f.write("\tpublic static void composeMessage_%s(BufferT buffer, %s)\n", msgName.c_str(), decl.c_str());
 		f.write("\t{\n");
 
-		if (proto == Proto::gmq)
+		if (scope.proto == Proto::gmq)
 		{
 			f.write("\t\tGmqComposer composer = new GmqComposer(buffer);\n\n");
 			f.write("\t\tcomposer.composeUnsignedInteger((UInt64)MsgId.%s);\n", msgName.c_str());
@@ -357,7 +357,7 @@ namespace {
 			string caller = generateCsharpCallerParams(s, false);
 			f.write("\t\t%s_message.compose(composer, %s);\n", s.name.c_str(), caller.c_str());
 		}
-		else if (proto == Proto::json)
+		else if (scope.proto == Proto::json)
 		{
 			f.write("\t\tJsonComposer composer = new JsonComposer(buffer);\n\n");
 			f.write("\t\tcomposer.append(\"{\\n  \");\n");
@@ -380,23 +380,20 @@ namespace {
 	}
 
 
-	void csharpMsg_generateParseMessageMethod(CsharpWritter f, const char* msg_name, const char* type_name)
+	void csharpMsg_generateParseMessageMethod(CsharpWritter f, const char* msg_name, const char* type_name, Scope& scope)
 	{
 		// when message is an alias we feed structure here
 
-
-
-		f.write("\tpublic static %s parseMessage_%s(ParserBase parser)\n", type_name, msg_name);
-
+		if (scope.proto == Proto::gmq)
+			f.write("\tpublic static %s parseMessage_%s(GmqParser parser)\n", type_name, msg_name);
+		else if (scope.proto == Proto::json)
+			f.write("\tpublic static %s parseMessage_%s(JsonParser parser)\n", type_name, msg_name);
+		else
+			assert(false);
 
 		f.write("\t{\n");
 		f.write("\t\t%s tmp = new %s();\n", type_name, type_name);
-		f.write("\t\tif (parser is GmqParser gmqP)\n");
-		f.write("\t\t\t%s_message.parse(gmqP, tmp);\n", type_name);
-		f.write("\t\telse if (parser is JsonParser jsonP)\n");
-		f.write("\t\t\t%s_message.parse(jsonP, tmp);\n", type_name);
-		f.write("\t\telse\n");
-		f.write("\t\t\tthrow new ArgumentException();\n");
+		f.write("\t\t%s_message.parse(parser, tmp);\n", type_name);
 		f.write("\t\treturn tmp;\n");
 		f.write("\t}\n");
 
@@ -418,72 +415,44 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpMsg_generateScopeHandler(CsharpWritter f, Scope& scope)
+	void csharpMsg_generateScopeHandler(CsharpWritter f, const char* prefix)
 	{
-
-
-		f.write("\tpublic static MessageHandler makeMessageHandler( MsgId id, MessageHandler.HandlerDelegate handler )\n");
+		f.write("\tpublic static %sMessageHandler makeMessageHandler( MsgId id, %sMessageHandler.HandlerDelegate handler )\n", prefix, prefix);
 		f.write("\t{\n");
-		f.write("\t\treturn new MessageHandler((ulong)id, handler);\n");
+		f.write("\t\treturn new %sMessageHandler((ulong)id, handler);\n", prefix);
 		f.write("\t}\n");
 
-		f.write("\tpublic static MessageHandler makeDefaultMessageHandler( MessageHandler.HandlerDelegate handler)\n");
+		f.write("\tpublic static %sMessageHandler makeDefaultMessageHandler( %sMessageHandler.HandlerDelegate handler)\n", prefix, prefix);
 		f.write("\t{\n");
-		f.write("\t\treturn new MessageHandler(MessageHandler.DefaultHandler, handler);\n");
+		f.write("\t\treturn new %sMessageHandler(%sMessageHandler.DefaultHandler, handler);\n", prefix, prefix);
 		f.write("\t}\n");
 
-		f.write("\tpublic static void handleMessage( BufferT buffer, params MessageHandler[] handlers )\n");
+		f.write("\tpublic static void handleMessage( BufferT buffer, params %sMessageHandler[] handlers )\n", prefix);
 		f.write("\t{\n");
 		f.write("\t\thandleMessage(buffer.getReadIterator(), handlers);\n");
 		f.write("\t}\n");
 
-
-		f.write("\tpublic static void handleMessage( ReadIteratorT riter, params MessageHandler[] handlers )\n");
+		f.write("\tpublic static void handleMessage( ReadIteratorT riter, params %sMessageHandler[] handlers )\n", prefix);
 		f.write("\t{\n");
-		switch (scope.proto)
-		{
-		case Proto::gmq:
-			f.write("\t\tGmqParser parser = new GmqParser( riter );\n");
-			f.write("\t\tMessageHandler.gmq_handle( parser, handlers );\n");
-			break;
-		case Proto::json:
-			f.write("\t\tJsonParser parser = new JsonParser( riter );\n");
-			f.write("\t\tMessageHandler.json_handle( parser, handlers );\n");
-			break;
-		default:
-			assert(false);
-		}
+		f.write("\t\t%sParser parser = new %sParser( riter );\n", prefix, prefix);
+		f.write("\t\t%sMessageHandler.handle( parser, handlers );\n", prefix);
 		f.write("\t}\n");
 	}
 
-	
-	void csharpMsg_generateScopeComposer(CsharpWritter f, Scope& scope)
+
+	void csharpMsg_generateScopeHandler(CsharpWritter f, Scope& scope)
 	{
-
-
-		f.write("\tpublic static void composeMessage( BufferT buffer, MessageHandlerArray handlers )\n");
-		f.write("\t{\n");
-		f.write("\t\tReadIteratorT riter = buffer.getReadIterator();\n");
-		f.write("\t\thandleMessage(riter, handlers);\n");
-		f.write("\t}\n");
-
-
-		f.write("\tpublic static void handleMessage( ReadIteratorT riter, MessageHandlerArray handlers )\n");
-		f.write("\t{\n");
 		switch (scope.proto)
 		{
 		case Proto::gmq:
-				f.write("\t\tGmqParser parser = new GmqParser( riter );\n");
-				f.write("\t\thandlers.gmq_handle(parser);\n");
+			csharpMsg_generateScopeHandler(f, "Gmq");
 			break;
 		case Proto::json:
-				f.write("\t\tJsonParser parser = new JsonParser( riter );\n");
-				f.write("\t\thandlers.json_handle(parser);\n");
+			csharpMsg_generateScopeHandler(f, "Json");
 			break;
 		default:
 			assert(false);
 		}
-		f.write("\t}\n");
 	}
 
 	void csharpMsg_generateDictionaryMessage(CsharpWritter f, MessageParameter& member)
@@ -976,16 +945,16 @@ void generateCsharpMessageScope(CsharpWritter f, Root& root, Scope& scope)
 			generateCsharpStructInterface(f.indent(), *it, type_name.c_str());
 			generateCsharpStructImpl(f.indent(), *it, type_name.c_str(), interface_name.c_str());
 			generateCsharpStructMessage(f.indent(), *it, type_name.c_str(), interface_name.c_str());
-			csharpMsg_generateComposeMessageMethod(f, *it, it->name, scope.proto);
-			csharpMsg_generateParseMessageMethod(f, type_name.c_str(), type_name.c_str());
+			csharpMsg_generateComposeMessageMethod(f, *it, it->name, scope);
+			csharpMsg_generateParseMessageMethod(f, type_name.c_str(), type_name.c_str(), scope);
 		}
 		else
 		{
 			assert(it->aliasIdx < root.structs.size());
 			auto& alias = root.structs[static_cast<decltype(root.structs)::size_type>(it->aliasIdx)];
 
-			csharpMsg_generateComposeMessageMethod(f, *alias, it->name, scope.proto);
-			csharpMsg_generateParseMessageMethod(f, it->name.c_str(), alias->name.c_str());
+			csharpMsg_generateComposeMessageMethod(f, *alias, it->name, scope);
+			csharpMsg_generateParseMessageMethod(f, it->name.c_str(), alias->name.c_str(), scope);
 		}
 
 	}

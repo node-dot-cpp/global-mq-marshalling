@@ -35,7 +35,7 @@ namespace TestProject1
     /// <summary>
     /// Tests to match Json parser/composer from C# to C++
     /// </summary>
-    public class TestUnitGmqIntegralEncoding
+    public class TestUnitEncoding
     {
 
         [Theory]
@@ -53,7 +53,7 @@ namespace TestProject1
 
             UInt64 result = IntegralVlq.readVlqIntegral(buffer.getReadIterator());
 
-            Assert.Equal<UInt64>(val, result);
+            Assert.Equal(val, result);
         }
 
         [Theory]
@@ -73,9 +73,38 @@ namespace TestProject1
             UInt64 uns = ZigZag.encode(val);
             Int64 result = ZigZag.decode(uns);
 
-            Assert.Equal<Int64>(val, result);
+            Assert.Equal(val, result);
         }
 
+        [Theory]
+        [InlineData("hello")]
+        [InlineData("\thi\r\nbye")]
+        public static void TestAsciiAddressEncoding(String val)
+        {
+            UInt64[] baseAddr = new UInt64[1];
+            UInt64[] addr = AsciiAddress.encode(baseAddr, val);
+            int refIndex = 1;
+            String result = AsciiAddress.decode(addr, ref refIndex);
+
+            Assert.Equal(val, result);
+        }
+
+
+        [Theory]
+        [InlineData("hello\0")]
+        public static void TestAsciiAddressEncodingFail(String val)
+        {
+            try
+            {
+                UInt64[] baseAddr = new UInt64[1];
+                UInt64[] addr = AsciiAddress.encode(baseAddr, val);
+            }
+            catch(Exception)
+            {
+                return;
+            }
+            Assert.True(false);
+        }
     }
 
 }

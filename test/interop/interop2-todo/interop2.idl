@@ -47,13 +47,13 @@ DISCRIMINATED_UNION du_one{
 };
 
 STRUCT struct_du {
-	STRUCT point3D pt;
+	CHARACTER-STRING name;
 	DISCRIMINATED_UNION du_one disc_union;
 };
 
 
-// MESSAGE gmq_scope : message_du = 5 = STRUCT struct_du;
-// MESSAGE json_scope : message_du = 5 = STRUCT struct_du;
+MESSAGE gmq_scope : message_du = 5 = STRUCT struct_du;
+MESSAGE json_scope : message_du = 5 = STRUCT struct_du;
 
 
 STRUCT NONEXTENDABLE BasicTypes {
@@ -77,9 +77,9 @@ STRUCT NONEXTENDABLE AggregateType {
 
 STRUCT NONEXTENDABLE struct_dictionary {
  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictionary_one;
-// DICTIONARY<UINTEGER, STRUCT AggregateType> dictio_two;
-// DICTIONARY<INTEGER, DISCRIMINATED_UNION  > dictio_three;
-// DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictio_four;
+ DICTIONARY<UINTEGER, STRUCT AggregateType> dictionary_two;
+ DICTIONARY<INTEGER, DISCRIMINATED_UNION du_one > dictionary_three;
+ DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictionary_four;
 };
 
 

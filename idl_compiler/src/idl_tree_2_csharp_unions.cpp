@@ -56,7 +56,9 @@ namespace {
 		f.write("\t\tif (key != \"caseData\")\n");
 		f.write("\t\t\tthrow new FormatException();\n\n");
 
-		f.write("\t\tswitch ((I%s.Variants)caseID)\n", type_name.c_str());
+
+		f.write("\t\tval.setCurrentVariant((I%s.Variants)caseID);\n", type_name.c_str());
+		f.write("\t\tswitch (val.currentVariant())\n");
 		f.write("\t\t{\n");
 
 		// each case attributes
@@ -69,13 +71,14 @@ namespace {
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t{\n");
-			f.write("\t\t\t\tval.setCurrentVariant(I%s.Variants.%s);\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t\t%s_message.parse(parser, val);\n", case_name.c_str());
 			f.write("\t\t\t\tbreak;\n");
 			f.write("\t\t\t}\n");
 		}
 
-		f.write("\t\t\tdefault: throw new System.Exception();\n");
+		f.write("\t\t\tdefault:\n");
+		f.write("\t\t\t\t// TODO: actually skip any data\n");
+		f.write("\t\t\t\tbreak;\n");
 		f.write("\t\t}\n\n");
 
 		f.write("\t\tparser.skipDelimiter('}');\n\n");
@@ -98,7 +101,8 @@ namespace {
 		f.write("\t\tInt64 caseID;\n");
 		f.write("\t\tparser.parseSignedInteger(out caseID);\n\n");
 
-		f.write("\t\tswitch ((I%s.Variants)caseID)\n", type_name.c_str());
+		f.write("\t\t\t\tval.setCurrentVariant((I%s.Variants)caseID);\n", type_name.c_str());
+		f.write("\t\tswitch (val.currentVariant())\n", type_name.c_str());
 		f.write("\t\t{\n");
 
 		// each case attributes
@@ -111,13 +115,14 @@ namespace {
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t{\n");
-			f.write("\t\t\t\tval.setCurrentVariant(I%s.Variants.%s);\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t\t%s_message.parse(parser, val);\n", case_name.c_str());
 			f.write("\t\t\t\tbreak;\n");
 			f.write("\t\t\t}\n");
 		}
 
-		f.write("\t\t\tdefault: throw new System.Exception();\n");
+		f.write("\t\t\tdefault:\n");
+		f.write("\t\t\t\t// TODO: actually skip any data\n");
+		f.write("\t\t\t\tbreak;\n");
 		f.write("\t\t}\n\n");
 
 		//f.write("\t\treturn val;\n");
@@ -137,7 +142,6 @@ namespace {
 		f.write("\t\tcomposer.addNamePart(\"caseid\");\n");
 		f.write("\t\tcomposer.composeSignedInteger((Int64)val.currentVariant());\n");
 		f.write("\t\tcomposer.append( \",\\n  \" );\n");
-		f.write("\t\tcomposer.addNamePart(\"caseData\");\n");
 
 		f.write("\t\tswitch (val.currentVariant())\n");
 		f.write("\t\t{\n");
@@ -152,6 +156,7 @@ namespace {
 
 			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
 			f.write("\t\t\t{\n");
+			f.write("\t\t\t\tcomposer.addNamePart(\"caseData\");\n");
 
 			string caller = generateCsharpCallerParams(cs, true);
 			f.write("\t\t\t\t%s_message.compose(composer, %s);\n", case_name.c_str(), caller.c_str());
@@ -160,7 +165,8 @@ namespace {
 			f.write("\t\t\t}\n");
 		}
 
-		f.write("\t\t\tdefault: throw new System.Exception();\n");
+		f.write("\t\t\tdefault:\n");
+		f.write("\t\t\t\tbreak;\n");
 		f.write("\t\t}\n\n");
 
 		f.write("\t\tcomposer.append( \"\\n}\" );\n");
@@ -196,7 +202,8 @@ namespace {
 			f.write("\t\t\t}\n");
 		}
 
-		f.write("\t\t\tdefault: throw new System.Exception();\n");
+		f.write("\t\t\tdefault:\n");
+		f.write("\t\t\t\tbreak;\n");
 		f.write("\t\t}\n\n");
 
 		f.write("\t}\n");

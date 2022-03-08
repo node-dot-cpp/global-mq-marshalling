@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace test_interop2_csharp
+namespace test_interop2_csharp_todo
 {
     public class test_simple
     {

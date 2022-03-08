@@ -1,0 +1,1 @@
+{"changes":[{"addr":[1, 1, 1],"key":2,"value":{"name":"aggr1","theAggregate":{"anInt":-15,"anUInt":15,"aReal":13.14,"aString":"hello2!"},"lastValue":199}},{}]}

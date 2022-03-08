@@ -9,13 +9,13 @@ add_custom_command(
     DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop2.idl
 )
 
-add_custom_target( test-csharp-only-idl ALL
+add_custom_target(test-interop2-todo-idl ALL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cs/generated_interop2.cs
 )
 
 
 if(MSVC)
-    add_test(NAME test-csharp-only
+    add_test(NAME test-interop2-todo
         COMMAND dotnet test /p:Configuration=Release /p:Platform=AnyCPU
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cs
     )

@@ -77,12 +77,12 @@ namespace TestProject1
             bool condition = false;
 
             mtest.test_gmq.handleMessage(buffer,
-                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_two, (ParserBase parser) => {
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_two, (GmqParser parser, ulong id) => {
                     mtest.struct_one msg = mtest.test_gmq.parseMessage_message_two(parser);
                     condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
-                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (ParserBase parser) => { Assert.True(false); }),
-                mtest.test_gmq.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (GmqParser parser, ulong id) => { Assert.True(false); }),
+                mtest.test_gmq.makeDefaultMessageHandler((GmqParser parser, ulong id) => { Assert.True(false); })
             );
 
             Assert.True(condition);
@@ -100,8 +100,8 @@ namespace TestProject1
             bool condition = false;
 
             mtest.test_gmq.handleMessage(buffer,
-                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (ParserBase parser) => { Assert.True(false); }),
-                mtest.test_gmq.makeDefaultMessageHandler((ParserBase parser) => {
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (GmqParser parser, ulong id) => { Assert.True(false); }),
+                mtest.test_gmq.makeDefaultMessageHandler((GmqParser parser, ulong id) => {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
                     // TODO see what we should really do in that case
                     mtest.struct_one msg = mtest.test_gmq.parseMessage_message_two(parser);

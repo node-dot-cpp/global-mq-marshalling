@@ -32,8 +32,6 @@ using System.Text;
 
 namespace globalmq.marshalling
 {
-	enum Proto { GMQ, JSON };
-
 	public class ZigZag
     {
 		public static UInt64 encode(Int64 i)
@@ -49,15 +47,21 @@ namespace globalmq.marshalling
 	{
 		public static UInt64[] encode(UInt64[] baseAddr, String str)
 		{
+			if (str.IndexOf('\0') != -1)
+				throw new ArgumentException();
+
 			byte[] ascii = Encoding.ASCII.GetBytes(str);
 
-			UInt64[] res = new UInt64[baseAddr.Length + ascii.Length];
+			UInt64[] res = new UInt64[baseAddr.Length + ascii.Length + 1];
 			baseAddr.CopyTo(res, 0);
 			
 			for(int i = 0; i != ascii.Length; ++i)
             {
 				res[baseAddr.Length + i] = ascii[i];
             }
+
+			// add ending null
+			res[baseAddr.Length + ascii.Length] = 0;
 
 			return res;
 		}
@@ -260,8 +264,7 @@ namespace globalmq.marshalling
 namespace globalmq.marshalling
 {
 
-    public interface ParserBase { }
-    public class GmqParser : ParserBase
+    public class GmqParser
 	{
 		ReadIteratorT riter;
 
@@ -306,7 +309,7 @@ namespace globalmq.marshalling
 			s = sb.ToString();
 		}
 	};
-	public class JsonParser : ParserBase
+	public class JsonParser
 	{
 		ReadIteratorT riter;
 

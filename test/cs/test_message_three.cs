@@ -73,12 +73,12 @@ namespace TestProject1
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
 
             mtest.test_json.handleMessage(buffer,
-                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (ParserBase parser) => {
+                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (JsonParser parser, ulong id) => {
                     mtest.struct_one msg = mtest.test_json.parseMessage_message_three(parser);
                     condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
-                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
-                mtest.test_json.makeDefaultMessageHandler((ParserBase parser) => { Assert.True(false); })
+                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (JsonParser parser, ulong id) => { Assert.True(false); }),
+                mtest.test_json.makeDefaultMessageHandler((JsonParser parser, ulong id) => { Assert.True(false); })
             );
 
             Assert.True(condition);
@@ -92,8 +92,8 @@ namespace TestProject1
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
 
             mtest.test_json.handleMessage(buffer,
-                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (ParserBase parser) => { Assert.True(false); }),
-                mtest.test_json.makeDefaultMessageHandler((ParserBase parser) =>
+                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (JsonParser parser, ulong id) => { Assert.True(false); }),
+                mtest.test_json.makeDefaultMessageHandler((JsonParser parser, ulong id) =>
                 {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
                     // TODO see what we should really do in that case

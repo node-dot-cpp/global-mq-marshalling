@@ -118,28 +118,24 @@ namespace globalmq.marshalling
             }
         }
     }
-    public class MessageHandler
+
+    public class JsonMessageHandler
     {
         public static ulong DefaultHandler = ulong.MaxValue;
-        public ulong msgID { get; set; }
-        HandlerDelegate lhandler_;
+        ulong msgID { get; set; }
+        HandlerDelegate _delegate;
 
-        public delegate void HandlerDelegate(ParserBase parser);
-        public MessageHandler(ulong msgID, HandlerDelegate lhandler)
+        public delegate void HandlerDelegate(JsonParser parser, ulong msgID);
+        public JsonMessageHandler(ulong msgID, HandlerDelegate lhandler)
         {
             this.msgID = msgID;
-            lhandler_ = lhandler;
+            this._delegate = lhandler;
         }
 
-        public void handle(ParserBase parser)
-        {
-            lhandler_(parser);
-        }
-
-        public static MessageHandler find_handler(ulong msgID, MessageHandler[] handlers)
+        static JsonMessageHandler find_handler(ulong msgID, JsonMessageHandler[] handlers)
         {
             // TODO improve
-            MessageHandler defaultHandler = null;
+            JsonMessageHandler defaultHandler = null;
 
             for (int i = 0; i != handlers.Length; ++i)
             {
@@ -147,7 +143,7 @@ namespace globalmq.marshalling
                 {
                     return handlers[i];
                 }
-                else if (handlers[i].msgID == MessageHandler.DefaultHandler)
+                else if (handlers[i].msgID == JsonMessageHandler.DefaultHandler)
                 {
                     defaultHandler = handlers[i];
                 }
@@ -155,18 +151,7 @@ namespace globalmq.marshalling
 
             return defaultHandler;
         }
-        public static void gmq_handle(GmqParser parser, MessageHandler[] handlers)
-        {
-            ulong msgID;
-            parser.parseUnsignedInteger(out msgID);
-            MessageHandler handler = find_handler(msgID, handlers);
-
-            if(handler != null)
-                handler.handle(parser);
-            else
-                throw new Exception();
-        }
-        public static void json_handle(JsonParser parser, MessageHandler[] handlers)
+        public static void handle(JsonParser parser, JsonMessageHandler[] handlers)
         {
             parser.skipDelimiter('{');
             string key;
@@ -181,15 +166,66 @@ namespace globalmq.marshalling
             if (key != "msgbody")
                 throw new Exception(); // bad format
 
-            MessageHandler handler = find_handler(msgID, handlers);
+            JsonMessageHandler handler = find_handler(msgID, handlers);
 
-            if(handler != null)
+            if (handler != null)
             {
-                handler.handle(parser);
-                parser.skipDelimiter('}');
+                handler._delegate(parser, msgID);
+                //parser.skipDelimiter('}');
             }
             else
                 throw new Exception();
         }
+
+    }
+
+    public class GmqMessageHandler
+    {
+        public static ulong DefaultHandler = ulong.MaxValue;
+        ulong msgID { get; set; }
+        HandlerDelegate _delegate;
+
+        public delegate void HandlerDelegate(GmqParser parser, ulong msgID);
+        public GmqMessageHandler(ulong msgID, HandlerDelegate lhandler)
+        {
+            this.msgID = msgID;
+            _delegate = lhandler;
+        }
+        void handle(GmqParser parser, ulong msgID)
+        {
+            _delegate(parser, msgID);
+        }
+
+        static GmqMessageHandler find_handler(ulong msgID, GmqMessageHandler[] handlers)
+        {
+            // TODO improve
+            GmqMessageHandler defaultHandler = null;
+
+            for (int i = 0; i != handlers.Length; ++i)
+            {
+                if (msgID == handlers[i].msgID)
+                {
+                    return handlers[i];
+                }
+                else if (handlers[i].msgID == GmqMessageHandler.DefaultHandler)
+                {
+                    defaultHandler = handlers[i];
+                }
+            }
+
+            return defaultHandler;
+        }
+        public static void handle(GmqParser parser, GmqMessageHandler[] handlers)
+        {
+            ulong msgID;
+            parser.parseUnsignedInteger(out msgID);
+            GmqMessageHandler handler = find_handler(msgID, handlers);
+
+            if (handler != null)
+                handler._delegate(parser, msgID);
+            else
+                throw new Exception();
+        }
+
     }
 }
