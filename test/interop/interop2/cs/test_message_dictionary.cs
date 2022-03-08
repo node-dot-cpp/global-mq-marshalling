@@ -70,7 +70,8 @@ namespace test_interop2_csharp
             if(WriteFiles)
                 buffer.writeToFile(JsonPath_0);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(JsonPath_0));
+            SimpleBuffer expected = SimpleBuffer.readFromFile(JsonPath_0);
+            Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
         }
 
         [Fact]
