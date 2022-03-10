@@ -39,7 +39,8 @@ inline
 mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 {
     FILE* input_file = fopen(filename.c_str(), "rb");
-    lest_EXPECT(input_file);
+    if(!input_file)
+        lest_EXPECT(false);
 
     mtest::Buffer b;
     b.read_file(input_file);

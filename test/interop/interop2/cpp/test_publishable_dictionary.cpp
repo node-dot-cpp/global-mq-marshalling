@@ -29,6 +29,8 @@
 
 using namespace std;
 
+namespace
+{
 std::string Prefix = "data/publishable_dictionary/";
 
 std::string JsonPath_s0 = Prefix + "state_sync_0.json";
@@ -78,7 +80,6 @@ class subscriber_dictionary_for_test :
 };
 
 
-inline
 bool operator==(const mtest::structures::publishable_dictionary& l, const mtest::structures::publishable_dictionary& r)
 {
     if(l.name != r.name)
@@ -89,7 +90,7 @@ bool operator==(const mtest::structures::publishable_dictionary& l, const mtest:
 }
 
 
-mtest::structures::publishable_dictionary GetPublishableUnion_0()
+mtest::structures::publishable_dictionary GetPublishableDictionary_0()
 {
     mtest::structures::publishable_dictionary data{};
 
@@ -100,9 +101,9 @@ mtest::structures::publishable_dictionary GetPublishableUnion_0()
 
 void doUpdate1(mtest::structures::publishable_dictionary& data)
 {
-    data.data.dictionary_one.insert("hello", "world");
-    data.data.dictionary_one.insert("red", "blue");
-    data.data.dictionary_one.insert("dog", "cat");
+    data.data.dictionary_one["hello"] = "world";
+    data.data.dictionary_one["red"] = "blue";
+    data.data.dictionary_one["dog"] = "cat";
 }
 
 template<class T>
@@ -114,9 +115,9 @@ void doUpdatePublisher1(T& publ)
 }
 
 
-mtest::structures::publishable_dictionary GetPublishableUnion_1()
+mtest::structures::publishable_dictionary GetPublishableDictionary_1()
 {
-    mtest::structures::publishable_dictionary data{};
+    mtest::structures::publishable_dictionary data = GetPublishableDictionary_0();
     doUpdate1(data);
     return data;
 }
@@ -169,93 +170,93 @@ class publishable_dictionary_gmq
 
     static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return operator==(l, r);
+        return ::operator==(l, r);
     }
 };
-
+}
 
 const lest::test test_publishable_dictionary[] =
 {
     lest_CASE( "test_publishable_dictionary.TestJsonComposeStateSync0" )
     {
-        testPublishableComposeStateSync<publishable_dictionary_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
+        testPublishableComposeStateSync<publishable_dictionary_json>(JsonPath_s0, GetPublishableDictionary_0, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonComposeStateSync1" )
     {
-        testPublishableComposeStateSync<publishable_dictionary_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
+        testPublishableComposeStateSync<publishable_dictionary_json>(JsonPath_s1, GetPublishableDictionary_1, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestJsonParseStateSync0" )
+    lest_CASE( "test_publishable_dictionary.TestJsonParseStateSync0" )
     {
-        testPublishableParseStateSync<publishable_dictionary_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
+        testPublishableParseStateSync<publishable_dictionary_json>(JsonPath_s0, GetPublishableDictionary_0, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestJsonParseStateSync1" )
+    lest_CASE( "test_publishable_dictionary.TestJsonParseStateSync1" )
     {
-        testPublishableParseStateSync<publishable_dictionary_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
+        testPublishableParseStateSync<publishable_dictionary_json>(JsonPath_s1, GetPublishableDictionary_1, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonComposeUpdate1" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u1, GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dictionary_json::PublishableT>, lest_env);
+        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u1, GetPublishableDictionary_0, doUpdatePublisher1<typename publishable_dictionary_json::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonParseUpdate1" )
     {
-        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u1, GetPublishableUnion_0, doUpdate1, lest_env);
+        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u1, GetPublishableDictionary_0, doUpdate1, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonComposeUpdate2" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u2, GetPublishableUnion_1, doUpdatePublisher2<typename publishable_dictionary_json::PublishableT>, lest_env);
+        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u2, GetPublishableDictionary_1, doUpdatePublisher2<typename publishable_dictionary_json::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonParseUpdate2" )
     {
-        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u2, GetPublishableUnion_1, doUpdate2, lest_env);
+        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u2, GetPublishableDictionary_1, doUpdate2, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonComposeUpdate3" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u3, GetPublishableUnion_1, doUpdatePublisher3<typename publishable_dictionary_json::PublishableT>, lest_env);
+        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u3, GetPublishableDictionary_1, doUpdatePublisher3<typename publishable_dictionary_json::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestJsonParseUpdate3" )
     {
-        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u3, GetPublishableUnion_1, doUpdate3, lest_env);
+        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u3, GetPublishableDictionary_1, doUpdate3, lest_env);
     },
 ////////////////////////
     lest_CASE( "test_publishable_dictionary.TestGmqComposeStateSync0" )
     {
-        testPublishableComposeStateSync<publishable_dictionary_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
+        testPublishableComposeStateSync<publishable_dictionary_gmq>(GmqPath_s0, GetPublishableDictionary_0, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestGmqParseStateSync0" )
+    lest_CASE( "test_publishable_dictionary.TestGmqParseStateSync0" )
     {
-        testPublishableParseStateSync<publishable_dictionary_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
+        testPublishableParseStateSync<publishable_dictionary_gmq>(GmqPath_s0, GetPublishableDictionary_0, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqComposeStateSync1" )
     {
-        testPublishableComposeStateSync<publishable_dictionary_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
+        testPublishableComposeStateSync<publishable_dictionary_gmq>(GmqPath_s1, GetPublishableDictionary_1, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestGmqParseStateSync1" )
+    lest_CASE( "test_publishable_dictionary.TestGmqParseStateSync1" )
     {
-        testPublishableParseStateSync<publishable_dictionary_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
+        testPublishableParseStateSync<publishable_dictionary_gmq>(GmqPath_s1, GetPublishableDictionary_1, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqComposeUpdate1" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u1, GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dictionary_gmq::PublishableT>, lest_env);
+        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u1, GetPublishableDictionary_0, doUpdatePublisher1<typename publishable_dictionary_gmq::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqParseUpdate1" )
     {
-        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u1, GetPublishableUnion_0, doUpdate1, lest_env);
+        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u1, GetPublishableDictionary_0, doUpdate1, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqComposeUpdate2" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u2, GetPublishableUnion_1, doUpdatePublisher2<typename publishable_dictionary_gmq::PublishableT>, lest_env);
+        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u2, GetPublishableDictionary_1, doUpdatePublisher2<typename publishable_dictionary_gmq::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqParseUpdate2" )
     {
-        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u2, GetPublishableUnion_1, doUpdate2, lest_env);
+        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u2, GetPublishableDictionary_1, doUpdate2, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqComposeUpdate3" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u3, GetPublishableUnion_1, doUpdatePublisher3<typename publishable_dictionary_gmq::PublishableT>, lest_env);
+        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u3, GetPublishableDictionary_1, doUpdatePublisher3<typename publishable_dictionary_gmq::PublishableT>, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestGmqParseUpdate3" )
     {
-        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u3, GetPublishableUnion_1, doUpdate3, lest_env);
+        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u3, GetPublishableDictionary_1, doUpdate3, lest_env);
     },
 };
 

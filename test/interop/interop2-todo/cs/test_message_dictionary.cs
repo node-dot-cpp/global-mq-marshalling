@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace test_interop2_csharp
+namespace test_interop2_csharp_todo
 {
 
     public class test_message_dictionary
@@ -38,17 +38,13 @@ namespace test_interop2_csharp
         private const string Prefix = TestCommon.DataPathPrefix + "message_dictionary/";
 
         private const string JsonPath_0 = Prefix + "message_0.json";
-        private const string JsonPath_1 = Prefix + "message_1.json";
-        private const string JsonPath_2 = Prefix + "message_2.json";
         private const string GmqPath_0 = Prefix + "message_0.gmq";
-        private const string GmqPath_1 = Prefix + "message_1.gmq";
-        private const string GmqPath_2 = Prefix + "message_2.gmq";
 
         public static bool WriteFiles = false;
 
-        public static mtest.struct_dictionary GetDictionary_0()
+        public static mtest.struct_dictionary1 GetDictionary_0()
         {
-            mtest.struct_dictionary data = new mtest.struct_dictionary();
+            mtest.struct_dictionary1 data = new mtest.struct_dictionary1();
 
             data.dictionary_one.Add("hello", "world");
             data.dictionary_one.Add("red", "blue");
@@ -61,11 +57,11 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestJsonCompose()
         {
-            mtest.struct_dictionary msg = GetDictionary_0();
+            mtest.struct_dictionary1 msg = GetDictionary_0();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
-            mtest.json_scope.composeMessage_message_dictionary_json(buffer, msg.dictionary_one);
+            mtest.json_scope.composeMessage_message_dictionary1_json(buffer, msg.dictionary_one);
 
             if(WriteFiles)
                 buffer.writeToFile(JsonPath_0);
@@ -82,8 +78,8 @@ namespace test_interop2_csharp
             SimpleBuffer buffer = SimpleBuffer.readFromFile(JsonPath_0);
 
             mtest.json_scope.handleMessage(buffer,
-                mtest.json_scope.makeMessageHandler(mtest.json_scope.MsgId.message_dictionary_json, (JsonParser parser, ulong id) => {
-                    mtest.struct_dictionary msg = mtest.json_scope.parseMessage_message_dictionary_json(parser);
+                mtest.json_scope.makeMessageHandler(mtest.json_scope.MsgId.message_dictionary1_json, (JsonParser parser, ulong id) => {
+                    mtest.struct_dictionary1 msg = mtest.json_scope.parseMessage_message_dictionary1_json(parser);
                     condition = msg.isEquivalent(GetDictionary_0());
                 }),
                 mtest.json_scope.makeDefaultMessageHandler((JsonParser parser, ulong id) => { Assert.True(false); })
@@ -95,11 +91,11 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestGmqCompose()
         {
-            mtest.struct_dictionary msg = GetDictionary_0();
+            mtest.struct_dictionary1 msg = GetDictionary_0();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
-            mtest.gmq_scope.composeMessage_message_dictionary_gmq(buffer, msg.dictionary_one);
+            mtest.gmq_scope.composeMessage_message_dictionary1_gmq(buffer, msg.dictionary_one);
 
             if (WriteFiles)
                 buffer.writeToFile(GmqPath_0);
@@ -116,8 +112,8 @@ namespace test_interop2_csharp
             bool condition = false;
 
             mtest.gmq_scope.handleMessage(buffer,
-                mtest.gmq_scope.makeMessageHandler(mtest.gmq_scope.MsgId.message_dictionary_gmq, (GmqParser parser, ulong id) => {
-                    mtest.struct_dictionary msg = mtest.gmq_scope.parseMessage_message_dictionary_gmq(parser);
+                mtest.gmq_scope.makeMessageHandler(mtest.gmq_scope.MsgId.message_dictionary1_gmq, (GmqParser parser, ulong id) => {
+                    mtest.struct_dictionary1 msg = mtest.gmq_scope.parseMessage_message_dictionary1_gmq(parser);
                     condition = msg.Equals(GetDictionary_0());
                 }),
                 mtest.gmq_scope.makeDefaultMessageHandler((GmqParser parser, ulong id) => { Assert.True(false); })

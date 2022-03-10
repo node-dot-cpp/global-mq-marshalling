@@ -75,12 +75,21 @@ STRUCT NONEXTENDABLE AggregateType {
  };
 
 
+STRUCT NONEXTENDABLE struct_dictionary1 {
+ DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictionary_one;
+};
+
+
 STRUCT NONEXTENDABLE struct_dictionary {
  DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> dictionary_one;
  DICTIONARY<UINTEGER, STRUCT AggregateType> dictionary_two;
  DICTIONARY<INTEGER, DISCRIMINATED_UNION du_one > dictionary_three;
  DICTIONARY<CHARACTER-STRING, STRUCT BasicTypes> dictionary_four;
 };
+
+
+MESSAGE gmq_scope : message_dictionary1_gmq = 11 = STRUCT struct_dictionary1;
+MESSAGE json_scope : message_dictionary1_json = 11 = STRUCT struct_dictionary1;
 
 
 MESSAGE gmq_scope : message_dictionary_gmq = 9 = STRUCT struct_dictionary;

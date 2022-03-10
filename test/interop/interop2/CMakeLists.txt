@@ -23,6 +23,7 @@ add_executable(test-interop2-cpp
     cpp/generated_interop2.h
     cpp/main.cpp
     cpp/test_common.h
+    cpp/test_publishable_dictionary.cpp
     cpp/test_publishable_dunion.cpp
     cpp/test_simple.cpp
 )

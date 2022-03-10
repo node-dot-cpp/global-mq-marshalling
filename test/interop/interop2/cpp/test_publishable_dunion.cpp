@@ -29,6 +29,8 @@
 
 using namespace std;
 
+namespace
+{
 std::string Prefix = "data/publishable_dunion/";
 
 std::string JsonPath_s0 = Prefix + "state_sync_0.json";
@@ -78,7 +80,6 @@ class subscriber_dunion_for_test :
 };
 
 
-inline
 bool operator==(const mtest::structures::publishable_dunion& l, const mtest::structures::publishable_dunion& r)
 {
     if(l.name != r.name)
@@ -188,10 +189,10 @@ class publishable_dunion_gmq
 
     static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return operator==(l, r);
+        return ::operator==(l, r);
     }
 };
-
+}
 
 const lest::test test_publishable_dunion[] =
 {
@@ -199,7 +200,7 @@ const lest::test test_publishable_dunion[] =
     {
         testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestJsonParseStateSync0" )
+    lest_CASE( "test_publishable_dunion.TestJsonParseStateSync0" )
     {
         testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
     },
@@ -207,7 +208,7 @@ const lest::test test_publishable_dunion[] =
     {
         testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestJsonParseStateSync1" )
+    lest_CASE( "test_publishable_dunion.TestJsonParseStateSync1" )
     {
         testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
     },
@@ -215,7 +216,7 @@ const lest::test test_publishable_dunion[] =
     {
         testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s2, GetPublishableUnion_2, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestJsonParseStateSync2" )
+    lest_CASE( "test_publishable_dunion.TestJsonParseStateSync2" )
     {
         testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s2, GetPublishableUnion_2, lest_env);
     },
@@ -240,7 +241,7 @@ const lest::test test_publishable_dunion[] =
     {
         testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestGmqParseStateSync0" )
+    lest_CASE( "test_publishable_dunion.TestGmqParseStateSync0" )
     {
         testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
     },
@@ -248,7 +249,7 @@ const lest::test test_publishable_dunion[] =
     {
         testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestGmqParseStateSync1" )
+    lest_CASE( "test_publishable_dunion.TestGmqParseStateSync1" )
     {
         testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
     },
@@ -256,7 +257,7 @@ const lest::test test_publishable_dunion[] =
     {
         testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s2, GetPublishableUnion_2, lest_env);
     },
-    lest_CASE( "test_publishable_seven.TestGmqParseStateSync2" )
+    lest_CASE( "test_publishable_dunion.TestGmqParseStateSync2" )
     {
         testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s2, GetPublishableUnion_2, lest_env);
     },

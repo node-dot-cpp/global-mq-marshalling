@@ -518,18 +518,18 @@ namespace globalmq.marshalling
             foreach (KeyValuePair<K, V> each in collection)
             {
                 if (i != 0)
-                    composer.append(", ");
+                    composer.append(',');
 
                 composer.append('{');
                 composeKeyDelegate(this, each.Key);
-                composer.append(", ");
+                composer.append(',');
                 composeValueDelegate(this, each.Value);
                 composer.append('}');
                 ++i;
             }
             composer.append('}');
             if (separator)
-                composer.append(",");
+                composer.append(',');
         }
 
 public void composeStructBegin()
