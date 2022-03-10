@@ -30,16 +30,16 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace TestProject1
+namespace test_interop2_csharp
 {
 
-    public class test_message_three
+    public class test_message_two
     {
-        private const string PathJson = TestCommon.DataPathPrefix + "test_message_three.json";
-        private static void ComposeMessageThree(BufferT buffer, mtest.struct_one msg)
+        private const string PathGmq = TestCommon.DataPathPrefix + "test_message_two.gmq";
+        private static void ComposeMessageTwo(BufferT buffer, mtest.struct_one msg)
         {
-            mtest.test_json.composeMessage_message_three(buffer,
-                thirdParam:msg.thirdParam,
+            mtest.test_gmq.composeMessage_message_two(buffer,
+                thirdParam: msg.thirdParam,
                 firstParam: msg.firstParam, fifthParam: msg.fifthParam, forthParam: msg.forthParam, seventhParam: msg.seventhParam,
                 eighthParam: msg.eighthParam,
                 ninethParam: msg.ninethParam,
@@ -50,59 +50,68 @@ namespace TestProject1
         }
 
         [Fact]
-        public static void TestJsonCompose()
+        public static void TestGmqCompose()
         {
             mtest.struct_one msg = test_struct_one.GetSampleData();
 
             SimpleBuffer buffer = new SimpleBuffer();
 
-            ComposeMessageThree(buffer, msg);
+            ComposeMessageTwo(buffer, msg);
 
             // uncomment to update file
-            //buffer.writeToFile(PathJson);
+            //buffer.writeToFile(PathGmq);
 
-            SimpleBuffer expected = SimpleBuffer.readFromFile(PathJson);
-            Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
+            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathGmq));
         }
 
+
         [Fact]
-        public static void TestJsonHandle()
+        public static void TestGmqHandle()
         {
+            mtest.struct_one msg = test_struct_one.GetSampleData();
+
+            SimpleBuffer buffer = new SimpleBuffer();
+
+            ComposeMessageTwo(buffer, msg);
+
             bool condition = false;
 
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
-
-            mtest.test_json.handleMessage(buffer,
-                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_three, (JsonParser parser, ulong id) => {
-                    mtest.struct_one msg = mtest.test_json.parseMessage_message_three(parser);
+            mtest.test_gmq.handleMessage(buffer,
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_two, (GmqParser parser, ulong id) => {
+                    mtest.struct_one msg = mtest.test_gmq.parseMessage_message_two(parser);
                     condition = msg.Equals(test_struct_one.GetSampleData());
                 }),
-                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (JsonParser parser, ulong id) => { Assert.True(false); }),
-                mtest.test_json.makeDefaultMessageHandler((JsonParser parser, ulong id) => { Assert.True(false); })
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (GmqParser parser, ulong id) => { Assert.True(false); }),
+                mtest.test_gmq.makeDefaultMessageHandler((GmqParser parser, ulong id) => { Assert.True(false); })
             );
 
             Assert.True(condition);
         }
 
         [Fact]
-        public static void TestJsonHandleDefault()
+        public static void TestGmqHandleDefault()
         {
+            mtest.struct_one msg = test_struct_one.GetSampleData();
+
+            SimpleBuffer buffer = new SimpleBuffer();
+
+            ComposeMessageTwo(buffer, msg);
+
             bool condition = false;
 
-            SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
-
-            mtest.test_json.handleMessage(buffer,
-                mtest.test_json.makeMessageHandler(mtest.test_json.MsgId.message_five, (JsonParser parser, ulong id) => { Assert.True(false); }),
-                mtest.test_json.makeDefaultMessageHandler((JsonParser parser, ulong id) =>
-                {
+            mtest.test_gmq.handleMessage(buffer,
+                mtest.test_gmq.makeMessageHandler(mtest.test_gmq.MsgId.message_four, (GmqParser parser, ulong id) => { Assert.True(false); }),
+                mtest.test_gmq.makeDefaultMessageHandler((GmqParser parser, ulong id) => {
                     //mb we need to remove data from stream, otherwise we get an exception from parser
                     // TODO see what we should really do in that case
-                    mtest.test_json.parseMessage_message_three(parser);
+                    mtest.struct_one msg = mtest.test_gmq.parseMessage_message_two(parser);
                     condition = true;
                 })
             );
 
             Assert.True(condition);
         }
+
     }
+
 }

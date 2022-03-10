@@ -28,19 +28,19 @@
 #include "test_idl_common.h"
 
 
-std::string PathPubSevenJson = "test_publishable_seven.json";
-std::string PathPubSevenJson1 = "test_publishable_seven_u1.json";
-std::string PathPubSevenJson2 = "test_publishable_seven_u2.json";
-std::string PathPubSevenJson3 = "test_publishable_seven_u3.json";
-std::string PathPubSevenJson4 = "test_publishable_seven_u4.json";
-std::string PathPubSevenJson5 = "test_publishable_seven_u5.json";
+std::string PathPubSevenJson = DataPrefix + "test_publishable_seven.json";
+std::string PathPubSevenJson1 = DataPrefix + "test_publishable_seven_u1.json";
+std::string PathPubSevenJson2 = DataPrefix + "test_publishable_seven_u2.json";
+std::string PathPubSevenJson3 = DataPrefix + "test_publishable_seven_u3.json";
+std::string PathPubSevenJson4 = DataPrefix + "test_publishable_seven_u4.json";
+std::string PathPubSevenJson5 = DataPrefix + "test_publishable_seven_u5.json";
 
-std::string PathPubSevenGmq = "test_publishable_seven.gmq";
-std::string PathPubSevenGmq1 = "test_publishable_seven_u1.gmq";
-std::string PathPubSevenGmq2 = "test_publishable_seven_u2.gmq";
-std::string PathPubSevenGmq3 = "test_publishable_seven_u3.gmq";
-std::string PathPubSevenGmq4 = "test_publishable_seven_u4.gmq";
-std::string PathPubSevenGmq5 = "test_publishable_seven_u5.gmq";
+std::string PathPubSevenGmq = DataPrefix + "test_publishable_seven.gmq";
+std::string PathPubSevenGmq1 = DataPrefix + "test_publishable_seven_u1.gmq";
+std::string PathPubSevenGmq2 = DataPrefix + "test_publishable_seven_u2.gmq";
+std::string PathPubSevenGmq3 = DataPrefix + "test_publishable_seven_u3.gmq";
+std::string PathPubSevenGmq4 = DataPrefix + "test_publishable_seven_u4.gmq";
+std::string PathPubSevenGmq5 = DataPrefix + "test_publishable_seven_u5.gmq";
 
 
 inline

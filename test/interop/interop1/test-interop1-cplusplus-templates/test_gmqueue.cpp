@@ -86,7 +86,7 @@ void deliverAllMessages(MetaPoolT& mp, MsgQueue& queue, const std::string &fileP
             if (!filePrefix.empty())
             {
 
-				std::string fileName = filePrefix + std::to_string(msgCnt) + ".json";
+				std::string fileName = DataPrefix + filePrefix + std::to_string(msgCnt) + ".json";
 
 				auto expected = makeBuffer(fileName, lest_env);
 				EXPECT(AreEqualIgnoreEol(expected, messages[i].msg));

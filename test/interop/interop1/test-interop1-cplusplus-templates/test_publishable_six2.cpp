@@ -27,14 +27,14 @@
 
 #include "test_idl_common.h"
 
-std::string PathPubGmq = "test_publishable_six2.gmq";
-std::string PathPubGmq1 = "test_publishable_six2_update1.gmq";
-std::string PathPubGmq2 = "test_publishable_six2_update2.gmq";
-std::string PathPubGmq3 = "test_publishable_six2_update3.gmq";
+std::string PathPubGmq = DataPrefix + "test_publishable_six2.gmq";
+std::string PathPubGmq1 = DataPrefix + "test_publishable_six2_update1.gmq";
+std::string PathPubGmq2 = DataPrefix + "test_publishable_six2_update2.gmq";
+std::string PathPubGmq3 = DataPrefix + "test_publishable_six2_update3.gmq";
 
 const lest::test test_publishable_six2[] =
 {
-    lest_CASE( "TestGmqComposeStateSync" )
+    lest_CASE( "test_publishable_six.TestGmqComposeStateSync" )
     {
         auto data = GetPublishableSix();
 
@@ -51,7 +51,7 @@ const lest::test test_publishable_six2[] =
         auto b2 = makeBuffer(PathPubGmq, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestGmqParseStateSync" )
+    lest_CASE( "test_publishable_six.TestGmqParseStateSync" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
@@ -68,7 +68,7 @@ const lest::test test_publishable_six2[] =
         EXPECT(subs.getState() == data2);
     },
 
-    lest_CASE( "TestGmqComposeUpdate1" )
+    lest_CASE( "test_publishable_six.TestGmqComposeUpdate1" )
     {
         auto data = GetPublishableSix();
 
@@ -85,7 +85,7 @@ const lest::test test_publishable_six2[] =
         auto b2 = makeBuffer(PathPubGmq1, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestGmqParseUpdate1" )
+    lest_CASE( "test_publishable_six.TestGmqParseUpdate1" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
@@ -105,7 +105,7 @@ const lest::test test_publishable_six2[] =
         data2.aggregate.theAggregate.anInt = -101;
         EXPECT(subs.getState() == data2);
     },
-    lest_CASE( "TestGmqComposeUpdate2" )
+    lest_CASE( "test_publishable_six.TestGmqComposeUpdate2" )
     {
         auto data = GetPublishableSix();
 
@@ -135,7 +135,7 @@ const lest::test test_publishable_six2[] =
         auto b2 = makeBuffer(PathPubGmq2, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestGmqParseUpdate2" )
+    lest_CASE( "test_publishable_six.TestGmqParseUpdate2" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 
@@ -165,7 +165,7 @@ const lest::test test_publishable_six2[] =
 
         EXPECT(subs.getState() == data2);
     },
-    lest_CASE( "TestComposeNoChangeUpdate3" )
+    lest_CASE( "test_publishable_six.TestComposeNoChangeUpdate3" )
     {
         auto data = GetPublishableSix();
 
@@ -182,7 +182,7 @@ const lest::test test_publishable_six2[] =
         auto b2 = makeBuffer(PathPubGmq3, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestGmqParseNoChangeUpdate3" )
+    lest_CASE( "test_publishable_six.TestGmqParseNoChangeUpdate3" )
     {
         using SubscriberT = subscriber_six_for_test<mtest::structures::StructSix, mtest::Buffer>;
 

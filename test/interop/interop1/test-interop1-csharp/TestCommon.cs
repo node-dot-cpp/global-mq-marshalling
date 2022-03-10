@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace TestProject1
+namespace test_interop2_csharp
 {
 
     public interface ITestPlatformSupport : IPlatformSupport
@@ -32,6 +32,6 @@ namespace TestProject1
     }
     class TestCommon
     {
-        public const string DataPathPrefix = "../../../";
+        public const string DataPathPrefix = "../../../../data/";
     }
 }

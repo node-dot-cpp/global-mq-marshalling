@@ -27,13 +27,12 @@
 
 #include "test_idl_common.h"
 
-std::string PathJson = "test_struct_one.json";
-std::string PathGmq = "test_struct_one.gmq";
+std::string PathMsg2Gmq = DataPrefix + "test_message_two.gmq";
 
-template<class ComposerT>
-void ComposeStructOne(ComposerT& composer, mtest::structures::struct_one& msg)
+template<class BufferT>
+void ComposeMessageTwo(BufferT& buffer, mtest::structures::struct_one& msg)
 {
-	mtest::STRUCT_struct_one_compose(composer,
+	mtest::test_gmq::composeMessage<mtest::test_gmq::message_two>(buffer,
 		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
 		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
 		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
@@ -45,55 +44,70 @@ void ComposeStructOne(ComposerT& composer, mtest::structures::struct_one& msg)
 }
 
 
-const lest::test test_struct_one[] =
+const lest::test test_message_two[] =
 {
-    lest_CASE( "TestJsonCompose" )
+    lest_CASE( "test_message_two.TestGmqCompose" )
     {
-        mtest::structures::struct_one msg = GetSampleStructOne();
+        auto msg = GetSampleStructOne();
 
         mtest::Buffer b;
-        mtest::JsonComposer<mtest::Buffer> composer(b);
 
-        ComposeStructOne(composer, msg);
+        ComposeMessageTwo(b, msg);
 
-        auto expected = makeBuffer(PathJson, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
-    },
-    lest_CASE( "TestJsonParse" )
-    {
-        mtest::Buffer b = makeBuffer(PathJson, lest_env);
-        auto iter = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(iter);
-
-        mtest::structures::struct_one msg = mtest::test_gmq::STRUCT_struct_one_parse(parser);
-
-        auto msg2 = GetSampleStructOne();
-        EXPECT(msg == msg2);
-    },
-
-    lest_CASE( "TestGmqCompose" )
-    {
-        mtest::structures::struct_one msg = GetSampleStructOne();
-
-        mtest::Buffer b;
-        mtest::GmqComposer<mtest::Buffer> composer(b);
-
-        ComposeStructOne(composer, msg);
-
-        auto b2 = makeBuffer(PathGmq, lest_env);
+        auto b2 = makeBuffer(PathMsg2Gmq, lest_env);
         EXPECT(b == b2);
     },
-    lest_CASE( "TestGmqParse" )
+    lest_CASE( "test_message_two.TestGmqHandle" )
     {
-        mtest::Buffer b = makeBuffer(PathGmq, lest_env);
-        auto iter = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(iter);
+        mtest::Buffer b = makeBuffer(PathMsg2Gmq, lest_env);
 
-        mtest::structures::struct_one msg = mtest::test_gmq::STRUCT_struct_one_parse(parser);
+        bool condition = false;
 
-        auto msg2 = GetSampleStructOne();
-        EXPECT(msg == msg2);
+        mtest::test_gmq::handleMessage(b,
+            mtest::makeMessageHandler<mtest::test_gmq::message_two>(
+                [&](auto& parser) {
+                    auto msg = mtest::test_gmq::MESSAGE_message_two_parse(parser);
+                    auto msg2 = GetSampleStructOne();
+                    condition = (msg == msg2);
+                }),
+            mtest::makeMessageHandler<mtest::test_gmq::message_four>(
+                [&](auto& parser) {
+                    EXPECT(false);
+                }),
+            mtest::makeDefaultMessageHandler(
+                [&](auto& parser, uint64_t msgID) {
+                    EXPECT(false);
+                })
+        );
+            
+        EXPECT(condition);
+    },
+    lest_CASE( "test_message_two.TestGmqHandleDefault" )
+    {
+        mtest::Buffer b = makeBuffer(PathMsg2Gmq, lest_env);
+
+        bool condition = false;
+
+        mtest::test_gmq::handleMessage(b,
+            // mtest::makeMessageHandler<mtest::test_gmq::message_two>(
+            //     [&](auto& parser) {
+            //         auto msg2 = GetSampleStructOne();
+            //         condition = (msg == msg2);
+            //     }),
+            mtest::makeMessageHandler<mtest::test_gmq::message_four>(
+                [&](auto& parser) {
+                    EXPECT(false);
+                }),
+            mtest::makeDefaultMessageHandler(
+                [&](auto& parser, uint64_t msgID) {
+                    // TODO if we don't remove msg from buffer we get an exception
+                    auto msg = mtest::test_gmq::MESSAGE_message_two_parse(parser);
+                    condition = true;
+                })
+        );
+            
+        EXPECT(condition);
     },
 };
 
-lest_MODULE(specification(), test_struct_one);
+lest_MODULE(specification(), test_message_two);

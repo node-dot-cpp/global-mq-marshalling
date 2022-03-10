@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace TestProject1
+namespace test_interop2_csharp
 {
 
     public class test_publishable_seven

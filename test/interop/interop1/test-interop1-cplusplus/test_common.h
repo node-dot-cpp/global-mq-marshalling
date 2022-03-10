@@ -25,14 +25,16 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef TEST_IDL_COMMON_H_INCLUDED
-#define TEST_IDL_COMMON_H_INCLUDED
+#ifndef TEST_COMMON_H_INCLUDED
+#define TEST_COMMON_H_INCLUDED
 
 
 #include "../../3rdparty/lest/include/lest/lest.hpp"
-#include "idl_generated.h"
+#include "generated_interop1.h"
 
 lest::tests& specification();
+
+const std::string DataPrefix = "data/";
 
 inline
 mtest::structures::struct_one GetSampleStructOne()
@@ -140,7 +142,8 @@ inline
 mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 {
     FILE* input_file = fopen(filename.c_str(), "rb");
-    lest_EXPECT(input_file);
+    if(!input_file)
+        EXPECT(false);
 
     mtest::Buffer b;
     b.read_file(input_file);
@@ -266,4 +269,4 @@ bool AreEqualIgnoreEol(const mtest::Buffer& l, const mtest::Buffer& r)
 }
 
 
-#endif // TEST_IDL_COMMON_H_INCLUDED
+#endif // TEST_COMMON_H_INCLUDED

@@ -25,9 +25,9 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "test_idl_common.h"
+#include "test_common.h"
 
-std::string PathMsg3Json = "test_message_three.json";
+std::string PathMsg3Json = DataPrefix + "test_message_three.json";
 
 template<class BufferT>
 void ComposeMessageThree(BufferT& buffer, mtest::structures::struct_one& msg)

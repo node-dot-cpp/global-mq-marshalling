@@ -25,9 +25,9 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "test_idl_common.h"
+#include "test_common.h"
 
-std::string PathMsg2Gmq = "test_message_two.gmq";
+std::string PathMsg2Gmq = DataPrefix + "test_message_two.gmq";
 
 template<class BufferT>
 void ComposeMessageTwo(BufferT& buffer, mtest::structures::struct_one& msg)
