@@ -15,6 +15,10 @@ add_executable(idl_compiler
     src/idl_tree_2_csharp_structs.cpp
     src/idl_tree_2_csharp_unions.cpp
     src/idl_tree_2_csharp.cpp
+    src/cplusplus/idl_tree_serializer_messages.cpp
+    src/cplusplus/idl_tree_serializer_publishables_print_tree.cpp
+    src/cplusplus/idl_tree_serializer_publishables.cpp
+    src/cplusplus/idl_tree_serializer.cpp
     src/main.cpp
 )
 
