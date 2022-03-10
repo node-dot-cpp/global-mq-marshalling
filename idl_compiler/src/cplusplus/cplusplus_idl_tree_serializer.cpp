@@ -27,6 +27,8 @@
 
 #include "cplusplus_idl_tree_serializer.h"
 
+namespace cplusplus
+{
 
 const char* impl_kindToString( MessageParameterType::KIND kind )
 {
@@ -1319,40 +1321,46 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-uint32_t adler32( uint8_t* buff, size_t sz ) 
-{
-    uint32_t a = 1;
-	uint32_t b = 0;
+// uint32_t adler32( uint8_t* buff, size_t sz ) 
+// {
+//     uint32_t a = 1;
+// 	uint32_t b = 0;
     
-    for (size_t i=0; i < sz; ++i)
-    {
-        a = (a + buff[i]) % 65521;
-        b = (b + a) % 65521;
-    }
+//     for (size_t i=0; i < sz; ++i)
+//     {
+//         a = (a + buff[i]) % 65521;
+//         b = (b + a) % 65521;
+//     }
     
-    return (b << 16) | a;
+//     return (b << 16) | a;
+// }
+
+// uint32_t idlFileChecksum( std::string path )
+// {
+// 	RaiiStdioFile file( fopen( path.c_str(), "rb" ) );
+// 	int res = fseek( file, 0, SEEK_END );
+// 	if ( res != 0 )
+// 		throw std::exception();
+
+// 	long sz = ftell( file );
+// 	if ( sz == -1 )
+// 		throw std::exception();
+	
+// 	res = fseek( file, 0, SEEK_SET );
+// 	if ( res != 0 )
+// 		throw std::exception();
+
+// 	uint8_t* buff = new uint8_t[sz];
+
+// 	fread( buff, 1, sz, file );
+// 	uint32_t ret = adler32( buff, sz );
+// 	delete [] buff;
+
+// 	return ret;
+// }
 }
 
-uint32_t idlFileChecksum( std::string path )
+void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
 {
-	RaiiStdioFile file( fopen( path.c_str(), "rb" ) );
-	int res = fseek( file, 0, SEEK_END );
-	if ( res != 0 )
-		throw std::exception();
-
-	long sz = ftell( file );
-	if ( sz == -1 )
-		throw std::exception();
-	
-	res = fseek( file, 0, SEEK_SET );
-	if ( res != 0 )
-		throw std::exception();
-
-	uint8_t* buff = new uint8_t[sz];
-
-	fread( buff, 1, sz, file );
-	uint32_t ret = adler32( buff, sz );
-	delete [] buff;
-
-	return ret;
+	cplusplus::generateRoot(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
 }

@@ -27,6 +27,8 @@
 
 #include "cplusplus_idl_tree_serializer.h"
 
+namespace cplusplus
+{
 
 void printRoot( Root& s )
 {
@@ -345,4 +347,6 @@ void printVariant( Variant& s ) {
 		case Variant::KIND::STRING:
 			printf( "%s", s.stringValue.c_str() ); break;
 	}
+}
+
 }

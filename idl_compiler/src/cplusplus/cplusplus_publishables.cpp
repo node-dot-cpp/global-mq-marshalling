@@ -27,7 +27,8 @@
 
 #include "cplusplus_idl_tree_serializer.h"
 
-inline
+namespace cplusplus
+{
 const char* paramTypeToParser( MessageParameterType::KIND kind )
 {
 	switch( kind )
@@ -40,7 +41,6 @@ const char* paramTypeToParser( MessageParameterType::KIND kind )
 	}
 }
 
-inline
 std::string impl_generatePublishableStructName( MessageParameter& s )
 {
 	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
@@ -2795,4 +2795,4 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s );
 }
 
-
+}

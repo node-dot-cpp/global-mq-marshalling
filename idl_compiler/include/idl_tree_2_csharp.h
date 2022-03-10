@@ -104,7 +104,7 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char* type_name);
 
 // code generation
-void generateCsharp(FILE* file, Root& root, const std::string& metascope);
+//void generateCsharp(FILE* file, Root& root, const std::string& metascope);
 void generateCsharpMessageScope(CsharpWritter f, Root& root, Scope& scope);
 
 

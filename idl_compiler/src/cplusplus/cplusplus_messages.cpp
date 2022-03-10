@@ -27,6 +27,10 @@
 
 #include "cplusplus_idl_tree_serializer.h"
 
+namespace cplusplus
+{
+
+
 string impl_MessageNameToDefaultsNamespaceName( string name )
 {
 	return fmt::format( "Message_{}_defaults", name );
@@ -1013,4 +1017,6 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "{\n" );
 	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
 	fprintf( header, "}\n\n" );
+}
+
 }

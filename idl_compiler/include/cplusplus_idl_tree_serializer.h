@@ -30,6 +30,8 @@
 
 #include "idl_tree.h"
 
+namespace cplusplus
+{
 struct FloatingParts
 {
 	int64_t fraction;
@@ -196,6 +198,8 @@ void generateDataType( FILE* header, MessageParameterType& s );
 void generateLimit( FILE* header, Limit& s );
 void generateVariant( FILE* header, Variant& s );
 
-uint32_t idlFileChecksum( std::string path );
+//uint32_t idlFileChecksum( std::string path );
+
+}
 
 #endif // CPLUSPLUS_IDL_TREE_SERIALIZER_H

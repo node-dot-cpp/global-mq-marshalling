@@ -27,16 +27,18 @@
 
 #include <idl_parser.h>
 #include <idl_tree_serializer.h>
-#include "idl_tree_2_csharp.h"
+#include "idl_generators.h"
 
 int main( int argc, char *argv[] )
 {
 	if ( argc < 3 )
 	{
 		fmt::print( "Usage:\n" );
-		fmt::print( "generator path/to/idl path/to/header [--csharp] [-m=metascopename]\n" );
+		fmt::print( "generator path/to/idl path/to/header [--csharp|--cplusplus|--cplusplus-templates] [-m=metascopename]\n" );
 		fmt::print( "  -m : defines metascope name (default=m)\n" );
-		fmt::print( "  --csharp : generate C# code (default is C++)\n");
+		fmt::print( "  --csharp              : generate C# code\n");
+		fmt::print( "  --cplusplus           : generate C++ code\n");
+		fmt::print( "  --cplusplus-templates : generate C++ templetaized code\n");
 		return 0;
 	}
 
@@ -47,12 +49,37 @@ int main( int argc, char *argv[] )
 	std::string classNotifierName;
 	std::string csharpFile;
 	bool isCsharp = false;
+	bool isCplusplus = false;
+	bool isCplusplusTemplates = false;
 	for ( int i=3; i<argc; ++i )
 	{
 		std::string entry = argv[i];
 		if (entry == "--csharp")
 		{
 			isCsharp = true;
+			if (isCplusplus || isCplusplusTemplates)
+			{
+				fmt::print("Only one generator can be specified\n");
+				return 0;
+			}
+		}
+		else if (entry == "--cplusplus")
+		{
+			isCplusplus = true;
+			if (isCsharp || isCplusplusTemplates)
+			{
+				fmt::print("Only one generator can be specified\n");
+				return 0;
+			}
+		}
+		else if (entry == "--cplusplus-templates")
+		{
+			isCplusplusTemplates = true;
+			if (isCsharp || isCplusplus)
+			{
+				fmt::print("Only one generator can be specified\n");
+				return 0;
+			}
 		}
 		else
 		{
@@ -131,10 +158,12 @@ int main( int argc, char *argv[] )
 
 		FILE* header = fopen(targetPath.c_str(), "wb");
 
-		if (!isCsharp)
-			generateRoot(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
+		if (isCsharp)
+			generateCsharp(header, *root, metascope.c_str());
+		else if(isCplusplus)
+			generateCplusplus(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
 		else
-			generateCsharp(header, *root, metascope.c_str() );
+			generateRoot(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
 
 	}
 	/*catch ( std::exception& x )
