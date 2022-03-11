@@ -6,6 +6,7 @@ add_executable(idl_compiler
     grammar/generated/lex.yy.cpp
     grammar/generated/global_mq_IDL.tab.cpp
     src/global_mq_parser_helper.cpp
+    src/idl_tree_common.cpp
     src/idl_tree_serializer.cpp
     src/idl_tree_serializer_messages.cpp
     src/idl_tree_serializer_publishables.cpp
@@ -16,7 +17,6 @@ add_executable(idl_compiler
     src/idl_tree_2_csharp_unions.cpp
     src/idl_tree_2_csharp.cpp
     src/cplusplus/cplusplus_messages.cpp
-    src/cplusplus/cplusplus_publishables_print_tree.cpp
     src/cplusplus/cplusplus_publishables.cpp
     src/cplusplus/cplusplus_idl_tree_serializer.cpp
     src/main.cpp

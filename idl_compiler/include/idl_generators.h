@@ -34,6 +34,7 @@ class Root;
 
 void generateCsharp(FILE* file, Root& root, const std::string& metascope);
 void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );
+void generateCppTemplates( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );
 
 
 #endif // IDL_GENERATORS_H_INCLUDED

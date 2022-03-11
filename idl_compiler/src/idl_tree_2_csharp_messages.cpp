@@ -26,7 +26,7 @@
 * -------------------------------------------------------------------------------*/
 
 #include "idl_tree_2_csharp.h"
-#include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
 
 #include <set>
 

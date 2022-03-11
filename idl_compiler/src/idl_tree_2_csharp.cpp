@@ -27,7 +27,7 @@
 
 #include "idl_tree_2_csharp.h"
 #include <fmt/printf.h>
-//#include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
 
 using namespace std;
 

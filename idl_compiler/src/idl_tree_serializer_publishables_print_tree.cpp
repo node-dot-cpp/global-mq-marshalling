@@ -25,7 +25,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
 
 
 void printRoot( Root& s )

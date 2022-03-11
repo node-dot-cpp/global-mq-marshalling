@@ -26,6 +26,10 @@
 * -------------------------------------------------------------------------------*/
 
 #include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
+
+namespace cpptemplates
+{
 
 inline
 const char* paramTypeToParser( MessageParameterType::KIND kind )
@@ -2541,72 +2545,6 @@ void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, Compos
 	fprintf( header, "};\n\n" );
 }
 
-void impl_generatePublishableCommentBlock_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
-{
-	assert( s.type != CompositeType::Type::discriminated_union );
-	for ( auto& it : s.getMembers() )
-	{
-		assert( it != nullptr );
-		MessageParameter& param = *it;
-		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		++count;
-			
-		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
-		{
-			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
-			else
-				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else if ( param.type.kind == MessageParameterType::KIND::DICTIONARY )
-		{
-			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-				fprintf( header, "// %d. %s<%s%s %s>", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
-			else
-				fprintf( header, "// %d. %s<%s>", count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else if ( param.type.kind == MessageParameterType::KIND::STRUCT )
-		{
-			fprintf( header, "// %d. %s %s%s", count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else
-			fprintf( header, "// %d. %s %s", count, impl_kindToString( param.type.kind ), param.name.c_str() );
-
-		assert( !param.type.hasDefault );
-		fprintf( header, "\n" );
-	}
-}
-
-void impl_generatePublishableCommentBlock( FILE* header, CompositeType& s )
-{
-	assert( s.type == CompositeType::Type::publishable );
-	fprintf( header, "//**********************************************************************\n" );
-
-	int count = 0;
-	if ( s.isDiscriminatedUnion() )
-	{
-		fprintf( header, "// %s %s (%zd cases)\n", s.type2string(), s.name.c_str(), s.getDiscriminatedUnionCases().size() );
-		for ( auto& it: s.getDiscriminatedUnionCases() )
-		{
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			fprintf( header, "// CASE %s (%zd parameters)\n", cs.name.c_str(), cs.getMembers().size() );
-			impl_generatePublishableCommentBlock_MemberIterationBlock( header, cs, count );
-		}
-	}
-	else
-	{
-		fprintf( header, "// %s %s (%zd parameters)\n", s.type2string(), s.name.c_str(), s.getMembers().size() );
-		impl_generatePublishableCommentBlock_MemberIterationBlock( header, s, count );
-	}
-
-	fprintf( header, "//**********************************************************************\n\n" );
-}
 
 void collectMemberNamesFromPublishableObjects( vector<unique_ptr<CompositeType>> &structs, set<string>& names )
 {
@@ -2795,4 +2733,4 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, std::strin
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s );
 }
 
-
+} // namespace cpptemplates

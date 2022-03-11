@@ -163,7 +163,7 @@ int main( int argc, char *argv[] )
 		else if(isCplusplus)
 			generateCplusplus(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
 		else
-			generateRoot(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
+			generateCppTemplates(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
 
 	}
 	/*catch ( std::exception& x )

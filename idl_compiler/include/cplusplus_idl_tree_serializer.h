@@ -52,11 +52,11 @@ struct FloatingParts
 	}
 };
 
-const char* impl_kindToString( MessageParameterType::KIND kind );
-bool impl_checkParamNameUniqueness(CompositeType& s);
-bool impl_checkFollowingExtensionRules(CompositeType& s);
-void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
-bool impl_processScopes( Root& r );
+// const char* impl_kindToString( MessageParameterType::KIND kind );
+// bool impl_checkParamNameUniqueness(CompositeType& s);
+// bool impl_checkFollowingExtensionRules(CompositeType& s);
+// void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
+// bool impl_processScopes( Root& r );
 void impl_generateScopeHandler( FILE* header, Scope& scope );
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope );
 void impl_generateScopeComposer( FILE* header, Scope& scope );
@@ -71,10 +71,10 @@ void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, 
 void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
 //mb exported to be used from C#
-void impl_insertScopeList(FILE* header, Root& r);
-void impl_generateMessageCommentBlock(FILE* header, CompositeType& s);
-void orderStructsByDependency(std::vector<unique_ptr<CompositeType>>& structs, std::vector<CompositeType*>& out, std::unordered_set<size_t>& collElementTypes);
-void impl_generatePublishableCommentBlock(FILE* header, CompositeType& s);
+// void impl_insertScopeList(FILE* header, Root& r);
+// void impl_generateMessageCommentBlock(FILE* header, CompositeType& s);
+// void orderStructsByDependency(std::vector<unique_ptr<CompositeType>>& structs, std::vector<CompositeType*>& out, std::unordered_set<size_t>& collElementTypes);
+// void impl_generatePublishableCommentBlock(FILE* header, CompositeType& s);
 //
 
 inline
@@ -149,36 +149,8 @@ std::string impl_templateMemberTypeName( std::string templateParentName, const M
 
 void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj );
 
-
-// printing global_mq tree
-void printRoot( Root& s );
-
-void printScope( Scope& s, size_t offset );
-void printMessage( CompositeType& s, size_t offset );
-void printPublishable( CompositeType& s, size_t offset );
-void printStruct( CompositeType& s, size_t offset );
-void printDiscriminatedUnionCase( CompositeType& s, size_t offset );
-
-void printMessageParameter( MessageParameter& s, size_t offset );
-void printMessageMembers( CompositeType& s, size_t offset );
-void printPublishableMembers( CompositeType& s, size_t offset );
-void printStructMembers( CompositeType& s, size_t offset );
-void printDiscriminatedUnionCases( CompositeType& s, size_t offset );
-void printLimit( Limit& s, size_t offset );
-void printLocation( Location& s, size_t offset );
-void printDataType( MessageParameterType& s, size_t offset );
-void print__unique_ptr_DataType( unique_ptr<MessageParameterType>& s, size_t offset );
-void print__unique_ptr_Message( unique_ptr<CompositeType>& s, size_t offset );
-void print__unique_ptr_Publishable( unique_ptr<CompositeType>& s, size_t offset );
-void print__unique_ptr_Struct( unique_ptr<CompositeType>& s, size_t offset );
-void print__unique_ptr_MessageParameter( unique_ptr<MessageParameter>& s, size_t offset );
-void print__unique_ptr_DiscriminatedUnionCase( unique_ptr<CompositeType>& s, size_t offset );
-
 void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s );
 
-void printDataType( MessageParameterType& s );
-void printLimit( Limit& s );
-void printVariant( Variant& s );
 
 // code generation
 void preprocessRoot(Root& s);
@@ -200,6 +172,6 @@ void generateVariant( FILE* header, Variant& s );
 
 //uint32_t idlFileChecksum( std::string path );
 
-}
+} // namespace cplusplus
 
 #endif // CPLUSPLUS_IDL_TREE_SERIALIZER_H
