@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------------------
 
 add_subdirectory(test-interop1-cplusplus)
-add_subdirectory(test-interop1-cplusplus-templates)
+add_subdirectory(test-interop1-cpptemplates)
 
 
 
