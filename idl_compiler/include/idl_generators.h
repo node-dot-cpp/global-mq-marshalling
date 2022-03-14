@@ -32,6 +32,19 @@
 
 class Root;
 
+struct GenerationConfig
+{
+	std::string fileName;
+	uint32_t fileChecksum = 0;
+	std::string metascope;
+	std::string platformPrefix;
+	std::string classNotifierName;
+
+	std::vector<std::string> composerNames;
+	std::vector<std::string> parserNames;
+};
+
+
 void generateCsharp(FILE* file, Root& root, const std::string& metascope);
 void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );
 void generateCppTemplates( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s );

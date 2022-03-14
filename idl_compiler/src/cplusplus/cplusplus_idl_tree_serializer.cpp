@@ -27,6 +27,7 @@
 
 #include "cplusplus_idl_tree_serializer.h"
 #include "idl_tree_common.h"
+#include "idl_generators.h"
 
 namespace cplusplus
 {
@@ -596,7 +597,7 @@ void generateStructOrDiscriminatedUnionForwardDeclaration( FILE* header, Root& s
 	}
 }
 
-void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s )
+void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 {
 	std::set<string> msgParams;
 	std::set<string> msgCaseParams;
@@ -611,13 +612,15 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		"\n"
 		"#include <marshalling.h>\n"
 		"#include <publishable_impl.h>\n"
+		"#include <globalmq/marshalling2/marshalling2.h>\n"
 		"using namespace globalmq::marshalling;\n"
 		"namespace %s {\n\n"
 		"#ifdef METASCOPE_%s_ALREADY_DEFINED\n"
 		"#error metascope must reside in a single idl file\n"
 		"#endif\n"
 		"#define METASCOPE_%s_ALREADY_DEFINED\n\n",
-		fileName, fileChecksum, fileName, fileChecksum, metascope, metascope, metascope );
+		config.fileName.c_str(), config.fileChecksum, config.fileName.c_str(), config.fileChecksum,
+		config.metascope.c_str(), config.metascope.c_str(), config.metascope.c_str());
 
 	addLibAliasingBlock( header );
 
@@ -708,7 +711,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 //		if ( it->isStruct4Publishing )
-			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), config );
 	}
 
 	for ( auto& scope : s.scopes )
@@ -716,8 +719,12 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		fprintf( header, "namespace %s {\n\n", scope->name.c_str() );
 
 		impl_generateScopeEnum( header, *scope );
-		impl_generateScopeHandler( header, *scope );
-		impl_generateScopeComposerForwardDeclaration( header, *scope );
+
+		for(auto& each : config.parserNames)
+			impl_generateScopeHandler( header, *scope, each);
+
+		for (auto& each : config.composerNames)
+			impl_generateScopeComposerForwardDeclaration( header, *scope, each);
 
 		std::unordered_set<size_t> aliassedStructIds;
 		for ( auto it : scope->objectList )
@@ -733,7 +740,8 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		{
 			assert( idx < s.structs.size() );
 			CompositeType& alias = *(s.structs[idx]);
-			impl_generateParseFunctionForMessagesAndAliasingStructs( header, s, alias );
+			for (auto& each : config.parserNames)
+				impl_generateParseFunctionForMessagesAndAliasingStructs( header, s, alias, each );
 		}
 
 		for ( auto it : scope->objectList )
@@ -742,12 +750,13 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 			assert( typeid( *(it) ) == typeid( CompositeType ) );
 			assert( it->type == CompositeType::Type::message );
 			if ( !it->isAlias )
-				generateMessage( header, s, *it );
+				generateMessage( header, s, *it, config );
 			else
-				generateMessageAlias( header, s, *it );
+				generateMessageAlias( header, s, *it, config );
 		}
 
-		impl_generateScopeComposer( header, *scope );
+		for (auto& each : config.composerNames)
+			impl_generateScopeComposer( header, *scope, each);
 
 		fprintf( header, "} // namespace %s \n\n", scope->name.c_str() );
 	}
@@ -758,7 +767,7 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( obj_1 != nullptr );
 		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
 		assert( obj_1->type == CompositeType::Type::publishable );
-		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), platformPrefix, classNotifierName );
+		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), config );
 	}
 
 	if ( !s.publishables.empty() )
@@ -785,15 +794,15 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Messaging )
-			generateMessage( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			generateMessage( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), config );
 	}
 
 	fprintf( header, "\n"
 		"} // namespace %s\n"
 		"\n"
 		"#endif // %s_%08x_guard\n",
-		metascope,
-		fileName, fileChecksum );
+		config.metascope.c_str(),
+		config.fileName.c_str(), config.fileChecksum );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -839,5 +848,16 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 
 void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
 {
-	cplusplus::generateRoot(fileName, fileChecksum, header, metascope, platformPrefix, classNotifierName, s);
+	GenerationConfig config;
+
+	config.fileChecksum = fileChecksum;
+	config.fileName = fileName;
+	config.metascope = metascope;
+	config.platformPrefix = platformPrefix;
+	config.classNotifierName = classNotifierName;
+
+	config.composerNames.push_back("globalmq::marshalling2::IComposer2");
+	config.parserNames.push_back("globalmq::marshalling2::IParser2");
+
+	cplusplus::generateRoot(header, s, config);
 }

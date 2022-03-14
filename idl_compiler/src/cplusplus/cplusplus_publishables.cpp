@@ -34,10 +34,10 @@ const char* paramTypeToParser( MessageParameterType::KIND kind )
 {
 	switch( kind )
 	{
-		case MessageParameterType::KIND::INTEGER: return "publishableParseInteger";
-		case MessageParameterType::KIND::UINTEGER: return "publishableParseUnsignedInteger";
-		case MessageParameterType::KIND::REAL: return "publishableParseReal";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseString";
+		case MessageParameterType::KIND::INTEGER: return "parseSignedInteger";
+		case MessageParameterType::KIND::UINTEGER: return "parseUnsignedInteger";
+		case MessageParameterType::KIND::REAL: return "parseReal";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "parseString";
 		default: return nullptr;
 	}
 }
@@ -1684,7 +1684,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 	fprintf( header, "\t}\n" );
 }
 
-void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj, std::string offset )
+void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj, std::string offset, const std::string& parserType )
 {
 	assert( obj.type != CompositeType::Type::discriminated_union );
 
@@ -1692,29 +1692,28 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 	{
 		assert( obj.getMembers()[i] != nullptr );
 		auto& member = *(obj.getMembers()[i]);
+		fprintf(header, "%sparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str());
 		switch ( member.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "%s::globalmq::marshalling::impl::%s<ParserT, %s>( parser, &(t.%s), \"%s\" );\n", offset.c_str(), paramTypeToParser( member.type.kind ), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+				fprintf( header, "%st.%s = parser.%s();\n", offset.c_str(),  impl_memberOrAccessFunctionName( member ).c_str(), paramTypeToParser(member.type.kind) );
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
+				fprintf( header, "%sparser.structBegin();\n", offset.c_str() );
 				fprintf( header, "%s%s::parseForStateSyncOrMessageInDepth( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-				fprintf( header, "%s::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n", offset.c_str() );
+				fprintf( header, "%sparser.structEnd();\n", offset.c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				assert( member.type.structIdx < root.structs.size() );				
-				fprintf( header, "%s::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
-				fprintf( header, "%sPublishableVectorProcessor::parse<ParserT, %s, %s, true>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				assert( member.type.structIdx < root.structs.size() );
+				fprintf( header, "%sPublishableVectorProcessor::parse<%s, %s, %s, true>( parser, t.%s );\n", offset.c_str(), parserType.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			case MessageParameterType::KIND::DICTIONARY:
-				assert( member.type.structIdx < root.structs.size() );				
-				fprintf( header, "%s::globalmq::marshalling::impl::parseKey( parser, \"%s\" );\n", offset.c_str(), member.name.c_str() );
-				fprintf( header, "%sPublishableDictionaryProcessor::parse<ParserT, %s, %s, %s, true>( parser, t.%s );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				assert( member.type.structIdx < root.structs.size() );
+				fprintf( header, "%sPublishableDictionaryProcessor::parse<%s, %s, %s, %s, true>( parser, t.%s );\n", offset.c_str(), parserType.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			default:
 				assert( false );
@@ -1723,19 +1722,20 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 	}
 }
 
-void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj )
+void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj, const std::string& parserType )
 {
 	assert( obj.type == CompositeType::Type::message || obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
 
 	if ( obj.isDiscriminatedUnion() )
 	{
-		fprintf( header, "\t\tuint64_t caseId;\n" );
-		fprintf( header, "\t\t::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), \"caseId\" );\n" );
+		fprintf( header, "\t\tparser.namedParamBegin( \"caseId\" );\n");
+		fprintf( header, "\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
 		fprintf( header, "\t\tt.initAs( (typename T::Variants)(caseId) );\n" );
 		fprintf( header, "\t\tif ( caseId != T::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
 
-		fprintf( header, "\t\t\t::globalmq::marshalling::impl::parsePublishableStructBegin( parser, \"caseData\" );\n" );
+		fprintf( header, "\t\t\tparser.namedParamBegin( \"caseData\" );\n");
+		fprintf( header, "\t\t\tparser.structBegin();\n" );
 		fprintf( header, "\t\t\tswitch ( caseId )\n" );
 		fprintf( header, "\t\t\t{\n" );
 
@@ -1747,7 +1747,7 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
+			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, cs, "\t\t\t\t\t", parserType );
 
 			fprintf( header, "\t\t\t\t\tbreak;\n" );
 			fprintf( header, "\t\t\t\t}\n" );
@@ -1756,25 +1756,25 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 		fprintf( header, "\t\t\t\tdefault:\n" );
 		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
 		fprintf( header, "\t\t\t}\n" );
-		fprintf( header, "\t\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+		fprintf( header, "\t\t\tparser.structEnd();\n" );
 
 		fprintf( header, "\t\t}\n" );
 	}
 	else
-		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, obj, "\t\t" );
+		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, obj, "\t\t", parserType );
 }
 
-void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj )
+void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj, const std::string& parserType )
 {
 	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
 //	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
-	fprintf( header, "\ttemplate<class ParserT, class T>\n" );
+	fprintf( header, "\ttemplate<class T>\n" );
 	fprintf( header, "\tstatic\n" );
 //	fprintf( header, "\tRetT parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n" );
-	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n" );
+	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( %s& parser, T& t )\n", parserType.c_str() );
 	fprintf( header, "\t{\n" );
 
-	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
+	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, obj, parserType );
 
 	fprintf( header, "\t}\n" );
 }
@@ -2004,12 +2004,13 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 	fprintf( header, "\t}\n" );
 }
 
-void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj )
+void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
 {
 	fprintf( header, "struct %s : public ::globalmq::marshalling::impl::StructType\n", impl_generatePublishableStructName( obj ).c_str() );
 	fprintf( header, "{\n" );
 
-	impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
+	for(auto& each : config.parserNames)
+		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj, each );
 	fprintf( header, "\n" );
 
 	if ( obj.isStruct4Publishing )
@@ -2707,25 +2708,25 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 	fprintf( header, "\n" );
 }
 
-void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
+void generatePublishable( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config )
 {
 	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
 	if ( !checked )
 		throw std::exception();
 
-	assert( ( platformPrefix.size() == 0 && classNotifierName.size() == 0 ) || ( platformPrefix.size() != 0 && classNotifierName.size() != 0 ) );
-	bool generatePlatformSpec = platformPrefix.size() != 0 && classNotifierName.size() != 0;
+	assert( ( config.platformPrefix.size() == 0 && config.classNotifierName.size() == 0 ) || ( config.platformPrefix.size() != 0 && config.classNotifierName.size() != 0 ) );
+	bool generatePlatformSpec = config.platformPrefix.size() != 0 && config.classNotifierName.size() != 0;
 
 	impl_generatePublishableCommentBlock( header, s );
 
 	impl_GeneratePublishableStateWrapperForPublisher( header, root, s );
 	if ( generatePlatformSpec )
-		impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, platformPrefix, classNotifierName );
+		impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, config.platformPrefix, config.classNotifierName );
 
 	impl_GeneratePublishableStateWrapperForSubscriber( header, root, s );
 	if ( generatePlatformSpec )
-		impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, platformPrefix, classNotifierName );
+		impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, config.platformPrefix, config.classNotifierName );
 
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s );
 }

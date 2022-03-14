@@ -29,6 +29,7 @@
 #define CPLUSPLUS_IDL_TREE_SERIALIZER_H
 
 #include "idl_tree.h"
+#include "idl_generators.h"
 
 namespace cplusplus
 {
@@ -57,13 +58,13 @@ struct FloatingParts
 // bool impl_checkFollowingExtensionRules(CompositeType& s);
 // void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
 // bool impl_processScopes( Root& r );
-void impl_generateScopeHandler( FILE* header, Scope& scope );
-void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope );
-void impl_generateScopeComposer( FILE* header, Scope& scope );
+void impl_generateScopeHandler( FILE* header, Scope& scope, const std::string& parserType );
+void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope, const std::string& composerType);
+void impl_generateScopeComposer( FILE* header, Scope& scope, const std::string& composerType);
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack, bool isCollectionElementType = false );
 string paramNameToNameTagType( string name );
 void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj );
-void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj );
+void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
 void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s );
@@ -147,28 +148,28 @@ std::string impl_templateMemberTypeName( std::string templateParentName, const M
 		return fmt::format( "decltype({}::{})", templateParentName, member.name );
 }
 
-void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj );
+void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj, const std::string& parserType );
 
-void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s );
+void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s, const std::string& parserType );
 
 
 // code generation
-void preprocessRoot(Root& s);
-void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
-void generateMessage( FILE* header, Root& root, CompositeType& s );
-void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName );
-void generateMessageAlias( FILE* header, Root& root, CompositeType& s );
-void generateMessageParameter( FILE* header, MessageParameter& s );
-void generateMessageMembers( FILE* header, CompositeType& s );
-void generateLimit( FILE* header, Limit& s );
-void generateLocation( FILE* header, Location& s );
-void generateDataType( FILE* header, MessageParameterType& s );
-void generate__unique_ptr_DataType( FILE* header, unique_ptr<MessageParameterType>& s );
-void generate__unique_ptr_MessageParameter( FILE* header, unique_ptr<MessageParameter>& s );
-
-void generateDataType( FILE* header, MessageParameterType& s );
-void generateLimit( FILE* header, Limit& s );
-void generateVariant( FILE* header, Variant& s );
+//void preprocessRoot(Root& s);
+//void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, std::string platformPrefix, std::string classNotifierName, Root& s );
+void generateMessage( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config );
+void generatePublishable( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config);
+void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config);
+//void generateMessageParameter( FILE* header, MessageParameter& s );
+//void generateMessageMembers( FILE* header, CompositeType& s );
+//void generateLimit( FILE* header, Limit& s );
+//void generateLocation( FILE* header, Location& s );
+//void generateDataType( FILE* header, MessageParameterType& s );
+//void generate__unique_ptr_DataType( FILE* header, unique_ptr<MessageParameterType>& s );
+//void generate__unique_ptr_MessageParameter( FILE* header, unique_ptr<MessageParameter>& s );
+//
+//void generateDataType( FILE* header, MessageParameterType& s );
+//void generateLimit( FILE* header, Limit& s );
+//void generateVariant( FILE* header, Variant& s );
 
 //uint32_t idlFileChecksum( std::string path );
 

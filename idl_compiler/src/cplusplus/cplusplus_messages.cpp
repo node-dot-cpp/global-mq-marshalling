@@ -57,46 +57,23 @@ std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
 	return fmt::format( "structures::{}", s.name );
 }
 
-void impl_generateScopeHandler( FILE* header, Scope& scope )
+void impl_generateScopeHandler( FILE* header, Scope& scope, const std::string& parserType )
 {
 	fprintf( header, 
-		"template<class ParserT, class ... HandlersT >\n"
-		"void implHandleMessage( ParserT& parser, HandlersT ... handlers )\n"
+		"template<class ... HandlersT >\n"
+		"void implHandleMessage( %s& parser, HandlersT ... handlers )\n"
 		"{\n"
-		"\tuint64_t msgID;\n\n"
+		"\tuint64_t msgID;\n\n", parserType.c_str()
 	);
-	switch ( scope.proto )
-	{
-		case Proto::gmq:
-			fprintf( header, 
-//				"\tGmqParser parser( buffer );\n"
-				"\tstatic_assert( ParserT::proto == Proto::GMQ, \"According to IDL GMQ parser is expected\" );\n"
-				"\tparser.parseUnsignedInteger( &msgID );\n"
-			);
-			break;
-		case Proto::json:
-			fprintf( header, 
-//				"\tJsonParser parser( buffer );\n"
-				"\tstatic_assert( ParserT::proto == Proto::JSON, \"According to IDL JSON parser is expected\" );\n"
-				"\tparser.skipDelimiter(\'{\');\n"
-				"\tstd::string key;\n"
-				"\tparser.readKey(&key);\n"
-				"\tif (key != \"msgid\")\n"
-				"\t\tthrow std::exception(); // bad format\n"
-				"\tparser.readUnsignedIntegerFromJson(&msgID);\n"
-				"\tparser.skipSpacesEtc();\n"
-				"\tif (!parser.isDelimiter(\',\'))\n"
-				"\t\tthrow std::exception(); // bad format\n"
-				"\tparser.skipDelimiter(\',\');\n"
-				"\tparser.readKey(&key);\n"
-				"\tif (key != \"msgbody\")\n"
-				"\t\tthrow std::exception(); // bad format\n"
-				"\tJsonParser p( parser );\n\n"
-			);
-			break;
-		default:
-			assert( false );
-	}
+
+
+	
+
+	fprintf(header, "\tparser.structBegin();\n");
+	fprintf(header, "\tparser.namedParamBegin(\"msgid\");\n");
+	fprintf(header, "\tuint64_t msgID = parser.parseUnsignedInteger();\n");
+	fprintf(header, "\tparser.nextElement();\n");
+	fprintf(header, "\tparser.namedParamBegin(\"msgbody\");\n");
 
 	fprintf( header, "\tbool ok = false;\n" );
 	fprintf( header, "\n" );
@@ -108,107 +85,48 @@ void impl_generateScopeHandler( FILE* header, Scope& scope )
 		fprintf( header, "\t\tcase %s::id: ok = ::globalmq::marshalling::impl::implHandleMessage<%s>( parser, handlers... ); break;\n", msg->name.c_str(), msg->name.c_str() );
 	fprintf( header, "\t\tdefault: ::globalmq::marshalling::impl::implHandleMessage<::globalmq::marshalling::impl::UnknownMessageName>( parser, handlers... ); break;\n" );
 	fprintf( header, "\t}\n\n" );
-	switch ( scope.proto )
-	{
-		case Proto::gmq: break;
-		case Proto::json:
-			fprintf( header, "\t/*if (!ok) return;\n" );
-			fprintf( header, "\tif (!parser.isDelimiter(\'}\'))\n" );
-			fprintf( header, "\t\tthrow std::exception(); // bad format\n" );
-			fprintf( header, "\tparser.skipDelimiter(\'}\');*/\n" );
-			break;
-		default:
-			assert( false );
-	}
+
+	fprintf( header, "\t/*if (!ok) return;\n" );
+	fprintf( header, "\tparser.structEnd();*/\n" );
+
 	fprintf( header, "}\n\n" );
 
 
 	fprintf( header, 
-		"template<class BufferT, class ... HandlersT >\n"
-		"void handleMessage( BufferT& buffer, HandlersT ... handlers )\n"
+		"template<class ... HandlersT >\n"
+		"void handleMessage( %s& parser, HandlersT ... handlers )\n"
 		"{\n"
-		"\tauto riter = buffer.getReadIter();\n"
+		"\tauto riter = buffer.getReadIter();\n", parserType.c_str()
 	);
-	switch ( scope.proto )
-	{
-		case Proto::gmq:
-			fprintf( header, 
-				"\tGmqParser<BufferT> parser( riter );\n"
-			);
-			break;
-		case Proto::json:
-			fprintf( header, 
-				"\tJsonParser<BufferT> parser( riter );\n"
-			);
-			break;
-		default:
-			assert( false );
-	}
-	fprintf( header, "\timplHandleMessage( parser, handlers... );\n" );
-	fprintf( header, "}\n\n" );
-
-
-	fprintf( header, 
-		"template<class ReadIteratorT, class ... HandlersT >\n"
-		"void handleMessage2( ReadIteratorT& riter, HandlersT ... handlers )\n"
-		"{\n"
-	);
-	switch ( scope.proto )
-	{
-		case Proto::gmq:
-			fprintf( header, 
-				"\tGmqParser<typename ReadIteratorT::BufferT> parser( riter );\n"
-			);
-			break;
-		case Proto::json:
-			fprintf( header, 
-				"\tJsonParser<typename ReadIteratorT::BufferT> parser( riter );\n"
-			);
-			break;
-		default:
-			assert( false );
-	}
 	fprintf( header, "\timplHandleMessage( parser, handlers... );\n" );
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope )
+void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope, const std::string& composerType)
 {
 	fprintf( header, 
-		"template<typename msgID, class BufferT, typename ... Args>\n"
-		"void composeMessage( BufferT& buffer, Args&& ... args );\n\n"
+		"template<typename msgID, typename ... Args>\n"
+		"void composeMessage( %s& composer, Args&& ... args );\n\n", composerType.c_str()
 	);
 }
 
-void impl_generateScopeComposer( FILE* header, Scope& scope )
+void impl_generateScopeComposer( FILE* header, Scope& scope, const std::string& composerType)
 {
 	assert( scope.objectList.size() != 0 );
 	fprintf( header, 
-		"template<typename msgID, class BufferT, typename ... Args>\n"
-		"void composeMessage( BufferT& buffer, Args&& ... args )\n"
+		"template<typename msgID, typename ... Args>\n"
+		"void composeMessage( %s& composer, Args&& ... args )\n"
 		"{\n"
-		"\tstatic_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );\n" 
+		"\tstatic_assert( std::is_base_of<::globalmq::marshalling::impl::MessageNameBase, msgID>::value );\n", composerType.c_str()
 	);
-	switch ( scope.proto )
-	{
-		case Proto::gmq: 
-			fprintf( header, 
-				"\tglobalmq::marshalling::GmqComposer composer( buffer );\n"
-				"\t::globalmq::marshalling::impl::composeUnsignedInteger( composer, msgID::id );\n"
-			);
-			break;
-		case Proto::json: 
-			fprintf( header, 
-				"\tglobalmq::marshalling::JsonComposer composer( buffer );\n"
-				"\tcomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n"
-				"\t::globalmq::marshalling::impl::json::composeNamedSignedInteger( composer, \"msgid\", msgID::id);\n"
-				"\tcomposer.buff.append( \",\\n  \", sizeof(\",\\n  \") - 1 );\n"
-				"\t::globalmq::marshalling::impl::json::addNamePart( composer, \"msgbody\" );\n"
-			);
-			break;
-		default:
-			assert( false );
-	}
+
+	fprintf(header,
+		"\tcomposer.structBegin();\n"
+		"\tcomposer.namedParamBegin(\"msgid\");\n"
+		"\tcomposer.composeUnsignedInteger(msgID::id);\n"
+		"\tcomposer.nextElement();\n"
+		"\tcomposer.namedParamBegin(\"msgbody\");\n"
+	);
 
 	fprintf( header, "\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
 	fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
@@ -220,16 +138,9 @@ void impl_generateScopeComposer( FILE* header, Scope& scope )
 	fprintf( header, 
 		"\telse\n"
 		"\t\tstatic_assert( std::is_same<::globalmq::marshalling::impl::MessageNameBase, msgID>::value, \"unexpected value of msgID\" ); // note: should be just static_assert(false,\"...\"); but it seems that in this case clang asserts yet before looking at constexpr conditions\n" );
-	switch ( scope.proto )
-	{
-		case Proto::gmq: break;
-		case Proto::json: 
-			fprintf( header, "\tcomposer.buff.append( \"\\n}\", 2 );\n"	);
-			break;
-		default:
-			assert( false );
-			break;
-	}
+
+
+	fprintf(header, "\tcomposer.structEnd();\n");
 	fprintf( header, 
 		"}\n\n" );
 }
@@ -510,84 +421,84 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 	fprintf( header, "\n" );
 }
 
-void impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( FILE* header, CompositeType& s, int& count, const char* offset )
-{
-	assert( s.type != CompositeType::Type::discriminated_union );
-	for ( auto& it : s.getMembers() )
-	{
-		assert( it != nullptr );
-
-		MessageParameter& param = *it;
-		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		++count;
-
-		switch ( param.type.kind )
-		{
-			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
-				break;
-			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
-				break;
-			case MessageParameterType::KIND::REAL:
-			{
-				FloatingParts parts(param.type.numericalDefault);
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
-				break;
-			}
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				if ( param.type.hasDefault )
-					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
-				else
-					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				break;
-			case MessageParameterType::KIND::BLOB:
-				break;
-			case MessageParameterType::KIND::ENUM:
-				break;
-			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
-				break;
-			case MessageParameterType::KIND::DICTIONARY: // TODO: revise
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
-				break;
-			case MessageParameterType::KIND::EXTENSION:
-				break; // TODO: treatment
-			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
-				break; // TODO: treatment
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
-				break;
-			default:
-			{
-				assert( false ); // unexpected
-				break;
-			}
-		}
-	}
-}
-
-void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
-{
-	int count = 0;
-	if ( s.isDiscriminatedUnion() )
-	{
-		for ( auto& it: s.getDiscriminatedUnionCases() )
-		{
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, cs, count, offset );
-		}
-	}
-	else
-		impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, s, count, offset );
-
-}
+//void impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( FILE* header, CompositeType& s, int& count, const char* offset )
+//{
+//	assert( s.type != CompositeType::Type::discriminated_union );
+//	for ( auto& it : s.getMembers() )
+//	{
+//		assert( it != nullptr );
+//
+//		MessageParameter& param = *it;
+//		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
+//			continue;
+//		++count;
+//
+//		switch ( param.type.kind )
+//		{
+//			case MessageParameterType::KIND::INTEGER:
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
+//				break;
+//			case MessageParameterType::KIND::UINTEGER:
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+//				break;
+//			case MessageParameterType::KIND::REAL:
+//			{
+//				FloatingParts parts(param.type.numericalDefault);
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
+//				break;
+//			}
+//			case MessageParameterType::KIND::CHARACTER_STRING:
+//				if ( param.type.hasDefault )
+//					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
+//				else
+//					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
+//				break;
+//			case MessageParameterType::KIND::BYTE_ARRAY:
+//				break;
+//			case MessageParameterType::KIND::BLOB:
+//				break;
+//			case MessageParameterType::KIND::ENUM:
+//				break;
+//			case MessageParameterType::KIND::VECTOR:
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+//				break;
+//			case MessageParameterType::KIND::DICTIONARY: // TODO: revise
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
+//				break;
+//			case MessageParameterType::KIND::EXTENSION:
+//				break; // TODO: treatment
+//			case MessageParameterType::KIND::STRUCT:
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+//				break; // TODO: treatment
+//			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
+//				break;
+//			default:
+//			{
+//				assert( false ); // unexpected
+//				break;
+//			}
+//		}
+//	}
+//}
+//
+//void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
+//{
+//	int count = 0;
+//	if ( s.isDiscriminatedUnion() )
+//	{
+//		for ( auto& it: s.getDiscriminatedUnionCases() )
+//		{
+//			assert( it != nullptr );
+//			CompositeType& cs = *it;
+//			assert( cs.type == CompositeType::Type::discriminated_union_case );
+//			impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, cs, count, offset );
+//		}
+//	}
+//	else
+//		impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, s, count, offset );
+//
+//}
 
 void impl_generateMatchCountBlock_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
 {
@@ -644,9 +555,9 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 }
 
 
-void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s, const char* offset )
+void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s, const char* offset, const std::string& composerType )
 {
-	fprintf( header, "%scomposer.buff.append( \"{\\n  \", sizeof(\"{\\n  \") - 1 );\n", offset );
+	fprintf( header, "%scomposer.structBegin();\n", offset );
 	int count = 0;
 	for ( auto& it : s.getMembers() )
 	{
@@ -660,23 +571,23 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::REAL:
 			{
 				FloatingParts parts(param.type.numericalDefault);
 //				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, double, double, %f>(\"%s\", arg_%d_type::nameAndTypeID, composer, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.type.numericalDefault, param.name.c_str(), count );
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, param.name.c_str(), count );
 				break;
 			}
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				if ( param.type.hasDefault )
-					fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
+					fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				else
-					fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.name.c_str(), count );
+					fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", composerType.c_str(), offset, count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -685,18 +596,18 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 			case MessageParameterType::KIND::ENUM:
 				break;
 			case MessageParameterType::KIND::VECTOR:
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::DICTIONARY: // TODO: revise
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::EXTENSION:
 				break; // TODO: ...
 			case MessageParameterType::KIND::STRUCT:
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
 				break; // TODO: ...
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				fprintf( header, "%s::globalmq::marshalling::impl::json::composeParamToJson<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
+				fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, %s, int64_t, int64_t, (int64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.type.hasDefault ? "false" : "true", param.name.c_str(), count );
 				break;
 			default:
 			{
@@ -706,127 +617,127 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 		}
 	
 		if ( count != s.getMembers().size() )
-			fprintf( header, "%scomposer.buff.append( \",\\n  \", 4 );\n", offset );
+			fprintf( header, "%scomposer.nextElement();\n", offset );
 	}
 
-	fprintf( header, "%scomposer.buff.append( \"\\n}\", 2 );\n", offset );
+	fprintf( header, "%scomposer.structEnd();\n", offset );
 }
 
-void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s )
+void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s, const std::string& composerType )
 {
-	size_t protoCount = s.protoList.size();
-	if ( protoCount == 1 )
-	{
-		switch ( *(s.protoList.begin()) )
-		{
-			case Proto::gmq:
-			{
-				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
-				impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
-				break;
-			}
-			case Proto::json:
-			{
-				fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
-				impl_generateParamCallBlockForComposingJson( header, s, "\t" );
-				break;
-			}
-			default:
-				assert( false );
-		}
-	}
-	else
-	{
-		size_t processedProtoCount = 0;
-		// if present, keep GMQ first!
-		if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
-		{
-			++processedProtoCount;
-			fprintf( header, 
-				"\tif constexpr( ComposerT::proto == Proto::GMQ )\n"
-				"\t{\n" );
-			impl_generateParamCallBlockForComposingGmq( header, s, "\t\t" );
-			fprintf( header, "\t}\n" );
-		}
-		// then add the rest
-		for ( auto it:s.protoList )
-		{
-			++processedProtoCount;
-			switch ( it )
-			{
-				case Proto::gmq:
-					break; // already done
-				case Proto::json:
-				{
-					// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
-					if ( processedProtoCount == 0 )
-					{
-						fprintf( header, 
-							"\tif constexpr ( ComposerT::proto == Proto::JSON )\n"
-							"\t{\n" );
-					}
-					else
-					{
-						if ( processedProtoCount == protoCount )
-							fprintf( header, 
-								"\telse\n"
-								"\t{\n"
-								"\t\tstatic_assert( ComposerT::proto == Proto::JSON );\n" );
-						else
-							fprintf( header, 
-								"\telse if constexpr ( ComposerT::proto == Proto::JSON )\n"
-								"\t{\n" );
-					}
-					impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
-					fprintf( header, "\n\t}\n" );
-					break;
-				}
-				default:
-					assert( false );
-			}
-		}
-	}
+	//size_t protoCount = s.protoList.size();
+	//if ( protoCount == 1 )
+	//{
+	//	switch ( *(s.protoList.begin()) )
+	//	{
+	//		case Proto::gmq:
+	//		{
+	//			fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
+	//			impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
+	//			break;
+	//		}
+	//		case Proto::json:
+	//		{
+				//fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
+				impl_generateParamCallBlockForComposingJson( header, s, "\t", composerType);
+	//			break;
+	//		}
+	//		default:
+	//			assert( false );
+	//	}
+	//}
+	//else
+	//{
+	//	size_t processedProtoCount = 0;
+	//	// if present, keep GMQ first!
+	//	if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
+	//	{
+	//		++processedProtoCount;
+	//		fprintf( header, 
+	//			"\tif constexpr( ComposerT::proto == Proto::GMQ )\n"
+	//			"\t{\n" );
+	//		impl_generateParamCallBlockForComposingGmq( header, s, "\t\t" );
+	//		fprintf( header, "\t}\n" );
+	//	}
+	//	// then add the rest
+	//	for ( auto it:s.protoList )
+	//	{
+	//		++processedProtoCount;
+	//		switch ( it )
+	//		{
+	//			case Proto::gmq:
+	//				break; // already done
+	//			case Proto::json:
+	//			{
+	//				// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
+	//				if ( processedProtoCount == 0 )
+	//				{
+	//					fprintf( header, 
+	//						"\tif constexpr ( ComposerT::proto == Proto::JSON )\n"
+	//						"\t{\n" );
+	//				}
+	//				else
+	//				{
+	//					if ( processedProtoCount == protoCount )
+	//						fprintf( header, 
+	//							"\telse\n"
+	//							"\t{\n"
+	//							"\t\tstatic_assert( ComposerT::proto == Proto::JSON );\n" );
+	//					else
+	//						fprintf( header, 
+	//							"\telse if constexpr ( ComposerT::proto == Proto::JSON )\n"
+	//							"\t{\n" );
+	//				}
+	//				impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
+	//				fprintf( header, "\n\t}\n" );
+	//				break;
+	//			}
+	//			default:
+	//				assert( false );
+	//		}
+	//	}
+	//}
 }
 
-void impl_generateComposeFunction( FILE* header, CompositeType& s )
+void impl_generateComposeFunction( FILE* header, CompositeType& s, const std::string& composerType )
 {
 	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
-	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s(ComposerT& composer, Args&& ... args)\n"
-	"{\n", impl_generateComposeFunctionName( s ).c_str() );
+	fprintf( header, "template<typename ... Args>\n"
+	"void %s(%s& composer, Args&& ... args)\n"
+	"{\n", impl_generateComposeFunctionName( s ).c_str(), composerType.c_str() );
 	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
-	impl_generateParamCallBlockForComposing( header, s );
+	impl_generateParamCallBlockForComposing( header, s, composerType);
 
 
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s )
+void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s, const std::string& parserType )
 {
-	fprintf( header, "template<class ParserT>\n" );
-	fprintf( header, "%s %s(ParserT& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str() );
+	fprintf( header, "inline\n" );
+	fprintf( header, "%s %s(%s& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str(), parserType.c_str());
 	fprintf( header, "{\n" );
-	fprintf( header, "\tstatic_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
+	fprintf( header, "\t// static_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	fprintf( header, "\tusing T = %s;\n", impl_generateMessageParseFunctionRetType(s).c_str() );
 	fprintf( header, "\tT t;\n" );
 
-	fprintf( header, "\t::globalmq::marshalling::impl::parseStructBegin( parser );\n" );
+	fprintf( header, "\tparser.structBegin();\n" );
 	fprintf( header, "\n" );
 
-	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, s );
+	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, s, parserType );
 
-	fprintf( header, "\t::globalmq::marshalling::impl::parseStructEnd( parser );\n" );
+	fprintf( header, "\tparser.structEnd();\n" );
 
 	fprintf( header, "\treturn t;\n" );
 
 	fprintf( header, "}\n\n" );
 }
 
-void generateMessage( FILE* header, Root& root, CompositeType& s )
+void generateMessage( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config)
 {
 	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
@@ -836,12 +747,15 @@ void generateMessage( FILE* header, Root& root, CompositeType& s )
 	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
 
-	impl_generateComposeFunction( header, s );
+	for(auto& each : config.composerNames)
+		impl_generateComposeFunction( header, s, each);
+
 	if ( s.type == CompositeType::Type::message )
-		impl_generateParseFunctionForMessagesAndAliasingStructs( header, root, s );
+		for (auto& each : config.parserNames)
+			impl_generateParseFunctionForMessagesAndAliasingStructs( header, root, s, each );
 }
 
-void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
+void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config)
 {
 	assert( s.aliasIdx < root.structs.size() );
 	CompositeType& alias = *(root.structs[s.aliasIdx]);
@@ -865,25 +779,30 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "//**********************************************************************\n\n" );
 
 	// compose function
-	fprintf( header, "template<class ComposerT, typename ... Args>\n"
-	"void %s_%s_compose(ComposerT& composer, Args&& ... args)\n", s.type2string(), s.name.c_str() );
-	fprintf( header, "{\n" );
-	fprintf( header, "\t%s_%s_compose(composer, std::forward<Args>( args )...);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
-	fprintf( header, "}\n\n" );
-
+	for (auto& each : config.composerNames)
+	{
+		fprintf(header, "template<typename ... Args>\n"
+			"void %s_%s_compose(%s& composer, Args&& ... args)\n", s.type2string(), s.name.c_str(), each.c_str());
+		fprintf(header, "{\n");
+		fprintf(header, "\t%s_%s_compose(composer, std::forward<Args>( args )...);\n", impl_kindToString(MessageParameterType::KIND::STRUCT), s.aliasOf.c_str());
+		fprintf(header, "}\n\n");
+	}
 	// parse-by-param function
-	fprintf( header, "template<class ParserT, typename ... Args>\n"
-	"void %s_%s_parse(ParserT& p, Args&& ... args)\n", s.type2string(), s.name.c_str() );
-	fprintf( header, "{\n" );
-	fprintf( header, "\t%s_%s_parse(p, std::forward<Args>( args )...);\n", impl_kindToString( MessageParameterType::KIND::STRUCT ), s.aliasOf.c_str() );
-	fprintf( header, "}\n\n" );
+	for (auto& each : config.parserNames)
+	{
+		fprintf(header, "template<typename ... Args>\n"
+			"void %s_%s_parse(%s& p, Args&& ... args)\n", s.type2string(), s.name.c_str(), each.c_str());
+		fprintf(header, "{\n");
+		fprintf(header, "\t%s_%s_parse(p, std::forward<Args>( args )...);\n", impl_kindToString(MessageParameterType::KIND::STRUCT), s.aliasOf.c_str());
+		fprintf(header, "}\n\n");
 
-	// parse function
-	fprintf( header, "template<class ParserT>\n" );
-	fprintf( header, "structures::%s::%s_%s %s_%s_parse(ParserT& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str() );
-	fprintf( header, "{\n" );
-	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
-	fprintf( header, "}\n\n" );
+		// parse function
+		fprintf(header, "inline\n");
+		fprintf(header, "structures::%s::%s_%s %s_%s_parse(%s& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str(), each.c_str());
+		fprintf(header, "{\n");
+		fprintf(header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName(alias).c_str());
+		fprintf(header, "}\n\n");
+	}
 }
 
 }//namespace cplusplus
