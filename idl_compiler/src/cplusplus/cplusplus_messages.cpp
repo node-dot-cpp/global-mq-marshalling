@@ -95,8 +95,7 @@ void impl_generateScopeHandler( FILE* header, Scope& scope, const std::string& p
 	fprintf( header, 
 		"template<class ... HandlersT >\n"
 		"void handleMessage( %s& parser, HandlersT ... handlers )\n"
-		"{\n"
-		"\tauto riter = buffer.getReadIter();\n", parserType.c_str()
+		"{\n", parserType.c_str()
 	);
 	fprintf( header, "\timplHandleMessage( parser, handlers... );\n" );
 	fprintf( header, "}\n\n" );
@@ -587,7 +586,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 				if ( param.type.hasDefault )
 					fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, param.name.c_str(), count );
 				else
-					fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", composerType.c_str(), offset, count, param.name.c_str(), count );
+					fprintf( header, "%s::globalmq::marshalling2::composeParam2<%s, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)(0)>(composer, \"%s\", arg_%d_type::nameAndTypeID, args...);\n", offset, composerType.c_str(), count, param.name.c_str(), count );
 				break;
 			case MessageParameterType::KIND::BYTE_ARRAY:
 				break;
@@ -705,7 +704,6 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s, const std::st
 	fprintf( header, "template<typename ... Args>\n"
 	"void %s(%s& composer, Args&& ... args)\n"
 	"{\n", impl_generateComposeFunctionName( s ).c_str(), composerType.c_str() );
-	fprintf( header, "\tstatic_assert( std::is_base_of<ComposerBase, ComposerT>::value, \"Composer must be one of GmqComposer<> or JsonComposer<>\" );\n\n" );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -720,7 +718,6 @@ void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root
 	fprintf( header, "inline\n" );
 	fprintf( header, "%s %s(%s& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str(), parserType.c_str());
 	fprintf( header, "{\n" );
-	fprintf( header, "\t// static_assert( std::is_base_of<ParserBase, ParserT>::value, \"Parser must be one of GmqParser<> or JsonParser<>\" );\n\n" );
 
 	fprintf( header, "\tusing T = %s;\n", impl_generateMessageParseFunctionRetType(s).c_str() );
 	fprintf( header, "\tT t;\n" );
