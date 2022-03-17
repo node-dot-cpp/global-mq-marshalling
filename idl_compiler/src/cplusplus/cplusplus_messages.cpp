@@ -47,6 +47,38 @@ std::string impl_generateParseFunctionName( CompositeType& s )
 	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
 }
 
+std::string impl_generateMessageClassName( MessageParameterType::KIND type, const std::string& name )
+{
+	if(type == MessageParameterType::KIND::STRUCT)
+		return fmt::format( "publishable_{}_{}", "STRUCT", name );
+	else if(type == MessageParameterType::KIND::DISCRIMINATED_UNION)
+		return fmt::format( "publishable_{}_{}", "DISCRIMINATED_UNION", name );
+	else
+		assert(false);
+}
+
+const char* impl_generatePrimitiveProcessorName( MessageParameterType::KIND type )
+{
+	switch ( type )
+	{
+		case MessageParameterType::KIND::INTEGER:
+			return "globalmq::marshalling2::Int64Processor";
+			break;
+		case MessageParameterType::KIND::UINTEGER:
+			return "globalmq::marshalling2::UInt64Processor";
+			break;
+		case MessageParameterType::KIND::REAL:
+			return "globalmq::marshalling2::DoubleProcessor";
+			break;
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return "globalmq::marshalling2::StringProcessor";
+			break;
+		default:
+			assert(false);
+			return "";
+	}
+}
+
 std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
 {
 	if ( s.type == CompositeType::Type::message )
@@ -123,7 +155,9 @@ void impl_generateScopeComposer( FILE* header, Scope& scope, const std::string& 
 		"\tcomposer.structBegin();\n"
 		"\tcomposer.namedParamBegin(\"msgid\");\n"
 		"\tcomposer.composeUnsignedInteger(msgID::id);\n"
+		"\n"
 		"\tcomposer.nextElement();\n"
+		"\n"
 		"\tcomposer.namedParamBegin(\"msgbody\");\n"
 	);
 
@@ -288,61 +322,27 @@ void impl_generateParamTypeLIst_MemberIterationBlock( FILE* header, CompositeTyp
 		switch ( param.type.kind )
 		{
 			case MessageParameterType::KIND::INTEGER:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::SignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
 			case MessageParameterType::KIND::UINTEGER:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::UnsignedIntegralType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
 			case MessageParameterType::KIND::REAL:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::RealType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::StringType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+				fprintf( header, "\tusing arg_%d_type = globalmq::marshalling2::NamedParameterWithProcessor<%s::Name, %s>;\n", count, paramNameToNameTagType( param.name ).c_str(), impl_generatePrimitiveProcessorName(param.type.kind) );
 				break;
-			case MessageParameterType::KIND::BYTE_ARRAY:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::ByteArrayType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
-			case MessageParameterType::KIND::BLOB:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::BlobType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
-			case MessageParameterType::KIND::ENUM:
-				fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::EnumType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				fprintf( header, "\tusing arg_%d_type = globalmq::marshalling2::NamedParameterWithProcessor<%s::Name, %s>;\n", count, paramNameToNameTagType( param.name ).c_str(), impl_generateMessageClassName( param.type.kind, param.type.name ).c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				switch ( param.type.vectorElemKind )
 				{
 					case MessageParameterType::KIND::INTEGER:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::SignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
 					case MessageParameterType::KIND::UINTEGER:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::UnsignedIntegralType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
 					case MessageParameterType::KIND::REAL:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::RealType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::StringType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
-					case MessageParameterType::KIND::BYTE_ARRAY:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::ByteArrayType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
-					case MessageParameterType::KIND::BLOB:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::BlobType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
-					case MessageParameterType::KIND::ENUM:
-						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfSympleTypes<::globalmq::marshalling::impl::EnumType>, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = globalmq::marshalling2::NamedParameterWithProcessor<%s::Name, globalmq::marshalling2::MessageVectorProcessor<%s>>;\n", count, paramNameToNameTagType( param.name ).c_str(), impl_generatePrimitiveProcessorName(param.type.vectorElemKind) );
 						break;
 					case MessageParameterType::KIND::STRUCT:
-						if ( param.type.isNonExtendable )
-							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextMessageTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						else
-							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						break;
 					case MessageParameterType::KIND::DISCRIMINATED_UNION:
-						if ( param.type.isNonExtendable )
-							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfNonextDiscriminatedUnionTypes, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-						else
-							fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::VectorOfDiscriminatedUnionType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
+						fprintf( header, "\tusing arg_%d_type = globalmq::marshalling2::NamedParameterWithProcessor<%s::Name, globalmq::marshalling2::MessageVectorProcessor<%s>>;\n", count, paramNameToNameTagType( param.name ).c_str(), impl_generateMessageClassName( param.type.vectorElemKind, param.type.name ).c_str() );
 						break;
 					default:
 						assert( false ); // unexpected
@@ -357,9 +357,9 @@ void impl_generateParamTypeLIst_MemberIterationBlock( FILE* header, CompositeTyp
 					case MessageParameterType::KIND::UINTEGER:
 					case MessageParameterType::KIND::REAL:
 					case MessageParameterType::KIND::CHARACTER_STRING:
-					case MessageParameterType::KIND::BYTE_ARRAY:
-					case MessageParameterType::KIND::BLOB:
-					case MessageParameterType::KIND::ENUM:
+					// case MessageParameterType::KIND::BYTE_ARRAY:
+					// case MessageParameterType::KIND::BLOB:
+					// case MessageParameterType::KIND::ENUM:
 						fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DictionaryOfSympleTypes<%s, %s>, %s::Name>;\n", count, paramTypeToLibType(param.type.dictionaryKeyKind), paramTypeToLibType(param.type.dictionaryValueKind), paramNameToNameTagType( param.name ).c_str() );
 						break;
 					case MessageParameterType::KIND::STRUCT:
@@ -380,18 +380,6 @@ void impl_generateParamTypeLIst_MemberIterationBlock( FILE* header, CompositeTyp
 				}
 				break;
 			}
-			case MessageParameterType::KIND::STRUCT:
-				if ( param.type.isNonExtendable )
-					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextMessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				else
-					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::MessageType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				if ( param.type.isNonExtendable )
-					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::NonextDiscriminatedUnionType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				else
-					fprintf( header, "\tusing arg_%d_type = NamedParameterWithType<::globalmq::marshalling::impl::DiscriminatedUnionType, %s::Name>;\n", count, paramNameToNameTagType( param.name ).c_str() );
-				break;
 			default:
 			{
 				assert( false ); // unexpected
@@ -565,7 +553,16 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 		MessageParameter& param = *it;
 		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
 			continue;
+
+		if ( count != 0 )
+		{
+			fprintf( header, "\n" );
+			fprintf( header, "%scomposer.nextElement();\n", offset );
+			fprintf( header, "\n" );
+		}
 		++count;
+
+		fprintf( header, "%scomposer.namedParamBegin(\"%s\");\n", offset, param.name.c_str() );
 
 		switch ( param.type.kind )
 		{
@@ -614,9 +611,6 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 				break;
 			}
 		}
-	
-		if ( count != s.getMembers().size() )
-			fprintf( header, "%scomposer.nextElement();\n", offset );
 	}
 
 	fprintf( header, "%scomposer.structEnd();\n", offset );
@@ -750,6 +744,7 @@ void generateMessage( FILE* header, Root& root, CompositeType& s, const Generati
 	if ( s.type == CompositeType::Type::message )
 		for (auto& each : config.parserNames)
 			impl_generateParseFunctionForMessagesAndAliasingStructs( header, root, s, each );
+
 }
 
 void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config)

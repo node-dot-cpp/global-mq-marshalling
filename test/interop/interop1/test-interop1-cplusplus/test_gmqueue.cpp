@@ -89,7 +89,7 @@ void deliverAllMessages(MetaPoolT& mp, MsgQueue& queue, const std::string &fileP
 				std::string fileName = DataPrefix + filePrefix + std::to_string(msgCnt) + ".json";
 
 				auto expected = makeBuffer(fileName, lest_env);
-				EXPECT(AreEqualIgnoreEol(expected, messages[i].msg));
+				EXPECT(AreEqualIgnoreWhite(expected, messages[i].msg));
             }
         }
     }

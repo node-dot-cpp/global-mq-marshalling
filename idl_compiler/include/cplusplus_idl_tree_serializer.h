@@ -58,6 +58,10 @@ struct FloatingParts
 // bool impl_checkFollowingExtensionRules(CompositeType& s);
 // void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
 // bool impl_processScopes( Root& r );
+std::string impl_generateMessageParseFunctionRetType( CompositeType& s );
+
+
+
 void impl_generateScopeHandler( FILE* header, Scope& scope, const std::string& parserType );
 void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope, const std::string& composerType);
 void impl_generateScopeComposer( FILE* header, Scope& scope, const std::string& composerType);

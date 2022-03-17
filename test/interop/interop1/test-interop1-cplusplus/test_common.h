@@ -268,5 +268,36 @@ bool AreEqualIgnoreEol(const mtest::Buffer& l, const mtest::Buffer& r)
     return !it1.isData() && !it2.isData();
 }
 
+inline
+bool AreEqualIgnoreWhite(const mtest::Buffer& l, const mtest::Buffer& r)
+{
+
+    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
+    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
+
+    while (it1.isData() && it2.isData())
+    {
+        if(*it1 != *it2)
+        {
+            while(it1.isData() && (*it1 == '\r' || *it1 == '\n'|| *it1 == '\t'|| *it1 == ' '))
+                ++it1;
+
+            while(it2.isData() && (*it2 == '\r' || *it2 == '\n'|| *it2 == '\t'|| *it2 == ' '))
+                ++it2;
+
+            if(!it1.isData() || !it2.isData())
+                return !it1.isData() && !it2.isData();
+
+            if(*it1 != *it2)
+                return false;
+        }
+
+        ++it1;
+        ++it2;
+    }
+
+    return !it1.isData() && !it2.isData();
+}
+
 
 #endif // TEST_COMMON_H_INCLUDED

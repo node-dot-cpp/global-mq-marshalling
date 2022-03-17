@@ -132,7 +132,7 @@ const lest::test test_publishable_seven[] =
         publ.generateStateSyncMessage(composer);
 
         auto expected = makeBuffer(PathPubSevenJson, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseStateSync" )
     {
@@ -166,7 +166,7 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
         auto expected = makeBuffer(PathPubSevenJson1, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate1" )
     {
@@ -211,7 +211,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto expected = makeBuffer(PathPubSevenJson2, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate2" )
     {
@@ -265,7 +265,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto expected = makeBuffer(PathPubSevenJson3, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate3" )
     {
@@ -317,7 +317,7 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
         auto expected = makeBuffer(PathPubSevenJson4, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate4" )
     {
@@ -372,7 +372,7 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
         auto expected = makeBuffer(PathPubSevenJson5, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "test_publishable_seven.TestJsonParseUpdate5" )
     {

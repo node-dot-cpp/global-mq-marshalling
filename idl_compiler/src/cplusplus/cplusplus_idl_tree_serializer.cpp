@@ -181,14 +181,10 @@ void addLibAliasingBlock( FILE* header )
 	fprintf( header, "//     (note: since clang apparently too often requires providing template arguments for aliased type ctors we use wrappers instead of type aliasing)\n" );
 	fprintf( header, "using Buffer = globalmq::marshalling::Buffer;\n" );
 	fprintf( header, "using FileReadBuffer = globalmq::marshalling::FileReadBuffer;\n" );
-	fprintf( header, "template<class BufferT>\n" );
-	fprintf( header, "class GmqComposer : public globalmq::marshalling::GmqComposer<BufferT> { public: GmqComposer( BufferT& buff_ ) : globalmq::marshalling::GmqComposer<BufferT>( buff_ ) {} };\n" );
-	fprintf( header, "template<class BufferT>\n" );
-	fprintf( header, "class GmqParser : public globalmq::marshalling::GmqParser<BufferT> { public: /*GmqParser( BufferT& buff_ ) : globalmq::marshalling::GmqParser<BufferT>( buff_ ) {}*/ GmqParser( typename BufferT::ReadIteratorT& iter ) : globalmq::marshalling::GmqParser<BufferT>( iter ) {} GmqParser( const GmqParser<BufferT>& other ) : globalmq::marshalling::GmqParser<BufferT>( other ) {} GmqParser& operator = ( const GmqParser<BufferT>& other ) { globalmq::marshalling::GmqParser<BufferT>::operator = ( other ); return *this; }};\n" );
-	fprintf( header, "template<class BufferT>\n" );
-	fprintf( header, "class JsonComposer : public globalmq::marshalling::JsonComposer<BufferT> { public: JsonComposer( BufferT& buff_ ) : globalmq::marshalling::JsonComposer<BufferT>( buff_ ) {} };\n" );
-	fprintf( header, "template<class BufferT>\n" );
-	fprintf( header, "class JsonParser : public globalmq::marshalling::JsonParser<BufferT> { public: /*JsonParser( BufferT& buff_ ) : globalmq::marshalling::JsonParser<BufferT>( buff_ ) {}*/ JsonParser( typename BufferT::ReadIteratorT& iter ) : globalmq::marshalling::JsonParser<BufferT>( iter ) {} JsonParser( const JsonParser<BufferT>& other ) : globalmq::marshalling::JsonParser<BufferT>( other ) {} JsonParser& operator = ( const JsonParser<BufferT>& other ) { globalmq::marshalling::JsonParser<BufferT>::operator = ( other ); return *this; } };\n" );
+	fprintf( header, "using GmqComposer = globalmq::marshalling2::GmqComposer2<Buffer>;\n" );
+	fprintf( header, "using GmqParser = globalmq::marshalling2::GmqParser2<Buffer>;\n" );
+	fprintf( header, "using JsonComposer = globalmq::marshalling2::JsonComposer2<Buffer>;\n" );
+	fprintf( header, "using JsonParser = globalmq::marshalling2::JsonParser2<Buffer>;\n" );
 	fprintf( header, "template<class T>\n" );
 	fprintf( header, "class SimpleTypeCollectionWrapper : public globalmq::marshalling::SimpleTypeCollectionWrapper<T> { public: SimpleTypeCollectionWrapper( T& coll ) : globalmq::marshalling::SimpleTypeCollectionWrapper<T>( coll ) {} };\n" );
 	fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );
@@ -857,7 +853,10 @@ void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* heade
 	config.classNotifierName = classNotifierName;
 
 	config.composerNames.push_back("globalmq::marshalling2::IComposer2");
+	config.composerNames.push_back("GmqComposer");
+	
 	config.parserNames.push_back("globalmq::marshalling2::IParser2");
+	config.parserNames.push_back("GmqParser");
 
 	cplusplus::generateRoot(header, s, config);
 }

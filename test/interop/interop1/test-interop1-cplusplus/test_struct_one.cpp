@@ -34,13 +34,16 @@ template<class ComposerT>
 void ComposeStructOne(ComposerT& composer, mtest::structures::struct_one& msg)
 {
 	mtest::STRUCT_struct_one_compose(composer,
-		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
-		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
-		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
-		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
-		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
+		mtest::thirdParam = msg.thirdParam,
+		mtest::firstParam = msg.firstParam,
+        mtest::fifthParam = msg.fifthParam,
+        mtest::forthParam = msg.forthParam,
+        mtest::seventhParam = msg.seventhParam,
+		mtest::eighthParam = msg.eighthParam,
+		mtest::ninethParam = msg.ninethParam,
+		mtest::secondParam = msg.secondParam,
+		mtest::tenthParam = msg.tenthParam,
+		mtest::sixthParam = msg.sixthParam
 	);
 }
 
@@ -52,18 +55,18 @@ const lest::test test_struct_one[] =
         mtest::structures::struct_one msg = GetSampleStructOne();
 
         mtest::Buffer b;
-        mtest::JsonComposer<mtest::Buffer> composer(b);
+        mtest::JsonComposer composer(b);
 
         ComposeStructOne(composer, msg);
 
         auto expected = makeBuffer(PathJson, lest_env);
-        EXPECT(AreEqualIgnoreEol(expected, b));
+        EXPECT(AreEqualIgnoreWhite(expected, b));
     },
     lest_CASE( "TestJsonParse" )
     {
         mtest::Buffer b = makeBuffer(PathJson, lest_env);
         auto iter = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(iter);
+        mtest::JsonParser parser(iter);
 
         mtest::structures::struct_one msg = mtest::test_gmq::STRUCT_struct_one_parse(parser);
 
@@ -76,7 +79,7 @@ const lest::test test_struct_one[] =
         mtest::structures::struct_one msg = GetSampleStructOne();
 
         mtest::Buffer b;
-        mtest::GmqComposer<mtest::Buffer> composer(b);
+        mtest::GmqComposer composer(b);
 
         ComposeStructOne(composer, msg);
 
@@ -87,7 +90,7 @@ const lest::test test_struct_one[] =
     {
         mtest::Buffer b = makeBuffer(PathGmq, lest_env);
         auto iter = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(iter);
+        mtest::GmqParser parser(iter);
 
         mtest::structures::struct_one msg = mtest::test_gmq::STRUCT_struct_one_parse(parser);
 
