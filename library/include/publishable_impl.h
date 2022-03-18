@@ -32,6 +32,9 @@
 #include "marshalling.h"
 #include "gmqueue.h"
 
+namespace globalmq::marshalling2 {
+	class ParserBase;
+}
 
 namespace globalmq::marshalling {
 
@@ -1192,6 +1195,7 @@ public:
 	}
 };
 
+
 template<class BufferT>
 class StateSubscriberBase
 {
@@ -1200,8 +1204,14 @@ public:
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
 	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
+
 	virtual const char* name() = 0;
 	virtual uint64_t stateTypeID() = 0;
+
+	// new interface with default implementation to avoid breaking old code
+	virtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+
 	virtual ~StateSubscriberBase() {}
 };
 
@@ -1284,11 +1294,10 @@ public:
 				subscribers[mh.ref_id_at_subscriber].ref_id_at_publisher = mh.ref_id_at_publisher;
 				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyJsonStateSyncMessage( parser );
-				else 
-				{
-					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+				else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqStateSyncMessage( parser );
-				}
+				else
+					subscribers[mh.ref_id_at_subscriber].subscriber->applyStateSyncMessage( parser );
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::stateUpdate:
@@ -1300,11 +1309,11 @@ public:
 				//	throw std::exception(); // TODO: ... (invalid source)
 				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyJsonMessageWithUpdates( parser );
-				else 
-				{
-					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+				else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqMessageWithUpdates( parser );
-				}
+				else
+					subscribers[mh.ref_id_at_subscriber].subscriber->applyMessageWithUpdates( parser );
+
 				break;
 			}
 			default:

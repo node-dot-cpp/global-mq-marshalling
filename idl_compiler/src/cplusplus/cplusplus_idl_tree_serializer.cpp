@@ -185,6 +185,8 @@ void addLibAliasingBlock( FILE* header )
 	fprintf( header, "using GmqParser = globalmq::marshalling2::GmqParser2<Buffer>;\n" );
 	fprintf( header, "using JsonComposer = globalmq::marshalling2::JsonComposer2<Buffer>;\n" );
 	fprintf( header, "using JsonParser = globalmq::marshalling2::JsonParser2<Buffer>;\n" );
+	fprintf( header, "using IComposer2 = globalmq::marshalling2::IComposer2<Buffer>;\n" );
+	fprintf( header, "using IParser2 = globalmq::marshalling2::IParser2;\n" );
 	fprintf( header, "template<class T>\n" );
 	fprintf( header, "class SimpleTypeCollectionWrapper : public globalmq::marshalling::SimpleTypeCollectionWrapper<T> { public: SimpleTypeCollectionWrapper( T& coll ) : globalmq::marshalling::SimpleTypeCollectionWrapper<T>( coll ) {} };\n" );
 	fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );
@@ -852,10 +854,10 @@ void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* heade
 	config.platformPrefix = platformPrefix;
 	config.classNotifierName = classNotifierName;
 
-	config.composerNames.push_back("globalmq::marshalling2::IComposer2");
+	config.composerNames.push_back("IComposer2");
 	config.composerNames.push_back("GmqComposer");
 	
-	config.parserNames.push_back("globalmq::marshalling2::IParser2");
+	config.parserNames.push_back("IParser2");
 	config.parserNames.push_back("GmqParser");
 
 	cplusplus::generateRoot(header, s, config);

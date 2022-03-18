@@ -54,11 +54,11 @@ const lest::test test_struct_one[] =
     {
         mtest::structures::struct_one msg = GetSampleStructOne();
 
-        mtest::Buffer b;
-        mtest::JsonComposer composer(b);
+        mtest::JsonComposer composer;
 
         ComposeStructOne(composer, msg);
 
+        mtest::Buffer b = composer.getBuffer();
         auto expected = makeBuffer(PathJson, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
     },
@@ -78,11 +78,11 @@ const lest::test test_struct_one[] =
     {
         mtest::structures::struct_one msg = GetSampleStructOne();
 
-        mtest::Buffer b;
-        mtest::GmqComposer composer(b);
+        mtest::GmqComposer composer;
 
         ComposeStructOne(composer, msg);
 
+        mtest::Buffer b = composer.getBuffer();
         auto b2 = makeBuffer(PathGmq, lest_env);
         EXPECT(b == b2);
     },

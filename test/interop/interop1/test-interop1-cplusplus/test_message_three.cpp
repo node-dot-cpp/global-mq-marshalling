@@ -53,11 +53,11 @@ const lest::test test_message_three[] =
     {
         auto msg = GetSampleStructOne();
 
-        mtest::Buffer b;
-        mtest::JsonComposer composer(b);
+        mtest::JsonComposer composer;
 
         ComposeMessageThree(composer, msg);
 
+        mtest::Buffer b = composer.getBuffer();
         auto expected = makeBuffer(PathMsg3Json, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
     },

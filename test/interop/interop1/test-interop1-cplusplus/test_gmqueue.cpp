@@ -45,12 +45,12 @@ class Mock_WrapperForSubscriber : public mtest::Mock_WrapperForSubscriber<mtest:
 public:
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) 
 	{
-		base::parseStateSyncMessage(parser);
+		throw std::exception();
 	}
 
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
 	{
-		base::parseStateSyncMessage(parser);
+		throw std::exception();
 	}
 };
 

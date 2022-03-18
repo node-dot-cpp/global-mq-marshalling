@@ -48,6 +48,10 @@ public:
 #include GMQUEUE_CUSTOMIZED_Q_TYPES
 #endif
 
+namespace globalmq::marshalling2 {
+	class ParserBase;
+}
+
 
 namespace globalmq::marshalling {
 
@@ -434,9 +438,6 @@ struct GmqPathHelper
 	}
 };
 
-
-
-
 template<class InputBufferT, class ComposerT>
 class StateConcentratorBase
 {
@@ -449,10 +450,15 @@ public:
 	virtual void applyJsonMessageWithUpdates( JsonParser<InputBufferT>& parser ) = 0;
 	virtual void applyGmqStateSyncMessage( GmqParser<InputBufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<InputBufferT>& parser ) = 0;
+
 	// as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 
 	virtual const char* name() = 0;
+
+	// new interface with default implementation to avoid breaking old code
+	virtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
 };
 
 template<class InputBufferT, class ComposerT>
@@ -589,11 +595,11 @@ class GMQueue
 			assert( subscribers.size() != 0 ); // current implementation does not practically assume removing subscribers 
 			if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 				ptr->applyJsonStateSyncMessage( parser );
-			else 
-			{
-				static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+			else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 				ptr->applyGmqStateSyncMessage( parser );
-			}
+			else
+				ptr->applyStateSyncMessage( parser );
+
 			subscriptionResponseReceived = true;
 			idAtPublisher = idAtPublisher_;
 		}
@@ -603,11 +609,10 @@ class GMQueue
 			assert( ptr != nullptr );
 			if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 				ptr->applyJsonMessageWithUpdates( parser );
-			else 
-			{
-				static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+			else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 				ptr->applyGmqMessageWithUpdates( parser );
-			}
+			else
+				ptr->applyMessageWithUpdates( parser );
 		}
 	};
 

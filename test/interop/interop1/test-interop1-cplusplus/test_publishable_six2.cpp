@@ -38,16 +38,16 @@ const lest::test test_publishable_six2[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
 
-        mtest::Buffer b;
-        ComposerT composer(b);
+        ComposerT composer;
 
         publ.generateStateSyncMessage(composer);
 
+        mtest::Buffer b = composer.getBuffer();
         auto b2 = makeBuffer(PathPubGmq, lest_env);
         EXPECT(b == b2);
     },
@@ -60,9 +60,9 @@ const lest::test test_publishable_six2[] =
 
         mtest::Buffer b = makeBuffer(PathPubGmq, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqStateSyncMessage(parser);
+        subs.applyStateSyncMessage(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);
@@ -72,7 +72,7 @@ const lest::test test_publishable_six2[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -95,9 +95,9 @@ const lest::test test_publishable_six2[] =
 
         mtest::Buffer b = makeBuffer(PathPubGmq1, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT_NOT(subs.getState() == data2);
@@ -109,7 +109,7 @@ const lest::test test_publishable_six2[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -145,9 +145,9 @@ const lest::test test_publishable_six2[] =
 
         mtest::Buffer b = makeBuffer(PathPubGmq2, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT_NOT(subs.getState() == data2);
@@ -169,7 +169,7 @@ const lest::test test_publishable_six2[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -192,9 +192,9 @@ const lest::test test_publishable_six2[] =
 
         mtest::Buffer b = makeBuffer(PathPubGmq3, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);

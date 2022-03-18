@@ -40,16 +40,16 @@ const lest::test test_publishable_six[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
 
-        mtest::Buffer b;
-        ComposerT composer(b);
+        ComposerT composer;
 
         publ.generateStateSyncMessage(composer);
 
+        mtest::Buffer b = composer.getBuffer();
         auto expected = makeBuffer(PathPubJson, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
     },
@@ -62,9 +62,9 @@ const lest::test test_publishable_six[] =
 
         mtest::Buffer b = makeBuffer(PathPubJson, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonStateSyncMessage(parser);
+        subs.applyStateSyncMessage(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);
@@ -74,7 +74,7 @@ const lest::test test_publishable_six[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -97,9 +97,9 @@ const lest::test test_publishable_six[] =
 
         mtest::Buffer b = makeBuffer(PathPubJson1, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT_NOT(subs.getState() == data2);
@@ -111,7 +111,7 @@ const lest::test test_publishable_six[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -147,9 +147,9 @@ const lest::test test_publishable_six[] =
 
         mtest::Buffer b = makeBuffer(PathPubJson2, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT_NOT(subs.getState() == data2);
@@ -171,7 +171,7 @@ const lest::test test_publishable_six[] =
     {
         auto data = GetPublishableSix();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
 
         PublishableT publ(data);
@@ -194,9 +194,9 @@ const lest::test test_publishable_six[] =
 
         mtest::Buffer b = makeBuffer(PathPubJson3, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSix();
         EXPECT(subs.getState() == data2);

@@ -105,11 +105,11 @@ class subscriber_seven_for_test :
 
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser )
     {
-        mtest::publishable_seven_WrapperForSubscriber<T, BufferT>::parseStateSyncMessage(parser);
+        throw std::exception();
     }
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
     {
-        mtest::publishable_seven_WrapperForSubscriber<T, BufferT>::parseStateSyncMessage(parser);
+        throw std::exception();
     }
 };
 
@@ -121,16 +121,16 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
 
-        mtest::Buffer b;
-        ComposerT composer(b);
+        ComposerT composer;
 
         publ.generateStateSyncMessage(composer);
 
+        mtest::Buffer b = composer.getBuffer();
         auto expected = makeBuffer(PathPubSevenJson, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
     },
@@ -143,9 +143,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenJson, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonStateSyncMessage(parser);
+        subs.applyStateSyncMessage(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT(subs.getState() == data2);
@@ -155,7 +155,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -178,9 +178,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenJson1, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -192,7 +192,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -223,9 +223,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenJson2, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -242,7 +242,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -277,9 +277,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenJson3, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -302,7 +302,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -329,9 +329,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenJson4, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -347,7 +347,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::JsonComposer<mtest::Buffer>;
+        using ComposerT = mtest::JsonComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -384,9 +384,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenJson5, lest_env);
         auto it = b.getReadIter();
-        mtest::JsonParser<mtest::Buffer> parser(it);
+        mtest::JsonParser parser(it);
 
-        subs.applyJsonMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -413,16 +413,16 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
 
-        mtest::Buffer b;
-        ComposerT composer(b);
+        ComposerT composer;
 
         publ.generateStateSyncMessage(composer);
 
+        mtest::Buffer b = composer.getBuffer();
         auto b2 = makeBuffer(PathPubSevenGmq, lest_env);
         EXPECT(b == b2);
     },
@@ -435,9 +435,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenGmq, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqStateSyncMessage(parser);
+        subs.applyStateSyncMessage(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT(subs.getState() == data2);
@@ -447,7 +447,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -471,9 +471,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenGmq1, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -485,7 +485,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -516,9 +516,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenGmq2, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -535,7 +535,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -570,9 +570,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenGmq3, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -595,7 +595,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -623,9 +623,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenGmq4, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);
@@ -641,7 +641,7 @@ const lest::test test_publishable_seven[] =
     {
         auto data = GetPublishableSeven();
 
-        using ComposerT = mtest::GmqComposer<mtest::Buffer>;
+        using ComposerT = mtest::GmqComposer;
         using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
 
         PublishableT publ(data);
@@ -678,9 +678,9 @@ const lest::test test_publishable_seven[] =
 
         mtest::Buffer b = makeBuffer(PathPubSevenGmq5, lest_env);
         auto it = b.getReadIter();
-        mtest::GmqParser<mtest::Buffer> parser(it);
+        mtest::GmqParser parser(it);
 
-        subs.applyGmqMessageWithUpdates(parser);
+        subs.applyMessageWithUpdates(parser);
 
         auto data2 = GetPublishableSeven();
         EXPECT_NOT(subs.getState() == data2);

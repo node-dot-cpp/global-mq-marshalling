@@ -129,11 +129,11 @@ class subscriber_six_for_test :
 
 	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser )
     {
-        mtest::StructSix_WrapperForSubscriber<T, BufferT>::parseStateSyncMessage(parser);
+        throw std::exception();
     }
 	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
     {
-        mtest::StructSix_WrapperForSubscriber<T, BufferT>::parseStateSyncMessage(parser);
+        throw std::exception();
     }
 };
 

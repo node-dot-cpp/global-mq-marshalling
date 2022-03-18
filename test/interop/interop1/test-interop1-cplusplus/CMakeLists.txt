@@ -16,8 +16,8 @@ add_executable(test-interop1-cplusplus
     test_message_three.cpp
     test_message_two.cpp
     # test_publishable_seven.cpp
-    # test_publishable_six.cpp
-    # test_publishable_six2.cpp
+    test_publishable_six.cpp
+    test_publishable_six2.cpp
     test_struct_one.cpp
 )
 

@@ -53,11 +53,11 @@ const lest::test test_message_two[] =
     {
         auto msg = GetSampleStructOne();
 
-        mtest::Buffer b;
-        mtest::GmqComposer composer(b);
+        mtest::GmqComposer composer;
 
         ComposeMessageTwo(composer, msg);
 
+        mtest::Buffer b = composer.getBuffer();
         auto b2 = makeBuffer(PathMsg2Gmq, lest_env);
         EXPECT(b == b2);
     },

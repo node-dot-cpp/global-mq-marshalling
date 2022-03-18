@@ -32,10 +32,22 @@
 
 namespace globalmq::marshalling2 {
 
-// mb: this is a reference interface for a composer. not really to be used virtually 
-class IComposer2
+// common base to be able to use RTTI
+class ComposerBase
 {
 public:
+	virtual ~ComposerBase() {}
+};
+
+// mb: this is a reference interface for a composer. not really to be used virtually 
+template<class BufferT>
+class IComposer2 : public ComposerBase
+{
+public:
+	using BufferType = BufferT;
+	virtual BufferT&& getBuffer() = 0;
+	virtual void setBuffer(BufferT&&) = 0;
+
 	virtual void composeSignedInteger(int64_t val) = 0;
 	virtual void composeUnsignedInteger(uint64_t val) = 0;
 	virtual void composeReal(double val) = 0;
@@ -54,7 +66,8 @@ public:
 	virtual void leafeBegin() = 0;
 	virtual void nextElement() = 0;
 
-	virtual void composeAddress(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) = 0;
+	virtual void changeBegin(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) = 0;
+	virtual void changeEnd() = 0;
 	virtual void stateUpdateBegin() = 0;
 	virtual void stateUpdateEnd() = 0;
 
@@ -64,12 +77,15 @@ public:
 };
 
 template<class BufferT>
-class JsonComposer2 : public IComposer2
+class JsonComposer2 : public IComposer2<BufferT>
 {
 public:
-	BufferT& buff; //public because of impl::json::composeXXX, remove
+	BufferT buff; //public because of impl::json::composeXXX, remove
 
-	JsonComposer2( BufferT& buff_ ) : buff( buff_ ) {}
+	// JsonComposer2() : buff( buff_ ) {}
+
+	virtual BufferT&& getBuffer() override { return std::move(buff); }
+	virtual void setBuffer(BufferT&& b) override { buff = std::move( b ); }
 
 	void composeSignedInteger(int64_t val) override { globalmq::marshalling::impl::json::composeSignedInteger(*this, val); }
 	void composeUnsignedInteger(uint64_t val) override { globalmq::marshalling::impl::json::composeUnsignedInteger(*this, val); }
@@ -89,7 +105,14 @@ public:
 	void leafeBegin() override { namedParamBegin("value"); }
 	void nextElement() override { buff.appendUint8( ',' ); }
 
-	void composeAddress(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) override { composeAddressInPublishable2(*this, addr, last); }
+	void changeBegin(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) override
+	{
+		structBegin();
+		composeAddressInPublishable2(*this, addr, last);
+	}
+
+	void changeEnd() override { structEnd(); nextElement(); }
+
 	void stateUpdateBegin() override
 	{
 		structBegin();
@@ -114,12 +137,16 @@ public:
 };
 
 template<class BufferT>
-class GmqComposer2
+class GmqComposer2 : public ComposerBase
 {
 public:
-	BufferT& buff; //public because of impl::json::composeXXX, remove
+	BufferT buff; //public because of impl::json::composeXXX, remove
 
-	GmqComposer2( BufferT& buff_ ) : buff( buff_ ) {}
+	// GmqComposer2( BufferT& buff_ ) : buff( buff_ ) {}
+
+	using BufferType = BufferT;
+	BufferT&& getBuffer() { return std::move(buff); }
+	void setBuffer(BufferT&& b) { buff = std::move( b ); }
 
 	void composeSignedInteger(int64_t val) { globalmq::marshalling::impl::composeSignedInteger(*this, val); }
 	void composeUnsignedInteger(uint64_t val) { globalmq::marshalling::impl::composeUnsignedInteger(*this, val); }
@@ -139,7 +166,9 @@ public:
 	void leafeBegin() {}
 	void nextElement() {}
 
-	void composeAddress(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) { composeAddressInPublishable2(*this, addr, last); }
+	void changeBegin(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) { composeAddressInPublishable2(*this, addr, last); }
+	void changeEnd() {}
+
 	void stateUpdateBegin() {}
 	void stateUpdateEnd() { composeUnsignedInteger(0); }
 
@@ -218,155 +247,16 @@ void composeParam2(ComposerT& composer, const char* name, const typename TypeToP
 		composeParam2<ComposerT, TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(composer, name, expected, args...);
 }
 
-// template<typename ComposerT, typename ParamTypeClassifier, typename ArgT>
-// void composeEntry2(ComposerT& composer, const char* name, ArgT& arg)
-// {
-// 	using AgrType = typename std::remove_reference<typename globalmq::marshalling::special_decay_t<ArgT>::Type>::type;
 
-// 	{
-// 		if constexpr ( std::is_same<ParamTypeClassifier, globalmq::marshalling::impl::SignedIntegralType>::value && (std::is_integral<AgrType>::value || std::is_integral<typename std::remove_reference<AgrType>::type>::value) )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.composeSignedInteger(arg.get());
-// 		}
-// 		else if constexpr ( std::is_same<ParamTypeClassifier, globalmq::marshalling::impl::UnsignedIntegralType>::value && (std::is_integral<AgrType>::value || std::is_integral<typename std::remove_reference<AgrType>::type>::value) )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.composeUnsignedInteger(arg.get());
-// 		}
-// 		else if constexpr ( std::is_same<ParamTypeClassifier, globalmq::marshalling::impl::RealType>::value && (std::is_arithmetic<AgrType>::value || std::is_arithmetic<typename std::remove_reference<AgrType>::type>::value) )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.composeReal(arg.get());
-// 		}
-// 		else if constexpr ( std::is_same<ParamTypeClassifier, globalmq::marshalling::impl::StringType>::value )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.composeString(arg.get());
-// 		}
-// 		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::VectorType, ParamTypeClassifier>::value )
-// 		{
-// 			if constexpr ( std::is_base_of<globalmq::marshalling::impl::VectorOfSympleTypesBase, ParamTypeClassifier>::value && std::is_base_of<globalmq::marshalling::SimpleTypeCollectionWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& coll = arg.get();
-// 				composer.vectorBegin(0);
-// 				composer.vectorEnd();
-// 			}
-// 			else if constexpr ( (std::is_base_of<globalmq::marshalling::impl::VectorOfNonextMessageTypesBase, ParamTypeClassifier>::value || std::is_base_of<globalmq::marshalling::impl::VectorOfNonextDiscriminatedUnionTypesBase, ParamTypeClassifier>::value) && std::is_base_of<globalmq::marshalling::CollectionWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& coll = arg.get();
-// 				composer.vectorBegin(0);
-// 				composer.vectorEnd();
-// 			}
-// 			else if constexpr ( (std::is_base_of<globalmq::marshalling::impl::VectorOfMessageType, ParamTypeClassifier>::value || std::is_base_of<globalmq::marshalling::impl::VectorOfDiscriminatedUnionType, ParamTypeClassifier>::value) && std::is_base_of<globalmq::marshalling::CollectionWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& coll = arg.get();
-// 				composer.vectorBegin(0);
-// 				composer.vectorEnd();
-// 			}
-// 		}
-// 		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::MessageType, ParamTypeClassifier>::value )
-// 		{
-// 			if constexpr ( std::is_base_of<globalmq::marshalling::impl::NonextMessageType, ParamTypeClassifier>::value && std::is_base_of<globalmq::marshalling::MessageWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& msg = arg.get();
-// 				msg.compose(composer);
-// 			}
-// 			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::MessageType, ParamTypeClassifier>::value && std::is_base_of<globalmq::marshalling::MessageWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& msg = arg.get();
-// 				msg.compose(composer);
-// 			}
-// 		}
-// 		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::DiscriminatedUnionType, ParamTypeClassifier>::value )
-// 		{
-// 			if constexpr ( std::is_base_of<globalmq::marshalling::impl::NonextDiscriminatedUnionType, ParamTypeClassifier>::value && std::is_base_of<globalmq::marshalling::MessageWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& msg = arg.get();
-// 				msg.compose(composer);
-// 			}
-// 			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::DiscriminatedUnionType, ParamTypeClassifier>::value && std::is_base_of<globalmq::marshalling::MessageWrapperBase, AgrType>::value )
-// 			{
-// 				composer.namedParamBegin(name);
-// 				auto& msg = arg.get();
-// 				msg.compose(composer);
-// 			}
-// 		}
-// 		else
-// 			static_assert( std::is_same<AgrType, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-// 	}
-// }
-
-// template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
-// void composeParam2(ComposerT& composer, GMQ_COLL string name, const typename TypeToPick::NameAndTypeID expected)
-// {
-// 		static_assert( !required, "required parameter" );
-// 		if constexpr ( std::is_same<typename TypeToPick::Type, globalmq::marshalling::impl::SignedIntegralType>::value )
-// 		{
-// 			static_assert ( std::is_integral<AssumedDefaultT>::value );
-// 			composer.namedParamBegin(name);
-// 			composer.composeSignedInteger(defaultValue);
-// 		}
-// 		else if constexpr ( std::is_same<typename TypeToPick::Type, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-// 		{
-// 			static_assert ( std::is_integral<AssumedDefaultT>::value );
-// 			composer.namedParamBegin(name);
-// 			composer.composeUnsignedInteger(defaultValue);
-// 		}
-// 		else if constexpr ( std::is_same<typename TypeToPick::Type, globalmq::marshalling::impl::RealType>::value )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.composeReal(AssumedDefaultT::value());
-// 		}
-// 		else if constexpr ( std::is_same<typename TypeToPick::Type, globalmq::marshalling::impl::StringType>::value )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.composeReal(defaultValue);
-// 		}
-// 		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::VectorType, typename TypeToPick::Type>::value )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.vectorBegin(0);
-// 			composer.vectorEnd();
-// 		}
-// 		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::MessageType, typename TypeToPick::Type>::value )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.structBegin();
-// 			composer.structEnd();
-// 		}
-// 		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::DiscriminatedUnionType, typename TypeToPick::Type>::value )
-// 		{
-// 			composer.namedParamBegin(name);
-// 			composer.structBegin();
-// 			composer.structEnd();
-// 		}
-// 		// TODO: add supported types here
-// 		else
-// 			static_assert( std::is_same<typename TypeToPick::Type, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-// }
-
-// template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
-// void composeParam2(ComposerT& composer, const char* name, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
-// {
-// 	using Agr0Type = globalmq::marshalling::special_decay_t<Arg0>;
-// 	if constexpr ( std::is_same<typename globalmq::marshalling::special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
-// 	{
-// 		composeEntry2<ComposerT, typename TypeToPick::Type, Arg0>(composer, name, arg0);
-// 	}
-// 	else
-// 		composeParam2<ComposerT, TypeToPick, required, AssumedDefaultT, DefaultT, defaultValue>(composer, name, expected, args...);
-// }
-
+// common base to be able to use RTTI
+class ParserBase
+{
+public:
+	virtual ~ParserBase() {}
+};
 
 // mb: this is a reference interface for a composer. not really to be used virtually 
-class IParser2
+class IParser2 : public ParserBase
 {
 public:
 	virtual int64_t parseSignedInteger() = 0;
@@ -389,8 +279,8 @@ public:
 	virtual void leafeBegin() = 0;
 	virtual void nextElement() = 0;
 
-	virtual bool parseAddress(GMQ_COLL vector<uint64_t>& addr) = 0;
-	virtual void nextChange() = 0;
+	virtual bool changeBegin(GMQ_COLL vector<uint64_t>& addr) = 0;
+	virtual void changeEnd() = 0;
 	virtual void stateUpdateBegin() = 0;
 	virtual void stateUpdateEnd() = 0;
 	virtual uint64_t parseAction() = 0;
@@ -445,7 +335,7 @@ public:
 		p.skipDelimiter(']');
 		structEnd();
 	}
-	bool parseAddress(GMQ_COLL vector<uint64_t>& addr) override
+	bool changeBegin(GMQ_COLL vector<uint64_t>& addr) override
 	{
 		addr.clear();
 
@@ -472,7 +362,7 @@ public:
 		return !addr.empty();
 	}
 
-	void nextChange() override { p.skipDelimiter('}'); }
+	void changeEnd() override { structEnd(); nextElement(); }
 	
 	uint64_t parseAction() override
 	{
@@ -486,7 +376,7 @@ public:
 
 
 template<class BufferT>
-class GmqParser2
+class GmqParser2 : public ParserBase
 {
 	globalmq::marshalling::GmqParser<BufferT> p;
 
@@ -513,7 +403,7 @@ public:
 	void leafeBegin() { }
 	void nextElement() { }
 
-	bool parseAddress(GMQ_COLL vector<uint64_t>& addr)
+	bool changeBegin(GMQ_COLL vector<uint64_t>& addr)
 	{
 		addr.clear();
 		uint64_t sz = vectorBegin();
@@ -530,7 +420,7 @@ public:
 		return true;
 	}
 
-	void nextChange() {}
+	void changeEnd() {}
 
 	void stateUpdateBegin() {}
 	void stateUpdateEnd() {}
@@ -797,26 +687,32 @@ public:
 	void remove( size_t idx ) { 
 		GMQ_ASSERT( idx < b.size());
 		b.erase( b.begin() + idx );
-		root.getComposer().composeAddress(address, idx);
+		root.getComposer().changeBegin(address, idx);
+		root.getComposer().nextElement();
 		root.getComposer().composeAction(globalmq::marshalling::ActionOnVector::remove_at);
+		root.getComposer().changeEnd();
 	}
 
 	void insert_before( size_t idx, typename VectorT::value_type what ) {
 		GMQ_ASSERT( idx <= b.size());
 		b.insert( b.begin() + idx, what );
-		root.getComposer().composeAddress(address, idx);
+		root.getComposer().changeBegin(address, idx);
+		root.getComposer().nextElement();
 		root.getComposer().composeAction(globalmq::marshalling::ActionOnVector::insert_single_before);
 		root.getComposer().nextElement();
 		finalizeInsertOrUpdateAt( idx );
+		root.getComposer().changeEnd();
 	}
 
 	void set_at( typename VectorT::value_type what, size_t idx ) {
 		GMQ_ASSERT( idx < b.size());
 		b[idx] = what;
-		root.getComposer().composeAddress(address, idx);
+		root.getComposer().changeBegin(address, idx);
+		root.getComposer().nextElement();
 		root.getComposer().composeAction(globalmq::marshalling::ActionOnVector::update_at);
 		root.getComposer().nextElement();
 		finalizeInsertOrUpdateAt( idx );
+		root.getComposer().changeEnd();
 	}
 };
 
@@ -1046,6 +942,53 @@ public:
 			// 	parser.skipDelimiter( ',' );
 		// }
 	}
+
+	template<class ElemTypeT, class ParserT, class VectorT>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, VectorT& dest ) { 
+		dest.clear();
+			uint64_t collSz = parser.vectorBegin();
+			if(collSz != UINT64_MAX)
+				dest.reserve( collSz );
+
+			for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+			{
+				typename VectorT::value_type what;
+				if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
+					what = parser.parseSignedInteger();
+				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
+					what = parser.parseUnsignedInteger();
+				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
+					what = parser.parseReal();
+				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
+					what = parser.parseString();
+				else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
+				{
+					ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
+				}
+				else
+					static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+				dest.push_back( what );
+
+				if(!parser.isVectorEnd())
+					parser.nextElement();
+				// if ( parser.isDelimiter( ',' ) )
+				// {
+				// 	parser.skipDelimiter( ',' );
+				// 	continue;
+				// }
+				// if ( parser.isDelimiter( ']' ) )
+				// {
+				// 	parser.skipDelimiter( ']' );
+				// 	break;
+				// }
+			}
+			parser.vectorEnd();
+			// if ( parser.isDelimiter( ',' ) )
+			// 	parser.skipDelimiter( ',' );
+		// }
+	}
+
 };
 
 template<class ElemProc>
