@@ -561,6 +561,14 @@ uint64_t parseMessageId(ParserT& parser)
 class Int64Processor
 {
 public:
+	template<typename T>
+	static
+	void checkType(const T& t)
+	{
+		//TODO improve
+		static_assert(std::is_integral<T>::value);
+	}
+
 	template<typename ComposerT>
 	static
 	void compose(ComposerT& composer, int64_t arg)
@@ -591,11 +599,22 @@ public:
 	{
 		return parser.parseSignedInteger();
 	}
+
+	static
+	bool isSame(int64_t l, int64_t r) { return l == r;}
 };
 
 class UInt64Processor
 {
 public:
+	template<typename T>
+	static
+	void checkType(const T& t)
+	{
+		//TODO improve
+		static_assert(std::is_integral<T>::value);
+	}
+
 	template<typename ComposerT>
 	static
 	void compose(ComposerT& composer, uint64_t arg)
@@ -626,11 +645,22 @@ public:
 	{
 		return parser.parseUnsignedInteger();
 	}
+
+	static
+	bool isSame(uint64_t l, uint64_t r) { return l == r;}
 };
 
 class DoubleProcessor
 {
 public:
+	template<typename T>
+	static
+	void checkType(const T& t)
+	{
+		//TODO improve
+		static_assert(std::is_arithmetic<T>::value);
+	}
+
 	template<typename ComposerT>
 	static
 	void compose(ComposerT& composer, double arg)
@@ -651,11 +681,22 @@ public:
 	{
 		return parser.parseReal();
 	}
+
+	static
+	bool isSame(double l, double r) { return l == r;}
 };
 
 class StringProcessor
 {
 public:
+	template<typename T>
+	static
+	void checkType(const T& t)
+	{
+		//TODO improve
+		static_assert(std::is_same<T, GMQ_COLL string>::value || std::is_same<T, char*>::value);
+	}
+
 	template<typename ComposerT>
 	static
 	void compose(ComposerT& composer, const GMQ_COLL string& arg)
@@ -676,6 +717,9 @@ public:
 	{
 		return parser.parseString();
 	}
+
+	static
+	bool isSame(GMQ_COLL string l, GMQ_COLL string r) { return l == r;}
 };
 
 

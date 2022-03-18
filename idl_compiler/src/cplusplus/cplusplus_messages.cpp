@@ -94,8 +94,7 @@ void impl_generateScopeHandler( FILE* header, Scope& scope, const std::string& p
 	fprintf( header, 
 		"template<class ... HandlersT >\n"
 		"void implHandleMessage( %s& parser, HandlersT ... handlers )\n"
-		"{\n"
-		"\tuint64_t msgID;\n\n", parserType.c_str()
+		"{\n", parserType.c_str()
 	);
 
 

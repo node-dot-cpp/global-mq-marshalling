@@ -33,13 +33,16 @@ template<class BufferT>
 void ComposeMessageThree(BufferT& buffer, mtest::structures::struct_one& msg)
 {
 	mtest::test_json::composeMessage<mtest::test_json::message_three>(buffer,
-		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
-		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
-		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
-		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
-		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
+		mtest::thirdParam = msg.thirdParam,
+		mtest::firstParam = msg.firstParam,
+        mtest::fifthParam = msg.fifthParam,
+        mtest::forthParam = msg.forthParam,
+        mtest::seventhParam = msg.seventhParam,
+		mtest::eighthParam = msg.eighthParam,
+		mtest::ninethParam = msg.ninethParam,
+		mtest::secondParam = msg.secondParam,
+		mtest::tenthParam = msg.tenthParam,
+		mtest::sixthParam = msg.sixthParam
 	);
 }
 
@@ -51,8 +54,9 @@ const lest::test test_message_three[] =
         auto msg = GetSampleStructOne();
 
         mtest::Buffer b;
+        mtest::JsonComposer composer(b);
 
-        ComposeMessageThree(b, msg);
+        ComposeMessageThree(composer, msg);
 
         auto expected = makeBuffer(PathMsg3Json, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
@@ -60,10 +64,12 @@ const lest::test test_message_three[] =
     lest_CASE( "TestJsonHandle" )
     {
         mtest::Buffer b = makeBuffer(PathMsg3Json, lest_env);
+        auto iter = b.getReadIter();
+        mtest::JsonParser parser(iter);
 
         bool condition = false;
 
-        mtest::test_json::handleMessage(b,
+        mtest::test_json::handleMessage(parser,
             mtest::makeMessageHandler<mtest::test_json::message_three>(
                 [&](auto& parser) {
                     auto msg = mtest::test_json::MESSAGE_message_three_parse(parser);
@@ -85,10 +91,12 @@ const lest::test test_message_three[] =
     lest_CASE( "TestJsonHandleDefault" )
     {
         mtest::Buffer b = makeBuffer(PathMsg3Json, lest_env);
+        auto iter = b.getReadIter();
+        mtest::JsonParser parser(iter);
 
         bool condition = false;
 
-        mtest::test_json::handleMessage(b,
+        mtest::test_json::handleMessage(parser,
             // mtest::makeMessageHandler<mtest::test_json::message_three>(
             //     [&](auto& parser) {
             //         auto msg2 = GetSampleStructOne();

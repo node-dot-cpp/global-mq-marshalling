@@ -33,13 +33,16 @@ template<class BufferT>
 void ComposeMessageTwo(BufferT& buffer, mtest::structures::struct_one& msg)
 {
 	mtest::test_gmq::composeMessage<mtest::test_gmq::message_two>(buffer,
-		mtest::thirdParam = mtest::CollectionWrapperForComposing([&]() { return msg.thirdParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.thirdParam[ordinal].x, mtest::y = msg.thirdParam[ordinal].y, mtest::z = msg.thirdParam[ordinal].z); }),
-		mtest::firstParam = msg.firstParam, mtest::fifthParam = msg.fifthParam, mtest::forthParam = msg.forthParam, mtest::seventhParam = msg.seventhParam,
-		mtest::eighthParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point_compose(c, mtest::x = msg.eighthParam.x, mtest::y = msg.eighthParam.y); }),
-		mtest::ninethParam = mtest::MessageWrapperForComposing([&](auto& c) { mtest::STRUCT_point3D_compose(c, mtest::x = msg.ninethParam.x, mtest::y = msg.ninethParam.y, mtest::z = msg.ninethParam.z); }),
-		mtest::secondParam = mtest::SimpleTypeCollectionWrapper(msg.secondParam),
-		mtest::tenthParam = mtest::SimpleTypeCollectionWrapper(msg.tenthParam),
-		mtest::sixthParam = mtest::CollectionWrapperForComposing([&]() { return msg.sixthParam.size(); }, [&](auto& c, size_t ordinal) { mtest::STRUCT_point_compose(c, mtest::x = msg.sixthParam[ordinal].x, mtest::y = msg.sixthParam[ordinal].y); })
+		mtest::thirdParam = msg.thirdParam,
+		mtest::firstParam = msg.firstParam,
+        mtest::fifthParam = msg.fifthParam,
+        mtest::forthParam = msg.forthParam,
+        mtest::seventhParam = msg.seventhParam,
+		mtest::eighthParam = msg.eighthParam,
+		mtest::ninethParam = msg.ninethParam,
+		mtest::secondParam = msg.secondParam,
+		mtest::tenthParam = msg.tenthParam,
+		mtest::sixthParam = msg.sixthParam
 	);
 }
 
@@ -51,8 +54,9 @@ const lest::test test_message_two[] =
         auto msg = GetSampleStructOne();
 
         mtest::Buffer b;
+        mtest::GmqComposer composer(b);
 
-        ComposeMessageTwo(b, msg);
+        ComposeMessageTwo(composer, msg);
 
         auto b2 = makeBuffer(PathMsg2Gmq, lest_env);
         EXPECT(b == b2);
@@ -60,10 +64,12 @@ const lest::test test_message_two[] =
     lest_CASE( "TestGmqHandle" )
     {
         mtest::Buffer b = makeBuffer(PathMsg2Gmq, lest_env);
+        auto iter = b.getReadIter();
+        mtest::GmqParser parser(iter);
 
         bool condition = false;
 
-        mtest::test_gmq::handleMessage(b,
+        mtest::test_gmq::handleMessage(parser,
             mtest::makeMessageHandler<mtest::test_gmq::message_two>(
                 [&](auto& parser) {
                     auto msg = mtest::test_gmq::MESSAGE_message_two_parse(parser);
@@ -85,10 +91,12 @@ const lest::test test_message_two[] =
     lest_CASE( "TestGmqHandleDefault" )
     {
         mtest::Buffer b = makeBuffer(PathMsg2Gmq, lest_env);
+        auto iter = b.getReadIter();
+        mtest::GmqParser parser(iter);
 
         bool condition = false;
 
-        mtest::test_gmq::handleMessage(b,
+        mtest::test_gmq::handleMessage(parser,
             // mtest::makeMessageHandler<mtest::test_gmq::message_two>(
             //     [&](auto& parser) {
             //         auto msg2 = GetSampleStructOne();
