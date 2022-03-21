@@ -121,6 +121,56 @@ string dictionaryValueTypeToLibTypeOrTypeProcessor( const MessageParameterType& 
 	return impl_typeToLibTypeOrTypeProcessor( type, type.dictionaryValueKind, root );
 }
 
+
+inline
+string impl_Type2Processor( const MessageParameterType& type, MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER: return "globalmq::marshalling2::Int64Processor";
+		case MessageParameterType::KIND::UINTEGER: return "globalmq::marshalling2::UInt64Processor";
+		case MessageParameterType::KIND::REAL: return "globalmq::marshalling2::DoubleProcessor";
+		case MessageParameterType::KIND::CHARACTER_STRING: return "globalmq::marshalling2::StringProcessor";
+		case MessageParameterType::KIND::STRUCT: 
+			return fmt::format( "publishable_STRUCT_{}", type.name );
+		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+			return fmt::format( "publishable_DISCRIMINATED_UNION_{}", type.name );
+		case MessageParameterType::KIND::VECTOR:
+			return fmt::format( "globalmq::marshalling2::PublishableVectorProcessor2<{}>", impl_Type2Processor(type, type.vectorElemKind) );
+		case MessageParameterType::KIND::DICTIONARY:
+			return fmt::format( "globalmq::marshalling2::PublishableDictionaryProcessor2<{},{}>",
+				impl_Type2Processor(type, type.dictionaryKeyKind), impl_Type2Processor(type, type.dictionaryValueKind) );
+		default: 
+			assert( false );
+			return "";
+	}
+}
+
+inline
+string getTypeProcessor( const MessageParameterType& type )
+{
+	return impl_Type2Processor( type, type.kind );
+}
+
+inline
+string getVectorElementProcessor( const MessageParameterType& type )
+{
+	return impl_Type2Processor( type, type.vectorElemKind );
+}
+
+inline
+string getDictionaryKeyProcessor( const MessageParameterType& type )
+{
+	return impl_Type2Processor( type, type.dictionaryKeyKind );
+}
+
+inline
+string getDictionaryValueProcessor( const MessageParameterType& type )
+{
+	return impl_Type2Processor( type, type.dictionaryValueKind );
+}
+
+
 inline
 const char* paramTypeToLibType( MessageParameterType::KIND kind )
 {

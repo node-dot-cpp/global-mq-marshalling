@@ -451,6 +451,8 @@ uint64_t parseMessageId(ParserT& parser)
 class Int64Processor
 {
 public:
+	using ProcessorType = int64_t;
+
 	template<typename T>
 	static
 	void checkType(const T& t)
@@ -478,17 +480,27 @@ public:
 
 	template<typename ParserT>
 	static
-	void parse(ParserT& parser, int64_t& arg)
-	{
-		arg = parser.parseSignedInteger();
-	}
-
-	template<typename ParserT>
-	static
 	int64_t parse(ParserT& parser)
 	{
 		return parser.parseSignedInteger();
 	}
+
+	template<typename ParserT>
+	static
+	void parse(ParserT& parser, int64_t& arg)
+	{
+		arg = parse(parser);
+	}
+
+	template<typename ParserT>
+	static
+	void parseForStateSyncOrMessageInDepth(ParserT& parser, int64_t& arg)
+	{
+		parse(parser, arg);
+	}
+
+	static
+	void copy( const int64_t& src, int64_t& dst ) { dst = src; }
 
 	static
 	bool isSame(int64_t l, int64_t r) { return l == r;}
@@ -497,6 +509,8 @@ public:
 class UInt64Processor
 {
 public:
+	using ProcessorType = uint64_t;
+
 	template<typename T>
 	static
 	void checkType(const T& t)
@@ -524,17 +538,27 @@ public:
 
 	template<typename ParserT>
 	static
-	void parse(ParserT& parser, uint64_t& arg)
-	{
-		arg = parser.parseUnsignedInteger();
-	}
-
-	template<typename ParserT, typename ArgT>
-	static
 	uint64_t parse(ParserT& parser)
 	{
 		return parser.parseUnsignedInteger();
 	}
+
+	template<typename ParserT>
+	static
+	void parse(ParserT& parser, uint64_t& arg)
+	{
+		arg = parse(parser);
+	}
+
+	template<typename ParserT>
+	static
+	void parseForStateSyncOrMessageInDepth(ParserT& parser, uint64_t& arg)
+	{
+		parse(parser, arg);
+	}
+
+	static
+	void copy( const uint64_t& src, uint64_t& dst ) { dst = src; }
 
 	static
 	bool isSame(uint64_t l, uint64_t r) { return l == r;}
@@ -543,6 +567,8 @@ public:
 class DoubleProcessor
 {
 public:
+	using ProcessorType = double;
+
 	template<typename T>
 	static
 	void checkType(const T& t)
@@ -560,17 +586,27 @@ public:
 
 	template<typename ParserT>
 	static
-	void parse(ParserT& parser, double& arg)
-	{
-		arg = parser.parseReal();
-	}
-
-	template<typename ParserT, typename ArgT>
-	static
 	double parse(ParserT& parser)
 	{
 		return parser.parseReal();
 	}
+
+	template<typename ParserT>
+	static
+	void parse(ParserT& parser, double& arg)
+	{
+		arg = parse(parser);
+	}
+
+	template<typename ParserT>
+	static
+	void parseForStateSyncOrMessageInDepth(ParserT& parser, double& arg)
+	{
+		parse(parser, arg);
+	}
+
+	static
+	void copy( const double& src, double& dst ) { dst = src; }
 
 	static
 	bool isSame(double l, double r) { return l == r;}
@@ -579,6 +615,8 @@ public:
 class StringProcessor
 {
 public:
+	using ProcessorType = GMQ_COLL string;
+
 	template<typename T>
 	static
 	void checkType(const T& t)
@@ -596,81 +634,38 @@ public:
 
 	template<typename ParserT>
 	static
-	void parse(ParserT& parser, GMQ_COLL string& arg)
-	{
-		arg = parser.parseString();
-	}
-
-	template<typename ParserT, typename ArgT>
-	static
 	GMQ_COLL string parse(ParserT& parser)
 	{
 		return parser.parseString();
 	}
+
+	template<typename ParserT>
+	static
+	void parse(ParserT& parser, GMQ_COLL string& arg)
+	{
+		arg = parse(parser);
+	}
+
+	template<typename ParserT>
+	static
+	void parseForStateSyncOrMessageInDepth(ParserT& parser, GMQ_COLL string& arg)
+	{
+		parse(parser, arg);
+	}
+
+	static
+	void copy( const GMQ_COLL string& src, GMQ_COLL string& dst ) { dst = src; }
 
 	static
 	bool isSame(GMQ_COLL string l, GMQ_COLL string r) { return l == r;}
 };
 
 
-template<class VectorT>
-class VectorOfSimpleTypeRefWrapper
-{
-	VectorT& b;
-public:
-	VectorOfSimpleTypeRefWrapper( VectorT& actual ) : b( actual ) {}
-	size_t size() { return b.size(); }
-	auto get_at( size_t idx ) { 
-		if constexpr ( std::is_arithmetic<typename VectorT::value_type>::value )
-			return b[idx];
-		else
-		{
-			const auto& ret = b[idx];
-			return ret;
-		}
-	}
-};
-
-template<class VectorT>
-class VectorOfCompositeTypeRefWrapper
-{
-	VectorT& b;
-public:
-	VectorOfCompositeTypeRefWrapper( VectorT& actual ) : b( actual ) {}
-	size_t size() { return b.size(); }
-	const auto& get_at( size_t idx ) { return b[idx]; }
-};
-
-template<class RefWrapperT, class VectorT>
-class VectorOfStructRefWrapper
-{
-	VectorT& b;
-public:
-	VectorOfStructRefWrapper( VectorT& actual ) : b( actual ) {}
-	size_t size() { return b.size(); }
-	auto get_at( size_t idx ) { return RefWrapperT(b[idx]); }
-};
-
 template<class VectorT, class ElemTypeT, class RootT>
 class VectorRefWrapper4Set
 {
 	void finalizeInsertOrUpdateAt( size_t idx ) { 
-		if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-			Int64Processor::compose( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-			UInt64Processor::compose( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-			DoubleProcessor::compose( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-			StringProcessor::compose( root.getComposer(), b[idx] );
-		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-		{
-			// impl::publishableComposeLeafeStructBegin( root.getComposer() );
-			ElemTypeT::compose( root.getComposer(), b[idx] );
-			// impl::publishableComposeLeafeStructEnd( root.getComposer() );
-		}
-		else
-			static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+		ElemTypeT::compose( root.getComposer(), b[idx] );
 	}
 
 protected:
@@ -727,59 +722,29 @@ public:
 	auto get4set_at( size_t idx ) { return RefWrapper4SetT(VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::b[idx], VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::root, VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::address, idx); }
 };
 
-class PublishableVectorProcessor
+
+template<class ProcType>
+class PublishableVectorProcessor2
 {
 public:
-	template<class ParserT, class VectorT, class ProcType>
+	using ProcessorType = GMQ_COLL vector<typename ProcType::ProcessorType>;
+
+	template<class ParserT>
 	static
-	void parseSingleValue( ParserT& parser, typename VectorT::value_type& value ) { 
-		if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::SignedIntegralType>::value )
-			Int64Processor::parse( parser, value );
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-			UInt64Processor::parse( parser, value );
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::RealType>::value )
-			DoubleProcessor::parse( parser, value );
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::StringType>::value )
-			StringProcessor::parse( parser, value );
-		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ProcType>::value )
-		{
-			// parser.structBegin();
-			ProcType::parse( parser, value );
-			// parser.structEnd();
-		}
-		else
-			static_assert( std::is_same<ProcType, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+	void parseSingleValue( ParserT& parser, typename ProcType::ProcessorType& value ) { 
+		ProcType::parse( parser, value );
 	}
 
-	template<class ParserT, class VectorT, class ProcType>
+	template<class ParserT>
 	static
-	bool parseSingleValueAndCompare( ParserT& parser, typename VectorT::value_type& value, const typename VectorT::value_type& oldValue ) { 
-		if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ProcType>::value )
-		{
-			// parser.structBegin();
-			ProcType::parse( parser, value );
-			// parser.structEnd();
-			return !ProcType::isSame( value, oldValue );
-		}
-		else 
-		{
-			if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::SignedIntegralType>::value )
-				Int64Processor::parse( parser, value );
-			else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-				UInt64Processor::parse( parser, value );
-			else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::RealType>::value )
-				DoubleProcessor::parse( parser, value );
-			else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::StringType>::value )
-				StringProcessor::parse( parser, value );
-			else
-				static_assert( std::is_same<ProcType, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-			return value != oldValue;
-		}
+	bool parseSingleValueAndCompare( ParserT& parser,  typename ProcType::ProcessorType& value, const typename ProcType::ProcessorType& oldValue ) { 
+		ProcType::parse( parser, value );
+		return !ProcType::isSame( value, oldValue );
 	}
 
-	template<class ElemTypeT, class ComposerTT, class VectorT>
+	template<class ComposerTT>
 	static
-	void compose( ComposerTT& composer, const VectorT& what ) { 
+	void compose( ComposerTT& composer, const GMQ_COLL vector<typename ProcType::ProcessorType>& what ) { 
 		using ComposerT = typename std::remove_reference<ComposerTT>::type;
 		size_t collSz = what.size();
 		composer.vectorBegin( collSz );
@@ -788,25 +753,14 @@ public:
 			if(i != 0)
 				composer.nextElement();
 
-			if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-				composer.composeSignedInteger( what[i] );
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-				composer.composeUnsignedInteger( what[i] );
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-				composer.composeReal( what[i] );
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-				composer.composeString( what[i] );
-			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-				ElemTypeT::compose( composer, what[i] );
-			else
-				static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			ProcType::compose( composer, what[i] );
 		}
 		composer.vectorEnd();
 	}
 
-	template<class ParserT, class VectorT, class ElemTypeT, bool suppressNotifications = false>
+	template<class ParserT>
 	static
-	void parse( ParserT& parser, VectorT& dest ) { 
+	void parse( ParserT& parser, GMQ_COLL vector<typename ProcType::ProcessorType>& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -814,24 +768,8 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			typename VectorT::value_type what;
-			if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-				what = parser.parseSignedInteger();
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-				what = parser.parseUnsignedInteger();
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-				what = parser.parseReal();
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-				what = parser.parseString();
-			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-			{
-				if constexpr( suppressNotifications )
-					ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
-				else
-					ElemTypeT::parse( parser, what );
-			}
-			else
-				static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			typename ProcType::ProcessorType what;
+			ProcType::parse( parser, what );
 			dest.push_back( what );
 
 			if(!parser.isVectorEnd())
@@ -840,9 +778,9 @@ public:
 		parser.vectorEnd();
 	}
 
-	template<class ElemTypeT, class ParserT, class VectorT>
+	template<class ParserT>
 	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, VectorT& dest ) { 
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, GMQ_COLL vector<typename ProcType::ProcessorType>& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -850,21 +788,8 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			typename VectorT::value_type what;
-			if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-				what = parser.parseSignedInteger();
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-				what = parser.parseUnsignedInteger();
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-				what = parser.parseReal();
-			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-				what = parser.parseString();
-			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-			{
-				ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
-			}
-			else
-				static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			typename ProcType::ProcessorType what;
+			ProcType::parseForStateSyncOrMessageInDepth( parser, what );
 			dest.push_back( what );
 
 			if(!parser.isVectorEnd())
@@ -874,26 +799,27 @@ public:
 		parser.vectorEnd();
 	}
 
-};
-
-template<class ElemProc>
-class MessageVectorProcessor
-{
-public:
-	template<class ComposerTT, class VectorT>
 	static
-	void compose( ComposerTT& composer, const VectorT& what ) { 
-
-		size_t collSz = what.size();
-		composer.vectorBegin( collSz );
-		for ( size_t i=0; i<collSz; ++i )
+	void copy( const GMQ_COLL vector<typename ProcType::ProcessorType>& src, GMQ_COLL vector<typename ProcType::ProcessorType>& dst )
+	{
+		dst.resize( src.size() );
+		for ( size_t i=0; i<src.size(); ++i )
 		{
-			if(i != 0)
-				composer.nextElement();
-
-			ElemProc::compose( composer, what[i] );
+			ProcType::copy(src[i], dst[i]);
 		}
-		composer.vectorEnd();
+	}
+
+	static
+	bool isSame( const GMQ_COLL vector<typename ProcType::ProcessorType>& v1, const GMQ_COLL vector<typename ProcType::ProcessorType>& v2 )
+	{
+		if ( v1.size() != v2.size() )
+			return false;
+		for ( size_t i=0; i<v1.size(); ++i )
+		{
+			if ( !ProcType::isSame( v1[i], v2[i] ) ) 
+				return false;
+		}
+		return true;
 	}
 };
 
