@@ -29,6 +29,15 @@
 #include "platforms/inproc_queue.h"
 
 
+class TestPlatformSupport
+{
+public:
+	using BufferT = globalmq::marshalling::Buffer;
+	using ParserT = globalmq::marshalling2::JsonParser2<BufferT>;
+	using ComposerT = globalmq::marshalling2::JsonComposer2<BufferT>;
+	template<class T>
+	using OwningPtrT = std::unique_ptr<T>;
+};
 
 template<class ComposerT>
 class Mock_WrapperForPublisher : public mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT>
@@ -99,20 +108,20 @@ const lest::test test_gmqueue[] =
 {
 	lest_CASE("test_gmqueue.TestGmQueueWithMock1"){
 		// gmqueue
-		using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
-		using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
-		using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
+		using BufferT = TestPlatformSupport::BufferT;
+		using ComposerT = TestPlatformSupport::ComposerT;
+		using ParserT = TestPlatformSupport::ParserT;
 
-		GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
+		GMQueue<TestPlatformSupport> gmqueue;
 		gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 		gmqueue.setAuthority("");
 
 		using PostmanT = globalmq::marshalling::ThreadQueuePostman<BufferT>;
 		typename PostmanT::MsgQueue queue;
 
-		globalmq::marshalling::GMQThreadQueueTransport<GMQueueStatePublisherSubscriberTypeInfo> transport(gmqueue, "test_node", queue, 1);
+		globalmq::marshalling::GMQThreadQueueTransport<TestPlatformSupport> transport(gmqueue, "test_node", queue, 1);
 
-		using MetaPoolT = globalmq::marshalling::MetaPool<GMQueueStatePublisherSubscriberTypeInfo>;
+		using MetaPoolT = globalmq::marshalling::MetaPool<TestPlatformSupport>;
 		MetaPoolT mp;
 		mp.setTransport(&transport);
 
@@ -137,20 +146,20 @@ const lest::test test_gmqueue[] =
 	},
 	lest_CASE("test_gmqueue.TestGmQueueWithMock2"){
 		// gmqueue
-		using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
-		using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
-		using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
+		using BufferT = TestPlatformSupport::BufferT;
+		using ComposerT = TestPlatformSupport::ComposerT;
+		using ParserT = TestPlatformSupport::ParserT;
 
-		GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
+		GMQueue<TestPlatformSupport> gmqueue;
 		gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 		gmqueue.setAuthority("");
 
 		using PostmanT = globalmq::marshalling::ThreadQueuePostman<BufferT>;
 		typename PostmanT::MsgQueue queue;
 
-		globalmq::marshalling::GMQThreadQueueTransport<GMQueueStatePublisherSubscriberTypeInfo> transport(gmqueue, "test_node", queue, 1);
+		globalmq::marshalling::GMQThreadQueueTransport<TestPlatformSupport> transport(gmqueue, "test_node", queue, 1);
 
-		using MetaPoolT = globalmq::marshalling::MetaPool<GMQueueStatePublisherSubscriberTypeInfo>;
+		using MetaPoolT = globalmq::marshalling::MetaPool<TestPlatformSupport>;
 		MetaPoolT mp;
 		mp.setTransport(&transport);
 
@@ -177,20 +186,20 @@ const lest::test test_gmqueue[] =
 	},
 	lest_CASE("test_gmqueue.TestGmQueueWithMock3"){
 		// gmqueue
-		using BufferT = GMQueueStatePublisherSubscriberTypeInfo::BufferT;
-		using ComposerT = GMQueueStatePublisherSubscriberTypeInfo::ComposerT;
-		using ParserT = GMQueueStatePublisherSubscriberTypeInfo::ParserT;
+		using BufferT = TestPlatformSupport::BufferT;
+		using ComposerT = TestPlatformSupport::ComposerT;
+		using ParserT = TestPlatformSupport::ParserT;
 
-		GMQueue<GMQueueStatePublisherSubscriberTypeInfo> gmqueue;
+		GMQueue<TestPlatformSupport> gmqueue;
 		gmqueue.template initStateConcentratorFactory<mtest::StateConcentratorFactory<BufferT, ComposerT>>();
 		gmqueue.setAuthority("");
 
 		using PostmanT = globalmq::marshalling::ThreadQueuePostman<BufferT>;
 		typename PostmanT::MsgQueue queue;
 
-		globalmq::marshalling::GMQThreadQueueTransport<GMQueueStatePublisherSubscriberTypeInfo> transport(gmqueue, "test_node", queue, 1);
+		globalmq::marshalling::GMQThreadQueueTransport<TestPlatformSupport> transport(gmqueue, "test_node", queue, 1);
 
-		using MetaPoolT = globalmq::marshalling::MetaPool<GMQueueStatePublisherSubscriberTypeInfo>;
+		using MetaPoolT = globalmq::marshalling::MetaPool<TestPlatformSupport>;
 		MetaPoolT mp;
 		mp.setTransport(&transport);
 

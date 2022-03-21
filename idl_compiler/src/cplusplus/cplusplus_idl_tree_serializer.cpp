@@ -701,6 +701,13 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		}
 	}
 
+	for ( auto& it : s.publishables )
+	{
+		assert( it->type == CompositeType::Type::publishable );
+		impl_generatePublishableStructForwardDeclaration( header, s, *it );
+		fprintf( header, "\n" );
+	}
+
 	fprintf( header, "\n" );
 
 	for ( auto it : structsOrderedByDependency )
@@ -710,6 +717,15 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 //		if ( it->isStruct4Publishing )
 			impl_generatePublishableStruct( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), config );
+	}
+
+	for ( auto& it : s.publishables )
+	{
+		// auto& obj_1 = it;
+		// assert( obj_1 != nullptr );
+		// assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::publishable );
+		impl_generatePublishableStruct( header, s, *it, config );
 	}
 
 	for ( auto& scope : s.scopes )

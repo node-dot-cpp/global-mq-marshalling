@@ -700,6 +700,7 @@ public:
 		root.getComposer().nextElement();
 		root.getComposer().composeAction(globalmq::marshalling::ActionOnVector::insert_single_before);
 		root.getComposer().nextElement();
+		root.getComposer().leafeBegin();
 		finalizeInsertOrUpdateAt( idx );
 		root.getComposer().changeEnd();
 	}
@@ -711,6 +712,7 @@ public:
 		root.getComposer().nextElement();
 		root.getComposer().composeAction(globalmq::marshalling::ActionOnVector::update_at);
 		root.getComposer().nextElement();
+		root.getComposer().leafeBegin();
 		finalizeInsertOrUpdateAt( idx );
 		root.getComposer().changeEnd();
 	}
@@ -780,213 +782,96 @@ public:
 	void compose( ComposerTT& composer, const VectorT& what ) { 
 		using ComposerT = typename std::remove_reference<ComposerTT>::type;
 		size_t collSz = what.size();
-		// if constexpr ( ComposerT::proto == Proto::GMQ )
-		// {
-		// 	impl::composeUnsignedInteger( composer, collSz );
-		// 	for ( size_t i=0; i<collSz; ++i )
-		// 	{
-		// 		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-		// 			impl::composeSignedInteger( composer, what[i] );
-		// 		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-		// 			impl::composeUnsignedInteger( composer, what[i] );
-		// 		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-		// 			impl::composeReal( composer, what[i] );
-		// 		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-		// 			impl::composeString( composer, what[i] );
-		// 		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
-		// 		{
-		// 			impl::composeStructBegin( composer );
-		// 			ElemTypeT::compose( composer, what[i] );
-		// 			impl::composeStructEnd( composer );
-		// 		}
-		// 		else
-		// 			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-		// 	}
-		// }
-		// else
-		// {
-			// static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-			composer.vectorBegin( collSz );
-			for ( size_t i=0; i<collSz; ++i )
-			{
-
-				if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					composer.composeSignedInteger( what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					composer.composeUnsignedInteger( what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-					composer.composeReal( what[i] );
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-					composer.composeString( what[i] );
-				else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-				{
-					// composer.structBegin();
-					ElemTypeT::compose( composer, what[i] );
-					// composer.structEnd( composer );
-				}
-				else
-					static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-				// if ( i + 1 < collSz ) 
-				// 	composer.buff.append( ", ", 2 );
+		composer.vectorBegin( collSz );
+		for ( size_t i=0; i<collSz; ++i )
+		{
+			if(i != 0)
 				composer.nextElement();
-			}
-			composer.vectorEnd();
-		// }
-	}
 
-	// template<class ComposerT, class VectorT, class ElemTypeT, typename NameT>
-	// static
-	// void compose( ComposerT& composer, const VectorT& what, NameT name, bool addListSeparator ) { 
-	// 	// if constexpr ( ComposerT::proto == Proto::GMQ )
-	// 	// 	compose<ComposerT, VectorT, ElemTypeT>( composer, what );
-	// 	// else
-	// 	// {
-	// 	// 	static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-	// 		composer.paramNameBegin( name );
-	// 		// impl::json::addNamePart( composer, name );
-	// 		compose<ComposerT, VectorT, ElemTypeT>( composer, what );
-	// 		if ( addListSeparator )
-	// 			composer.nextElement();
-	// 	// }
-	// }
+			if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
+				composer.composeSignedInteger( what[i] );
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
+				composer.composeUnsignedInteger( what[i] );
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
+				composer.composeReal( what[i] );
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
+				composer.composeString( what[i] );
+			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
+				ElemTypeT::compose( composer, what[i] );
+			else
+				static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+		}
+		composer.vectorEnd();
+	}
 
 	template<class ParserT, class VectorT, class ElemTypeT, bool suppressNotifications = false>
 	static
 	void parse( ParserT& parser, VectorT& dest ) { 
 		dest.clear();
-		// if constexpr ( ParserT::proto == Proto::GMQ )
-		// {
-		// 	size_t collSz;
-		// 	parser.parseUnsignedInteger( &collSz );
-		// 	dest.reserve( collSz );
-		// 	for ( size_t i=0; i<collSz; ++i )
-		// 	{
-		// 		typename VectorT::value_type what;
-		// 		if constexpr ( std::is_same<ElemTypeT, impl::SignedIntegralType>::value )
-		// 			parser.parseSignedInteger( &what );
-		// 		else if constexpr ( std::is_same<ElemTypeT, impl::UnsignedIntegralType>::value )
-		// 			parser.parseUnsignedInteger( &what );
-		// 		else if constexpr ( std::is_same<ElemTypeT, impl::RealType>::value )
-		// 			parser.parseReal( &what );
-		// 		else if constexpr ( std::is_same<ElemTypeT, impl::StringType>::value )
-		// 			parser.parseString( &what );
-		// 		else if constexpr ( std::is_base_of<impl::StructType, ElemTypeT>::value )
-		// 		{
-		// 			impl::parseStructBegin( parser );
-		// 			if constexpr( suppressNotifications )
-		// 				ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
-		// 			else
-		// 				ElemTypeT::parse( parser, what );
-		// 			impl::parseStructEnd( parser );
-		// 		}
-		// 		else
-		// 			static_assert( std::is_same<ElemTypeT, AllowedDataType>::value, "unsupported type" );
-		// 		dest.push_back( what );
-		// 	}
-		// }
-		// else
-		// {
-		// 	static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
 
-			// parser.skipDelimiter( '[' );
-			uint64_t collSz = parser.vectorBegin();
-			if(collSz != UINT64_MAX)
-				dest.reserve( collSz );
-
-			// if ( parser.isVectorEnd( ']' ) )
-			// {
-			// 	parser.skipDelimiter( ']' );
-			// 	if ( parser.isDelimiter( ',' ) )
-			// 		parser.skipDelimiter( ',' );
-			// 	return;
-			// }
-			for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			typename VectorT::value_type what;
+			if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
+				what = parser.parseSignedInteger();
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
+				what = parser.parseUnsignedInteger();
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
+				what = parser.parseReal();
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
+				what = parser.parseString();
+			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
 			{
-				typename VectorT::value_type what;
-				if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					what = parser.parseSignedInteger();
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					what = parser.parseUnsignedInteger();
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-					what = parser.parseReal();
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-					what = parser.parseString();
-				else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-				{
-					// parser.structBegin();
-					if constexpr( suppressNotifications )
-						ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
-					else
-						ElemTypeT::parse( parser, what );
-					// parser.structEnd();
-				}
+				if constexpr( suppressNotifications )
+					ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
 				else
-					static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-				dest.push_back( what );
-
-				if(!parser.isVectorEnd())
-					parser.nextElement();
-				// if ( parser.isDelimiter( ',' ) )
-				// {
-				// 	parser.skipDelimiter( ',' );
-				// 	continue;
-				// }
-				// if ( parser.isDelimiter( ']' ) )
-				// {
-				// 	parser.skipDelimiter( ']' );
-				// 	break;
-				// }
+					ElemTypeT::parse( parser, what );
 			}
-			parser.vectorEnd();
-			// if ( parser.isDelimiter( ',' ) )
-			// 	parser.skipDelimiter( ',' );
-		// }
+			else
+				static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			dest.push_back( what );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+		}
+		parser.vectorEnd();
 	}
 
 	template<class ElemTypeT, class ParserT, class VectorT>
 	static
 	void parseForStateSyncOrMessageInDepth( ParserT& parser, VectorT& dest ) { 
 		dest.clear();
-			uint64_t collSz = parser.vectorBegin();
-			if(collSz != UINT64_MAX)
-				dest.reserve( collSz );
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
 
-			for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			typename VectorT::value_type what;
+			if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
+				what = parser.parseSignedInteger();
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
+				what = parser.parseUnsignedInteger();
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
+				what = parser.parseReal();
+			else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
+				what = parser.parseString();
+			else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
 			{
-				typename VectorT::value_type what;
-				if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					what = parser.parseSignedInteger();
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					what = parser.parseUnsignedInteger();
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::RealType>::value )
-					what = parser.parseReal();
-				else if constexpr ( std::is_same<ElemTypeT, globalmq::marshalling::impl::StringType>::value )
-					what = parser.parseString();
-				else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ElemTypeT>::value )
-				{
-					ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
-				}
-				else
-					static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-				dest.push_back( what );
-
-				if(!parser.isVectorEnd())
-					parser.nextElement();
-				// if ( parser.isDelimiter( ',' ) )
-				// {
-				// 	parser.skipDelimiter( ',' );
-				// 	continue;
-				// }
-				// if ( parser.isDelimiter( ']' ) )
-				// {
-				// 	parser.skipDelimiter( ']' );
-				// 	break;
-				// }
+				ElemTypeT::parseForStateSyncOrMessageInDepth( parser, what );
 			}
-			parser.vectorEnd();
-			// if ( parser.isDelimiter( ',' ) )
-			// 	parser.skipDelimiter( ',' );
-		// }
+			else
+				static_assert( std::is_same<ElemTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			dest.push_back( what );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+
+		}
+		parser.vectorEnd();
 	}
 
 };
