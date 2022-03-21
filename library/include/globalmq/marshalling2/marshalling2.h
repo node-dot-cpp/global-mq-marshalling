@@ -744,7 +744,7 @@ public:
 
 	template<class ComposerTT>
 	static
-	void compose( ComposerTT& composer, const GMQ_COLL vector<typename ProcType::ProcessorType>& what ) { 
+	void compose( ComposerTT& composer, const ProcessorType& what ) { 
 		using ComposerT = typename std::remove_reference<ComposerTT>::type;
 		size_t collSz = what.size();
 		composer.vectorBegin( collSz );
@@ -760,7 +760,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parse( ParserT& parser, GMQ_COLL vector<typename ProcType::ProcessorType>& dest ) { 
+	void parse( ParserT& parser, ProcessorType& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -780,7 +780,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, GMQ_COLL vector<typename ProcType::ProcessorType>& dest ) { 
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, ProcessorType& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -800,7 +800,7 @@ public:
 	}
 
 	static
-	void copy( const GMQ_COLL vector<typename ProcType::ProcessorType>& src, GMQ_COLL vector<typename ProcType::ProcessorType>& dst )
+	void copy( const ProcessorType& src, ProcessorType& dst )
 	{
 		dst.resize( src.size() );
 		for ( size_t i=0; i<src.size(); ++i )
@@ -810,7 +810,7 @@ public:
 	}
 
 	static
-	bool isSame( const GMQ_COLL vector<typename ProcType::ProcessorType>& v1, const GMQ_COLL vector<typename ProcType::ProcessorType>& v2 )
+	bool isSame( const ProcessorType& v1, const ProcessorType& v2 )
 	{
 		if ( v1.size() != v2.size() )
 			return false;
@@ -823,313 +823,157 @@ public:
 	}
 };
 
-
-class PublishableDictionaryProcessor
+template<class KeyProcT, class ValueProcT>
+class PublishableDictionaryProcessor2
 {
 public:
-	template<class ParserT, class DictionaryT, class ProcType>
+	using ProcessorType = GMQ_COLL unordered_map<typename KeyProcT::ProcessorType, typename ValueProcT::ProcessorType>;
+
+	template<class ParserT>
 	static
-	void parseKey( ParserT& parser, typename DictionaryT::key_type& key ) {
+	void parseKey( ParserT& parser, typename KeyProcT::ProcessorType& key )
+	{
 		parser.namedParamBegin("key");
-		if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::SignedIntegralType>::value )
-			key = parser.parseSignedInteger();
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-			key = parser.parseUnsignedInteger();
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::StringType>::value )
-			key = parser.parseString();
-		else
-			static_assert( std::is_same<ProcType, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+		KeyProcT::parse( parser, key );
 	}
 
-	template<class ParserT, class DictionaryT, class ProcType>
+	template<class ParserT>
 	static
-	void parseValue( ParserT& parser, typename DictionaryT::mapped_type& value ) { 
+	void parseValue( ParserT& parser, typename ValueProcT::ProcessorType& value )
+	{
 		parser.namedParamBegin("value");
-		if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::SignedIntegralType>::value )
-			value = parser.parseSignedInteger();
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-			value = parser.parseUnsignedInteger();
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::RealType>::value )
-			value = parser.parseReal();
-		else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::StringType>::value )
-			value = parser.parseString();
-		else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ProcType>::value )
-		{
-			// parser.structBegin();
-			ProcType::parse( parser, value );
-			// parser.structEnd( parser );
-		}
-		else
-			static_assert( std::is_same<ProcType, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+		ValueProcT::parse( parser, value );
 	}
 
-	template<class ParserT, class DictionaryT, class ProcType>
+	template<class ParserT>
 	static
-	bool parseValueAndCompare( ParserT& parser, typename DictionaryT::mapped_type& value, const typename DictionaryT::mapped_type& oldValue ) { 
+	bool parseValueAndCompare( ParserT& parser, typename ValueProcT::ProcessorType& value, const typename ValueProcT::ProcessorType& oldValue ) { 
 		parser.namedParamBegin("value");
-		if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ProcType>::value )
-		{
-			// parser.structBegin();
-			ProcType::parse( parser, value );
-			// parser.structEnd();
-			return !ProcType::isSame( value, oldValue );
-		}
-		else 
-		{
-			if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::SignedIntegralType>::value )
-				value = parser.parseSignedInteger();
-			else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-				value = parser.parseUnsignedInteger();
-			else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::RealType>::value )
-				value = parser.parseReal();
-			else if constexpr ( std::is_same<ProcType, globalmq::marshalling::impl::StringType>::value )
-				value = parser.parseString();
-			else
-				static_assert( std::is_same<ProcType, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-			return value != oldValue;
-		}
+		ValueProcT::parse( parser, value );
+		return !ValueProcT::isSame( value, oldValue );
 	}
 
-	template<class KeyTypeT, class ValueTypeT, class ComposerTT, class DictionaryT>
+	template<class ComposerTT>
 	static
-	void compose( ComposerTT& composer, const DictionaryT& what ) { 
-		using ComposerT = typename std::remove_reference<ComposerTT>::type;
-		using key_type = typename DictionaryT::key_type;
-		using value_type = typename DictionaryT::mapped_type;
+	void compose( ComposerTT& composer, const ProcessorType& what ) {
 		size_t collSz = what.size();
-		// if constexpr ( ComposerT::proto == Proto::GMQ )
-		// {
-		// 	impl::composeUnsignedInteger( composer, collSz );
-		// 	for ( const auto& it: what )
-		// 	{
-		// 		// key
-		// 		if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
-		// 			impl::composeSignedInteger( composer, it.first );
-		// 		else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
-		// 			impl::composeUnsignedInteger( composer, it.first );
-		// 		else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
-		// 			impl::composeString( composer, it.first );
-		// 		else
-		// 			static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
-
-		// 		// value
-		// 		if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
-		// 			impl::composeSignedInteger( composer, it.second );
-		// 		else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
-		// 			impl::composeUnsignedInteger( composer, it.second );
-		// 		else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
-		// 			impl::composeReal( composer, it.second );
-		// 		else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
-		// 			impl::composeString( composer, it.second );
-		// 		else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
-		// 		{
-		// 			impl::composeStructBegin( composer );
-		// 			ValueTypeT::compose( composer, it.second );
-		// 			impl::composeStructEnd( composer );
-		// 		}
-		// 		else
-		// 			static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
-		// 	}
-		// }
-		// else
-		// {
-		// 	static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-			composer.dictionaryBegin(collSz);
-			size_t commaCtr = 0;
-			for ( const auto& it: what )
-			{
-				if(commaCtr != 0)
-					composer.nextElement();
-
-				++commaCtr;
-
-				composer.structBegin();
-
-				// key
-				if constexpr ( std::is_same<KeyTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					composer.composeSignedInteger( composer, it.first );
-				else if constexpr ( std::is_same<KeyTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					composer.composeUnsignedInteger( composer, it.first );
-				else if constexpr ( std::is_same<KeyTypeT, globalmq::marshalling::impl::StringType>::value )
-					composer.composeString( composer, it.first );
-				else
-					static_assert( std::is_same<KeyTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-
+		composer.dictionaryBegin(collSz);
+		size_t commaCtr = 0;
+		for ( const auto& it: what )
+		{
+			if(commaCtr != 0)
 				composer.nextElement();
 
-				// value
-				if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					composer.composeSignedInteger( composer, it.second );
-				else if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					composer.composeUnsignedInteger( composer, it.second );
-				else if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::RealType>::value )
-					composer.composeReal( composer, it.second );
-				else if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::StringType>::value )
-					composer.composeString( composer, it.second );
-				else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ValueTypeT>::value )
-				{
-					// composer.structBegin( composer );
-					ValueTypeT::compose( composer, it.second );
-					// composer.structEnd( composer );
-				}
-				else
-					static_assert( std::is_same<ValueTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			++commaCtr;
 
-				composer.structEnd();
-				// if ( commaCtr + 1 < collSz )
-				// {
-				// 	composer.buff.append( ",", 1 );
-				// 	++commaCtr;
-				// }
-			}
-			// assert( collSz == 0 || commaCtr + 1 == collSz );
-			composer.dictionaryEnd();
-		// }
+			composer.structBegin();
+
+			// key
+			KeyProcT::compose( composer, it.first );
+
+			composer.nextElement();
+
+			// value
+			ValueProcT::compose( composer, it.second );
+
+			composer.structEnd();
+		}
+		composer.dictionaryEnd();
 	}
 
-	// template<class ComposerT, class DictionaryT, class KeyTypeT, class ValueTypeT, typename NameT>
-	// static
-	// void compose( ComposerT& composer, const DictionaryT& what, NameT name, bool addListSeparator ) { 
 
-	// 	// if constexpr ( ComposerT::proto == Proto::GMQ )
-	// 	// 	compose<ComposerT, DictionaryT, KeyTypeT, ValueTypeT>( composer, what );
-	// 	// else
-	// 	// {
-	// 	// 	static_assert( ComposerT::proto == Proto::JSON, "unexpected protocol id" );
-	// 	// 	impl::json::addNamePart( composer, name );
-	// 		composer.namedParamBegin(name);
-	// 		compose<ComposerT, DictionaryT, KeyTypeT, ValueTypeT>( composer, what );
-	// 		if ( addListSeparator )
-	// 			composer.nextElement();
-	// 	// }
-	// }
-
-	template<class ParserT, class DictionaryT, class KeyTypeT, class ValueTypeT, bool suppressNotifications = false>
+	template<class ParserT>
 	static
-	void parse( ParserT& parser, DictionaryT& dest ) { 
-		using key_type = typename DictionaryT::key_type;
-		using value_type = typename DictionaryT::mapped_type;
+	void parse( ParserT& parser, ProcessorType& dest ) { 
 		dest.clear();
-		// if constexpr ( ParserT::proto == Proto::GMQ )
-		// {
-		// 	size_t collSz;
-		// 	parser.parseUnsignedInteger( &collSz );
-		// 	for ( size_t i=0; i<collSz; ++i )
-		// 	{
-		// 		key_type key;
-		// 		value_type value;
+		size_t collSz = parser.dictionaryBegin();
 
-		// 		// key
-		// 		if constexpr ( std::is_same<KeyTypeT, impl::SignedIntegralType>::value )
-		// 			parser.parseSignedInteger( &key );
-		// 		else if constexpr ( std::is_same<KeyTypeT, impl::UnsignedIntegralType>::value )
-		// 			parser.parseUnsignedInteger( &key );
-		// 		else if constexpr ( std::is_same<KeyTypeT, impl::StringType>::value )
-		// 			parser.parseString( &key );
-		// 		else
-		// 			static_assert( std::is_same<KeyTypeT, AllowedDataType>::value, "unsupported type" );
-
-		// 		// value
-		// 		if constexpr ( std::is_same<ValueTypeT, impl::SignedIntegralType>::value )
-		// 			parser.parseSignedInteger( &value );
-		// 		else if constexpr ( std::is_same<ValueTypeT, impl::UnsignedIntegralType>::value )
-		// 			parser.parseUnsignedInteger( &value );
-		// 		else if constexpr ( std::is_same<ValueTypeT, impl::RealType>::value )
-		// 			parser.parseReal( &value );
-		// 		else if constexpr ( std::is_same<ValueTypeT, impl::StringType>::value )
-		// 			parser.parseString( &value );
-		// 		else if constexpr ( std::is_base_of<impl::StructType, ValueTypeT>::value )
-		// 		{
-		// 			impl::parseStructBegin( parser );
-		// 			if constexpr( suppressNotifications )
-		// 				ValueTypeT::parseForStateSyncOrMessageInDepth( parser, value );
-		// 			else
-		// 				ValueTypeT::parse( parser, value );
-		// 			impl::parseStructEnd( parser );
-		// 		}
-		// 		else
-		// 			static_assert( std::is_same<ValueTypeT, AllowedDataType>::value, "unsupported type" );
-
-		// 		dest.insert( std::make_pair( key, value ) );
-		// 	}
-		// }
-		// else
-		// {
-		// 	static_assert( ParserT::proto == Proto::JSON, "unexpected protocol id" );
-
-			size_t collSz = parser.dictionaryBegin();
-
-			// parser.skipDelimiter( '{' );
-			// if ( parser.isDelimiter( '}' ) )
-			// {
-			// 	parser.skipDelimiter( '}' );
-			// 	if ( parser.isDelimiter( ',' ) )
-			// 		parser.skipDelimiter( ',' );
-			// 	return;
-			// }
-			for ( size_t i = 0; i < collSz && !parser.isDictionaryEnd(); ++i )
-			{
-				key_type key;
-				value_type value;
-
-				if(i != 0)
-					parser.nextElement();
-
-
-				parser.structBegin();
-
-				// key
-				if constexpr ( std::is_same<KeyTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					key = parser.parseSignedInteger();
-				else if constexpr ( std::is_same<KeyTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					key = parser.parseUnsignedInteger();
-				else if constexpr ( std::is_same<KeyTypeT, globalmq::marshalling::impl::StringType>::value )
-					key = parser.readString();
-				else
-					static_assert( std::is_same<KeyTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
-
+		for ( size_t i = 0; i < collSz && !parser.isDictionaryEnd(); ++i )
+		{
+			if(i != 0)
 				parser.nextElement();
 
-				// value
-				if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::SignedIntegralType>::value )
-					value = parser.parseSignedInteger();
-				else if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::UnsignedIntegralType>::value )
-					value = parser.parseUnsignedInteger();
-				else if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::RealType>::value )
-					value = parser.parseReal();
-				else if constexpr ( std::is_same<ValueTypeT, globalmq::marshalling::impl::StringType>::value )
-					value = parser.parseString();
-				else if constexpr ( std::is_base_of<globalmq::marshalling::impl::StructType, ValueTypeT>::value )
-				{
-					// parser.structBegin();
-					if constexpr( suppressNotifications )
-						ValueTypeT::parseForStateSyncOrMessageInDepth( parser, value );
-					else
-						ValueTypeT::parse( parser, value );
-					// parser.structEnd( parser );
-				}
-				else
-					static_assert( std::is_same<ValueTypeT, globalmq::marshalling::AllowedDataType>::value, "unsupported type" );
+			parser.structBegin();
 
-				parser.structEnd();
-				dest.insert( std::make_pair( key, value ) );
+			// key
+			typename KeyProcT::ProcessorType key;
+			KeyProcT::parse( parser, key );
 
-				// if ( parser.isDelimiter( ',' ) )
-				// {
-				// 	parser.skipDelimiter( ',' );
-				// 	continue;
-				// }
-				// if ( parser.isDelimiter( '}' ) )
-				// {
-				// 	parser.skipDelimiter( '}' );
-				// 	break;
-				// }
-			}
-			parser.dictionaryEnd();
-			// if ( parser.isDelimiter( ',' ) )
-			// 	parser.skipDelimiter( ',' );
-		// }
+			parser.nextElement();
+
+			// value
+			typename ValueProcT::ProcessorType value;
+			ValueProcT::parse( parser, value );
+
+			parser.structEnd();
+
+			dest.insert( std::make_pair( key, value ) );
+		}
+		parser.dictionaryEnd();
 	}
+
+	
+
+	template<class ParserT>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, ProcessorType& dest ) { 
+		dest.clear();
+		size_t collSz = parser.dictionaryBegin();
+
+		for ( size_t i = 0; i < collSz && !parser.isDictionaryEnd(); ++i )
+		{
+			if(i != 0)
+				parser.nextElement();
+
+			parser.structBegin();
+
+			// key
+			typename KeyProcT::ProcessorType key;
+			KeyProcT::parseForStateSyncOrMessageInDepth( parser, key );
+
+			parser.nextElement();
+
+			// value
+			typename ValueProcT::ProcessorType value;
+			ValueProcT::parseForStateSyncOrMessageInDepth( parser, value );
+
+			parser.structEnd();
+
+			dest.insert( std::make_pair( key, value ) );
+		}
+		parser.dictionaryEnd();
+	}
+
+	static
+	void copy( const ProcessorType& src, ProcessorType& dst )
+	{
+		for ( const auto& it: src )
+		{
+			typename ValueProcT::ProcessorType value;
+			ValueProcT::copy( it.second, value );
+			dst.insert( GMQ_COLL make_pair( it.first, value ) );
+		}
+	}
+
+	static
+	bool isSame( const ProcessorType& v1, const ProcessorType& v2 )
+	{
+		if ( v1.size() != v2.size() )
+			return false;
+		auto it1 = v1.begin();
+		auto it2 = v2.begin();
+		while ( it1 != v1.end() )
+		{
+			if ( !KeyProcT::isSame(it1->first, it2->first) || !ValueProcT::isSame( it1->second, it2->second ) ) 
+				return false;
+			
+			++it1;
+			++it2;
+		}
+
+		return true;
+	}
+
 };
 
 
