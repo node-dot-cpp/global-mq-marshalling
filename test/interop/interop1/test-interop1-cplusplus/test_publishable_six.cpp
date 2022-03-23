@@ -45,11 +45,11 @@ const lest::test test_publishable_six[] =
 
         PublishableT publ(data);
 
-        ComposerT composer;
+        mtest::Buffer b;
+        ComposerT composer(b);
 
         publ.generateStateSyncMessage(composer);
 
-        mtest::Buffer b = composer.getBuffer();
         auto expected = makeBuffer(PathPubJson, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
     },

@@ -43,11 +43,11 @@ const lest::test test_publishable_six2[] =
 
         PublishableT publ(data);
 
-        ComposerT composer;
+        mtest::Buffer b;
+        ComposerT composer(b);
 
         publ.generateStateSyncMessage(composer);
 
-        mtest::Buffer b = composer.getBuffer();
         auto b2 = makeBuffer(PathPubGmq, lest_env);
         EXPECT(b == b2);
     },

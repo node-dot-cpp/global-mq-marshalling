@@ -45,8 +45,7 @@ class IComposer2 : public ComposerBase
 {
 public:
 	using BufferType = BufferT;
-	virtual BufferT&& getBuffer() = 0;
-	virtual void setBuffer(BufferT&&) = 0;
+	virtual void reset() = 0;
 
 	virtual void composeSignedInteger(int64_t val) = 0;
 	virtual void composeUnsignedInteger(uint64_t val) = 0;
@@ -80,12 +79,11 @@ template<class BufferT>
 class JsonComposer2 : public IComposer2<BufferT>
 {
 public:
-	BufferT buff; //public because of impl::json::composeXXX, remove
+	BufferT& buff; //public because of impl::json::composeXXX, remove
 
-	// JsonComposer2() : buff( buff_ ) {}
+	JsonComposer2(BufferT& buff) : buff(buff) {}
 
-	virtual BufferT&& getBuffer() override { return std::move(buff); }
-	virtual void setBuffer(BufferT&& b) override { buff = std::move( b ); }
+	virtual void reset() override {}
 
 	void composeSignedInteger(int64_t val) override { globalmq::marshalling::impl::json::composeSignedInteger(*this, val); }
 	void composeUnsignedInteger(uint64_t val) override { globalmq::marshalling::impl::json::composeUnsignedInteger(*this, val); }
@@ -140,13 +138,12 @@ template<class BufferT>
 class GmqComposer2 : public ComposerBase
 {
 public:
-	BufferT buff; //public because of impl::json::composeXXX, remove
+	BufferT& buff; //public because of impl::json::composeXXX, remove
 
-	// GmqComposer2( BufferT& buff_ ) : buff( buff_ ) {}
+	GmqComposer2( BufferT& buff ) : buff(buff) {}
 
 	using BufferType = BufferT;
-	BufferT&& getBuffer() { return std::move(buff); }
-	void setBuffer(BufferT&& b) { buff = std::move( b ); }
+	void reset() {}
 
 	void composeSignedInteger(int64_t val) { globalmq::marshalling::impl::composeSignedInteger(*this, val); }
 	void composeUnsignedInteger(uint64_t val) { globalmq::marshalling::impl::composeUnsignedInteger(*this, val); }

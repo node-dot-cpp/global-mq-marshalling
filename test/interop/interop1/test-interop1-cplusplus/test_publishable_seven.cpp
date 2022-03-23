@@ -126,11 +126,11 @@ const lest::test test_publishable_seven[] =
 
         PublishableT publ(data);
 
-        ComposerT composer;
+        mtest::Buffer b;
+        ComposerT composer(b);
 
         publ.generateStateSyncMessage(composer);
 
-        mtest::Buffer b = composer.getBuffer();
         auto expected = makeBuffer(PathPubSevenJson, lest_env);
         EXPECT(AreEqualIgnoreWhite(expected, b));
     },
@@ -418,11 +418,11 @@ const lest::test test_publishable_seven[] =
 
         PublishableT publ(data);
 
-        ComposerT composer;
+        mtest::Buffer b;
+        ComposerT composer(b);
 
         publ.generateStateSyncMessage(composer);
 
-        mtest::Buffer b = composer.getBuffer();
         auto b2 = makeBuffer(PathPubSevenGmq, lest_env);
         EXPECT(b == b2);
     },

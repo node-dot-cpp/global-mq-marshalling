@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>test_interop2_csharp_todo</RootNamespace>
+    <RootNamespace>test_interop3_csharp</RootNamespace>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>

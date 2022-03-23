@@ -125,12 +125,10 @@ void testPublishableComposeStateSync(std::string fileName, std::function<typenam
         typename Types::PublishableT publ(data);
 
         mtest::Buffer b;
-        typename Types::ComposerT composer;
-        composer.setBuffer(std::move(b));
+        typename Types::ComposerT composer(b);
 
         publ.generateStateSyncMessage(composer);
 
-        b = composer.getBuffer();
         auto expected = makeBuffer(fileName, lest_env);
         EXPECT(Types::AreEqual(expected, b));
 }

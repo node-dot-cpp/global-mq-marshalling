@@ -491,6 +491,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::remove:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -512,6 +513,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::update_value:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -538,6 +540,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 			break;
 	}
 				
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
 
@@ -586,8 +589,10 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::insert:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 
@@ -629,6 +634,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "%s}\n", offset.c_str() );
 	fprintf( header, "%selse // replacement of the whole dictionary\n", offset.c_str() );
 	fprintf( header, "%s{\n", offset.c_str() );
+	fprintf( header, "%s\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\tparser.leafeBegin();\n", offset.c_str() );
 	fprintf( header, "\n" );
 	fprintf( header, "%s\tif constexpr( alwaysCollectChanges )\n", offset.c_str() );
@@ -951,6 +957,7 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* 
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::remove:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -962,12 +969,14 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* 
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::update_value:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\t\t\tif ( f == t.%s.end() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tthrow std::exception();\n", offset.c_str() );
 
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type& value = f->second;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
@@ -975,8 +984,10 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* 
 
 	fprintf( header, "%s\t\t\tcase ActionOnDictionary::insert:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
 	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -993,11 +1004,11 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* 
 	
 	fprintf( header, "%selse // replacement of the whole dictionary\n", offset.c_str() );
 	fprintf( header, "%s{\n", offset.c_str() );
-	fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryBegin( parser );\n", offset.c_str() );
+	fprintf( header, "%s\tparser.leafeBegin();\n", offset.c_str() );
 	fprintf( header, "\n" );
 	fprintf( header, "%s\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\n" );
-	fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n", offset.c_str() );
+	// fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n", offset.c_str() );
 	fprintf( header, "%s}\n", offset.c_str() );
 	fprintf( header, "\n" );
 }
@@ -1621,6 +1632,7 @@ void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, C
 		fprintf( header, "\t\tparser.namedParamBegin( \"caseId\" );\n" );
 		fprintf( header, "\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
 		fprintf( header, "\t\tt.initAs( (typename %s::Variants)(caseId) );\n", typeName.c_str() );
+		fprintf( header, "\t\tparser.nextElement();\n");
 		fprintf( header, "\t\tif ( caseId != %s::Variants::unknown )\n", typeName.c_str() );
 		fprintf( header, "\t\t{\n" );
 
@@ -1702,6 +1714,7 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 		fprintf( header, "\t\tparser.namedParamBegin( \"caseId\" );\n");
 		fprintf( header, "\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
 		fprintf( header, "\t\tt.initAs( (typename %s::Variants)(caseId) );\n", typeName.c_str() );
+		fprintf( header, "\t\tparser.nextElement();\n");
 		fprintf( header, "\t\tif ( caseId != %s::Variants::unknown )\n", typeName.c_str() );
 		fprintf( header, "\t\t{\n" );
 
@@ -2045,6 +2058,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "{\n" );
 	fprintf( header, "\tT t;\n" );
 	fprintf( header, "\tusing BufferT = typename ComposerT::BufferType;\n" );
+	fprintf( header, "\tBufferT buffer;\n" );
 	fprintf( header, "\tComposerT composer;\n" );
 
 	// impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
@@ -2055,11 +2069,11 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tstatic constexpr const char* stringTypeID = \"%s\";\n", s.name.c_str() );
 	fprintf( header, "\n" );
 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
+	fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
-	fprintf( header, "\tvoid startTick( BufferT&& buff ) { composer.setBuffer( std::move( buff ) ); composer.stateUpdateBegin(); }\n" );
-	fprintf( header, "\tBufferT&& endTick() { composer.stateUpdateEnd(); return composer.getBuffer(); }\n" );
+	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); composer.stateUpdateBegin(); }\n" );
+	fprintf( header, "\tBufferT&& endTick() { composer.stateUpdateEnd(); return std::move( buffer ); }\n" );
 	fprintf( header, "\tconst char* name() { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
 

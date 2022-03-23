@@ -57,12 +57,10 @@ const lest::test test_simple[] =
         auto msg = GetSample1();
 
         mtest::Buffer b;
-        mtest::JsonComposer composer;
-        composer.setBuffer(std::move(b));
+        mtest::JsonComposer composer(b);
 
         mtest::json_scope::MESSAGE_SimpleJsonMessage_compose(composer, mtest::data =  msg);
 
-        b = composer.getBuffer();
         auto expect = makeBuffer(PathJson, lest_env);
         EXPECT(AreEqualIgnoreWhite(expect, b));
     },
@@ -83,13 +81,10 @@ const lest::test test_simple[] =
         auto msg = GetSample1();
 
         mtest::Buffer b;
-        mtest::GmqComposer composer;
-        composer.setBuffer(std::move(b)); 
-
+        mtest::GmqComposer composer(b);
 
         mtest::gmq_scope::MESSAGE_SimpleGmqMessage_compose(composer, mtest::data = msg);
 
-        b = composer.getBuffer();
         auto expect = makeBuffer(PathGmq, lest_env);
         EXPECT(expect == b);
     },
