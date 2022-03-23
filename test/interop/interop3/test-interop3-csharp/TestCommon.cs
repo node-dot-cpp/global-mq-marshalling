@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace test_interop2_csharp_todo
+namespace test_interop3_csharp
 {
     public interface ITestPlatformSupport : IPlatformSupport
     {

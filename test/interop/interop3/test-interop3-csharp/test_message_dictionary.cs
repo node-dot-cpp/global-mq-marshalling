@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace test_interop2_csharp_todo
+namespace test_interop3_csharp
 {
 
     public class test_message_dictionary
