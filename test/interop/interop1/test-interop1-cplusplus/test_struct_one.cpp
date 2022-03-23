@@ -33,18 +33,7 @@ std::string PathGmq = DataPrefix + "test_struct_one.gmq";
 template<class ComposerT>
 void ComposeStructOne(ComposerT& composer, mtest::structures::struct_one& msg)
 {
-	mtest::STRUCT_struct_one_compose(composer,
-		mtest::thirdParam = msg.thirdParam,
-		mtest::firstParam = msg.firstParam,
-        mtest::fifthParam = msg.fifthParam,
-        mtest::forthParam = msg.forthParam,
-        mtest::seventhParam = msg.seventhParam,
-		mtest::eighthParam = msg.eighthParam,
-		mtest::ninethParam = msg.ninethParam,
-		mtest::secondParam = msg.secondParam,
-		mtest::tenthParam = msg.tenthParam,
-		mtest::sixthParam = msg.sixthParam
-	);
+	mtest::publishable_STRUCT_struct_one::compose(composer, msg);
 }
 
 
@@ -68,7 +57,8 @@ const lest::test test_struct_one[] =
         auto iter = b.getReadIter();
         mtest::JsonParser parser(iter);
 
-        mtest::structures::struct_one msg = mtest::test_gmq::STRUCT_struct_one_parse(parser);
+        mtest::structures::struct_one msg;
+        mtest::publishable_STRUCT_struct_one::parseForStateSyncOrMessageInDepth(parser, msg);
 
         auto msg2 = GetSampleStructOne();
         EXPECT(msg == msg2);
@@ -92,7 +82,8 @@ const lest::test test_struct_one[] =
         auto iter = b.getReadIter();
         mtest::GmqParser parser(iter);
 
-        mtest::structures::struct_one msg = mtest::test_gmq::STRUCT_struct_one_parse(parser);
+        mtest::structures::struct_one msg;
+        mtest::publishable_STRUCT_struct_one::parseForStateSyncOrMessageInDepth(parser, msg);
 
         auto msg2 = GetSampleStructOne();
         EXPECT(msg == msg2);

@@ -2,6 +2,8 @@
 # Copyright (c) 2022, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 
+add_subdirectory(test-interop2-cplusplus)
+
 
 add_custom_command(
     COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop2.idl ${CMAKE_CURRENT_SOURCE_DIR}/cpp/generated_interop2.h -m=mtest

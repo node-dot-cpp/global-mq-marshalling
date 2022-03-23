@@ -30,7 +30,7 @@
 
 
 #include "../../3rdparty/lest/include/lest/lest.hpp"
-#include "generated_interop3.h"
+#include "generated_interop2.h"
 
 lest::tests& specification();
 
