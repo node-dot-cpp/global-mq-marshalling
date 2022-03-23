@@ -761,6 +761,80 @@ void orderStructsByDependency( std::vector<unique_ptr<CompositeType>> &structs, 
 		s->dependsOnCnt = 0;
 }
 
+bool impl_isComplexType(const MessageParameterType& type)
+{
+	if ( type.kind == MessageParameterType::KIND::STRUCT ||
+		type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		return true;
+	else if ( type.kind == MessageParameterType::KIND::VECTOR &&
+	 			( type.vectorElemKind == MessageParameterType::KIND::STRUCT ||
+				 type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+		return true;
+	else if ( type.kind == MessageParameterType::KIND::DICTIONARY &&
+	 			( type.dictionaryValueKind == MessageParameterType::KIND::STRUCT ||
+				 type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
+		return true;
+	else
+		return false;
+}
+
+std::vector<CompositeType*> orderStructsByDependency2( const std::vector<unique_ptr<CompositeType>> &structs )
+{
+	size_t processed = 0;
+	std::vector<CompositeType*> result;
+	std::vector<bool> resolved(structs.size(), false);
+
+	bool stillChanging = true;
+	while(stillChanging)
+	{
+		stillChanging = false;
+		for(size_t i = 0; i != structs.size(); ++i)
+		{
+			if(resolved[i])
+				continue;
+
+			bool currentResolved = true;
+
+			if ( structs[i]->type == CompositeType::Type::structure)
+			{
+				for ( auto& member : structs[i]->getMembers() )
+				{
+					if(impl_isComplexType(member->type))
+					{
+						if(!resolved.at(member->type.structIdx))
+							currentResolved = false;
+					}
+				}
+				
+			}
+			else if ( structs[i]->type == CompositeType::Type::discriminated_union )
+			{
+				for ( auto& cs : structs[i]->getDiscriminatedUnionCases() )
+				{
+					for ( auto& member : cs->getMembers() )
+					{
+						if(impl_isComplexType(member->type))
+						{
+							if(!resolved.at(member->type.structIdx))
+								currentResolved = false;
+						}
+					}
+				}
+			}
+
+			if(currentResolved)
+			{
+				resolved[i] = true;
+				stillChanging = true;
+				result.push_back(structs[i].get());
+			}
+		}
+	}
+	assert( result.size() == structs.size() );
+
+	return result;
+}
+
 void impl_generatePublishableCommentBlock_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );

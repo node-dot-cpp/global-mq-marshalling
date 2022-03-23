@@ -175,6 +175,13 @@ public:
 	void composeAction(uint64_t action) { composeUnsignedInteger(action); }
 };
 
+inline
+GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& addr, uint64_t last)
+{
+	GMQ_COLL vector<uint64_t> result{addr};
+	result.push_back(last);
+	return result;
+}
 
 template<typename ComposerT>
 void composeAddressInPublishable2( ComposerT& composer, const GMQ_COLL vector<uint64_t>& addr, uint64_t last )
@@ -295,7 +302,7 @@ class JsonParser2 : public IParser2
 	globalmq::marshalling::JsonParser<BufferT> p;
 
 public:
-	JsonParser2(typename BufferT::ReadIteratorT iter) :p(iter) {}
+	JsonParser2(typename BufferT::ReadIteratorT& iter) :p(iter) {}
 
 	int64_t parseSignedInteger() override { int64_t v; p.readSignedIntegerFromJson(&v); return v; }
 	uint64_t parseUnsignedInteger() override { uint64_t v; p.readUnsignedIntegerFromJson(&v); return v; }
@@ -381,7 +388,7 @@ class GmqParser2 : public ParserBase
 	globalmq::marshalling::GmqParser<BufferT> p;
 
 public:
-	GmqParser2(typename BufferT::ReadIteratorT iter) :p(iter) {}
+	GmqParser2(typename BufferT::ReadIteratorT& iter) :p(iter) {}
 
 	int64_t parseSignedInteger() { int64_t v; p.parseSignedInteger(&v); return v; }
 	uint64_t parseUnsignedInteger() { uint64_t v; p.parseUnsignedInteger(&v); return v; }
@@ -504,6 +511,22 @@ public:
 
 	static
 	bool isSame(int64_t l, int64_t r) { return l == r;}
+
+	GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& baseAddress, int64_t address)
+	{
+		GMQ_COLL vector<uint64_t> result{baseAddress};
+		uint64_t val = globalmq::marshalling::impl::IntegralVlq::zigzagEncode(address);
+		result.push_back(val);
+		return result;
+	}
+
+	int64_t fromAddress(const GMQ_COLL vector<uint64_t>& address, size_t& index)
+	{
+		uint64_t val = address[index];
+		int64_t result = globalmq::marshalling::impl::IntegralVlq::zigzagDecode(val);
+		++index;
+		return result;
+	}
 };
 
 class UInt64Processor
@@ -562,6 +585,20 @@ public:
 
 	static
 	bool isSame(uint64_t l, uint64_t r) { return l == r;}
+
+	GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& baseAddress, uint64_t address)
+	{
+		GMQ_COLL vector<uint64_t> result{baseAddress};
+		result.push_back(address);
+		return result;
+	}
+
+	uint64_t fromAddress(const GMQ_COLL vector<uint64_t>& address, size_t& index)
+	{
+		uint64_t result = address[index];
+		++index;
+		return result;
+	}
 };
 
 class DoubleProcessor
@@ -658,8 +695,31 @@ public:
 
 	static
 	bool isSame(GMQ_COLL string l, GMQ_COLL string r) { return l == r;}
-};
 
+	GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& baseAddress, GMQ_COLL string address)
+	{
+		if(address.find_first_of('\0') != GMQ_COLL string::npos)
+			throw std::exception();
+
+		GMQ_COLL vector<uint64_t> result{baseAddress};
+		result.insert(result.end(), address.begin(), address.end());
+		result.push_back(0);
+		return result;
+	}
+
+	GMQ_COLL string fromAddress(const GMQ_COLL vector<uint64_t>& address, size_t& index)
+	{
+		GMQ_COLL string result;
+		while(address[index] != 0)
+		{
+			result.push_back(static_cast<char>(address[index]));
+			++index;
+		}
+
+		++index; // skip nul terminator
+		return result;
+	}
+};
 
 template<class VectorT, class ElemTypeT, class RootT>
 class VectorRefWrapper4Set
@@ -674,10 +734,8 @@ protected:
 	GMQ_COLL vector<uint64_t> address;
 
 public:
-	VectorRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<uint64_t> address_, uint64_t idx ) : b( actual ), root( root_ ) {
-		address = address_;
-		address.push_back (idx );
-	}
+	VectorRefWrapper4Set( VectorT& actual, RootT& root_, GMQ_COLL vector<uint64_t>&& address_ )
+		: b( actual ), root( root_ ), address( std::move(address_) ) { }
 
 	void remove( size_t idx ) { 
 		GMQ_ASSERT( idx < b.size());
@@ -717,29 +775,32 @@ template<class VectorT, class ElemTypeT, class RootT, class RefWrapper4SetT>
 class VectorOfStructRefWrapper4Set : public VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>
 {
 public:
-	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, const GMQ_COLL vector<uint64_t> address_, uint64_t idx ) : 
-		VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>( actual, root_, address_, idx ) {}
-	auto get4set_at( size_t idx ) { return RefWrapper4SetT(VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::b[idx], VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::root, VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>::address, idx); }
+	using base_type = VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>;
+
+
+	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, GMQ_COLL vector<uint64_t>&& address_ ) : 
+		base_type( actual, root_, std::move(address_) ) {}
+	auto get4set_at( size_t idx ) { return RefWrapper4SetT(base_type::b[idx], base_type::root, makeAddress(base_type::address, idx)); }
 };
 
 
-template<class ProcType>
+template<class ElemProcT>
 class PublishableVectorProcessor2
 {
 public:
-	using ProcessorType = GMQ_COLL vector<typename ProcType::ProcessorType>;
+	using ProcessorType = GMQ_COLL vector<typename ElemProcT::ProcessorType>;
 
 	template<class ParserT>
 	static
-	void parseSingleValue( ParserT& parser, typename ProcType::ProcessorType& value ) { 
-		ProcType::parse( parser, value );
+	void parseSingleValue( ParserT& parser, typename ElemProcT::ProcessorType& value ) { 
+		ElemProcT::parse( parser, value );
 	}
 
 	template<class ParserT>
 	static
-	bool parseSingleValueAndCompare( ParserT& parser,  typename ProcType::ProcessorType& value, const typename ProcType::ProcessorType& oldValue ) { 
-		ProcType::parse( parser, value );
-		return !ProcType::isSame( value, oldValue );
+	bool parseSingleValueAndCompare( ParserT& parser,  typename ElemProcT::ProcessorType& value, const typename ElemProcT::ProcessorType& oldValue ) { 
+		ElemProcT::parse( parser, value );
+		return !ElemProcT::isSame( value, oldValue );
 	}
 
 	template<class ComposerTT>
@@ -753,7 +814,7 @@ public:
 			if(i != 0)
 				composer.nextElement();
 
-			ProcType::compose( composer, what[i] );
+			ElemProcT::compose( composer, what[i] );
 		}
 		composer.vectorEnd();
 	}
@@ -768,8 +829,8 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			typename ProcType::ProcessorType what;
-			ProcType::parse( parser, what );
+			typename ElemProcT::ProcessorType what;
+			ElemProcT::parse( parser, what );
 			dest.push_back( what );
 
 			if(!parser.isVectorEnd())
@@ -788,8 +849,8 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			typename ProcType::ProcessorType what;
-			ProcType::parseForStateSyncOrMessageInDepth( parser, what );
+			typename ElemProcT::ProcessorType what;
+			ElemProcT::parseForStateSyncOrMessageInDepth( parser, what );
 			dest.push_back( what );
 
 			if(!parser.isVectorEnd())
@@ -805,7 +866,7 @@ public:
 		dst.resize( src.size() );
 		for ( size_t i=0; i<src.size(); ++i )
 		{
-			ProcType::copy(src[i], dst[i]);
+			ElemProcT::copy(src[i], dst[i]);
 		}
 	}
 
@@ -816,13 +877,96 @@ public:
 			return false;
 		for ( size_t i=0; i<v1.size(); ++i )
 		{
-			if ( !ProcType::isSame( v1[i], v2[i] ) ) 
+			if ( !ElemProcT::isSame( v1[i], v2[i] ) ) 
 				return false;
 		}
 		return true;
 	}
 };
 
+
+template<class DictionaryT, class KeyProcT, class ValueProcT, class RootT>
+class DictionaryRefWrapper4Set
+{
+public:
+	using key_type = typename KeyProcT::ProcessorType;
+	using value_type = typename ValueProcT::ProcessorType;
+
+protected:
+	DictionaryT& b;
+	RootT& root;
+	GMQ_COLL vector<size_t> address;
+
+private:
+
+public:
+	DictionaryRefWrapper4Set( DictionaryT& actual, RootT& root_, GMQ_COLL vector<size_t>&& address_ ) :
+		b( actual ), root( root_ ), address( std::move(address_) )
+	{ }
+
+	size_t remove( const key_type& key ) { 
+		size_t ret = b.erase( key );
+		if ( ret != 0 )
+		{
+			root.getComposer().changeBegin(address, globalmq::marshalling::ActionOnDictionary::remove);
+			root.getComposer().nextElement();
+			root.getComposer().namedParamBegin("key");
+			KeyProcT::compose( root.getComposer(), key );
+			root.getComposer().changeEnd();
+		}
+		return ret;
+	}
+
+	bool insert( const key_type& key, const value_type& value ) { 
+		auto insret = b.insert( std::make_pair( key, value ) );
+		if ( insret.second )
+		{
+			root.getComposer().changeBegin(address, globalmq::marshalling::ActionOnDictionary::insert);
+			root.getComposer().nextElement();
+			root.getComposer().namedParamBegin("key");
+			KeyProcT::compose( root.getComposer(), key );
+			root.getComposer().nextElement();
+			root.getComposer().namedParamBegin("value");
+			ValueProcT::compose( root.getComposer(), value );
+			root.getComposer().changeEnd();
+		}
+		return insret.second;
+	}
+
+	bool update_value( const key_type& key, const value_type& newValue ) {
+		auto f = b.find( key );
+		if ( f != b.end() )
+		{
+			f->second = newValue;
+
+			root.getComposer().changeBegin(address, globalmq::marshalling::ActionOnDictionary::update_value);
+			root.getComposer().nextElement();
+			root.getComposer().namedParamBegin("key");
+			KeyProcT::compose( root.getComposer(), key );
+			root.getComposer().nextElement();
+			root.getComposer().namedParamBegin("value");
+			ValueProcT::compose( root.getComposer(), newValue );
+			root.getComposer().changeEnd();
+
+			return true;
+		}
+		return false;
+	}
+};
+
+template<class DictionaryT, class KeyProcT, class ValueProcT, class RootT, class RefWrapper4SetT>
+class DictionaryOfStructRefWrapper4Set : public DictionaryRefWrapper4Set<DictionaryT, KeyProcT, ValueProcT, RootT>
+{
+public:
+	using base_type = DictionaryRefWrapper4Set<DictionaryT, KeyProcT, ValueProcT, RootT>;
+
+	DictionaryOfStructRefWrapper4Set( DictionaryT& actual, RootT& root_, GMQ_COLL vector<uint64_t>&& address_ ) : 
+		base_type( actual, root_, std::move(address_) ) {}
+	auto get4set_at( const typename KeyProcT::ProcessorType& key )
+	{
+		return RefWrapper4SetT(base_type::b[key], base_type::root, KeyProcT::makeAddress(base_type::address, key));
+	}
+};
 template<class KeyProcT, class ValueProcT>
 class PublishableDictionaryProcessor2
 {

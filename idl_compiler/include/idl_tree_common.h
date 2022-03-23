@@ -45,6 +45,7 @@ bool impl_processScopes( Root& r );
 void impl_insertScopeList(FILE* header, Root& r);
 void impl_generateMessageCommentBlock(FILE* header, CompositeType& s);
 void orderStructsByDependency(std::vector<unique_ptr<CompositeType>>& structs, std::vector<CompositeType*>& out, std::unordered_set<size_t>& collElementTypes);
+std::vector<CompositeType*> orderStructsByDependency2(const std::vector<unique_ptr<CompositeType>>& structs);
 void impl_generatePublishableCommentBlock(FILE* header, CompositeType& s);
 //
 

@@ -47,47 +47,6 @@ std::string impl_generateParseFunctionName( CompositeType& s )
 	return fmt::format( "{}_{}_parse", s.type2string(), s.name );
 }
 
-std::string impl_generateMessageClassName( MessageParameterType::KIND type, const std::string& name )
-{
-	if(type == MessageParameterType::KIND::STRUCT)
-		return fmt::format( "publishable_{}_{}", "STRUCT", name );
-	else if(type == MessageParameterType::KIND::DISCRIMINATED_UNION)
-		return fmt::format( "publishable_{}_{}", "DISCRIMINATED_UNION", name );
-	else
-		assert(false);
-}
-
-const char* impl_generatePrimitiveProcessorName( MessageParameterType::KIND type )
-{
-	switch ( type )
-	{
-		case MessageParameterType::KIND::INTEGER:
-			return "globalmq::marshalling2::Int64Processor";
-			break;
-		case MessageParameterType::KIND::UINTEGER:
-			return "globalmq::marshalling2::UInt64Processor";
-			break;
-		case MessageParameterType::KIND::REAL:
-			return "globalmq::marshalling2::DoubleProcessor";
-			break;
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			return "globalmq::marshalling2::StringProcessor";
-			break;
-		default:
-			assert(false);
-			return "";
-	}
-}
-
-std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
-{
-	if ( s.type == CompositeType::Type::message )
-		return fmt::format( "structures::{}::{}_{}", s.scopeName.c_str(), s.type2string(), s.name );
-	
-//	assert( false );
-//	if ( s.type == CompositeType::Type::structure )
-	return fmt::format( "structures::{}", s.name );
-}
 
 void impl_generateScopeHandler( FILE* header, Scope& scope, const std::string& parserType )
 {
@@ -161,11 +120,11 @@ void impl_generateScopeComposer( FILE* header, Scope& scope, const std::string& 
 	);
 
 	fprintf( header, "\tif constexpr ( msgID::id == %s::id )\n", scope.objectList[0]->name.c_str() );
-	fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[0])).c_str() );
+	fprintf( header, "\t\tMESSAGE_%s_compose( composer, std::forward<Args>( args )... );\n", scope.objectList[0]->name.c_str() );
 	for ( size_t i=1; i<scope.objectList.size(); ++i )
 	{
 		fprintf( header, "\telse if constexpr ( msgID::id == %s::id )\n", scope.objectList[i]->name.c_str() );
-		fprintf( header, "\t\t%s( composer, std::forward<Args>( args )... );\n", impl_generateComposeFunctionName(*(scope.objectList[i])).c_str() );
+		fprintf( header, "\t\tMESSAGE_%s_compose( composer, std::forward<Args>( args )... );\n", scope.objectList[i]->name.c_str() );
 	}
 	fprintf( header, 
 		"\telse\n"
@@ -626,12 +585,12 @@ void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s, co
 	//}
 }
 
-void impl_generateComposeFunction( FILE* header, CompositeType& s, const std::string& composerType )
+void impl_generateComposeFunction( FILE* header, CompositeType& s, const std::string& messageName, const std::string& composerType )
 {
 	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 	fprintf( header, "template<typename ... Args>\n"
-	"void %s(%s& composer, Args&& ... args)\n"
-	"{\n", impl_generateComposeFunctionName( s ).c_str(), composerType.c_str() );
+	"void MESSAGE_%s_compose(%s& composer, Args&& ... args)\n"
+	"{\n", messageName.c_str(), composerType.c_str() );
 
 	impl_generateParamTypeLIst( header, s );
 	impl_addParamStatsCheckBlock( header, s );
@@ -641,28 +600,23 @@ void impl_generateComposeFunction( FILE* header, CompositeType& s, const std::st
 	fprintf( header, "}\n\n" );
 }
 
-void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root& root, CompositeType& s, const std::string& parserType )
+void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, CompositeType& s, const std::string& messageName, const std::string& parserType )
 {
 	fprintf( header, "inline\n" );
-	fprintf( header, "%s %s(%s& parser)\n", impl_generateMessageParseFunctionRetType(s).c_str(), impl_generateParseFunctionName( s ).c_str(), parserType.c_str());
+	fprintf( header, "%s MESSAGE_%s_parse(%s& parser)\n", getGeneratedTypeName(s).c_str(), messageName.c_str(), parserType.c_str());
 	fprintf( header, "{\n" );
 
-	fprintf( header, "\tusing T = %s;\n", impl_generateMessageParseFunctionRetType(s).c_str() );
+	fprintf( header, "\tusing T = %s;\n", getGeneratedTypeName(s).c_str() );
 	fprintf( header, "\tT t;\n" );
-
-	fprintf( header, "\tparser.structBegin();\n" );
-	fprintf( header, "\n" );
-
-	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, s, parserType );
-
-	fprintf( header, "\tparser.structEnd();\n" );
+ 
+	fprintf( header, "\t%s::parseForStateSyncOrMessageInDepth(parser, t);\n", getHelperClassName(s).c_str() );
 
 	fprintf( header, "\treturn t;\n" );
 
 	fprintf( header, "}\n\n" );
 }
 
-void generateMessage( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config)
+void generateMessage( FILE* header, Root& root, CompositeType& s, const std::string& messageName, const GenerationConfig& config)
 {
 	bool checked = impl_checkParamNameUniqueness(s);
 	checked = impl_checkFollowingExtensionRules(s) && checked;
@@ -673,11 +627,10 @@ void generateMessage( FILE* header, Root& root, CompositeType& s, const Generati
 	impl_GenerateMessageDefaults( header, s );
 
 	for(auto& each : config.composerNames)
-		impl_generateComposeFunction( header, s, each);
+		impl_generateComposeFunction( header, s, messageName, each);
 
-	if ( s.type == CompositeType::Type::message )
-		for (auto& each : config.parserNames)
-			impl_generateParseFunctionForMessagesAndAliasingStructs( header, root, s, each );
+	for (auto& each : config.parserNames)
+		impl_generateParseFunctionForMessagesAndAliasingStructs( header, s, messageName, each );
 
 }
 
@@ -691,44 +644,7 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const Gen
 	if ( !checked )
 		throw std::exception();
 
-	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
-	for ( auto t:s.protoList )
-		switch ( t )
-		{
-			case Proto::gmq: fprintf( header, "GMQ " ); break;
-			case Proto::json: fprintf( header, "JSON " ); break;
-			default: assert( false );
-		}
-	fprintf( header, "(Alias of %s)\n", s.aliasOf.c_str() );
-	fprintf( header, "\n" );
-	fprintf( header, "//**********************************************************************\n\n" );
-
-	// compose function
-	for (auto& each : config.composerNames)
-	{
-		fprintf(header, "template<typename ... Args>\n"
-			"void %s_%s_compose(%s& composer, Args&& ... args)\n", s.type2string(), s.name.c_str(), each.c_str());
-		fprintf(header, "{\n");
-		fprintf(header, "\t%s_%s_compose(composer, std::forward<Args>( args )...);\n", impl_kindToString(MessageParameterType::KIND::STRUCT), s.aliasOf.c_str());
-		fprintf(header, "}\n\n");
-	}
-	// parse-by-param function
-	for (auto& each : config.parserNames)
-	{
-		fprintf(header, "template<typename ... Args>\n"
-			"void %s_%s_parse(%s& p, Args&& ... args)\n", s.type2string(), s.name.c_str(), each.c_str());
-		fprintf(header, "{\n");
-		fprintf(header, "\t%s_%s_parse(p, std::forward<Args>( args )...);\n", impl_kindToString(MessageParameterType::KIND::STRUCT), s.aliasOf.c_str());
-		fprintf(header, "}\n\n");
-
-		// parse function
-		fprintf(header, "inline\n");
-		fprintf(header, "structures::%s::%s_%s %s_%s_parse(%s& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str(), each.c_str());
-		fprintf(header, "{\n");
-		fprintf(header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName(alias).c_str());
-		fprintf(header, "}\n\n");
-	}
+	generateMessage(header, root, alias, s.name, config);
 }
 
 }//namespace cplusplus
