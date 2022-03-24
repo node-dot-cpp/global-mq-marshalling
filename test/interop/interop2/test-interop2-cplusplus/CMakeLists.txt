@@ -12,7 +12,6 @@ add_executable(test-interop2-cplusplus
     generated_interop2.h
     main.cpp
 #    test_gmqueue.cpp
-    test_common.h
     test_publishable_dictionary.cpp
     test_publishable_dunion.cpp
     test_simple.cpp
