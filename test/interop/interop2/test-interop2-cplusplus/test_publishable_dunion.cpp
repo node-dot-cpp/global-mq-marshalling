@@ -25,7 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "test_common.h"
+#include "../../common/include/test_common.h"
+#include "generated_interop2.h"
 
 using namespace std;
 

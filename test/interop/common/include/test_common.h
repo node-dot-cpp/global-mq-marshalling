@@ -25,25 +25,27 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef TEST_IDL_COMMON_H_INCLUDED
-#define TEST_IDL_COMMON_H_INCLUDED
+#ifndef TEST_COMMON_H_INCLUDED
+#define TEST_COMMON_H_INCLUDED
 
 
 #include "../../3rdparty/lest/include/lest/lest.hpp"
-#include "generated_interop2.h"
+#include <global_mq_common.h>
+#include <marshalling_impl.h>
+
+using BufferT = globalmq::marshalling::Buffer;
 
 lest::tests& specification();
 
-
 inline
-mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
+BufferT makeBuffer(const std::string& filename)
 {
     FILE* input_file = fopen(filename.c_str(), "rb");
     if(!input_file)
         throw lest::failure{ lest_LOCATION, "fopen", "\"" + filename + "\""};
 
 
-    mtest::Buffer b;
+    BufferT b;
     b.read_file(input_file);
     fclose(input_file);
 
@@ -51,11 +53,11 @@ mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 }
 
 inline
-std::string buffersToStringBinary(const mtest::Buffer& l, const mtest::Buffer& r)
+std::string buffersToStringBinary(const BufferT& l, const BufferT& r)
 {
     std::string result = "[ ";
 
-    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
+    auto it1 = const_cast<BufferT&>(l).getReadIter();
     while(it1.isData())
     {
         result += fmt::format("{:02x} ", *it1);
@@ -64,7 +66,7 @@ std::string buffersToStringBinary(const mtest::Buffer& l, const mtest::Buffer& r
 
     result += "] != [ ";
 
-    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
+    auto it2 = const_cast<BufferT&>(r).getReadIter();
     while(it2.isData())
     {
         result += fmt::format("{:02x} ", *it2);
@@ -76,18 +78,18 @@ std::string buffersToStringBinary(const mtest::Buffer& l, const mtest::Buffer& r
 }
 
 inline
-std::string buffersToStringText(const mtest::Buffer& l, const mtest::Buffer& r)
+std::string buffersToStringText(const BufferT& l, const BufferT& r)
 {
     return "\"" + globalmq::marshalling::impl::json::string2JsonString(l) +
         "\" != \"" + globalmq::marshalling::impl::json::string2JsonString(r) + "\"";
 }
 
 inline
-void AreEqualBinary(const mtest::Buffer& l, const mtest::Buffer& r)
+void AreEqualBinary(const BufferT& l, const BufferT& r)
 {
 
-    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
-    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
+    auto it1 = const_cast<BufferT&>(l).getReadIter();
+    auto it2 = const_cast<BufferT&>(r).getReadIter();
 
     while(it1.isData() && it2.isData())
     {
@@ -103,11 +105,11 @@ void AreEqualBinary(const mtest::Buffer& l, const mtest::Buffer& r)
 }
 
 inline
-void AreEqualIgnoreWhite(const mtest::Buffer& l, const mtest::Buffer& r)
+void AreEqualIgnoreWhite(const BufferT& l, const BufferT& r)
 {
 
-    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
-    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
+    auto it1 = const_cast<BufferT&>(l).getReadIter();
+    auto it2 = const_cast<BufferT&>(r).getReadIter();
 
     while (it1.isData() && it2.isData())
     {
@@ -144,12 +146,12 @@ void testPublishableComposeStateSync(std::string fileName, std::function<typenam
 
         typename Types::PublishableT publ(data);
 
-        mtest::Buffer b;
+        BufferT b;
         typename Types::ComposerT composer(b);
 
         publ.generateStateSyncMessage(composer);
 
-        auto expected = makeBuffer(fileName, lest_env);
+        auto expected = makeBuffer(fileName);
         Types::ExpectAreEqual(expected, b);
 }
 
@@ -160,7 +162,7 @@ void testPublishableParseStateSync(std::string fileName, std::function<typename 
         typename Types::DataT data;
         typename Types::SubscriberT subs(data);
 
-        mtest::Buffer b = makeBuffer(fileName, lest_env);
+        BufferT b = makeBuffer(fileName);
         auto it = b.getReadIter();
         typename Types::ParserT parser(it);
 
@@ -168,6 +170,15 @@ void testPublishableParseStateSync(std::string fileName, std::function<typename 
 
         auto expected = getState();
         EXPECT(expected == subs.getState());
+}
+
+template<typename TypesA, typename TypesB>
+void testPublishableStateSync(std::string fileName, std::function<typename TypesA::DataT()> getState, lest::env & lest_env)
+{
+    testPublishableComposeStateSync<TypesA>(fileName + TypesA::Extension, getState, lest_env);
+    testPublishableParseStateSync<TypesA>(fileName + TypesA::Extension, getState, lest_env);
+    testPublishableComposeStateSync<TypesB>(fileName + TypesB::Extension, getState, lest_env);
+    testPublishableParseStateSync<TypesB>(fileName + TypesB::Extension, getState, lest_env);
 }
 
 template<typename Types>
@@ -178,11 +189,11 @@ void testPublishableComposeUpdate(std::string fileName, std::function<typename T
 
     typename Types::PublishableT publ(data);
 
-    publ.startTick(mtest::Buffer());
+    publ.startTick(BufferT());
     doUpdate(publ);
-    mtest::Buffer b = publ.endTick();
+    BufferT b = publ.endTick();
 
-    auto expected = makeBuffer(fileName, lest_env);
+    auto expected = makeBuffer(fileName);
     Types::ExpectAreEqual(expected, b);
 }
 
@@ -195,7 +206,7 @@ void testPublishableParseUpdate(std::string fileName, std::function<typename Typ
 
         typename Types::SubscriberT subs(data);
 
-        mtest::Buffer b = makeBuffer(fileName, lest_env);
+        BufferT b = makeBuffer(fileName);
         auto it = b.getReadIter();
         typename Types::ParserT parser(it);
 
@@ -208,4 +219,15 @@ void testPublishableParseUpdate(std::string fileName, std::function<typename Typ
         EXPECT(subs.getState() == data2);
 }
 
-#endif // TEST_IDL_COMMON_H_INCLUDED
+template<typename TypesA, typename TypesB>
+void testPublishableUpdate(std::string fileName, std::function<typename TypesA::DataT()> getInitState,
+                        std::function<void(typename TypesA::DataT&)> doUpdate, lest::env & lest_env)
+{
+    testPublishableComposeUpdate<TypesA>(fileName + TypesA::Extension, getInitState, doUpdate, lest_env);
+    testPublishableParseUpdate<TypesA>(fileName + TypesA::Extension, getInitState, doUpdate, lest_env);
+    testPublishableComposeUpdate<TypesB>(fileName + TypesB::Extension, getInitState, doUpdate, lest_env);
+    testPublishableParseUpdate<TypesB>(fileName + TypesB::Extension, getInitState, doUpdate, lest_env);
+}
+
+
+#endif // TEST_COMMON_H_INCLUDED

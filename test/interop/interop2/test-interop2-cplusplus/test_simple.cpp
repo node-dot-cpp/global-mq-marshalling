@@ -25,7 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "test_common.h"
+#include "../../common/include/test_common.h"
+#include "generated_interop2.h"
 
 namespace
 {
@@ -56,12 +57,12 @@ const lest::test test_simple[] =
 
         mtest::json_scope::MESSAGE_SimpleJsonMessage_compose(composer, mtest::data =  msg);
 
-        auto expect = makeBuffer(PathJson, lest_env);
+        auto expect = makeBuffer(PathJson);
         AreEqualIgnoreWhite(expect, b);
     },
     lest_CASE( "TestJsonParse" )
     {
-        mtest::Buffer b = makeBuffer(PathJson, lest_env);
+        mtest::Buffer b = makeBuffer(PathJson);
         auto iter = b.getReadIter();
         mtest::JsonParser parser(iter);
 
@@ -81,12 +82,12 @@ const lest::test test_simple[] =
 
         mtest::gmq_scope::MESSAGE_SimpleGmqMessage_compose(composer, mtest::data = msg);
 
-        auto expect = makeBuffer(PathGmq, lest_env);
+        auto expect = makeBuffer(PathGmq);
         AreEqualBinary(expect, b);
     },
     lest_CASE( "TestGmqParse" )
     {
-        mtest::Buffer b = makeBuffer(PathGmq, lest_env);
+        mtest::Buffer b = makeBuffer(PathGmq);
         auto iter = b.getReadIter();
         mtest::GmqParser parser(iter);
 
