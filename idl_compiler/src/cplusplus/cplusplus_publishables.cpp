@@ -1202,7 +1202,7 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				assert( param.type.structIdx < root.structs.size() );
 				fprintf( header, 
-					"\tauto get4set_%s() { return globalmq::marshalling2::DictionaryRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::value_type, %s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+					"\tauto get4set_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::value_type, %s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
 					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(),
 					getDictionaryKeyValueProcessor(param.type).c_str(), 
 					rootType.c_str(), 
@@ -1992,7 +1992,7 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 			const char* composer = forRoot ? "composer" : "root.getComposer()";
 			const char* composerT = forRoot ? "ComposerT" : "decltype(root.getComposer())";
 			const char* addrVector = forRoot ? "GMQ_COLL vector<uint64_t>()" : "address";
-			fprintf( header, "\tvoid set_currentVariant( decltype(T::v) v ) { \n" );
+			fprintf( header, "\tvoid set_currentVariant( typename T::Variants v ) { \n" );
 			fprintf( header, "\t\tt.initAs( v ); \n" );
 
 			std::string idxStr = std::to_string(0);
@@ -2072,10 +2072,10 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
-	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); composer.stateUpdateBegin(); }\n" );
-	fprintf( header, "\tBufferT&& endTick() { composer.stateUpdateEnd(); return std::move( buffer ); }\n" );
-	fprintf( header, "\tconst char* name() { return stringTypeID; }\n" );
-	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
+	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { buffer = std::move( buff ); composer.reset(); composer.stateUpdateBegin(); }\n" );
+	fprintf( header, "\tvirtual BufferT&& endTick() override { composer.stateUpdateEnd(); return std::move( buffer ); }\n" );
+	fprintf( header, "\tvirtual const char* name() override { return stringTypeID; }\n" );
+	fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
 	fprintf( header, "\n" );
@@ -2111,10 +2111,10 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
 
-	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) { %s_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual BufferT&& endTick() { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual const char* name() { return %s_WrapperForPublisher<T, ComposerT>::name(); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { %s_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual BufferT&& endTick() override { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) override { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* name() override { return %s_WrapperForPublisher<T, ComposerT>::name(); }\n", s.name.c_str() );
 
 	fprintf( header, "};\n\n" );
 }
@@ -2162,8 +2162,8 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\t\tthrow std::exception();\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual const char* name() { return stringTypeID; }\n" );
-	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
+	fprintf( header, "\tvirtual const char* name() override { return stringTypeID; }\n" );
+	fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
 	fprintf( header, "\n" );
 
 	for (auto& each : config.parserNames)
@@ -2202,26 +2202,26 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t\tregistrar.remove( this );\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) \n", classNotifierName.c_str() );
+	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
+	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) \n", classNotifierName.c_str() );
+	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser )\n", classNotifierName.c_str() );
+	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
-	fprintf( header, "\tvirtual const char* name()\n" );
+	fprintf( header, "\tvirtual const char* name() override\n" );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::name();\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
@@ -2250,7 +2250,7 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
 	fprintf( header, "\n" );
 	fprintf( header, "\t%s_WrapperForConcentrator() {}\n", s.name.c_str() );
-	fprintf( header, "\tconst char* name() {return \"%s\";}\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* name() override {return \"%s\";}\n", s.name.c_str() );
 	fprintf( header, "\t\n" );
 
 	fprintf( header, "\t// Acting as publisher\n" );

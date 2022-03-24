@@ -152,69 +152,9 @@ mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
     return b;
 }
 
-inline
-bool operator==(const mtest::structures::point3D& l, const mtest::structures::point3D& r)
-{
-    return l.x == r.x && l.y == r.y && l.z == r.z;
-}
 
 inline
-bool operator==(const mtest::structures::point& l, const mtest::structures::point& r)
-{
-    return l.x == r.x && l.y == r.y;
-}
-
-template<class T>
-bool operator==(const std::vector<T>& l, const std::vector<T>& r)
-{
-    auto it1 = l.begin();
-    auto it2 = r.begin();
-
-    while(it1 != l.end() && it2 != r.end())
-    {
-        if(!(*it1 == *it2))
-            return false;
-
-        ++it1;
-        ++it2;
-    }
-
-    return it1 == l.end() && it2 == r.end();
-}
-
-inline
-bool operator==(const mtest::structures::struct_one& l, const mtest::structures::struct_one& r)
-{
-    return (l.firstParam == r.firstParam) &&
-            (l.secondParam == r.secondParam) &&
-            (l.thirdParam == r.thirdParam) &&
-            (l.forthParam == r.forthParam) &&
-            (l.fifthParam == r.fifthParam) &&
-            (l.sixthParam == r.sixthParam) &&
-            (l.seventhParam == r.seventhParam) &&
-            (l.eighthParam == r.eighthParam) &&
-            (l.ninethParam == r.ninethParam) &&
-            (l.tenthParam == r.tenthParam);
-}
-
-inline
-bool operator==(const mtest::structures::StructSix& l, const mtest::structures::StructSix& r)
-{
-    return (l.name == r.name) &&
-            (l.basic.anInt == r.basic.anInt) &&
-            (l.basic.anUInt == r.basic.anUInt) &&
-            (l.basic.aReal == r.basic.aReal) &&
-            (l.basic.aString == r.basic.aString) &&
-            (l.aggregate.name == r.aggregate.name) &&
-            (l.aggregate.theAggregate.anInt == r.aggregate.theAggregate.anInt) &&
-            (l.aggregate.theAggregate.anUInt == r.aggregate.theAggregate.anUInt) &&
-            (l.aggregate.theAggregate.aReal == r.aggregate.theAggregate.aReal) &&
-            (l.aggregate.theAggregate.aString == r.aggregate.theAggregate.aString) &&
-            (l.aggregate.lastValue == r.aggregate.lastValue);
-}
-
-inline
-bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
+bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
 {
 
     auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();

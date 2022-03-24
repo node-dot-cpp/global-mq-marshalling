@@ -49,7 +49,7 @@ const lest::test test_publishable_six2[] =
         publ.generateStateSyncMessage(composer);
 
         auto b2 = makeBuffer(PathPubGmq, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_six.TestGmqParseStateSync" )
     {
@@ -83,7 +83,7 @@ const lest::test test_publishable_six2[] =
 
 
         auto b2 = makeBuffer(PathPubGmq1, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_six.TestGmqParseUpdate1" )
     {
@@ -133,7 +133,7 @@ const lest::test test_publishable_six2[] =
 
 
         auto b2 = makeBuffer(PathPubGmq2, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_six.TestGmqParseUpdate2" )
     {
@@ -180,7 +180,7 @@ const lest::test test_publishable_six2[] =
 
 
         auto b2 = makeBuffer(PathPubGmq3, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_six.TestGmqParseNoChangeUpdate3" )
     {

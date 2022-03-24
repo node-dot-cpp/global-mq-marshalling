@@ -74,7 +74,7 @@ const lest::test test_struct_one[] =
         ComposeStructOne(composer, msg);
 
         auto b2 = makeBuffer(PathGmq, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "TestGmqParse" )
     {

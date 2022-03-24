@@ -3,8 +3,9 @@
 #-------------------------------------------------------------------------------------------
 
 add_subdirectory(test-interop1-cplusplus)
-add_subdirectory(test-interop1-cpptemplates)
-
+if(MSVC)
+    add_subdirectory(test-interop1-cpptemplates)
+endif()
 
 
 add_custom_command(

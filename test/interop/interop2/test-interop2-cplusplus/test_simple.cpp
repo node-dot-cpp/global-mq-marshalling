@@ -32,11 +32,6 @@ namespace
 std::string PathJson = "data/simple/sample_1.json";
 std::string PathGmq = "data/simple/sample_1.gmq";
 
-bool operator==(const mtest::structures::SimpleStruct& l, const mtest::structures::SimpleStruct& r)
-{
-    return l.name == r.name && l.id == r.id;
-}
-
 mtest::structures::SimpleStruct GetSample1()
 {
     //create some sample data to be written to message
@@ -87,7 +82,7 @@ const lest::test test_simple[] =
         mtest::gmq_scope::MESSAGE_SimpleGmqMessage_compose(composer, mtest::data = msg);
 
         auto expect = makeBuffer(PathGmq, lest_env);
-        EXPECT(expect == b);
+        EXPECT(AreEqual(expect, b));
     },
     lest_CASE( "TestGmqParse" )
     {

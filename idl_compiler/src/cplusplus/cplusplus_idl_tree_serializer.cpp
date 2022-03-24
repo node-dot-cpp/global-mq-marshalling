@@ -332,7 +332,9 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 			fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
 	}
 
-	fprintf( header, "%sstruct %s%s\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str() );
+	string typeName = ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "";
+	typeName += impl_generateDiscriminatedUnionCaseStructName( ducs );
+	fprintf( header, "%sstruct %s\n", offset, typeName.c_str() );
 	fprintf( header, "%s{\n", offset );
 	for ( auto& mbit: ducs.getMembers() )
 	{
@@ -343,6 +345,32 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 		if ( m.type.kind != MessageParameterType::KIND::EXTENSION )
 			fprintf( header, "%s\t%s %s;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
 	}
+
+
+	fprintf( header, "%s\tbool operator==(const %s& other) const\n", offset, typeName.c_str() );
+	fprintf( header, "%s\t{\n", offset );
+	fprintf( header, "%s\t\treturn\n", offset );
+	
+	auto& members = ducs.getMembers();
+	for ( size_t i = 0; i != members.size(); ++i )
+	{
+		auto& mem = *members[i];
+		if ( mem.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
+
+		if(i != 0)
+			fprintf( header, " &&\n" );
+
+		fprintf( header, "%s\t\t\tthis->%s == other.%s", offset, mem.name.c_str(), mem.name.c_str() );
+	}
+	fprintf( header, ";\n" );
+	fprintf( header, "%s\t}\n", offset );
+
+	fprintf( header, "%s\tbool operator!=(const %s& other) const\n", offset, typeName.c_str() );
+	fprintf( header, "%s\t{\n", offset );
+	fprintf( header, "%s\t\treturn !this->operator==(other);\n", offset );
+	fprintf( header, "%s\t}\n", offset );
+
 	fprintf( header, "%s};\n", offset );
 
 	if ( ducs.type == CompositeType::Type::message )
@@ -456,6 +484,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
 		fprintf( header, "\t\t\t\tcase Variants::%s: reinterpret_cast<Case_%s*>( %s ) -> ~Case_%s(); break;\n", name, name, memName.c_str(), name );
 	}
+	fprintf( header, "\t\t\t\tdefault: break;\n" );
 	fprintf( header, "\t\t\t}\n" );
 	fprintf( header, "\t\t\tv = Variants::unknown;\n" );
 	fprintf( header, "\t\t}\n" );
@@ -545,6 +574,7 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
 		fprintf( header, "\t\t\tcase Variants::%s: new ( %s ) Case_%s; break;\n", name, memName.c_str(), name );
 	}
+	fprintf( header, "\t\t\tdefault: break;\n" );
 	fprintf( header, "\t\t}\n" );
 	fprintf( header, "\t\tv = v_;\n" );
 	fprintf( header, "\t}\n" );
@@ -578,6 +608,35 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du )
 			fprintf( header, "\t\n" );
 		}
 	}
+
+	fprintf( header, "\tbool operator==(const %s& other) const\n", du.name.c_str() );
+	fprintf( header, "\t{\n");
+	fprintf( header, "\t\tif(this->currentVariant() != other.currentVariant())\n" );
+	fprintf( header, "\t\t\treturn false;\n" );
+	
+	fprintf( header, "\t\tswitch ( this->currentVariant() )\n" );
+	fprintf( header, "\t\t{\n" );
+	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	{
+		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+		fprintf( header, "\t\t\tcase Variants::%s:\n", name );
+		fprintf( header, "\t\t\t\treturn reinterpret_cast<const Case_%s*>( %s )->operator==(*reinterpret_cast<const Case_%s*>( other.%s ));\n", name, memName.c_str(), name, memName.c_str() );
+	}
+	fprintf( header, "\t\t\tcase Variants::unknown:\n" );
+	fprintf( header, "\t\t\t\treturn true;\n" );
+	fprintf( header, "\t\t\tdefault:\n" );
+	fprintf( header, "\t\t\t\treturn false;\n" );
+	fprintf( header, "\t\t}\n" );
+	fprintf( header, "\t\treturn false;\n" );
+
+	fprintf( header, "\t}\n" );
+
+	fprintf( header, "\tbool operator!=(const %s& other) const\n", du.name.c_str() );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\treturn !this->operator==(other);\n" );
+	fprintf( header, "\t}\n" );
+
+
 
 	fprintf( header, "};\n\n" );
 }

@@ -49,26 +49,8 @@ mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
     return b;
 }
 
-template<class T>
-bool operator==(const std::vector<T>& l, const std::vector<T>& r)
-{
-    auto it1 = l.begin();
-    auto it2 = r.begin();
-
-    while(it1 != l.end() && it2 != r.end())
-    {
-        if(!(*it1 == *it2))
-            return false;
-
-        ++it1;
-        ++it2;
-    }
-
-    return it1 == l.end() && it2 == r.end();
-}
-
 inline
-bool operator==(const mtest::Buffer& l, const mtest::Buffer& r)
+bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
 {
 
     auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();

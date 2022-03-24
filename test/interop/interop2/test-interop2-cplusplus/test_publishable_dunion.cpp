@@ -80,23 +80,6 @@ class subscriber_dunion_for_test :
 };
 
 
-bool operator==(const mtest::structures::publishable_dunion& l, const mtest::structures::publishable_dunion& r)
-{
-    if(l.name != r.name)
-        return false;
-    if(l.anUnion.currentVariant() != r.anUnion.currentVariant())
-        return false;
-    
-    if(l.anUnion.currentVariant() == mtest::structures::du_one::Variants::one)
-        return l.anUnion.D1() == r.anUnion.D1() && r.anUnion.D2() == r.anUnion.D2() &&
-            l.anUnion.D3() == r.anUnion.D3();
-    else if(l.anUnion.currentVariant() == mtest::structures::du_one::Variants::two)
-        return l.anUnion.Data() == r.anUnion.Data();
-    else
-        return true;
-}
-
-
 mtest::structures::publishable_dunion GetPublishableUnion_0()
 {
     mtest::structures::publishable_dunion data{};
@@ -189,7 +172,7 @@ class publishable_dunion_gmq
 
     static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return ::operator==(l, r);
+        return ::AreEqual(l, r);
     }
 };
 }

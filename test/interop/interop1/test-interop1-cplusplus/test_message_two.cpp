@@ -59,7 +59,7 @@ const lest::test test_message_two[] =
         ComposeMessageTwo(composer, msg);
 
         auto b2 = makeBuffer(PathMsg2Gmq, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "TestGmqHandle" )
     {

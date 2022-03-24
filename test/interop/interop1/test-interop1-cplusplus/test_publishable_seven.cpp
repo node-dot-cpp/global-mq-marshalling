@@ -71,16 +71,6 @@ mtest::structures::publishable_seven GetPublishableSeven()
     return data;
 }
 
-inline
-bool operator==(const mtest::structures::publishable_seven& l, const mtest::structures::publishable_seven& r)
-{
-    return (l.intVec == r.intVec) &&
-            (l.uintVec == r.uintVec) &&
-            (l.realVec == r.realVec) &&
-            (l.strVec == r.strVec) &&
-            (l.structVec == r.structVec);
-}
-
 template<class T, class ComposerT>
 class publishable_seven_for_test :
     public mtest::publishable_seven_WrapperForPublisher<T, ComposerT>
@@ -424,7 +414,7 @@ const lest::test test_publishable_seven[] =
         publ.generateStateSyncMessage(composer);
 
         auto b2 = makeBuffer(PathPubSevenGmq, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestGmqParseStateSync" )
     {
@@ -459,7 +449,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenGmq1, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestGmqParseUpdate1" )
     {
@@ -504,7 +494,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenGmq2, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestGmqParseUpdate2" )
     {
@@ -558,7 +548,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenGmq3, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestGmqParseUpdate3" )
     {
@@ -611,7 +601,7 @@ const lest::test test_publishable_seven[] =
 
 
         auto b2 = makeBuffer(PathPubSevenGmq4, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestGmqParseUpdate4" )
     {
@@ -666,7 +656,7 @@ const lest::test test_publishable_seven[] =
         mtest::Buffer b = publ.endTick();
 
         auto b2 = makeBuffer(PathPubSevenGmq5, lest_env);
-        EXPECT(b == b2);
+        EXPECT(AreEqual(b, b2));
     },
     lest_CASE( "test_publishable_seven.TestGmqParseUpdate5" )
     {

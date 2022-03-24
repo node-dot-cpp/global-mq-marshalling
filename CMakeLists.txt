@@ -28,9 +28,12 @@ endif()
 
 
 if(GLOBAL_MQ_TEST)
-  add_subdirectory(test/cpp)
-  add_subdirectory(test/cs)
-  add_subdirectory(test/csharp-2-cpp)
+  if(MSVC)
+    add_subdirectory(test/cpp)
+    add_subdirectory(test/cs)
+    add_subdirectory(test/csharp-2-cpp)
+  endif()
+
   add_subdirectory(test/interop/interop1)
   add_subdirectory(test/interop/interop2)
   add_subdirectory(test/interop/interop3)

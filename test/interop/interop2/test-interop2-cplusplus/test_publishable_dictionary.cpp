@@ -79,17 +79,6 @@ class subscriber_dictionary_for_test :
     }
 };
 
-
-bool operator==(const mtest::structures::publishable_dictionary& l, const mtest::structures::publishable_dictionary& r)
-{
-    if(l.name != r.name)
-        return false;
-    if(l.data.dictionary_one != r.data.dictionary_one)
-        return false;
-    return true;
-}
-
-
 mtest::structures::publishable_dictionary GetPublishableDictionary_0()
 {
     mtest::structures::publishable_dictionary data{};
@@ -155,7 +144,7 @@ class publishable_dictionary_json
 
     static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return AreEqualIgnoreWhite(l, r);
+        return ::AreEqualIgnoreWhite(l, r);
     }
 };
 
@@ -170,7 +159,7 @@ class publishable_dictionary_gmq
 
     static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return ::operator==(l, r);
+        return ::AreEqual(l, r);
     }
 };
 }
