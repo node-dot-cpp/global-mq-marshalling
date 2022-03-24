@@ -155,9 +155,9 @@ class publishable_dunion_json
     using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
     using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
 
-    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+    static void ExpectAreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return AreEqualIgnoreWhite(l, r);
+        ::AreEqualIgnoreWhite(l, r);
     }
 };
 
@@ -170,9 +170,9 @@ class publishable_dunion_gmq
     using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
     using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
 
-    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+    static void ExpectAreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return ::AreEqual(l, r);
+        return ::AreEqualBinary(l, r);
     }
 };
 }

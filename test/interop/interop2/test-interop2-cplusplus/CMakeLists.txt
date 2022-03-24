@@ -22,7 +22,7 @@ target_compile_definitions(test-interop2-cplusplus PRIVATE _CRT_SECURE_NO_WARNIN
 target_link_libraries(test-interop2-cplusplus global-mq) 
 
 add_test(NAME interop2-cplusplus
-    COMMAND test-interop2-cplusplus --pass-zen
+    COMMAND test-interop2-cplusplus
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 

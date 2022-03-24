@@ -88,12 +88,23 @@ mtest::structures::publishable_dictionary GetPublishableDictionary_0()
     return data;
 }
 
+// on linux std::unordered_map reverses the order
+// this is a quick hack for testing only
+#ifdef _MSC_VER
 void doUpdate1(mtest::structures::publishable_dictionary& data)
 {
     data.data.dictionary_one["hello"] = "world";
     data.data.dictionary_one["red"] = "blue";
     data.data.dictionary_one["dog"] = "cat";
 }
+#else
+void doUpdate1(mtest::structures::publishable_dictionary& data)
+{
+    data.data.dictionary_one["dog"] = "cat";
+    data.data.dictionary_one["red"] = "blue";
+    data.data.dictionary_one["hello"] = "world";
+}
+#endif
 
 template<class T>
 void doUpdatePublisher1(T& publ)
@@ -142,9 +153,9 @@ class publishable_dictionary_json
     using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
     using SubscriberT = subscriber_dictionary_for_test<mtest::structures::publishable_dictionary, mtest::Buffer>;
 
-    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+    static void ExpectAreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return ::AreEqualIgnoreWhite(l, r);
+        ::AreEqualIgnoreWhite(l, r);
     }
 };
 
@@ -157,9 +168,9 @@ class publishable_dictionary_gmq
     using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
     using SubscriberT = subscriber_dictionary_for_test<mtest::structures::publishable_dictionary, mtest::Buffer>;
 
-    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+    static void ExpectAreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     {
-        return ::AreEqual(l, r);
+        ::AreEqualBinary(l, r);
     }
 };
 }

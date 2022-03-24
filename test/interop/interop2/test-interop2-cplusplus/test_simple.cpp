@@ -57,7 +57,7 @@ const lest::test test_simple[] =
         mtest::json_scope::MESSAGE_SimpleJsonMessage_compose(composer, mtest::data =  msg);
 
         auto expect = makeBuffer(PathJson, lest_env);
-        EXPECT(AreEqualIgnoreWhite(expect, b));
+        AreEqualIgnoreWhite(expect, b);
     },
     lest_CASE( "TestJsonParse" )
     {
@@ -82,7 +82,7 @@ const lest::test test_simple[] =
         mtest::gmq_scope::MESSAGE_SimpleGmqMessage_compose(composer, mtest::data = msg);
 
         auto expect = makeBuffer(PathGmq, lest_env);
-        EXPECT(AreEqual(expect, b));
+        AreEqualBinary(expect, b);
     },
     lest_CASE( "TestGmqParse" )
     {

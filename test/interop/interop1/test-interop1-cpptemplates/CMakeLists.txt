@@ -24,7 +24,7 @@ target_compile_definitions(test-interop1-cpptemplates PRIVATE _CRT_SECURE_NO_WAR
 target_link_libraries(test-interop1-cpptemplates global-mq) 
 
 add_test(NAME interop1-cpptemplates
-    COMMAND test-interop1-cpptemplates --pass-zen
+    COMMAND test-interop1-cpptemplates
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 

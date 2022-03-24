@@ -40,7 +40,8 @@ mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 {
     FILE* input_file = fopen(filename.c_str(), "rb");
     if(!input_file)
-        lest_EXPECT(false);
+        throw lest::failure{ lest_LOCATION, "fopen", "\"" + filename + "\""};
+
 
     mtest::Buffer b;
     b.read_file(input_file);
@@ -50,7 +51,39 @@ mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)
 }
 
 inline
-bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
+std::string buffersToStringBinary(const mtest::Buffer& l, const mtest::Buffer& r)
+{
+    std::string result = "[ ";
+
+    auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
+    while(it1.isData())
+    {
+        result += fmt::format("{:02x} ", *it1);
+        ++it1;
+    }
+
+    result += "] != [ ";
+
+    auto it2 = const_cast<mtest::Buffer&>(r).getReadIter();
+    while(it2.isData())
+    {
+        result += fmt::format("{:02x} ", *it2);
+        ++it2;
+    }
+
+    result += "]";
+    return result;
+}
+
+inline
+std::string buffersToStringText(const mtest::Buffer& l, const mtest::Buffer& r)
+{
+    return "\"" + globalmq::marshalling::impl::json::string2JsonString(l) +
+        "\" != \"" + globalmq::marshalling::impl::json::string2JsonString(r) + "\"";
+}
+
+inline
+void AreEqualBinary(const mtest::Buffer& l, const mtest::Buffer& r)
 {
 
     auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
@@ -59,17 +92,18 @@ bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
     while(it1.isData() && it2.isData())
     {
         if(*it1 != *it2)
-            return false;
+            throw lest::failure{ lest_LOCATION, "AreEqualBinary", buffersToStringBinary(l, r) };
 
         ++it1;
         ++it2;
     }
 
-    return !it1.isData() && !it2.isData();
+    if(it1.isData() || it2.isData())
+        throw lest::failure{ lest_LOCATION, "AreEqualBinary", buffersToStringBinary(l, r) };
 }
 
 inline
-bool AreEqualIgnoreWhite(const mtest::Buffer& l, const mtest::Buffer& r)
+void AreEqualIgnoreWhite(const mtest::Buffer& l, const mtest::Buffer& r)
 {
 
     auto it1 = const_cast<mtest::Buffer&>(l).getReadIter();
@@ -85,18 +119,22 @@ bool AreEqualIgnoreWhite(const mtest::Buffer& l, const mtest::Buffer& r)
             while(it2.isData() && (*it2 == '\r' || *it2 == '\n'|| *it2 == '\t'|| *it2 == ' '))
                 ++it2;
 
+            if(!it1.isData() && !it2.isData())
+                return;
+
             if(!it1.isData() || !it2.isData())
-                return !it1.isData() && !it2.isData();
+                throw lest::failure{ lest_LOCATION, "AreEqualIgnoreWhite", buffersToStringText(l, r) };
 
             if(*it1 != *it2)
-                return false;
+                throw lest::failure{ lest_LOCATION, "AreEqualIgnoreWhite", buffersToStringText(l, r) };
         }
 
         ++it1;
         ++it2;
     }
 
-    return !it1.isData() && !it2.isData();
+    if(it1.isData() || it2.isData())
+        throw lest::failure{ lest_LOCATION, "AreEqualIgnoreWhite", buffersToStringText(l, r) };
 }
 
 template<typename Types>
@@ -112,7 +150,7 @@ void testPublishableComposeStateSync(std::string fileName, std::function<typenam
         publ.generateStateSyncMessage(composer);
 
         auto expected = makeBuffer(fileName, lest_env);
-        EXPECT(Types::AreEqual(expected, b));
+        Types::ExpectAreEqual(expected, b);
 }
 
 template<typename Types>
@@ -145,7 +183,7 @@ void testPublishableComposeUpdate(std::string fileName, std::function<typename T
     mtest::Buffer b = publ.endTick();
 
     auto expected = makeBuffer(fileName, lest_env);
-    EXPECT(Types::AreEqual(expected, b));
+    Types::ExpectAreEqual(expected, b);
 }
 
 template<typename Types>
