@@ -465,7 +465,7 @@ public:
 	~GmqParser() {}
 
 	RiterT& getIterator() { return riter; }
-	size_t getCurrentOffset() { return riter.offset(); }
+	size_t getCurrentOffset() const { return riter.offset(); }
 
 	template <typename T>
 	void parseSignedInteger( T* num )
@@ -718,7 +718,7 @@ private:
 
 public:
 	RiterT& getIterator() { return riter; }
-	size_t getCurrentOffset() { return riter.offset(); }
+	size_t getCurrentOffset() const { return riter.offset(); }
 
 	void impl_skipBlockFromJson( char left, char right )
 	{

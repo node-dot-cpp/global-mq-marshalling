@@ -186,7 +186,7 @@ void addLibAliasingBlock( FILE* header )
 	fprintf( header, "using JsonComposer = globalmq::marshalling2::JsonComposer2<Buffer>;\n" );
 	fprintf( header, "using JsonParser = globalmq::marshalling2::JsonParser2<Buffer>;\n" );
 	fprintf( header, "using IComposer2 = globalmq::marshalling2::IComposer2<Buffer>;\n" );
-	fprintf( header, "using IParser2 = globalmq::marshalling2::IParser2;\n" );
+	fprintf( header, "using IParser2 = globalmq::marshalling2::IParser2<Buffer>;\n" );
 	fprintf( header, "template<class T>\n" );
 	fprintf( header, "class SimpleTypeCollectionWrapper : public globalmq::marshalling::SimpleTypeCollectionWrapper<T> { public: SimpleTypeCollectionWrapper( T& coll ) : globalmq::marshalling::SimpleTypeCollectionWrapper<T>( coll ) {} };\n" );
 	fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );

@@ -127,7 +127,7 @@ namespace globalmq::marshalling {
 					size = 0;
 				return size;
 			}
-			size_t offset() { return currentOffset; }
+			size_t offset() const { return currentOffset; }
 		};
 
 		using ReadIteratorT = ReadIter;
@@ -215,6 +215,20 @@ namespace globalmq::marshalling {
 			ensureCapacity(_size + sz);
 			memcpy(end(), dt, sz);
 			_size += sz;
+		}
+
+		void append(ReadIteratorT it, size_t count)
+		{
+			ensureCapacity(_size + count);
+			while(count != 0 && it.isData())
+            {
+                size_t avail = it.directlyAvailableSize();
+                size_t toRead = std::min(count, avail);
+                size_t actualyRead = it.read(end(), toRead);
+				_size += actualyRead;
+                count -= actualyRead;
+            }
+
 		}
 
 		size_t appendUint8( int8_t val ) {
