@@ -2,6 +2,9 @@
 # Copyright (c) 2020, OLogN Technologies AG
 #-------------------------------------------------------------------------------------------
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 add_library(global-mq
     src/marshalling.cpp
     src/gmqueue.cpp
@@ -16,4 +19,5 @@ endif()
 
 
 target_include_directories(global-mq PUBLIC include)
-target_link_libraries(global-mq fmt::fmt)
+target_link_libraries(global-mq fmt::fmt Threads::Threads)
+
