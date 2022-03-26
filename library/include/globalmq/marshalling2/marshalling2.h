@@ -45,6 +45,8 @@ class IComposer2 : public ComposerBase
 {
 public:
 	using BufferType = BufferT;
+	static constexpr int proto = -1;
+
 	virtual void reset() = 0;
 	virtual void appendRaw(typename BufferT::ReadIteratorT it, size_t count = SIZE_MAX) = 0;
 
@@ -150,6 +152,8 @@ public:
 	GmqComposer2( BufferT& buff ) : buff(buff) {}
 
 	using BufferType = BufferT;
+	static constexpr int proto = -1;
+
 	void reset() {}
 	void appendRaw(typename BufferT::ReadIteratorT it, size_t count = SIZE_MAX) { buff.append(it, count); }
 
@@ -276,8 +280,11 @@ class IParser2 : public ParserBase
 {
 public:
 	using BufferType = BufferT;
+	using RiterT = typename BufferT::ReadIteratorT;
+	static constexpr int proto = -1;
 
 	virtual size_t getCurrentOffset() const = 0;
+	virtual RiterT& getIterator() = 0;
 
 	virtual int64_t parseSignedInteger() = 0;
 	virtual uint64_t parseUnsignedInteger() = 0;
@@ -318,9 +325,11 @@ class JsonParser2 : public IParser2<BufferT>
 	globalmq::marshalling::JsonParser<BufferT> p;
 
 public:
+
 	JsonParser2(typename BufferT::ReadIteratorT& iter) :p(iter) {}
 
 	virtual size_t getCurrentOffset() const override { return p.getCurrentOffset(); }
+	virtual typename IParser2<BufferT>::RiterT& getIterator() override { return p.getIterator(); }
 
 	int64_t parseSignedInteger() override { int64_t v; p.readSignedIntegerFromJson(&v); return v; }
 	uint64_t parseUnsignedInteger() override { uint64_t v; p.readUnsignedIntegerFromJson(&v); return v; }
@@ -409,9 +418,13 @@ class GmqParser2 : public ParserBase
 	globalmq::marshalling::GmqParser<BufferT> p;
 
 public:
+	using RiterT = typename BufferT::ReadIteratorT;
+	static constexpr int proto = -1;
+
 	GmqParser2(typename BufferT::ReadIteratorT& iter) :p(iter) {}
 
 	size_t getCurrentOffset() const { return p.getCurrentOffset(); }
+	RiterT& getIterator() { return p.getIterator(); }
 
 	int64_t parseSignedInteger() { int64_t v; p.parseSignedInteger(&v); return v; }
 	uint64_t parseUnsignedInteger() { uint64_t v; p.parseUnsignedInteger(&v); return v; }

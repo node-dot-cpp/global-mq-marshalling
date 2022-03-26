@@ -2250,31 +2250,23 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
 	fprintf( header, "\n" );
 	fprintf( header, "\t%s_WrapperForConcentrator() {}\n", s.name.c_str() );
-	fprintf( header, "\tvirtual const char* name() override {return \"%s\";}\n", s.name.c_str() );
-	fprintf( header, "\t\n" );
-
-	fprintf( header, "\t// Acting as publisher\n" );
-	fprintf( header, "\tvirtual void generateStateSyncMessage( globalmq::marshalling2::ComposerBase& composer ) override\n" );
-
-	fprintf( header, "\t{\n" );
-	for (auto& each : config.composerNames)
-		fprintf( header, "\t\tif(auto ptr = dynamic_cast<%s*>(&composer)) { compose(*ptr); return; }\n", each.c_str() );
-
-	fprintf( header, "\t\tthrow std::exception();\n" );
-	fprintf( header, "\t}\n" );
-
-	for (auto& each : config.composerNames)
-		fprintf( header, "\tvoid compose( %s& composer ) { %s::compose( composer, t ); }\n", each.c_str(), structName.c_str() );
-
 	fprintf( header, "\n" );
+
 
 	fprintf( header, "\t// Acting as subscriber\n" );
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) override { throw std::exception(); }\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) override { throw std::exception(); }\n" );
 	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) override { throw std::exception(); }\n" );
 	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) override { throw std::exception(); }\n" );
+
+	fprintf( header, "\n" );
+	fprintf( header, "\t// Acting as publisher\n" );
+	fprintf( header, "\tvirtual void generateStateSyncMessage( ComposerT& composer ) override { throw std::exception(); }\n" );
+	fprintf( header, "\n" );
+	fprintf( header, "\tvirtual const char* name() override {return \"%s\";}\n", s.name.c_str() );
 	fprintf( header, "\n" );
 
+	fprintf( header, "\t// new interface with default implementation to avoid breaking old code\n" );
 	fprintf( header, "\tvirtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) override\n" );
 	fprintf( header, "\t{\n" );
 	for (auto& each : config.parserNames)
@@ -2290,6 +2282,20 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 
 	fprintf( header, "\t\tthrow std::exception();\n" );
 	fprintf( header, "\t}\n" );
+	fprintf( header, "\n" );
+
+	fprintf( header, "\tvirtual void generateStateSyncMessage( globalmq::marshalling2::ComposerBase& composer ) override\n" );
+
+	fprintf( header, "\t{\n" );
+	for (auto& each : config.composerNames)
+		fprintf( header, "\t\tif(auto ptr = dynamic_cast<%s*>(&composer)) { compose(*ptr); return; }\n", each.c_str() );
+
+	fprintf( header, "\t\tthrow std::exception();\n" );
+	fprintf( header, "\t}\n" );
+
+	for (auto& each : config.composerNames)
+		fprintf( header, "\tvoid compose( %s& composer ) { %s::compose( composer, t ); }\n", each.c_str(), structName.c_str() );
+
 	fprintf( header, "\n" );
 
 

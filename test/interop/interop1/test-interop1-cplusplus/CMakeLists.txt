@@ -11,7 +11,7 @@ add_custom_command(
 add_executable(test-interop1-cplusplus
     generated_interop1.h
     main.cpp
-#    test_gmqueue.cpp
+    test_gmqueue.cpp
     test_common.h
     test_message_three.cpp
     test_message_two.cpp
