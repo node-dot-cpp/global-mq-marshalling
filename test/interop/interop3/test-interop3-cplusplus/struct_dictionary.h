@@ -35,9 +35,17 @@ mtest::structures::struct_dictionary GetDictionary_2()
 {
     mtest::structures::struct_dictionary data;
 
+// on linux std::unordered_map reverses the order
+// this is a quick hack for testing only
+#ifdef _MSC_VER
     data.dictionary_one["hello"] = "world";
     data.dictionary_one["red"] = "blue";
     data.dictionary_one["dog"] = "cat";
+#else
+    data.dictionary_one["dog"] = "cat";
+    data.dictionary_one["red"] = "blue";
+    data.dictionary_one["hello"] = "world";
+#endif
 
     mtest::structures::AggregateType aggr1;
     aggr1.name = "aggr1";
