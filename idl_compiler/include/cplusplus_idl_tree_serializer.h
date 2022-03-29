@@ -205,6 +205,17 @@ string getDictionaryKeyValueProcessor( const MessageParameterType& type )
 	return fmt::format( "{},{}", impl_Type2Processor( type, type.dictionaryKeyKind ), impl_Type2Processor( type, type.dictionaryValueKind ) );
 }
 
+inline
+string getDictionaryKeyProcessor( const MessageParameterType& type )
+{
+	return impl_Type2Processor( type, type.dictionaryKeyKind );
+}
+
+inline
+string getDictionaryValueProcessor( const MessageParameterType& type )
+{
+	return impl_Type2Processor( type, type.dictionaryValueKind );
+}
 
 
 inline

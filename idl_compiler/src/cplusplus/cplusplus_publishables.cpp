@@ -468,24 +468,76 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 //	const char* libType = paramTypeToLibType( member.type.dictionaryValueKind );
 	assert( member.type.structIdx < root.structs.size() );
-	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the dictionary\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s{\n", offset.c_str() );
-	fprintf( header, "%s\tsize_t action = addr[%s1];\n", offset.c_str(), offsetPlusStr );
 
-	fprintf( header, "%s\tif ( addr.size() > %s2 ) // update for a value of a particular dictionary element\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s\t{\n", offset.c_str() );
+
+	fprintf( header, "%sif ( addr.size() > %s2 ) // update for a value of a particular dictionary element\n", offset.c_str(), offsetPlusStr );
+	fprintf( header, "%s{\n", offset.c_str() );
 
 	if ( member.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 	{
-		fprintf( header, "%s\t\tthrow std::exception(); // not implemented yet\n", offset.c_str() );
-		fprintf( header, "%s\t\t//typename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		fprintf( header, "%s\toffset += 1;\n", offset.c_str() );
+		fprintf( header, "%s\tauto key = %s::fromAddress(addr, offset);\n", offset.c_str(), getDictionaryKeyProcessor(member.type).c_str() );
+		// fprintf( header, "%s\t%s::parse(parser, t.%s[key], addr, offset);\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+		fprintf( header, "%s\t\ttypename %s::mapped_type& value = t.%s[key];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+		fprintf( header, "%s\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\ttypename %s::mapped_type oldValue;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		fprintf( header, "%s\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str() );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tchanged = true;\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t\t\tt.notifyValueUpdated_%s();\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t}\n", offset.c_str() );
+		fprintf( header, "%s\t\t}\n", offset.c_str() );
+
+		fprintf( header, "%s\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tchanged = true;\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tt.notifyValueUpdated_%s( key );\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t\t\tt.notifyValueUpdated_%s();\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t}\n", offset.c_str() );
+		fprintf( header, "%s\t\t}\n", offset.c_str() );
+
+		fprintf( header, "%s\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tchanged = true;\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tt.notifyValueUpdated_%s();\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s\t\t\t}\n", offset.c_str() );
+		fprintf( header, "%s\t\t}\n", offset.c_str() );
+
+		fprintf( header, "%s\t\telse\n", offset.c_str() );
+		fprintf( header, "%s\t\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\telse\n", offset.c_str() );
+		fprintf( header, "%s\t\t\t\t%s::parse( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t}\n", offset.c_str() );
 	}
 	else
-		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
+		fprintf( header, "%s\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
 				
-	fprintf( header, "%s\t}\n", offset.c_str() );
-	fprintf( header, "%s\telse // update of one or more elelments as a whole\n", offset.c_str() );
-	fprintf( header, "%s\t{\n", offset.c_str() );
+	fprintf( header, "%s}\n", offset.c_str() );
+
+	fprintf( header, "%selse if ( addr.size() > %s1 ) // update of one or more elelments as a whole\n", offset.c_str(), offsetPlusStr );
+	fprintf( header, "%s{\n", offset.c_str() );
+	fprintf( header, "%s\tsize_t action = addr[%s1];\n", offset.c_str(), offsetPlusStr );
+
+	// fprintf( header, "%s\telse \n", offset.c_str() );
+	// fprintf( header, "%s\t{\n", offset.c_str() );
 	fprintf( header, "%s\t\tswitch ( action )\n", offset.c_str() );
 	fprintf( header, "%s\t\t{\n", offset.c_str() );
 
@@ -628,7 +680,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	fprintf( header, "%s\t\t\t\tthrow std::exception();\n", offset.c_str() );
 	fprintf( header, "%s\t\t}\n", offset.c_str() );
 	// fprintf( header, "%s\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t}\n", offset.c_str() );
+	// fprintf( header, "%s\t}\n", offset.c_str() );
 			
 //fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n", offset.c_str() );
 	fprintf( header, "%s}\n", offset.c_str() );
@@ -928,166 +980,6 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	}
 }
 
-void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, std::string offset, const std::string& parserType )
-{
-//	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
-	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
-
-//	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-	assert( member.type.structIdx < root.structs.size() );
-	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the dictionary\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s{\n", offset.c_str() );
-	fprintf( header, "%s\tsize_t action = addr[%s1];\n", offset.c_str(), offsetPlusStr );
-
-	fprintf( header, "%s\tif ( addr.size() > %s2 ) // update for a value of a particular dictionary element\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s\t{\n", offset.c_str() );
-
-	if ( member.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-	{
-		fprintf( header, "%s\t\tthrow std::exception(); // so far unsupported and, therefore, unexpected\n", offset.c_str() );
-	}
-	else
-		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
-				
-	fprintf( header, "%s\t}\n", offset.c_str() );
-	fprintf( header, "%s\telse // update of one or more elelments as a whole\n", offset.c_str() );
-	fprintf( header, "%s\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\tswitch ( action )\n", offset.c_str() );
-	fprintf( header, "%s\t\t{\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\tcase ActionOnDictionary::remove:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
-	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tif ( f == t.%s.end() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\t\tthrow std::exception();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tt.%s.erase( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\tcase ActionOnDictionary::update_value:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
-	fprintf( header, "%s\t\t\t\tauto f = t.%s.find( key );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tif ( f == t.%s.end() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\t\tthrow std::exception();\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type& value = f->second;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
-	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\tcase ActionOnDictionary::insert:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::key_type key;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::mapped_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str() );
-	fprintf( header, "%s\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-	
-	fprintf( header, "%s\t\t\tdefault:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tthrow std::exception();\n", offset.c_str() );
-	fprintf( header, "%s\t\t}\n", offset.c_str() );
-	// fprintf( header, "%s\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t}\n", offset.c_str() );
-			
-	fprintf( header, "%s}\n", offset.c_str() );
-	
-	fprintf( header, "%selse // replacement of the whole dictionary\n", offset.c_str() );
-	fprintf( header, "%s{\n", offset.c_str() );
-	fprintf( header, "%s\tparser.leafeBegin();\n", offset.c_str() );
-	fprintf( header, "\n" );
-	fprintf( header, "%s\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "\n" );
-	// fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n", offset.c_str() );
-	fprintf( header, "%s}\n", offset.c_str() );
-	fprintf( header, "\n" );
-}
-
-void impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, std::string offset, const std::string& parserType )
-{
-//	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
-	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
-
-//	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-	assert( member.type.structIdx < root.structs.size() );
-	fprintf( header, "%sif ( addr.size() > %s1 ) // one of actions over elements of the vector\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s{\n", offset.c_str() );
-	fprintf( header, "%s\tsize_t pos = addr[%s1];\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s\tif ( pos > t.%s.size() )\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\tthrow std::exception();\n", offset.c_str() );
-
-	fprintf( header, "%s\tif ( addr.size() > %s2 ) // update for a member of a particular vector element\n", offset.c_str(), offsetPlusStr );
-	fprintf( header, "%s\t{\n", offset.c_str() );
-
-	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT || member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-	{
-		fprintf( header, "%s\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-		fprintf( header, "%s\t\t%s::parse<typename %s::value_type>( parser, value, addr, %s2 );\n", offset.c_str(), getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
-	}
-	else
-		fprintf( header, "%s\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", offset.c_str(), member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
-				
-	fprintf( header, "%s\t}\n", offset.c_str() );
-	fprintf( header, "%s\telse // update of one or more elelments as a whole\n", offset.c_str() );
-	fprintf( header, "%s\t{\n", offset.c_str() );
-	// fprintf( header, "%s\t\tsize_t action;\n", offset.c_str() );
-	fprintf( header, "%s\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\tuint64_t action = parser.parseAction();\n", offset.c_str() );
-	fprintf( header, "%s\t\tswitch ( action )\n", offset.c_str() );
-	fprintf( header, "%s\t\t{\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\tcase ActionOnVector::remove_at:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\tcase ActionOnVector::update_at:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	// fprintf( header, "%s\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.leafeBegin();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::value_type& value = t.%s[pos];\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValue( parser, value );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
-	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-
-	fprintf( header, "%s\t\t\tcase ActionOnVector::insert_single_before:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
-	// fprintf( header, "%s\t\t\t\t::globalmq::marshalling::impl::publishableParseLeafeValueBegin( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tparser.leafeBegin();\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\ttypename %s::value_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValue( parser, value );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
-				
-	fprintf( header, "%s\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t}\n", offset.c_str() );
-	fprintf( header, "%s\t\t\tdefault:\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\tthrow std::exception();\n", offset.c_str() );
-	fprintf( header, "%s\t\t}\n", offset.c_str() );
-	// fprintf( header, "%s\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n", offset.c_str() );
-	fprintf( header, "%s\t}\n", offset.c_str() );
-			
-	fprintf( header, "%s}\n", offset.c_str() );
-	fprintf( header, "%selse // replacement of the whole vector\n", offset.c_str() );
-	fprintf( header, "%s{\n", offset.c_str() );
-	fprintf( header, "%s\tparser.nextElement();\n", offset.c_str() );
-	fprintf( header, "%s\tparser.leafeBegin();\n", offset.c_str() );
-	fprintf( header, "%s\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s}\n", offset.c_str() );
-	fprintf( header, "\n" );
-}
 
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
 {
@@ -1202,7 +1094,7 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				assert( param.type.structIdx < root.structs.size() );
 				fprintf( header, 
-					"\tauto get4set_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::value_type, %s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+					"\tauto get4set_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::mapped_type, %s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
 					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(),
 					getDictionaryKeyValueProcessor(param.type).c_str(), 
 					rootType.c_str(), 
@@ -1349,8 +1241,8 @@ void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlo
 			{
 				fprintf( header, "%s\tif ( addr.size() > offset + 1 )\n", offset );
 				fprintf( header, "%s\t\tthrow std::exception(); // bad format, TODO: ...\n", offset );
-				fprintf( header, "%s\t\tparser.nextElement();\n", offset );
-				fprintf( header, "%s\t\tparser.leafeBegin();\n", offset );
+				fprintf( header, "%s\tparser.nextElement();\n", offset );
+				fprintf( header, "%s\tparser.leafeBegin();\n", offset );
 				impl_generateApplyUpdateForSimpleType( header, member, true, true, std::string( offset ) + '\t', parserType );
 				break;
 			}
@@ -1540,21 +1432,21 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 			case  MessageParameterType::KIND::STRUCT:
 			{
 				fprintf( header, "%sparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str());
-				fprintf( header, "%sparser.structBegin();\n", offset.c_str());
+				// fprintf( header, "%sparser.structBegin();\n", offset.c_str());
 
 				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false, offset, parserType );
 
-				fprintf( header, "%sparser.structEnd();\n", offset.c_str() );
+				// fprintf( header, "%sparser.structEnd();\n", offset.c_str() );
 				break;
 			}
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
 			{
 				fprintf(header, "%sparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str());
-				fprintf(header, "%sparser.structBegin();\n", offset.c_str());
+				// fprintf(header, "%sparser.structBegin();\n", offset.c_str());
 
 				impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, false, offset, parserType ); // TODO: revise DU: we may need something DU-spec here
 
-				fprintf(header, "%sparser.structEnd();\n", offset.c_str());
+				// fprintf(header, "%sparser.structEnd();\n", offset.c_str());
 				break;
 			}
 			case MessageParameterType::KIND::VECTOR:

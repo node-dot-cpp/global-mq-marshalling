@@ -22,6 +22,7 @@ add_executable(cpp-2-csharp
     ${IDL_CPLUSPLUS}
 )
 
+target_compile_definitions(cpp-2-csharp PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(cpp-2-csharp global-mq)
 
 if(MSVC)

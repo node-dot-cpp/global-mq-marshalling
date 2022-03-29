@@ -46,10 +46,10 @@ namespace {
 		f.write("\t\tparser.skipDelimiter('{');\n");
 		f.write("\t\tstring key;\n");
 		f.write("\t\tparser.readKeyFromJson( out key );\n");
-		f.write("\t\tif (key != \"caseid\")\n");
+		f.write("\t\tif (key != \"caseId\")\n");
 		f.write("\t\t\tthrow new FormatException();\n");
-		f.write("\t\tInt64 caseID;\n");
-		f.write("\t\tparser.parseSignedInteger(out caseID);\n");
+		f.write("\t\tUInt64 caseID;\n");
+		f.write("\t\tparser.parseUnsignedInteger(out caseID);\n");
 		f.write("\t\tparser.skipSpacesEtc();\n");
 		f.write("\t\tparser.skipDelimiter(',');\n");
 		f.write("\t\tparser.readKeyFromJson(out key);\n");
@@ -98,8 +98,8 @@ namespace {
 		//f.write("\t\t%s val = new %s();\n\n", type_name.c_str(), type_name.c_str());
 
 
-		f.write("\t\tInt64 caseID;\n");
-		f.write("\t\tparser.parseSignedInteger(out caseID);\n\n");
+		f.write("\t\tUInt64 caseID;\n");
+		f.write("\t\tparser.parseUnsignedInteger(out caseID);\n\n");
 
 		f.write("\t\t\t\tval.setCurrentVariant((I%s.Variants)caseID);\n", type_name.c_str());
 		f.write("\t\tswitch (val.currentVariant())\n", type_name.c_str());
@@ -139,8 +139,8 @@ namespace {
 
 
 		f.write("\t\tcomposer.append( \"{\\n  \");\n");
-		f.write("\t\tcomposer.addNamePart(\"caseid\");\n");
-		f.write("\t\tcomposer.composeSignedInteger((Int64)val.currentVariant());\n");
+		f.write("\t\tcomposer.addNamePart(\"caseId\");\n");
+		f.write("\t\tcomposer.composeUnsignedInteger((UInt64)val.currentVariant());\n");
 		f.write("\t\tcomposer.append( \",\\n  \" );\n");
 
 		f.write("\t\tswitch (val.currentVariant())\n");
@@ -181,7 +181,7 @@ namespace {
 		f.write("\tpublic static void compose(GmqComposer composer, I%s val)\n", type_name);
 
 		f.write("\t{\n");
-		f.write("\t\tcomposer.composeSignedInteger((Int64)val.currentVariant());\n");
+		f.write("\t\tcomposer.composeUnsignedInteger((UInt64)val.currentVariant());\n");
 
 		f.write("\t\tswitch (val.currentVariant())\n");
 		f.write("\t\t{\n");

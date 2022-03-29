@@ -27,12 +27,13 @@
 
 #include "test_common.h"
 
+std::string SimplePrefix = "data/simple/";
+
 namespace
 {
-std::string PathJson = "data/simple/sample_1.json";
 std::string PathGmq = "data/simple/sample_1.gmq";
 
-mtest::structures::SimpleStruct GetSample1()
+mtest::structures::SimpleStruct GetSample_1()
 {
     //create some sample data to be written to message
 
@@ -45,55 +46,37 @@ mtest::structures::SimpleStruct GetSample1()
 }
 }
 
+template<class T>
+void TestComposeParse(const std::string& fileName, std::function<mtest::structures::SimpleStruct()> getState, lest::env& lest_env)
+{
+    auto msg = getState();
+
+    mtest::Buffer b;
+    typename T::ComposerT composer(b);
+
+    mtest::publishable_STRUCT_SimpleStruct::compose(composer, msg);
+
+    auto expected = makeBuffer(fileName);
+    T::ExpectAreEqual(expected, b);
+
+
+    auto iter = b.getReadIter();
+    typename T::ParserT parser(iter);
+
+    mtest::structures::SimpleStruct msg2;
+    mtest::publishable_STRUCT_SimpleStruct::parseForStateSyncOrMessageInDepth(parser, msg2);
+
+    EXPECT(msg == msg2);
+}
+
+
 const lest::test test_simple[] =
 {
-    lest_CASE( "TestJsonCompose" )
+    lest_CASE( "Simple" )
     {
-        auto msg = GetSample1();
-
-        mtest::Buffer b;
-        mtest::JsonComposer composer(b);
-
-        mtest::json_scope::MESSAGE_SimpleJsonMessage_compose(composer, mtest::data =  msg);
-
-        auto expect = makeBuffer(PathJson, lest_env);
-        EXPECT(AreEqualIgnoreWhite(expect, b));
-    },
-    lest_CASE( "TestJsonParse" )
-    {
-        mtest::Buffer b = makeBuffer(PathJson, lest_env);
-        auto iter = b.getReadIter();
-        mtest::JsonParser parser(iter);
-
-        auto msg = mtest::json_scope::MESSAGE_SimpleJsonMessage_parse(parser);
-
-        auto expect = GetSample1();
-        EXPECT(expect == msg.data);
-    },
-
-    lest_CASE( "TestGmqCompose" )
-    {
-        auto msg = GetSample1();
-
-        mtest::Buffer b;
-        mtest::GmqComposer composer(b);
-
-        mtest::gmq_scope::MESSAGE_SimpleGmqMessage_compose(composer, mtest::data = msg);
-
-        auto expect = makeBuffer(PathGmq, lest_env);
-        EXPECT(AreEqual(expect, b));
-    },
-    lest_CASE( "TestGmqParse" )
-    {
-        mtest::Buffer b = makeBuffer(PathGmq, lest_env);
-        auto iter = b.getReadIter();
-        mtest::GmqParser parser(iter);
-
-        auto msg = mtest::gmq_scope::MESSAGE_SimpleGmqMessage_parse(parser);
-
-        auto expect = GetSample1();
-        EXPECT(expect == msg.data);
-    },
+        TestComposeParse<types_json>(SimplePrefix + "sample_1.json", GetSample_1, lest_env);
+        TestComposeParse<types_gmq>(SimplePrefix + "sample_1.gmq", GetSample_1, lest_env);
+    }
 };
 
 lest_MODULE(specification(), test_simple);

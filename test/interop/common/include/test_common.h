@@ -31,7 +31,9 @@
 
 #include "../../3rdparty/lest/include/lest/lest.hpp"
 #include <global_mq_common.h>
+#include <globalmq/marshalling2/marshalling2.h>
 #include <marshalling_impl.h>
+
 
 using BufferT = globalmq::marshalling::Buffer;
 
@@ -139,6 +141,32 @@ void AreEqualIgnoreWhite(const BufferT& l, const BufferT& r)
         throw lest::failure{ lest_LOCATION, "AreEqualIgnoreWhite", buffersToStringText(l, r) };
 }
 
+
+class types_json
+{
+    public:
+    using ComposerT = globalmq::marshalling2::JsonComposer2<BufferT>;
+    using ParserT = globalmq::marshalling2::JsonParser2<BufferT>;
+
+    static void ExpectAreEqual(const BufferT& l, const BufferT& r)
+    {
+        ::AreEqualIgnoreWhite(l, r);
+    }
+};
+
+class types_gmq
+{
+    public:
+    using ComposerT = globalmq::marshalling2::GmqComposer2<BufferT>;
+    using ParserT =globalmq::marshalling2::GmqParser2<BufferT>;
+
+    static void ExpectAreEqual(const BufferT& l, const BufferT& r)
+    {
+        ::AreEqualBinary(l, r);
+    }
+};
+
+
 template<typename Types>
 void testPublishableComposeStateSync(std::string fileName, std::function<typename Types::DataT()> getState, lest::env & lest_env)
 {
@@ -228,6 +256,70 @@ void testPublishableUpdate(std::string fileName, std::function<typename TypesA::
     testPublishableComposeUpdate<TypesB>(fileName + TypesB::Extension, getInitState, doUpdate, lest_env);
     testPublishableParseUpdate<TypesB>(fileName + TypesB::Extension, getInitState, doUpdate, lest_env);
 }
+
+template<typename Types>
+void testStateSync(std::string fileName, std::function<typename Types::DataT()> getState, lest::env & lest_env)
+{
+        auto data = getState();
+
+        typename Types::PublishableT publ(data);
+
+        BufferT b;
+        typename Types::ComposerT composer(b);
+
+        publ.generateStateSyncMessage(composer);
+
+        auto expected = makeBuffer(fileName);
+        Types::ExpectAreEqual(expected, b);
+
+
+
+        typename Types::DataT data2;
+        typename Types::SubscriberT subs(data2);
+
+        auto it = b.getReadIter();
+        typename Types::ParserT parser(it);
+
+        subs.parseStateSyncMessage(parser);
+
+        typename Types::DataT data3 = getState();
+        EXPECT(data3 == subs.getState());
+}
+
+
+template<typename Types>
+void testUpdate(std::string fileName, std::function<typename Types::DataT()> getInitState,
+                        std::function<void(typename Types::PublishableT&)> doUpdatePub,
+                        std::function<void(typename Types::DataT&)> doUpdateData, lest::env& lest_env)
+{
+    auto data = getInitState();
+
+    typename Types::PublishableT publ(data);
+
+    publ.startTick(BufferT());
+    doUpdatePub(publ);
+    BufferT b = publ.endTick();
+
+    auto expected = makeBuffer(fileName);
+    Types::ExpectAreEqual(expected, b);
+
+
+    auto data2 = getInitState();
+    typename Types::SubscriberT subs(data2);
+
+    auto it = b.getReadIter();
+    typename Types::ParserT parser(it);
+
+    subs.applyMessageWithUpdates(parser);
+
+    auto data3 = getInitState();
+    EXPECT_NOT(subs.getState() == data3);
+
+    doUpdateData(data3);
+    EXPECT(subs.getState() == data3);
+
+}
+
 
 
 #endif // TEST_COMMON_H_INCLUDED

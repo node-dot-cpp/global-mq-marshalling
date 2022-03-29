@@ -56,7 +56,7 @@ namespace test_interop3_csharp
             SimpleBuffer buffer = new SimpleBuffer();
             JsonComposer composer = new JsonComposer(buffer);
 
-            mtest.json_scope.SimpleJsonMessage_message.compose(composer, data);
+            mtest.SimpleStruct_message.compose(composer, data);
 
 
             // uncomment to update file
@@ -71,9 +71,10 @@ namespace test_interop3_csharp
         {
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
             JsonParser parser = new JsonParser(buffer.getReadIterator());
-            mtest.json_scope.SimpleJsonMessage msg = mtest.json_scope.parseMessage_SimpleJsonMessage(parser);
+            mtest.SimpleStruct msg = new mtest.SimpleStruct();
+            mtest.SimpleStruct_message.parse(parser, msg);
             
-            Assert.True(GetSample1().isEquivalent(msg.data));
+            Assert.True(GetSample1().isEquivalent(msg));
          }
 
 
@@ -86,7 +87,7 @@ namespace test_interop3_csharp
             SimpleBuffer buffer = new SimpleBuffer();
             GmqComposer composer = new GmqComposer(buffer);
 
-            mtest.gmq_scope.SimpleGmqMessage_message.compose(composer, data);
+            mtest.SimpleStruct_message.compose(composer, data);
 
             // uncomment to update file
             //buffer.writeToFile(PathGmq);
@@ -101,9 +102,10 @@ namespace test_interop3_csharp
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathGmq);
             GmqParser parser = new GmqParser(buffer.getReadIterator());
 
-            mtest.gmq_scope.SimpleGmqMessage msg = mtest.gmq_scope.parseMessage_SimpleGmqMessage(parser);
+            mtest.SimpleStruct msg = new mtest.SimpleStruct();
+            mtest.SimpleStruct_message.parse(parser, msg);
 
-            Assert.True(GetSample1().isEquivalent(msg.data));
+            Assert.True(GetSample1().isEquivalent(msg));
         }
 
     }

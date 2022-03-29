@@ -14,7 +14,6 @@ add_executable(test-interop2-cpptemplates
     test_common.h
     test_publishable_dictionary.cpp
     test_publishable_dunion.cpp
-    test_simple.cpp
 )
 
 target_compile_definitions(test-interop2-cpptemplates PRIVATE _CRT_SECURE_NO_WARNINGS)

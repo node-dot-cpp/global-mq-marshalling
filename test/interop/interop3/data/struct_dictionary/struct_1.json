@@ -38,19 +38,19 @@
 },
   "dictionary_three":{
   {-5,{
-  "caseid":2,
+  "caseId":2,
   "caseData":{
   "Data":[-100.001, -200.002, -300.003]
 }
 }}, 
   {-6,{
-  "caseid":2,
+  "caseId":2,
   "caseData":{
   "Data":[-100.001, -200.002, -300.003]
 }
 }}, 
   {-7,{
-  "caseid":2,
+  "caseId":2,
   "caseData":{
   "Data":[-100.001, -200.002, -300.003]
 }

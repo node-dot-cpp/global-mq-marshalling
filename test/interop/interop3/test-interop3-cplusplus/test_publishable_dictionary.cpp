@@ -26,26 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 #include "test_common.h"
+#include "struct_dictionary.h"
+
 
 using namespace std;
 
 namespace
 {
 std::string Prefix = "data/publishable_dictionary/";
-
-std::string JsonPath_s0 = Prefix + "state_sync_0.json";
-std::string JsonPath_s1 = Prefix + "state_sync_1.json";
-std::string JsonPath_u1 = Prefix + "update_1.json";
-std::string JsonPath_u2 = Prefix + "update_2.json";
-std::string JsonPath_u3 = Prefix + "update_3.json";
-
-std::string GmqPath_s0 = Prefix + "state_sync_0.gmq";
-std::string GmqPath_s1 = Prefix + "state_sync_1.gmq";
-std::string GmqPath_u1 = Prefix + "update_1.gmq";
-std::string GmqPath_u2 = Prefix + "update_2.gmq";
-std::string GmqPath_u3 = Prefix + "update_3.gmq";
-
-
 
 template<class T, class ComposerT>
 class publishable_dictionary_for_test :
@@ -79,173 +67,181 @@ class subscriber_dictionary_for_test :
     }
 };
 
-mtest::structures::publishable_dictionary GetPublishableDictionary_0()
+mtest::structures::publishable_dictionary GetPublishableDictionary_2()
 {
     mtest::structures::publishable_dictionary data{};
 
-    data.name = "dictionary";
+    data.name = "publishable_dictionary";
+    data.data = GetDictionary_2();
 
     return data;
 }
 
-void doUpdate1(mtest::structures::publishable_dictionary& data)
+// replace full element in dictionary
+void doUpdate21(mtest::structures::publishable_dictionary& data)
 {
-    data.data.dictionary_one["hello"] = "world";
-    data.data.dictionary_one["red"] = "blue";
-    data.data.dictionary_one["dog"] = "cat";
+    mtest::structures::AggregateType aggr1;
+    aggr1.name = "aggr1";
+    aggr1.theAggregate.anInt = -15;
+    aggr1.theAggregate.anUInt = 15;
+    aggr1.theAggregate.aReal = 13.14;
+    aggr1.theAggregate.aString = "hello2!";
+    aggr1.lastValue = 199;
+
+    data.data.dictionary_two[2] = aggr1;
+
 }
 
 template<class T>
-void doUpdatePublisher1(T& publ)
+void doUpdatePublisher21(T& publ)
 {
-    publ.get4set_data().get4set_dictionary_one().insert("hello", "world");
-    publ.get4set_data().get4set_dictionary_one().insert("red", "blue");
-    publ.get4set_data().get4set_dictionary_one().insert("dog", "cat");
+    mtest::structures::AggregateType aggr1;
+    aggr1.name = "aggr1";
+    aggr1.theAggregate.anInt = -15;
+    aggr1.theAggregate.anUInt = 15;
+    aggr1.theAggregate.aReal = 13.14;
+    aggr1.theAggregate.aString = "hello2!";
+    aggr1.lastValue = 199;
+
+    publ.get4set_data().get4set_dictionary_two().update_value(2, aggr1);
 }
 
-
-mtest::structures::publishable_dictionary GetPublishableDictionary_1()
+void doUpdate22(mtest::structures::publishable_dictionary& data)
 {
-    mtest::structures::publishable_dictionary data = GetPublishableDictionary_0();
-    doUpdate1(data);
-    return data;
-}
+    mtest::structures::du_one du;
+    du.initAs(mtest::structures::du_one::Variants::one);
+    du.D1() = -100.001;
+    du.D2() = -200.002;
+    du.D3() = -300.003;
 
-void doUpdate2(mtest::structures::publishable_dictionary& data)
-{
-    data.data.dictionary_one["hello"] = "goodbye";
-}
-
-template<class T>
-void doUpdatePublisher2(T& publ)
-{
-    publ.get4set_data().get4set_dictionary_one().update_value("hello", "goodbye");
-}
-
-void doUpdate3(mtest::structures::publishable_dictionary& data)
-{
-    data.data.dictionary_one.erase("red");
+    data.data.dictionary_three[-6] = du;
 }
 
 template<class T>
-void doUpdatePublisher3(T& publ)
+void doUpdatePublisher22(T& publ)
 {
-    publ.get4set_data().get4set_dictionary_one().remove("red");
+    mtest::structures::du_one du;
+    du.initAs(mtest::structures::du_one::Variants::one);
+    du.D1() = -100.001;
+    du.D2() = -200.002;
+    du.D3() = -300.003;
+
+    publ.get4set_data().get4set_dictionary_three().update_value(-6, du);
 }
 
-class publishable_dictionary_json
+void doUpdate23(mtest::structures::publishable_dictionary& data)
+{
+    mtest::structures::BasicTypes bt;
+    bt.anInt = -999;
+    bt.aString = "someName";
+
+    data.data.dictionary_four["someName"] = bt;
+}
+
+template<class T>
+void doUpdatePublisher23(T& publ)
+{
+    mtest::structures::BasicTypes bt;
+    bt.anInt = -999;
+    bt.aString = "someName";
+
+    publ.get4set_data().get4set_dictionary_four().update_value("someName", bt);
+}
+
+// modify sub element in dictionary
+
+void doUpdate24(mtest::structures::publishable_dictionary& data)
+{
+    data.data.dictionary_two[2].lastValue = 0;
+}
+
+template<class T>
+void doUpdatePublisher24(T& publ)
+{
+    publ.get4set_data().get4set_dictionary_two().get4set_at(2).set_lastValue(0);
+}
+
+void doUpdate25(mtest::structures::publishable_dictionary& data)
+{
+    data.data.dictionary_three[-6].Data().push_back(-400.004);
+}
+
+template<class T>
+void doUpdatePublisher25(T& publ)
+{
+    size_t sz = publ.get_data().dictionary_three.at(-6).Data().size();
+
+    publ.get4set_data().get4set_dictionary_three().get4set_at(-6).get4set_Data().insert_before(sz, -400.004);
+}
+
+void doUpdate26(mtest::structures::publishable_dictionary& data)
+{
+    data.data.dictionary_four["someName"].aReal = 9;
+}
+
+template<class T>
+void doUpdatePublisher26(T& publ)
+{
+    publ.get4set_data().get4set_dictionary_four().get4set_at("someName").set_aReal(9);
+}
+
+
+class publishable_dictionary_json : public types_json
 {
     public:
-    using ComposerT = mtest::JsonComposer;
-    using ParserT = mtest::JsonParser;
     using DataT = mtest::structures::publishable_dictionary;
     using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
     using SubscriberT = subscriber_dictionary_for_test<mtest::structures::publishable_dictionary, mtest::Buffer>;
-
-    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
-    {
-        return ::AreEqualIgnoreWhite(l, r);
-    }
 };
 
-class publishable_dictionary_gmq
+class publishable_dictionary_gmq : public types_gmq
 {
     public:
-    using ComposerT = mtest::GmqComposer;
-    using ParserT = mtest::GmqParser;
     using DataT = mtest::structures::publishable_dictionary;
     using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
     using SubscriberT = subscriber_dictionary_for_test<mtest::structures::publishable_dictionary, mtest::Buffer>;
-
-    static bool AreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
-    {
-        return ::AreEqual(l, r);
-    }
 };
 }
+
+
+
 
 const lest::test test_publishable_dictionary[] =
 {
-    lest_CASE( "test_publishable_dictionary.TestJsonComposeStateSync0" )
+    lest_CASE( "test_publishable_dictionary.TestStateSync2" )
     {
-        testPublishableComposeStateSync<publishable_dictionary_json>(JsonPath_s0, GetPublishableDictionary_0, lest_env);
+        testStateSync<publishable_dictionary_json>(Prefix + "state_sync_2.json", GetPublishableDictionary_2, lest_env);
+        testStateSync<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", GetPublishableDictionary_2, lest_env);
     },
-    lest_CASE( "test_publishable_dictionary.TestJsonComposeStateSync1" )
+    lest_CASE( "test_publishable_dictionary.TestUpdate21" )
     {
-        testPublishableComposeStateSync<publishable_dictionary_json>(JsonPath_s1, GetPublishableDictionary_1, lest_env);
+        testUpdate<publishable_dictionary_json>(Prefix + "update_21.json", GetPublishableDictionary_2, doUpdatePublisher21<typename publishable_dictionary_json::PublishableT>, doUpdate21, lest_env);
+        testUpdate<publishable_dictionary_gmq>(Prefix + "update_21.gmq", GetPublishableDictionary_2, doUpdatePublisher21<typename publishable_dictionary_gmq::PublishableT>, doUpdate21, lest_env);
     },
-    lest_CASE( "test_publishable_dictionary.TestJsonParseStateSync0" )
+    lest_CASE( "test_publishable_dictionary.TestUpdate22" )
     {
-        testPublishableParseStateSync<publishable_dictionary_json>(JsonPath_s0, GetPublishableDictionary_0, lest_env);
+        testUpdate<publishable_dictionary_json>(Prefix + "update_22.json", GetPublishableDictionary_2, doUpdatePublisher22<typename publishable_dictionary_json::PublishableT>, doUpdate22, lest_env);
+        testUpdate<publishable_dictionary_gmq>(Prefix + "update_22.gmq", GetPublishableDictionary_2, doUpdatePublisher22<typename publishable_dictionary_gmq::PublishableT>, doUpdate22, lest_env);
     },
-    lest_CASE( "test_publishable_dictionary.TestJsonParseStateSync1" )
+    lest_CASE( "test_publishable_dictionary.TestUpdate23" )
     {
-        testPublishableParseStateSync<publishable_dictionary_json>(JsonPath_s1, GetPublishableDictionary_1, lest_env);
+        testUpdate<publishable_dictionary_json>(Prefix + "update_23.json", GetPublishableDictionary_2, doUpdatePublisher23<typename publishable_dictionary_json::PublishableT>, doUpdate23, lest_env);
+        testUpdate<publishable_dictionary_gmq>(Prefix + "update_23.gmq", GetPublishableDictionary_2, doUpdatePublisher23<typename publishable_dictionary_gmq::PublishableT>, doUpdate23, lest_env);
     },
-    lest_CASE( "test_publishable_dictionary.TestJsonComposeUpdate1" )
+    lest_CASE( "test_publishable_dictionary.TestUpdate24" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u1, GetPublishableDictionary_0, doUpdatePublisher1<typename publishable_dictionary_json::PublishableT>, lest_env);
+        testUpdate<publishable_dictionary_json>(Prefix + "update_24.json", GetPublishableDictionary_2, doUpdatePublisher24<typename publishable_dictionary_json::PublishableT>, doUpdate24, lest_env);
+        testUpdate<publishable_dictionary_gmq>(Prefix + "update_24.gmq", GetPublishableDictionary_2, doUpdatePublisher24<typename publishable_dictionary_gmq::PublishableT>, doUpdate24, lest_env);
     },
-    lest_CASE( "test_publishable_dictionary.TestJsonParseUpdate1" )
+    lest_CASE( "test_publishable_dictionary.TestUpdate25" )
     {
-        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u1, GetPublishableDictionary_0, doUpdate1, lest_env);
+        testUpdate<publishable_dictionary_json>(Prefix + "update_25.json", GetPublishableDictionary_2, doUpdatePublisher25<typename publishable_dictionary_json::PublishableT>, doUpdate25, lest_env);
+        testUpdate<publishable_dictionary_gmq>(Prefix + "update_25.gmq", GetPublishableDictionary_2, doUpdatePublisher25<typename publishable_dictionary_gmq::PublishableT>, doUpdate25, lest_env);
     },
-    lest_CASE( "test_publishable_dictionary.TestJsonComposeUpdate2" )
+    lest_CASE( "test_publishable_dictionary.TestUpdate26" )
     {
-        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u2, GetPublishableDictionary_1, doUpdatePublisher2<typename publishable_dictionary_json::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestJsonParseUpdate2" )
-    {
-        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u2, GetPublishableDictionary_1, doUpdate2, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestJsonComposeUpdate3" )
-    {
-        testPublishableComposeUpdate<publishable_dictionary_json>(JsonPath_u3, GetPublishableDictionary_1, doUpdatePublisher3<typename publishable_dictionary_json::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestJsonParseUpdate3" )
-    {
-        testPublishableParseUpdate<publishable_dictionary_json>(JsonPath_u3, GetPublishableDictionary_1, doUpdate3, lest_env);
-    },
-////////////////////////
-    lest_CASE( "test_publishable_dictionary.TestGmqComposeStateSync0" )
-    {
-        testPublishableComposeStateSync<publishable_dictionary_gmq>(GmqPath_s0, GetPublishableDictionary_0, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqParseStateSync0" )
-    {
-        testPublishableParseStateSync<publishable_dictionary_gmq>(GmqPath_s0, GetPublishableDictionary_0, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqComposeStateSync1" )
-    {
-        testPublishableComposeStateSync<publishable_dictionary_gmq>(GmqPath_s1, GetPublishableDictionary_1, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqParseStateSync1" )
-    {
-        testPublishableParseStateSync<publishable_dictionary_gmq>(GmqPath_s1, GetPublishableDictionary_1, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqComposeUpdate1" )
-    {
-        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u1, GetPublishableDictionary_0, doUpdatePublisher1<typename publishable_dictionary_gmq::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqParseUpdate1" )
-    {
-        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u1, GetPublishableDictionary_0, doUpdate1, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqComposeUpdate2" )
-    {
-        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u2, GetPublishableDictionary_1, doUpdatePublisher2<typename publishable_dictionary_gmq::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqParseUpdate2" )
-    {
-        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u2, GetPublishableDictionary_1, doUpdate2, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqComposeUpdate3" )
-    {
-        testPublishableComposeUpdate<publishable_dictionary_gmq>(GmqPath_u3, GetPublishableDictionary_1, doUpdatePublisher3<typename publishable_dictionary_gmq::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dictionary.TestGmqParseUpdate3" )
-    {
-        testPublishableParseUpdate<publishable_dictionary_gmq>(GmqPath_u3, GetPublishableDictionary_1, doUpdate3, lest_env);
+        testUpdate<publishable_dictionary_json>(Prefix + "update_26.json", GetPublishableDictionary_2, doUpdatePublisher26<typename publishable_dictionary_json::PublishableT>, doUpdate26, lest_env);
+        testUpdate<publishable_dictionary_gmq>(Prefix + "update_26.gmq", GetPublishableDictionary_2, doUpdatePublisher26<typename publishable_dictionary_gmq::PublishableT>, doUpdate26, lest_env);
     },
 };
 

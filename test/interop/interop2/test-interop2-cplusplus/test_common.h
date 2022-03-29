@@ -25,57 +25,13 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "test_common.h"
+#ifndef INTEROP2_TEST_COMMON_H_INCLUDED
+#define INTEROP2_TEST_COMMON_H_INCLUDED
 
 
-namespace
-{
-std::string Prefix = "data/simple/";
-
-mtest::structures::SimpleStruct GetSample_1()
-{
-    //create some sample data to be written to message
-
-    mtest::structures::SimpleStruct msg;
-
-    msg.name = "Hello world!";
-    msg.id = 1;
-
-    return msg;
-}
-}
-
-template<class T>
-void TestComposeParse(const std::string& fileName, std::function<mtest::structures::SimpleStruct()> getState, lest::env & lest_env)
-{
-    auto msg = getState();
-
-    mtest::Buffer b;
-    typename T::ComposerT composer(b);
-
-    mtest::publishable_STRUCT_SimpleStruct::compose(composer, msg);
-
-    auto expected = makeBuffer(fileName);
-    T::ExpectAreEqual(expected, b);
+#include "../../3rdparty/lest/include/lest/lest.hpp"
+#include "generated_interop2.h"
+#include "../../common/include/test_common.h"
 
 
-    auto iter = b.getReadIter();
-    typename T::ParserT parser(iter);
-
-    mtest::structures::SimpleStruct msg2;
-    mtest::publishable_STRUCT_SimpleStruct::parseForStateSyncOrMessageInDepth(parser, msg2);
-
-    EXPECT(msg == msg2);
-}
-
-
-const lest::test test_simple[] =
-{
-    lest_CASE( "Simple" )
-    {
-        TestComposeParse<types_json>(Prefix + "sample_1.json", GetSample_1, lest_env);
-        TestComposeParse<types_gmq>(Prefix + "sample_1.gmq", GetSample_1, lest_env);
-    }
-};
-
-lest_MODULE(specification(), test_simple);
+#endif // INTEROP2_TEST_COMMON_H_INCLUDED

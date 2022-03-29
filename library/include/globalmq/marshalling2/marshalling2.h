@@ -28,7 +28,7 @@
 #ifndef GLOBALMQ_MARSHALLING2_MARSHALLING2_H
 #define GLOBALMQ_MARSHALLING2_MARSHALLING2_H
 
-#include <marshalling_impl.h>
+#include <publishable_impl.h>
 
 namespace globalmq::marshalling2 {
 
@@ -547,10 +547,13 @@ public:
 
 	static
 	void copy( const int64_t& src, int64_t& dst ) { dst = src; }
+	static
+	int64_t copy( const int64_t& src ) { return src; }
 
 	static
 	bool isSame(int64_t l, int64_t r) { return l == r;}
 
+	static
 	GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& baseAddress, int64_t address)
 	{
 		GMQ_COLL vector<uint64_t> result{baseAddress};
@@ -559,6 +562,7 @@ public:
 		return result;
 	}
 
+	static
 	int64_t fromAddress(const GMQ_COLL vector<uint64_t>& address, size_t& index)
 	{
 		uint64_t val = address[index];
@@ -623,8 +627,12 @@ public:
 	void copy( const uint64_t& src, uint64_t& dst ) { dst = src; }
 
 	static
+	uint64_t copy( const uint64_t& src ) { return src; }
+
+	static
 	bool isSame(uint64_t l, uint64_t r) { return l == r;}
 
+	static
 	GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& baseAddress, uint64_t address)
 	{
 		GMQ_COLL vector<uint64_t> result{baseAddress};
@@ -632,6 +640,7 @@ public:
 		return result;
 	}
 
+	static
 	uint64_t fromAddress(const GMQ_COLL vector<uint64_t>& address, size_t& index)
 	{
 		uint64_t result = address[index];
@@ -683,6 +692,8 @@ public:
 
 	static
 	void copy( const double& src, double& dst ) { dst = src; }
+	static
+	double copy( const double& src ) { return src; }
 
 	static
 	bool isSame(double l, double r) { return l == r;}
@@ -731,10 +742,13 @@ public:
 
 	static
 	void copy( const GMQ_COLL string& src, GMQ_COLL string& dst ) { dst = src; }
+	static
+	GMQ_COLL string copy( const GMQ_COLL string& src ) { return src; }
 
 	static
 	bool isSame(GMQ_COLL string l, GMQ_COLL string r) { return l == r;}
 
+	static
 	GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& baseAddress, GMQ_COLL string address)
 	{
 		if(address.find_first_of('\0') != GMQ_COLL string::npos)
@@ -746,6 +760,7 @@ public:
 		return result;
 	}
 
+	static
 	GMQ_COLL string fromAddress(const GMQ_COLL vector<uint64_t>& address, size_t& index)
 	{
 		GMQ_COLL string result;
@@ -908,6 +923,14 @@ public:
 			ElemProcT::copy(src[i], dst[i]);
 		}
 	}
+	static
+	ProcessorType copy( const ProcessorType& src )
+	{
+		ProcessorType dst;
+		copy(src, dst);
+		return dst;
+	}
+
 
 	static
 	bool isSame( const ProcessorType& v1, const ProcessorType& v2 )
@@ -1136,6 +1159,12 @@ public:
 			ValueProcT::copy( it.second, value );
 			dst.insert( GMQ_COLL make_pair( it.first, value ) );
 		}
+	}
+	ProcessorType copy( const ProcessorType& src )
+	{
+		ProcessorType dst;
+		copy(src, dst);
+		return dst;
 	}
 
 	static

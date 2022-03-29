@@ -27,33 +27,51 @@
 
 #include "test_common.h"
 
-
 namespace
 {
-std::string Prefix = "data/simple/";
+std::string StructDuPrefix = "data/struct_dunion/";
 
-mtest::structures::SimpleStruct GetSample_1()
+mtest::structures::struct_du GetStructDu_0()
 {
-    //create some sample data to be written to message
+    mtest::structures::struct_du msg;
+    return msg;
+}
 
-    mtest::structures::SimpleStruct msg;
+mtest::structures::struct_du GetStructDu_1()
+{
+    mtest::structures::struct_du msg;
 
-    msg.name = "Hello world!";
-    msg.id = 1;
+    msg.disc_union.initAs(mtest::structures::du_one::Variants::one);
+    msg.disc_union.D1() = 1.2;
+    msg.disc_union.D2() = 3.4;
+    msg.disc_union.D3() = 5.6;
 
     return msg;
 }
+
+mtest::structures::struct_du GetStructDu_2()
+{
+    mtest::structures::struct_du msg;
+
+    msg.disc_union.initAs(mtest::structures::du_one::Variants::two);
+
+    msg.disc_union.Data().push_back(1.2);
+    msg.disc_union.Data().push_back(3.4);
+    msg.disc_union.Data().push_back(5.6);
+
+    return msg;
 }
 
+
 template<class T>
-void TestComposeParse(const std::string& fileName, std::function<mtest::structures::SimpleStruct()> getState, lest::env & lest_env)
+void TestComposeParse(const std::string& fileName, std::function<mtest::structures::struct_du()> getState, lest::env& lest_env)
 {
     auto msg = getState();
 
     mtest::Buffer b;
     typename T::ComposerT composer(b);
 
-    mtest::publishable_STRUCT_SimpleStruct::compose(composer, msg);
+    mtest::publishable_STRUCT_struct_du::compose(composer, msg);
 
     auto expected = makeBuffer(fileName);
     T::ExpectAreEqual(expected, b);
@@ -62,20 +80,30 @@ void TestComposeParse(const std::string& fileName, std::function<mtest::structur
     auto iter = b.getReadIter();
     typename T::ParserT parser(iter);
 
-    mtest::structures::SimpleStruct msg2;
-    mtest::publishable_STRUCT_SimpleStruct::parseForStateSyncOrMessageInDepth(parser, msg2);
+    mtest::structures::struct_du msg2;
+    mtest::publishable_STRUCT_struct_du::parseForStateSyncOrMessageInDepth(parser, msg2);
 
     EXPECT(msg == msg2);
 }
+}
 
-
-const lest::test test_simple[] =
+const lest::test test_struct_du[] =
 {
-    lest_CASE( "Simple" )
+    lest_CASE( "StructDu_0" )
     {
-        TestComposeParse<types_json>(Prefix + "sample_1.json", GetSample_1, lest_env);
-        TestComposeParse<types_gmq>(Prefix + "sample_1.gmq", GetSample_1, lest_env);
-    }
+        TestComposeParse<types_json>(StructDuPrefix + "test_struct_du_0.json", GetStructDu_0, lest_env);
+        TestComposeParse<types_gmq>(StructDuPrefix + "test_struct_du_0.gmq", GetStructDu_0, lest_env);
+    },
+    lest_CASE( "StructDu_1" )
+    {
+        TestComposeParse<types_json>(StructDuPrefix + "test_struct_du_1.json", GetStructDu_1, lest_env);
+        TestComposeParse<types_gmq>(StructDuPrefix + "test_struct_du_1.gmq", GetStructDu_1, lest_env);
+    },
+    lest_CASE( "StructDu_2" )
+    {
+        TestComposeParse<types_json>(StructDuPrefix + "test_struct_du_2.json", GetStructDu_2, lest_env);
+        TestComposeParse<types_gmq>(StructDuPrefix + "test_struct_du_2.gmq", GetStructDu_2, lest_env);
+    },
 };
 
-lest_MODULE(specification(), test_simple);
+lest_MODULE(specification(), test_struct_du);

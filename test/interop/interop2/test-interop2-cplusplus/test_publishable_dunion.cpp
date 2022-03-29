@@ -25,8 +25,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "../../common/include/test_common.h"
-#include "generated_interop2.h"
+#include "test_common.h"
 
 using namespace std;
 
@@ -79,7 +78,6 @@ class subscriber_dunion_for_test :
         throw std::exception();
     }
 };
-
 
 mtest::structures::publishable_dunion GetPublishableUnion_0()
 {
@@ -147,119 +145,53 @@ mtest::structures::publishable_dunion GetPublishableUnion_2()
     return data;
 }
 
-class publishable_dunion_json
+class publishable_dunion_json : public types_json
 {
     public:
-    using ComposerT = mtest::JsonComposer;
-    using ParserT = mtest::JsonParser;
     using DataT = mtest::structures::publishable_dunion;
     using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
     using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
-
-    static void ExpectAreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
-    {
-        ::AreEqualIgnoreWhite(l, r);
-    }
 };
 
-class publishable_dunion_gmq
+class publishable_dunion_gmq: public types_gmq
 {
     public:
-    using ComposerT = mtest::GmqComposer;
-    using ParserT = mtest::GmqParser;
     using DataT = mtest::structures::publishable_dunion;
     using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
     using SubscriberT = subscriber_dunion_for_test<mtest::structures::publishable_dunion, mtest::Buffer>;
 
-    static void ExpectAreEqual(const mtest::Buffer& l, const mtest::Buffer& r)
-    {
-        return ::AreEqualBinary(l, r);
-    }
 };
 }
 
 const lest::test test_publishable_dunion[] =
 {
-    lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync0" )
+    lest_CASE( "test_publishable_dunion.TestStateSync0" )
     {
-        testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
+        testStateSync<publishable_dunion_json>(Prefix + "state_sync_0.json", GetPublishableUnion_0, lest_env);
+        testStateSync<publishable_dunion_gmq>(Prefix + "state_sync_0.gmq", GetPublishableUnion_0, lest_env);
+ 
     },
-    lest_CASE( "test_publishable_dunion.TestJsonParseStateSync0" )
+    lest_CASE( "test_publishable_dunion.TestStateSync1" )
     {
-        testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s0, GetPublishableUnion_0, lest_env);
+        testStateSync<publishable_dunion_json>(Prefix + "state_sync_1.json", GetPublishableUnion_1, lest_env);
+        testStateSync<publishable_dunion_gmq>(Prefix + "state_sync_1.gmq", GetPublishableUnion_1, lest_env);
+ 
     },
-    lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync1" )
+    lest_CASE( "test_publishable_dunion.TestStateSync2" )
     {
-        testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
+        testStateSync<publishable_dunion_json>(Prefix + "state_sync_2.json", GetPublishableUnion_2, lest_env);
+        testStateSync<publishable_dunion_gmq>(Prefix + "state_sync_2.gmq", GetPublishableUnion_2, lest_env);
+ 
     },
-    lest_CASE( "test_publishable_dunion.TestJsonParseStateSync1" )
+    lest_CASE( "test_publishable_dunion.TestUpdate1" )
     {
-        testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s1, GetPublishableUnion_1, lest_env);
+        testUpdate<publishable_dunion_json>(Prefix + "update_1.json", GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dunion_json::PublishableT>, doUpdate1, lest_env);
+        testUpdate<publishable_dunion_gmq>(Prefix + "update_1.gmq", GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dunion_gmq::PublishableT>, doUpdate1, lest_env);
     },
-    lest_CASE( "test_publishable_dunion.TestJsonComposeStateSync2" )
+    lest_CASE( "test_publishable_dunion.TestUpdate2" )
     {
-        testPublishableComposeStateSync<publishable_dunion_json>(JsonPath_s2, GetPublishableUnion_2, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestJsonParseStateSync2" )
-    {
-        testPublishableParseStateSync<publishable_dunion_json>(JsonPath_s2, GetPublishableUnion_2, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestJsonComposeUpdate1" )
-    {
-        testPublishableComposeUpdate<publishable_dunion_json>(JsonPath_u1, GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dunion_json::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestJsonParseUpdate1" )
-    {
-        testPublishableParseUpdate<publishable_dunion_json>(JsonPath_u1, GetPublishableUnion_0, doUpdate1, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestJsonComposeUpdate2" )
-    {
-        testPublishableComposeUpdate<publishable_dunion_json>(JsonPath_u2, GetPublishableUnion_1, doUpdatePublisher2<typename publishable_dunion_json::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestJsonParseUpdate2" )
-    {
-        testPublishableParseUpdate<publishable_dunion_json>(JsonPath_u2, GetPublishableUnion_1, doUpdate2, lest_env);
-    },
-////////////////////////
-    lest_CASE( "test_publishable_dunion.TestGmqComposeStateSync0" )
-    {
-        testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqParseStateSync0" )
-    {
-        testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s0, GetPublishableUnion_0, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqComposeStateSync1" )
-    {
-        testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqParseStateSync1" )
-    {
-        testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s1, GetPublishableUnion_1, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqComposeStateSync2" )
-    {
-        testPublishableComposeStateSync<publishable_dunion_gmq>(GmqPath_s2, GetPublishableUnion_2, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqParseStateSync2" )
-    {
-        testPublishableParseStateSync<publishable_dunion_gmq>(GmqPath_s2, GetPublishableUnion_2, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqComposeUpdate1" )
-    {
-        testPublishableComposeUpdate<publishable_dunion_gmq>(GmqPath_u1, GetPublishableUnion_0, doUpdatePublisher1<typename publishable_dunion_gmq::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqParseUpdate1" )
-    {
-        testPublishableParseUpdate<publishable_dunion_gmq>(GmqPath_u1, GetPublishableUnion_0, doUpdate1, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqComposeUpdate2" )
-    {
-        testPublishableComposeUpdate<publishable_dunion_gmq>(GmqPath_u2, GetPublishableUnion_1, doUpdatePublisher2<typename publishable_dunion_gmq::PublishableT>, lest_env);
-    },
-    lest_CASE( "test_publishable_dunion.TestGmqParseUpdate2" )
-    {
-        testPublishableParseUpdate<publishable_dunion_gmq>(GmqPath_u2, GetPublishableUnion_1, doUpdate2, lest_env);
+        testUpdate<publishable_dunion_json>(Prefix + "update_2.json", GetPublishableUnion_1, doUpdatePublisher2<typename publishable_dunion_json::PublishableT>, doUpdate2, lest_env);
+        testUpdate<publishable_dunion_gmq>(Prefix + "update_2.gmq", GetPublishableUnion_1, doUpdatePublisher2<typename publishable_dunion_gmq::PublishableT>, doUpdate2, lest_env);
     },
 };
 

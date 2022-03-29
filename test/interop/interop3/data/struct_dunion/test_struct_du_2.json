@@ -1,7 +1,7 @@
 {
   "name":"",
   "disc_union":{
-  "caseid":2,
+  "caseId":2,
   "caseData":{
   "Data":[1.2, 3.4, 5.6]
 }

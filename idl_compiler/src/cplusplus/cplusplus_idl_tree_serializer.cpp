@@ -342,8 +342,16 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 		auto& m = *mbit;
 		assert( typeid( m ) == typeid( MessageParameter ) );
 		assert( m.type.kind != MessageParameterType::KIND::UNDEFINED );
-		if ( m.type.kind != MessageParameterType::KIND::EXTENSION )
+		if ( m.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
+
+
+		if ( m.type.kind == MessageParameterType::KIND::INTEGER || m.type.kind == MessageParameterType::KIND::UINTEGER ||
+			m.type.kind == MessageParameterType::KIND::REAL || m.type.kind == MessageParameterType::KIND::ENUM)
+			fprintf( header, "%s\t%s %s = 0;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
+		else
 			fprintf( header, "%s\t%s %s;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
+
 	}
 
 

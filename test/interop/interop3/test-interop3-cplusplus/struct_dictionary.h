@@ -25,57 +25,56 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
+#ifndef INTEROP3_STRUCT_DICTIONARY_H_INCLUDED
+#define INTEROP3_STRUCT_DICTIONARY_H_INCLUDED
+
 #include "test_common.h"
 
-
-namespace
+inline
+mtest::structures::struct_dictionary GetDictionary_2()
 {
-std::string Prefix = "data/simple/";
+    mtest::structures::struct_dictionary data;
 
-mtest::structures::SimpleStruct GetSample_1()
-{
-    //create some sample data to be written to message
+    data.dictionary_one["hello"] = "world";
+    data.dictionary_one["red"] = "blue";
+    data.dictionary_one["dog"] = "cat";
 
-    mtest::structures::SimpleStruct msg;
+    mtest::structures::AggregateType aggr1;
+    aggr1.name = "aggr1";
+    aggr1.theAggregate.anInt = -5;
+    aggr1.theAggregate.anUInt = 5;
+    aggr1.theAggregate.aReal = 3.14;
+    aggr1.theAggregate.aString = "hello!";
+    aggr1.lastValue = 99;
 
-    msg.name = "Hello world!";
-    msg.id = 1;
+    data.dictionary_two[2] = aggr1;
+    data.dictionary_two[3] = aggr1;
+    data.dictionary_two[4] = aggr1;
 
-    return msg;
+    mtest::structures::du_one du;
+    du.initAs(mtest::structures::du_one::Variants::two);
+    du.Data().push_back(-100.001);
+    du.Data().push_back(-200.002);
+    du.Data().push_back(-300.003);
+
+    data.dictionary_three[-5] = du;
+    data.dictionary_three[-6] = du;
+    data.dictionary_three[-7] = du;
+
+    mtest::structures::BasicTypes bt;
+    bt.anInt = -99;
+    bt.aString = "someName";
+
+    data.dictionary_four["someName"] = bt;
+
+    mtest::structures::BasicTypes bt2;
+    bt2.anInt = -98;
+    bt2.aString = "otherName";
+
+    data.dictionary_four["otherName"] = bt2;
+
+    return data;
 }
-}
-
-template<class T>
-void TestComposeParse(const std::string& fileName, std::function<mtest::structures::SimpleStruct()> getState, lest::env & lest_env)
-{
-    auto msg = getState();
-
-    mtest::Buffer b;
-    typename T::ComposerT composer(b);
-
-    mtest::publishable_STRUCT_SimpleStruct::compose(composer, msg);
-
-    auto expected = makeBuffer(fileName);
-    T::ExpectAreEqual(expected, b);
 
 
-    auto iter = b.getReadIter();
-    typename T::ParserT parser(iter);
-
-    mtest::structures::SimpleStruct msg2;
-    mtest::publishable_STRUCT_SimpleStruct::parseForStateSyncOrMessageInDepth(parser, msg2);
-
-    EXPECT(msg == msg2);
-}
-
-
-const lest::test test_simple[] =
-{
-    lest_CASE( "Simple" )
-    {
-        TestComposeParse<types_json>(Prefix + "sample_1.json", GetSample_1, lest_env);
-        TestComposeParse<types_gmq>(Prefix + "sample_1.gmq", GetSample_1, lest_env);
-    }
-};
-
-lest_MODULE(specification(), test_simple);
+#endif // INTEROP3_STRUCT_DICTIONARY_H_INCLUDED

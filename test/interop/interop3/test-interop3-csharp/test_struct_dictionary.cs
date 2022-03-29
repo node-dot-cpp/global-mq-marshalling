@@ -80,10 +80,10 @@ namespace test_interop3_csharp
             data.dictionary_four.Add("someName", bt);
 
             mtest.BasicTypes bt2 = new mtest.BasicTypes();
-            bt.anInt = -98;
-            bt.aString = "otherName";
+            bt2.anInt = -98;
+            bt2.aString = "otherName";
 
-            data.dictionary_four.Add("otherName", bt);
+            data.dictionary_four.Add("otherName", bt2);
 
             return data;
         }
