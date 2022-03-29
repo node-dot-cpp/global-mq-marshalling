@@ -92,11 +92,6 @@ void doUpdate1(mtest::structures::publishable_dictionary& data)
 }
 #endif
 
-
-
-// on linux std::unordered_map reverses the order
-// this is a quick hack for testing only
-#ifdef _MSC_VER
 template<class T>
 void doUpdatePublisher1(T& publ)
 {
@@ -104,15 +99,6 @@ void doUpdatePublisher1(T& publ)
     publ.get4set_data().get4set_dictionary_one().insert("red", "blue");
     publ.get4set_data().get4set_dictionary_one().insert("dog", "cat");
 }
-#else
-template<class T>
-void doUpdatePublisher1(T& publ)
-{
-    publ.get4set_data().get4set_dictionary_one().insert("dog", "cat");
-    publ.get4set_data().get4set_dictionary_one().insert("red", "blue");
-    publ.get4set_data().get4set_dictionary_one().insert("hello", "world");
-}
-#endif
 
 
 mtest::structures::publishable_dictionary GetPublishableDictionary_1()

@@ -55,9 +55,16 @@ mtest::structures::struct_dictionary GetDictionary_2()
     aggr1.theAggregate.aString = "hello!";
     aggr1.lastValue = 99;
 
+#ifdef _MSC_VER
     data.dictionary_two[2] = aggr1;
     data.dictionary_two[3] = aggr1;
     data.dictionary_two[4] = aggr1;
+#else
+    data.dictionary_two[4] = aggr1;
+    data.dictionary_two[3] = aggr1;
+    data.dictionary_two[2] = aggr1;
+#endif
+
 
     mtest::structures::du_one du;
     du.initAs(mtest::structures::du_one::Variants::two);
@@ -65,21 +72,34 @@ mtest::structures::struct_dictionary GetDictionary_2()
     du.Data().push_back(-200.002);
     du.Data().push_back(-300.003);
 
+#ifdef _MSC_VER
     data.dictionary_three[-5] = du;
     data.dictionary_three[-6] = du;
     data.dictionary_three[-7] = du;
+#else
+    data.dictionary_three[-7] = du;
+    data.dictionary_three[-6] = du;
+    data.dictionary_three[-5] = du;
+#endif
+
 
     mtest::structures::BasicTypes bt;
     bt.anInt = -99;
     bt.aString = "someName";
 
-    data.dictionary_four["someName"] = bt;
 
     mtest::structures::BasicTypes bt2;
     bt2.anInt = -98;
     bt2.aString = "otherName";
 
+
+#ifdef _MSC_VER
+    data.dictionary_four["someName"] = bt;
     data.dictionary_four["otherName"] = bt2;
+#else
+    data.dictionary_four["otherName"] = bt2;
+    data.dictionary_four["someName"] = bt;
+#endif
 
     return data;
 }
