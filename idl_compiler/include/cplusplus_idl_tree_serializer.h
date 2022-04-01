@@ -223,6 +223,12 @@ string getSubscriberTypeProcessor( const MessageParameterType& type )
 }
 
 inline
+string getVectorElemSubscriberTypeProcessor( const MessageParameterType& type )
+{
+	return impl_SubscriberTypeProcessor( type, type.vectorElemKind);
+}
+
+inline
 string getCppType( MessageParameterType::KIND kind )
 {
 	switch( kind )
@@ -271,6 +277,11 @@ string getSubscriberCppType( const MessageParameterType& type )
 	return impl_SubscriberCppType( type, type.kind );
 }
 
+inline
+string getVectorElemSubscriberCppType( const MessageParameterType& type )
+{
+	return impl_SubscriberCppType( type, type.vectorElemKind );
+}
 
 
 inline

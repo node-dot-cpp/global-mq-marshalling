@@ -2593,7 +2593,7 @@ void impl_generateApplyUpdateForStructItself2( FileWritter f, MessageParameter& 
 
 	// f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, *(this->%s) );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\tif ( changedCurrent )\n" );
 	f.write("\t{\n" );
 	// if ( addReportChanges )
@@ -2647,7 +2647,7 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct2( FileWritter f, Messa
 
 // 	f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, *(this->%s) );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\tif ( changedCurrent )\n" );
 	f.write("\t{\n" );
 	// if ( addReportChanges )
@@ -2700,18 +2700,18 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct3( FileWritter f, Messa
 // 	f.write("}\n" );
 
 // 	f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("{\n" );
+	f.write("bool changedCurrent = %s::parse_continue( parser, *(this->%s), addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("if ( changedCurrent )\n" );
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_continue( parser, this->%s, addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\tif ( changedCurrent )\n" );
-	f.write("\t{\n" );
 	// if ( addReportChanges )
 	// {
 	// 	f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
-		f.write("\t\tchanged = true;\n" );
+	f.write("\tchanged = true;\n" );
 	// }
-	f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str() );
-	f.write("\t}\n" );
+	f.write("\tthis->notifyUpdated_%s();\n", member.name.c_str() );
 	f.write("}\n" );
+	// f.write("}\n" );
 
 	// if ( addReportChanges )
 	// {
@@ -2996,120 +2996,139 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 //	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
 	// const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
-	f.write("%s oldVectorVal;\n",  impl_templateMemberTypeName( "T", member).c_str() );
+	// f.write("%s oldVectorVal;\n",  impl_templateMemberTypeName( "T", member).c_str() );
 	f.write("bool currentChanged = false;\n" );
-	f.write("constexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
-	f.write("if constexpr( alwaysCollectChanges )\n" );
-	f.write("\t%s::copy( t.%s, oldVectorVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("constexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
+	// f.write("if constexpr( alwaysCollectChanges )\n" );
+	// f.write("\t%s::copy( t.%s, oldVectorVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
 //f.write("//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 
 //	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
-	assert( member.type.structIdx < root.structs.size() );
-	f.write("if ( addr.size() > offset + 1 ) // one of actions over elements of the vector\n" );
-	f.write("{\n" );
-	f.write("\tsize_t pos = addr[offset + 1];\n" );
-	f.write("\tif ( pos > t.%s.size() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\tthrow std::exception();\n" );
+	// assert( member.type.structIdx < root.structs.size() );
+	// f.write("if ( addr.size() > offset + 1 ) // one of actions over elements of the vector\n" );
+	// f.write("{\n" );
+	// f.write("\tsize_t pos = addr[offset + 1];\n" );
+	// f.write("\tif ( pos > t.%s.size() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\t\tthrow std::exception();\n" );
 
 	f.write("\tif ( addr.size() > offset + 2 ) // update for a member of a particular vector element\n" );
 	f.write("\t{\n" );
 
-	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT || member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+	bool complexElement = member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ||
+						member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION;
+
+	if ( complexElement )
 	{
-		f.write("\t\ttypename %s::value_type& value = t.%s[pos];\n", impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\tsize_t pos = addr[offset + 1];\n" );
+		f.write("\t\tif ( pos > this->%s.size() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\t\tthrow std::exception();\n" );
+		f.write("\t\tauto& value = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
 
-		f.write("\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t{\n" );
-		f.write("\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
-		switch ( member.type.vectorElemKind )
-		{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				f.write("\t\t\toldValue = value;\n" );
-				break;
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
-				break;
-			default:
-				f.write("\t\t\t\tstatic_assert(false);\n" );
-				break;
-		}
-		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t{\n" );
+		// f.write("\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// switch ( member.type.vectorElemKind )
+		// {
+		// 	case MessageParameterType::KIND::INTEGER:
+		// 	case MessageParameterType::KIND::UINTEGER:
+		// 	case MessageParameterType::KIND::REAL:
+		// 	case MessageParameterType::KIND::CHARACTER_STRING:
+		// 		f.write("\t\t\toldValue = value;\n" );
+		// 		break;
+		// 	case MessageParameterType::KIND::STRUCT:
+		// 	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+		// 		f.write("\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
+		// 		break;
+		// 	default:
+		// 		f.write("\t\t\t\tstatic_assert(false);\n" );
+		// 		break;
+		// }
+		// f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\tif ( currentChanged )\n" );
+		// f.write("\t\t\t{\n" );
+		// f.write("\t\t\t\tchanged = true;\n" );
+		// f.write("\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		// f.write("\t\t\t}\n" );
+		// f.write("\t\t}\n" );
+
+		// f.write("\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t{\n" );
+		// f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\tif ( currentChanged )\n" );
+		// f.write("\t\t\t{\n" );
+		// f.write("\t\t\t\tchanged = true;\n" );
+		// f.write("\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		// f.write("\t\t\t}\n" );
+		// f.write("\t\t}\n" );
+
+		// f.write("\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t{\n" );
+		f.write("\t\t\tcurrentChanged = %s::parse_continue( parser, *value, addr, offset + 2 );\n", getVectorElemSubscriberTypeProcessor( member.type ).c_str() );
 		f.write("\t\t\tif ( currentChanged )\n" );
 		f.write("\t\t\t{\n" );
 		f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
-		f.write("\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
-		f.write("\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t\tthis->notifyElementUpdated_%s(pos);\n", member.name.c_str() );
 		f.write("\t\t\t}\n" );
-		f.write("\t\t}\n" );
+		// f.write("\t\t}\n" );
 
-		f.write("\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t{\n" );
-		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\tif ( currentChanged )\n" );
-		f.write("\t\t\t{\n" );
-		f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
-		f.write("\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
-		f.write("\t\t\t}\n" );
-		f.write("\t\t}\n" );
-
-		f.write("\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t{\n" );
-		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\tif ( currentChanged )\n" );
-		f.write("\t\t\t{\n" );
-		f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
-		f.write("\t\t\t}\n" );
-		f.write("\t\t}\n" );
-
-		f.write("\t\telse\n" );
-		f.write("\t\t{\n" );
-		f.write("\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-		f.write("\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\telse\n" );
-		f.write("\t\t\t\t%s::parse<typename %s::value_type>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t}\n" );
+		// f.write("\t\telse\n" );
+		// f.write("\t\t{\n" );
+		// f.write("\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+		// f.write("\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\telse\n" );
+		// f.write("\t\t\t\t%s::parse<typename %s::value_type>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t}\n" );
 	}
 	else
 		f.write("\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
 				
 	f.write("\t}\n" );
-	f.write("\telse // update of one or more elelments as a whole\n" );
+	f.write("\telse if ( addr.size() == offset + 2 ) // update of one or more elelments as a whole\n" );
 	f.write("\t{\n" );
+	f.write("\t\tsize_t pos = addr[offset + 1];\n" );
+	f.write("\t\tif ( pos > this->%s.size() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\tthrow std::exception();\n" );
 	f.write("\t\tparser.nextElement();\n" );
 	f.write("\t\tuint64_t action = parser.parseAction();\n" );
 	f.write("\t\tswitch ( action )\n" );
 	f.write("\t\t{\n" );
 	f.write("\t\t\tcase ActionOnVector::remove_at:\n" );
 	f.write("\t\t\t{\n" );
-	f.write("\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", member.name.c_str() );
-//	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tt.notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
+
+	if(complexElement)
+	{
+		f.write("\t\t\t\tauto oldVal{std::move(this->%s[pos])};\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\t\t\tthis->%s.erase( this->%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\t\t\tthis->notifyErased_%s( pos, std::move(oldVal) );\n", member.name.c_str() );
+	}
+	else
+	{
+		f.write("\t\t\t\tauto oldVal{this->%s[pos]};\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		// f.write("\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\t\t\tthis->%s.erase( this->%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", member.name.c_str() );
+	//	f.write("\t\t\t\t{\n" );
+		f.write("\t\t\t\t\tthis->notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
+	}
 //	f.write("\t\t\t\t}\n" );
-	f.write("\t\t\t\tif constexpr ( has_erased_notifier2_for_%s )\n", member.name.c_str() );
-//	f.write("\t\t\t\t{\n" );
-//	f.write("\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\t\tt.notifyErased_%s( pos );\n", member.name.c_str() );
-//	f.write("\t\t\t\t}\n" );
-	f.write("\t\t\t\tif constexpr ( has_void_erased_notifier_for_%s )\n", member.name.c_str() );
-//	f.write("\t\t\t\t{\n" );
-//	f.write("\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\t\tt.notifyErased_%s();\n", member.name.c_str() );
-//	f.write("\t\t\t\t}\n" );
-	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+// 	f.write("\t\t\t\tif constexpr ( has_erased_notifier2_for_%s )\n", member.name.c_str() );
+// //	f.write("\t\t\t\t{\n" );
+// //	f.write("\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+// 	f.write("\t\t\t\t\tt.notifyErased_%s( pos );\n", member.name.c_str() );
+// //	f.write("\t\t\t\t}\n" );
+// 	f.write("\t\t\t\tif constexpr ( has_void_erased_notifier_for_%s )\n", member.name.c_str() );
+// //	f.write("\t\t\t\t{\n" );
+// //	f.write("\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+// 	f.write("\t\t\t\t\tt.notifyErased_%s();\n", member.name.c_str() );
+// //	f.write("\t\t\t\t}\n" );
+// 	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
 	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
 	f.write("\t\t\t\tbreak;\n" );
 	f.write("\t\t\t}\n" );
@@ -3117,71 +3136,71 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("\t\t\t{\n" );
 	f.write("\t\t\t\tparser.nextElement();\n" );
 	f.write("\t\t\t\tparser.leafeBegin();\n" );
-	f.write("\t\t\t\ttypename %s::value_type& value = t.%s[pos];\n", impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tauto& value = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
 
-	f.write("\t\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
-	switch ( member.type.vectorElemKind )
-	{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			f.write("\t\t\t\toldValue = value;\n" );
-			break;
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\t\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
-			break;
-		default:
-			f.write("\t\t\t\tstatic_assert(false);\n" );
-			break;
-	}
+	// f.write("\t\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+	// switch ( member.type.vectorElemKind )
+	// {
+	// 	case MessageParameterType::KIND::INTEGER:
+	// 	case MessageParameterType::KIND::UINTEGER:
+	// 	case MessageParameterType::KIND::REAL:
+	// 	case MessageParameterType::KIND::CHARACTER_STRING:
+	// 		f.write("\t\t\t\toldValue = value;\n" );
+	// 		break;
+	// 	case MessageParameterType::KIND::STRUCT:
+	// 	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	// 		f.write("\t\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
+	// 		break;
+	// 	default:
+	// 		f.write("\t\t\t\tstatic_assert(false);\n" );
+	// 		break;
+	// }
 				
-	f.write("\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
 
-	f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	// f.write("\t\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\t\tchanged = true;\n" );
+	// f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t}\n" );
+	// f.write("\t\t\t\t}\n"  );
+				
+	// f.write("\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tcurrentChanged = %s::parse_notify( parser, value );\n", getSubscriberTypeProcessor( member.type ).c_str() );
 	f.write("\t\t\t\t\tif ( currentChanged )\n" );
 	f.write("\t\t\t\t\t{\n" );
 	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tthis->notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
 	f.write("\t\t\t\t\t}\n" );
-	f.write("\t\t\t\t}\n"  );
-				
-	f.write("\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\tif ( currentChanged )\n" );
-	f.write("\t\t\t\t\t{\n" );
-	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t\t}\n" );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\t}\n" );
 
-	f.write("\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\tif ( currentChanged )\n" );
-	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\tcurrentChanged = %s::parse_notify( parser, value );\n", getSubscriberTypeProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	// f.write("\t\t\t\t\t\tchanged = true;\n" );
+	// f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t}\n" );
 
-	f.write("\t\t\t\telse\n" );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t}\n" );
-	f.write("\t\t\t\t\telse\n" );
-	f.write("\t\t\t\t\t\t%s::parseSingleValue( parser, value );\n", getTypeProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\telse\n" );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\t\tchanged = true;\n" );
+	// f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\t\telse\n" );
+	// f.write("\t\t\t\t\t\t%s::parseSingleValue( parser, value );\n", getTypeProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t}\n" );
 
 	f.write("\t\t\t\tbreak;\n" );
 	f.write("\t\t\t}\n" );
@@ -3189,26 +3208,37 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("\t\t\t{\n" );
 	f.write("\t\t\t\tparser.nextElement();\n" );
 	f.write("\t\t\t\tparser.leafeBegin();\n" );
-	f.write("\t\t\t\ttypename %s::value_type value;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
-	f.write("\t\t\t\t%s::parseSingleValue( parser, value );\n", getTypeProcessor( member.type ).c_str() );
 
-	f.write("\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-				
-	f.write("\t\t\t\t\tt.notifyInserted_%s( pos, oldVal );\n", member.name.c_str() );
-	f.write("\t\t\t\t}\n" );
+	if(complexElement)
+	{
+		f.write("\t\t\t\t//TODO\n");
 
-	f.write("\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\tt.notifyInserted_%s( pos );\n", member.name.c_str() );
+
+	}
+	else
+	{
+		f.write("\t\t\t\tauto value = %s::parse(parser);\n", getVectorElemSubscriberTypeProcessor(member.type).c_str() );
+		f.write("\t\t\t\tthis->%s.insert( this->%s.begin() + pos, value );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\t\t\t\tthis->notifyInserted_%s( pos );\n", member.name.c_str() );
+
+	}
+
+	// f.write("\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	// f.write("\t\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				
-	f.write("\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.notifyInserted_%s( pos, oldVal );\n", member.name.c_str() );
+	// f.write("\t\t\t\t}\n" );
+
+	// f.write("\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.notifyInserted_%s( pos );\n", member.name.c_str() );
 				
-	f.write("\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
 				
-	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+				
+	// f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
 	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
 	f.write("\t\t\t\tbreak;\n" );
 	f.write("\t\t\t}\n" );
@@ -3219,20 +3249,23 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("\t}\n" );
 			
 //f.write("//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
-	f.write("}\n" );
+	// f.write("}\n" );
 	f.write("else // replacement of the whole vector\n" );
 	f.write("{\n" );
 	f.write("\tparser.nextElement();\n" );
 	f.write("\tparser.leafeBegin();\n" );
 	// f.write("\t::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
 	f.write("\n" );
-	f.write("\tif constexpr( alwaysCollectChanges )\n" );
-	f.write("\t{\n" );
-	f.write("\t\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\tcurrentChanged = !%s::isSame( oldVectorVal, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t}\n" );
-	f.write("\telse\n" );
-	f.write("\t\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\tif constexpr( alwaysCollectChanges )\n" );
+	// f.write("\t{\n" );
+	f.write("\t\tauto value = %s::parse( parser );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tcurrentChanged = !%s::isSame( value, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tauto oldVal{std::move(this->%s)};\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tthis->%s = std::move(value);\n", impl_memberOrAccessFunctionName( member ).c_str() );
+
+	// f.write("\t}\n" );
+	// f.write("\telse\n" );
+	// f.write("\t\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\n" );
 	// f.write("\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
 	f.write("}\n" );
@@ -3240,18 +3273,18 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("if ( currentChanged )\n" );
 	f.write("{\n" );
 	f.write("\tchanged = true;\n" );
-	f.write("\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
-	f.write("\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\tt.notifyUpdated_%s( oldVectorVal );\n", member.name.c_str() );
+	// f.write("\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str() );
+	// f.write("\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\tt.notifyUpdated_%s( oldVectorVal );\n", member.name.c_str() );
 	f.write("}\n" );
 
-	if ( addReportChanges )
-	{
-		f.write("\n" );
-		f.write("if constexpr( alwaysCollectChanges )\n" );
-		f.write("\treturn currentChanged;\n" );
-	}
+	// if ( addReportChanges )
+	// {
+	// 	f.write("\n" );
+	// 	f.write("if constexpr( alwaysCollectChanges )\n" );
+		// f.write("\treturn tchanged;\n" );
+	// }
 }
 
 void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock2( FileWritter f, Root& root, CompositeType& obj, const char* offset, size_t idxBase, const std::string& parserType )
@@ -3272,11 +3305,14 @@ void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlo
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 			{
-				f.write("\tif ( addr.size() > offset + 1 )\n" );
+				f.write("\tif ( addr.size() == offset + 1 )\n" );
+				f.write("\t{\n" );
+				f.write("\t\tparser.nextElement();\n" );
+				f.write("\t\tparser.leafeBegin();\n" );
+				impl_generateApplyUpdateForSimpleType2( f.indent(2), member, true, true, parserType );
+				f.write("\t}\n" );
+				f.write("\telse // deeper address not supported for this type\n" );
 				f.write("\t\tthrow std::exception(); // bad format, TODO: ...\n" );
-				f.write("\tparser.nextElement();\n" );
-				f.write("\tparser.leafeBegin();\n" );
-				impl_generateApplyUpdateForSimpleType2( f.indent(), member, true, true, parserType );
 				break;
 			}
 			case  MessageParameterType::KIND::STRUCT:
@@ -3741,16 +3777,16 @@ void impl_SubscriberVirtualHandlers_Members( FileWritter f, CompositeType& obj )
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
 				f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
-				f.write("virtual void notifyElementUpdated_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getCppType(member.type.vectorElemKind).c_str());
+				f.write("virtual void notifyElementUpdated_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str());
 				f.write("virtual void notifyInserted_%s(size_t ix) {}\n", member.name.c_str());
-				f.write("virtual void notifyErased_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getSubscriberCppType(member.type).c_str());
+				f.write("virtual void notifyErased_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str());
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
 				f.write("virtual void notifyElementUpdated_%s(size_t ix) {}\n", member.name.c_str());
 				f.write("virtual void notifyInserted_%s(size_t ix) {}\n", member.name.c_str());
-				f.write("virtual void notifyErased_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getSubscriberCppType(member.type).c_str());
+				f.write("virtual void notifyErased_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str());
 				break;
 			default:
 				assert(false);
