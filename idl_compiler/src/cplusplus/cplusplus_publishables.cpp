@@ -27,20 +27,20 @@
 
 #include "cplusplus_idl_tree_serializer.h"
 #include "idl_tree_common.h"
-
+#include "file_writter.h"
 namespace cplusplus
 {
-const char* paramTypeToParser( MessageParameterType::KIND kind )
-{
-	switch( kind )
-	{
-		case MessageParameterType::KIND::INTEGER: return "parseSignedInteger";
-		case MessageParameterType::KIND::UINTEGER: return "parseUnsignedInteger";
-		case MessageParameterType::KIND::REAL: return "parseReal";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "parseString";
-		default: return nullptr;
-	}
-}
+// const char* paramTypeToParser( MessageParameterType::KIND kind )
+// {
+// 	switch( kind )
+// 	{
+// 		case MessageParameterType::KIND::INTEGER: return "parseSignedInteger";
+// 		case MessageParameterType::KIND::UINTEGER: return "parseUnsignedInteger";
+// 		case MessageParameterType::KIND::REAL: return "parseReal";
+// 		case MessageParameterType::KIND::CHARACTER_STRING: return "parseString";
+// 		default: return nullptr;
+// 	}
+// }
 
 
 string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterType& type )
@@ -98,55 +98,55 @@ string impl_parameterTypeToDescriptiveString( Root& s, const MessageParameterTyp
 	}
 }
 
-const char* paramTypeToLeafeParser( MessageParameterType::KIND kind )
-{
-	switch( kind )
-	{
-		case MessageParameterType::KIND::INTEGER: return "publishableParseLeafeInteger";
-		case MessageParameterType::KIND::UINTEGER: return "publishableParseLeafeUnsignedInteger";
-		case MessageParameterType::KIND::REAL: return "publishableParseLeafeReal";
-		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseLeafeString";
-		default: return nullptr;
-	}
-}
+// const char* paramTypeToLeafeParser( MessageParameterType::KIND kind )
+// {
+// 	switch( kind )
+// 	{
+// 		case MessageParameterType::KIND::INTEGER: return "publishableParseLeafeInteger";
+// 		case MessageParameterType::KIND::UINTEGER: return "publishableParseLeafeUnsignedInteger";
+// 		case MessageParameterType::KIND::REAL: return "publishableParseLeafeReal";
+// 		case MessageParameterType::KIND::CHARACTER_STRING: return "publishableParseLeafeString";
+// 		default: return nullptr;
+// 	}
+// }
 
-std::string impl_generateComposeFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
-{
-	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
-		return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
-	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-		return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
-	else
-	{
-		assert( false );
-		return "";
-	}
-}
+// std::string impl_generateComposeFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
+// {
+// 	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+// 		return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+// 	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+// 		return fmt::format( "publishable_{}_{}_compose", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+// 	else
+// 	{
+// 		assert( false );
+// 		return "";
+// 	}
+// }
 
-std::string impl_generateComposeFunctionNameForPublishableStruct( CompositeType& s )
-{
-	assert( s.type == CompositeType::Type::structure || s.isDiscriminatedUnion() );
-	return fmt::format( "publishable_{}_{}_compose", s.type2string(), s.name );
-}
+// std::string impl_generateComposeFunctionNameForPublishableStruct( CompositeType& s )
+// {
+// 	assert( s.type == CompositeType::Type::structure || s.isDiscriminatedUnion() );
+// 	return fmt::format( "publishable_{}_{}_compose", s.type2string(), s.name );
+// }
 
-std::string impl_generateParseFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
-{
-	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
-		return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
-	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-		return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
-	else
-	{
-		assert( false );
-		return "";
-	}
-}
+// std::string impl_generateParseFunctionNameForStructMemeberOfPublishable( MessageParameter& s )
+// {
+// 	if ( s.type.kind == MessageParameterType::KIND::STRUCT )
+// 		return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::structure ), s.type.name );
+// 	else if ( s.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+// 		return fmt::format( "publishable_{}_{}_parse", CompositeType::type2string( CompositeType::Type::discriminated_union ), s.type.name );
+// 	else
+// 	{
+// 		assert( false );
+// 		return "";
+// 	}
+// }
 
-std::string impl_generateParseFunctionNameForPublishableStruct( CompositeType& s )
-{
-	assert( s.type == CompositeType::Type::structure || s.isDiscriminatedUnion() );
-	return fmt::format( "publishable_{}_{}_parse", s.type2string(), s.name );
-}
+// std::string impl_generateParseFunctionNameForPublishableStruct( CompositeType& s )
+// {
+// 	assert( s.type == CompositeType::Type::structure || s.isDiscriminatedUnion() );
+// 	return fmt::format( "publishable_{}_{}_parse", s.type2string(), s.name );
+// }
 
 
 void impl_GeneratePublishableStateMemberPresenceCheckingBlock( FILE* header, Root& root, CompositeType& s )
@@ -271,7 +271,7 @@ void impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( FILE* he
 
 void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& member, bool addReportChanges, bool isLeafe, std::string offset, const std::string& parserType )
 {
-	string parseProcessorType = isLeafe ? paramTypeToLeafeParser( member.type.kind ) : paramTypeToParser( member.type.kind );
+	// string parseProcessorType = isLeafe ? paramTypeToLeafeParser( member.type.kind ) : paramTypeToParser( member.type.kind );
 	if ( addReportChanges )
 		fprintf( header, "%sif constexpr( has_any_notifier_for_%s || reportChanges || has_update_notifier )\n", offset.c_str(), member.name.c_str() );
 	else
@@ -282,7 +282,7 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	// 	fprintf( header, "%s\tparser.leafeBegin();\n", offset.c_str() );
 	// else
 		// fprintf( header, "%s\tparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str() );
-	fprintf( header, "%s\tt.%s = parser.%s();\n", offset.c_str(), impl_memberOrAccessFunctionName(member).c_str(), paramTypeToParser(member.type.kind));
+	fprintf( header, "%s\tt.%s = %s::parse(parser);\n", offset.c_str(), impl_memberOrAccessFunctionName(member).c_str(), getTypeProcessor(member.type).c_str());
 	fprintf( header, "%s\tbool currentChanged = oldVal != t.%s;\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\tif ( currentChanged )\n", offset.c_str() );
 	fprintf( header, "%s\t{\n", offset.c_str() );
@@ -304,18 +304,8 @@ void impl_generateApplyUpdateForSimpleType( FILE* header, MessageParameter& memb
 	// 	fprintf( header, "%s\tparser.leafeBegin();\n", offset.c_str());
 	// else
 		// fprintf( header, "%s\tparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str());
-	fprintf( header, "%s\tt.%s = parser.%s();\n", offset.c_str(), impl_memberOrAccessFunctionName(member).c_str(), paramTypeToParser(member.type.kind));
+	fprintf( header, "%s\tt.%s = %s::parse(parser);\n", offset.c_str(), impl_memberOrAccessFunctionName(member).c_str(), getTypeProcessor(member.type).c_str());
 	fprintf( header, "%s}\n", offset.c_str());
-}
-
-void impl_generateApplyUpdateForSimpleTypeNoNotifiers( FILE* header, MessageParameter& member, bool isLeafe, std::string offset)
-{
-	// fprintf( header, "%s\tparser.nextElement();\n", offset.c_str() );
-	// if (isLeafe)
-	// 	fprintf(header, "%s\tparser.leafeBegin();\n", offset.c_str());
-	// else
-	// 	fprintf(header, "%s\tparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str());
-	fprintf(header, "%s\tt.%s = parser.%s();\n", offset.c_str(), impl_memberOrAccessFunctionName(member).c_str(), paramTypeToParser(member.type.kind));
 }
 
 void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& member, bool addReportChanges, std::string offset, const std::string& parserType )
@@ -485,7 +475,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\ttypename %s::mapped_type oldValue;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 		fprintf( header, "%s\t\t\t%s::copy( value, oldValue );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t\tchanged = true;\n", offset.c_str() );
@@ -499,7 +489,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 		fprintf( header, "%s\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t\tchanged = true;\n", offset.c_str() );
@@ -511,7 +501,7 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 		fprintf( header, "%s\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
-		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 		fprintf( header, "%s\t\t\tif ( currentChanged )\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\t\tchanged = true;\n", offset.c_str() );
@@ -522,9 +512,9 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		fprintf( header, "%s\t\telse\n", offset.c_str() );
 		fprintf( header, "%s\t\t{\n", offset.c_str() );
 		fprintf( header, "%s\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 		fprintf( header, "%s\t\t\telse\n", offset.c_str() );
-		fprintf( header, "%s\t\t\t\t%s::parse( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str(), offsetPlusStr );
+		fprintf( header, "%s\t\t\t\t%s::parse( parser, value, addr, offset );\n", offset.c_str(), getDictionaryValueProcessor(member.type).c_str() );
 		fprintf( header, "%s\t\t}\n", offset.c_str() );
 	}
 	else
@@ -726,7 +716,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%sbool currentChanged = false;\n", offset.c_str() );
 	fprintf( header, "%sconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
-	fprintf( header, "%s\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::copy( t.%s, oldVectorVal );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t%s::copy( t.%s, oldVectorVal );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
 //fprintf( header, "//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n", offset.c_str() );
 
@@ -819,7 +809,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%s\t\t\tcase ActionOnVector::remove_at:\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t{\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t%s oldVal;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::copy( t.%s, oldVal );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\t%s::copy( t.%s, oldVal );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", offset.c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", offset.c_str(), member.name.c_str() );
 //	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
@@ -866,7 +856,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%s\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
 
-	fprintf( header, "%s\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getTypeProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tif ( currentChanged )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t{\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tchanged = true;\n", offset.c_str() );
@@ -880,7 +870,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 				
 	fprintf( header, "%s\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getTypeProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tif ( currentChanged )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t{\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tchanged = true;\n", offset.c_str() );
@@ -892,7 +882,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 
 	fprintf( header, "%s\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getTypeProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\t\tif ( currentChanged )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tchanged = true;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", offset.c_str(), member.name.c_str() );
@@ -902,11 +892,11 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", offset.c_str(), getTypeProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\t\t\tchanged = true;\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\telse\n", offset.c_str() );
-	fprintf( header, "%s\t\t\t\t\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValue( parser, value );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\t\t\t%s::parseSingleValue( parser, value );\n", offset.c_str(), getTypeProcessor( member.type ).c_str() );
 	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
 
 	fprintf( header, "%s\t\t\t\tbreak;\n", offset.c_str() );
@@ -916,12 +906,12 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%s\t\t\t\tparser.nextElement();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\tparser.leafeBegin();\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\ttypename %s::value_type value;\n", offset.c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-	fprintf( header, "%s\t\t\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parseSingleValue( parser, value );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str() );
+	fprintf( header, "%s\t\t\t\t%s::parseSingleValue( parser, value );\n", offset.c_str(), getTypeProcessor( member.type ).c_str() );
 
 	fprintf( header, "%s\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t{\n", offset.c_str() );
 	fprintf( header, "%s\t\t\t\t\t%s oldVal;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-	fprintf( header, "%s\t\t\t\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::copy( t.%s, oldVal );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t\t\t\t%s::copy( t.%s, oldVal );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				
 	fprintf( header, "%s\t\t\t\t\tt.notifyInserted_%s( pos, oldVal );\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s\t\t\t\t}\n", offset.c_str() );
@@ -954,11 +944,11 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "\n" );
 	fprintf( header, "%s\tif constexpr( alwaysCollectChanges )\n", offset.c_str() );
 	fprintf( header, "%s\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	fprintf( header, "%s\t\tcurrentChanged = !globalmq::marshalling2::PublishableVectorProcessor2<%s>::isSame( oldVectorVal, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t%s::parse( parser, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\tcurrentChanged = !%s::isSame( oldVectorVal, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\t}\n", offset.c_str() );
 	fprintf( header, "%s\telse\n", offset.c_str() );
-	fprintf( header, "%s\t\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	fprintf( header, "%s\t\t%s::parse( parser, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "\n" );
 	// fprintf( header, "%s\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n", offset.c_str() );
 	fprintf( header, "%s}\n", offset.c_str() );
@@ -1456,16 +1446,16 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 				fprintf( header, "%sif constexpr( reportChanges || has_update_notifier )\n", offset.c_str() );
 				fprintf( header, "%s{\n", offset.c_str() );
 				fprintf( header, "%s\t%s oldVectorVal;\n", offset.c_str(), impl_templateMemberTypeName( "T", member ).c_str() );
-				fprintf( header, "%s\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::copy( t.%s, oldVectorVal );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\t%s::copy( t.%s, oldVectorVal );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "%s\tparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str() );
-				fprintf( header, "%s\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-				fprintf( header, "%s\tbool currentChanged = !::globalmq::marshalling2::PublishableVectorProcessor2<%s>::isSame( oldVectorVal, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\t%s::parse( parser, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\tbool currentChanged = !%s::isSame( oldVectorVal, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "%s\tchanged = changed || currentChanged;\n", offset.c_str() );
 				fprintf( header, "%s}\n", offset.c_str() );
 				fprintf( header, "%selse\n", offset.c_str() );
 				fprintf( header, "%s{\n", offset.c_str() );
 				fprintf( header, "%s\tparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str());
-				fprintf( header, "%s\tglobalmq::marshalling2::PublishableVectorProcessor2<%s>::parse( parser, t.%s );\n", offset.c_str(), getVectorElementProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				fprintf( header, "%s\t%s::parse( parser, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				fprintf( header, "%s}\n", offset.c_str() );
 				fprintf( header, "\n" );
 
@@ -1662,13 +1652,95 @@ void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FI
 	fprintf( header, "\t}\n" );
 }
 
+
+
+void impl_generateHelperParseStateSync_MemberIterationBlock( FILE* header, Root& root, CompositeType& obj, std::string offset, const std::string& parserType )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	std::string templParent = getGeneratedTypeName(obj);
+
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
+	{
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
+
+		if(i != 0)
+			fprintf( header, "%sparser.nextElement();\n\n", offset.c_str() );
+			
+
+		fprintf( header, "%sparser.namedParamBegin( \"%s\" );\n", offset.c_str(), member.name.c_str() );
+		fprintf( header, "%s%s::parseForStateSyncOrMessageInDepth( parser, t.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	}
+}
+
+void impl_generateHelperParseStateSync( FILE* header, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	fprintf( header, "\ttemplate<class T>\n" );
+	fprintf( header, "\tstatic\n" );
+	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( %s& parser, T& t )\n", parserType.c_str() );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\tparser.structBegin();\n" );
+	fprintf( header, "\n" );
+	std::string typeName = getGeneratedTypeName(obj);
+	if ( obj.isDiscriminatedUnion() )
+	{
+		fprintf( header, "\t\tparser.namedParamBegin( \"caseId\" );\n");
+		fprintf( header, "\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
+		fprintf( header, "\t\tt.initAs( (typename %s::Variants)(caseId) );\n", typeName.c_str() );
+		fprintf( header, "\t\tparser.nextElement();\n");
+		fprintf( header, "\t\tif ( caseId != %s::Variants::unknown )\n", typeName.c_str() );
+		fprintf( header, "\t\t{\n" );
+
+		fprintf( header, "\t\t\tparser.namedParamBegin( \"caseData\" );\n");
+		fprintf( header, "\t\t\tparser.structBegin();\n" );
+		fprintf( header, "\t\t\tswitch ( caseId )\n" );
+		fprintf( header, "\t\t\t{\n" );
+
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			std::string numId = std::to_string(it->numID);
+			fprintf( header, "\t\t\t\tcase %s: // IDL CASE %s\n", numId.c_str(), it->name.c_str() );
+			fprintf( header, "\t\t\t\t{\n" );
+
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateHelperParseStateSync_MemberIterationBlock( header, root, cs, "\t\t\t\t\t", parserType );
+
+			fprintf( header, "\t\t\t\t\tbreak;\n" );
+			fprintf( header, "\t\t\t\t}\n" );
+		}
+
+		fprintf( header, "\t\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		fprintf( header, "\t\t\t}\n" );
+		fprintf( header, "\t\t\tparser.structEnd();\n" );
+
+		fprintf( header, "\t\t}\n" );
+	}
+	else
+		impl_generateHelperParseStateSync_MemberIterationBlock( header, root, obj, "\t\t", parserType );
+
+	fprintf( header, "\n" );
+	fprintf( header, "\t\tparser.structEnd();\n" );
+
+	fprintf( header, "\t}\n" );
+}
+
 void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, CompositeType& obj, bool addFullUpdateNotifierBlock, const std::string& parserType )
 {
 	assert( obj.type == CompositeType::Type::publishable );
 	fprintf( header, "\tvoid parseStateSyncMessage( %s& parser )\n", parserType.c_str());
 	fprintf( header, "\t{\n" );
 
-	fprintf( header, "\t\t%s::parseForStateSyncOrMessageInDepth( parser, t );\n", getHelperClassName(obj).c_str() );
+//	fprintf( header, "\t\t%s::parseForStateSyncOrMessageInDepth( parser, t );\n", getHelperClassName(obj).c_str() );
 
 	if ( addFullUpdateNotifierBlock )
 	{
@@ -1749,14 +1821,14 @@ void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( FILE* header, 
 		assert( s.getMembers()[i] != nullptr );
 		auto& member = *(s.getMembers()[i]);
 
-		fprintf( header, "%sif( ! %s::isSame( s1.%s, s2.%s ) ) return false;\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		fprintf( header, "%sif( ! %s::isSame( s1.get_%s(), s2.get_%s() ) ) return false;\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	}
 }
 
 void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, CompositeType& s )
 {
-	fprintf( header, "\ttemplate<typename UserT>\n" );
-	fprintf( header, "\tstatic bool isSame(const UserT& s1, const UserT& s2) {\n" );
+	fprintf( header, "\ttemplate<typename UserT1, typename UserT2>\n" );
+	fprintf( header, "\tstatic bool isSame(const UserT1& s1, const UserT2& s2) {\n" );
 
 	if ( s.isDiscriminatedUnion() )
 	{
@@ -1820,6 +1892,9 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 	{
 		for (auto& each : config.parserNames)
 		{
+			impl_generateHelperParseStateSync( header, root, obj, each );
+			fprintf(header, "\n");
+
 			impl_generateParseFunctionForPublishableStruct(header, root, obj, each);
 			fprintf(header, "\n");
 
@@ -1922,7 +1997,7 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 	assert( s.type != CompositeType::Type::discriminated_union ); // not implemented
 
 	std::string structName = getHelperClassName(s);
-	fprintf( header, "\t\t\t%s::parse(parser, t, addr, 0);\n", structName.c_str() );
+//	fprintf( header, "\t\t\t%s::parse(parser, t, addr, 0);\n", structName.c_str() );
 
 	fprintf( header, "\t\t\taddr.clear();\n" );
 	fprintf( header, "\t\t\tparser.changeEnd();\n" );
@@ -1966,7 +2041,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
 	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { buffer = std::move( buff ); composer.reset(); composer.stateUpdateBegin(); }\n" );
 	fprintf( header, "\tvirtual BufferT&& endTick() override { composer.stateUpdateEnd(); return std::move( buffer ); }\n" );
-	fprintf( header, "\tvirtual const char* name() override { return stringTypeID; }\n" );
+	fprintf( header, "\tvirtual const char* publishableName() override { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
@@ -2006,7 +2081,7 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { %s_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual BufferT&& endTick() override { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) override { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual const char* name() override { return %s_WrapperForPublisher<T, ComposerT>::name(); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* publishableName() override { return %s_WrapperForPublisher<T, ComposerT>::publishableName(); }\n", s.name.c_str() );
 
 	fprintf( header, "};\n\n" );
 }
@@ -2054,7 +2129,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\t\tthrow std::exception();\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual const char* name() override { return stringTypeID; }\n" );
+	fprintf( header, "\tvirtual const char* publishableName() override { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
 	fprintf( header, "\n" );
 
@@ -2113,9 +2188,9 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
-	fprintf( header, "\tvirtual const char* name() override\n" );
+	fprintf( header, "\tvirtual const char* publishableName() override\n" );
 	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::name();\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::publishableName();\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvoid subscribe(GMQ_COLL string path)\n" );
 	fprintf( header, "\t{\n" );
@@ -2155,7 +2230,7 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 	fprintf( header, "\t// Acting as publisher\n" );
 	fprintf( header, "\tvirtual void generateStateSyncMessage( ComposerT& composer ) override { throw std::exception(); }\n" );
 	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual const char* name() override {return \"%s\";}\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* publishableName() override {return \"%s\";}\n", s.name.c_str() );
 	fprintf( header, "\n" );
 
 	fprintf( header, "\t// new interface with default implementation to avoid breaking old code\n" );
@@ -2449,5 +2524,1510 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, const Gene
 
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s, config );
 }
+
+             //////////////////////////////////////////
+////////////// new subscriber model below this line //////////////
+            //////////////////////////////////////////
+
+void impl_generateApplyUpdateForSimpleType2( FileWritter f, MessageParameter& member, bool addReportChanges, bool isLeafe, const std::string& parserType )
+{
+	// string parseProcessorType = isLeafe ? paramTypeToLeafeParser( member.type.kind ) : paramTypeToParser( member.type.kind );
+	// if ( addReportChanges )
+	// 	f.write("if constexpr( has_any_notifier_for_%s || reportChanges || has_update_notifier )\n", member.name.c_str() );
+	// else
+	// 	f.write("if constexpr( has_any_notifier_for_%s )\n", member.name.c_str() );
+	f.write("{\n" );
+	f.write("\tauto oldVal = this->%s;\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	// if ( isLeafe )
+	// 	f.write("\tparser.leafeBegin();\n" );
+	// else
+		// f.write("\tparser.namedParamBegin( \"%s\" );\n", member.name.c_str() );
+	f.write("\tthis->%s = %s::parse(parser);\n", impl_memberOrAccessFunctionName(member).c_str(), getTypeProcessor(member.type).c_str());
+	f.write("\tbool currentChanged = oldVal != this->%s;\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tif ( currentChanged )\n" );
+	f.write("\t{\n" );
+	if ( addReportChanges )
+	{
+		// f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+		f.write("\t\tchanged = true;\n" );
+	}
+	// f.write("\t\tif constexpr ( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+	// f.write("\t\tif constexpr ( has_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\tthis->notifyUpdated_%s( oldVal );\n", member.name.c_str() );
+	f.write("\t}\n" );
+	f.write("}\n" );
+	// f.write("else\n" );
+	// f.write("\t{\n");
+	// f.write("\tparser.nextElement();\n" );
+	// if (isLeafe)
+	// 	f.write("\tparser.leafeBegin();\n");
+	// else
+		// f.write("\tparser.namedParamBegin( \"%s\" );\n", member.name.c_str());
+	// f.write("\tt.%s = %s::parse(parser);\n", impl_memberOrAccessFunctionName(member).c_str(), getTypeProcessor(member.type).c_str());
+	// f.write("}\n");
+}
+
+void impl_generateApplyUpdateForStructItself2( FileWritter f, MessageParameter& member, bool addReportChanges, const std::string& parserType )
+{
+
+// 	f.write("if constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("{\n" );
+// 	f.write("\t%s temp_%s;\n", impl_templateMemberTypeName( "T", member).c_str(), member.name.c_str() );
+// //	f.write("\t%s::copy<%s, %s>( t.%s, temp_%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_templateMemberTypeName( "T", member).c_str(), member.name.c_str(), member.name.c_str() );
+// 	f.write("\t%s::copy<%s>( t.%s, temp_%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+// 	f.write("\tbool changedCurrent = %s::parse<%s, bool>( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+// 	f.write("\tif ( changedCurrent )\n" );
+// 	f.write("\t{\n" );
+// 	if ( addReportChanges )
+// 	{
+// 		f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+// 		f.write("\t\t\tchanged = true;\n" );
+// 	}
+// 	f.write("\t\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("\t\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+// 	f.write("\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("\t\t\tt.notifyUpdated_%s( temp_%s );\n", member.name.c_str(), member.name.c_str() );
+// 	f.write("\t}\n" );
+// 	f.write("}\n" );
+
+	// f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("{\n" );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tif ( changedCurrent )\n" );
+	f.write("\t{\n" );
+	// if ( addReportChanges )
+	// {
+	// 	f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+		f.write("\t\tchanged = true;\n" );
+	// }
+	f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str() );
+	f.write("\t}\n" );
+	f.write("}\n" );
+
+	// f.write("else\n" );
+	// f.write("{\n" );
+	// if ( addReportChanges )
+	// {
+	// 	f.write("\tif constexpr ( reportChanges || has_update_notifier )\n" );
+	// 	f.write("\t\tchanged = %s::parse<%s, bool>( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// 	f.write("\telse\n" );
+	// 	f.write("\t\t%s::parse( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// }
+	// else
+	// 	f.write("\t%s::parse( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("}\n" );
+}
+
+
+void impl_generateApplyUpdateForFurtherProcessingInStruct2( FileWritter f, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, bool forwardAddress, const std::string& parserType )
+{
+	// assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+	// const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+// 	f.write("if constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("{\n" );
+// 	f.write("\t%s temp_%s;\n", impl_templateMemberTypeName( "T", member).c_str(), member.name.c_str() );
+// //	f.write("\t%s::copy<%s, %s>( t.%s, temp_%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+// 	f.write("\t%s::copy<%s>( t.%s, temp_%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+// 	f.write("\tbool changedCurrent = %s::parse<%s, bool>( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+// 	f.write("\tif ( changedCurrent )\n" );
+// 	f.write("\t{\n" );
+// 	f.write("\t\tchanged = true;\n" );
+// 	if ( addReportChanges )
+// 	{
+// 		f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+// 		f.write("\t\t\tchanged = true;\n" );
+// 	}
+// 	f.write("\t\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("\t\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+// 	f.write("\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("\t\t\tt.notifyUpdated_%s( temp_%s );\n", member.name.c_str(), member.name.c_str() );
+// 	f.write("\t}\n" );
+// 	f.write("}\n" );
+
+// 	f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("{\n" );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tif ( changedCurrent )\n" );
+	f.write("\t{\n" );
+	// if ( addReportChanges )
+	// {
+	// 	f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+		f.write("\t\t\tchanged = true;\n" );
+	// }
+	f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str() );
+	f.write("\t}\n" );
+	f.write("}\n" );
+
+	// if ( addReportChanges )
+	// {
+	// 	f.write("else if constexpr ( reportChanges || has_update_notifier )\n" );
+	// 	f.write("\tchanged = %s::parse<%s, bool>( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// 	f.write("else\n" );
+	// 	f.write("\t%s::parse( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// }
+	// else
+	// {
+	// 	f.write("else\n" );
+	// 	f.write("\t%s::parse( parser, t.%s );\n", getHelperClassName( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// }
+}
+
+
+void impl_generateApplyUpdateForFurtherProcessingInStruct3( FileWritter f, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, bool forwardAddress, const std::string& parserType )
+{
+// 	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+// 	// const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+// 	f.write("if constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("{\n" );
+// 	f.write("\t%s temp_%s;\n", impl_templateMemberTypeName( "T", member).c_str(), member.name.c_str() );
+// //	f.write("\t%s::copy<%s, %s>( t.%s, temp_%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+// 	f.write("\t%s::copy<%s>( t.%s, temp_%s );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+// 	f.write("\tbool changedCurrent = %s::parse<%s, bool>( parser, t.%s, addr, offset + 1 );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+// 	f.write("\tif ( changedCurrent )\n" );
+// 	f.write("\t{\n" );
+// 	f.write("\t\tchanged = true;\n" );
+// 	if ( addReportChanges )
+// 	{
+// 		f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+// 		f.write("\t\t\tchanged = true;\n" );
+// 	}
+// 	f.write("\t\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("\t\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+// 	f.write("\t\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+// 	f.write("\t\t\tt.notifyUpdated_%s( temp_%s );\n", member.name.c_str(), member.name.c_str() );
+// 	f.write("\t}\n" );
+// 	f.write("}\n" );
+
+// 	f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("{\n" );
+	f.write("\tbool changedCurrent = %s::parse_continue( parser, this->%s, addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tif ( changedCurrent )\n" );
+	f.write("\t{\n" );
+	// if ( addReportChanges )
+	// {
+	// 	f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+		f.write("\t\tchanged = true;\n" );
+	// }
+	f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str() );
+	f.write("\t}\n" );
+	f.write("}\n" );
+
+	// if ( addReportChanges )
+	// {
+	// 	f.write("else if constexpr ( reportChanges || has_update_notifier )\n" );
+	// 	f.write("\tchanged = %s::parse<%s, bool>( parser, t.%s, addr, offset + 1 );\n", getHelperClassName( member.type ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// 	f.write("else\n" );
+	// 	f.write("\t%s::parse( parser, t.%s, addr, offset + 1 );\n", getHelperClassName( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// }
+	// else
+	// {
+	// 	f.write("else\n" );
+	// 	f.write("\t%s::parse( parser, t.%s, addr, offset + 1 );\n", getHelperClassName( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// }
+}
+
+void impl_generateApplyUpdateForFurtherProcessingInDictionary2( FileWritter f, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, const std::string& parserType )
+{
+//	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+	// const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+
+	f.write("%s oldDictionaryVal;\n",  impl_templateMemberTypeName( "T", member).c_str() );
+	f.write("bool currentChanged = false;\n" );
+	f.write("constexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
+//	f.write("if constexpr( alwaysCollectChanges )\n" );
+//	f.write("\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+f.write("//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+
+//	const char* libType = paramTypeToLibType( member.type.dictionaryValueKind );
+	assert( member.type.structIdx < root.structs.size() );
+
+
+	f.write("if ( addr.size() > offset + 2 ) // update for a value of a particular dictionary element\n" );
+	f.write("{\n" );
+
+	if ( member.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+	{
+		f.write("\toffset += 1;\n" );
+		f.write("\tauto key = %s::fromAddress(addr, offset);\n", getDictionaryKeyProcessor(member.type).c_str() );
+		// f.write("\t%s::parse(parser, t.%s[key], addr, offset);\n", getDictionaryValueProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+		f.write("\t\ttypename %s::mapped_type& value = t.%s[key];\n", impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+		f.write("\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t{\n" );
+		f.write("\t\t\ttypename %s::mapped_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\t%s::copy( value, oldValue );\n", getDictionaryValueProcessor(member.type).c_str() );
+		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\tif ( currentChanged )\n" );
+		f.write("\t\t\t{\n" );
+		f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", member.name.c_str() );
+		f.write("\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+		f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\tif ( currentChanged )\n" );
+		f.write("\t\t\t{\n" );
+		f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+		f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\tif ( currentChanged )\n" );
+		f.write("\t\t\t{\n" );
+		f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse\n" );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+		f.write("\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\telse\n" );
+		f.write("\t\t\t\t%s::parse( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str() );
+		f.write("\t\t}\n" );
+	}
+	else
+		f.write("\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
+				
+	f.write("}\n" );
+
+	f.write("else if ( addr.size() > offset + 1 ) // update of one or more elelments as a whole\n" );
+	f.write("{\n" );
+	f.write("\tsize_t action = addr[offset + 1];\n" );
+
+	// f.write("\telse \n" );
+	// f.write("\t{\n" );
+	f.write("\t\tswitch ( action )\n" );
+	f.write("\t\t{\n" );
+
+	f.write("\t\t\tcase ActionOnDictionary::remove:\n" );
+	f.write("\t\t\t{\n" );
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\tauto f = t.%s.find( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tif ( f == t.%s.end() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\t\tthrow std::exception();\n" );
+	f.write("\t\t\t\ttypename %s::mapped_type oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\toldVal = f->second;\n" );
+	f.write("\t\t\t\tt.%s.erase( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tif constexpr ( has_removed_notifier3_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\tt.notifyRemoved_%s( key, oldVal );\n", member.name.c_str() );
+	f.write("\t\t\t\tif constexpr ( has_removed_notifier2_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\tt.notifyRemoved_%s( key );\n", member.name.c_str() );
+	f.write("\t\t\t\tif constexpr ( has_void_removed_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\tt.notifyRemoved_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
+	f.write("\t\t\t\tbreak;\n" );
+	f.write("\t\t\t}\n" );
+
+	f.write("\t\t\tcase ActionOnDictionary::update_value:\n" );
+	f.write("\t\t\t{\n" );
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\tauto f = t.%s.find( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tif ( f == t.%s.end() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\t\tthrow std::exception();\n" );
+
+	f.write("\t\t\t\ttypename %s::mapped_type& value = f->second;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+
+	f.write("\t\t\t\ttypename %s::mapped_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+	switch ( member.type.dictionaryValueKind )
+	{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			f.write("\t\t\t\toldValue = value;\n" );
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("\t\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
+			break;
+		default:
+			f.write("\t\t\t\tstatic_assert(false);\n" );
+			break;
+	}
+				
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+
+	f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	f.write("\t\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t\t}\n" );
+	f.write("\t\t\t\t}\n"  );
+				
+	f.write("\t\t\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	f.write("\t\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t\t}\n" );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\telse\n" );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\telse\n" );
+	f.write("\t\t\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\tbreak;\n" );
+	f.write("\t\t\t}\n" );
+
+	f.write("\t\t\tcase ActionOnDictionary::insert:\n" );
+	f.write("\t\t\t{\n" );
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\ttypename %s::mapped_type value;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+
+	f.write("\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::copy( t.%s, oldVal );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+				
+	f.write("\t\t\t\t\tt.notifyInserted_%s( key, oldVal );\n", member.name.c_str() );
+	f.write("\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tt.notifyInserted_%s( key );\n", member.name.c_str() );
+				
+	f.write("\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t}\n" );
+	f.write("\t\t\t\telse\n" );
+	f.write("\t\t\t\t{\n" );
+
+	f.write("\t\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tt.notifyInserted_%s( key );\n", member.name.c_str() );
+				
+	f.write("\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t}\n" );
+				
+	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
+	f.write("\t\t\t\tbreak;\n" );
+	f.write("\t\t\t}\n" );
+	f.write("\t\t\tdefault:\n" );
+	f.write("\t\t\t\tthrow std::exception();\n" );
+	f.write("\t\t}\n" );
+	// f.write("\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n" );
+	// f.write("\t}\n" );
+			
+//f.write("//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+	f.write("}\n" );
+	f.write("else // replacement of the whole dictionary\n" );
+	f.write("{\n" );
+	f.write("\tparser.nextElement();\n" );
+	f.write("\tparser.leafeBegin();\n" );
+	f.write("\n" );
+	f.write("\tif constexpr( alwaysCollectChanges )\n" );
+	f.write("\t{\n" );
+	f.write("\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tcurrentChanged = !globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::isSame( oldDictionaryVal, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t}\n" );
+	f.write("\telse\n" );
+	f.write("\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\n" );
+	// f.write("\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n" );
+	f.write("}\n" );
+	f.write("\n" );
+	f.write("if ( currentChanged )\n" );
+	f.write("{\n" );
+	f.write("\tchanged = true;\n" );
+	f.write("\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+	f.write("\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\tt.notifyUpdated_%s( oldDictionaryVal );\n", member.name.c_str() );
+	f.write("}\n" );
+
+	if ( addReportChanges )
+	{
+		f.write("\n" );
+		f.write("if constexpr( alwaysCollectChanges )\n" );
+		f.write("\treturn currentChanged;\n" );
+	}
+}
+
+void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, const std::string& parserType )
+{
+//	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
+	// const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
+
+	f.write("%s oldVectorVal;\n",  impl_templateMemberTypeName( "T", member).c_str() );
+	f.write("bool currentChanged = false;\n" );
+	f.write("constexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
+	f.write("if constexpr( alwaysCollectChanges )\n" );
+	f.write("\t%s::copy( t.%s, oldVectorVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+//f.write("//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+
+//	const char* libType = paramTypeToLibType( member.type.vectorElemKind );
+	assert( member.type.structIdx < root.structs.size() );
+	f.write("if ( addr.size() > offset + 1 ) // one of actions over elements of the vector\n" );
+	f.write("{\n" );
+	f.write("\tsize_t pos = addr[offset + 1];\n" );
+	f.write("\tif ( pos > t.%s.size() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tthrow std::exception();\n" );
+
+	f.write("\tif ( addr.size() > offset + 2 ) // update for a member of a particular vector element\n" );
+	f.write("\t{\n" );
+
+	if ( member.type.vectorElemKind == MessageParameterType::KIND::STRUCT || member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+	{
+		f.write("\t\ttypename %s::value_type& value = t.%s[pos];\n", impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+		f.write("\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t{\n" );
+		f.write("\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+		switch ( member.type.vectorElemKind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("\t\t\toldValue = value;\n" );
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
+				break;
+			default:
+				f.write("\t\t\t\tstatic_assert(false);\n" );
+				break;
+		}
+		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\tif ( currentChanged )\n" );
+		f.write("\t\t\t{\n" );
+		f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
+		f.write("\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\tif ( currentChanged )\n" );
+		f.write("\t\t\t{\n" );
+		f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+		f.write("\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\tif ( currentChanged )\n" );
+		f.write("\t\t\t{\n" );
+		f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse\n" );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+		f.write("\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t\telse\n" );
+		f.write("\t\t\t\t%s::parse<typename %s::value_type>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\t\t}\n" );
+	}
+	else
+		f.write("\t\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
+				
+	f.write("\t}\n" );
+	f.write("\telse // update of one or more elelments as a whole\n" );
+	f.write("\t{\n" );
+	f.write("\t\tparser.nextElement();\n" );
+	f.write("\t\tuint64_t action = parser.parseAction();\n" );
+	f.write("\t\tswitch ( action )\n" );
+	f.write("\t\t{\n" );
+	f.write("\t\t\tcase ActionOnVector::remove_at:\n" );
+	f.write("\t\t\t{\n" );
+	f.write("\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", member.name.c_str() );
+//	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tt.notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
+//	f.write("\t\t\t\t}\n" );
+	f.write("\t\t\t\tif constexpr ( has_erased_notifier2_for_%s )\n", member.name.c_str() );
+//	f.write("\t\t\t\t{\n" );
+//	f.write("\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\t\tt.notifyErased_%s( pos );\n", member.name.c_str() );
+//	f.write("\t\t\t\t}\n" );
+	f.write("\t\t\t\tif constexpr ( has_void_erased_notifier_for_%s )\n", member.name.c_str() );
+//	f.write("\t\t\t\t{\n" );
+//	f.write("\t\t\t\t\tt.%s.erase( t.%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\t\t\tt.notifyErased_%s();\n", member.name.c_str() );
+//	f.write("\t\t\t\t}\n" );
+	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
+	f.write("\t\t\t\tbreak;\n" );
+	f.write("\t\t\t}\n" );
+	f.write("\t\t\tcase ActionOnVector::update_at:\n" );
+	f.write("\t\t\t{\n" );
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\tparser.leafeBegin();\n" );
+	f.write("\t\t\t\ttypename %s::value_type& value = t.%s[pos];\n", impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+
+	f.write("\t\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+	switch ( member.type.vectorElemKind )
+	{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			f.write("\t\t\t\toldValue = value;\n" );
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("\t\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
+			break;
+		default:
+			f.write("\t\t\t\tstatic_assert(false);\n" );
+			break;
+	}
+				
+	f.write("\t\t\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+
+	f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	f.write("\t\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s( pos, oldValue );\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tif constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t\t}\n" );
+	f.write("\t\t\t\t}\n"  );
+				
+	f.write("\t\t\t\telse if constexpr ( has_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	f.write("\t\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\tif constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t\t}\n" );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\telse if constexpr ( has_void_element_updated_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t\t\tt.notifyElementUpdated_%s();\n", member.name.c_str() );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\telse\n" );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t\tcurrentChanged = %s::parseSingleValueAndCompare( parser, value, oldValue );\n", getTypeProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t\t\tchanged = true;\n" );
+	f.write("\t\t\t\t}\n" );
+	f.write("\t\t\t\t\telse\n" );
+	f.write("\t\t\t\t\t\t%s::parseSingleValue( parser, value );\n", getTypeProcessor( member.type ).c_str() );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\tbreak;\n" );
+	f.write("\t\t\t}\n" );
+	f.write("\t\t\tcase ActionOnVector::insert_single_before:\n" );
+	f.write("\t\t\t{\n" );
+	f.write("\t\t\t\tparser.nextElement();\n" );
+	f.write("\t\t\t\tparser.leafeBegin();\n" );
+	f.write("\t\t\t\ttypename %s::value_type value;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+	f.write("\t\t\t\t%s::parseSingleValue( parser, value );\n", getTypeProcessor( member.type ).c_str() );
+
+	f.write("\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t{\n" );
+	f.write("\t\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				
+	f.write("\t\t\t\t\tt.notifyInserted_%s( pos, oldVal );\n", member.name.c_str() );
+	f.write("\t\t\t\t}\n" );
+
+	f.write("\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\tt.notifyInserted_%s( pos );\n", member.name.c_str() );
+				
+	f.write("\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
+				
+	f.write("\t\t\t\tt.%s.insert( t.%s.begin() + pos, value );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				
+	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
+	f.write("\t\t\t\tbreak;\n" );
+	f.write("\t\t\t}\n" );
+	f.write("\t\t\tdefault:\n" );
+	f.write("\t\t\t\tthrow std::exception();\n" );
+	f.write("\t\t}\n" );
+	// f.write("\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n" );
+	f.write("\t}\n" );
+			
+//f.write("//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
+	f.write("}\n" );
+	f.write("else // replacement of the whole vector\n" );
+	f.write("{\n" );
+	f.write("\tparser.nextElement();\n" );
+	f.write("\tparser.leafeBegin();\n" );
+	// f.write("\t::globalmq::marshalling::impl::publishableParseLeafeVectorBegin( parser );\n" );
+	f.write("\n" );
+	f.write("\tif constexpr( alwaysCollectChanges )\n" );
+	f.write("\t{\n" );
+	f.write("\t\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tcurrentChanged = !%s::isSame( oldVectorVal, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t}\n" );
+	f.write("\telse\n" );
+	f.write("\t\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\n" );
+	// f.write("\t::globalmq::marshalling::impl::publishableParseLeafeVectorEnd( parser );\n" );
+	f.write("}\n" );
+	f.write("\n" );
+	f.write("if ( currentChanged )\n" );
+	f.write("{\n" );
+	f.write("\tchanged = true;\n" );
+	f.write("\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
+	f.write("\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\t\tt.notifyUpdated_%s( oldVectorVal );\n", member.name.c_str() );
+	f.write("}\n" );
+
+	if ( addReportChanges )
+	{
+		f.write("\n" );
+		f.write("if constexpr( alwaysCollectChanges )\n" );
+		f.write("\treturn currentChanged;\n" );
+	}
+}
+
+void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock2( FileWritter f, Root& root, CompositeType& obj, const char* offset, size_t idxBase, const std::string& parserType )
+{
+	assert( obj.type != CompositeType::Type::discriminated_union );
+
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
+	{
+		std::string numId = std::to_string(idxBase + i);
+		f.write("case %s:\n", numId.c_str() );
+		f.write("{\n" );
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+			{
+				f.write("\tif ( addr.size() > offset + 1 )\n" );
+				f.write("\t\tthrow std::exception(); // bad format, TODO: ...\n" );
+				f.write("\tparser.nextElement();\n" );
+				f.write("\tparser.leafeBegin();\n" );
+				impl_generateApplyUpdateForSimpleType2( f.indent(), member, true, true, parserType );
+				break;
+			}
+			case  MessageParameterType::KIND::STRUCT:
+			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+			{
+				f.write("\tif ( addr.size() == offset + 1 ) // we have to parse and apply changes of this child\n" );
+				f.write("\t{\n" );
+				f.write("\t\tparser.nextElement();\n" );
+				f.write("\t\tparser.leafeBegin();\n" );
+
+				impl_generateApplyUpdateForStructItself2( f.indent(2), member, true, parserType ); // TODO: revise DU: we may need something DU_spec here
+
+				// f.write("\t\t::globalmq::marshalling::impl::publishableParseLeafeStructEnd( parser );\n" );
+				f.write("\t}\n" );
+				f.write("\telse // let child continue parsing\n" );
+				f.write("\t{\n" );
+
+				impl_generateApplyUpdateForFurtherProcessingInStruct3( f.indent(2), member, true, true, true, parserType );
+
+				f.write("\t}\n" );
+				break;
+			}
+			case MessageParameterType::KIND::VECTOR:
+			{
+				f.write("\t{\n" );
+//				impl_generateApplyUpdateForFurtherProcessingInVector( f, root, member, false, false );
+				impl_generateApplyUpdateForFurtherProcessingInVector2( f.indent(2), root, member, true, false, parserType );
+				f.write("\t}\n" );
+				break;
+			}
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				f.write("\t{\n" );
+//				impl_generateApplyUpdateForFurtherProcessingInVector( f, root, member, false, false );
+				impl_generateApplyUpdateForFurtherProcessingInDictionary2( f.indent(2), root, member, true, false, parserType );
+				f.write("\t}\n" );
+				break;
+			}
+			default:
+				assert( false );
+		}
+		f.write("\tbreak;\n" );
+		f.write("}\n" );
+	}
+}
+
+void impl_generateApplyUpdateForDiscriminatedUnionVariant2( FileWritter f, bool addReportChanges )
+{
+	f.write("parser.nextElement();\n" );
+	f.write("parser.leafeBegin();\n");
+	f.write("uint64_t newVar = parser.parseUnsignedInteger();\n" );
+
+	if ( addReportChanges )
+		f.write("if constexpr( has_any_notifier_for_currentVariant || reportChanges || has_update_notifier )\n" );
+	else
+		f.write("if constexpr( has_any_notifier_for_currentVariant )\n" );
+	f.write("{\n" );
+	f.write("\tauto oldVal = this->currentVariant();\n" );
+	f.write("\tthis->initAs( static_cast<Variants>( newVar ) );\n" );
+	f.write("\tbool currentChanged = oldVal != t.currentVariant();\n" );
+	f.write("\tif ( currentChanged )\n" );
+	f.write("\t{\n" );
+	if ( addReportChanges )
+	{
+		f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
+		f.write("\t\t\tchanged = true;\n" );
+	}
+	f.write("\t\tif constexpr ( has_void_update_notifier_for_currentVariant )\n" );
+	f.write("\t\t\tt.notifyUpdated_currentVariant();\n" );
+	f.write("\t\tif constexpr ( has_update_notifier_for_currentVariant )\n" );
+	f.write("\t\t\tt.notifyUpdated_currentVariant( oldVal );\n" );
+	f.write("\t}\n" );
+	f.write("}\n" );
+	f.write("else\n" );
+
+	f.write("\tthis->initAs( static_cast<Variants>( newVar ) );\n" );
+}
+
+void impl_generateContinueParsingFunctionForPublishableStruct2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	// f.write("\ttemplate<class T, class RetT = void>\n" );
+	// f.write("\tstatic\n" );
+	f.write("\tbool parse_continue( %s& parser, GMQ_COLL vector<uint64_t>& addr, uint64_t offset )\n", parserType.c_str() );
+	f.write("\t{\n" );
+//	f.write("\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" );
+	// f.write("\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n" );
+	f.write("\t\tconstexpr bool reportChanges = true;\n" );
+	f.write("\t\tbool changed = false;\n" );
+
+	// impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( f, root, obj, "\t\t" );
+
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		// impl_GenerateDiscriminatedUnionVariantUpdateNotifierPresenceCheckingBlock( f, "\t\t" );
+		f.write("\t\tGMQ_ASSERT( addr.size() );\n" );
+		f.write("\t\tif ( addr[offset] == 0 ) // changing current variant\n" );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tif ( addr.size() > offset + 1 )\n" );
+		f.write("\t\t\t\tthrow std::exception(); // bad format, TODO: ...\n" );
+		impl_generateApplyUpdateForDiscriminatedUnionVariant2( f.indent(3), true );
+		f.write("\t\t}\n" );
+
+		f.write("\t\telse // updating particular members in particular cases\n" );
+
+		f.write("\t\t{\n" );
+		f.write("\t\t\tswitch ( this->currentVariant() )\n" );
+		f.write("\t\t\t{\n" );
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			// std::string numId = std::to_string(it->numID);
+			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\t{\n" );
+			f.write("\t\t\t\t\tswitch ( addr[offset] )\n" );
+			f.write("\t\t\t\t\t{\n" );
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock2( f.indent(6), root, cs, "\t\t\t\t\t\t", 1, parserType );
+			f.write("\t\t\t\t\t\tdefault:\n" );
+			f.write("\t\t\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+			f.write("\t\t\t\t\t}\n" );
+			f.write("\t\t\t\t\tbreak;\n" );
+			f.write("\t\t\t\t}\n" );
+		}
+		f.write("\t\t\t\tdefault:\n" );
+		f.write("\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t}\n" );
+//		f.write("\t\t::globalmq::marshalling::impl::parsePublishableStructEnd( parser );\n" );
+	}
+	else
+	{
+		f.write("\t\tGMQ_ASSERT( addr.size() );\n" );
+		f.write("\t\tswitch ( addr[offset] )\n" );
+		f.write("\t\t{\n" );
+		impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlock2( f.indent(3), root, obj, "\t\t\t", 0, parserType );
+		f.write("\t\t\tdefault:\n" );
+		f.write("\t\t\t\tthrow std::exception(); // unexpected\n" );
+		f.write("\t\t}\n" );
+	}
+
+	// f.write("\t\tif constexpr ( has_update_notifier )\n" );
+	// f.write("\t\t{\n" );
+	f.write("\t\tif ( changed )\n" );
+	f.write("\t\t\tthis->notifyUpdated();\n" );
+	// f.write("\t\t}\n" );
+
+	// f.write("\t\tif constexpr ( reportChanges )\n" );
+	f.write("\t\treturn changed;\n" );
+	f.write("\t}\n" );
+}
+
+
+void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	assert( obj.type != CompositeType::Type::discriminated_union );
+
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
+	{
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
+
+		if(i != 0)
+			f.write("parser.nextElement();\n" );
+
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("parser.namedParamBegin( \"%s\" );\n", member.name.c_str());
+				impl_generateApplyUpdateForSimpleType2( f, member, true, false, parserType );
+				f.write("\n" );
+				break;
+			case  MessageParameterType::KIND::STRUCT:
+			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("parser.namedParamBegin( \"%s\" );\n", member.name.c_str());
+				impl_generateApplyUpdateForFurtherProcessingInStruct2( f, member, false, true, false, parserType );
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			{
+				assert( member.type.structIdx < root.structs.size() );
+				
+				f.write("if constexpr( reportChanges || has_update_notifier )\n" );
+				f.write("{\n" );
+				f.write("\t%s oldVectorVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+				f.write("\t%s::copy( t.%s, oldVectorVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tparser.namedParamBegin( \"%s\" );\n", member.name.c_str() );
+				f.write("\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tbool currentChanged = !%s::isSame( oldVectorVal, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tchanged = changed || currentChanged;\n" );
+				f.write("}\n" );
+				f.write("else\n" );
+				f.write("{\n" );
+				f.write("\tparser.namedParamBegin( \"%s\" );\n", member.name.c_str());
+				f.write("\t%s::parse( parser, t.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("}\n" );
+				f.write("\n" );
+
+				break;
+			}
+			case MessageParameterType::KIND::DICTIONARY:
+			{
+				assert( member.type.structIdx < root.structs.size() );
+				
+				f.write("//// TODO: revise notifier list !!!!!!!!!!!!!!!!!!!!!!!!!\n" );
+				f.write("if constexpr( reportChanges || has_update_notifier )\n" );
+				f.write("{\n" );
+				f.write("\t%s oldDictionaryVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+				f.write("\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::copy( t.%s, oldDictionaryVal );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tparser.namedParamBegin( \"%s\" );\n", member.name.c_str());
+				f.write("\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tbool currentChanged = !globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::isSame( oldDictionaryVal, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tchanged = changed || currentChanged;\n" );
+				f.write("}\n" );
+				f.write("else\n" );
+				f.write("{\n" );
+				f.write("\tparser.namedParamBegin( \"%s\" );\n", member.name.c_str());
+				f.write("\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("}\n" );
+				f.write("\n" );
+
+				break;
+			}
+			default:
+				assert( false );
+		}
+	}
+}
+
+void impl_generateParseFunctionForPublishableStruct2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	std::string typeName = getGeneratedTypeName(obj);
+	// f.write("\ttemplate<class T, class RetT = void>\n" );
+	// f.write("\tstatic\n" );
+	f.write("\tbool parse_notify( %s& parser )\n", parserType.c_str() );
+	f.write("\t{\n" );
+	// f.write("\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n" );
+	f.write("\t\tconstexpr bool reportChanges = true;\n" );
+	f.write("\t\tbool changed = false;\n" );
+
+	// impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( f, root, obj, "\t\t" );
+
+	f.write("\t\tparser.structBegin();\n" );
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		f.write("\t\tparser.namedParamBegin( \"caseId\" );\n" );
+		f.write("\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
+		f.write("\t\tthis->initAs( static_cast<Variants>(caseId) );\n" );
+		f.write("\t\tparser.nextElement();\n");
+		f.write("\t\tif ( caseId != Variants::unknown )\n" );
+		f.write("\t\t{\n" );
+
+		f.write("\t\t\tparser.namedParamBegin( \"caseData\" );\n");
+		f.write("\t\t\tparser.structBegin();\n" );
+		f.write("\t\t\tswitch ( this->currentVariant() )\n" );
+		f.write("\t\t\t{\n" );
+
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			std::string numId = std::to_string(it->numID);
+			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\t{\n" );
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( f.indent(5), root, cs, parserType );
+			f.write("\t\t\t\t\tbreak;\n" );
+			f.write("\t\t\t\t}\n" );
+		}
+
+		f.write("\t\t\t\tdefault:\n" );
+		f.write("\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t\tparser.structEnd();\n" );
+
+		f.write("\t\t}\n" );
+	}
+	else
+	{
+		impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( f.indent(2), root, obj, parserType);
+	}
+
+	f.write("\n" );
+
+	f.write("\t\tparser.structEnd();\n" );
+
+	// f.write("\t\tif constexpr ( has_update_notifier )\n" );
+	// f.write("\t\t{\n" );
+	f.write("\t\tif ( changed )\n" );
+	f.write("\t\t\tthis->notifyUpdated();\n" );
+	// f.write("\t\t}\n" );
+
+	// f.write("\t\tif constexpr ( reportChanges )\n" );
+	f.write("\t\treturn changed;\n" );
+	f.write("\t}\n" );
+}
+
+void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
+	{
+		assert( obj.getMembers()[i] != nullptr );
+		auto& member = *(obj.getMembers()[i]);
+
+		if(i != 0)
+			f.write("parser.nextElement();\n\n" );
+			
+
+		f.write("parser.namedParamBegin( \"%s\" );\n", member.name.c_str() );
+		f.write("%s::parseForStateSyncOrMessageInDepth( parser, this->%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	}
+}
+
+void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	// std::string typeName = getGeneratedTypeName(obj);
+	if ( obj.isDiscriminatedUnion() )
+	{
+		f.write("\t\tparser.namedParamBegin( \"caseId\" );\n");
+		f.write("\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
+		f.write("\t\tthis->initAs( static_cast<Variants>(caseId) );\n" );
+		f.write("\t\tparser.nextElement();\n");
+		f.write("\t\tif ( caseId != Variants::unknown )\n" );
+		f.write("\t\t{\n" );
+
+		f.write("\t\t\tparser.namedParamBegin( \"caseData\" );\n");
+		f.write("\t\t\tparser.structBegin();\n" );
+		f.write("\t\t\tswitch ( this->currentVariant() )\n" );
+		f.write("\t\t\t{\n" );
+
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			// std::string numId = std::to_string(it->numID);
+			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\t{\n" );
+
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( f.indent(5), root, cs, parserType );
+
+			f.write("\t\t\t\t\tbreak;\n" );
+			f.write("\t\t\t\t}\n" );
+		}
+
+		f.write("\t\t\t\tdefault:\n" );
+		f.write("\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t\tparser.structEnd();\n" );
+
+		f.write("\t\t}\n" );
+	}
+	else
+		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( f.indent(2), root, obj, parserType );
+}
+
+void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	f.write("\tvoid parse_state_sync( %s& parser )\n", parserType.c_str() );
+	f.write("\t{\n" );
+	f.write("\t\tparser.structBegin();\n" );
+	f.write("\n" );
+
+	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth2( f, root, obj, parserType );
+
+	f.write("\n" );
+	f.write("\t\tparser.structEnd();\n" );
+
+	f.write("\t}\n" );
+}
+
+
+void impl_GenerateApplyUpdateMessageMemberFn2( FileWritter f, const std::string& parserType )
+{
+	f.write("\tvoid applyMessageWithUpdates(%s& parser)\n", parserType.c_str() );
+	f.write("\t{\n" );
+	f.write("\t\tparser.stateUpdateBegin();\n" );
+	// f.write("\t\tbool changed = false;\n" );
+	f.write("\t\tGMQ_COLL vector<uint64_t> addr;\n" );
+	f.write("\t\twhile( parser.changeBegin( addr ) )\n" );
+	f.write("\t\t{\n" );
+	f.write("\t\t\tGMQ_ASSERT( addr.size() );\n" );
+
+	f.write("\t\t\tthis->parse_continue(parser, addr, 0);\n" );
+
+	f.write("\t\t\taddr.clear();\n" );
+	f.write("\t\t\tparser.changeEnd();\n" );
+	f.write("\t\t}\n" );
+	f.write("\t\tparser.stateUpdateEnd();\n" );
+
+	// if ( addNotifications )
+	// {
+	// 	f.write("\t\tif constexpr ( has_update_notifier )\n" );
+	// 	f.write("\t\t{\n" );
+	// 	f.write("\t\t\tif ( changed )\n" );
+	// 	f.write("\t\t\t\tstatic_cast<T*>(this)->notifyUpdated();\n" );
+	// 	f.write("\t\t}\n" );
+	// }
+
+	f.write("\t}\n" );
+}
+
+void impl_generateParseFunctionForPublishableState2( FileWritter f, const std::string& parserType )
+{
+	f.write("\tvoid parseStateSyncMessage( %s& parser )\n", parserType.c_str());
+	f.write("\t{\n" );
+
+	f.write("\t\tthis->parse_state_sync( parser );\n" );
+	f.write("\t\tthis->notifyFullyUpdated();\n" );
+	f.write("\t}\n" );
+}
+
+
+void impl_SubscriberVirtualHandlers_Members( FileWritter f, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	for (size_t i = 0; i < obj.getMembers().size(); ++i)
+	{
+		assert(obj.getMembers()[i] != nullptr);
+		auto &member = *(obj.getMembers()[i]);
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			f.write("virtual void notifyUpdated_%s(%s oldVal) {}\n", member.name.c_str(), getCppType(member.type.kind).c_str());
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
+			break;
+		case MessageParameterType::KIND::VECTOR:
+			switch (member.type.vectorElemKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
+				f.write("virtual void notifyElementUpdated_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getCppType(member.type.vectorElemKind).c_str());
+				f.write("virtual void notifyInserted_%s(size_t ix) {}\n", member.name.c_str());
+				f.write("virtual void notifyErased_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getSubscriberCppType(member.type).c_str());
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
+				f.write("virtual void notifyElementUpdated_%s(size_t ix) {}\n", member.name.c_str());
+				f.write("virtual void notifyInserted_%s(size_t ix) {}\n", member.name.c_str());
+				f.write("virtual void notifyErased_%s(size_t ix, %s oldVal) {}\n", member.name.c_str(), getSubscriberCppType(member.type).c_str());
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		case MessageParameterType::KIND::DICTIONARY:
+			f.write("//// TODO: revise notifier list DICTIONARY !!!!!!!!!!!!!!!!!!!!!!!!!\n");
+			break;
+		default:
+			assert(false);
+		}
+	}
+}
+
+void impl_SubscriberVirtualHandlers( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+
+
+	f.write("////////////////////////////// begin user override section //////////////////////////////\n");
+	if(obj.type == CompositeType::Type::publishable)
+		f.write("virtual void notifyFullyUpdated() {}\n");
+
+	f.write("virtual void notifyUpdated() {}\n");
+	if ( obj.isDiscriminatedUnion() )
+	{
+		f.write("virtual void notifyUpdated_currentVariant(Variants oldVal) {}\n");
+
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			f.write("// IDL CASE %s\n", it->name.c_str() );
+
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_SubscriberVirtualHandlers_Members( f, cs );
+
+		}
+	}
+	else
+		impl_SubscriberVirtualHandlers_Members( f, obj );
+
+	f.write("//////////////////////////////  end user override section  //////////////////////////////\n");
+}
+
+
+void impl_SubscriberGetters_Members( FileWritter f, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	for (size_t i = 0; i < obj.getMembers().size(); ++i)
+	{
+		assert(obj.getMembers()[i] != nullptr);
+		auto &member = *(obj.getMembers()[i]);
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+			f.write("\tauto get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			break;
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			break;
+		case MessageParameterType::KIND::VECTOR:
+		case MessageParameterType::KIND::DICTIONARY:
+			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			break;
+		default:
+			assert(false);
+		}
+	}
+}
+
+void impl_SubscriberGetters( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		f.write("//Variants currentVariant();\n");
+
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			f.write("// IDL CASE %s\n", it->name.c_str() );
+
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_SubscriberGetters_Members( f, cs );
+
+		}
+	}
+	else
+		impl_SubscriberGetters_Members( f, obj );
+}
+
+void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
+
+	FileWritter f(header, 0);
+
+	string typeName = getSubscriberClassName( obj.name );
+	if( obj.type == CompositeType::Type::publishable )
+	{
+		f.write("class %s : public globalmq::marshalling::StateSubscriberBase<globalmq::marshalling::Buffer>\n", typeName.c_str() );
+	}
+	else
+	{
+		f.write("class %s\n", typeName.c_str() );
+	}
+
+
+
+
+	f.write("{\n" );
+	f.write("\tfriend struct %s;\n", getHelperClassName(obj).c_str() );
+	f.write("\tusing ThisType = %s;\n", typeName.c_str() );
+	f.write("\tusing ProcessorType = %s;\n", typeName.c_str() );
+
+	f.write("public:\n" );
+	f.write("\tvirtual ~%s() {}\n", typeName.c_str() );
+
+	f.write("\n" );
+	impl_SubscriberVirtualHandlers( f.indent(), obj );
+
+	f.write("private:\n" );
+	for ( auto& mbit: obj.getMembers() )
+	{
+		assert( mbit != nullptr );
+		auto& m = *mbit;
+		assert( typeid( m ) == typeid( MessageParameter ) );
+		assert( m.type.kind != MessageParameterType::KIND::UNDEFINED );
+		if ( m.type.kind == MessageParameterType::KIND::EXTENSION )
+			continue;
+
+
+		if ( m.type.kind == MessageParameterType::KIND::INTEGER || m.type.kind == MessageParameterType::KIND::UINTEGER ||
+			m.type.kind == MessageParameterType::KIND::REAL || m.type.kind == MessageParameterType::KIND::ENUM)
+			f.write("\t%s %s = 0;\n", getSubscriberCppType( m.type ).c_str(), m.name.c_str() );
+		else
+			f.write("\t%s %s;\n", getSubscriberCppType( m.type ).c_str(), m.name.c_str() );
+	}
+
+	f.write("\npublic:\n" );
+
+	impl_SubscriberGetters( f, obj );
+
+
+	f.write("\ttemplate<class T2>\n" );
+	f.write("\tbool operator==(const T2& other) const\n" );
+	f.write("\t{\n" );
+	f.write("\t\treturn  %s::isSame( *this, other );\n", getHelperClassName(obj).c_str() );
+	f.write("\t}\n" );
+
+	f.write("\ttemplate<class T2>\n" );
+	f.write("\tbool operator!=(const T2& other) const\n" );
+	f.write("\t{\n" );
+	f.write("\t\treturn !this->operator==(other);\n" );
+	f.write("\t}\n" );
+
+
+	// impl_GeneratePublishableStateMemberPresenceCheckingBlock( f, root, obj );
+	// impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock2( f, root, obj, "\t" );
+
+	if( obj.type == CompositeType::Type::publishable )
+	{
+
+		f.write("\npublic:\n" );
+		std::string numStr = std::to_string(obj.numID);
+		f.write("\tstatic constexpr uint64_t numTypeID = %s;\n", numStr.c_str() );
+		f.write("\tstatic constexpr const char* stringTypeID = \"%s\";\n", obj.name.c_str() );
+		f.write("\n" );
+		f.write("\tstatic constexpr bool reportChanges = false;\n" );
+		f.write("\tbool changed = false;\n" );
+		f.write("\n" );
+		// f.write("\ttemplate<class ... ArgsT>\n" );
+		f.write("\t%s() {}\n", typeName.c_str() );
+		// f.write("\tconst T& getState() { return t; }\n" );
+		f.write("\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<globalmq::marshalling::Buffer>& parser ) override { throw std::exception(); }\n" );
+		f.write("\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<globalmq::marshalling::Buffer>& parser ) override { throw std::exception(); }\n" );
+		f.write("\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<globalmq::marshalling::Buffer>& parser ) override { throw std::exception(); }\n" );
+		f.write("\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<globalmq::marshalling::Buffer>& parser ) override { throw std::exception(); }\n" );
+		f.write("\n" );
+		f.write("\tvirtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) override\n" );
+		f.write("\t{\n" );
+		for (auto& each : config.parserNames)
+			f.write("\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { applyMessageWithUpdates(*ptr); return; }\n", each.c_str() );
+
+		f.write("\t\tthrow std::exception();\n" );
+		f.write("\t}\n" );
+
+		f.write("\tvirtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) override\n" );
+		f.write("\t{\n" );
+		for (auto& each : config.parserNames)
+			f.write("\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { parseStateSyncMessage(*ptr); return; }\n", each.c_str() );
+
+		f.write("\t\tthrow std::exception();\n" );
+		f.write("\t}\n" );
+		f.write("\n" );
+		f.write("\tvirtual const char* publishableName() override { return stringTypeID; }\n" );
+		f.write("\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
+		f.write("\n" );
+
+		for (auto& each : config.parserNames)
+		{
+			impl_GenerateApplyUpdateMessageMemberFn2(f, each);
+
+			f.write("\n");
+
+			impl_generateParseFunctionForPublishableState2(f, each);
+
+			f.write("\n");
+		}
+	}
+	
+
+	for (auto& each : config.parserNames)
+	{
+		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2(f, root, obj, each);
+		f.write("\n");
+
+		impl_generateParseFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\n");
+
+		impl_generateContinueParsingFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\n");
+
+		f.write("\tstatic\n" );
+		f.write("\tvoid parseForStateSyncOrMessageInDepth( %s& parser, ThisType& tt )\n", each.c_str() );
+		f.write("\t{\n" );
+		f.write("\t\ttt.parse_state_sync(parser);\n" );
+		f.write("\t}\n" );
+
+		f.write("\tstatic\n" );
+		f.write("\tvoid parse_state_sync( %s& parser, ThisType& tt )\n", each.c_str() );
+		f.write("\t{\n" );
+		f.write("\t\ttt.parse_state_sync(parser);\n" );
+		f.write("\t}\n" );
+
+		f.write("\tstatic\n" );
+		f.write("\tbool parse_notify( %s& parser, ThisType& tt )\n", each.c_str() );
+		f.write("\t{\n" );
+		f.write("\t\treturn tt.parse_notify(parser);\n" );
+		f.write("\t}\n" );
+
+		f.write("\tstatic\n" );
+		f.write("\tbool parse_continue( %s& parser, ThisType& tt, GMQ_COLL vector<uint64_t>& addr, uint64_t offset )\n", each.c_str() );
+		f.write("\t{\n" );
+		f.write("\t\treturn tt.parse_continue(parser, addr, offset);\n" );
+		f.write("\t}\n" );
+	}
+	// impl_GeneratePublishableStructCopyFn( f, root, obj );
+	// f.write("\n" );
+	// impl_GeneratePublishableStructIsSameFn( f, root, obj );
+
+
+
+	f.write("};\n\n" );
+}
+
 
 }//namespace cplusplus

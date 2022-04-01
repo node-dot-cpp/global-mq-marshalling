@@ -2320,6 +2320,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tvoid startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}\n" );
 	fprintf( header, "\tBufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }\n" );
 	fprintf( header, "\tconst char* name() { return stringTypeID; }\n" );
+	fprintf( header, "\tconst char* publishableName() { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
@@ -2356,6 +2357,7 @@ void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Roo
 	fprintf( header, "\tvirtual BufferT&& endTick() { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
 	fprintf( header, "\tvirtual const char* name() { return %s_WrapperForPublisher<T, ComposerT>::name(); }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual const char* publishableName() { return %s_WrapperForPublisher<T, ComposerT>::publishableName(); }\n", s.name.c_str() );
 
 	fprintf( header, "};\n\n" );
 }
@@ -2385,6 +2387,7 @@ void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root
 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }\n" );
 	fprintf( header, "\tvirtual const char* name() { return stringTypeID; }\n" );
+	fprintf( header, "\tvirtual const char* publishableName() { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() { return numTypeID; }\n" );
 	fprintf( header, "\n" );
 
@@ -2441,6 +2444,10 @@ void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Ro
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::name();\n", s.name.c_str(), classNotifierName.c_str() );
 	fprintf( header, "\t}\n" );
+	fprintf( header, "\tvirtual const char* publishableName()\n" );
+	fprintf( header, "\t{\n" );
+	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::publishableName();\n", s.name.c_str(), classNotifierName.c_str() );
+	fprintf( header, "\t}\n" );
 	fprintf( header, "\tvoid subscribe(GMQ_COLL string path)\n" );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\tregistrar.subscribe( this, path );\n" );
@@ -2465,6 +2472,7 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 	fprintf( header, "\n" );
 	fprintf( header, "\t%s_WrapperForConcentrator() {}\n", s.name.c_str() );
 	fprintf( header, "\tconst char* name() {return \"%s\";}\n", s.name.c_str() );
+	fprintf( header, "\tconst char* publishableName() {return \"%s\";}\n", s.name.c_str() );
 	fprintf( header, "\t\n" );
 
 	fprintf( header, "\t// Acting as publisher\n" );

@@ -1004,7 +1004,7 @@ public:
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 	virtual void startTick( BufferT&& buff ) = 0;
 	virtual BufferT&& endTick() = 0;
-	virtual const char* name() = 0;
+	virtual const char* publishableName() = 0;
 	virtual uint64_t stateTypeID() = 0;
 };
 
@@ -1082,18 +1082,18 @@ public:
 			if ( !publishers[i].isUsed() )
 			{
 				publishers[i].setPublisher( publisher );
-				auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->name(), &(publishers[i] ) ) ) );
+				auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->publishableName(), &(publishers[i] ) ) ) );
 				assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 				return i;
 			}
 		publishers.push_back( std::move( StatePublisherData<PlatformSupportT>(publishers.size(), publisher) ) );
-		auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->name(), &(publishers[publishers.size() - 1] ) ) ) );
+		auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->publishableName(), &(publishers[publishers.size() - 1] ) ) ) );
 		assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 		return publishers.size() - 1;
 	}
 	void remove( globalmq::marshalling::StatePublisherBase<ComposerT>* publisher )
 	{
-		size_t res = name2publisherMapping.erase( publisher->name() );
+		size_t res = name2publisherMapping.erase( publisher->publishableName() );
 		assert( res == 1 );
 		assert( publisher->idx < publishers.size() );
 		for ( auto& subscriber : publishers[publisher->idx].subscribers )
@@ -1205,7 +1205,7 @@ public:
 	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
 
-	virtual const char* name() = 0;
+	virtual const char* publishableName() = 0;
 	virtual uint64_t stateTypeID() = 0;
 
 	// new interface with default implementation to avoid breaking old code

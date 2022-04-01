@@ -545,6 +545,13 @@ public:
 		parse(parser, arg);
 	}
 
+	template<typename ParserT>
+	static
+	void parse_state_sync(ParserT& parser, int64_t& arg)
+	{
+		parse(parser, arg);
+	}
+
 	static
 	void copy( const int64_t& src, int64_t& dst ) { dst = src; }
 	static
@@ -623,6 +630,13 @@ public:
 		parse(parser, arg);
 	}
 
+	template<typename ParserT>
+	static
+	void parse_state_sync(ParserT& parser, uint64_t& arg)
+	{
+		parse(parser, arg);
+	}
+
 	static
 	void copy( const uint64_t& src, uint64_t& dst ) { dst = src; }
 
@@ -690,6 +704,13 @@ public:
 		parse(parser, arg);
 	}
 
+	template<typename ParserT>
+	static
+	void parse_state_sync(ParserT& parser, double& arg)
+	{
+		parse(parser, arg);
+	}
+
 	static
 	void copy( const double& src, double& dst ) { dst = src; }
 	static
@@ -736,6 +757,13 @@ public:
 	template<typename ParserT>
 	static
 	void parseForStateSyncOrMessageInDepth(ParserT& parser, GMQ_COLL string& arg)
+	{
+		parse(parser, arg);
+	}
+
+	template<typename ParserT>
+	static
+	void parse_state_sync(ParserT& parser, GMQ_COLL string& arg)
 	{
 		parse(parser, arg);
 	}
@@ -838,21 +866,21 @@ public:
 };
 
 
-template<class ElemProcT>
+template<class ElemProcT, class UserElementT = typename ElemProcT::ProcessorType>
 class PublishableVectorProcessor2
 {
 public:
-	using ProcessorType = GMQ_COLL vector<typename ElemProcT::ProcessorType>;
+	using ProcessorType = GMQ_COLL vector<UserElementT>;
 
 	template<class ParserT>
 	static
-	void parseSingleValue( ParserT& parser, typename ElemProcT::ProcessorType& value ) { 
+	void parseSingleValue( ParserT& parser, UserElementT& value ) { 
 		ElemProcT::parse( parser, value );
 	}
 
 	template<class ParserT>
 	static
-	bool parseSingleValueAndCompare( ParserT& parser,  typename ElemProcT::ProcessorType& value, const typename ElemProcT::ProcessorType& oldValue ) { 
+	bool parseSingleValueAndCompare( ParserT& parser,  UserElementT& value, const UserElementT& oldValue ) { 
 		ElemProcT::parse( parser, value );
 		return !ElemProcT::isSame( value, oldValue );
 	}
@@ -883,7 +911,7 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			typename ElemProcT::ProcessorType what;
+			UserElementT what;
 			ElemProcT::parse( parser, what );
 			dest.push_back( what );
 
@@ -903,8 +931,29 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			typename ElemProcT::ProcessorType what;
+			UserElementT what;
 			ElemProcT::parseForStateSyncOrMessageInDepth( parser, what );
+			dest.push_back( what );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+
+		}
+		parser.vectorEnd();
+	}
+
+	template<class ParserT>
+	static
+	void parse_state_sync( ParserT& parser, ProcessorType& dest ) { 
+		dest.clear();
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
+
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			UserElementT what;
+			ElemProcT::parse_state_sync( parser, what );
 			dest.push_back( what );
 
 			if(!parser.isVectorEnd())
@@ -917,23 +966,17 @@ public:
 	static
 	void copy( const ProcessorType& src, ProcessorType& dst )
 	{
-		dst.resize( src.size() );
-		for ( size_t i=0; i<src.size(); ++i )
-		{
-			ElemProcT::copy(src[i], dst[i]);
-		}
+		dst = src;
 	}
 	static
 	ProcessorType copy( const ProcessorType& src )
 	{
-		ProcessorType dst;
-		copy(src, dst);
-		return dst;
+		return src;
 	}
 
-
+	template<class UserT1, class UserT2>
 	static
-	bool isSame( const ProcessorType& v1, const ProcessorType& v2 )
+	bool isSame( const GMQ_COLL vector<UserT1>& v1, const GMQ_COLL vector<UserT2>& v2 )
 	{
 		if ( v1.size() != v2.size() )
 			return false;
@@ -1149,6 +1192,7 @@ public:
 		}
 		parser.dictionaryEnd();
 	}
+
 
 	static
 	void copy( const ProcessorType& src, ProcessorType& dst )

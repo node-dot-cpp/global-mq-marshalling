@@ -348,12 +348,18 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 
 		if ( m.type.kind == MessageParameterType::KIND::INTEGER || m.type.kind == MessageParameterType::KIND::UINTEGER ||
 			m.type.kind == MessageParameterType::KIND::REAL || m.type.kind == MessageParameterType::KIND::ENUM)
+		{
 			fprintf( header, "%s\t%s %s = 0;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
+			fprintf( header, "\tauto get_%s() const { return this->%s; }\n", m.name.c_str(), m.name.c_str() );
+
+		}
+			
 		else
+		{
 			fprintf( header, "%s\t%s %s;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
-
+			fprintf( header, "\tconst auto& get_%s() const { return this->%s; }\n", m.name.c_str(), m.name.c_str() );
+		}
 	}
-
 
 	fprintf( header, "%s\tbool operator==(const %s& other) const\n", offset, typeName.c_str() );
 	fprintf( header, "%s\t{\n", offset );
@@ -785,6 +791,8 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		impl_generatePublishableStruct( header, s, *it, config );
+		if ( it->isStruct4Publishing )
+			generateSubscriberStruct(header, s, *it, config);
 	}
 
 
@@ -792,6 +800,7 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	{
 		assert( it->type == CompositeType::Type::publishable );
 		impl_generatePublishableStruct( header, s, *it, config );
+		generateSubscriberStruct(header, s, *it, config);
 	}
 
 	for ( auto& scope : s.scopes )

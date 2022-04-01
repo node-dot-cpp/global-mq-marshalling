@@ -5,6 +5,7 @@
 add_executable(idl_compiler
     grammar/generated/lex.yy.cpp
     grammar/generated/global_mq_IDL.tab.cpp
+    src/file_writter.cpp
     src/global_mq_parser_helper.cpp
     src/idl_tree_common.cpp
     src/idl_tree_serializer.cpp

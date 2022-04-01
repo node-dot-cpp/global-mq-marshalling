@@ -759,7 +759,7 @@ public:
 	// as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 
-	virtual const char* name() = 0;
+	virtual const char* publishableName() = 0;
 
 	// new interface with default implementation to avoid breaking old code
 	virtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }

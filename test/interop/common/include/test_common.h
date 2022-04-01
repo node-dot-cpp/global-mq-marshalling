@@ -320,6 +320,97 @@ void testUpdate(std::string fileName, std::function<typename Types::DataT()> get
 
 }
 
+template<typename Types>
+void testStateSync2(std::string fileName, std::function<typename Types::DataT()> getState, lest::env & lest_env)
+{
+        auto data = getState();
+
+        typename Types::PublishableT publ(data);
+
+        BufferT b;
+        typename Types::ComposerT composer(b);
+
+        publ.generateStateSyncMessage(composer);
+
+        auto expected = makeBuffer(fileName);
+        Types::ExpectAreEqual(expected, b);
+
+
+
+        typename Types::SubscriberT subs;
+
+        auto it = b.getReadIter();
+        typename Types::ParserT parser(it);
+
+        subs.parseStateSyncMessage(parser);
+
+        typename Types::DataT data3 = getState();
+        EXPECT(subs == data3);
+}
+
+
+template<typename Types>
+void testUpdate2(std::string fileNameInit, std::string fileNameUpdate, std::function<typename Types::DataT()> getInitState,
+                        std::function<void(typename Types::PublishableT&)> doUpdatePub,
+                        std::function<void(typename Types::DataT&)> doUpdateData, lest::env& lest_env)
+{
+    auto data = getInitState();
+
+    typename Types::PublishableT publ(data);
+
+    publ.startTick(BufferT());
+    doUpdatePub(publ);
+    BufferT b = publ.endTick();
+
+    auto expected = makeBuffer(fileNameUpdate);
+    Types::ExpectAreEqual(expected, b);
+
+
+    typename Types::SubscriberT subs;
+
+    auto buffInit = makeBuffer(fileNameInit);
+    auto itInit = buffInit.getReadIter();
+    typename Types::ParserT parserInit(itInit);
+ 
+    subs.parseStateSyncMessage(parserInit);
+
+    auto it = b.getReadIter();
+    typename Types::ParserT parser(it);
+
+    subs.applyMessageWithUpdates(parser);
+
+    auto data3 = getInitState();
+    EXPECT_NOT(subs == data3);
+
+    doUpdateData(data3);
+    EXPECT(subs == data3);
+
+}
+
+template<typename Types, typename Evs>
+void testNotify2(std::string fileNameInit, std::string fileNameUpdate, std::vector<Evs> events, std::vector<Evs>& handled, lest::env& lest_env)
+{
+    handled.clear();
+
+    typename Types::SubscriberT subs;
+
+    auto buffInit = makeBuffer(fileNameInit);
+    auto itInit = buffInit.getReadIter();
+    typename Types::ParserT parserInit(itInit);
+ 
+    subs.parseStateSyncMessage(parserInit);
+
+    if(!fileNameUpdate.empty())
+    {
+        auto up = makeBuffer(fileNameUpdate);
+        auto it = up.getReadIter();
+        typename Types::ParserT parser(it);
+
+        subs.applyMessageWithUpdates(parser);
+    }
+
+    EXPECT(events == handled);
+}
 
 
 #endif // TEST_COMMON_H_INCLUDED

@@ -25,12 +25,13 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef TEST_COMMON_H_INCLUDED
-#define TEST_COMMON_H_INCLUDED
+#ifndef INTEROP1_TEST_COMMON_H_INCLUDED
+#define INTEROP1_TEST_COMMON_H_INCLUDED
 
 
 #include "../../3rdparty/lest/include/lest/lest.hpp"
 #include "generated_interop1.h"
+#include "user_handlers.h"
 
 lest::tests& specification();
 
@@ -240,4 +241,4 @@ bool AreEqualIgnoreWhite(const mtest::Buffer& l, const mtest::Buffer& r)
 }
 
 
-#endif // TEST_COMMON_H_INCLUDED
+#endif // INTEROP1_TEST_COMMON_H_INCLUDED
