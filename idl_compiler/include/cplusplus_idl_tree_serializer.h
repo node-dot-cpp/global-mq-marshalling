@@ -121,9 +121,8 @@ std::string getGeneratedTypeName( CompositeType& s )
 	return fmt::format( "structures::{}", s.name );
 }
 
-
 inline
-string impl_Type2Processor( const MessageParameterType& type, MessageParameterType::KIND kind )
+const char* getValueProcessor( MessageParameterType::KIND kind )
 {
 	switch( kind )
 	{
@@ -135,6 +134,23 @@ string impl_Type2Processor( const MessageParameterType& type, MessageParameterTy
 			return "globalmq::marshalling2::DoubleProcessor";
 		case MessageParameterType::KIND::CHARACTER_STRING:
 			return "globalmq::marshalling2::StringProcessor";
+		default: 
+			assert( false );
+			return "";
+	}
+}
+
+
+inline
+string impl_Type2Processor( const MessageParameterType& type, MessageParameterType::KIND kind )
+{
+	switch( kind )
+	{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			return getValueProcessor(kind);
 		case MessageParameterType::KIND::STRUCT:
 			return fmt::format( "publishable_{}_{}", CompositeType::type2string( CompositeType::Type::structure ), type.name );
 		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
@@ -195,18 +211,28 @@ string impl_SubscriberTypeProcessor( const MessageParameterType& type, MessagePa
 	switch( kind )
 	{
 		case MessageParameterType::KIND::INTEGER:
-			return "globalmq::marshalling2::Int64Processor";
 		case MessageParameterType::KIND::UINTEGER:
-			return "globalmq::marshalling2::UInt64Processor";
 		case MessageParameterType::KIND::REAL:
-			return "globalmq::marshalling2::DoubleProcessor";
 		case MessageParameterType::KIND::CHARACTER_STRING:
-			return "globalmq::marshalling2::StringProcessor";
+			return getValueProcessor(kind);
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
 			return getSubscriberClassName(type.name);
 		case MessageParameterType::KIND::VECTOR:
-			return fmt::format( "globalmq::marshalling2::PublishableVectorProcessor2<{}>", impl_SubscriberTypeProcessor(type, type.vectorElemKind) );
+		switch(type.vectorElemKind)
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				return fmt::format( "globalmq::marshalling2::ValueVectorProcessor2<{}>", getValueProcessor(type.vectorElemKind) );
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+				return fmt::format( "globalmq::marshalling2::PtrVectorProcessor2<{}>", getSubscriberClassName(type.name) );
+			default: 
+				assert( false );
+				return "";
+		}
 		case MessageParameterType::KIND::DICTIONARY:
 			return fmt::format( "globalmq::marshalling2::PublishableDictionaryProcessor2<{},{}>",
 				impl_SubscriberTypeProcessor(type, type.dictionaryKeyKind), impl_SubscriberTypeProcessor(type, type.dictionaryValueKind) );
@@ -298,13 +324,7 @@ std::string impl_templateMemberTypeName( std::string templateParentName, const M
 		return fmt::format( "decltype({}::{})", templateParentName, member.name );
 }
 
-inline
-std::string impl_templateMemberTypeName2( std::string templateParentName, const MessageParameter& member, bool noTypeNameAppending = false ) {
-	if ( member.duCaseParam )
-		return fmt::format( "{}{}::{}", noTypeNameAppending ? "" : "typename ", templateParentName, impl_discriminatedUnionCaseMemberType( member ) );
-	else
-		return fmt::format( "decltype({}::{}_)", templateParentName, member.name );
-}
+
 
 void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj, const std::string& parserType );
 

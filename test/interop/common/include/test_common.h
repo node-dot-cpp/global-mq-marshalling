@@ -387,11 +387,46 @@ void testUpdate2(std::string fileNameInit, std::string fileNameUpdate, std::func
 
 }
 
-template<typename Types, typename Evs>
-void testNotify2(std::string fileNameInit, std::string fileNameUpdate, std::vector<Evs> events, std::vector<Evs>& handled, lest::env& lest_env)
+template<typename Types>
+void testEmptyUpdate2(std::string fileNameInit, std::string fileNameUpdate, std::function<typename Types::DataT()> getInitState,
+                        lest::env& lest_env)
 {
-    handled.clear();
+    auto data = getInitState();
 
+    typename Types::PublishableT publ(data);
+
+    publ.startTick(BufferT());
+//    doUpdatePub(publ);
+    BufferT b = publ.endTick();
+
+    auto expected = makeBuffer(fileNameUpdate);
+    Types::ExpectAreEqual(expected, b);
+
+
+    typename Types::SubscriberT subs;
+
+    auto buffInit = makeBuffer(fileNameInit);
+    auto itInit = buffInit.getReadIter();
+    typename Types::ParserT parserInit(itInit);
+ 
+    subs.parseStateSyncMessage(parserInit);
+
+    auto it = b.getReadIter();
+    typename Types::ParserT parser(it);
+
+    subs.applyMessageWithUpdates(parser);
+
+    auto data3 = getInitState();
+    // EXPECT_NOT(subs == data3);
+
+    // doUpdateData(data3);
+    EXPECT(subs == data3);
+
+}
+
+template<typename Types, typename Evs>
+void testNotify2(std::string fileNameInit, std::string fileNameUpdate, std::vector<Evs> events, lest::env& lest_env)
+{
     typename Types::SubscriberT subs;
 
     auto buffInit = makeBuffer(fileNameInit);
@@ -409,7 +444,7 @@ void testNotify2(std::string fileNameInit, std::string fileNameUpdate, std::vect
         subs.applyMessageWithUpdates(parser);
     }
 
-    EXPECT(events == handled);
+    EXPECT(subs.getEvents() == events);
 }
 
 

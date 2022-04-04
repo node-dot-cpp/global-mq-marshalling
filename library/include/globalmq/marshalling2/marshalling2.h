@@ -241,10 +241,10 @@ public:
 
 
 
-template<typename ComposerT, typename ProcessorType, typename ArgT>
+template<typename ComposerT, typename ProcessorCppType, typename ArgT>
 void composeEntry2(ComposerT& composer, const char* name, ArgT& arg)
 {
-	ProcessorType::compose(composer, arg.get());
+	ProcessorCppType::compose(composer, arg.get());
 }
 
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue>
@@ -497,7 +497,7 @@ uint64_t parseMessageId(ParserT& parser)
 class Int64Processor
 {
 public:
-	using ProcessorType = int64_t;
+	using CppType = int64_t;
 
 	template<typename T>
 	static
@@ -582,7 +582,7 @@ public:
 class UInt64Processor
 {
 public:
-	using ProcessorType = uint64_t;
+	using CppType = uint64_t;
 
 	template<typename T>
 	static
@@ -666,7 +666,7 @@ public:
 class DoubleProcessor
 {
 public:
-	using ProcessorType = double;
+	using CppType = double;
 
 	template<typename T>
 	static
@@ -723,7 +723,7 @@ public:
 class StringProcessor
 {
 public:
-	using ProcessorType = GMQ_COLL string;
+	using CppType = GMQ_COLL string;
 
 	template<typename T>
 	static
@@ -866,11 +866,11 @@ public:
 };
 
 
-template<class ElemProcT, class UserElementT = typename ElemProcT::ProcessorType>
+template<class ElemProcT, class UserElementT = typename ElemProcT::CppType>
 class PublishableVectorProcessor2
 {
 public:
-	using ProcessorType = GMQ_COLL vector<UserElementT>;
+	using CppType = GMQ_COLL vector<UserElementT>;
 
 	template<class ParserT>
 	static
@@ -887,7 +887,7 @@ public:
 
 	template<class ComposerTT>
 	static
-	void compose( ComposerTT& composer, const ProcessorType& what ) { 
+	void compose( ComposerTT& composer, const CppType& what ) { 
 		using ComposerT = typename std::remove_reference<ComposerTT>::type;
 		size_t collSz = what.size();
 		composer.vectorBegin( collSz );
@@ -903,7 +903,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parse( ParserT& parser, ProcessorType& dest ) { 
+	void parse( ParserT& parser, CppType& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -923,7 +923,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, ProcessorType& dest ) { 
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, CppType& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -944,7 +944,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parse_state_sync( ParserT& parser, ProcessorType& dest ) { 
+	void parse_state_sync( ParserT& parser, CppType& dest ) { 
 		dest.clear();
 		uint64_t collSz = parser.vectorBegin();
 		if(collSz != UINT64_MAX)
@@ -964,12 +964,12 @@ public:
 	}
 
 	static
-	void copy( const ProcessorType& src, ProcessorType& dst )
+	void copy( const CppType& src, CppType& dst )
 	{
 		dst = src;
 	}
 	static
-	ProcessorType copy( const ProcessorType& src )
+	CppType copy( const CppType& src )
 	{
 		return src;
 	}
@@ -990,12 +990,274 @@ public:
 };
 
 
+template<class ElemProcT>
+class ValueVectorProcessor2
+{
+public:
+	using CppType = GMQ_COLL vector<typename ElemProcT::CppType>;
+	using ElementType = typename ElemProcT::CppType;
+
+	template<class ParserT>
+	static
+	void parseSingleValue( ParserT& parser, ElementType& value ) { 
+		ElemProcT::parse( parser, value );
+	}
+
+	template<class ParserT>
+	static
+	ElementType parseSingleValue( ParserT& parser ) { 
+		return ElemProcT::parse( parser );
+	}
+
+	template<class ParserT>
+	static
+	bool parseSingleValueAndCompare( ParserT& parser,  ElementType& value, const ElementType& oldValue ) { 
+		ElemProcT::parse( parser, value );
+		return !ElemProcT::isSame( value, oldValue );
+	}
+
+	template<class ComposerTT>
+	static
+	void compose( ComposerTT& composer, const CppType& what ) { 
+		using ComposerT = typename std::remove_reference<ComposerTT>::type;
+		size_t collSz = what.size();
+		composer.vectorBegin( collSz );
+		for ( size_t i=0; i<collSz; ++i )
+		{
+			if(i != 0)
+				composer.nextElement();
+
+			ElemProcT::compose( composer, what[i] );
+		}
+		composer.vectorEnd();
+	}
+
+	template<class ParserT>
+	static
+	void parse( ParserT& parser, CppType& dest ) { 
+		dest.clear();
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
+
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			ElementType what;
+			ElemProcT::parse( parser, what );
+			dest.push_back( what );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+		}
+		parser.vectorEnd();
+	}
+
+	template<class ParserT>
+	static
+	CppType parse( ParserT& parser ) { 
+		
+		CppType dest;
+
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
+
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			ElementType what{ElemProcT::parse( parser )};
+			dest.push_back( what );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+		}
+		parser.vectorEnd();
+
+		return dest;
+	}
+
+	template<class ParserT>
+	static
+	void parse_state_sync( ParserT& parser, CppType& dest ) { 
+		dest.clear();
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
+
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			ElementType what;
+			ElemProcT::parse_state_sync( parser, what );
+			dest.push_back( what );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+
+		}
+		parser.vectorEnd();
+	}
+
+	static
+	void copy( const CppType& src, CppType& dst )
+	{
+		dst = src;
+	}
+	static
+	CppType copy( const CppType& src )
+	{
+		return src;
+	}
+
+	static
+	bool isSame( const CppType& v1, const CppType& v2 )
+	{
+		return v1 == v2;
+	}
+};
+template<class ElemProcT>
+class PtrVectorProcessor2
+{
+public:
+	using CppType = GMQ_COLL vector<GMQ_COLL unique_ptr<typename ElemProcT::CppType>>;
+	using PtrType = GMQ_COLL unique_ptr<typename ElemProcT::CppType>;
+	using ElementType = typename ElemProcT::CppType;
+
+
+	// template<class ParserT>
+	// static
+	// bool parse_element( ParserT& parser, PtrType& value ) { 
+	// 	return parse_element(parser, *value );
+	// }
+
+	template<class ParserT>
+	static
+	bool parse_element( ParserT& parser, ElementType& value ) { 
+		return ElemProcT::parse( parser, value );
+	}
+
+
+	// template<class ParserT>
+	// static
+	// bool parseSingleValueAndCompare( ParserT& parser,  ElementType& value, const ElementType& oldValue ) { 
+	// 	ElemProcT::parse( parser, value );
+	// 	return !ElemProcT::isSame( value, oldValue );
+	// }
+
+	template<class ComposerTT>
+	static
+	void compose( ComposerTT& composer, const CppType& what ) { 
+
+		size_t collSz = what.size();
+		composer.vectorBegin( collSz );
+		for ( size_t i=0; i<collSz; ++i )
+		{
+			if(i != 0)
+				composer.nextElement();
+
+			ElemProcT::compose( composer, *(what[i]) );
+		}
+		composer.vectorEnd();
+	}
+
+	template<class ParserT>
+	static
+	void parse_notify( ParserT& parser, CppType& dest, std::function<PtrType()> factory ) { 
+		dest.clear();
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
+
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			PtrType what{factory()};
+			ElemProcT::parse_notify( parser, *what );
+			dest.push_back( std::move(what) );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+		}
+		parser.vectorEnd();
+	}
+
+	template<class ParserT>
+	static
+	void parse_state_sync( ParserT& parser, CppType& dest, std::function<PtrType()> factory ) {
+		dest.clear();
+		uint64_t collSz = parser.vectorBegin();
+		if(collSz != UINT64_MAX)
+			dest.reserve( collSz );
+
+		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
+		{
+			PtrType what{factory()};
+			ElemProcT::parse_state_sync( parser, *what );
+			dest.push_back( std::move(what) );
+
+			if(!parser.isVectorEnd())
+				parser.nextElement();
+
+		}
+		parser.vectorEnd();
+	}
+
+	// static
+	// void copy( const CppType& src, CppType& dst )
+	// {
+	// 	dst = src;
+	// }
+	// static
+	// CppType copy( const CppType& src )
+	// {
+	// 	return src;
+	// }
+
+	static
+	bool isSame( const CppType& v1, const CppType& v2 )
+	{
+		if ( v1.size() != v2.size() )
+			return false;
+		for ( size_t i=0; i<v1.size(); ++i )
+		{
+			if ( !ElemProcT::isSame( *(v1[i]), *(v2[i]) ) ) 
+				return false;
+		}
+		return true;
+	}
+
+	template<class UserT>
+	static
+	bool isSame( const CppType& v1, const GMQ_COLL vector<UserT>& v2 )
+	{
+		if ( v1.size() != v2.size() )
+			return false;
+		for ( size_t i=0; i<v1.size(); ++i )
+		{
+			if ( !ElemProcT::isSame( *(v1[i]), v2[i] ) ) 
+				return false;
+		}
+		return true;
+	}
+
+	// template<class UserT1, class UserT2>
+	// static
+	// bool isSame( const GMQ_COLL vector<UserT1>& v1, const GMQ_COLL vector<UserT2>& v2 )
+	// {
+	// 	if ( v1.size() != v2.size() )
+	// 		return false;
+	// 	for ( size_t i=0; i<v1.size(); ++i )
+	// 	{
+	// 		if ( !ElemProcT::isSame( v1[i], v2[i] ) ) 
+	// 			return false;
+	// 	}
+	// 	return true;
+	// }
+};
+
 template<class DictionaryT, class KeyProcT, class ValueProcT, class RootT>
 class DictionaryRefWrapper4Set
 {
 public:
-	using key_type = typename KeyProcT::ProcessorType;
-	using value_type = typename ValueProcT::ProcessorType;
+	using key_type = typename KeyProcT::CppType;
+	using value_type = typename ValueProcT::CppType;
 
 protected:
 	DictionaryT& b;
@@ -1067,7 +1329,7 @@ public:
 
 	DictionaryOfStructRefWrapper4Set( DictionaryT& actual, RootT& root_, GMQ_COLL vector<uint64_t>&& address_ ) : 
 		base_type( actual, root_, std::move(address_) ) {}
-	auto get4set_at( const typename KeyProcT::ProcessorType& key )
+	auto get4set_at( const typename KeyProcT::CppType& key )
 	{
 		return RefWrapper4SetT(base_type::b[key], base_type::root, KeyProcT::makeAddress(base_type::address, key));
 	}
@@ -1076,11 +1338,11 @@ template<class KeyProcT, class ValueProcT>
 class PublishableDictionaryProcessor2
 {
 public:
-	using ProcessorType = GMQ_COLL unordered_map<typename KeyProcT::ProcessorType, typename ValueProcT::ProcessorType>;
+	using CppType = GMQ_COLL unordered_map<typename KeyProcT::CppType, typename ValueProcT::CppType>;
 
 	template<class ParserT>
 	static
-	void parseKey( ParserT& parser, typename KeyProcT::ProcessorType& key )
+	void parseKey( ParserT& parser, typename KeyProcT::CppType& key )
 	{
 		parser.namedParamBegin("key");
 		KeyProcT::parse( parser, key );
@@ -1088,7 +1350,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parseValue( ParserT& parser, typename ValueProcT::ProcessorType& value )
+	void parseValue( ParserT& parser, typename ValueProcT::CppType& value )
 	{
 		parser.namedParamBegin("value");
 		ValueProcT::parse( parser, value );
@@ -1096,7 +1358,7 @@ public:
 
 	template<class ParserT>
 	static
-	bool parseValueAndCompare( ParserT& parser, typename ValueProcT::ProcessorType& value, const typename ValueProcT::ProcessorType& oldValue ) { 
+	bool parseValueAndCompare( ParserT& parser, typename ValueProcT::CppType& value, const typename ValueProcT::CppType& oldValue ) { 
 		parser.namedParamBegin("value");
 		ValueProcT::parse( parser, value );
 		return !ValueProcT::isSame( value, oldValue );
@@ -1104,7 +1366,7 @@ public:
 
 	template<class ComposerTT>
 	static
-	void compose( ComposerTT& composer, const ProcessorType& what ) {
+	void compose( ComposerTT& composer, const CppType& what ) {
 		size_t collSz = what.size();
 		composer.dictionaryBegin(collSz);
 		size_t commaCtr = 0;
@@ -1133,7 +1395,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parse( ParserT& parser, ProcessorType& dest ) { 
+	void parse( ParserT& parser, CppType& dest ) { 
 		dest.clear();
 		size_t collSz = parser.dictionaryBegin();
 
@@ -1145,13 +1407,13 @@ public:
 			parser.structBegin();
 
 			// key
-			typename KeyProcT::ProcessorType key;
+			typename KeyProcT::CppType key;
 			KeyProcT::parse( parser, key );
 
 			parser.nextElement();
 
 			// value
-			typename ValueProcT::ProcessorType value;
+			typename ValueProcT::CppType value;
 			ValueProcT::parse( parser, value );
 
 			parser.structEnd();
@@ -1165,7 +1427,7 @@ public:
 
 	template<class ParserT>
 	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, ProcessorType& dest ) { 
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, CppType& dest ) { 
 		dest.clear();
 		size_t collSz = parser.dictionaryBegin();
 
@@ -1177,13 +1439,13 @@ public:
 			parser.structBegin();
 
 			// key
-			typename KeyProcT::ProcessorType key;
+			typename KeyProcT::CppType key;
 			KeyProcT::parseForStateSyncOrMessageInDepth( parser, key );
 
 			parser.nextElement();
 
 			// value
-			typename ValueProcT::ProcessorType value;
+			typename ValueProcT::CppType value;
 			ValueProcT::parseForStateSyncOrMessageInDepth( parser, value );
 
 			parser.structEnd();
@@ -1195,24 +1457,24 @@ public:
 
 
 	static
-	void copy( const ProcessorType& src, ProcessorType& dst )
+	void copy( const CppType& src, CppType& dst )
 	{
 		for ( const auto& it: src )
 		{
-			typename ValueProcT::ProcessorType value;
+			typename ValueProcT::CppType value;
 			ValueProcT::copy( it.second, value );
 			dst.insert( GMQ_COLL make_pair( it.first, value ) );
 		}
 	}
-	ProcessorType copy( const ProcessorType& src )
+	CppType copy( const CppType& src )
 	{
-		ProcessorType dst;
+		CppType dst;
 		copy(src, dst);
 		return dst;
 	}
 
 	static
-	bool isSame( const ProcessorType& v1, const ProcessorType& v2 )
+	bool isSame( const CppType& v1, const CppType& v2 )
 	{
 		if ( v1.size() != v2.size() )
 			return false;

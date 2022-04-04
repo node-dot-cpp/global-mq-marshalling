@@ -31,7 +31,6 @@
 
 #include "../../3rdparty/lest/include/lest/lest.hpp"
 #include "generated_interop1.h"
-#include "user_handlers.h"
 
 lest::tests& specification();
 
