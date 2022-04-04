@@ -47,22 +47,6 @@ public:
     virtual void generateStateSyncMessage(ComposerT& composer) { base::compose(composer); }
 };
 
-template<class BufferT>
-class Mock_WrapperForSubscriber : public mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT>
-{
-	typedef mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT> base;
-public:
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) 
-	{
-		throw std::exception();
-	}
-
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
-	{
-		throw std::exception();
-	}
-};
-
 
 GMQ_COLL string getSubcriptionAddress(const char* name)
 {
@@ -131,7 +115,7 @@ const lest::test test_gmqueue[] =
 
 		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
 
-		Mock_WrapperForSubscriber<BufferT> subs;
+		mtest::Mock_subscriber subs;
 		// mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT> sub;
 		mp.add(&subs);
 		mp.subscribe(&subs, path);
@@ -168,11 +152,11 @@ const lest::test test_gmqueue[] =
 
 		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
 
-		Mock_WrapperForSubscriber<BufferT> subs;
+		mtest::Mock_subscriber subs;
 		mp.add(&subs);
 		mp.subscribe(&subs, path);
 
-		Mock_WrapperForSubscriber<BufferT> subs2;
+		mtest::Mock_subscriber subs2;
 		mp.add(&subs2);
 		mp.subscribe(&subs2, path);
 
@@ -210,7 +194,7 @@ const lest::test test_gmqueue[] =
 
 		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
 
-		Mock_WrapperForSubscriber<BufferT> subs;
+		mtest::Mock_subscriber subs;
 		mp.add(&subs);
 		mp.remove(&subs);
 		mp.add(&subs);
