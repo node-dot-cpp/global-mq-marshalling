@@ -342,6 +342,9 @@ namespace {
 		}
 		f.write("\t\tparser.parseStructEnd();\n");
 
+		f.write("\t\tif(changed)\n");
+		f.write("\t\t\tsubscriber.notifyUpdated();\n");
+
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
 	}
@@ -555,6 +558,10 @@ namespace {
 					f.write("\t\t\t\t{\n");
 					f.write("\t\t\t\t\tint index = (int)addr[offset + 1];\n");
 					f.write("\t\t\t\t\tcurrentChanged = %s_subscriber.parse(parser, (%s_subscriber)(subscriber.lazy_%s_handlers()[index]), addr, offset + 2);\n", elem_type_name, elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t\tif (currentChanged)\n");
+					f.write("\t\t\t\t\t{\n");
+					f.write("\t\t\t\t\t\tsubscriber.notifyElementUpdated_%s(index);\n", member.name.c_str());
+					f.write("\t\t\t\t\t}\n");
 					f.write("\t\t\t\t}\n");
 					f.write("\t\t\t\telse\n");
 					f.write("\t\t\t\t\tthrow new Exception();\n\n");
@@ -759,6 +766,11 @@ namespace {
 					{
 						f.write("\t\t\t\t\tthrow new Exception(); // key type not supported for deeper address\n");
 					}
+					// f.write("\t\t\t\t\t\tif (currentChanged)\n");
+					// f.write("\t\t\t\t\t\t{\n");
+					// f.write("\t\t\t\t\t\t\tsubscriber.notifyValueUpdated_%s(key, oldVal);\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\t}\n");
+
 					f.write("\t\t\t\t}\n");
 					f.write("\t\t\t\telse\n");
 					f.write("\t\t\t\t\tthrow new Exception();\n\n");
@@ -790,6 +802,9 @@ namespace {
 
 		f.write("\t\t}\n");
 
+		f.write("\t\tif(changed)\n");
+		f.write("\t\t\tsubscriber.notifyUpdated();\n");
+
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
 	}
@@ -817,8 +832,8 @@ namespace {
 		f.write("\t\t\taddr = null;\n");
 		f.write("\t\t}\n");
 		f.write("\t\tparser.parseStateUpdateMessageEnd();\n");
-		f.write("\t\tif(changed)\n");
-		f.write("\t\t\tthis.notifyUpdated();\n");
+		// f.write("\t\tif(changed)\n");
+		// f.write("\t\t\tthis.notifyUpdated();\n");
 		f.write("\t}\n");
 
 		f.write("\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
@@ -840,10 +855,9 @@ namespace {
 
 
 		if (s.type == CompositeType::Type::publishable)
-		{
 			f.write("\tpublic virtual void notifyFullyUpdated() { }\n");
-			f.write("\tpublic virtual void notifyUpdated() { }\n");
-		}
+
+		f.write("\tpublic virtual void notifyUpdated() { }\n");
 		auto& mem = s.getMembers();
 		for (size_t i = 0; i < mem.size(); ++i)
 		{

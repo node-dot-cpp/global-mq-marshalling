@@ -55,6 +55,7 @@ namespace TestProject1
                 this.handled = handled;
             }
 
+            public override void notifyUpdated() { handled.Add(Events.notifyUpdated); }
             public override void notifyUpdated_x(Int64 old) { handled.Add(Events.notifyUpdated_x); }
             public override void notifyUpdated_y(Int64 old) { handled.Add(Events.notifyUpdated_y); }
             public override void notifyUpdated_z(Int64 old) { handled.Add(Events.notifyUpdated_z); }
@@ -121,7 +122,7 @@ namespace TestProject1
                 stub.applyMessageWithUpdates(parserUpdate);
             }
 
-            Assert.Equal(handled.ToArray(), events);
+            Assert.Equal(events, handled.ToArray());
         }
 
         [Fact]
@@ -145,6 +146,8 @@ namespace TestProject1
                 new Events[] {
                     Events.notifyFullyUpdated,
                     Events.notifyUpdated_y,
+                    Events.notifyUpdated,
+//                    Events.notifyElementUpdated_structVec,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
                 }
@@ -161,15 +164,20 @@ namespace TestProject1
                     Events.notifyFullyUpdated,
                     Events.notifyElementUpdated_intVec,
                     Events.notifyUpdated_intVec,
+                    Events.notifyUpdated,
                     Events.notifyElementUpdated_uintVec,
                     Events.notifyUpdated_uintVec,
+                    Events.notifyUpdated,
                     Events.notifyElementUpdated_realVec,
                     Events.notifyUpdated_realVec,
+                    Events.notifyUpdated,
                     Events.notifyElementUpdated_strVec,
                     Events.notifyUpdated_strVec,
+                    Events.notifyUpdated,
                     Events.notifyUpdated_x,
                     Events.notifyUpdated_y,
                     Events.notifyUpdated_z,
+                    Events.notifyUpdated,
                     Events.notifyElementUpdated_structVec,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
@@ -185,7 +193,12 @@ namespace TestProject1
                 new Events[] {
                     Events.notifyFullyUpdated,
                     Events.notifyUpdated_strVec,
+                    Events.notifyUpdated,
                     Events.notifyUpdated_realVec,
+                    Events.notifyUpdated,
+                    //Events.notifyUpdated_x,
+                    //Events.notifyUpdated_y,
+                    //Events.notifyUpdated_z,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
                 }
@@ -202,8 +215,10 @@ namespace TestProject1
                     Events.notifyFullyUpdated,
                     Events.notifyErased_intVec,
                     Events.notifyUpdated_intVec,
+                    Events.notifyUpdated,
                     Events.notifyErased_realVec,
                     Events.notifyUpdated_realVec,
+                    Events.notifyUpdated,
                     Events.notifyErased_structVec,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
@@ -221,15 +236,20 @@ namespace TestProject1
                     Events.notifyFullyUpdated,
                     Events.notifyInserted_intVec,
                     Events.notifyUpdated_intVec,
+                    Events.notifyUpdated,
                     Events.notifyInserted_uintVec,
                     Events.notifyUpdated_uintVec,
+                    Events.notifyUpdated,
                     Events.notifyInserted_realVec,
                     Events.notifyUpdated_realVec,
+                    Events.notifyUpdated,
                     Events.notifyInserted_strVec,
                     Events.notifyUpdated_strVec,
+                    Events.notifyUpdated,
                     Events.notifyUpdated_x,
                     Events.notifyUpdated_y,
                     Events.notifyUpdated_z,
+                    Events.notifyUpdated,
                     Events.notifyInserted_structVec,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
