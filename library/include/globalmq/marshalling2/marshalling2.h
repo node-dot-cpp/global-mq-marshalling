@@ -1176,14 +1176,7 @@ public:
 	static
 	bool isSame( const CppType& v1, const CppType& v2 )
 	{
-		if ( v1.size() != v2.size() )
-			return false;
-		for ( size_t i=0; i<v1.size(); ++i )
-		{
-			if ( !ElemProcT::isSame( *(v1[i]), *(v2[i]) ) ) 
-				return false;
-		}
-		return true;
+		return v1 == v2;
 	}
 
 	template<class UserT>
@@ -1544,20 +1537,7 @@ public:
 	static
 	bool isSame( const CppType& v1, const CppType& v2 )
 	{
-		if ( v1.size() != v2.size() )
-			return false;
-		auto it1 = v1.begin();
-		auto it2 = v2.begin();
-		while ( it1 != v1.end() )
-		{
-			if ( !KeyProcT::isSame(it1->first, it2->first) || !ValueProcT::isSame( it1->second, it2->second ) ) 
-				return false;
-			
-			++it1;
-			++it2;
-		}
-
-		return true;
+		return v1 == v2;
 	}
 
 };
@@ -1573,10 +1553,10 @@ public:
 
 	template<class ParserT>
 	static
-	void parse_key( ParserT& parser, typename KeyProcT::CppType& key )
+	KeyType parse_key( ParserT& parser )
 	{
 		parser.namedParamBegin("key");
-		KeyProcT::parse( parser, key );
+		return KeyProcT::parse( parser );
 	}
 
 	template<class ComposerTT>
@@ -1628,7 +1608,7 @@ public:
 
 			// value
 			auto value = factory();
-			ValueProcT::parse( parser, *value );
+			ValueProcT::parse_notify( parser, *value );
 
 			parser.structEnd();
 
@@ -1659,7 +1639,7 @@ public:
 
 			// value
 			PtrValueType value = factory();
-			ValueProcT::parse( parser, *value );
+			ValueProcT::parse_state_sync( parser, *value );
 
 			parser.structEnd();
 
@@ -1689,22 +1669,33 @@ public:
 	static
 	bool isSame( const CppType& v1, const CppType& v2 )
 	{
-		if ( v1.size() != v2.size() )
+		return v1 == v2;
+	}
+
+	template<class UserT>
+	static
+	bool isSame( const CppType& d1, const GMQ_COLL unordered_map<KeyType, UserT>& d2 )
+	{
+		if (d1.size() != d2.size())
 			return false;
-		auto it1 = v1.begin();
-		auto it2 = v2.begin();
-		while ( it1 != v1.end() )
+		
+		auto it1 = d1.begin();
+
+		while ( it1 != d1.end() )
 		{
-			if ( !KeyProcT::isSame(it1->first, it2->first) || !ValueProcT::isSame( it1->second, it2->second ) ) 
+			auto it2 = d2.find(it1->first);
+
+			if(it2 == d2.end())
 				return false;
-			
+
+			if (!ValueProcT::isSame( *(it1->second), it2->second )) 
+				return false;
+
 			++it1;
-			++it2;
 		}
 
 		return true;
 	}
-
 };
 
 

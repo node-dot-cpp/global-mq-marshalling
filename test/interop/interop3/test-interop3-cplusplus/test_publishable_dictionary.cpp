@@ -49,24 +49,6 @@ class publishable_dictionary_for_test :
     }
 };
 
-template<class T, class BufferT>
-class subscriber_dictionary_for_test :
-    public mtest::publishable_dictionary_WrapperForSubscriber<T, BufferT>
-{
-    public:
-    subscriber_dictionary_for_test(T& data) : 
-        mtest::publishable_dictionary_WrapperForSubscriber<T, BufferT>(data) {}
-
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser )
-    {
-        throw std::exception();
-    }
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
-    {
-        throw std::exception();
-    }
-};
-
 mtest::structures::publishable_dictionary GetPublishableDictionary_2()
 {
     mtest::structures::publishable_dictionary data{};
@@ -191,7 +173,7 @@ class publishable_dictionary_json : public types_json
     public:
     using DataT = mtest::structures::publishable_dictionary;
     using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
-    using SubscriberT = subscriber_dictionary_for_test<mtest::structures::publishable_dictionary, mtest::Buffer>;
+    using SubscriberT = mtest::publishable_dictionary_subscriber;
 };
 
 class publishable_dictionary_gmq : public types_gmq
@@ -199,7 +181,7 @@ class publishable_dictionary_gmq : public types_gmq
     public:
     using DataT = mtest::structures::publishable_dictionary;
     using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
-    using SubscriberT = subscriber_dictionary_for_test<mtest::structures::publishable_dictionary, mtest::Buffer>;
+    using SubscriberT = mtest::publishable_dictionary_subscriber;
 };
 }
 
@@ -210,38 +192,38 @@ const lest::test test_publishable_dictionary[] =
 {
     lest_CASE( "test_publishable_dictionary.TestStateSync2" )
     {
-        testStateSync<publishable_dictionary_json>(Prefix + "state_sync_2.json", GetPublishableDictionary_2, lest_env);
-        testStateSync<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", GetPublishableDictionary_2, lest_env);
+        testStateSync2<publishable_dictionary_json>(Prefix + "state_sync_2.json", GetPublishableDictionary_2, lest_env);
+        testStateSync2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", GetPublishableDictionary_2, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestUpdate21" )
     {
-        testUpdate<publishable_dictionary_json>(Prefix + "update_21.json", GetPublishableDictionary_2, doUpdatePublisher21<typename publishable_dictionary_json::PublishableT>, doUpdate21, lest_env);
-        testUpdate<publishable_dictionary_gmq>(Prefix + "update_21.gmq", GetPublishableDictionary_2, doUpdatePublisher21<typename publishable_dictionary_gmq::PublishableT>, doUpdate21, lest_env);
+        testUpdate2<publishable_dictionary_json>(Prefix + "state_sync_2.json", Prefix + "update_21.json", GetPublishableDictionary_2, doUpdatePublisher21<typename publishable_dictionary_json::PublishableT>, doUpdate21, lest_env);
+        testUpdate2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", Prefix + "update_21.gmq", GetPublishableDictionary_2, doUpdatePublisher21<typename publishable_dictionary_gmq::PublishableT>, doUpdate21, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestUpdate22" )
     {
-        testUpdate<publishable_dictionary_json>(Prefix + "update_22.json", GetPublishableDictionary_2, doUpdatePublisher22<typename publishable_dictionary_json::PublishableT>, doUpdate22, lest_env);
-        testUpdate<publishable_dictionary_gmq>(Prefix + "update_22.gmq", GetPublishableDictionary_2, doUpdatePublisher22<typename publishable_dictionary_gmq::PublishableT>, doUpdate22, lest_env);
+        testUpdate2<publishable_dictionary_json>(Prefix + "state_sync_2.json", Prefix + "update_22.json", GetPublishableDictionary_2, doUpdatePublisher22<typename publishable_dictionary_json::PublishableT>, doUpdate22, lest_env);
+        testUpdate2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", Prefix + "update_22.gmq", GetPublishableDictionary_2, doUpdatePublisher22<typename publishable_dictionary_gmq::PublishableT>, doUpdate22, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestUpdate23" )
     {
-        testUpdate<publishable_dictionary_json>(Prefix + "update_23.json", GetPublishableDictionary_2, doUpdatePublisher23<typename publishable_dictionary_json::PublishableT>, doUpdate23, lest_env);
-        testUpdate<publishable_dictionary_gmq>(Prefix + "update_23.gmq", GetPublishableDictionary_2, doUpdatePublisher23<typename publishable_dictionary_gmq::PublishableT>, doUpdate23, lest_env);
+        testUpdate2<publishable_dictionary_json>(Prefix + "state_sync_2.json", Prefix + "update_23.json", GetPublishableDictionary_2, doUpdatePublisher23<typename publishable_dictionary_json::PublishableT>, doUpdate23, lest_env);
+        testUpdate2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", Prefix + "update_23.gmq", GetPublishableDictionary_2, doUpdatePublisher23<typename publishable_dictionary_gmq::PublishableT>, doUpdate23, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestUpdate24" )
     {
-        testUpdate<publishable_dictionary_json>(Prefix + "update_24.json", GetPublishableDictionary_2, doUpdatePublisher24<typename publishable_dictionary_json::PublishableT>, doUpdate24, lest_env);
-        testUpdate<publishable_dictionary_gmq>(Prefix + "update_24.gmq", GetPublishableDictionary_2, doUpdatePublisher24<typename publishable_dictionary_gmq::PublishableT>, doUpdate24, lest_env);
+        testUpdate2<publishable_dictionary_json>(Prefix + "state_sync_2.json", Prefix + "update_24.json", GetPublishableDictionary_2, doUpdatePublisher24<typename publishable_dictionary_json::PublishableT>, doUpdate24, lest_env);
+        testUpdate2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", Prefix + "update_24.gmq", GetPublishableDictionary_2, doUpdatePublisher24<typename publishable_dictionary_gmq::PublishableT>, doUpdate24, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestUpdate25" )
     {
-        testUpdate<publishable_dictionary_json>(Prefix + "update_25.json", GetPublishableDictionary_2, doUpdatePublisher25<typename publishable_dictionary_json::PublishableT>, doUpdate25, lest_env);
-        testUpdate<publishable_dictionary_gmq>(Prefix + "update_25.gmq", GetPublishableDictionary_2, doUpdatePublisher25<typename publishable_dictionary_gmq::PublishableT>, doUpdate25, lest_env);
+        testUpdate2<publishable_dictionary_json>(Prefix + "state_sync_2.json", Prefix + "update_25.json", GetPublishableDictionary_2, doUpdatePublisher25<typename publishable_dictionary_json::PublishableT>, doUpdate25, lest_env);
+        testUpdate2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", Prefix + "update_25.gmq", GetPublishableDictionary_2, doUpdatePublisher25<typename publishable_dictionary_gmq::PublishableT>, doUpdate25, lest_env);
     },
     lest_CASE( "test_publishable_dictionary.TestUpdate26" )
     {
-        testUpdate<publishable_dictionary_json>(Prefix + "update_26.json", GetPublishableDictionary_2, doUpdatePublisher26<typename publishable_dictionary_json::PublishableT>, doUpdate26, lest_env);
-        testUpdate<publishable_dictionary_gmq>(Prefix + "update_26.gmq", GetPublishableDictionary_2, doUpdatePublisher26<typename publishable_dictionary_gmq::PublishableT>, doUpdate26, lest_env);
+        testUpdate2<publishable_dictionary_json>(Prefix + "state_sync_2.json", Prefix + "update_26.json", GetPublishableDictionary_2, doUpdatePublisher26<typename publishable_dictionary_json::PublishableT>, doUpdate26, lest_env);
+        testUpdate2<publishable_dictionary_gmq>(Prefix + "state_sync_2.gmq", Prefix + "update_26.gmq", GetPublishableDictionary_2, doUpdatePublisher26<typename publishable_dictionary_gmq::PublishableT>, doUpdate26, lest_env);
     },
 };
 

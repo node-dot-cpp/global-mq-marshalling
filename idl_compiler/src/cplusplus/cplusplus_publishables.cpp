@@ -2786,7 +2786,7 @@ f.write("//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		f.write("\tif ( currentChanged )\n" );
 		f.write("\t{\n" );
 		// f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+		f.write("\t\tthis->notifyValueUpdated_%s( key );\n", member.name.c_str() );
 		// f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
 		// f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
 		f.write("\t}\n" );
