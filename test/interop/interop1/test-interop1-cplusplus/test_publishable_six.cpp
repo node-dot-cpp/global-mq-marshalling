@@ -93,6 +93,7 @@ class user_BasicTypes_handler : public  mtest::BasicTypes_subscriber
 
     user_BasicTypes_handler(std::vector<Events6>& handled) : handled(handled) {}
 
+    void notifyUpdated() override { handled.push_back(Events6::notifyUpdated); }
     void notifyUpdated_anInt(int64_t old) override { handled.push_back(Events6::notifyUpdated_anInt); }
     void notifyUpdated_anUInt(uint64_t old) override { handled.push_back(Events6::notifyUpdated_anUInt); }
     void notifyUpdated_aReal(double old) override { handled.push_back(Events6::notifyUpdated_aReal); }
@@ -108,6 +109,7 @@ class user_AggregateType_handler : public  mtest::AggregateType_subscriber
 
     GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber> make_theAggregate() override { return GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber>{new user_BasicTypes_handler(handled)}; }
 
+    void notifyUpdated() override { handled.push_back(Events6::notifyUpdated); }
     void notifyUpdated_name(GMQ_COLL string old) override { handled.push_back(Events6::notifyUpdated_name); }
     void notifyUpdated_theAggregate() override { handled.push_back(Events6::notifyUpdated_theAggregate); }
     void notifyUpdated_lastValue(int64_t old) override { handled.push_back(Events6::notifyUpdated_lastValue); }
@@ -170,8 +172,11 @@ void doUpdatePublisher1(T& publ)
 std::vector<Events6> events1 = {
                     Events6::notifyFullyUpdated,
                     Events6::notifyUpdated_anInt,
+                    Events6::notifyUpdated,
                     Events6::notifyUpdated_theAggregate,
+                    Events6::notifyUpdated,
                     Events6::notifyUpdated_aggregate,
+                    Events6::notifyUpdated,
                     Events6::notifyUpdated
                 };
 
@@ -210,23 +215,30 @@ std::vector<Events6> events2 = {
 
                 Events6::notifyFullyUpdated,
                 Events6::notifyUpdated_name,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated_aggregate,
                 Events6::notifyUpdated,
                 Events6::notifyUpdated_anInt,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated_basic,
                 Events6::notifyUpdated,
                 Events6::notifyUpdated_anUInt,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated_basic,
                 Events6::notifyUpdated,
                 Events6::notifyUpdated_aReal,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated_basic,
                 Events6::notifyUpdated,
                 Events6::notifyUpdated_anInt,
                 Events6::notifyUpdated_anUInt,
                 Events6::notifyUpdated_aReal,
                 Events6::notifyUpdated_aString,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated_theAggregate,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated_aggregate,
+                Events6::notifyUpdated,
                 Events6::notifyUpdated
                 };
 }

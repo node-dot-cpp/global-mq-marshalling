@@ -563,6 +563,9 @@ namespace {
 
 		f.write("\t\tparser.parseStructEnd();\n");
 
+		f.write("\t\tif(changed)\n");
+		f.write("\t\t\tsubscriber.notifyUpdated();\n");
+
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");
 	}
@@ -606,6 +609,9 @@ namespace {
 		f.write("\t\t\t}\n");
 
 		f.write("\t\t}\n");
+
+		f.write("\t\tif(changed)\n");
+		f.write("\t\t\tsubscriber.notifyUpdated();\n");
 
 		f.write("\t\treturn changed;\n");
 		f.write("\t}\n");

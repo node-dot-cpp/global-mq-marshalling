@@ -50,6 +50,7 @@ namespace test_interop2_csharp
             }
 
 
+            public override void notifyUpdated() { handled.Add(Events.notifyUpdated); }
             public override void notifyUpdated_anInt(Int64 old) { handled.Add(Events.notifyUpdated_anInt); }
             public override void notifyUpdated_anUInt(UInt64 old) { handled.Add(Events.notifyUpdated_anUInt); }
             public override void notifyUpdated_aReal(Double old) { handled.Add(Events.notifyUpdated_aReal); }
@@ -67,6 +68,7 @@ namespace test_interop2_csharp
 
             public override   mtest.BasicTypes_subscriber makeHandler_theAggregate(  mtest.IBasicTypes data) { return new BasicTypes_stub(data, handled); }
 
+            public override void notifyUpdated() { handled.Add(Events.notifyUpdated); }
             public override void notifyUpdated_name(String old) { handled.Add(Events.notifyUpdated_name); }
             public override void notifyUpdated_theAggregate() { handled.Add(Events.notifyUpdated_theAggregate); }
             public override void notifyUpdated_lastValue(Int64 old) { handled.Add(Events.notifyUpdated_lastValue); }
@@ -127,7 +129,9 @@ namespace test_interop2_csharp
         {
             TestJsonParseUpdate(test_publishable_six.Path1, new Events[] {
                 Events.notifyUpdated_anInt,
+                Events.notifyUpdated,
                 Events.notifyUpdated_theAggregate,
+                Events.notifyUpdated,
                 Events.notifyUpdated_aggregate,
                 Events.notifyUpdated
             });
@@ -139,18 +143,28 @@ namespace test_interop2_csharp
         {
             TestJsonParseUpdate(test_publishable_six.Path2, new Events[] {
                 Events.notifyUpdated_name,
+                Events.notifyUpdated,
                 Events.notifyUpdated_aggregate,
+                Events.notifyUpdated,
                 Events.notifyUpdated_anInt,
+                Events.notifyUpdated,
                 Events.notifyUpdated_basic,
+                Events.notifyUpdated,
                 Events.notifyUpdated_anUInt,
+                Events.notifyUpdated,
                 Events.notifyUpdated_basic,
+                Events.notifyUpdated,
                 Events.notifyUpdated_aReal,
+                Events.notifyUpdated,
                 Events.notifyUpdated_basic,
+                Events.notifyUpdated,
                 Events.notifyUpdated_anInt,
                 Events.notifyUpdated_anUInt,
                 Events.notifyUpdated_aReal,
                 Events.notifyUpdated_aString,
+                Events.notifyUpdated,
                 Events.notifyUpdated_theAggregate,
+                Events.notifyUpdated,
                 Events.notifyUpdated_aggregate,
                 Events.notifyUpdated
             });
