@@ -1835,7 +1835,7 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 		fprintf( header, "\t\tif ( s1.currentVariant() != s2.currentVariant() )\n" );
 		fprintf( header, "\t\t\treturn false;\n" );
 
-		fprintf( header, "\t\tif ( s1.currentVariant() != UserT::Variants::unknown )\n" );
+		fprintf( header, "\t\tif ( s1.currentVariant() != UserT1::Variants::unknown )\n" );
 		fprintf( header, "\t\t\tswitch ( s1.currentVariant() )\n" );
 		fprintf( header, "\t\t\t{\n" );
 
@@ -2732,263 +2732,325 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary2( FileWritter f, R
 //	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
 	// const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
-	f.write("%s oldDictionaryVal;\n",  impl_templateMemberTypeName( "T", member).c_str() );
+	// f.write("%s oldDictionaryVal;\n",  impl_templateMemberTypeName( "T", member).c_str() );
 	f.write("bool currentChanged = false;\n" );
-	f.write("constexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
+	// f.write("constexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", member.name.c_str() );
 //	f.write("if constexpr( alwaysCollectChanges )\n" );
 //	f.write("\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
 f.write("//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 
 //	const char* libType = paramTypeToLibType( member.type.dictionaryValueKind );
-	assert( member.type.structIdx < root.structs.size() );
+	// assert( member.type.structIdx < root.structs.size() );
 
+	bool simpleType = member.type.dictionaryValueKind == MessageParameterType::KIND::INTEGER ||
+						member.type.dictionaryValueKind == MessageParameterType::KIND::UINTEGER ||
+						member.type.dictionaryValueKind == MessageParameterType::KIND::REAL ||
+						member.type.dictionaryValueKind == MessageParameterType::KIND::CHARACTER_STRING;
 
 	f.write("if ( addr.size() > offset + 2 ) // update for a value of a particular dictionary element\n" );
 	f.write("{\n" );
 
-	if ( member.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+	if ( simpleType )
+		f.write("\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
+	else
 	{
 		f.write("\toffset += 1;\n" );
-		f.write("\tauto key = %s::fromAddress(addr, offset);\n", getDictionaryKeyProcessor(member.type).c_str() );
+		f.write("\tauto key = %s::fromAddress(addr, offset);\n", getValueProcessor(member.type.dictionaryKeyKind) );
 		// f.write("\t%s::parse(parser, t.%s[key], addr, offset);\n", getDictionaryValueProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
-		f.write("\t\ttypename %s::mapped_type& value = t.%s[key];\n", impl_templateMemberTypeName( "T", member, true ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\tauto& value = this->%s[key];\n", impl_memberOrAccessFunctionName( member ).c_str() );
 
-		f.write("\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t{\n" );
-		f.write("\t\t\ttypename %s::mapped_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\t%s::copy( value, oldValue );\n", getDictionaryValueProcessor(member.type).c_str() );
-		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\tif ( currentChanged )\n" );
-		f.write("\t\t\t{\n" );
-		f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", member.name.c_str() );
-		f.write("\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
-		f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
-		f.write("\t\t\t}\n" );
-		f.write("\t\t}\n" );
+		// f.write("\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t{\n" );
+		// f.write("\t\t\ttypename %s::mapped_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\t%s::copy( value, oldValue );\n", getDictionaryValueProcessor(member.type).c_str() );
+		// f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\tif ( currentChanged )\n" );
+		// f.write("\t\t\t{\n" );
+		// f.write("\t\t\t\tchanged = true;\n" );
+		// f.write("\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", member.name.c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+		// f.write("\t\t\t}\n" );
+		// f.write("\t\t}\n" );
 
-		f.write("\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t{\n" );
-		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\tif ( currentChanged )\n" );
-		f.write("\t\t\t{\n" );
-		f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
-		f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
-		f.write("\t\t\t}\n" );
-		f.write("\t\t}\n" );
+		// f.write("\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t{\n" );
 
-		f.write("\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
-		f.write("\t\t{\n" );
-		f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\tif ( currentChanged )\n" );
-		f.write("\t\t\t{\n" );
-		f.write("\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
-		f.write("\t\t\t}\n" );
-		f.write("\t\t}\n" );
+		f.write("\tcurrentChanged = %s::parse_continue( parser, *value, addr, offset );\n", getDictionaryValueSubscriberTypeProcessor( member.type ).c_str() );
 
-		f.write("\t\telse\n" );
-		f.write("\t\t{\n" );
-		f.write("\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-		f.write("\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
-		f.write("\t\t\telse\n" );
-		f.write("\t\t\t\t%s::parse( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str() );
-		f.write("\t\t}\n" );
+		// f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		f.write("\tif ( currentChanged )\n" );
+		f.write("\t{\n" );
+		// f.write("\t\t\t\tchanged = true;\n" );
+		f.write("\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+		// f.write("\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+		f.write("\t}\n" );
+		// f.write("\t\t}\n" );
+
+		// f.write("\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+		// f.write("\t\t{\n" );
+		// f.write("\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\tif ( currentChanged )\n" );
+		// f.write("\t\t\t{\n" );
+		// f.write("\t\t\t\tchanged = true;\n" );
+		// f.write("\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+		// f.write("\t\t\t}\n" );
+		// f.write("\t\t}\n" );
+
+		// f.write("\t\telse\n" );
+		// f.write("\t\t{\n" );
+		// f.write("\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+		// f.write("\t\t\t\tcurrentChanged = %s::parse<typename %s::value_type, bool>( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
+		// f.write("\t\t\telse\n" );
+		// f.write("\t\t\t\t%s::parse( parser, value, addr, offset );\n", getDictionaryValueProcessor(member.type).c_str() );
+		// f.write("\t\t}\n" );
 	}
-	else
-		f.write("\tthrow std::exception(); // deeper address is unrelated to simple type of dictionary values (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.dictionaryValueKind ) );
 				
 	f.write("}\n" );
 
-	f.write("else if ( addr.size() > offset + 1 ) // update of one or more elelments as a whole\n" );
+	f.write("else if ( addr.size() == offset + 2 ) // update of one or more elelments as a whole\n" );
 	f.write("{\n" );
-	f.write("\tsize_t action = addr[offset + 1];\n" );
+	f.write("\tuint64_t action = addr[offset + 1];\n" );
 
 	// f.write("\telse \n" );
 	// f.write("\t{\n" );
-	f.write("\t\tswitch ( action )\n" );
-	f.write("\t\t{\n" );
+	f.write("\tswitch ( action )\n" );
+	f.write("\t{\n" );
 
-	f.write("\t\t\tcase ActionOnDictionary::remove:\n" );
-	f.write("\t\t\t{\n" );
-	f.write("\t\t\t\tparser.nextElement();\n" );
-	f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\tauto f = t.%s.find( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\tif ( f == t.%s.end() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\t\tthrow std::exception();\n" );
-	f.write("\t\t\t\ttypename %s::mapped_type oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\toldVal = f->second;\n" );
-	f.write("\t\t\t\tt.%s.erase( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\tif constexpr ( has_removed_notifier3_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\tt.notifyRemoved_%s( key, oldVal );\n", member.name.c_str() );
-	f.write("\t\t\t\tif constexpr ( has_removed_notifier2_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\tt.notifyRemoved_%s( key );\n", member.name.c_str() );
-	f.write("\t\t\t\tif constexpr ( has_void_removed_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\tt.notifyRemoved_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
-	f.write("\t\t\t\tbreak;\n" );
-	f.write("\t\t\t}\n" );
+	f.write("\tcase ActionOnDictionary::remove:\n" );
+	f.write("\t{\n" );
+	f.write("\t\tparser.nextElement();\n" );
+	// f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\tauto key = %s::parse_key( parser );\n", getSubscriberTypeProcessor( member.type ).c_str() );
+	f.write("\t\tauto f = this->%s.find( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tif ( f == this->%s.end() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\tthrow std::exception();\n" );
+	// f.write("\t\t\t\ttypename %s::mapped_type oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	f.write("\t\tauto oldVal = std::move(f->second);\n" );
+	f.write("\t\tthis->%s.erase( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\t\t\t\tif constexpr ( has_removed_notifier3_for_%s )\n", member.name.c_str() );
+	f.write("\t\tthis->notifyRemoved_%s( key, std::move(oldVal) );\n", member.name.c_str() );
+	// f.write("\t\t\t\tif constexpr ( has_removed_notifier2_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.notifyRemoved_%s( key );\n", member.name.c_str() );
+	// f.write("\t\t\t\tif constexpr ( has_void_removed_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.notifyRemoved_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\tcurrentChanged = true;\n" );
+	f.write("\t\tbreak;\n" );
+	f.write("\t}\n" );
 
-	f.write("\t\t\tcase ActionOnDictionary::update_value:\n" );
-	f.write("\t\t\t{\n" );
-	f.write("\t\t\t\tparser.nextElement();\n" );
-	f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\tauto f = t.%s.find( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\tif ( f == t.%s.end() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\t\tthrow std::exception();\n" );
+	f.write("\tcase ActionOnDictionary::update_value:\n" );
+	f.write("\t{\n" );
+	f.write("\t\tparser.nextElement();\n" );
+	// f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	// f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\tauto key = %s::parse_key( parser );\n", getSubscriberTypeProcessor( member.type ).c_str() );
+	f.write("\t\tauto f = this->%s.find( key );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tif ( f == this->%s.end() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\t\tthrow std::exception();\n" );
+	f.write("\t\tparser.nextElement();\n" );
+	f.write("\t\tparser.namedParamBegin(\"value\");\n" );
 
-	f.write("\t\t\t\ttypename %s::mapped_type& value = f->second;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-
-	f.write("\t\t\t\ttypename %s::mapped_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
-	switch ( member.type.dictionaryValueKind )
+	if(simpleType)
 	{
-		case MessageParameterType::KIND::INTEGER:
-		case MessageParameterType::KIND::UINTEGER:
-		case MessageParameterType::KIND::REAL:
-		case MessageParameterType::KIND::CHARACTER_STRING:
-			f.write("\t\t\t\toldValue = value;\n" );
-			break;
-		case MessageParameterType::KIND::STRUCT:
-		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\t\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
-			break;
-		default:
-			f.write("\t\t\t\tstatic_assert(false);\n" );
-			break;
+		f.write("\t\tauto oldVal = this->%s[key];\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\tauto newVal = %s::parse( parser );\n", getDictionaryValueSubscriberTypeProcessor(member.type).c_str() );
+		f.write("\t\tcurrentChanged = newVal != oldVal;\n" );
+
+		f.write("\t\tif ( currentChanged )\n" );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tthis->%s[key] = newVal;\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		// f.write("\t\t\t\t\tchanged = true;\n" );
+		// f.write("\t\t\tthis->notifyElementUpdated_%s( pos, oldVal );\n", member.name.c_str() );
+		f.write("\t\t\tthis->notifyValueUpdated_%s( key, oldVal );\n", member.name.c_str() );
+		f.write("\t\t}\n" );
 	}
+	else
+	{
+		f.write("\t\tauto& value = this->%s[key];\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\tcurrentChanged = %s::parse_notify( parser, *value );\n", getDictionaryValueSubscriberTypeProcessor(member.type).c_str() );
+		f.write("\t\tif ( currentChanged )\n" );
+		f.write("\t\t{\n" );
+		// f.write("\t\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\tthis->notifyValueUpdated_%s( key );\n", member.name.c_str() );
+		f.write("\t\t}\n" );
+	}
+
+	// f.write("\t\t\t\ttypename %s::mapped_type& value = f->second;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+
+	// f.write("\t\t\t\ttypename %s::mapped_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
+	// switch ( member.type.dictionaryValueKind )
+	// {
+	// 	case MessageParameterType::KIND::INTEGER:
+	// 	case MessageParameterType::KIND::UINTEGER:
+	// 	case MessageParameterType::KIND::REAL:
+	// 	case MessageParameterType::KIND::CHARACTER_STRING:
+	// 		f.write("\t\t\t\toldValue = value;\n" );
+	// 		break;
+	// 	case MessageParameterType::KIND::STRUCT:
+	// 	case MessageParameterType::KIND::DISCRIMINATED_UNION:
+	// 		f.write("\t\t\t\t%s::copy( value, oldValue );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str() );
+	// 		break;
+	// 	default:
+	// 		f.write("\t\t\t\tstatic_assert(false);\n" );
+	// 		break;
+	// }
 				
-	f.write("\t\t\t\tparser.nextElement();\n" );
-	f.write("\t\t\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\tparser.nextElement();\n" );
+	// f.write("\t\t\t\tif constexpr ( has_full_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
 
-	f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\tif ( currentChanged )\n" );
-	f.write("\t\t\t\t\t{\n" );
-	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t\t}\n" );
-	f.write("\t\t\t\t}\n"  );
+	// f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	// f.write("\t\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\t\tchanged = true;\n" );
+	// f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s( key, oldValue );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tif constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t}\n" );
+	// f.write("\t\t\t\t}\n"  );
 				
-	f.write("\t\t\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\tif ( currentChanged )\n" );
-	f.write("\t\t\t\t\t{\n" );
-	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t\t}\n" );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\telse if constexpr ( has_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	// f.write("\t\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\t\tchanged = true;\n" );
+	// f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s( key );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tif constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t}\n" );
+	// f.write("\t\t\t\t}\n" );
 
-	f.write("\t\t\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\tif ( currentChanged )\n" );
-	f.write("\t\t\t\t\t\tchanged = true;\n" );
-	f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\telse if constexpr ( has_void_value_updated_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\tif ( currentChanged )\n" );
+	// f.write("\t\t\t\t\t\tchanged = true;\n" );
+	// f.write("\t\t\t\t\t\tt.notifyValueUpdated_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t}\n" );
 
-	f.write("\t\t\t\telse\n" );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-	f.write("\t\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t\telse\n" );
-	f.write("\t\t\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\telse\n" );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	// f.write("\t\t\t\t\t\tcurrentChanged = globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValueAndCompare( parser, value, oldValue );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t\telse\n" );
+	// f.write("\t\t\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	// f.write("\t\t\t\t}\n" );
 
-	f.write("\t\t\t\tbreak;\n" );
-	f.write("\t\t\t}\n" );
+	f.write("\t\tbreak;\n" );
+	f.write("\t}\n" );
 
-	f.write("\t\t\tcase ActionOnDictionary::insert:\n" );
-	f.write("\t\t\t{\n" );
-	f.write("\t\t\t\tparser.nextElement();\n" );
-	f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
-	f.write("\t\t\t\tparser.nextElement();\n" );
-	f.write("\t\t\t\ttypename %s::mapped_type value;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\tcase ActionOnDictionary::insert:\n" );
+	f.write("\t{\n" );
+	f.write("\t\tparser.nextElement();\n" );
+	// f.write("\t\t\t\ttypename %s::key_type key;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	// f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseKey( parser, key );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+	f.write("\t\tauto key = %s::parse_key( parser );\n", getSubscriberTypeProcessor( member.type ).c_str() );
+	f.write("\t\tparser.nextElement();\n" );
+	f.write("\t\tparser.namedParamBegin(\"value\");\n" );
 
-	f.write("\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t{\n" );
-	f.write("\t\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
-	f.write("\t\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::copy( t.%s, oldVal );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	if(simpleType)
+		f.write("\t\tauto newVal = %s::parse(parser);\n", getDictionaryValueSubscriberTypeProcessor(member.type).c_str() );
+	else
+	{
+		f.write("\t\tauto newVal = this->makeValue_%s();\n", member.name.c_str() );
+		f.write("\t\t%s::parse_notify(parser, *newVal);\n", getDictionaryValueSubscriberTypeProcessor(member.type).c_str() );
+	}
+
+	// f.write("\t\t\t\ttypename %s::mapped_type value;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	// f.write("\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parseValue( parser, value );\n", getDictionaryKeyValueProcessor( member.type ).c_str() );
+
+	// f.write("\t\t\t\tif constexpr ( has_insert_notifier3_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\t%s oldVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
+	// f.write("\t\t\t\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::copy( t.%s, oldVal );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\t\tthis->%s.insert( GMQ_COLL make_pair( key, std::move(newVal) ) );\n", impl_memberOrAccessFunctionName( member ).c_str() );
 				
-	f.write("\t\t\t\t\tt.notifyInserted_%s( key, oldVal );\n", member.name.c_str() );
-	f.write("\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tt.notifyInserted_%s( key );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.notifyInserted_%s( key, oldVal );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
+	f.write("\t\tthis->notifyInserted_%s( key );\n", member.name.c_str() );
 				
-	f.write("\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t}\n" );
-	f.write("\t\t\t\telse\n" );
-	f.write("\t\t\t\t{\n" );
+	// f.write("\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\telse\n" );
+	// f.write("\t\t\t\t{\n" );
 
-	f.write("\t\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tt.notifyInserted_%s( key );\n", member.name.c_str() );
+	// f.write("\t\t\t\t\tt.%s.insert( std::make_pair( key, value ) );\n", impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\t\t\t\t\tif constexpr ( has_insert_notifier2_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tt.notifyInserted_%s( key );\n", member.name.c_str() );
 				
-	f.write("\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
-	f.write("\t\t\t\t}\n" );
+	// f.write("\t\t\t\t\tif constexpr ( has_void_insert_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\t\t\t\t\tt.notifyInserted_%s();\n", member.name.c_str() );
+	// f.write("\t\t\t\t}\n" );
 				
-	f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
-	f.write("\t\t\t\t\tcurrentChanged = true;\n" );
-	f.write("\t\t\t\tbreak;\n" );
-	f.write("\t\t\t}\n" );
-	f.write("\t\t\tdefault:\n" );
-	f.write("\t\t\t\tthrow std::exception();\n" );
-	f.write("\t\t}\n" );
+	// f.write("\t\t\t\tif constexpr ( alwaysCollectChanges )\n" );
+	f.write("\t\tcurrentChanged = true;\n" );
+	f.write("\t\tbreak;\n" );
+	f.write("\t}\n" );
+	f.write("\tdefault:\n" );
+	f.write("\t\tthrow std::exception();\n" );
+	f.write("\t}\n" );
 	// f.write("\t\t::globalmq::marshalling::impl::parseStateUpdateBlockEnd( parser );\n" );
 	// f.write("\t}\n" );
 			
 //f.write("//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n" );
 	f.write("}\n" );
-	f.write("else // replacement of the whole dictionary\n" );
+	f.write("else if ( addr.size() == offset + 1 ) // replacement of the whole dictionary\n" );
 	f.write("{\n" );
 	f.write("\tparser.nextElement();\n" );
 	f.write("\tparser.leafeBegin();\n" );
+
+
+	if(simpleType)
+		f.write("\tauto newVal = %s::parse( parser );\n", getSubscriberTypeProcessor( member.type ).c_str() );
+	else
+	{
+		f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
+		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeValue_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+	}
+
+	f.write("\tcurrentChanged = true;\n" );
+	f.write("\tthis->%s = std::move(newVal);\n", impl_memberOrAccessFunctionName( member ).c_str() );
+
 	f.write("\n" );
-	f.write("\tif constexpr( alwaysCollectChanges )\n" );
-	f.write("\t{\n" );
-	f.write("\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t\tcurrentChanged = !globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::isSame( oldDictionaryVal, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\t}\n" );
-	f.write("\telse\n" );
-	f.write("\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-	f.write("\n" );
+	// f.write("\tif constexpr( alwaysCollectChanges )\n" );
+	// f.write("\t{\n" );
+	// f.write("\t\t%s::parse( parser, t.%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\t\tcurrentChanged = !globalmq::marshalling2::PublishableDictionaryProcessor2<%s>::isSame( oldDictionaryVal, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\t}\n" );
+	// f.write("\telse\n" );
+	// f.write("\t\tglobalmq::marshalling2::PublishableDictionaryProcessor2<%s>::parse( parser, t.%s );\n", getDictionaryKeyValueProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	// f.write("\n" );
 	// f.write("\t::globalmq::marshalling::impl::publishableParseLeafeDictionaryEnd( parser );\n" );
 	f.write("}\n" );
+	f.write("else // bad address\n" );
+	f.write("\tthrow std::exception();" );
+
 	f.write("\n" );
 	f.write("if ( currentChanged )\n" );
 	f.write("{\n" );
 	f.write("\tchanged = true;\n" );
-	f.write("\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\tt.notifyUpdated_%s();\n", member.name.c_str() );
-	f.write("\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
-	f.write("\t\tt.notifyUpdated_%s( oldDictionaryVal );\n", member.name.c_str() );
+	// f.write("\tif constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
+	f.write("\tthis->notifyUpdated_%s();\n", member.name.c_str() );
+	// f.write("\tif constexpr( has_update_notifier_for_%s )\n", member.name.c_str() );
+	// f.write("\t\tt.notifyUpdated_%s( oldDictionaryVal );\n", member.name.c_str() );
 	f.write("}\n" );
 
-	if ( addReportChanges )
-	{
-		f.write("\n" );
-		f.write("if constexpr( alwaysCollectChanges )\n" );
-		f.write("\treturn currentChanged;\n" );
-	}
+	// if ( addReportChanges )
+	// {
+	// 	f.write("\n" );
+	// 	f.write("if constexpr( alwaysCollectChanges )\n" );
+	// 	f.write("\treturn currentChanged;\n" );
+	// }
 }
 
 void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, const std::string& parserType )
@@ -3017,16 +3079,20 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("if ( addr.size() > offset + 2 ) // update for a member of a particular vector element\n" );
 	f.write("{\n" );
 
-	bool complexElement = member.type.vectorElemKind == MessageParameterType::KIND::STRUCT ||
-						member.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION;
+	bool simpleType = member.type.vectorElemKind == MessageParameterType::KIND::INTEGER ||
+						member.type.vectorElemKind == MessageParameterType::KIND::UINTEGER ||
+						member.type.vectorElemKind == MessageParameterType::KIND::REAL ||
+						member.type.vectorElemKind == MessageParameterType::KIND::CHARACTER_STRING;
 
-	if ( complexElement )
+	if ( simpleType )
+		f.write("\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
+	else
 	{
 		f.write("\tsize_t pos = addr[offset + 1];\n" );
 		f.write("\tif ( pos > this->%s.size() )\n", impl_memberOrAccessFunctionName( member ).c_str() );
 		f.write("\t\tthrow std::exception();\n" );
-		f.write("\tauto& value = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
 
+		f.write("\tauto& value = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
 		// f.write("\t\tif constexpr ( has_full_element_updated_notifier_for_%s )\n", member.name.c_str() );
 		// f.write("\t\t{\n" );
 		// f.write("\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
@@ -3088,8 +3154,6 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 		// f.write("\t\t\t\t%s::parse<typename %s::value_type>( parser, value, addr, offset + 2 );\n", getHelperClassName( *(root.structs[member.type.structIdx]) ).c_str(), impl_templateMemberTypeName( "T", member, true ).c_str() );
 		// f.write("\t\t}\n" );
 	}
-	else
-		f.write("\tthrow std::exception(); // deeper address is unrelated to simple type of vector elements (IDL type of t.%s elements is %s)\n", member.name.c_str(), impl_kindToString( member.type.vectorElemKind ) );
 				
 	f.write("}\n" );
 	f.write("else if ( addr.size() == offset + 2 ) // update of one or more elelments as a whole\n" );
@@ -3104,20 +3168,17 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("\tcase ActionOnVector::remove_at:\n" );
 	f.write("\t{\n" );
 
-	if(complexElement)
+	if(simpleType)
+	{
+		f.write("\t\tauto oldVal = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\tthis->%s.erase( this->%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\tthis->notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
+	}
+	else
 	{
 		f.write("\t\tauto oldVal = std::move(this->%s[pos]);\n", impl_memberOrAccessFunctionName( member ).c_str() );
 		f.write("\t\tthis->%s.erase( this->%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 		f.write("\t\tthis->notifyErased_%s( pos, std::move(oldVal) );\n", member.name.c_str() );
-	}
-	else
-	{
-		f.write("\t\tauto oldVal = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
-		// f.write("\t\t\t\t%s::copy( t.%s, oldVal );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-		f.write("\t\tthis->%s.erase( this->%s.begin() + pos );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-		// f.write("\t\t\t\tif constexpr ( has_erased_notifier3_for_%s )\n", member.name.c_str() );
-	//	f.write("\t\t\t\t{\n" );
-		f.write("\t\tthis->notifyErased_%s( pos, oldVal );\n", member.name.c_str() );
 	}
 //	f.write("\t\t\t\t}\n" );
 // 	f.write("\t\t\t\tif constexpr ( has_erased_notifier2_for_%s )\n", member.name.c_str() );
@@ -3139,17 +3200,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("\t\tparser.nextElement();\n" );
 	f.write("\t\tparser.leafeBegin();\n" );
 
-	if(complexElement)
-	{
-		f.write("\t\tauto& value = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
-		f.write("\t\tcurrentChanged = %s::parse_notify( parser, *value );\n", elemProc.c_str() );
-		f.write("\t\tif ( currentChanged )\n" );
-		f.write("\t\t{\n" );
-		// f.write("\t\t\t\t\tchanged = true;\n" );
-		f.write("\t\t\tthis->notifyElementUpdated_%s( pos );\n", member.name.c_str() );
-		f.write("\t\t}\n" );
-	}
-	else
+	if(simpleType)
 	{
 		f.write("\t\tauto oldVal = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
 		f.write("\t\tauto newVal = %s::parse( parser );\n", elemProc.c_str() );
@@ -3161,7 +3212,17 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 		// f.write("\t\t\t\t\tchanged = true;\n" );
 		f.write("\t\t\tthis->notifyElementUpdated_%s( pos, oldVal );\n", member.name.c_str() );
 		f.write("\t\t}\n" );
+	}
+	else
+	{
 
+		f.write("\t\tauto& value = this->%s[pos];\n", impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write("\t\tcurrentChanged = %s::parse_notify( parser, *value );\n", elemProc.c_str() );
+		f.write("\t\tif ( currentChanged )\n" );
+		f.write("\t\t{\n" );
+		// f.write("\t\t\t\t\tchanged = true;\n" );
+		f.write("\t\t\tthis->notifyElementUpdated_%s( pos );\n", member.name.c_str() );
+		f.write("\t\t}\n" );
 	}
 
 	// f.write("\t\t\t\ttypename %s::value_type oldValue;\n", impl_templateMemberTypeName( "T", member, true ).c_str() );
@@ -3235,14 +3296,14 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	f.write("\t\tparser.nextElement();\n" );
 	f.write("\t\tparser.leafeBegin();\n" );
 
-	if(complexElement)
+	if(simpleType)
 	{
-		f.write("\t\tauto newVal = this->makeElement_%s();\n", member.name.c_str() );
-		f.write("\t\t%s::parse_notify(parser, *newVal);\n", elemProc.c_str() );
+		f.write("\t\tauto newVal = %s::parse(parser);\n", elemProc.c_str() );
 	}
 	else
 	{
-		f.write("\t\tauto newVal = %s::parse(parser);\n", elemProc.c_str() );
+		f.write("\t\tauto newVal = this->makeElement_%s();\n", member.name.c_str() );
+		f.write("\t\t%s::parse_notify(parser, *newVal);\n", elemProc.c_str() );
 	}
 
 	f.write("\t\tthis->%s.insert( this->%s.begin() + pos, std::move(newVal) );\n", impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -3283,14 +3344,14 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	// f.write("\n" );
 	// f.write("\tif constexpr( alwaysCollectChanges )\n" );
 	// f.write("\t{\n" );
-	if(complexElement)
+	if(simpleType)
 	{
-		f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
-		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeElement_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+		f.write("\tauto newVal = %s::parse( parser );\n", getSubscriberTypeProcessor( member.type ).c_str() );
 	}
 	else
 	{
-		f.write("\tauto newVal = %s::parse( parser );\n", getSubscriberTypeProcessor( member.type ).c_str() );
+		f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
+		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeElement_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
 	}
 
 	f.write("\tcurrentChanged = !%s::isSame( newVal, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -3383,10 +3444,10 @@ void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlo
 			}
 			case MessageParameterType::KIND::DICTIONARY:
 			{
-				f.write("\t{\n" );
+				// f.write("\t{\n" );
 //				impl_generateApplyUpdateForFurtherProcessingInVector( f, root, member, false, false );
 				impl_generateApplyUpdateForFurtherProcessingInDictionary2( f.indent(2), root, member, true, false, parserType );
-				f.write("\t}\n" );
+				// f.write("\t}\n" );
 				break;
 			}
 			default:
@@ -3401,7 +3462,7 @@ void impl_generateApplyUpdateForDiscriminatedUnionVariant2( FileWritter f, bool 
 {
 	f.write("parser.nextElement();\n" );
 	f.write("parser.leafeBegin();\n");
-	f.write("uint64_t newVar = parser.parseUnsignedInteger();\n" );
+	f.write("uint64_t newVal = parser.parseUnsignedInteger();\n" );
 
 	// if ( addReportChanges )
 	// 	f.write("if constexpr( has_any_notifier_for_currentVariant || reportChanges || has_update_notifier )\n" );
@@ -3409,10 +3470,10 @@ void impl_generateApplyUpdateForDiscriminatedUnionVariant2( FileWritter f, bool 
 	// 	f.write("if constexpr( has_any_notifier_for_currentVariant )\n" );
 	// f.write("{\n" );
 	f.write("auto oldVal = this->currentVariant();\n" );
-	f.write("this->initAs( static_cast<Variants>( newVar ) );\n" );
-	f.write("bool currentChanged = oldVal != t.currentVariant();\n" );
+	f.write("bool currentChanged = oldVal != newVal;\n" );
 	f.write("if ( currentChanged )\n" );
 	f.write("{\n" );
+	f.write("\tthis->initAs( newVal );\n" );
 	// if ( addReportChanges )
 	// {
 	// 	f.write("\t\tif constexpr ( reportChanges || has_update_notifier )\n" );
@@ -3421,7 +3482,7 @@ void impl_generateApplyUpdateForDiscriminatedUnionVariant2( FileWritter f, bool 
 	// f.write("\t\tif constexpr ( has_void_update_notifier_for_currentVariant )\n" );
 	// f.write("\t\t\tt.notifyUpdated_currentVariant();\n" );
 	// f.write("\t\tif constexpr ( has_update_notifier_for_currentVariant )\n" );
-	f.write("\tt.notifyUpdated_currentVariant( oldVal );\n" );
+	f.write("\tthis->notifyUpdated_currentVariant( oldVal );\n" );
 	f.write("}\n" );
 	// f.write("}\n" );
 	// f.write("else\n" );
@@ -3462,7 +3523,7 @@ void impl_generateContinueParsingFunctionForPublishableStruct2( FileWritter f, R
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
 			// std::string numId = std::to_string(it->numID);
-			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
 			f.write("\t\t\t\t{\n" );
 			f.write("\t\t\t\t\tswitch ( addr[offset] )\n" );
 			f.write("\t\t\t\t\t{\n" );
@@ -3539,32 +3600,46 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( FileW
 				case MessageParameterType::KIND::REAL:
 				case MessageParameterType::KIND::CHARACTER_STRING:
 					f.write("\tauto newVal = %s::parse(parser);\n", getSubscriberTypeProcessor(member.type).c_str() );
-					f.write("\tbool currentChanged = !%s::isSame( newVal, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-					f.write("\tif(currentChanged)\n" );
-					f.write("\t{\n" );
-					f.write("\t\tthis->%s = std::move(newVal);\n", impl_memberOrAccessFunctionName( member ).c_str() );
-					f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str());
-					f.write("\t\tchanged = true;\n", member.name.c_str());
-					f.write("\t}\n" );
 					break;
 				case  MessageParameterType::KIND::STRUCT:
 				case  MessageParameterType::KIND::DISCRIMINATED_UNION:
 
 					f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
 					f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeElement_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
-					f.write("\tbool currentChanged = !%s::isSame( newVal, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
-					f.write("\tif(currentChanged)\n" );
-					f.write("\t{\n" );
-					f.write("\t\tthis->%s = std::move(newVal);\n", impl_memberOrAccessFunctionName( member ).c_str() );
-					f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str());
-					f.write("\t\tchanged = true;\n", member.name.c_str());
-					f.write("\t}\n" );
 					break;
 				default:
 					assert( false );
 				}
+				f.write("\tbool currentChanged = !%s::isSame( newVal, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tif(currentChanged)\n" );
+				f.write("\t{\n" );
+				f.write("\t\tthis->%s = std::move(newVal);\n", impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\t\tthis->notifyUpdated_%s();\n", member.name.c_str());
+				f.write("\t\tchanged = true;\n", member.name.c_str());
+				f.write("\t}\n" );
 				break;
 			case MessageParameterType::KIND::DICTIONARY:
+				switch(member.type.dictionaryValueKind)
+				{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					f.write("\tauto newVal = %s::parse(parser);\n", getSubscriberTypeProcessor(member.type).c_str() );
+					break;
+				case  MessageParameterType::KIND::STRUCT:
+				case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+
+					f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
+					f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeValue_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+					break;
+				default:
+					assert( false );
+				}
+				f.write("\tthis->%s = std::move(newVal);\n", impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("\tthis->notifyUpdated_%s();\n", member.name.c_str());
+				f.write("\tchanged = true;\n", member.name.c_str());
+				break;
 			{
 				assert( false );
 				
@@ -3617,9 +3692,9 @@ void impl_generateParseFunctionForPublishableStruct2( FileWritter f, Root& root,
 	{
 		f.write("\t\tparser.namedParamBegin( \"caseId\" );\n" );
 		f.write("\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
-		f.write("\t\tthis->initAs( static_cast<Variants>(caseId) );\n" );
+		f.write("\t\tthis->initAs( caseId );\n" );
 		f.write("\t\tparser.nextElement();\n");
-		f.write("\t\tif ( caseId != Variants::unknown )\n" );
+		f.write("\t\tif ( this->currentVariant() != Variants::unknown )\n" );
 		f.write("\t\t{\n" );
 
 		f.write("\t\t\tparser.namedParamBegin( \"caseData\" );\n");
@@ -3630,7 +3705,7 @@ void impl_generateParseFunctionForPublishableStruct2( FileWritter f, Root& root,
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
 			std::string numId = std::to_string(it->numID);
-			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
 			f.write("\t\t\t\t{\n" );
 			assert( it != nullptr );
 			CompositeType& cs = *it;
@@ -3690,7 +3765,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				f.write("%s::parse_state_sync( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("%s::parse( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
@@ -3703,7 +3778,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 					case MessageParameterType::KIND::UINTEGER:
 					case MessageParameterType::KIND::REAL:
 					case MessageParameterType::KIND::CHARACTER_STRING:
-						f.write("%s::parse_state_sync( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+						f.write("%s::parse( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 						break;
 					case  MessageParameterType::KIND::STRUCT:
 					case  MessageParameterType::KIND::DISCRIMINATED_UNION:
@@ -3714,6 +3789,22 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 				}
 				break;
 			case MessageParameterType::KIND::DICTIONARY:
+				switch ( member.type.dictionaryValueKind )
+				{
+					case MessageParameterType::KIND::INTEGER:
+					case MessageParameterType::KIND::UINTEGER:
+					case MessageParameterType::KIND::REAL:
+					case MessageParameterType::KIND::CHARACTER_STRING:
+						f.write("%s::parse( parser, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+						break;
+					case  MessageParameterType::KIND::STRUCT:
+					case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+						f.write("%s::parse_state_sync( parser, this->%s, [this]() { return this->makeValue_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+						break;
+					default:
+						assert( false );
+				}
+				break;
 			{
 				f.write("//// TODO: \n" );
 				break;
@@ -3737,9 +3828,9 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 	{
 		f.write("\t\tparser.namedParamBegin( \"caseId\" );\n");
 		f.write("\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
-		f.write("\t\tthis->initAs( static_cast<Variants>(caseId) );\n" );
+		f.write("\t\tthis->initAs( caseId );\n" );
 		f.write("\t\tparser.nextElement();\n");
-		f.write("\t\tif ( caseId != Variants::unknown )\n" );
+		f.write("\t\tif ( this->currentVariant() != Variants::unknown )\n" );
 		f.write("\t\t{\n" );
 
 		f.write("\t\t\tparser.namedParamBegin( \"caseData\" );\n");
@@ -3750,7 +3841,7 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
 			// std::string numId = std::to_string(it->numID);
-			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
 			f.write("\t\t\t\t{\n" );
 
 			assert( it != nullptr );
@@ -3874,8 +3965,32 @@ void impl_SubscriberVirtualHandlers_Members( FileWritter f, CompositeType& obj )
 			}
 			break;
 		case MessageParameterType::KIND::DICTIONARY:
-			f.write("//// TODO: revise notifier list DICTIONARY !!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		{
+			string keyType = MessageParameterType::isNumericType(member.type.dictionaryKeyKind) ? getCppType(member.type.dictionaryKeyKind) :
+				fmt::format("const {}&", getCppType(member.type.dictionaryKeyKind));
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
+				f.write("virtual void notifyValueUpdated_%s(%s key, %s oldVal) {}\n", member.name.c_str(), keyType.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str());
+				f.write("virtual void notifyInserted_%s(%s key) {}\n", member.name.c_str(), keyType.c_str());
+				f.write("virtual void notifyRemoved_%s(%s key, %s oldVal) {}\n", member.name.c_str(), keyType.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str());
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("virtual void notifyUpdated_%s() {}\n", member.name.c_str());
+				f.write("virtual void notifyValueUpdated_%s(%s key) {}\n", member.name.c_str(), keyType.c_str());
+				f.write("virtual void notifyInserted_%s(%s key) {}\n", member.name.c_str(), keyType.c_str());
+				f.write("virtual void notifyRemoved_%s(%s key, %s oldVal) {}\n", member.name.c_str(), keyType.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str());
+				break;
+			default:
+				assert(false);
+			}
 			break;
+		}
 		default:
 			assert(false);
 		}
@@ -3921,7 +4036,20 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 			}
 			break;
 		case MessageParameterType::KIND::DICTIONARY:
-			f.write("//// TODO: DICTIONARY value factory\n");
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("virtual %s makeValue_%s() { return %s{new %s()}; }\n", getDictionaryValueSubscriberCppType(member.type).c_str(), member.name.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				break;
+			default:
+				assert(false);
+			}
 			break;
 		default:
 			assert(false);
@@ -3999,24 +4127,24 @@ void impl_SubscriberGetters_Members( FileWritter f, CompositeType& obj )
 		case MessageParameterType::KIND::INTEGER:
 		case MessageParameterType::KIND::UINTEGER:
 		case MessageParameterType::KIND::REAL:
-			f.write("\tauto get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			f.write("\tauto get_%s() const { return this->%s; }\n", member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 			break;
 		case MessageParameterType::KIND::CHARACTER_STRING:
-			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 			f.write("\tauto& lazy_%s()\n", member.name.c_str() );
 			f.write("\t{\n" );
-			f.write("\t\tif(!this->%s)\n", member.name.c_str() );
-			f.write("\t\t\tthis->%s = make_%s();\n", member.name.c_str(), member.name.c_str() );
-			f.write("\t\treturn *(this->%s);\n", member.name.c_str() );
+			f.write("\t\tif(!this->%s)\n", impl_memberOrAccessFunctionName( member ).c_str() );
+			f.write("\t\t\tthis->%s = make_%s();\n",impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+			f.write("\t\treturn *(this->%s);\n", impl_memberOrAccessFunctionName( member ).c_str() );
 			f.write("\t}\n" );
-			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->lazy_%s(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), member.name.c_str() );
+			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->lazy_%s(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
 		case MessageParameterType::KIND::DICTIONARY:
-			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), member.name.c_str() );
+			f.write("\tconst auto& get_%s() const { return this->%s; }\n", member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 			break;
 		default:
 			assert(false);
@@ -4049,7 +4177,7 @@ void impl_SubscriberGetters( FileWritter f, CompositeType& obj )
 		impl_SubscriberGetters_Members( f, obj );
 }
 
-void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( FileWritter f, CompositeType& s )
+void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( FileWritter f, CompositeType& s, bool isPlainStruct )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 
@@ -4058,42 +4186,46 @@ void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( FileWritter f
 		assert( s.getMembers()[i] != nullptr );
 		auto& member = *(s.getMembers()[i]);
 
-		f.write("if( ! %s::isSame( s1.get_%s(), s2.get_%s() ) ) return false;\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		if(isPlainStruct)
+			f.write("if( ! %s::isSame( s1.get_%s(), s2.%s ) ) return false;\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		else
+			f.write("if( ! %s::isSame( s1.get_%s(), s2.get_%s() ) ) return false;\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str(), member.name.c_str() );
 	}
 }
 
-void impl_GeneratePublishableStructIsSameFn3( FileWritter f, CompositeType& s )
+void impl_GeneratePublishableStructIsSameFn3( FileWritter f, CompositeType& s, bool isPlainStruct )
 {
 	if ( s.isDiscriminatedUnion() )
 	{
 		f.write("\t\tif ( s1.currentVariant() != s2.currentVariant() )\n" );
 		f.write("\t\t\treturn false;\n" );
 
-		f.write("\t\tif ( s1.currentVariant() != UserT::Variants::unknown )\n" );
-		f.write("\t\t\tswitch ( s1.currentVariant() )\n" );
-		f.write("\t\t\t{\n" );
+		// f.write("\t\tif ( s1.currentVariant() != UserT::Variants::unknown )\n" );
+		f.write("\t\tswitch ( s1.currentVariant() )\n" );
+		f.write("\t\t{\n" );
+		f.write("\t\tcase Variants::unknown: break;\n" );
 
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
 			std::string numId = std::to_string(it->numID);
-			f.write("\t\t\t\tcase %s: // IDL CASE %s\n", numId.c_str(), it->name.c_str() );
-			f.write("\t\t\t\t{\n" );
+			f.write("\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t{\n" );
 
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( f.indent(5), cs );
+			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( f.indent(3), cs, isPlainStruct );
 
-			f.write( "\t\t\t\t\tbreak;\n" );
-			f.write( "\t\t\t\t}\n" );
+			f.write( "\t\t\tbreak;\n" );
+			f.write( "\t\t}\n" );
 		}
 
-		f.write( "\t\t\t\tdefault:\n" );
-		f.write( "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
-		f.write("\t\t\t}\n" );
+		f.write( "\t\tdefault:\n" );
+		f.write( "\t\t\treturn false; // unexpected\n" );
+		f.write("\t\t}\n" );
 	}
 	else
-		impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( f.indent(2), s );
+		impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( f.indent(2), s, isPlainStruct );
 
 	f.write("\t\treturn true;\n" );
 }
@@ -4104,12 +4236,12 @@ void impl_GeneratePublishableStructIsSameFn2( FileWritter f, CompositeType& s )
 
 	f.write("\tstatic bool isSame(const ThisType& s1, const ThisType& s2)\n" );
 	f.write( "\t{\n" );
-	impl_GeneratePublishableStructIsSameFn3(f, s);
+	impl_GeneratePublishableStructIsSameFn3(f, s, false);
 	f.write( "\t}\n" );
 
 	f.write("\tstatic bool isSame(const ThisType& s1, const %s& s2)\n", genName.c_str() );
 	f.write( "\t{\n" );
-	impl_GeneratePublishableStructIsSameFn3(f, s);
+	impl_GeneratePublishableStructIsSameFn3(f, s, true);
 	f.write( "\t}\n" );
 
 	f.write("\tstatic bool isSame(const GMQ_COLL unique_ptr<ThisType>& s1, const GMQ_COLL unique_ptr<ThisType>& s2) { return isSame(*s1, *s2); }\n" );
@@ -4130,10 +4262,17 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 
 	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
 
+
+
 	FileWritter f(header, 0);
 
 	string typeName = getSubscriberClassName( obj.name );
-	if( obj.type == CompositeType::Type::publishable )
+	if(obj.type == CompositeType::Type::discriminated_union)
+	{
+		generateDiscriminatedUnionObject(header, obj, true);
+		f.write("class %s : private  %s_subscriber_base\n", typeName.c_str(), obj.name.c_str() );
+	}
+	else if( obj.type == CompositeType::Type::publishable )
 	{
 		f.write("class %s : public globalmq::marshalling::StateSubscriberBase<globalmq::marshalling::Buffer>\n", typeName.c_str() );
 	}

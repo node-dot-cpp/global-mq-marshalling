@@ -219,23 +219,35 @@ string impl_SubscriberTypeProcessor( const MessageParameterType& type, MessagePa
 		case MessageParameterType::KIND::DISCRIMINATED_UNION: 
 			return getSubscriberClassName(type.name);
 		case MessageParameterType::KIND::VECTOR:
-		switch(type.vectorElemKind)
-		{
-			case MessageParameterType::KIND::INTEGER:
-			case MessageParameterType::KIND::UINTEGER:
-			case MessageParameterType::KIND::REAL:
-			case MessageParameterType::KIND::CHARACTER_STRING:
-				return fmt::format( "globalmq::marshalling2::ValueVectorProcessor2<{}>", getValueProcessor(type.vectorElemKind) );
-			case MessageParameterType::KIND::STRUCT:
-			case MessageParameterType::KIND::DISCRIMINATED_UNION: 
-				return fmt::format( "globalmq::marshalling2::PtrVectorProcessor2<{}>", getSubscriberClassName(type.name) );
-			default: 
-				assert( false );
-				return "";
-		}
+			switch(type.vectorElemKind)
+			{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					return fmt::format( "globalmq::marshalling2::ValueVectorProcessor2<{}>", getValueProcessor(type.vectorElemKind) );
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+					return fmt::format( "globalmq::marshalling2::PtrVectorProcessor2<{}>", getSubscriberClassName(type.name) );
+				default: 
+					assert( false );
+					return "";
+			}
 		case MessageParameterType::KIND::DICTIONARY:
-			return fmt::format( "globalmq::marshalling2::PublishableDictionaryProcessor2<{},{}>",
-				impl_SubscriberTypeProcessor(type, type.dictionaryKeyKind), impl_SubscriberTypeProcessor(type, type.dictionaryValueKind) );
+			switch(type.dictionaryValueKind)
+			{
+				case MessageParameterType::KIND::INTEGER:
+				case MessageParameterType::KIND::UINTEGER:
+				case MessageParameterType::KIND::REAL:
+				case MessageParameterType::KIND::CHARACTER_STRING:
+					return fmt::format( "globalmq::marshalling2::ValueDictionaryProcessor2<{},{}>", getValueProcessor(type.dictionaryKeyKind), getValueProcessor(type.dictionaryValueKind) );
+				case MessageParameterType::KIND::STRUCT:
+				case MessageParameterType::KIND::DISCRIMINATED_UNION: 
+					return fmt::format( "globalmq::marshalling2::PtrDictionaryProcessor2<{},{}>", getValueProcessor(type.dictionaryKeyKind), getSubscriberClassName(type.name) );
+				default: 
+					assert( false );
+					return "";
+			}
 		default: 
 			assert( false );
 			return "";
@@ -252,6 +264,12 @@ inline
 string getVectorElemSubscriberTypeProcessor( const MessageParameterType& type )
 {
 	return impl_SubscriberTypeProcessor( type, type.vectorElemKind);
+}
+
+inline
+string getDictionaryValueSubscriberTypeProcessor( const MessageParameterType& type )
+{
+	return impl_SubscriberTypeProcessor( type, type.dictionaryValueKind);
 }
 
 inline
@@ -308,6 +326,11 @@ string getVectorElemSubscriberCppType( const MessageParameterType& type )
 {
 	return impl_SubscriberCppType( type, type.vectorElemKind );
 }
+inline
+string getDictionaryValueSubscriberCppType( const MessageParameterType& type )
+{
+	return impl_SubscriberCppType( type, type.dictionaryValueKind );
+}
 
 
 inline
@@ -339,6 +362,7 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, const Gene
 void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config);
 
 void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
+void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isForSubscriber = false );
 //void generateMessageParameter( FILE* header, MessageParameter& s );
 //void generateMessageMembers( FILE* header, CompositeType& s );
 //void generateLimit( FILE* header, Limit& s );
