@@ -147,7 +147,7 @@ namespace test_interop2_csharp
                     Events.notifyFullyUpdated,
                     Events.notifyUpdated_y,
                     Events.notifyUpdated,
-//                    Events.notifyElementUpdated_structVec,
+                    Events.notifyElementUpdated_structVec,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
                 }

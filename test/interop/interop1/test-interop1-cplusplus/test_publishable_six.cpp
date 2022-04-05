@@ -176,7 +176,6 @@ std::vector<Events6> events1 = {
                     Events6::notifyUpdated_theAggregate,
                     Events6::notifyUpdated,
                     Events6::notifyUpdated_aggregate,
-                    Events6::notifyUpdated,
                     Events6::notifyUpdated
                 };
 
@@ -238,7 +237,6 @@ std::vector<Events6> events2 = {
                 Events6::notifyUpdated_theAggregate,
                 Events6::notifyUpdated,
                 Events6::notifyUpdated_aggregate,
-                Events6::notifyUpdated,
                 Events6::notifyUpdated
                 };
 }

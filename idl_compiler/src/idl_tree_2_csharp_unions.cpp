@@ -885,6 +885,7 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 		}
 	}
 
+	f.write("\tpublic virtual void notifyUpdated() { }\n");
 	f.write("\tpublic virtual void notifyUpdated_CurrentVariant(I%s.Variants old) { }\n", type_name);
 
 	for (auto& duit : s.getDiscriminatedUnionCases())
