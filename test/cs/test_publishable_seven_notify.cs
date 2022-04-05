@@ -147,7 +147,7 @@ namespace TestProject1
                     Events.notifyFullyUpdated,
                     Events.notifyUpdated_y,
                     Events.notifyUpdated,
-//                    Events.notifyElementUpdated_structVec,
+                    Events.notifyElementUpdated_structVec,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
                 }
