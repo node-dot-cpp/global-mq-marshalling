@@ -39,15 +39,6 @@ public:
 	using OwningPtrT = std::unique_ptr<T>;
 };
 
-template<class ComposerT>
-class Mock_WrapperForPublisher : public mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT>
-{
-	typedef mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT> base;
-public:
-    virtual void generateStateSyncMessage(ComposerT& composer) { base::compose(composer); }
-};
-
-
 GMQ_COLL string getSubcriptionAddress(const char* name)
 {
 	globalmq::marshalling::GmqPathHelper::PathComponents pc;
@@ -109,11 +100,11 @@ const lest::test test_gmqueue[] =
 		MetaPoolT mp;
 		mp.setTransport(&transport);
 
-		Mock_WrapperForPublisher<ComposerT> publ;
+		mtest::Mock_WrapperForPublisher<ComposerT> publ;
 		// mtest::Mock_WrapperForPublisher<mtest::structures::Mock, ComposerT> publ;
 		mp.add(&publ);
 
-		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
+		GMQ_COLL string path = getSubcriptionAddress(publ.publishableName());
 
 		mtest::Mock_subscriber subs;
 		// mtest::Mock_WrapperForSubscriber<mtest::structures::Mock, BufferT> sub;
@@ -147,10 +138,10 @@ const lest::test test_gmqueue[] =
 		MetaPoolT mp;
 		mp.setTransport(&transport);
 
-		Mock_WrapperForPublisher<ComposerT> publ;
+		mtest::Mock_WrapperForPublisher<ComposerT> publ;
 		mp.add(&publ);
 
-		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
+		GMQ_COLL string path = getSubcriptionAddress(publ.publishableName());
 
 		mtest::Mock_subscriber subs;
 		mp.add(&subs);
@@ -187,12 +178,12 @@ const lest::test test_gmqueue[] =
 		MetaPoolT mp;
 		mp.setTransport(&transport);
 
-		Mock_WrapperForPublisher<ComposerT> publ;
+		mtest::Mock_WrapperForPublisher<ComposerT> publ;
 		mp.add(&publ);
 		mp.remove(&publ);
 		mp.add(&publ);
 
-		GMQ_COLL string path = getSubcriptionAddress(Mock_WrapperForPublisher<ComposerT>::stringTypeID);
+		GMQ_COLL string path = getSubcriptionAddress(publ.publishableName());
 
 		mtest::Mock_subscriber subs;
 		mp.add(&subs);

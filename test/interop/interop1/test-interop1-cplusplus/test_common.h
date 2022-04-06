@@ -105,38 +105,6 @@ mtest::structures::StructSix GetPublishableSix()
     return data;
 }
 
-template<class T, class ComposerT>
-class publishable_six_for_test :
-    public mtest::StructSix_WrapperForPublisher<T, ComposerT>
-{
-    public:
-    publishable_six_for_test(T& data) : 
-        mtest::StructSix_WrapperForPublisher<T, ComposerT>(data) {}
-
-	virtual void generateStateSyncMessage(ComposerT& composer)
-    {
-        mtest::StructSix_WrapperForPublisher<T, ComposerT>::compose(composer);
-    }
-};
-
-template<class T, class BufferT>
-class subscriber_six_for_test :
-    public mtest::StructSix_WrapperForSubscriber<T, BufferT>
-{
-    public:
-    subscriber_six_for_test(T& data) : 
-        mtest::StructSix_WrapperForSubscriber<T, BufferT>(data) {}
-
-	virtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser )
-    {
-        throw std::exception();
-    }
-	virtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser )
-    {
-        throw std::exception();
-    }
-};
-
 
 inline
 mtest::Buffer makeBuffer(const std::string& filename, lest::env & lest_env)

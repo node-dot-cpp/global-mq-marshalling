@@ -46,22 +46,6 @@ std::string GmqPath_u1 = Prefix + "update_1.gmq";
 std::string GmqPath_u2 = Prefix + "update_2.gmq";
 
 
-
-template<class T, class ComposerT>
-class publishable_dunion_for_test :
-    public mtest::publishable_dunion_WrapperForPublisher<T, ComposerT>
-{
-    public:
-    publishable_dunion_for_test(T& data) : 
-        mtest::publishable_dunion_WrapperForPublisher<T, ComposerT>(data) {}
-
-	virtual void generateStateSyncMessage(ComposerT& composer)
-    {
-        mtest::publishable_dunion_WrapperForPublisher<T, ComposerT>::compose(composer);
-    }
-};
-
-
 mtest::structures::publishable_dunion GetPublishableUnion_0()
 {
     mtest::structures::publishable_dunion data{};
@@ -132,7 +116,7 @@ class publishable_dunion_json : public types_json
 {
     public:
     using DataT = mtest::structures::publishable_dunion;
-    using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
+    using PublishableT = mtest::publishable_dunion_WrapperForPublisher<ComposerT>;
     using SubscriberT = mtest::publishable_dunion_subscriber;
 };
 
@@ -140,7 +124,7 @@ class publishable_dunion_gmq: public types_gmq
 {
     public:
     using DataT = mtest::structures::publishable_dunion;
-    using PublishableT = publishable_dunion_for_test<mtest::structures::publishable_dunion, ComposerT>;
+    using PublishableT = mtest::publishable_dunion_WrapperForPublisher<ComposerT>;
     using SubscriberT = mtest::publishable_dunion_subscriber;
 
 };

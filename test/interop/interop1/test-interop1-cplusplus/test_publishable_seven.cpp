@@ -73,21 +73,6 @@ mtest::structures::publishable_seven GetPublishableSeven()
     return data;
 }
 
-template<class T, class ComposerT>
-class publishable_seven_for_test :
-    public mtest::publishable_seven_WrapperForPublisher<T, ComposerT>
-{
-    public:
-    publishable_seven_for_test(T& data) : 
-        mtest::publishable_seven_WrapperForPublisher<T, ComposerT>(data) {}
-
-	virtual void generateStateSyncMessage(ComposerT& composer)
-    {
-        mtest::publishable_seven_WrapperForPublisher<T, ComposerT>::compose(composer);
-    }
-};
-
-
 enum Events7
 {
     notifyUpdated_x, notifyUpdated_y, notifyUpdated_z,
@@ -155,7 +140,7 @@ class publishable_seven_json : public types_json
 {
     public:
     using DataT = mtest::structures::publishable_seven;
-    using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
+    using PublishableT =  mtest::publishable_seven_WrapperForPublisher<ComposerT>;
     using SubscriberT = user_publishable_seven_handler;
 };
 
@@ -163,7 +148,7 @@ class publishable_seven_gmq : public types_gmq
 {
     public:
     using DataT = mtest::structures::publishable_seven;
-    using PublishableT = publishable_seven_for_test<mtest::structures::publishable_seven, ComposerT>;
+    using PublishableT = mtest::publishable_seven_WrapperForPublisher<ComposerT>;
     using SubscriberT = user_publishable_seven_handler;
 };
 

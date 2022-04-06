@@ -1059,13 +1059,25 @@ public:
 	BufferT&& endTick() { assert( publisher != nullptr ); return std::move( publisher->endTick() ); }
 };
 
+template<class ComposerT>
+class PublisherRegistryBase
+{
+public:
+	using BasePublisherT = StatePublisherBase<ComposerT>;
+	virtual void addPublisher( BasePublisherT* publisher ) = 0;
+	virtual void removePublisher( BasePublisherT* publisher ) = 0;
+
+	virtual ~PublisherRegistryBase() {}
+};
+
 template<class PlatformSupportT>
-class StatePublisherPool
+class StatePublisherPool : public PublisherRegistryBase<typename PlatformSupportT::ComposerT>
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
+	using BasePublisherT = StatePublisherBase<ComposerT>;
 
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
@@ -1076,6 +1088,16 @@ public: // TODO: just a tmp approach to continue immediate dev
 	uint64_t publisherAndItsSubscriberBase = 0;
 
 public:
+	virtual void addPublisher( BasePublisherT* publisher ) override
+	{
+		add(publisher);
+	}
+	virtual void removePublisher( BasePublisherT* publisher ) override
+	{
+		remove(publisher);
+	}
+
+
 	uint64_t add( globalmq::marshalling::StatePublisherBase<ComposerT>* publisher )
 	{
 		for ( size_t i=0; i<publishers.size(); ++i )
@@ -1215,14 +1237,28 @@ public:
 	virtual ~StateSubscriberBase() {}
 };
 
+
+class SubscriberRegistryBase
+{
+public:
+	using BaseSubscriberT = StateSubscriberBase<Buffer>; //Buffer type is legacy here, not really needed
+	virtual void addSubscriber( BaseSubscriberT* subscriber ) = 0;
+	virtual void removeSubscriber( BaseSubscriberT* subscriber ) = 0;
+	virtual void pathSubscribe( BaseSubscriberT* subscriber, const GMQ_COLL string& path ) = 0;
+
+	virtual ~SubscriberRegistryBase() {}
+};
+
+
 template<class PlatformSupportT>
-class StateSubscriberPool
+class StateSubscriberPool : public SubscriberRegistryBase
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
+	using BaseSubscriberT = StateSubscriberBase<Buffer>; //Buffer type is legacy here, not really needed
 
 	struct Subscriber
 	{
@@ -1236,6 +1272,30 @@ protected:
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
 public:
+
+	virtual void addSubscriber( BaseSubscriberT* subscriber ) override
+	{
+		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
+			add(subscriber);
+		else
+			throw std::exception();
+	}
+
+	virtual void removeSubscriber( BaseSubscriberT* subscriber ) override
+	{
+		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
+			remove(subscriber);
+		else
+			throw std::exception();
+	}
+	virtual void pathSubscribe( BaseSubscriberT* subscriber, const GMQ_COLL string& path ) override
+	{
+		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
+			subscribe(subscriber, path);
+		else
+			throw std::exception();
+	}
+
 	void add( StateSubscriberT* subscriber )
 	{
 		// TODO: revise for performance

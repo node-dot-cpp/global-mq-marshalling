@@ -33,21 +33,6 @@ namespace
 {
 std::string Prefix = "data/publishable_dictionary/";
 
-template<class T, class ComposerT>
-class publishable_dictionary_for_test :
-    public mtest::publishable_dictionary_WrapperForPublisher<T, ComposerT>
-{
-    public:
-    publishable_dictionary_for_test(T& data) : 
-        mtest::publishable_dictionary_WrapperForPublisher<T, ComposerT>(data) {}
-
-	virtual void generateStateSyncMessage(ComposerT& composer)
-    {
-        mtest::publishable_dictionary_WrapperForPublisher<T, ComposerT>::compose(composer);
-    }
-};
-
-
 mtest::structures::publishable_dictionary GetPublishableDictionary_0()
 {
     mtest::structures::publishable_dictionary data{};
@@ -117,7 +102,7 @@ class publishable_dictionary_json : public types_json
 {
     public:
     using DataT = mtest::structures::publishable_dictionary;
-    using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
+    using PublishableT = mtest::publishable_dictionary_WrapperForPublisher<ComposerT>;
     using SubscriberT = mtest::publishable_dictionary_subscriber;
 };
 
@@ -125,7 +110,7 @@ class publishable_dictionary_gmq : public types_gmq
 {
     public:
     using DataT = mtest::structures::publishable_dictionary;
-    using PublishableT = publishable_dictionary_for_test<mtest::structures::publishable_dictionary, ComposerT>;
+    using PublishableT = mtest::publishable_dictionary_WrapperForPublisher<ComposerT>;
     using SubscriberT = mtest::publishable_dictionary_subscriber;
 };
 }

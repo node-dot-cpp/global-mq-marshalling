@@ -66,20 +66,6 @@ mtest::structures::StructSix GetPublishableSix()
     return data;
 }
 
-template<class T, class ComposerT>
-class publishable_six_for_test :
-    public mtest::StructSix_WrapperForPublisher<T, ComposerT>
-{
-    public:
-    publishable_six_for_test(T& data) : 
-        mtest::StructSix_WrapperForPublisher<T, ComposerT>(data) {}
-
-	virtual void generateStateSyncMessage(ComposerT& composer)
-    {
-        mtest::StructSix_WrapperForPublisher<T, ComposerT>::compose(composer);
-    }
-};
-
 
 enum Events6 {
     notifyUpdated_anInt, notifyUpdated_anUInt, notifyUpdated_aReal, notifyUpdated_aString,
@@ -142,7 +128,7 @@ class publishable_six_json : public types_json
 {
     public:
     using DataT = mtest::structures::StructSix;
-    using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
+    using PublishableT = mtest::StructSix_WrapperForPublisher<ComposerT>;
     using SubscriberT = user_StructSix_handler;
 };
 
@@ -150,7 +136,7 @@ class publishable_six_gmq : public types_gmq
 {
     public:
     using DataT = mtest::structures::StructSix;
-    using PublishableT = publishable_six_for_test<mtest::structures::StructSix, ComposerT>;
+    using PublishableT = mtest::StructSix_WrapperForPublisher<ComposerT>;
     using SubscriberT = user_StructSix_handler;
 };
 

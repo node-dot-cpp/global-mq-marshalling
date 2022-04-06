@@ -2020,13 +2020,16 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 {
 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T, class ComposerT>\n" );
+	fprintf( header, "template<class ComposerT>\n" );
 	fprintf( header, "class %s_WrapperForPublisher : public globalmq::marshalling::StatePublisherBase<ComposerT>\n", s.name.c_str() );
 	fprintf( header, "{\n" );
-	fprintf( header, "\tT t;\n" );
 	fprintf( header, "\tusing BufferT = typename ComposerT::BufferType;\n" );
+	fprintf( header, "\tusing RegistryT = globalmq::marshalling::PublisherRegistryBase<ComposerT>;\n" );
+	fprintf( header, "\tusing T = %s;\n", getGeneratedTypeName(s).c_str() );
+	fprintf( header, "\tRegistryT* publishableRegistry = nullptr;\n" );
 	fprintf( header, "\tBufferT buffer;\n" );
 	fprintf( header, "\tComposerT composer;\n" );
+	fprintf( header, "\tT t;\n" );
 
 	// impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
 //	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
@@ -2035,14 +2038,20 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
 	fprintf( header, "\tstatic constexpr const char* stringTypeID = \"%s\";\n", s.name.c_str() );
 	fprintf( header, "\n" );
-	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
+	// fprintf( header, "\ttemplate<class ... ArgsT>\n" );
+	// fprintf( header, "\t%s_WrapperForPublisher( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ), composer( buffer ) {}\n", s.name.c_str() );
+	fprintf( header, "\t%s_WrapperForPublisher() : composer( buffer ) {}\n", s.name.c_str() );
+	fprintf( header, "\t%s_WrapperForPublisher( T arg ) : t( std::move( arg ) ), composer( buffer ) {}\n", s.name.c_str() );
+	fprintf( header, "\t%s_WrapperForPublisher( RegistryT* registry ) : publishableRegistry(registry), composer( buffer ) { if(publishableRegistry) { publishableRegistry->addPublisher(this); } }\n", s.name.c_str() );
+	fprintf( header, "\t%s_WrapperForPublisher( RegistryT* registry, T arg ) : publishableRegistry(registry), t( std::move( arg ) ), composer( buffer ) { if(publishableRegistry) { publishableRegistry->addPublisher(this); } }\n", s.name.c_str() );
+	fprintf( header, "\tvirtual ~%s_WrapperForPublisher() { if(publishableRegistry) { publishableRegistry->removePublisher(this); } }\n", s.name.c_str() );
 	fprintf( header, "\tconst T& getState() { return t; }\n" );
 	fprintf( header, "\tComposerT& getComposer() { return composer; }\n" );
 	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { buffer = std::move( buff ); composer.reset(); composer.stateUpdateBegin(); }\n" );
 	fprintf( header, "\tvirtual BufferT&& endTick() override { composer.stateUpdateEnd(); return std::move( buffer ); }\n" );
 	fprintf( header, "\tvirtual const char* publishableName() override { return stringTypeID; }\n" );
 	fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
+ 	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) override { compose(composer); }\n" );
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
 	fprintf( header, "\n" );
@@ -2055,149 +2064,150 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 	fprintf( header, "};\n\n" );
 }
 
-void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
-{
-	assert( s.type == CompositeType::Type::publishable );
+// void impl_GeneratePublishableStatePlatformWrapperForPublisher( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
+// {
+// 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T, class RegistrarT>\n" );
-	fprintf( header, "class %s_%sWrapperForPublisher : public %s_WrapperForPublisher<T, typename %s::ComposerT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "{\n" );
-	fprintf( header, "\tusing ComposerT = typename %s::ComposerT;\n", classNotifierName.c_str() );
-	fprintf( header, "\tRegistrarT& registrar;\n" );
-	fprintf( header, "public:\n" );
-	fprintf( header, "\tusing BufferT = typename %s::ComposerT::BufferType;\n", classNotifierName.c_str() );
-	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_%sWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\tregistrar.add( this );\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual ~%s_%sWrapperForPublisher()\n", s.name.c_str(), platformPrefix.c_str() );
-	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\tregistrar.remove( this );\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
+// 	fprintf( header, "template<class RegistrarT>\n" );
+// 	fprintf( header, "class %s_%sWrapperForPublisher : public %s_WrapperForPublisher<typename %s::ComposerT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "{\n" );
+// 	fprintf( header, "\tusing ComposerT = typename %s::ComposerT;\n", classNotifierName.c_str() );
+// 	fprintf( header, "\tRegistrarT& registrar;\n" );
+// 	fprintf( header, "public:\n" );
+// 	fprintf( header, "\tusing BufferT = typename %s::ComposerT::BufferType;\n", classNotifierName.c_str() );
+// 	// fprintf( header, "\ttemplate<class ... ArgsT>\n" );
+// 	// fprintf( header, "\t%s_%sWrapperForPublisher( RegistrarT& registrar_, ArgsT&& ... args ) : %s_WrapperForPublisher<T, typename %s::ComposerT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t%s_%sWrapperForPublisher( RegistrarT& registrar_, %s arg ) : %s_WrapperForPublisher<typename %s::ComposerT>( std::move(arg) ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), getGeneratedTypeName(s).c_str(), s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t{ \n" );
+// 	fprintf( header, "\t\tregistrar.add( this );\n" );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
+// 	fprintf( header, "\tvirtual ~%s_%sWrapperForPublisher()\n", s.name.c_str(), platformPrefix.c_str() );
+// 	fprintf( header, "\t{ \n" );
+// 	fprintf( header, "\t\tregistrar.remove( this );\n" );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
 
-	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { %s_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual BufferT&& endTick() override { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) override { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
-	fprintf( header, "\tvirtual const char* publishableName() override { return %s_WrapperForPublisher<T, ComposerT>::publishableName(); }\n", s.name.c_str() );
+// 	fprintf( header, "\tvirtual void startTick( BufferT&& buff ) override { %s_WrapperForPublisher<T, ComposerT>::startTick( std::move( buff ) ); }\n", s.name.c_str() );
+// 	fprintf( header, "\tvirtual BufferT&& endTick() override { return  %s_WrapperForPublisher<T, ComposerT>::endTick(); }\n", s.name.c_str() );
+// 	fprintf( header, "\tvirtual void generateStateSyncMessage(ComposerT& composer) override { %s_WrapperForPublisher<T, ComposerT>::compose(composer); }\n", s.name.c_str() );
+// 	fprintf( header, "\tvirtual const char* publishableName() override { return %s_WrapperForPublisher<T, ComposerT>::publishableName(); }\n", s.name.c_str() );
 
-	fprintf( header, "};\n\n" );
-}
+// 	fprintf( header, "};\n\n" );
+// }
 
 void impl_GeneratePublishableStateWrapperForSubscriber( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config)
 {
 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T, class BufferT>\n" );
-	fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>\n", s.name.c_str() );
-	fprintf( header, "{\n" );
-	fprintf( header, "\tT t;\n" );
+	// fprintf( header, "template<class T, class BufferT>\n" );
+	// fprintf( header, "class %s_WrapperForSubscriber : public globalmq::marshalling::StateSubscriberBase<BufferT>\n", s.name.c_str() );
+	// fprintf( header, "{\n" );
+	// fprintf( header, "\tT t;\n" );
 
-	impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
-	impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
+	// impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
+	// impl_GeneratePublishableMemberUpdateNotifierPresenceCheckingBlock( header, root, s, "\t" );
 
-	fprintf( header, "\npublic:\n" );
-	fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
-	fprintf( header, "\tstatic constexpr const char* stringTypeID = \"%s\";\n", s.name.c_str() );
-	fprintf( header, "\n" );
-	fprintf( header, "\tstatic constexpr bool reportChanges = false;\n" );
-	fprintf( header, "\tbool changed = false;\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
-	fprintf( header, "\tconst T& getState() { return t; }\n" );
-	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) override { throw std::exception(); }\n" );
-	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) override { throw std::exception(); }\n" );
-	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) override { throw std::exception(); }\n" );
-	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) override { throw std::exception(); }\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) override\n" );
-	fprintf( header, "\t{\n" );
-	for (auto& each : config.parserNames)
-		fprintf( header, "\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { applyMessageWithUpdates(*ptr); return; }\n", each.c_str() );
+	// fprintf( header, "\npublic:\n" );
+	// fprintf( header, "\tstatic constexpr uint64_t numTypeID = %lld;\n", s.numID );
+	// fprintf( header, "\tstatic constexpr const char* stringTypeID = \"%s\";\n", s.name.c_str() );
+	// fprintf( header, "\n" );
+	// fprintf( header, "\tstatic constexpr bool reportChanges = false;\n" );
+	// fprintf( header, "\tbool changed = false;\n" );
+	// fprintf( header, "\n" );
+	// fprintf( header, "\ttemplate<class ... ArgsT>\n" );
+	// fprintf( header, "\t%s_WrapperForSubscriber( ArgsT&& ... args ) : t( std::forward<ArgsT>( args )... ) {}\n", s.name.c_str() );
+	// fprintf( header, "\tconst T& getState() { return t; }\n" );
+	// fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) override { throw std::exception(); }\n" );
+	// fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) override { throw std::exception(); }\n" );
+	// fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferT>& parser ) override { throw std::exception(); }\n" );
+	// fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<BufferT>& parser ) override { throw std::exception(); }\n" );
+	// fprintf( header, "\n" );
+	// fprintf( header, "\tvirtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) override\n" );
+	// fprintf( header, "\t{\n" );
+	// for (auto& each : config.parserNames)
+	// 	fprintf( header, "\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { applyMessageWithUpdates(*ptr); return; }\n", each.c_str() );
 
-	fprintf( header, "\t\tthrow std::exception();\n" );
-	fprintf( header, "\t}\n" );
+	// fprintf( header, "\t\tthrow std::exception();\n" );
+	// fprintf( header, "\t}\n" );
 
-	fprintf( header, "\tvirtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) override\n" );
-	fprintf( header, "\t{\n" );
-	for (auto& each : config.parserNames)
-		fprintf( header, "\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { parseStateSyncMessage(*ptr); return; }\n", each.c_str() );
+	// fprintf( header, "\tvirtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) override\n" );
+	// fprintf( header, "\t{\n" );
+	// for (auto& each : config.parserNames)
+	// 	fprintf( header, "\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { parseStateSyncMessage(*ptr); return; }\n", each.c_str() );
 
-	fprintf( header, "\t\tthrow std::exception();\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual const char* publishableName() override { return stringTypeID; }\n" );
-	fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
-	fprintf( header, "\n" );
+	// fprintf( header, "\t\tthrow std::exception();\n" );
+	// fprintf( header, "\t}\n" );
+	// fprintf( header, "\n" );
+	// fprintf( header, "\tvirtual const char* publishableName() override { return stringTypeID; }\n" );
+	// fprintf( header, "\tvirtual uint64_t stateTypeID() override { return numTypeID; }\n" );
+	// fprintf( header, "\n" );
 
-	for (auto& each : config.parserNames)
-	{
-		impl_GenerateApplyUpdateMessageMemberFn(header, root, s, true, each);
+	// for (auto& each : config.parserNames)
+	// {
+	// 	impl_GenerateApplyUpdateMessageMemberFn(header, root, s, true, each);
 
-		fprintf(header, "\n");
+	// 	fprintf(header, "\n");
 
-		impl_generateParseFunctionForPublishableState(header, root, s, true, each);
+	// 	impl_generateParseFunctionForPublishableState(header, root, s, true, each);
 
-		fprintf(header, "\n");
-	}
+	// 	fprintf(header, "\n");
+	// }
 
-	impl_GeneratePublishableStateMemberAccessors(header, root, s, false);
+	// impl_GeneratePublishableStateMemberAccessors(header, root, s, false);
 
-	fprintf( header, "};\n\n" );
+	// fprintf( header, "};\n\n" );
 }
 
-void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
-{
-	assert( s.type == CompositeType::Type::publishable );
+// void impl_GeneratePublishableStatePlatformWrapperForSubscriber( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
+// {
+// 	assert( s.type == CompositeType::Type::publishable );
 
-	fprintf( header, "template<class T, class RegistrarT>\n" );
-	fprintf( header, "class %s_%sWrapperForSubscriber : public %s_WrapperForSubscriber<T, typename %s::BufferT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "{\n" );
-	fprintf( header, "\tRegistrarT& registrar;\n" );
-	fprintf( header, "public:\n" );
-	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
-	fprintf( header, "\t%s_%sWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : %s_WrapperForSubscriber<T, typename %s::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\tregistrar.add( this );\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual ~%s_%sWrapperForSubscriber()\n", s.name.c_str(), platformPrefix.c_str() );
-	fprintf( header, "\t{ \n" );
-	fprintf( header, "\t\tregistrar.remove( this );\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
-	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\tvirtual const char* publishableName() override\n" );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::publishableName();\n", s.name.c_str(), classNotifierName.c_str() );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\tvoid subscribe(GMQ_COLL string path)\n" );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\tregistrar.subscribe( this, path );\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "};\n\n" );
-}
+// 	fprintf( header, "template<class T, class RegistrarT>\n" );
+// 	fprintf( header, "class %s_%sWrapperForSubscriber : public %s_WrapperForSubscriber<T, typename %s::BufferT>\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "{\n" );
+// 	fprintf( header, "\tRegistrarT& registrar;\n" );
+// 	fprintf( header, "public:\n" );
+// 	fprintf( header, "\ttemplate<class ... ArgsT>\n" );
+// 	fprintf( header, "\t%s_%sWrapperForSubscriber( RegistrarT& registrar_, ArgsT&& ... args ) : %s_WrapperForSubscriber<T, typename %s::BufferT>( std::forward<ArgsT>( args )... ), registrar( registrar_ )\n", s.name.c_str(), platformPrefix.c_str(), s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t{ \n" );
+// 	fprintf( header, "\t\tregistrar.add( this );\n" );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
+// 	fprintf( header, "\tvirtual ~%s_%sWrapperForSubscriber()\n", s.name.c_str(), platformPrefix.c_str() );
+// 	fprintf( header, "\t{ \n" );
+// 	fprintf( header, "\t\tregistrar.remove( this );\n" );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
+// 	fprintf( header, "\tvirtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
+// 	fprintf( header, "\t{\n" );
+// 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
+// 	fprintf( header, "\tvirtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
+// 	fprintf( header, "\t{\n" );
+// 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::applyMessageWithUpdates(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
+// 	fprintf( header, "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
+// 	fprintf( header, "\t{\n" );
+// 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\n" );
+// 	fprintf( header, "\tvirtual void applyJsonStateSyncMessage( globalmq::marshalling::JsonParser<typename %s::BufferT>& parser ) override\n", classNotifierName.c_str() );
+// 	fprintf( header, "\t{\n" );
+// 	fprintf( header, "\t\t%s_WrapperForSubscriber<T, typename %s::BufferT>::parseStateSyncMessage(parser);\n", s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\tvirtual const char* publishableName() override\n" );
+// 	fprintf( header, "\t{\n" );
+// 	fprintf( header, "\t\treturn %s_WrapperForSubscriber<T, typename %s::BufferT>::publishableName();\n", s.name.c_str(), classNotifierName.c_str() );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "\tvoid subscribe(GMQ_COLL string path)\n" );
+// 	fprintf( header, "\t{\n" );
+// 	fprintf( header, "\t\tregistrar.subscribe( this, path );\n" );
+// 	fprintf( header, "\t}\n" );
+// 	fprintf( header, "};\n\n" );
+// }
 
 void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config)
 {
@@ -2515,12 +2525,12 @@ void generatePublishable( FILE* header, Root& root, CompositeType& s, const Gene
 	impl_generatePublishableCommentBlock( header, s );
 
 	impl_GeneratePublishableStateWrapperForPublisher( header, root, s, config );
-	if ( generatePlatformSpec )
-		impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, config.platformPrefix, config.classNotifierName );
+	// if ( generatePlatformSpec )
+	// 	impl_GeneratePublishableStatePlatformWrapperForPublisher( header, root, s, config.platformPrefix, config.classNotifierName );
 
-	impl_GeneratePublishableStateWrapperForSubscriber( header, root, s, config );
-	if ( generatePlatformSpec )
-		impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, config.platformPrefix, config.classNotifierName );
+	// impl_GeneratePublishableStateWrapperForSubscriber( header, root, s, config );
+	// if ( generatePlatformSpec )
+	// 	impl_GeneratePublishableStatePlatformWrapperForSubscriber( header, root, s, config.platformPrefix, config.classNotifierName );
 
 	impl_GeneratePublishableStateWrapperForConcentrator( header, root, s, config );
 }
@@ -2593,7 +2603,7 @@ void impl_generateApplyUpdateForStructItself2( FileWritter f, MessageParameter& 
 
 	// f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->lazy_%s() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s_lazy() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\tif ( changedCurrent )\n" );
 	f.write("\t{\n" );
 	// if ( addReportChanges )
@@ -2647,7 +2657,7 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct2( FileWritter f, Messa
 
 // 	f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->lazy_%s() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s_lazy() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\tif ( changedCurrent )\n" );
 	f.write("\t{\n" );
 	// if ( addReportChanges )
@@ -2701,7 +2711,7 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct3( FileWritter f, Messa
 
 // 	f.write("else if constexpr( has_void_update_notifier_for_%s )\n", member.name.c_str() );
 	// f.write("{\n" );
-	f.write("bool changedCurrent = %s::parse_continue( parser, this->lazy_%s(), addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("bool changedCurrent = %s::parse_continue( parser, this->%s_lazy(), addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("if ( changedCurrent )\n" );
 	f.write("{\n" );
 	// if ( addReportChanges )
@@ -3640,10 +3650,10 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( FileW
 				f.write("\tthis->notifyUpdated_%s();\n", member.name.c_str());
 				f.write("\tchanged = true;\n", member.name.c_str());
 				break;
-			{
-				assert( false );
+			// {
+			// 	assert( false );
 				
-				f.write("//// TODO: \n" );
+			// 	f.write("//// TODO: \n" );
 				// f.write("if constexpr( reportChanges || has_update_notifier )\n" );
 				// f.write("{\n" );
 				// f.write("\t%s oldDictionaryVal;\n", impl_templateMemberTypeName( "T", member ).c_str() );
@@ -3660,8 +3670,8 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( FileW
 				// f.write("}\n" );
 				// f.write("\n" );
 
-				break;
-			}
+			// 	break;
+			// }
 			default:
 				assert( false );
 		}
@@ -3769,7 +3779,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("%s::parse_state_sync( parser, this->lazy_%s() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("%s::parse_state_sync( parser, this->%s_lazy() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				switch ( member.type.vectorElemKind )
@@ -3805,10 +3815,10 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 						assert( false );
 				}
 				break;
-			{
-				f.write("//// TODO: \n" );
-				break;
-			}
+			// {
+			// 	f.write("//// TODO: \n" );
+			// 	break;
+			// }
 			default:
 				assert( false );
 		}
@@ -4134,13 +4144,13 @@ void impl_SubscriberGetters_Members( FileWritter f, CompositeType& obj )
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\tauto& lazy_%s()\n", member.name.c_str() );
+			f.write("\tauto& %s_lazy()\n", member.name.c_str() );
 			f.write("\t{\n" );
 			f.write("\t\tif(!this->%s)\n", impl_memberOrAccessFunctionName( member ).c_str() );
 			f.write("\t\t\tthis->%s = make_%s();\n",impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
 			f.write("\t\treturn *(this->%s);\n", impl_memberOrAccessFunctionName( member ).c_str() );
 			f.write("\t}\n" );
-			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->lazy_%s(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->%s_lazy(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
 		case MessageParameterType::KIND::DICTIONARY:
@@ -4151,6 +4161,7 @@ void impl_SubscriberGetters_Members( FileWritter f, CompositeType& obj )
 		}
 	}
 }
+
 
 void impl_SubscriberGetters( FileWritter f, CompositeType& obj )
 {
@@ -4176,6 +4187,7 @@ void impl_SubscriberGetters( FileWritter f, CompositeType& obj )
 	else
 		impl_SubscriberGetters_Members( f, obj );
 }
+
 
 void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( FileWritter f, CompositeType& s, bool isPlainStruct )
 {
@@ -4254,7 +4266,7 @@ void impl_GeneratePublishableStructIsSameFn2( FileWritter f, CompositeType& s )
 	f.write("\tbool operator!=(const %s& other) const { return !this->operator==(other); }\n", genName.c_str() );
 }
 
-void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& obj, const GenerationConfig& config )
 {
 	assert( obj.type == CompositeType::Type::structure ||
 			obj.type == CompositeType::Type::discriminated_union ||
@@ -4262,14 +4274,9 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 
 	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
 
-
-
-	FileWritter f(header, 0);
-
 	string typeName = getSubscriberClassName( obj.name );
 	if(obj.type == CompositeType::Type::discriminated_union)
 	{
-		generateDiscriminatedUnionObject(header, obj, true);
 		f.write("class %s : private  %s_subscriber_base\n", typeName.c_str(), obj.name.c_str() );
 	}
 	else if( obj.type == CompositeType::Type::publishable )
@@ -4294,6 +4301,9 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 	impl_SubscriberVirtualHandlers( f.indent(), obj );
 
 	f.write("private:\n" );
+	if( obj.type == CompositeType::Type::publishable )
+		f.write("\tglobalmq::marshalling::SubscriberRegistryBase* const publishableRegistry = nullptr;\n" );
+
 	if(!obj.isDiscriminatedUnion())
 	{
 		for ( auto& mbit: obj.getMembers() )
@@ -4315,7 +4325,19 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 
 	f.write("\npublic:\n" );
 
-	f.write("\tvirtual ~%s() {}\n", typeName.c_str() );
+	if( obj.type == CompositeType::Type::publishable )
+	{
+		f.write("\tvirtual ~%s() { if(publishableRegistry) publishableRegistry->removeSubscriber(this); }\n", typeName.c_str() );
+		f.write("\t%s() {}\n", typeName.c_str() );
+		f.write("\t%s(globalmq::marshalling::SubscriberRegistryBase* registry) : publishableRegistry(registry) { if(publishableRegistry) publishableRegistry->addSubscriber(this); }\n", typeName.c_str() );
+		f.write("\tvoid subscribe(const GMQ_COLL string& path) { if(!publishableRegistry) throw std::exception(); publishableRegistry->pathSubscribe(this, path); }\n" );
+	}
+	else
+	{
+		f.write("\tvirtual ~%s() {}\n", typeName.c_str() );
+		f.write("\t%s() {}\n", typeName.c_str() );
+	}
+
 	f.write("\n" );
 
 	impl_SubscriberGetters( f, obj );
@@ -4323,8 +4345,6 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 	
 	if( obj.type == CompositeType::Type::publishable )
 	{
-
-		f.write("\npublic:\n" );
 		std::string numStr = std::to_string(obj.numID);
 		// f.write("\tstatic constexpr uint64_t numTypeID = %s;\n", numStr.c_str() );
 		// f.write("\tstatic constexpr const char* stringTypeID = \"%s\";\n", obj.name.c_str() );
@@ -4375,22 +4395,18 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2(f, root, obj, each);
 		f.write("\n");
 
-		impl_generateParseFunctionForPublishableStruct2(f, root, obj, each);
-		f.write("\n");
-
-		impl_generateContinueParsingFunctionForPublishableStruct2(f, root, obj, each);
-		f.write("\n");
-
-		// f.write("\tstatic\n" );
-		// f.write("\tvoid parseForStateSyncOrMessageInDepth( %s& parser, ThisType& tt ) { tt.parse_state_sync(parser); }\n", each.c_str() );
-		// f.write("\n");
-
 		f.write("\tstatic\n" );
 		f.write("\tvoid parse_state_sync( %s& parser, ThisType& tt ) { tt.parse_state_sync(parser); }\n", each.c_str() );
 		f.write("\n");
 
+		impl_generateParseFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\n");
+
 		f.write("\tstatic\n" );
 		f.write("\tbool parse_notify( %s& parser, ThisType& tt ) { return tt.parse_notify(parser); }\n", each.c_str() );
+		f.write("\n");
+
+		impl_generateContinueParsingFunctionForPublishableStruct2(f, root, obj, each);
 		f.write("\n");
 
 		f.write("\tstatic\n" );
@@ -4405,5 +4421,455 @@ void generateSubscriberStruct( FILE* header, Root& root, CompositeType& obj, con
 	f.write("};\n\n" );
 }
 
+
+
+             //////////////////////////////////////////
+////////////// new publisher model below this line //////////////
+            //////////////////////////////////////////
+
+
+void impl_PublisherFactories_Iteration( FileWritter f, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	for (size_t i = 0; i < obj.getMembers().size(); ++i)
+	{
+		assert(obj.getMembers()[i] != nullptr);
+		auto &member = *(obj.getMembers()[i]);
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("%s make_%s() { return %s{new %s(publishableComposer, publishableAddress)}; }\n", getPublisherCppType(member.type).c_str(), member.name.c_str(), getPublisherCppType(member.type).c_str(), getPublisherClassName(member.type.name).c_str());
+			break;
+		case MessageParameterType::KIND::VECTOR:
+			switch (member.type.vectorElemKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("%s makeElement_%s() { return %s{new %s(publishableComposer, publishableAddress)}; }\n", getVectorElemPublisherCppType(member.type).c_str(), member.name.c_str(), getVectorElemPublisherCppType(member.type).c_str(), getPublisherClassName(member.type.name).c_str());
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		case MessageParameterType::KIND::DICTIONARY:
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("%s makeValue_%s() { return %s{new %s(publishableComposer, publishableAddress)}; }\n", getDictionaryValuePublisherCppType(member.type).c_str(), member.name.c_str(), getDictionaryValuePublisherCppType(member.type).c_str(), getPublisherClassName(member.type.name).c_str());
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		default:
+			assert(false);
+		}
+	}
+}
+
+void impl_PublisherFactories( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			f.write("// IDL CASE %s\n", it->name.c_str() );
+
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_PublisherFactories_Iteration( f, cs );
+
+		}
+	}
+	else
+		impl_PublisherFactories_Iteration( f, obj );
+}
+
+void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock2( FileWritter f, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	// const char* composer = "composer";
+
+	for ( size_t i=0; i<obj.getMembers().size(); ++i )
+	{
+		auto& it = obj.getMembers()[i];
+		assert( it != nullptr );
+		auto& member = *it;
+
+		if( i != 0)
+		{
+			f.write("\n" );
+			f.write("composer.nextElement();\n" );
+			f.write("\n" );
+		}
+
+		f.write("composer.namedParamBegin( \"%s\" );\n", member.name.c_str() );
+
+		switch ( member.type.kind )
+		{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("%s::compose(composer, this->%s );\n", getPublisherTypeProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str());
+				break;
+			case  MessageParameterType::KIND::STRUCT:
+			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("%s::compose(composer, this->%s_lazy() );\n", getPublisherTypeProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str());
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			case MessageParameterType::KIND::DICTIONARY:
+				f.write("%s::compose(composer, this->%s );\n", getPublisherTypeProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str());
+				break;
+			default:
+				assert( false );
+		}
+
+	}
+}
+
+void impl_generateComposeFunctionForPublishableStruct2( FileWritter f, CompositeType& obj, const std::string& composerType )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	f.write("\tvoid compose( %s& composer )\n", composerType.c_str() );
+	f.write("\t{\n" );
+
+	f.write("\t\tcomposer.structBegin();\n" );
+	f.write("\n" );
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		f.write("\t\tVariants caseId = this->currentVariant();\n" );
+		f.write("\t\tcomposer.namedParamBegin( \"caseId\" );\n" );
+		f.write("\t\tcomposer.composeUnsignedInteger( caseId );\n" );
+
+		f.write("\n" );
+		f.write("\t\tcomposer.nextElement();\n" );
+		f.write("\n" );
+
+		f.write("\t\tif ( caseId != Variants::unknown )\n" );
+		f.write("\t\t{\n" );
+		f.write("\t\t\tcomposer.namedParamBegin( \"caseData\" );\n" );
+		f.write("\t\t\tcomposer.structBegin();\n" );
+		f.write("\t\t\tswitch ( caseId )\n" );
+		f.write("\t\t\t{\n" );
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			f.write("\t\t\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\t{\n" );
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock2( f.indent(5), cs );
+			f.write("\t\t\t\t\tbreak;\n" );
+			f.write("\t\t\t\t}\n" );
+		}
+		f.write("\t\t\t\tdefault:\n" );
+		f.write("\t\t\t\t\tthrow std::exception(); // unexpected\n" );
+		f.write("\t\t\t}\n" );
+		f.write("\t\t\tcomposer.structEnd();\n" );
+
+		f.write("\t\t}\n" );
+	}
+	else
+		impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock2( f.indent(2), obj );
+
+	f.write("\n" );
+	f.write("\t\tcomposer.structEnd();\n" );
+
+	f.write("\t}\n" );
+}
+
+
+void impl_PublisherGetterSetters_Members( FileWritter f, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	for (size_t i = 0; i < obj.getMembers().size(); ++i)
+	{
+		assert(obj.getMembers()[i] != nullptr);
+		auto &member = *(obj.getMembers()[i]);
+
+		const char* memberName = member.name.c_str();
+		string memberAccesor = impl_memberOrAccessFunctionName( member );
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+			f.write("\tauto get_%s() const { return this->%s; }\n", memberName, memberAccesor.c_str() );
+			f.write("\tvoid set_%s(%s newVal) { this->%s = newVal; }\n", memberName, getPublisherCppType(member.type).c_str(), memberAccesor.c_str() );
+			break;
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			f.write("\tconst auto& get_%s() const { return this->%s; }\n", memberName, memberAccesor.c_str() );
+			f.write("\tvoid set_%s(%s newVal) { this->%s = std::move(newVal); }\n", memberName, getPublisherCppType(member.type).c_str(), memberAccesor.c_str() );
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->%s_lazy(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), memberAccesor.c_str() );
+			f.write("\tauto& get_%s() { this->%s_lazy(); return this->%s; }\n", memberName, memberName, memberAccesor.c_str() );
+			f.write("\tvoid set_%s(decltype(%s) newVal) { return this->%s = std::move(newVal); }\n", memberName, memberName, memberAccesor.c_str() );
+			break;
+		case MessageParameterType::KIND::VECTOR:
+		case MessageParameterType::KIND::DICTIONARY:
+			f.write("\tauto& get_%s() { return this->%s_wrapper; }\n", memberName, memberAccesor.c_str() );
+			f.write("\tvoid set_%s(decltype(%s) newVal) { this->%s = std::move(newVal); }\n", memberName, memberName, memberAccesor.c_str() );
+			break;
+		default:
+			assert(false);
+		}
+	}
+}
+
+void impl_PublisherGetterSetters( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		f.write("//Variants currentVariant();\n");
+
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			f.write("// IDL CASE %s\n", it->name.c_str() );
+
+			assert( it != nullptr );
+			CompositeType& cs = *it;
+			assert( cs.type == CompositeType::Type::discriminated_union_case );
+			impl_PublisherGetterSetters_Members( f, cs );
+
+		}
+	}
+	else
+	{
+		impl_PublisherGetterSetters_Members( f, obj );
+	}
+}
+
+void impl_PublisherMembers( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	if(!obj.isDiscriminatedUnion())
+	{
+		for (size_t i = 0; i < obj.getMembers().size(); ++i)
+		{
+			assert(obj.getMembers()[i] != nullptr);
+			auto &member = *(obj.getMembers()[i]);
+
+			const char* memberName = member.name.c_str();
+			string memberAccesor = impl_memberOrAccessFunctionName( member );
+
+			switch (member.type.kind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+		 		f.write("\t%s %s = 0;\n", getPublisherCppType( member.type ).c_str(), memberName );
+				break;
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				f.write("\t%s %s;\n", getPublisherCppType( member.type ).c_str(), memberName );
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("\t%s %s;\n", getPublisherCppType( member.type ).c_str(), memberName );
+				f.write("\tauto& %s_lazy() { if(!this->%s) { this->%s = this->make_%s(); } return *(this->%s); }\n", memberName, memberAccesor.c_str(), memberAccesor.c_str(), memberName, memberName );
+
+				break;
+			case MessageParameterType::KIND::VECTOR:
+			case MessageParameterType::KIND::DICTIONARY:
+				f.write("\t%s %s;\n", getPublisherCppType( member.type ).c_str(), memberName );
+				f.write("\t%s %s_wrapper = %s;\n", getPublisherCppType( member.type ).c_str(), memberName, memberName );
+				break;
+			default:
+				assert(false);
+			}
+		}
+	}
+}
+
+void impl_generatePublisherStruct( FileWritter f, Root& root, CompositeType& obj, const GenerationConfig& config )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
+
+	string typeName = fmt::format("{}_publisher", obj.name);
+	f.write("template<class ComposerT>\n" );
+	if(obj.type == CompositeType::Type::discriminated_union)
+	{
+		f.write("class %s : private  %s_subscriber_base\n", typeName.c_str(), obj.name.c_str() );
+	}
+	else if( obj.type == CompositeType::Type::publishable )
+	{
+
+		f.write("class %s : public globalmq::marshalling::StatePublisherBase<ComposerT>\n", typeName.c_str() );
+	}
+	else
+	{
+		f.write("class %s\n", typeName.c_str() );
+	}
+
+
+
+
+	f.write("{\n" );
+	f.write("public:\n" );
+	// f.write("\tfriend struct %s;\n", getHelperClassName(obj).c_str() );
+	f.write("\tusing ThisType = %s;\n", typeName.c_str() );
+	f.write("\tusing CppType = ThisType;\n" );
+
+	f.write("\n" );
+
+	f.write("private:\n" );
+	if( obj.type == CompositeType::Type::publishable )
+	{
+		f.write("\ttypename ComposerT::BufferType publishableBuffer;\n" );
+		f.write("\tComposerT publishableComposer{publishableBuffer};\n" );
+	}
+	else
+		f.write("\tComposerT& publishableComposer;\n" );
+	f.write("\tGMQ_COLL vector<uint64_t> publishableAddress;\n" );
+
+	impl_PublisherMembers(f, obj);
+	impl_PublisherFactories( f.indent(), obj );
+
+	f.write("\npublic:\n" );
+
+	if( obj.type == CompositeType::Type::publishable )
+	{
+		f.write("\t%s() {}\n", typeName.c_str() );
+	}
+	else
+		f.write("\t%s(ComposerT& composer, GMQ_COLL vector<uint64_t> address) : publishableComposer(composer), publishableAddress(address) {}\n", typeName.c_str() );
+
+	f.write("\n" );
+
+	impl_PublisherGetterSetters( f, obj );
+	impl_GeneratePublishableStructIsSameFn2( f, obj );
+	
+	if( obj.type == CompositeType::Type::publishable )
+	{
+		f.write("\npublic:\n" );
+		std::string numStr = std::to_string(obj.numID);
+
+		f.write("\tvirtual const char* publishableName() override { return \"%s\"; }\n", obj.name.c_str() );
+		f.write("\tvirtual uint64_t stateTypeID() override { return %s; }\n", numStr.c_str() );
+		f.write("\tvirtual void startTick( typename ComposerT::BufferType&& buff ) override { this->publishableBuffer = std::move( buff ); this->publishableComposer.reset(); this->publishableComposer.stateUpdateBegin(); }\n" );
+		f.write("\tvirtual typename ComposerT::BufferType&& endTick() override { this->publishableComposer.stateUpdateEnd(); return std::move( publishableBuffer ); }\n" );
+
+		f.write("\tvirtual void generateStateSyncMessage( ComposerT& composer ) override { compose(composer); }\n" );
+
+		// f.write("\tvirtual void generateStateSyncMessage( globalmq::marshalling2::ComposerBase& composer ) override\n" );
+
+		// f.write("\t{\n" );
+		// for (auto& each : config.composerNames)
+		// 	f.write("\t\tif(auto ptr = dynamic_cast<%s*>(&composer)) { compose(*ptr); return; }\n", each.c_str() );
+
+		// f.write("\t\tthrow std::exception();\n" );
+		// f.write("\t}\n" );
+
+		f.write("\n" );
+
+		f.write("\tvoid applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser )\n" );
+		f.write("\t{\n" );
+		for (auto& each : config.parserNames)
+			f.write("\t\tif(auto ptr = dynamic_cast<%s*>(&parser)) { parse_state_sync( *ptr ); return; }\n", each.c_str() );
+
+		f.write("\t\tthrow std::exception();\n" );
+		f.write("\t}\n" );
+		f.write("\n" );
+
+		f.write("\n");
+	}
+	
+
+	for (auto& each : config.composerNames)
+	{
+		impl_generateComposeFunctionForPublishableStruct2( f, obj, each );
+		
+		f.write("\n");
+
+		f.write("\tstatic\n" );
+		f.write("\tvoid compose( %s& composer, ThisType& tt ) { tt.compose(composer); }\n", each.c_str() );
+		f.write("\n");
+	}
+	// impl_GeneratePublishableStructCopyFn( f, root, obj );
+	// f.write("\n" );
+
+
+
+	for (auto& each : config.parserNames)
+	{
+		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2(f, root, obj, each);
+		f.write("\n");
+
+		f.write("\tstatic\n" );
+		f.write("\tvoid parse_state_sync( %s& parser, ThisType& tt ) { tt.parse_state_sync(parser); }\n", each.c_str() );
+		f.write("\n");
+	}
+
+	f.write("};\n\n" );
+}
+
+
+void generatePublishable2Struct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
+
+	FileWritter f(header, 0);
+
+	if(obj.isDiscriminatedUnion())
+		generateDiscriminatedUnionObject(header, obj, true);
+
+	impl_generateSubscriberStruct(f, root, obj, config);
+	// impl_generatePublisherStruct(f, root, obj, config);
+}
 
 }//namespace cplusplus

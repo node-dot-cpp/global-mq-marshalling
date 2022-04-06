@@ -881,7 +881,7 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		impl_generatePublishableStruct( header, s, *it, config );
 		if ( it->isStruct4Publishing )
-			generateSubscriberStruct(header, s, *it, config);
+			generatePublishable2Struct(header, s, *it, config);
 	}
 
 
@@ -889,7 +889,7 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	{
 		assert( it->type == CompositeType::Type::publishable );
 		impl_generatePublishableStruct( header, s, *it, config );
-		generateSubscriberStruct(header, s, *it, config);
+		generatePublishable2Struct(header, s, *it, config);
 	}
 
 	for ( auto& scope : s.scopes )
