@@ -74,7 +74,7 @@ void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root
 void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, Root& root, CompositeType& s );
-void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
+// void generateNotifierPresenceTesterBlock( FILE* header, Root& root );
 
 
 //mb exported to be used from C#

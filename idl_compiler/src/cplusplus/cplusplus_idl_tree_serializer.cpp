@@ -221,7 +221,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 		assert( obj_1->type == CompositeType::Type::publishable );
 		string idStr = std::to_string(obj_1->numID);
 		fprintf( header, "\t\t\tcase %s:\n", idStr.c_str() );
-		fprintf( header, "\t\t\t\treturn new %s_concentrator<InputBufferT, ComposerT>();\n", obj_1->name.c_str(), obj_1->name.c_str() );
+		fprintf( header, "\t\t\t\treturn new %s_concentrator<InputBufferT, ComposerT>();\n", obj_1->name.c_str() );
 	}
 	fprintf( header, "\t\t\tdefault:\n" );
 	fprintf( header, "\t\t\t\treturn nullptr;\n" );
@@ -776,9 +776,9 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	impl_insertScopeList( header, s );
 
 	generateMessageParamNameBlock( header, msgParams );
-	generatePublishableMemberNameBlock( header, publishableMembers );
+	// generatePublishableMemberNameBlock( header, publishableMembers );
 //	generatePublishableCaseMemberNameBlock( header, publishableCaseMembers );
-	generateNotifierPresenceTesterBlock( header, s );
+	// generateNotifierPresenceTesterBlock( header, s );
 
 	vector<CompositeType*> structsOrderedByDependency;
 	std::unordered_set<size_t> collElementTypes;
