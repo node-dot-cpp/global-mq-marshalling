@@ -746,7 +746,7 @@ struct GmqPathHelper
 template<class InputBufferT, class ComposerT>
 class StateConcentratorBase
 {
-	using OutputBufferT = typename ComposerT::BufferType;
+	// using OutputBufferT = typename ComposerT::BufferType;
 
 public:
 	virtual ~StateConcentratorBase() {}
@@ -762,9 +762,9 @@ public:
 	virtual const char* publishableName() = 0;
 
 	// new interface with default implementation to avoid breaking old code
-	virtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
-	virtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
-	virtual void generateStateSyncMessage( globalmq::marshalling2::ComposerBase& parser ) { throw std::exception(); }
+	virtual void publishableApplyUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void publishableApplyStateSync( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void publishableGenerateStateSync( globalmq::marshalling2::ComposerBase& composer ) { throw std::exception(); }
 };
 
 template<class InputBufferT, class ComposerT>
@@ -892,7 +892,11 @@ class GMQueue
 		{
 			assert( ptr != nullptr );
 			assert( subscriptionResponseReceived );
-			ptr->generateStateSyncMessage( composer );
+			if constexpr ( ComposerT::proto == globalmq::marshalling::Proto::JSON ||
+							ComposerT::proto == globalmq::marshalling::Proto::GMQ )
+				ptr->generateStateSyncMessage( composer );
+			else
+				ptr->publishableGenerateStateSync( composer );
 		}
 
 		void onSubscriptionResponseMessage( ParserT& parser, uint64_t idAtPublisher_ ) 
@@ -904,7 +908,7 @@ class GMQueue
 			else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 				ptr->applyGmqStateSyncMessage( parser );
 			else
-				ptr->applyStateSyncMessage( parser );
+				ptr->publishableApplyStateSync( parser );
 
 			subscriptionResponseReceived = true;
 			idAtPublisher = idAtPublisher_;
@@ -918,7 +922,7 @@ class GMQueue
 			else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 				ptr->applyGmqMessageWithUpdates( parser );
 			else
-				ptr->applyMessageWithUpdates( parser );
+				ptr->publishableApplyUpdates( parser );
 		}
 	};
 

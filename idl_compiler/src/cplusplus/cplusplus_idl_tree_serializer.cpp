@@ -219,8 +219,9 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 		assert( obj_1 != nullptr );
 		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
 		assert( obj_1->type == CompositeType::Type::publishable );
-		fprintf( header, "\t\t\tcase %lld:\n", obj_1->numID );
-		fprintf( header, "\t\t\t\treturn new %s_WrapperForConcentrator<structures::%s, InputBufferT, ComposerT>;\n", obj_1->name.c_str(), obj_1->name.c_str() );
+		string idStr = std::to_string(obj_1->numID);
+		fprintf( header, "\t\t\tcase %s:\n", idStr.c_str() );
+		fprintf( header, "\t\t\t\treturn new %s_concentrator<InputBufferT, ComposerT>();\n", obj_1->name.c_str(), obj_1->name.c_str() );
 	}
 	fprintf( header, "\t\t\tdefault:\n" );
 	fprintf( header, "\t\t\t\treturn nullptr;\n" );

@@ -1580,7 +1580,7 @@ public:
 			composer.nextElement();
 
 			// value
-			ValueProcT::compose( composer, it.second );
+			ValueProcT::compose( composer, *(it.second) );
 
 			composer.structEnd();
 		}

@@ -1231,8 +1231,8 @@ public:
 	virtual uint64_t stateTypeID() = 0;
 
 	// new interface with default implementation to avoid breaking old code
-	virtual void applyMessageWithUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
-	virtual void applyStateSyncMessage( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void publishableApplyUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void publishableApplyStateSync( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
 
 	virtual ~StateSubscriberBase() {}
 };
@@ -1357,7 +1357,7 @@ public:
 				else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqStateSyncMessage( parser );
 				else
-					subscribers[mh.ref_id_at_subscriber].subscriber->applyStateSyncMessage( parser );
+					subscribers[mh.ref_id_at_subscriber].subscriber->publishableApplyStateSync( parser );
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::stateUpdate:
@@ -1372,7 +1372,7 @@ public:
 				else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqMessageWithUpdates( parser );
 				else
-					subscribers[mh.ref_id_at_subscriber].subscriber->applyMessageWithUpdates( parser );
+					subscribers[mh.ref_id_at_subscriber].subscriber->publishableApplyUpdates( parser );
 
 				break;
 			}
