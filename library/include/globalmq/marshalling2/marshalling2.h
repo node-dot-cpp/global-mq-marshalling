@@ -803,14 +803,19 @@ public:
 	}
 };
 
-template<class VectorT, class ElemTypeT, class RootT>
+template<class ElemTypeT, class RootT>
 class VectorRefWrapper4Set
 {
+public:
+	using VectorT = GMQ_COLL vector<typename ElemTypeT::CppType>;
+	using CppType = VectorT;
+private:
 	void finalizeInsertOrUpdateAt( size_t idx ) { 
 		ElemTypeT::compose( root.getComposer(), b[idx] );
 	}
 
 protected:
+
 	VectorT& b;
 	RootT& root;
 	GMQ_COLL vector<uint64_t> address;
@@ -853,16 +858,53 @@ public:
 	}
 };
 
-template<class VectorT, class ElemTypeT, class RootT, class RefWrapper4SetT>
-class VectorOfStructRefWrapper4Set : public VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>
+template<class ElemTypeT, class RootT, class RefWrapper4SetT>
+class VectorOfStructRefWrapper4Set : public VectorRefWrapper4Set<ElemTypeT, RootT>
 {
 public:
-	using base_type = VectorRefWrapper4Set<VectorT, ElemTypeT, RootT>;
-
+	using base_type = VectorRefWrapper4Set<ElemTypeT, RootT>;
+	using VectorT = typename base_type::VectorT;
+	using CppType = VectorT;
 
 	VectorOfStructRefWrapper4Set( VectorT& actual, RootT& root_, GMQ_COLL vector<uint64_t>&& address_ ) : 
 		base_type( actual, root_, std::move(address_) ) {}
 	auto get4set_at( size_t idx ) { return RefWrapper4SetT(base_type::b[idx], base_type::root, makeAddress(base_type::address, idx)); }
+};
+
+template<class ElemTypeT>
+class VectorOfSimpleTypeRefWrapper
+{
+public:
+	using VectorT = GMQ_COLL vector<typename ElemTypeT::CppType>;
+	using CppType = VectorT;
+private:
+	VectorT& b;
+public:
+	VectorOfSimpleTypeRefWrapper( VectorT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+	auto get_at( size_t idx ) { 
+		if constexpr ( std::is_arithmetic<typename VectorT::value_type>::value )
+			return b[idx];
+		else
+		{
+			const auto& ret = b[idx];
+			return ret;
+		}
+	}
+};
+
+template<class ElemTypeT, class RefWrapperT>
+class VectorOfStructRefWrapper
+{
+public:
+	using VectorT = GMQ_COLL vector<typename ElemTypeT::CppType>;
+	using CppType = VectorT;
+private:
+	VectorT& b;
+public:
+	VectorOfStructRefWrapper( VectorT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+	auto get_at( size_t idx ) { return RefWrapperT(b[idx]); }
 };
 
 
@@ -1194,13 +1236,14 @@ public:
 	}
 };
 
-template<class DictionaryT, class KeyProcT, class ValueProcT, class RootT>
+template<class KeyProcT, class ValueProcT, class RootT>
 class DictionaryRefWrapper4Set
 {
 public:
 	using key_type = typename KeyProcT::CppType;
 	using value_type = typename ValueProcT::CppType;
-
+	using DictionaryT = GMQ_COLL unordered_map<key_type, value_type>;
+	using CppType = DictionaryT;
 protected:
 	DictionaryT& b;
 	RootT& root;
@@ -1263,11 +1306,12 @@ public:
 	}
 };
 
-template<class DictionaryT, class KeyProcT, class ValueProcT, class RootT, class RefWrapper4SetT>
-class DictionaryOfStructRefWrapper4Set : public DictionaryRefWrapper4Set<DictionaryT, KeyProcT, ValueProcT, RootT>
+template<class KeyProcT, class ValueProcT, class RootT, class RefWrapper4SetT>
+class DictionaryOfStructRefWrapper4Set : public DictionaryRefWrapper4Set<KeyProcT, ValueProcT, RootT>
 {
 public:
-	using base_type = DictionaryRefWrapper4Set<DictionaryT, KeyProcT, ValueProcT, RootT>;
+	using base_type = DictionaryRefWrapper4Set<KeyProcT, ValueProcT, RootT>;
+	using DictionaryT = typename base_type::DictionaryT;
 
 	DictionaryOfStructRefWrapper4Set( DictionaryT& actual, RootT& root_, GMQ_COLL vector<uint64_t>&& address_ ) : 
 		base_type( actual, root_, std::move(address_) ) {}
@@ -1276,6 +1320,48 @@ public:
 		return RefWrapper4SetT(base_type::b[key], base_type::root, KeyProcT::makeAddress(base_type::address, key));
 	}
 };
+
+template<class KeyProcT, class ValueProcT>
+class DictionaryOfSimpleTypeRefWrapper
+{
+public:
+	using key_type = typename KeyProcT::CppType;
+	using value_type = typename ValueProcT::CppType;
+	using DictionaryT = GMQ_COLL unordered_map<key_type, value_type>;
+	using CppType = DictionaryT;
+private:
+	DictionaryT& b;
+public:
+	DictionaryOfSimpleTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+	bool get_value( const key_type key, value_type& value )
+	{
+		auto f = b.find( key );
+		if ( f != b.end() )
+		{
+			value = f->second;
+			return true;
+		}
+		return false;
+	}
+};
+
+
+template<class KeyProcT, class ValueProcT, class RefWrapperT>
+class DictionaryOfStructRefWrapper
+{
+public:
+	using key_type = typename KeyProcT::CppType;
+	using value_type = typename ValueProcT::CppType;
+	using DictionaryT = GMQ_COLL unordered_map<key_type, value_type>;
+	using CppType = DictionaryT;
+private:
+	DictionaryT& b;
+public:
+	DictionaryOfStructRefWrapper( DictionaryT& actual ) : b( actual ) {}
+	size_t size() { return b.size(); }
+};
+
 template<class KeyProcT, class ValueProcT>
 class PublishableDictionaryProcessor2
 {
