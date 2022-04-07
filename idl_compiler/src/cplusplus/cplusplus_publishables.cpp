@@ -109,22 +109,22 @@ void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, Compos
 		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 		{
 			assert( root.structs.size() > param.type.structIdx );
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::VectorOfStructRefWrapper<%s_RefWrapper<typename %s::value_type>, %s>(t.%s); }\n", 
-				param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param, true ).c_str(), impl_templateMemberTypeName( "T", param).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::VectorOfStructRefWrapper<%s, %s_RefWrapper>(t.%s); }\n", 
+				param.name.c_str(),  getVectorElementProcessor(param.type).c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 		}
 		else
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::VectorOfSimpleTypeRefWrapper(t.%s); }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::VectorOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), getVectorElementProcessor(param.type).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::DICTIONARY )
 	{
 		if ( param.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || param.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
 		{
 			assert( root.structs.size() > param.type.structIdx );
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::DictionaryOfStructRefWrapper<%s_RefWrapper<typename %s::value_type>, %s>(t.%s); }\n", 
-				param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param, true ).c_str(), impl_templateMemberTypeName( "T", param).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper<%s, %s_RefWrapper>(t.%s); }\n", 
+				param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 		}
 		else
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling::DictionaryOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), impl_templateMemberTypeName( "T", param).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::DictionaryOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 	}
 	else
 		fprintf( header, "\tconst auto& get_%s() { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
@@ -155,14 +155,14 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 		assert( param.type.structIdx < root.structs.size() );
 //		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set</*aaa*/%s, %s>(t.%s, *this, %s, %zd); }\n", 
 //			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), addr.c_str(), idx );
-		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<%s, %s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
-			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
+		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<%s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION ) // TODO: revise DU
 	{
 		assert( param.type.structIdx < root.structs.size() );
-		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<%s, %s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
-			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
+		fprintf( header, "\tauto get4set_%s() { return %s_RefWrapper4Set<%s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+			param.name.c_str(), root.structs[param.type.structIdx]->name.c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
 	}
 	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
 	{
@@ -174,18 +174,17 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tauto get4set_%s() { return globalmq::marshalling2::VectorRefWrapper4Set<%s, %s, %s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
-					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), getVectorElementProcessor(param.type).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
+				fprintf( header, "\tauto get4set_%s() { return globalmq::marshalling2::VectorRefWrapper4Set<%s, %s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+					param.name.c_str(), getVectorElementProcessor(param.type).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION: // TODO: revise DU (lib kw: VectorOfStructRefWrapper4Set and around)
 				fprintf( header, 
-					"\tauto get4set_%s() { return globalmq::marshalling2::VectorOfStructRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::value_type, %s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
-					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(),
+					"\tauto get4set_%s() { return globalmq::marshalling2::VectorOfStructRefWrapper4Set<%s, %s, %s_RefWrapper4Set<%s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+					param.name.c_str(),
 					getVectorElementProcessor(param.type).c_str(), 
 					rootType.c_str(), 
 					param.type.name.c_str(), 
-					impl_templateMemberTypeName( "T", param, true ).c_str(),
 					rootType.c_str(), 
 					impl_memberOrAccessFunctionName( param ).c_str(), 
 					rootObjName.c_str(),
@@ -205,19 +204,18 @@ void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, co
 			case MessageParameterType::KIND::UINTEGER:
 			case MessageParameterType::KIND::REAL:
 			case MessageParameterType::KIND::CHARACTER_STRING:
-				fprintf( header, "\tauto get4set_%s() { return globalmq::marshalling2::DictionaryRefWrapper4Set<%s, %s, %s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
-					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
+				fprintf( header, "\tauto get4set_%s() { return globalmq::marshalling2::DictionaryRefWrapper4Set<%s, %s>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+					param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), rootType.c_str(), impl_memberOrAccessFunctionName( param ).c_str(), rootObjName.c_str(), addr.c_str(), idxStr.c_str() );
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
 				assert( param.type.structIdx < root.structs.size() );
 				fprintf( header, 
-					"\tauto get4set_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper4Set<%s, %s, %s, %s_RefWrapper4Set<typename %s::mapped_type, %s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
-					param.name.c_str(), impl_templateMemberTypeName( "T", param ).c_str(),
+					"\tauto get4set_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper4Set<%s, %s, %s_RefWrapper4Set<%s>>(t.%s, %s, globalmq::marshalling2::makeAddress(%s, %s)); }\n", 
+					param.name.c_str(),
 					getDictionaryKeyValueProcessor(param.type).c_str(), 
 					rootType.c_str(), 
 					param.type.name.c_str(), 
-					impl_templateMemberTypeName( "T", param, true ).c_str(),
 					rootType.c_str(), 
 					impl_memberOrAccessFunctionName( param ).c_str(), 
 					rootObjName.c_str(),
@@ -529,7 +527,7 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 
 	if ( s.isDiscriminatedUnion() )
 	{
-		fprintf( header, "\t\tif ( s1.currentVariant() != s2.currentVariant() )\n" );
+		fprintf( header, "\t\tif ( static_cast<uint64_t>(s1.currentVariant()) != static_cast<uint64_t>(s2.currentVariant()) )\n" );
 		fprintf( header, "\t\t\treturn false;\n" );
 
 		fprintf( header, "\t\tif ( s1.currentVariant() != UserT1::Variants::unknown )\n" );
@@ -767,16 +765,16 @@ void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root
 {
 	assert( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 
-	fprintf( header, "template<class T> class %s_RefWrapper;\n", s.name.c_str() );
+	fprintf( header, "class %s_RefWrapper;\n", s.name.c_str() );
 }
 
 void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 
-	fprintf( header, "template<class T>\n" );
 	fprintf( header, "class %s_RefWrapper\n", s.name.c_str() );
 	fprintf( header, "{\n" );
+	fprintf( header, "\tusing T = %s;\n", getGeneratedTypeName(s).c_str() );
 	fprintf( header, "\tT& t;\n" );
 
 	// impl_GeneratePublishableStateMemberPresenceCheckingBlock( header, root, s );
@@ -794,16 +792,17 @@ void impl_GeneratePublishableStructWrapper4SetForwardDeclaration( FILE* header, 
 {
 	assert( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 
-	fprintf( header, "template<class T, class RootT> class %s_RefWrapper4Set;\n", s.name.c_str() );
+	fprintf( header, "template<class RootT> class %s_RefWrapper4Set;\n", s.name.c_str() );
 }
 
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
 
-	fprintf( header, "template<class T, class RootT>\n" );
+	fprintf( header, "template<class RootT>\n" );
 	fprintf( header, "class %s_RefWrapper4Set\n", s.name.c_str() );
 	fprintf( header, "{\n" );
+	fprintf( header, "\tusing T = %s;\n", getGeneratedTypeName(s).c_str() );
 	fprintf( header, "\tT& t;\n" );
 	fprintf( header, "\tRootT& root;\n" );
 	fprintf( header, "\tGMQ_COLL vector<uint64_t> address;\n" );
@@ -2006,7 +2005,7 @@ void impl_GeneratePublishableStructIsSameFn3( FileWritter f, CompositeType& s, b
 {
 	if ( s.isDiscriminatedUnion() )
 	{
-		f.write("\t\tif ( s1.currentVariant() != s2.currentVariant() )\n" );
+		f.write("\t\tif ( static_cast<uint64_t>(s1.currentVariant()) != static_cast<uint64_t>(s2.currentVariant()) )\n" );
 		f.write("\t\t\treturn false;\n" );
 
 		f.write("\t\tswitch ( s1.currentVariant() )\n" );

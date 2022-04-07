@@ -116,7 +116,7 @@ class user_publishable_seven_handler :  public mtest::publishable_seven_subscrib
     void notifyElementUpdated_intVec(size_t index, int64_t oldVal) override { handled7.push_back(Events7::notifyElementUpdated_intVec); }
     void notifyInserted_intVec(size_t index) override { handled7.push_back(Events7::notifyInserted_intVec); }
     void notifyErased_intVec(size_t index, int64_t oldVal) override { handled7.push_back(Events7::notifyErased_intVec); }
-    void notifyUpdated_uintVec() { handled7.push_back(Events7::notifyUpdated_uintVec); }
+    void notifyUpdated_uintVec() override { handled7.push_back(Events7::notifyUpdated_uintVec); }
     void notifyElementUpdated_uintVec(size_t index, uint64_t oldVal) override { handled7.push_back(Events7::notifyElementUpdated_uintVec); }
     void notifyInserted_uintVec(size_t index) override { handled7.push_back(Events7::notifyInserted_uintVec); }
     void notifyErased_uintVec(size_t index, uint64_t oldVal) override { handled7.push_back(Events7::notifyErased_uintVec); }
