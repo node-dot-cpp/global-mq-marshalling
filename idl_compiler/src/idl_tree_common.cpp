@@ -761,22 +761,35 @@ void orderStructsByDependency( std::vector<unique_ptr<CompositeType>> &structs, 
 		s->dependsOnCnt = 0;
 }
 
-bool impl_isComplexType(const MessageParameterType& type)
+bool impl_isResolved(CompositeType& s, const std::vector<bool> alreadyResolved)
 {
-	if ( type.kind == MessageParameterType::KIND::STRUCT ||
-		type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-		return true;
-	else if ( type.kind == MessageParameterType::KIND::VECTOR &&
-	 			( type.vectorElemKind == MessageParameterType::KIND::STRUCT ||
-				 type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-		return true;
-	else if ( type.kind == MessageParameterType::KIND::DICTIONARY &&
-	 			( type.dictionaryValueKind == MessageParameterType::KIND::STRUCT ||
-				 type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-		return true;
+	assert( s.type == CompositeType::Type::structure ||
+			s.type == CompositeType::Type::discriminated_union ||
+			s.type == CompositeType::Type::discriminated_union_case);
+
+	if(s.isDiscriminatedUnion())
+	{
+		for ( auto& cs : s.getDiscriminatedUnionCases() )
+		{
+			if(!impl_isResolved(*cs, alreadyResolved))
+				return false;
+		}
+	}
 	else
-		return false;
+	{
+		for ( auto& member : s.getMembers() )
+		{
+			if( member->type.kind == MessageParameterType::KIND::STRUCT ||
+				member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+			{
+				if(!alreadyResolved.at(member->type.structIdx))
+					return false;
+			}
+		}
+	}
+	return true;
 }
+
 
 std::vector<CompositeType*> orderStructsByDependency2( const std::vector<unique_ptr<CompositeType>> &structs )
 {
@@ -793,35 +806,7 @@ std::vector<CompositeType*> orderStructsByDependency2( const std::vector<unique_
 			if(resolved[i])
 				continue;
 
-			bool currentResolved = true;
-
-			if ( structs[i]->type == CompositeType::Type::structure)
-			{
-				for ( auto& member : structs[i]->getMembers() )
-				{
-					if(impl_isComplexType(member->type))
-					{
-						if(!resolved.at(member->type.structIdx))
-							currentResolved = false;
-					}
-				}
-				
-			}
-			else if ( structs[i]->type == CompositeType::Type::discriminated_union )
-			{
-				for ( auto& cs : structs[i]->getDiscriminatedUnionCases() )
-				{
-					for ( auto& member : cs->getMembers() )
-					{
-						if(impl_isComplexType(member->type))
-						{
-							if(!resolved.at(member->type.structIdx))
-								currentResolved = false;
-						}
-					}
-				}
-			}
-
+			bool currentResolved = impl_isResolved(*structs[i], resolved);
 			if(currentResolved)
 			{
 				resolved[i] = true;
@@ -830,7 +815,8 @@ std::vector<CompositeType*> orderStructsByDependency2( const std::vector<unique_
 			}
 		}
 	}
-	assert( result.size() == structs.size() );
+	if(result.size() != structs.size())
+		throw std::logic_error("Internal error at 'orderStructsByDependency2'");
 
 	return result;
 }

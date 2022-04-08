@@ -908,21 +908,22 @@ public:
 };
 
 
-template<class ElemProcT, class UserElementT = typename ElemProcT::CppType>
+template<class ElemProcT>
 class PublishableVectorProcessor2
 {
 public:
-	using CppType = GMQ_COLL vector<UserElementT>;
+	using ElementT = typename ElemProcT::CppType;
+	using CppType = GMQ_COLL vector<ElementT>;
 
 	template<class ParserT>
 	static
-	void parseSingleValue( ParserT& parser, UserElementT& value ) { 
+	void parseSingleValue( ParserT& parser, ElementT& value ) { 
 		ElemProcT::parse( parser, value );
 	}
 
 	template<class ParserT>
 	static
-	bool parseSingleValueAndCompare( ParserT& parser,  UserElementT& value, const UserElementT& oldValue ) { 
+	bool parseSingleValueAndCompare( ParserT& parser,  ElementT& value, const ElementT& oldValue ) { 
 		ElemProcT::parse( parser, value );
 		return !ElemProcT::isSame( value, oldValue );
 	}
@@ -953,7 +954,7 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			UserElementT what;
+			ElementT what;
 			ElemProcT::parse( parser, what );
 			dest.push_back( what );
 
@@ -973,7 +974,7 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			UserElementT what;
+			ElementT what;
 			ElemProcT::parseForStateSyncOrMessageInDepth( parser, what );
 			dest.push_back( what );
 
@@ -994,7 +995,7 @@ public:
 
 		for( size_t i = 0; i < collSz && !parser.isVectorEnd(); ++i )
 		{
-			UserElementT what;
+			ElementT what;
 			ElemProcT::parse_state_sync( parser, what );
 			dest.push_back( what );
 
@@ -1256,6 +1257,11 @@ public:
 		b( actual ), root( root_ ), address( std::move(address_) )
 	{ }
 
+	auto get_at( const typename KeyProcT::CppType& key )
+	{
+		return b.at(key);
+	}
+
 	size_t remove( const key_type& key ) { 
 		size_t ret = b.erase( key );
 		if ( ret != 0 )
@@ -1334,15 +1340,9 @@ private:
 public:
 	DictionaryOfSimpleTypeRefWrapper( DictionaryT& actual ) : b( actual ) {}
 	size_t size() { return b.size(); }
-	bool get_value( const key_type key, value_type& value )
+	auto get_at( const typename KeyProcT::CppType& key )
 	{
-		auto f = b.find( key );
-		if ( f != b.end() )
-		{
-			value = f->second;
-			return true;
-		}
-		return false;
+		return b.at(key);
 	}
 };
 
@@ -1360,6 +1360,10 @@ private:
 public:
 	DictionaryOfStructRefWrapper( DictionaryT& actual ) : b( actual ) {}
 	size_t size() { return b.size(); }
+	auto get_at( const typename KeyProcT::CppType& key )
+	{
+		return RefWrapperT(b.at(key));
+	}
 };
 
 template<class KeyProcT, class ValueProcT>

@@ -259,9 +259,9 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 			obj.type == CompositeType::Type::message ||
 			obj.type == CompositeType::Type::publishable );
 
-	std::string typeName = getGeneratedTypeName(obj);
-	fprintf( header, "\tstatic\n" );
-	fprintf( header, "\tvoid compose( %s& composer, const %s& t )\n", composerType.c_str(), typeName.c_str() );
+	fprintf( header, "\t/* static */\n" );
+	fprintf( header, "\tinline\n" );
+	fprintf( header, "\tvoid %s::compose( %s& composer, const CppType& t )\n", getHelperClassName(obj).c_str(), composerType.c_str() );
 	fprintf( header, "\t{\n" );
 
 	// if ( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union )
@@ -296,7 +296,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 		fprintf( header, "\t\tcomposer.nextElement();\n" );
 		fprintf( header, "\n" );
 
-		fprintf( header, "\t\tif ( caseId != %s::Variants::unknown )\n", typeName.c_str() );
+		fprintf( header, "\t\tif ( caseId != CppType::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
 		// fprintf( header, "\t\t\t::globalmq::marshalling::impl::composePublishableStructBegin( composer, \"caseData\" );\n" );
 		fprintf( header, "\t\t\tcomposer.namedParamBegin( \"caseData\" );\n" );
@@ -413,8 +413,9 @@ void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FI
 			obj.type == CompositeType::Type::message ||
 			obj.type == CompositeType::Type::publishable );
 
-	fprintf( header, "\tstatic\n" );
-	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( %s& parser, %s& t )\n", parserType.c_str(), getGeneratedTypeName(obj).c_str() );
+	fprintf( header, "\t/* static */\n" );
+	fprintf( header, "\tinline\n" );
+	fprintf( header, "\tvoid %s::parseForStateSyncOrMessageInDepth( %s& parser, CppType& t )\n", getHelperClassName( obj ).c_str(), parserType.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\tparser.structBegin();\n" );
 	fprintf( header, "\n" );
@@ -446,132 +447,161 @@ void impl_generateParseFunctionForPublishableState( FILE* header, Root& root, Co
 	fprintf( header, "\t}\n" );
 }
 
-void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj )
+void impl_generateHelperForwardDeclaration( FILE* header, Root& root, CompositeType& obj )
 {
-	// if ( obj.isDiscriminatedUnion() )
-	// 	fprintf( header, "class %s;\n", getHelperClassName( obj ).c_str() );
-	// else
-		fprintf( header, "struct %s;\n", getHelperClassName( obj ).c_str() );
+	fprintf( header, "struct %s;\n", getHelperClassName( obj ).c_str() );
+	fprintf( header, "class %s;\n", getSubscriberClassName( obj.name ).c_str() );
 }
 
-void impl_GeneratePublishableStructCopyFn_MemberIterationBlock( FILE* header, Root& root, CompositeType& s, std::string offset )
+void impl_GeneratePublishableStructCopyFn_MemberIterationBlock( FileWritter f, CompositeType& s )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 
-	for ( size_t i=0; i<s.getMembers().size(); ++i )
+	for ( auto& each : s.getMembers() )
 	{
-		assert( s.getMembers()[i] != nullptr );
-		auto& member = *(s.getMembers()[i]);
+		auto& member = *each;
 
-		fprintf( header, "%s%s::copy( src.%s, dst.%s );\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write( "%s::copy( src.%s, dst.%s );\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
 	}
 }
 
-void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableStructCopyFn( FileWritter f, CompositeType& s )
 {
-	fprintf( header, "\ttemplate<typename UserT>\n" );
-	fprintf( header, "\tstatic void copy(const UserT& src, UserT& dst) {\n" );
+	f.write( "\t/* static */\n" );
+	f.write( "\tinline\n" );
+	f.write( "\tvoid %s::copy(const CppType& src, CppType& dst)\n", getHelperClassName(s).c_str() );
+	f.write( "{\n" );
 
 	if ( s.isDiscriminatedUnion() )
 	{
-		fprintf( header, "\t\tauto srcCaseId = src.currentVariant();\n" );
-		fprintf( header, "\t\tdst.initAs( srcCaseId );\n" );
+		f.write( "\tauto srcCaseId = src.currentVariant();\n" );
+		f.write( "\tdst.initAs( srcCaseId );\n" );
 
-		fprintf( header, "\t\tif ( srcCaseId != UserT::Variants::unknown )\n" );
-		fprintf( header, "\t\t\tswitch ( srcCaseId )\n" );
-		fprintf( header, "\t\t\t{\n" );
+		// f.write( "\tif ( srcCaseId != CppType::Variants::unknown )\n" );
+		f.write( "\tswitch ( srcCaseId )\n" );
+		f.write( "\t{\n" );
+		f.write( "\tcase CppType::Variants::unknown:\n" );
+		f.write( "\t\tbreak;\n" );
 
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
-			std::string numId = std::to_string(it->numID);
-			fprintf( header, "\t\t\t\tcase %s: // IDL CASE %s\n", numId.c_str(), it->name.c_str() );
-			fprintf( header, "\t\t\t\t{\n" );
-
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStructCopyFn_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
-
-			fprintf( header, "\t\t\t\t\tbreak;\n" );
-			fprintf( header, "\t\t\t\t}\n" );
+			f.write( "\tcase CppType::Variants::%s:\n", it->name.c_str() );
+			f.write( "\t{\n" );
+			impl_GeneratePublishableStructCopyFn_MemberIterationBlock( f.indent(2), *it );
+			f.write( "\t\tbreak;\n" );
+			f.write( "\t}\n" );
 		}
 
-		fprintf( header, "\t\t\t\tdefault:\n" );
-		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
-		fprintf( header, "\t\t\t}\n" );
+		f.write( "\tdefault:\n" );
+		f.write( "\t\tthrow std::exception(); // unexpected\n" );
+		f.write( "\t}\n" );
 	}
 	else
-		impl_GeneratePublishableStructCopyFn_MemberIterationBlock( header, root, s, "\t\t" );
+		impl_GeneratePublishableStructCopyFn_MemberIterationBlock( f.indent(1), s );
 
-	fprintf( header, "\t}\n" );
+	f.write( "}\n" );
 }
 
-void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( FILE* header, Root& root, CompositeType& s, std::string offset )
+void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( FileWritter f, CompositeType& s )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
 
-	for ( size_t i=0; i<s.getMembers().size(); ++i )
+	for ( auto& each : s.getMembers() )
 	{
-		assert( s.getMembers()[i] != nullptr );
-		auto& member = *(s.getMembers()[i]);
+		auto& member = *each;
 
-		fprintf( header, "%sif( ! %s::isSame( s1.get_%s(), s2.get_%s() ) ) return false;\n", offset.c_str(), getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		f.write( "if( ! %s::isSame( s1.%s, s2.%s ) ) return false;\n", getTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	}
 }
 
-void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableStructIsSameFn( FileWritter f, CompositeType& s )
 {
-	fprintf( header, "\ttemplate<typename UserT1, typename UserT2>\n" );
-	fprintf( header, "\tstatic bool isSame(const UserT1& s1, const UserT2& s2) {\n" );
+	f.write( "/* static */\n" );
+	f.write( "inline\n" );
+	f.write( "bool %s::isSame(const CppType& s1, const CppType& s2)\n", getHelperClassName(s).c_str() );
+	f.write( "{\n" );
 
 	if ( s.isDiscriminatedUnion() )
 	{
-		fprintf( header, "\t\tif ( static_cast<uint64_t>(s1.currentVariant()) != static_cast<uint64_t>(s2.currentVariant()) )\n" );
-		fprintf( header, "\t\t\treturn false;\n" );
+		f.write( "\tif ( s1.currentVariant() != s2.currentVariant() )\n" );
+		f.write( "\t\treturn false;\n" );
 
-		fprintf( header, "\t\tif ( s1.currentVariant() != UserT1::Variants::unknown )\n" );
-		fprintf( header, "\t\t\tswitch ( s1.currentVariant() )\n" );
-		fprintf( header, "\t\t\t{\n" );
+		// f.write( "\t\tif ( s1.currentVariant() != CppType::Variants::unknown )\n" );
+		f.write( "\tswitch ( s1.currentVariant() )\n" );
+		f.write( "\t{\n" );
+		f.write( "\tcase CppType::Variants::unknown:\n" );
+		f.write( "\t\tbreak;\n" );
 
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
-			std::string numId = std::to_string(it->numID);
-			fprintf( header, "\t\t\t\tcase %s: // IDL CASE %s\n", numId.c_str(), it->name.c_str() );
-			fprintf( header, "\t\t\t\t{\n" );
-
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, cs, "\t\t\t\t\t" );
-
-			fprintf( header, "\t\t\t\t\tbreak;\n" );
-			fprintf( header, "\t\t\t\t}\n" );
+			f.write( "\tcase CppType::Variants::%s:\n", it->name.c_str() );
+			f.write( "\t{\n" );
+			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( f.indent(2), *it );
+			f.write( "\t\tbreak;\n" );
+			f.write( "\t}\n" );
 		}
 
-		fprintf( header, "\t\t\t\tdefault:\n" );
-		fprintf( header, "\t\t\t\t\tthrow std::exception(); // unexpected\n" );
-		fprintf( header, "\t\t\t}\n" );
+		f.write( "\tdefault:\n" );
+		f.write( "\t\tthrow std::exception(); // unexpected\n" );
+		f.write( "\t}\n" );
 	}
 	else
-		impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( header, root, s, "\t\t" );
+		impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( f.indent(1), s );
 
-	fprintf( header, "\t\treturn true;\n" );
-	fprintf( header, "\t}\n" );
+	f.write( "\treturn true;\n" );
+	f.write( "}\n" );
 }
 
-void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+
+void impl_generateHelperDeclaration( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
 {
 	assert( obj.type == CompositeType::Type::structure ||
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::message ||
 			obj.type == CompositeType::Type::publishable );
 
-	fprintf( header, "struct %s : public ::globalmq::marshalling::impl::StructType\n", getHelperClassName( obj ).c_str() );
+	fprintf( header, "struct %s\n", getHelperClassName( obj ).c_str() );
 	fprintf( header, "{\n" );
 
 	fprintf( header, "\tusing CppType = %s;\n", getGeneratedTypeName(obj).c_str() );
 	
+
+	for(auto& each : config.parserNames)
+	{
+		fprintf( header, "\tstatic inline void parseForStateSyncOrMessageInDepth( %s& parser, CppType& t );\n", each.c_str() );
+		fprintf( header, "\n" );
+	}
+	fprintf( header, "\n" );
+
+	for (auto& each : config.composerNames)
+	{
+		fprintf( header, "\tstatic inline void compose( %s& composer, const CppType& t );\n", each.c_str() );
+		fprintf(header, "\n");
+	}
+
+	if ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable )
+	{
+		fprintf( header, "\tstatic inline void copy(const CppType& src, CppType& dst);\n" );
+		fprintf( header, "\n" );
+		fprintf( header, "\tstatic inline bool isSame(const CppType& s1, const CppType& s2);\n" );
+		fprintf( header, "\n" );
+	}
+
+	fprintf( header, "};\n\n" );
+}
+
+
+void impl_generateHelperDefinition( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::message ||
+			obj.type == CompositeType::Type::publishable );
+
+	FileWritter f(header, 0);
+
+	string typeName = getHelperClassName( obj );
 
 	for(auto& each : config.parserNames)
 		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj, each );
@@ -585,23 +615,11 @@ void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& ob
 
 	if ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable )
 	{
-		// for (auto& each : config.parserNames)
-		// {
-		// 	impl_generateHelperParseStateSync( header, root, obj, each );
-		// 	fprintf(header, "\n");
-
-		// 	impl_generateParseFunctionForPublishableStruct(header, root, obj, each);
-		// 	fprintf(header, "\n");
-
-		// 	impl_generateContinueParsingFunctionForPublishableStruct(header, root, obj, each);
-		// 	fprintf(header, "\n");
-		// }
-		impl_GeneratePublishableStructCopyFn( header, root, obj );
+		impl_GeneratePublishableStructCopyFn( f, obj );
 		fprintf( header, "\n" );
-		impl_GeneratePublishableStructIsSameFn( header, root, obj );
+		impl_GeneratePublishableStructIsSameFn( f, obj );
+		fprintf( header, "\n" );
 	}
-
-	fprintf( header, "};\n\n" );
 }
 
 void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot, MessageParameter& param, size_t idx )
@@ -1254,7 +1272,11 @@ void impl_generateApplyUpdateForDiscriminatedUnionVariant2( FileWritter f, bool 
 
 void impl_generateContinueParsingFunctionForPublishableStruct2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
 {
-	f.write("\tbool parse_continue( %s& parser, GMQ_COLL vector<uint64_t>& addr, uint64_t offset )\n", parserType.c_str() );
+
+	string className = getSubscriberClassName(obj.name);
+
+	f.write("\tinline\n" );
+	f.write("\tbool %s::parse_continue( %s& parser, GMQ_COLL vector<uint64_t>& addr, uint64_t offset )\n", className.c_str(), parserType.c_str() );
 	f.write("\t{\n" );
 	f.write("\t\tbool changed = false;\n" );
 
@@ -1398,8 +1420,10 @@ void impl_generateParseFunctionForPublishableStruct2( FileWritter f, Root& root,
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::publishable );
 
-	std::string typeName = getGeneratedTypeName(obj);
-	f.write("\tbool parse_notify( %s& parser )\n", parserType.c_str() );
+	string className = getSubscriberClassName(obj.name);
+
+	f.write("\tinline\n" );
+	f.write("\tbool %s::parse_notify( %s& parser )\n", className.c_str(), parserType.c_str() );
 	f.write("\t{\n" );
 	f.write("\t\tbool changed = false;\n" );
 	
@@ -1421,13 +1445,9 @@ void impl_generateParseFunctionForPublishableStruct2( FileWritter f, Root& root,
 
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
-			std::string numId = std::to_string(it->numID);
-			f.write("\t\t\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t\t\t\tcase Variants::%s:\n", it->name.c_str() );
 			f.write("\t\t\t\t{\n" );
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( f.indent(5), root, cs, parserType );
+			impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( f.indent(5), root, *it, parserType );
 			f.write("\t\t\t\t\tbreak;\n" );
 			f.write("\t\t\t\t}\n" );
 		}
@@ -1576,7 +1596,10 @@ void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2( F
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::publishable );
 
-	f.write("\tvoid parse_state_sync( %s& parser )\n", parserType.c_str() );
+	string className = getSubscriberClassName(obj.name);
+
+	f.write("\tinline\n" );
+	f.write("\tvoid %s::parse_state_sync( %s& parser )\n", className.c_str(), parserType.c_str() );
 	f.write("\t{\n" );
 	f.write("\t\tparser.structBegin();\n" );
 	f.write("\n" );
@@ -1674,7 +1697,10 @@ void impl_generateComposeFunctionForPublishableStruct2( FileWritter f, Composite
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::publishable );
 
-	f.write("\tvoid compose( %s& composer )\n", composerType.c_str() );
+	string className = getSubscriberClassName(obj.name);
+
+	f.write("\tinline\n" );
+	f.write("\tvoid %s::compose( %s& composer )\n", className.c_str(), composerType.c_str() );
 	f.write("\t{\n" );
 
 	f.write("\t\tcomposer.structBegin();\n" );
@@ -1823,7 +1849,7 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("virtual %s make_%s() { return %s{new %s()}; }\n", getSubscriberCppType(member.type).c_str(), member.name.c_str(), getSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+			f.write("virtual %s make_%s();\n", getSubscriberCppType(member.type).c_str(), member.name.c_str());
 			break;
 		case MessageParameterType::KIND::VECTOR:
 			switch (member.type.vectorElemKind)
@@ -1835,7 +1861,7 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("virtual %s makeElement_%s() { return %s{new %s()}; }\n", getVectorElemSubscriberCppType(member.type).c_str(), member.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				f.write("virtual %s makeElement_%s();\n", getVectorElemSubscriberCppType(member.type).c_str(), member.name.c_str());
 				break;
 			default:
 				assert(false);
@@ -1851,7 +1877,7 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("virtual %s makeValue_%s() { return %s{new %s()}; }\n", getDictionaryValueSubscriberCppType(member.type).c_str(), member.name.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				f.write("virtual %s makeValue_%s();\n", getDictionaryValueSubscriberCppType(member.type).c_str(), member.name.c_str());
 				break;
 			default:
 				assert(false);
@@ -1863,32 +1889,31 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 	}
 }
 
-void impl_SubscriberVirtualHandlers( FileWritter f, CompositeType& obj )
+
+void impl_SubscriberVirtualFactoriesDeclarations( FileWritter f, CompositeType& obj )
 {
 	assert(	obj.type == CompositeType::Type::structure ||
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::publishable );
-
-
-
-	f.write("////////////////////////////// begin user override section //////////////////////////////\n");
-
 
 	if ( obj.isDiscriminatedUnion() )
 	{
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
 			f.write("// IDL CASE %s\n", it->name.c_str() );
-
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_SubscriberVirtualFactories( f, cs );
-
+			impl_SubscriberVirtualFactories( f, *it );
 		}
 	}
 	else
 		impl_SubscriberVirtualFactories( f, obj );
+
+}
+
+void impl_SubscriberVirtualHandlers( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
 
 
 	if(obj.type == CompositeType::Type::publishable)
@@ -1902,20 +1927,104 @@ void impl_SubscriberVirtualHandlers( FileWritter f, CompositeType& obj )
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
 			f.write("// IDL CASE %s\n", it->name.c_str() );
-
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_SubscriberVirtualHandlers_Members( f, cs );
-
+			impl_SubscriberVirtualHandlers_Members( f, *it );
 		}
 	}
 	else
 		impl_SubscriberVirtualHandlers_Members( f, obj );
-
-	f.write("//////////////////////////////  end user override section  //////////////////////////////\n");
 }
 
+
+
+void impl_SubscriberVirtualFactoriesDefinitionMembers( FileWritter f, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union_case ||
+			obj.type == CompositeType::Type::publishable );
+
+	string className = getSubscriberClassName(obj.name);
+
+	for (size_t i = 0; i < obj.getMembers().size(); ++i)
+	{
+		assert(obj.getMembers()[i] != nullptr);
+		auto &member = *(obj.getMembers()[i]);
+
+		switch (member.type.kind)
+		{
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			break;
+		case MessageParameterType::KIND::STRUCT:
+		case MessageParameterType::KIND::DISCRIMINATED_UNION:
+			f.write("/* virtual */\n");
+			f.write("inline\n");
+			f.write("%s %s::make_%s() { return %s{new %s()}; }\n", getSubscriberCppType(member.type).c_str(), className.c_str(), member.name.c_str(), getSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+			break;
+		case MessageParameterType::KIND::VECTOR:
+			switch (member.type.vectorElemKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("/* virtual */\n");
+				f.write("inline\n");
+				f.write("%s %s::makeElement_%s() { return %s{new %s()}; }\n", getVectorElemSubscriberCppType(member.type).c_str(), className.c_str(), member.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		case MessageParameterType::KIND::DICTIONARY:
+			switch (member.type.dictionaryValueKind)
+			{
+			case MessageParameterType::KIND::INTEGER:
+			case MessageParameterType::KIND::UINTEGER:
+			case MessageParameterType::KIND::REAL:
+			case MessageParameterType::KIND::CHARACTER_STRING:
+				break;
+			case MessageParameterType::KIND::STRUCT:
+			case MessageParameterType::KIND::DISCRIMINATED_UNION:
+				f.write("/* virtual */\n");
+				f.write("inline\n");
+				f.write("%s %s::makeValue_%s() { return %s{new %s()}; }\n", getDictionaryValueSubscriberCppType(member.type).c_str(), className.c_str(), member.name.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		default:
+			assert(false);
+		}
+	}
+}
+
+void impl_SubscriberVirtualFactoriesDefinitions( FileWritter f, CompositeType& obj )
+{
+	assert(	obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+
+	if ( obj.isDiscriminatedUnion() )
+	{
+		for ( auto& it: obj.getDiscriminatedUnionCases() )
+		{
+			f.write("// IDL CASE %s\n", it->name.c_str() );
+
+			impl_SubscriberVirtualFactoriesDefinitionMembers( f, *it );
+
+		}
+	}
+	else
+		impl_SubscriberVirtualFactoriesDefinitionMembers( f, obj );
+
+}
 
 void impl_SubscriberGetters_Members( FileWritter f, CompositeType& obj )
 {
@@ -2037,19 +2146,12 @@ void impl_GeneratePublishableStructIsSameFn3( FileWritter f, CompositeType& s, b
 	f.write("\t\treturn true;\n" );
 }
 
-void impl_GeneratePublishableStructIsSameFn2( FileWritter f, CompositeType& s )
+void impl_GeneratePublishableStructIsSameFn2Decl( FileWritter f, CompositeType& s )
 {
 	string genName = getGeneratedTypeName(s);
 
-	f.write("\tstatic bool isSame(const ThisType& s1, const ThisType& s2)\n" );
-	f.write( "\t{\n" );
-	impl_GeneratePublishableStructIsSameFn3(f, s, false);
-	f.write( "\t}\n" );
-
-	f.write("\tstatic bool isSame(const ThisType& s1, const %s& s2)\n", genName.c_str() );
-	f.write( "\t{\n" );
-	impl_GeneratePublishableStructIsSameFn3(f, s, true);
-	f.write( "\t}\n" );
+	f.write("\tstatic inline bool isSame(const ThisType& s1, const ThisType& s2);\n" );
+	f.write("\tstatic inline bool isSame(const ThisType& s1, const %s& s2);\n", genName.c_str() );
 
 	f.write("\tstatic bool isSame(const GMQ_COLL unique_ptr<ThisType>& s1, const GMQ_COLL unique_ptr<ThisType>& s2) { return isSame(*s1, *s2); }\n" );
 	f.write("\tstatic bool isSame(const GMQ_COLL unique_ptr<ThisType>& s1, const %s& s2) { return isSame(*s1, s2); }\n", genName.c_str() );
@@ -2059,6 +2161,26 @@ void impl_GeneratePublishableStructIsSameFn2( FileWritter f, CompositeType& s )
 
 	f.write("\tbool operator==(const %s& other) const { return isSame( *this, other ); }\n", genName.c_str() );
 	f.write("\tbool operator!=(const %s& other) const { return !this->operator==(other); }\n", genName.c_str() );
+}
+
+void impl_GeneratePublishableStructIsSameFn2Def( FileWritter f, CompositeType& s )
+{
+	string genName = getGeneratedTypeName(s);
+	string className = getSubscriberClassName(s.name);
+
+	f.write( "/* static */\n" );
+	f.write( "inline\n" );
+	f.write("bool %s::isSame(const ThisType& s1, const ThisType& s2)\n", className.c_str() );
+	f.write( "{\n" );
+	impl_GeneratePublishableStructIsSameFn3(f, s, false);
+	f.write( "}\n" );
+
+	f.write( "/* static */\n" );
+	f.write( "inline\n" );
+	f.write("bool %s::isSame(const ThisType& s1, const %s& s2)\n", className.c_str(), genName.c_str() );
+	f.write( "{\n" );
+	impl_GeneratePublishableStructIsSameFn3(f, s, true);
+	f.write( "}\n" );
 }
 
 void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& obj, const GenerationConfig& config )
@@ -2089,7 +2211,12 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 	f.write("{\n" );
 	f.write("public:\n" );
 	f.write("\n" );
+
+	f.write("////////////////////////////// begin user override section //////////////////////////////\n");
+	impl_SubscriberVirtualFactoriesDeclarations( f.indent(), obj );
 	impl_SubscriberVirtualHandlers( f.indent(), obj );
+	f.write("//////////////////////////////  end user override section  //////////////////////////////\n");
+
 
 	f.write("\tusing ThisType = %s;\n", typeName.c_str() );
 	f.write("\tusing CppType = %s;\n", typeName.c_str() );
@@ -2135,7 +2262,7 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 	f.write("\n" );
 
 	impl_SubscriberGetters( f, obj );
-	impl_GeneratePublishableStructIsSameFn2( f, obj );
+	impl_GeneratePublishableStructIsSameFn2Decl( f, obj );
 	
 	if( obj.type == CompositeType::Type::publishable )
 	{
@@ -2182,21 +2309,24 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 
 	for (auto& each : config.parserNames)
 	{
-		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2(f, root, obj, each);
+		f.write("\tinline\n" );
+		f.write("\tvoid parse_state_sync( %s& parser );\n", each.c_str() );
 		f.write("\n");
 
 		f.write("\tstatic\n" );
 		f.write("\tvoid parse_state_sync( %s& parser, ThisType& tt ) { tt.parse_state_sync(parser); }\n", each.c_str() );
 		f.write("\n");
 
-		impl_generateParseFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\tinline\n" );
+		f.write("\tbool parse_notify( %s& parser );\n", each.c_str() );
 		f.write("\n");
 
 		f.write("\tstatic\n" );
 		f.write("\tbool parse_notify( %s& parser, ThisType& tt ) { return tt.parse_notify(parser); }\n", each.c_str() );
 		f.write("\n");
 
-		impl_generateContinueParsingFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\tinline\n" );
+		f.write("\tbool parse_continue( %s& parser, GMQ_COLL vector<uint64_t>& addr, uint64_t offset );\n", each.c_str() );
 		f.write("\n");
 
 		f.write("\tstatic\n" );
@@ -2207,7 +2337,8 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 	// compose is used by concentrator only, but we put it here to be able to access private members
 	for (auto& each : config.composerNames)
 	{
-		impl_generateComposeFunctionForPublishableStruct2( f, obj, each );
+		f.write("\tinline\n" );
+		f.write("\tvoid compose( %s& composer );\n", each.c_str() );
 		
 		f.write("\n");
 
@@ -2218,6 +2349,35 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 
 
 	f.write("};\n\n" );
+}
+
+void impl_generateSubscriberStructDefinitions( FileWritter f, Root& root, CompositeType& obj, const GenerationConfig& config )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
+
+	impl_SubscriberVirtualFactoriesDefinitions( f, obj );
+	impl_GeneratePublishableStructIsSameFn2Def( f, obj );
+
+	for (auto& each : config.parserNames)
+	{
+		impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2(f, root, obj, each);
+		f.write("\n");
+		impl_generateParseFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\n");
+		impl_generateContinueParsingFunctionForPublishableStruct2(f, root, obj, each);
+		f.write("\n");
+	}
+
+	// compose is used by concentrator only, but we put it here to be able to access private members
+	for (auto& each : config.composerNames)
+	{
+		impl_generateComposeFunctionForPublishableStruct2( f, obj, each );
+		f.write("\n");
+	}
 }
 
 void impl_generateConcentratorStruct( FileWritter f, CompositeType& obj, const GenerationConfig& config )
@@ -2279,7 +2439,7 @@ void impl_generateConcentratorStruct( FileWritter f, CompositeType& obj, const G
 }
 
 
-void generatePublishable2Struct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+void generatePublishableDeclaration2( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
 {
 	assert( obj.type == CompositeType::Type::structure ||
 			obj.type == CompositeType::Type::discriminated_union ||
@@ -2296,6 +2456,25 @@ void generatePublishable2Struct( FILE* header, Root& root, CompositeType& obj, c
 
 	if(obj.type == CompositeType::Type::publishable)
 		impl_generateConcentratorStruct(f, obj, config);
+}
+
+void generatePublishableDefinition2( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config )
+{
+	assert( obj.type == CompositeType::Type::structure ||
+			obj.type == CompositeType::Type::discriminated_union ||
+			obj.type == CompositeType::Type::publishable );
+
+	assert ( obj.isStruct4Publishing || obj.type == CompositeType::Type::publishable );
+
+	FileWritter f(header, 0);
+
+	// if(obj.isDiscriminatedUnion())
+	// 	generateDiscriminatedUnionObject(header, obj, true);
+
+	impl_generateSubscriberStructDefinitions(f, root, obj, config);
+
+	// if(obj.type == CompositeType::Type::publishable)
+	// 	impl_generateConcentratorStruct(f, obj, config);
 }
 
 }//namespace cplusplus

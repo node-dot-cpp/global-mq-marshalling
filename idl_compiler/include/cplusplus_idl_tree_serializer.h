@@ -68,8 +68,9 @@ void impl_generateScopeComposerForwardDeclaration( FILE* header, Scope& scope, c
 void impl_generateScopeComposer( FILE* header, Scope& scope, const std::string& composerType);
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack, bool isCollectionElementType = false );
 string paramNameToNameTagType( string name );
-void impl_generatePublishableStructForwardDeclaration( FILE* header, Root& root, CompositeType& obj );
-void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
+void impl_generateHelperForwardDeclaration( FILE* header, Root& root, CompositeType& obj );
+void impl_generateHelperDeclaration( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
+void impl_generateHelperDefinition( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
 void impl_GeneratePublishableStructWrapperForwardDeclaration( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper( FILE* header, Root& root, CompositeType& s );
 void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, CompositeType& s );
@@ -362,7 +363,8 @@ void generateMessage( FILE* header, Root& root, CompositeType& s, const std::str
 void generatePublishable( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config);
 void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config);
 
-void generatePublishable2Struct( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
+void generatePublishableDeclaration2( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
+void generatePublishableDefinition2( FILE* header, Root& root, CompositeType& obj, const GenerationConfig& config );
 void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isForSubscriber = false );
 //void generateMessageParameter( FILE* header, MessageParameter& s );
 //void generateMessageMembers( FILE* header, CompositeType& s );

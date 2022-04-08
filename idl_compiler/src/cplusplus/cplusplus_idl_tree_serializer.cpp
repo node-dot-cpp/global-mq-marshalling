@@ -786,13 +786,41 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 	structsOrderedByDependency = orderStructsByDependency2(s.structs);
 
+	for ( auto it : structsOrderedByDependency )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+	}
+
+	for ( auto& it : s.messages )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::message );
+	}
+
+	for ( auto& it : s.publishables )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::publishable );
+	}
+
+	for ( auto& scope : s.scopes )
+	{
+		for ( auto it : scope->objectList )
+		{
+			assert( it != nullptr );
+			assert( typeid( *(it) ) == typeid( CompositeType ) );
+			assert( it->type == CompositeType::Type::message );
+		}
+	}
+
 	fprintf( header, "//===============================================================================\n" );
 	fprintf( header, "// Dependency ordering\n" );
 	for ( auto it : structsOrderedByDependency )
-	{
 		fprintf( header, "// %s\n", it->name.c_str() );
-	}
-
 
 	fprintf( header, "//===============================================================================\n" );
 	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs, MESSAGEs and PUBLISHABLEs\n" );
@@ -803,7 +831,6 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	for ( auto it: structsOrderedByDependency )
 	{
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-	
 		if ( it->type == CompositeType::Type::discriminated_union )
 			fprintf( header, "class %s;\n", it->name.c_str() );
 		else
@@ -813,58 +840,31 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	fprintf( header, "\n" );
 	for ( auto it : structsOrderedByDependency )
 	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->type == CompositeType::Type::structure )
-			generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
+			generateStructOrDiscriminatedUnionCaseStruct( header, *it, "" );
 		else
-			generateDiscriminatedUnionObject( header, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			generateDiscriminatedUnionObject( header, *it );
 	}
 
 	for ( auto& it : s.messages )
 	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::message );
-		generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
+		generateStructOrDiscriminatedUnionCaseStruct( header, *it, "" );
 	}
 
 	for ( auto& it : s.publishables )
 	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::publishable );
-		generateStructOrDiscriminatedUnionCaseStruct( header, *(dynamic_cast<CompositeType*>(&(*(it)))), "" );
+		generateStructOrDiscriminatedUnionCaseStruct( header, *it, "" );
 	}
 
 	fprintf( header, "\n" );
 	fprintf( header, "} // namespace structures\n" );
 	fprintf( header, "\n//===============================================================================\n\n" );
 
-// 	for ( size_t idx : collElementTypes )
-// 	{
-// 		assert( idx < s.structs.size() );
-// 		auto& it = s.structs[idx];
-// 		assert( it != nullptr );
-// 		assert( typeid( *(it) ) == typeid( CompositeType ) );
-// 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-// //		if ( it->type == CompositeType::Type::structure && it->isStruct4Publishing )
-// 		{
-// 			impl_generatePublishableStructForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-// 			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-// 			impl_GeneratePublishableStructWrapper4SetForwardDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-// 			fprintf( header, "\n" );
-// 		}
-// 	}
-
 	for ( auto& it : structsOrderedByDependency ) // TODO: avoid dulication of the above
 	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-
-		impl_generatePublishableStructForwardDeclaration( header, s, *it );
+		impl_generateHelperForwardDeclaration( header, s, *it );
 		if ( it->isStruct4Publishing )
 		{
 			impl_GeneratePublishableStructWrapperForwardDeclaration( header, s, *it );
@@ -877,20 +877,25 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 	for ( auto it : structsOrderedByDependency )
 	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
-		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-		impl_generatePublishableStruct( header, s, *it, config );
+		impl_generateHelperDeclaration( header, s, *it, config );
 		if ( it->isStruct4Publishing )
-			generatePublishable2Struct(header, s, *it, config);
+			generatePublishableDeclaration2( header, s, *it, config );
+	}
+
+	for ( auto it : structsOrderedByDependency )
+	{
+		impl_generateHelperDefinition( header, s, *it, config );
+		if ( it->isStruct4Publishing )
+			generatePublishableDefinition2(header, s, *it, config);
 	}
 
 
 	for ( auto& it : s.publishables )
 	{
-		assert( it->type == CompositeType::Type::publishable );
-		impl_generatePublishableStruct( header, s, *it, config );
-		generatePublishable2Struct(header, s, *it, config);
+		impl_generateHelperDeclaration( header, s, *it, config );
+		impl_generateHelperDefinition( header, s, *it, config );
+		generatePublishableDeclaration2( header, s, *it, config );
+		generatePublishableDefinition2(header, s, *it, config);
 	}
 
 	for ( auto& scope : s.scopes )
@@ -903,7 +908,10 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		{
 			assert( it->type == CompositeType::Type::message );
 			if ( !it->isAlias )
-				impl_generatePublishableStruct( header, s, *it, config );
+			{
+				impl_generateHelperDeclaration( header, s, *it, config );
+				impl_generateHelperDefinition( header, s, *it, config );
+			}
 		}
 
 		for(auto& each : config.parserNames)
@@ -912,28 +920,8 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		for (auto& each : config.composerNames)
 			impl_generateScopeComposerForwardDeclaration( header, *scope, each);
 
-		// std::unordered_set<size_t> aliassedStructIds;
-		// for ( auto it : scope->objectList )
-		// {
-		// 	assert( it != nullptr );
-		// 	assert( typeid( *(it) ) == typeid( CompositeType ) );
-		// 	assert( it->type == CompositeType::Type::message );
-		// 	if ( it->isAlias )
-		// 		aliassedStructIds.insert( it->aliasIdx );
-		// }
-
-		// for ( size_t idx: aliassedStructIds )
-		// {
-		// 	assert( idx < s.structs.size() );
-		// 	CompositeType& alias = *(s.structs[idx]);
-		// 	for (auto& each : config.parserNames)
-		// 		impl_generateParseFunctionForMessagesAndAliasingStructs( header, s, alias, each );
-		// }
-
 		for ( auto it : scope->objectList )
 		{
-			assert( it != nullptr );
-			assert( typeid( *(it) ) == typeid( CompositeType ) );
 			assert( it->type == CompositeType::Type::message );
 			if ( !it->isAlias )
 				generateMessage( header, s, *it, it->name, config );
@@ -949,11 +937,8 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 	for ( auto& it : s.publishables )
 	{
-		auto& obj_1 = it;
-		assert( obj_1 != nullptr );
-		assert( typeid( *(obj_1) ) == typeid( CompositeType ) );
-		assert( obj_1->type == CompositeType::Type::publishable );
-		generatePublishable( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), config );
+		assert( it->type == CompositeType::Type::publishable );
+		generatePublishable( header, s, *it, config );
 	}
 
 	if ( !s.publishables.empty() )
@@ -964,24 +949,13 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 	for ( auto& it : structsOrderedByDependency )
 	{
-		assert( it != nullptr );
-		assert( typeid( *(it) ) == typeid( CompositeType ) );
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		if ( it->isStruct4Publishing )
 		{
-			impl_GeneratePublishableStructWrapper( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
-			impl_GeneratePublishableStructWrapper4Set( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+			impl_GeneratePublishableStructWrapper( header, s, *it );
+			impl_GeneratePublishableStructWrapper4Set( header, s, *it );
 		}
 	}
-
-	// for ( auto& it : s.structs )
-	// {
-	// 	assert( it != nullptr );
-	// 	assert( typeid( *(it) ) == typeid( CompositeType ) );
-	// 	assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-	// 	if ( it->isStruct4Messaging )
-	// 		generateMessage( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))), config );
-	// }
 
 	fprintf( header, "\n"
 		"} // namespace %s\n"
@@ -993,43 +967,6 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// uint32_t adler32( uint8_t* buff, size_t sz ) 
-// {
-//     uint32_t a = 1;
-// 	uint32_t b = 0;
-    
-//     for (size_t i=0; i < sz; ++i)
-//     {
-//         a = (a + buff[i]) % 65521;
-//         b = (b + a) % 65521;
-//     }
-    
-//     return (b << 16) | a;
-// }
-
-// uint32_t idlFileChecksum( std::string path )
-// {
-// 	RaiiStdioFile file( fopen( path.c_str(), "rb" ) );
-// 	int res = fseek( file, 0, SEEK_END );
-// 	if ( res != 0 )
-// 		throw std::exception();
-
-// 	long sz = ftell( file );
-// 	if ( sz == -1 )
-// 		throw std::exception();
-	
-// 	res = fseek( file, 0, SEEK_SET );
-// 	if ( res != 0 )
-// 		throw std::exception();
-
-// 	uint8_t* buff = new uint8_t[sz];
-
-// 	fread( buff, 1, sz, file );
-// 	uint32_t ret = adler32( buff, sz );
-// 	delete [] buff;
-
-// 	return ret;
-// }
 } //namespace cplusplus
 
 void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
