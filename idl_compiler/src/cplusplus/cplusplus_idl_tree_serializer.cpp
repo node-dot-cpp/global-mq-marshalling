@@ -351,14 +351,10 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 			m.type.kind == MessageParameterType::KIND::REAL || m.type.kind == MessageParameterType::KIND::ENUM)
 		{
 			fprintf( header, "%s\t%s %s = 0;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
-			fprintf( header, "\tauto get_%s() const { return this->%s; }\n", m.name.c_str(), m.name.c_str() );
-
 		}
-			
 		else
 		{
 			fprintf( header, "%s\t%s %s;\n", offset, impl_generateStandardCppTypeName( m.type ).c_str(), m.name.c_str() );
-			fprintf( header, "\tconst auto& get_%s() const { return this->%s; }\n", m.name.c_str(), m.name.c_str() );
 		}
 	}
 

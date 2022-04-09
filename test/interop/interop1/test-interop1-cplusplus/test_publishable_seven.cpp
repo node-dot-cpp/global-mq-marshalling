@@ -107,7 +107,7 @@ class user_publishable_seven_handler :  public mtest::publishable_seven_subscrib
 
     const std::vector<Events7>& getEvents() const { return handled7; }
 
-    std::unique_ptr<mtest::point3D_subscriber> makeElement_structVec() override { return std::unique_ptr<mtest::point3D_subscriber>{new user_point3D_handler(handled7)}; }
+    std::unique_ptr<mtest::point3D_subscriber> make_point3D() override { return std::unique_ptr<mtest::point3D_subscriber>{new user_point3D_handler(handled7)}; }
 
 
     void notifyFullyUpdated() override { handled7.push_back(Events7::notifyFullyUpdated); }

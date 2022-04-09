@@ -880,7 +880,7 @@ void impl_generateApplyUpdateForSimpleType2( FileWritter f, MessageParameter& me
 void impl_generateApplyUpdateForStructItself2( FileWritter f, MessageParameter& member, const std::string& parserType )
 {
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s_lazy() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->lazy_%s() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\tif ( changedCurrent )\n" );
 	f.write("\t{\n" );
 	f.write("\t\tchanged = true;\n" );
@@ -893,7 +893,7 @@ void impl_generateApplyUpdateForStructItself2( FileWritter f, MessageParameter& 
 void impl_generateApplyUpdateForFurtherProcessingInStruct2( FileWritter f, MessageParameter& member, const std::string& parserType )
 {
 	f.write("{\n" );
-	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->%s_lazy() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("\tbool changedCurrent = %s::parse_notify( parser, this->lazy_%s() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("\tif ( changedCurrent )\n" );
 	f.write("\t{\n" );
 	f.write("\t\t\tchanged = true;\n" );
@@ -905,7 +905,7 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct2( FileWritter f, Messa
 
 void impl_generateApplyUpdateForFurtherProcessingInStruct3( FileWritter f, MessageParameter& member, const std::string& parserType )
 {
-	f.write("bool changedCurrent = %s::parse_continue( parser, this->%s_lazy(), addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+	f.write("bool changedCurrent = %s::parse_continue( parser, this->lazy_%s(), addr, offset + 1 );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	f.write("if ( changedCurrent )\n" );
 	f.write("{\n" );
 	f.write("\tchanged = true;\n" );
@@ -1008,7 +1008,7 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary2( FileWritter f, R
 		f.write("\t\tauto newVal = %s::parse(parser);\n", getDictionaryValueSubscriberTypeProcessor(member.type).c_str() );
 	else
 	{
-		f.write("\t\tauto newVal = this->makeValue_%s();\n", member.name.c_str() );
+		f.write("\t\tauto newVal = this->make_%s();\n", member.type.name.c_str() );
 		f.write("\t\t%s::parse_notify(parser, *newVal);\n", getDictionaryValueSubscriberTypeProcessor(member.type).c_str() );
 	}
 
@@ -1032,7 +1032,7 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary2( FileWritter f, R
 	else
 	{
 		f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
-		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeValue_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->make_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.type.name.c_str() );
 	}
 
 	f.write("\tcurrentChanged = true;\n" );
@@ -1149,7 +1149,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	}
 	else
 	{
-		f.write("\t\tauto newVal = this->makeElement_%s();\n", member.name.c_str() );
+		f.write("\t\tauto newVal = this->make_%s();\n", member.type.name.c_str() );
 		f.write("\t\t%s::parse_notify(parser, *newVal);\n", elemProc.c_str() );
 	}
 
@@ -1173,7 +1173,7 @@ void impl_generateApplyUpdateForFurtherProcessingInVector2( FileWritter f, Root&
 	else
 	{
 		f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
-		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeElement_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+		f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->make_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.type.name.c_str() );
 	}
 
 	f.write("\tcurrentChanged = !%s::isSame( newVal, this->%s );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
@@ -1372,7 +1372,7 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( FileW
 				case  MessageParameterType::KIND::DISCRIMINATED_UNION:
 
 					f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
-					f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeElement_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+					f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->make_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.type.name.c_str() );
 					break;
 				default:
 					assert( false );
@@ -1398,7 +1398,7 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock2( FileW
 				case  MessageParameterType::KIND::DISCRIMINATED_UNION:
 
 					f.write("\t%s newVal;\n", getSubscriberCppType( member.type ).c_str() );
-					f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->makeValue_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.name.c_str() );
+					f.write("\t%s::parse_notify( parser, newVal, [this]() { return this->make_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), member.type.name.c_str() );
 					break;
 				default:
 					assert( false );
@@ -1501,7 +1501,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("%s::parse_state_sync( parser, this->%s_lazy() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+				f.write("%s::parse_state_sync( parser, this->lazy_%s() );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 				break;
 			case MessageParameterType::KIND::VECTOR:
 				switch ( member.type.vectorElemKind )
@@ -1514,7 +1514,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 						break;
 					case  MessageParameterType::KIND::STRUCT:
 					case  MessageParameterType::KIND::DISCRIMINATED_UNION:
-						f.write("%s::parse_state_sync( parser, this->%s, [this]() { return this->makeElement_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+						f.write("%s::parse_state_sync( parser, this->%s, [this]() { return this->make_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.type.name.c_str() );
 						break;
 					default:
 						assert( false );
@@ -1531,7 +1531,7 @@ void impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBloc
 						break;
 					case  MessageParameterType::KIND::STRUCT:
 					case  MessageParameterType::KIND::DISCRIMINATED_UNION:
-						f.write("%s::parse_state_sync( parser, this->%s, [this]() { return this->makeValue_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+						f.write("%s::parse_state_sync( parser, this->%s, [this]() { return this->make_%s(); } );\n", getSubscriberTypeProcessor( member.type ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), member.type.name.c_str() );
 						break;
 					default:
 						assert( false );
@@ -1553,41 +1553,38 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 
 	if ( obj.isDiscriminatedUnion() )
 	{
-		f.write("\t\tparser.namedParamBegin( \"caseId\" );\n");
-		f.write("\t\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
-		f.write("\t\tthis->initAs( caseId );\n" );
-		f.write("\t\tparser.nextElement();\n");
-		f.write("\t\tif ( this->currentVariant() != Variants::unknown )\n" );
-		f.write("\t\t{\n" );
+		f.write("\tparser.namedParamBegin( \"caseId\" );\n");
+		f.write("\tuint64_t caseId = parser.parseUnsignedInteger();\n" );
+		f.write("\tthis->initAs( caseId );\n" );
+		f.write("\tparser.nextElement();\n");
+		f.write("\tif ( this->currentVariant() != Variants::unknown )\n" );
+		f.write("\t{\n" );
 
-		f.write("\t\t\tparser.namedParamBegin( \"caseData\" );\n");
-		f.write("\t\t\tparser.structBegin();\n" );
-		f.write("\t\t\tswitch ( this->currentVariant() )\n" );
-		f.write("\t\t\t{\n" );
+		f.write("\t\tparser.namedParamBegin( \"caseData\" );\n");
+		f.write("\t\tparser.structBegin();\n" );
+		f.write("\t\tswitch ( this->currentVariant() )\n" );
+		f.write("\t\t{\n" );
 
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
 		{
-			f.write("\t\t\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
-			f.write("\t\t\t\t{\n" );
+			f.write("\t\tcase Variants::%s:\n", it->name.c_str() );
+			f.write("\t\t{\n" );
 
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( f.indent(5), root, cs, parserType );
+			impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( f.indent(3), root, *it, parserType );
 
-			f.write("\t\t\t\t\tbreak;\n" );
-			f.write("\t\t\t\t}\n" );
+			f.write("\t\t\tbreak;\n" );
+			f.write("\t\t}\n" );
 		}
 
-		f.write("\t\t\t\tdefault:\n" );
-		f.write("\t\t\t\t\tthrow std::exception(); // unexpected\n" );
-		f.write("\t\t\t}\n" );
-		f.write("\t\t\tparser.structEnd();\n" );
-
+		f.write("\t\tdefault:\n" );
+		f.write("\t\t\tthrow std::exception(); // unexpected\n" );
 		f.write("\t\t}\n" );
+		f.write("\t\tparser.structEnd();\n" );
+
+		f.write("\t}\n" );
 	}
 	else
-		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( f.indent(2), root, obj, parserType );
+		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock2( f.indent(1), root, obj, parserType );
 }
 
 void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2( FileWritter f, Root& root, CompositeType& obj, const std::string& parserType )
@@ -1598,18 +1595,18 @@ void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth2( F
 
 	string className = getSubscriberClassName(obj.name);
 
-	f.write("\tinline\n" );
-	f.write("\tvoid %s::parse_state_sync( %s& parser )\n", className.c_str(), parserType.c_str() );
-	f.write("\t{\n" );
-	f.write("\t\tparser.structBegin();\n" );
+	f.write("inline\n" );
+	f.write("void %s::parse_state_sync( %s& parser )\n", className.c_str(), parserType.c_str() );
+	f.write("{\n" );
+	f.write("\tparser.structBegin();\n" );
 	f.write("\n" );
 
 	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth2( f, root, obj, parserType );
 
 	f.write("\n" );
-	f.write("\t\tparser.structEnd();\n" );
+	f.write("\tparser.structEnd();\n" );
 
-	f.write("\t}\n" );
+	f.write("}\n" );
 }
 
 
@@ -1678,7 +1675,7 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock2( Fil
 				break;
 			case  MessageParameterType::KIND::STRUCT:
 			case  MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("%s::compose(composer, this->%s_lazy() );\n", getSubscriberTypeProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str());
+				f.write("%s::compose(composer, this->lazy_%s() );\n", getSubscriberTypeProcessor(member.type).c_str(), impl_memberOrAccessFunctionName( member ).c_str());
 				break;
 			case MessageParameterType::KIND::VECTOR:
 			case MessageParameterType::KIND::DICTIONARY:
@@ -1829,7 +1826,7 @@ void impl_SubscriberVirtualHandlers_Members( FileWritter f, CompositeType& obj )
 	}
 }
 
-void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
+void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj, set<string>& alreadyMade )
 {
 	assert( obj.type == CompositeType::Type::structure ||
 			obj.type == CompositeType::Type::discriminated_union_case ||
@@ -1849,7 +1846,8 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("virtual %s make_%s();\n", getSubscriberCppType(member.type).c_str(), member.name.c_str());
+			if(alreadyMade.insert(member.type.name).second)
+				f.write("virtual %s make_%s();\n", getSubscriberCppType(member.type).c_str(), member.type.name.c_str());
 			break;
 		case MessageParameterType::KIND::VECTOR:
 			switch (member.type.vectorElemKind)
@@ -1861,7 +1859,8 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("virtual %s makeElement_%s();\n", getVectorElemSubscriberCppType(member.type).c_str(), member.name.c_str());
+				if(alreadyMade.insert(member.type.name).second)
+					f.write("virtual %s make_%s();\n", getVectorElemSubscriberCppType(member.type).c_str(), member.type.name.c_str());
 				break;
 			default:
 				assert(false);
@@ -1877,7 +1876,8 @@ void impl_SubscriberVirtualFactories( FileWritter f, CompositeType& obj )
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("virtual %s makeValue_%s();\n", getDictionaryValueSubscriberCppType(member.type).c_str(), member.name.c_str());
+				if(alreadyMade.insert(member.type.name).second)
+					f.write("virtual %s make_%s();\n", getDictionaryValueSubscriberCppType(member.type).c_str(), member.type.name.c_str());
 				break;
 			default:
 				assert(false);
@@ -1896,16 +1896,14 @@ void impl_SubscriberVirtualFactoriesDeclarations( FileWritter f, CompositeType& 
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::publishable );
 
+	set<string> alreadyMade;
 	if ( obj.isDiscriminatedUnion() )
 	{
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
-		{
-			f.write("// IDL CASE %s\n", it->name.c_str() );
-			impl_SubscriberVirtualFactories( f, *it );
-		}
+			impl_SubscriberVirtualFactories( f, *it, alreadyMade );
 	}
 	else
-		impl_SubscriberVirtualFactories( f, obj );
+		impl_SubscriberVirtualFactories( f, obj, alreadyMade );
 
 }
 
@@ -1936,7 +1934,7 @@ void impl_SubscriberVirtualHandlers( FileWritter f, CompositeType& obj )
 
 
 
-void impl_SubscriberVirtualFactoriesDefinitionMembers( FileWritter f, CompositeType& obj )
+void impl_SubscriberVirtualFactoriesDefinitionMembers( FileWritter f, CompositeType& obj, set<string>& alreadyMade )
 {
 	assert( obj.type == CompositeType::Type::structure ||
 			obj.type == CompositeType::Type::discriminated_union_case ||
@@ -1958,9 +1956,12 @@ void impl_SubscriberVirtualFactoriesDefinitionMembers( FileWritter f, CompositeT
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("/* virtual */\n");
-			f.write("inline\n");
-			f.write("%s %s::make_%s() { return %s{new %s()}; }\n", getSubscriberCppType(member.type).c_str(), className.c_str(), member.name.c_str(), getSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+			if(alreadyMade.insert(member.type.name).second)
+			{
+				f.write("/* virtual */\n");
+				f.write("inline\n");
+				f.write("%s %s::make_%s() { return %s{new %s()}; }\n", getSubscriberCppType(member.type).c_str(), className.c_str(), member.type.name.c_str(), getSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+			}
 			break;
 		case MessageParameterType::KIND::VECTOR:
 			switch (member.type.vectorElemKind)
@@ -1972,9 +1973,12 @@ void impl_SubscriberVirtualFactoriesDefinitionMembers( FileWritter f, CompositeT
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("/* virtual */\n");
-				f.write("inline\n");
-				f.write("%s %s::makeElement_%s() { return %s{new %s()}; }\n", getVectorElemSubscriberCppType(member.type).c_str(), className.c_str(), member.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				if(alreadyMade.insert(member.type.name).second)
+				{
+					f.write("/* virtual */\n");
+					f.write("inline\n");
+					f.write("%s %s::make_%s() { return %s{new %s()}; }\n", getVectorElemSubscriberCppType(member.type).c_str(), className.c_str(), member.type.name.c_str(), getVectorElemSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				}
 				break;
 			default:
 				assert(false);
@@ -1990,9 +1994,12 @@ void impl_SubscriberVirtualFactoriesDefinitionMembers( FileWritter f, CompositeT
 				break;
 			case MessageParameterType::KIND::STRUCT:
 			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-				f.write("/* virtual */\n");
-				f.write("inline\n");
-				f.write("%s %s::makeValue_%s() { return %s{new %s()}; }\n", getDictionaryValueSubscriberCppType(member.type).c_str(), className.c_str(), member.name.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				if(alreadyMade.insert(member.type.name).second)
+				{
+					f.write("/* virtual */\n");
+					f.write("inline\n");
+					f.write("%s %s::make_%s() { return %s{new %s()}; }\n", getDictionaryValueSubscriberCppType(member.type).c_str(), className.c_str(), member.type.name.c_str(), getDictionaryValueSubscriberCppType(member.type).c_str(), getSubscriberClassName(member.type.name).c_str());
+				}
 				break;
 			default:
 				assert(false);
@@ -2010,19 +2017,14 @@ void impl_SubscriberVirtualFactoriesDefinitions( FileWritter f, CompositeType& o
 			obj.type == CompositeType::Type::discriminated_union ||
 			obj.type == CompositeType::Type::publishable );
 
-
+	set<string> alreadyMade;
 	if ( obj.isDiscriminatedUnion() )
 	{
 		for ( auto& it: obj.getDiscriminatedUnionCases() )
-		{
-			f.write("// IDL CASE %s\n", it->name.c_str() );
-
-			impl_SubscriberVirtualFactoriesDefinitionMembers( f, *it );
-
-		}
+			impl_SubscriberVirtualFactoriesDefinitionMembers( f, *it, alreadyMade );
 	}
 	else
-		impl_SubscriberVirtualFactoriesDefinitionMembers( f, obj );
+		impl_SubscriberVirtualFactoriesDefinitionMembers( f, obj, alreadyMade );
 
 }
 
@@ -2049,13 +2051,13 @@ void impl_SubscriberGetters_Members( FileWritter f, CompositeType& obj )
 			break;
 		case MessageParameterType::KIND::STRUCT:
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
-			f.write("\tauto& %s_lazy()\n", member.name.c_str() );
+			f.write("\tauto& lazy_%s()\n", member.name.c_str() );
 			f.write("\t{\n" );
 			f.write("\t\tif(!this->%s)\n", impl_memberOrAccessFunctionName( member ).c_str() );
-			f.write("\t\t\tthis->%s = make_%s();\n",impl_memberOrAccessFunctionName( member ).c_str(), member.name.c_str() );
+			f.write("\t\t\tthis->%s = make_%s();\n",impl_memberOrAccessFunctionName( member ).c_str(), member.type.name.c_str() );
 			f.write("\t\treturn *(this->%s);\n", impl_memberOrAccessFunctionName( member ).c_str() );
 			f.write("\t}\n" );
-			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->%s_lazy(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+			f.write("\tconst auto& get_%s() const { const_cast<ThisType*>(this)->lazy_%s(); return this->%s; }\n", member.name.c_str(), member.name.c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 			break;
 		case MessageParameterType::KIND::VECTOR:
 		case MessageParameterType::KIND::DICTIONARY:
@@ -2114,36 +2116,36 @@ void impl_GeneratePublishableStructIsSameFn3( FileWritter f, CompositeType& s, b
 {
 	if ( s.isDiscriminatedUnion() )
 	{
-		f.write("\t\tif ( static_cast<uint64_t>(s1.currentVariant()) != static_cast<uint64_t>(s2.currentVariant()) )\n" );
-		f.write("\t\t\treturn false;\n" );
+		f.write("\tif ( static_cast<uint64_t>(s1.currentVariant()) != static_cast<uint64_t>(s2.currentVariant()) )\n" );
+		f.write("\t\treturn false;\n" );
 
-		f.write("\t\tswitch ( s1.currentVariant() )\n" );
-		f.write("\t\t{\n" );
-		f.write("\t\tcase Variants::unknown: break;\n" );
+		f.write("\tswitch ( s1.currentVariant() )\n" );
+		f.write("\t{\n" );
+		f.write("\tcase Variants::unknown: break;\n" );
 
 		for ( auto& it: s.getDiscriminatedUnionCases() )
 		{
 			std::string numId = std::to_string(it->numID);
-			f.write("\t\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
-			f.write("\t\t{\n" );
+			f.write("\tcase Variants::%s: // IDL CASE %s\n", it->name.c_str(), it->name.c_str() );
+			f.write("\t{\n" );
 
 			assert( it != nullptr );
 			CompositeType& cs = *it;
 			assert( cs.type == CompositeType::Type::discriminated_union_case );
 			impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( f.indent(3), cs, isPlainStruct );
 
-			f.write( "\t\t\tbreak;\n" );
-			f.write( "\t\t}\n" );
+			f.write( "\t\tbreak;\n" );
+			f.write( "\t}\n" );
 		}
 
-		f.write( "\t\tdefault:\n" );
-		f.write( "\t\t\treturn false; // unexpected\n" );
-		f.write("\t\t}\n" );
+		f.write( "\tdefault:\n" );
+		f.write( "\t\treturn false; // unexpected\n" );
+		f.write("\t}\n" );
 	}
 	else
 		impl_GeneratePublishableStructIsSameFn_MemberIterationBlock2( f.indent(2), s, isPlainStruct );
 
-	f.write("\t\treturn true;\n" );
+	f.write("\treturn true;\n" );
 }
 
 void impl_GeneratePublishableStructIsSameFn2Decl( FileWritter f, CompositeType& s )
@@ -2210,16 +2212,17 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 
 	f.write("{\n" );
 	f.write("public:\n" );
-	f.write("\n" );
 
-	f.write("////////////////////////////// begin user override section //////////////////////////////\n");
+	f.write("\t////////////////////////////// begin user override section //////////////////////////////\n");
 	impl_SubscriberVirtualFactoriesDeclarations( f.indent(), obj );
 	impl_SubscriberVirtualHandlers( f.indent(), obj );
-	f.write("//////////////////////////////  end user override section  //////////////////////////////\n");
+	f.write("\t//////////////////////////////  end user override section  //////////////////////////////\n");
+	f.write("\n" );
 
 
 	f.write("\tusing ThisType = %s;\n", typeName.c_str() );
 	f.write("\tusing CppType = %s;\n", typeName.c_str() );
+	f.write("\n" );
 
 	f.write("private:\n" );
 	if( obj.type == CompositeType::Type::publishable )
@@ -2244,6 +2247,7 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 		}
 	}
 
+	f.write("\n" );
 	f.write("\npublic:\n" );
 
 	if( obj.type == CompositeType::Type::publishable )
@@ -2260,14 +2264,14 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 	}
 
 	f.write("\n" );
-
 	impl_SubscriberGetters( f, obj );
+	f.write("\n");
 	impl_GeneratePublishableStructIsSameFn2Decl( f, obj );
+	f.write("\n");
 	
 	if( obj.type == CompositeType::Type::publishable )
 	{
 		std::string numStr = std::to_string(obj.numID);
-		f.write("\n" );
 		f.write("\t//////////////////////////////\n" );
 		f.write("\tvirtual const char* publishableName() override { return \"%s\"; }\n", obj.name.c_str() );
 		f.write("\tvirtual uint64_t stateTypeID() override { return %s; }\n", numStr.c_str() );
@@ -2309,41 +2313,24 @@ void impl_generateSubscriberStruct( FileWritter f, Root& root, CompositeType& ob
 
 	for (auto& each : config.parserNames)
 	{
-		f.write("\tinline\n" );
-		f.write("\tvoid parse_state_sync( %s& parser );\n", each.c_str() );
+		f.write("\tinline void parse_state_sync( %s& parser );\n", each.c_str() );
+		f.write("\tstatic void parse_state_sync( %s& parser, ThisType& tt ) { tt.parse_state_sync(parser); }\n", each.c_str() );
 		f.write("\n");
 
-		f.write("\tstatic\n" );
-		f.write("\tvoid parse_state_sync( %s& parser, ThisType& tt ) { tt.parse_state_sync(parser); }\n", each.c_str() );
+		f.write("\tinline bool parse_notify( %s& parser );\n", each.c_str() );
+		f.write("\tstatic bool parse_notify( %s& parser, ThisType& tt ) { return tt.parse_notify(parser); }\n", each.c_str() );
 		f.write("\n");
 
-		f.write("\tinline\n" );
-		f.write("\tbool parse_notify( %s& parser );\n", each.c_str() );
-		f.write("\n");
-
-		f.write("\tstatic\n" );
-		f.write("\tbool parse_notify( %s& parser, ThisType& tt ) { return tt.parse_notify(parser); }\n", each.c_str() );
-		f.write("\n");
-
-		f.write("\tinline\n" );
-		f.write("\tbool parse_continue( %s& parser, GMQ_COLL vector<uint64_t>& addr, uint64_t offset );\n", each.c_str() );
-		f.write("\n");
-
-		f.write("\tstatic\n" );
-		f.write("\tbool parse_continue( %s& parser, ThisType& tt, GMQ_COLL vector<uint64_t>& addr, uint64_t offset ) { return tt.parse_continue(parser, addr, offset); }\n", each.c_str() );
+		f.write("\tinline bool parse_continue( %s& parser, GMQ_COLL vector<uint64_t>& addr, uint64_t offset );\n", each.c_str() );
+		f.write("\tstatic bool parse_continue( %s& parser, ThisType& tt, GMQ_COLL vector<uint64_t>& addr, uint64_t offset ) { return tt.parse_continue(parser, addr, offset); }\n", each.c_str() );
 		f.write("\n");
 	}
 
 	// compose is used by concentrator only, but we put it here to be able to access private members
 	for (auto& each : config.composerNames)
 	{
-		f.write("\tinline\n" );
-		f.write("\tvoid compose( %s& composer );\n", each.c_str() );
-		
-		f.write("\n");
-
-		f.write("\tstatic\n" );
-		f.write("\tvoid compose( %s& composer, ThisType& tt ) { tt.compose(composer); }\n", each.c_str() );
+		f.write("\tinline void compose( %s& composer );\n", each.c_str() );
+		f.write("\tstatic void compose( %s& composer, ThisType& tt ) { tt.compose(composer); }\n", each.c_str() );
 		f.write("\n");
 	}
 

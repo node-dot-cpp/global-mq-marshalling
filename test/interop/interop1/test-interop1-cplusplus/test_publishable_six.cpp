@@ -93,7 +93,7 @@ class user_AggregateType_handler : public  mtest::AggregateType_subscriber
 
     user_AggregateType_handler(std::vector<Events6>& handled) : handled(handled) {}
 
-    GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber> make_theAggregate() override { return GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber>{new user_BasicTypes_handler(handled)}; }
+    GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber> make_BasicTypes() override { return GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber>{new user_BasicTypes_handler(handled)}; }
 
     void notifyUpdated() override { handled.push_back(Events6::notifyUpdated); }
     void notifyUpdated_name(GMQ_COLL string old) override { handled.push_back(Events6::notifyUpdated_name); }
@@ -112,8 +112,8 @@ class user_StructSix_handler : public mtest::StructSix_subscriber
 
     const std::vector<Events6>& getEvents() const { return handled; }
 
-    GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber> make_basic() override { return GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber>{new user_BasicTypes_handler(handled)}; }
-    GMQ_COLL unique_ptr<mtest::AggregateType_subscriber> make_aggregate() override { return GMQ_COLL unique_ptr<mtest::AggregateType_subscriber>{new user_AggregateType_handler(handled)}; }
+    GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber> make_BasicTypes() override { return GMQ_COLL unique_ptr<mtest::BasicTypes_subscriber>{new user_BasicTypes_handler(handled)}; }
+    GMQ_COLL unique_ptr<mtest::AggregateType_subscriber> make_AggregateType() override { return GMQ_COLL unique_ptr<mtest::AggregateType_subscriber>{new user_AggregateType_handler(handled)}; }
 
     void notifyFullyUpdated() override { handled.push_back(Events6::notifyFullyUpdated); }
     void notifyUpdated() override { handled.push_back(Events6::notifyUpdated); }
