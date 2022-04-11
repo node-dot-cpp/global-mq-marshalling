@@ -1,0 +1,38 @@
+//-------------------------------------------------------------------------------------------
+// Copyright (c) 2022, OLogN Technologies AG
+//-------------------------------------------------------------------------------------------
+
+SCOPE test_scope PROTO = GMQ;
+
+STRUCT NONEXTENDABLE SimpleStruct {
+  INTEGER id;
+  CHARACTER-STRING name;
+};
+
+PUBLISHABLE NONEXTENDABLE simple_publishable = 1 {
+	STRUCT SimpleStruct data;
+};
+
+MESSAGE NONEXTENDABLE test_scope : simple_message = 1 {
+	STRUCT SimpleStruct data;
+};
+
+
+
+STRUCT NONEXTENDABLE Cicle_1 {
+	STRUCT Cicle_2 child;
+};
+
+STRUCT NONEXTENDABLE Cicle_2 {
+	VECTOR<STRUCT Cicle_1> childs;
+};
+
+
+PUBLISHABLE NONEXTENDABLE publishable_cycle = 5 {
+	STRUCT Cicle_2 data;
+};
+
+MESSAGE NONEXTENDABLE test_scope : message_cycle = 5 {
+	STRUCT Cicle_2 data;
+};
+

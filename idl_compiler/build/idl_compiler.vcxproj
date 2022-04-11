@@ -25,6 +25,7 @@
     <ClCompile Include="..\src\cplusplus\cplusplus_idl_tree_serializer.cpp" />
     <ClCompile Include="..\src\cplusplus\cplusplus_messages.cpp" />
     <ClCompile Include="..\src\cplusplus\cplusplus_publishables.cpp" />
+    <ClCompile Include="..\src\file_writter.cpp" />
     <ClCompile Include="..\src\global_mq_parser_helper.cpp" />
     <ClCompile Include="..\src\idl_tree_2_csharp.cpp" />
     <ClCompile Include="..\src\idl_tree_2_csharp_unions.cpp" />
