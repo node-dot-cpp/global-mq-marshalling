@@ -65,7 +65,7 @@ namespace test_interop2_csharp_todo
         static void doUpdate22(mtest.Ipublishable_dictionary data)
         {
             mtest.Idu_one du = new mtest.du_one();
-            du.setCurrentVariant(mtest.Idu_one.Variants.one);
+            du.setCurrentVariant(mtest.du_one_variants.one);
             du.D1 = -100.001;
             du.D2 = -200.002;
             du.D3 = -300.003;

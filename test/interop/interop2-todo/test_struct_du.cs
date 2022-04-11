@@ -54,7 +54,7 @@ namespace test_interop2_csharp
         {
             mtest.struct_du msg = new mtest.struct_du();
 
-            msg.disc_union.setCurrentVariant(mtest.Idu_one.Variants.one);
+            msg.disc_union.setCurrentVariant(mtest.du_one_variants.one);
             msg.disc_union.D1 = 1.2;
             msg.disc_union.D2 = 3.4;
             msg.disc_union.D3 = 5.6;
@@ -66,7 +66,7 @@ namespace test_interop2_csharp
         {
             mtest.struct_du msg = new mtest.struct_du();
 
-            msg.disc_union.setCurrentVariant(mtest.Idu_one.Variants.two);
+            msg.disc_union.setCurrentVariant(mtest.du_one_variants.two);
             msg.disc_union.Data.Add(1.2);
             msg.disc_union.Data.Add(3.4);
             msg.disc_union.Data.Add(5.6);

@@ -64,7 +64,7 @@ namespace test_interop2_csharp_todo
             data.dictionary_two.Add(4, aggr1);
 
             mtest.Idu_one du = new mtest.du_one();
-            du.setCurrentVariant(mtest.Idu_one.Variants.two);
+            du.setCurrentVariant(mtest.du_one_variants.two);
             du.Data.Add(-100.001);
             du.Data.Add(-200.002);
             du.Data.Add(-300.003);

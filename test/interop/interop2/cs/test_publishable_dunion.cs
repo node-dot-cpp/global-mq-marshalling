@@ -84,7 +84,7 @@ namespace test_interop2_csharp
         static void doUpdate1(mtest.Ipublishable_dunion data)
         {
             //modify substructure inside vector
-            data.anUnion.setCurrentVariant(mtest.Idu_one.Variants.one);
+            data.anUnion.setCurrentVariant(mtest.du_one_variants.one);
 
             data.anUnion.D1 = 3.14;
             data.anUnion.D2 = -3.14;
@@ -94,7 +94,7 @@ namespace test_interop2_csharp
         static void doUpdate2(mtest.Ipublishable_dunion data)
         {
             //modify existing elements
-            data.anUnion.setCurrentVariant(mtest.Idu_one.Variants.two);
+            data.anUnion.setCurrentVariant(mtest.du_one_variants.two);
 
             data.anUnion.Data.Add(3.14);
             data.anUnion.Data.Add(-3.14);
