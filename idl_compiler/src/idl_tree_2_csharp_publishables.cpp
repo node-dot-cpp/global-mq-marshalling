@@ -1005,7 +1005,7 @@ namespace {
 					const char* elem = getCSharpPrimitiveType(member.type.vectorElemKind);
 					const char* idl = getIdlPrimitiveType(member.type.vectorElemKind);
 					f.write("\t\tcomposer.composeVector2(\"%s\", t.%s,\n", member.name.c_str(), member.name.c_str());
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", elem, idl);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", elem, idl);
 					f.write("\t\t\t%s);\n", last);
 					break;
 				}
@@ -1045,8 +1045,8 @@ namespace {
 					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
 					const char* idlValue = getIdlPrimitiveType(member.type.dictionaryValueKind);
 					f.write("\t\tcomposer.composeDictionary(\"%s\", t.%s,\n", member.name.c_str(), member.name.c_str());
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", key, idlKey);
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", value, idlValue);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", key, idlKey);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", value, idlValue);
 					f.write("\t\t\t%s);\n", last);
 					break;
 				}
@@ -1055,7 +1055,7 @@ namespace {
 				{
 					const char* value = member.type.name.c_str();
 					f.write("\t\tcomposer.composeDictionary(\"%s\", t.%s,\n", member.name.c_str(), member.name.c_str());
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", key, idlKey);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", key, idlKey);
 					f.write("\t\t\t%s_publisher.compose,\n", value);
 					f.write("\t\t\t%s);\n", last);
 					break;
