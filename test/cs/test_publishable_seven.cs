@@ -152,10 +152,13 @@ namespace TestProject1
             SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
             Assert.True(platform.AreEqual(expected, buffer));
         }
-        static void TestParseUpdate(ITestPlatformSupport platform, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
+        static void TestParseUpdate(ITestPlatformSupport platform, String fileNameInit, String fileName, Action<mtest.Ipublishable_seven> updateDelegate)
         {
             mtest.publishable_seven_subscriber subs = new mtest.publishable_seven_subscriber();
-            subs.debugOnlySetData(GetPublishableSeven());
+            //subs.debugOnlySetData(GetPublishableSeven());
+            SimpleBuffer bufferInit = SimpleBuffer.readFromFile(fileNameInit);
+            IPublishableParser parserInit = platform.makePublishableParser(bufferInit.getReadIterator());
+            subs.applyStateSyncMessage(parserInit);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
@@ -255,7 +258,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate1()
         {
-            TestParseUpdate(JsonFactory, JsonPath1, doUpdate1);
+            TestParseUpdate(JsonFactory, JsonPath, JsonPath1, doUpdate1);
         }
 
 
@@ -268,7 +271,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            TestParseUpdate(JsonFactory, JsonPath2, doUpdate2);
+            TestParseUpdate(JsonFactory, JsonPath, JsonPath2, doUpdate2);
         }
 
         [Fact]
@@ -280,7 +283,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate3()
         {
-            TestParseUpdate(JsonFactory, JsonPath3, doUpdate3);
+            TestParseUpdate(JsonFactory, JsonPath, JsonPath3, doUpdate3);
         }
 
         [Fact]
@@ -292,7 +295,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate4()
         {
-            TestParseUpdate(JsonFactory, JsonPath4, doUpdate4);
+            TestParseUpdate(JsonFactory, JsonPath, JsonPath4, doUpdate4);
         }
         [Fact]
         public static void TestJsonComposeUpdate5()
@@ -303,7 +306,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate5()
         {
-            TestParseUpdate(JsonFactory, JsonPath5, doUpdate5);
+            TestParseUpdate(JsonFactory, JsonPath, JsonPath5, doUpdate5);
         }
 
 
@@ -329,7 +332,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            TestParseUpdate(GmqFactory, GmqPath1, doUpdate1);
+            TestParseUpdate(GmqFactory, GmqPath, GmqPath1, doUpdate1);
         }
 
         [Fact]
@@ -341,7 +344,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            TestParseUpdate(GmqFactory, GmqPath2, doUpdate2);
+            TestParseUpdate(GmqFactory, GmqPath, GmqPath2, doUpdate2);
         }
         [Fact]
         public static void TestGmqComposeUpdate3()
@@ -352,7 +355,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate3()
         {
-            TestParseUpdate(GmqFactory, GmqPath3, doUpdate3);
+            TestParseUpdate(GmqFactory, GmqPath, GmqPath3, doUpdate3);
         }
 
         [Fact]
@@ -364,7 +367,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate4()
         {
-            TestParseUpdate(GmqFactory, GmqPath4, doUpdate4);
+            TestParseUpdate(GmqFactory, GmqPath, GmqPath4, doUpdate4);
         }
         [Fact]
         public static void TestGmqComposeUpdate5()
@@ -375,7 +378,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate5()
         {
-            TestParseUpdate(GmqFactory, GmqPath5, doUpdate5);
+            TestParseUpdate(GmqFactory, GmqPath, GmqPath5, doUpdate5);
         }
 
     }

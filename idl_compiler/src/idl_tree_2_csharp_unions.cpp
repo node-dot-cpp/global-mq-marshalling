@@ -955,13 +955,6 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 
 	csharpDu_generateUnionResetHandlers(f, s);
 
-	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name);
-	f.write("\t{\n");
-	f.write("\t\tthis._data = data;\n");
-	f.write("\t\t_reset_handlers();\n");
-	f.write("\t}\n");
-
 	for (auto& duit : s.getDiscriminatedUnionCases())
 	{
 		assert(duit != nullptr);

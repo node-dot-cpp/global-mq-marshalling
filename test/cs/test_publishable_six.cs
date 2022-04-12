@@ -131,10 +131,13 @@ namespace TestProject1
             SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
             Assert.True(platform.AreEqual(expected, buffer));
         }
-        internal static void TestParseUpdate(ITestPlatformSupport platform, String fileName, Action< mtest.IStructSix> updateDelegate)
+        internal static void TestParseUpdate(ITestPlatformSupport platform, String fileNameInit, String fileName, Action< mtest.IStructSix> updateDelegate)
         {
-             mtest.StructSix_subscriber subs = new  mtest.StructSix_subscriber();
-            subs.debugOnlySetData(GetPublishableSix());
+            mtest.StructSix_subscriber subs = new  mtest.StructSix_subscriber();
+            //subs.debugOnlySetData(GetPublishableSix());
+            SimpleBuffer bufferInit = SimpleBuffer.readFromFile(fileNameInit);
+            IPublishableParser parserInit = platform.makePublishableParser(bufferInit.getReadIterator());
+            subs.applyStateSyncMessage(parserInit);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             IPublishableParser parser = platform.makePublishableParser(buffer.getReadIterator());
@@ -200,7 +203,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate1()
         {
-            TestParseUpdate(JsonPlatform, Path1, doUpdate1);
+            TestParseUpdate(JsonPlatform, Path, Path1, doUpdate1);
         }
 
         [Fact]
@@ -212,7 +215,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            TestParseUpdate(JsonPlatform, Path2, doUpdate2);
+            TestParseUpdate(JsonPlatform, Path, Path2, doUpdate2);
         }
 
 
@@ -225,7 +228,7 @@ namespace TestProject1
         [Fact]
         public static void TestJsonParseNoChangeUpdate3()
         {
-            TestParseUpdate(JsonPlatform, Path3, null);
+            TestParseUpdate(JsonPlatform, Path, Path3, null);
         }
 //////////////////////
         [Fact]
@@ -249,7 +252,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            TestParseUpdate(GmqPlatform, GmqPath_u1, doUpdate1);
+            TestParseUpdate(GmqPlatform, GmqPath_s0, GmqPath_u1, doUpdate1);
         }
 
         [Fact]
@@ -261,7 +264,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            TestParseUpdate(GmqPlatform, GmqPath_u2, doUpdate2);
+            TestParseUpdate(GmqPlatform, GmqPath_s0, GmqPath_u2, doUpdate2);
         }
 
 
@@ -274,7 +277,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmqParseNoChangeUpdate3()
         {
-            TestParseUpdate(GmqPlatform, GmqPath_u3, null);
+            TestParseUpdate(GmqPlatform, GmqPath_s0, GmqPath_u3, null);
         }
     }
 }

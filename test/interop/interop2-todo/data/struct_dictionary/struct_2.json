@@ -58,10 +58,10 @@
 },
   "dictionary_four":{
   {"someName",{
-  "anInt":-98,
+  "anInt":-99,
   "anUInt":0,
   "aReal":0,
-  "aString":"otherName"
+  "aString":"someName"
 }}, 
   {"otherName",{
   "anInt":-98,

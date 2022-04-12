@@ -1765,14 +1765,6 @@ void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const cha
 
 	csharpPub_generateSubscriberResetHandlers(f, s);
 
-	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name);
-	f.write("\t{\n");
-	f.write("\t\tthis._data = data;\n");
-	f.write("\t\tthis._reset_handlers();\n");
-	f.write("\t}\n");
-
-
 	f.write("} // class %s_subscriber\n\n", type_name);
 
 }
@@ -1832,9 +1824,6 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 	if (s.type == CompositeType::Type::publishable)
 		csharpPub_generateStatePublishableBase(f, s, type_name);
 
-
-	//f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	//f.write("\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
 
 	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 	f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name);

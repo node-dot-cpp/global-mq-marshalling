@@ -176,11 +176,15 @@ namespace test_interop2_csharp
             else if (proto == Protocol.Gmq)
                 Assert.Equal(expected, buffer);
         }
-        static void TestParseUpdate(Protocol proto, String fileName, Func<mtest.publishable_dunion> getState, Action<mtest.Ipublishable_dunion> updateDelegate)
+        static void TestParseUpdate(Protocol proto, String fileNameInit, String fileName, Func<mtest.publishable_dunion> getState, Action<mtest.Ipublishable_dunion> updateDelegate)
         {
             mtest.publishable_dunion_subscriber subs = new mtest.publishable_dunion_subscriber();
-            mtest.publishable_dunion data = getState();
-            subs.debugOnlySetData(data);
+            //mtest.publishable_dunion data = getState();
+            //subs.debugOnlySetData(data);
+            SimpleBuffer bufferInit = SimpleBuffer.readFromFile(fileNameInit);
+            IPublishableParser parserInit = makePublishableParser(proto, bufferInit.getReadIterator());
+            subs.applyStateSyncMessage(parserInit);
+
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             IPublishableParser parser = makePublishableParser(proto, buffer.getReadIterator());
@@ -239,7 +243,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestJsonParseUpdate1()
         {
-            TestParseUpdate(Protocol.Json, JsonPath_u1, GetPublishableUnion_0, doUpdate1);
+            TestParseUpdate(Protocol.Json, JsonPath_s0, JsonPath_u1, GetPublishableUnion_0, doUpdate1);
         }
 
 
@@ -252,7 +256,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            TestParseUpdate(Protocol.Json, JsonPath_u2, GetPublishableUnion_1, doUpdate2);
+            TestParseUpdate(Protocol.Json, JsonPath_s1, JsonPath_u2, GetPublishableUnion_1, doUpdate2);
         }
 
 
@@ -301,7 +305,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            TestParseUpdate(Protocol.Gmq, GmqPath_u1, GetPublishableUnion_0, doUpdate1);
+            TestParseUpdate(Protocol.Gmq, GmqPath_s0, GmqPath_u1, GetPublishableUnion_0, doUpdate1);
         }
 
 
@@ -314,7 +318,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            TestParseUpdate(Protocol.Gmq, GmqPath_u2, GetPublishableUnion_1, doUpdate2);
+            TestParseUpdate(Protocol.Gmq, GmqPath_s1, GmqPath_u2, GetPublishableUnion_1, doUpdate2);
         }
     }
 
