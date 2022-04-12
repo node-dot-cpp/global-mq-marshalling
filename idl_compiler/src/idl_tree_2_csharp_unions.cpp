@@ -531,6 +531,17 @@ namespace {
 		f.write("\t{\n");
 
 		f.write("\t\tparser.parseKey(expectedName);\n");
+		f.write("\t\treturn parse(parser, subscriber);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static bool parse_notify(IPublishableParser parser, %s_subscriber subscriber)\n", type_name);
+		f.write("\t{\n");
+		f.write("\t\treturn parse(parser, subscriber);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber)\n", type_name);
+		f.write("\t{\n");
+
 		f.write("\t\tparser.parseStructBegin();\n");
 
 		f.write("\t\tbool changed = subscriber.update_CurrentVariant(parser, \"caseId\");\n");
@@ -911,7 +922,7 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 
 	csharpDu_generateUnionAddressEnum(f, s);
 
-	f.write("\tpublic %s_subscriber(I%s data) { this._data = data; }\n", type_name, type_name);
+	f.write("\tpublic %s_subscriber(I%s data) { this._data = data ?? new %s(); }\n", type_name, type_name, type_name);
 
 	f.write("\tpublic %s_variants currentVariant() { return this._data.currentVariant(); }\n", type_name);
 	f.write("\tpublic void setCurrentVariant(%s_variants v) { throw new InvalidOperationException(); }\n", type_name);

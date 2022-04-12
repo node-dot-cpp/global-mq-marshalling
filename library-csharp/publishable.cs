@@ -55,7 +55,9 @@ namespace globalmq.marshalling
         Double parseReal(String expectedName);
         String parseString(String expectedName);
         void parseDictionary<K, V>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, V> parseValueDelegate);
+        void parseDictionaryComplex<K, V, VV>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, VV, bool> parseValueDelegate, Func<V, VV> factoryValueDelegate) where V : class where VV : V;
         void parseVector2<T>(String expectedName, IList<T> collection, Func<IPublishableParser, T> parseDelegate);
+        void parseVectorComplex<T, TT>(String expectedName, IList<T> collection, Func<IPublishableParser, TT, bool> parseDelegate, Func<T, TT> factoryDelegate) where T : class where TT : T;
 
         void parseStructBegin();
         void parseStructEnd();
@@ -232,6 +234,46 @@ namespace globalmq.marshalling
                 p.skipDelimiter(',');
         }
 
+        public void parseDictionaryComplex<K, V, VV>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, VV, bool> parseValueDelegate, Func<V, VV> factoryValueDelegate) where V : class where VV : V
+        {
+            Debug.Assert(collection.Count == 0);
+            parseKey(expectedName);
+            p.skipDelimiter('{');
+
+            if (!p.isDelimiter('}')) // there are some items there
+            {
+                for (int i = 0; /*!newFormat || i < sz*/; ++i)
+                {
+                    p.skipDelimiter('{');
+                    K k = parseKeyDelegate(this);
+
+                    if (p.isDelimiter(',')) // usually eaten by parseKeyDelegate
+                        p.skipDelimiter(',');
+
+                    VV v = factoryValueDelegate(null);
+                    parseValueDelegate(this, v);
+                    p.skipDelimiter('}');
+
+                    collection.Add(k, v);
+                    if (p.isDelimiter(','))
+                    {
+                        p.skipDelimiter(',');
+                        continue;
+                    }
+                    if (p.isDelimiter('}'))
+                    {
+                        p.skipDelimiter('}');
+                        break;
+                    }
+                }
+            }
+            else
+                p.skipDelimiter('}');
+
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
+        }
+
         public void parseVector2<T>(String expectedName, IList<T> collection, Func<IPublishableParser, T> parseDelegate)
         {
             Debug.Assert(collection.Count == 0);
@@ -243,6 +285,38 @@ namespace globalmq.marshalling
                 for (int i = 0; /*!newFormat || i < sz*/; ++i)
                 {
                     T t = parseDelegate(this);
+                    collection.Add(t);
+                    if (p.isDelimiter(','))
+                    {
+                        p.skipDelimiter(',');
+                        continue;
+                    }
+                    if (p.isDelimiter(']'))
+                    {
+                        p.skipDelimiter(']');
+                        break;
+                    }
+                }
+            }
+            else
+                p.skipDelimiter(']');
+
+            if (p.isDelimiter(','))
+                p.skipDelimiter(',');
+        }
+
+        public void parseVectorComplex<T, TT>(String expectedName, IList<T> collection, Func<IPublishableParser, TT, bool> parseDelegate, Func<T, TT> factoryDelegate) where T : class where TT : T
+        {
+            Debug.Assert(collection.Count == 0);
+            parseKey(expectedName);
+            p.skipDelimiter('[');
+
+            if (!p.isDelimiter(']')) // there are some items there
+            {
+                for (int i = 0; /*!newFormat || i < sz*/; ++i)
+                {
+                    TT t = factoryDelegate(null);
+                    parseDelegate(this, t);
                     collection.Add(t);
                     if (p.isDelimiter(','))
                     {
@@ -354,6 +428,20 @@ namespace globalmq.marshalling
                 collection.Add(k, v);
             }
         }
+        public void parseDictionaryComplex<K, V, VV>(String expectedName, IDictionary<K, V> collection, Func<IPublishableParser, K> parseKeyDelegate, Func<IPublishableParser, VV, bool> parseValueDelegate, Func<V, VV> factoryValueDelegate) where V : class where VV : V
+        {
+            Debug.Assert(collection.Count == 0);
+            int sz;
+            p.parseUnsignedInteger(out sz);
+            for (int i = 0; i < sz; ++i)
+            {
+                K k = parseKeyDelegate(this);
+                
+                VV v = factoryValueDelegate(null);
+                parseValueDelegate(this, v);
+                collection.Add(k, v);
+            }
+        }
         public void parseVector2<T>(String expectedName, IList<T> collection, Func<IPublishableParser, T> parseDelegate)
         {
             Debug.Assert(collection.Count == 0);
@@ -362,6 +450,19 @@ namespace globalmq.marshalling
             for (int i = 0; i < sz; ++i)
             {
                 T t = parseDelegate(this);
+                collection.Add(t);
+            }
+        }
+
+        public void parseVectorComplex<T, TT>(String expectedName, IList<T> collection, Func<IPublishableParser, TT, bool> parseDelegate, Func<T, TT> factoryDelegate) where T : class where TT : T
+        {
+            Debug.Assert(collection.Count == 0);
+            int sz;
+            p.parseUnsignedInteger(out sz);
+            for (int i = 0; i < sz; ++i)
+            {
+                TT t = factoryDelegate(null);
+                parseDelegate(this, t);
                 collection.Add(t);
             }
 
