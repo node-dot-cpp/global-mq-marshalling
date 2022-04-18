@@ -65,7 +65,7 @@ namespace test_interop3_csharp
         static void doUpdate22(mtest.Ipublishable_dictionary data)
         {
             mtest.Idu_one du = new mtest.du_one();
-            du.setCurrentVariant(mtest.Idu_one.Variants.one);
+            du.setCurrentVariant(mtest.du_one_variants.one);
             du.D1 = -100.001;
             du.D2 = -200.002;
             du.D3 = -300.003;
@@ -170,18 +170,23 @@ namespace test_interop3_csharp
                 Assert.Equal(expected, buffer);
 
         }
-        static void TestParseUpdate(TestCommon.Protocol proto, String fileName, Func<mtest.publishable_dictionary> getState, Action<mtest.Ipublishable_dictionary> updateDelegate)
+        static void TestParseUpdate(TestCommon.Protocol proto, String fileNameInit, String fileName, Func<mtest.publishable_dictionary> getState, Action<mtest.Ipublishable_dictionary> updateDelegate)
         {
             mtest.publishable_dictionary_subscriber subs = new mtest.publishable_dictionary_subscriber();
-            mtest.publishable_dictionary data = getState();
-            subs.debugOnlySetData(data);
+            //mtest.publishable_dictionary data = getState();
+            //subs.debugOnlySetData(data);
+            SimpleBuffer bufferInit = SimpleBuffer.readFromFile(fileNameInit);
+            IPublishableParser parserInit = TestCommon.makePublishableParser(proto, bufferInit.getReadIterator());
+            subs.applyStateSyncMessage(parserInit);
+
+            mtest.publishable_dictionary expected = getState();
+            Assert.True(expected.isEquivalent(subs));
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             IPublishableParser parser = TestCommon.makePublishableParser(proto, buffer.getReadIterator());
 
             subs.applyMessageWithUpdates(parser);
 
-            mtest.publishable_dictionary expected = getState();
 
             Assert.False(expected.isEquivalent(subs));
 
@@ -190,14 +195,15 @@ namespace test_interop3_csharp
             Assert.True(expected.isEquivalent(subs));
         }
 
-        static void TestUpdate(int id, Func<mtest.publishable_dictionary> initState, Action<mtest.Ipublishable_dictionary> updateDelegate)
+        static void TestUpdate(int initId, int id, Func<mtest.publishable_dictionary> initState, Action<mtest.Ipublishable_dictionary> updateDelegate)
         {
+            string fileNameInit = Prefix + "state_sync_" + initId.ToString();
             string fileName = Prefix + "update_" + id.ToString();
             TestComposeUpdate(TestCommon.Protocol.Json, fileName + ".json", initState, updateDelegate);
-            TestParseUpdate(TestCommon.Protocol.Json, fileName + ".json", initState, updateDelegate);
+            TestParseUpdate(TestCommon.Protocol.Json, fileNameInit + ".json", fileName + ".json", initState, updateDelegate);
 
             TestComposeUpdate(TestCommon.Protocol.Gmq, fileName + ".gmq", initState, updateDelegate);
-            TestParseUpdate(TestCommon.Protocol.Gmq, fileName + ".gmq", initState, updateDelegate);
+            TestParseUpdate(TestCommon.Protocol.Gmq, fileNameInit + ".gmq",  fileName + ".gmq", initState, updateDelegate);
         }
 
 
@@ -210,33 +216,33 @@ namespace test_interop3_csharp
         [Fact]
         public static void TestUpdate21()
         {
-            TestUpdate(21, GetPublishableDictionary_2, doUpdate21);
+            TestUpdate(2, 21, GetPublishableDictionary_2, doUpdate21);
         }
         [Fact]
         public static void TestUpdate22()
         {
-            TestUpdate(22, GetPublishableDictionary_2, doUpdate22);
+            TestUpdate(2, 22, GetPublishableDictionary_2, doUpdate22);
         }
         [Fact]
         public static void TestUpdate23()
         {
-            TestUpdate(23, GetPublishableDictionary_2, doUpdate23);
+            TestUpdate(2, 23, GetPublishableDictionary_2, doUpdate23);
         }
         [Fact]
         public static void TestUpdate24()
         {
-            TestUpdate(24, GetPublishableDictionary_2, doUpdate24);
+            TestUpdate(2, 24, GetPublishableDictionary_2, doUpdate24);
         }
         [Fact]
         public static void TestUpdate25()
         {
-            TestUpdate(25, GetPublishableDictionary_2, doUpdate25);
+            TestUpdate(2, 25, GetPublishableDictionary_2, doUpdate25);
         }
 
         [Fact]
         public static void TestUpdate26()
         {
-            TestUpdate(26, GetPublishableDictionary_2, doUpdate26);
+            TestUpdate(2, 26, GetPublishableDictionary_2, doUpdate26);
         }
     }
 

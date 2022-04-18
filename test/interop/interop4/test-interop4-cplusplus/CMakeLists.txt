@@ -3,9 +3,11 @@
 #-------------------------------------------------------------------------------------------
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/generated_interop4.h
-    COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/../interop4.idl ${CMAKE_CURRENT_SOURCE_DIR}/generated_interop4.h --cplusplus -m=mtest
-    DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/../interop4.idl
+    OUTPUT generated_interop4.h
+    COMMAND idl_compiler ../interop4.idl generated_interop4.h --cplusplus -m=mtest
+    DEPENDS idl_compiler
+    MAIN_DEPENDENCY ../interop4.idl
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_executable(test-interop4-cplusplus

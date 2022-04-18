@@ -59,30 +59,57 @@ namespace test_interop3_csharp
             aggr1.theAggregate.aString = "hello!";
             aggr1.lastValue = 99;
 
+            mtest.IAggregateType aggr2 = new mtest.AggregateType();
+            aggr2.name = "aggr1";
+            aggr2.theAggregate.anInt = -5;
+            aggr2.theAggregate.anUInt = 5;
+            aggr2.theAggregate.aReal = 3.14;
+            aggr2.theAggregate.aString = "hello!";
+            aggr2.lastValue = 99;
+
+            mtest.IAggregateType aggr3 = new mtest.AggregateType();
+            aggr3.name = "aggr1";
+            aggr3.theAggregate.anInt = -5;
+            aggr3.theAggregate.anUInt = 5;
+            aggr3.theAggregate.aReal = 3.14;
+            aggr3.theAggregate.aString = "hello!";
+            aggr3.lastValue = 99;
+
             data.dictionary_two.Add(2, aggr1);
-            data.dictionary_two.Add(3, aggr1);
-            data.dictionary_two.Add(4, aggr1);
+            data.dictionary_two.Add(3, aggr2);
+            data.dictionary_two.Add(4, aggr3);
 
-            mtest.Idu_one du = new mtest.du_one();
-            du.setCurrentVariant(mtest.Idu_one.Variants.two);
-            du.Data.Add(-100.001);
-            du.Data.Add(-200.002);
-            du.Data.Add(-300.003);
+            mtest.Idu_one du1 = new mtest.du_one();
+            du1.setCurrentVariant(mtest.du_one_variants.two);
+            du1.Data.Add(-100.001);
+            du1.Data.Add(-200.002);
+            du1.Data.Add(-300.003);
 
-            data.dictionary_three.Add(-5, du);
-            data.dictionary_three.Add(-6, du);
-            data.dictionary_three.Add(-7, du);
+            mtest.Idu_one du2 = new mtest.du_one();
+            du2.setCurrentVariant(mtest.du_one_variants.two);
+            du2.Data.Add(-100.001);
+            du2.Data.Add(-200.002);
+            du2.Data.Add(-300.003);
+
+            mtest.Idu_one du3 = new mtest.du_one();
+            du3.setCurrentVariant(mtest.du_one_variants.two);
+            du3.Data.Add(-100.001);
+            du3.Data.Add(-200.002);
+            du3.Data.Add(-300.003);
+
+            data.dictionary_three.Add(-5, du1);
+            data.dictionary_three.Add(-6, du2);
+            data.dictionary_three.Add(-7, du3);
 
             mtest.BasicTypes bt = new mtest.BasicTypes();
             bt.anInt = -99;
             bt.aString = "someName";
 
-            data.dictionary_four.Add("someName", bt);
-
             mtest.BasicTypes bt2 = new mtest.BasicTypes();
             bt2.anInt = -98;
             bt2.aString = "otherName";
 
+            data.dictionary_four.Add("someName", bt);
             data.dictionary_four.Add("otherName", bt2);
 
             return data;

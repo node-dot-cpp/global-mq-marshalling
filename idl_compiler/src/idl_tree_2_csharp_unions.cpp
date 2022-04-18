@@ -57,7 +57,7 @@ namespace {
 		f.write("\t\t\tthrow new FormatException();\n\n");
 
 
-		f.write("\t\tval.setCurrentVariant((I%s.Variants)caseID);\n", type_name.c_str());
+		f.write("\t\tval.setCurrentVariant((%s_variants)caseID);\n", type_name.c_str());
 		f.write("\t\tswitch (val.currentVariant())\n");
 		f.write("\t\t{\n");
 
@@ -69,7 +69,7 @@ namespace {
 
 			std::string case_name = getCaseTypeName(cs);
 
-			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
+			f.write("\t\t\tcase %s_variants.%s:\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t{\n");
 			f.write("\t\t\t\t%s_message.parse(parser, val);\n", case_name.c_str());
 			f.write("\t\t\t\tbreak;\n");
@@ -101,7 +101,7 @@ namespace {
 		f.write("\t\tUInt64 caseID;\n");
 		f.write("\t\tparser.parseUnsignedInteger(out caseID);\n\n");
 
-		f.write("\t\t\t\tval.setCurrentVariant((I%s.Variants)caseID);\n", type_name.c_str());
+		f.write("\t\t\t\tval.setCurrentVariant((%s_variants)caseID);\n", type_name.c_str());
 		f.write("\t\tswitch (val.currentVariant())\n", type_name.c_str());
 		f.write("\t\t{\n");
 
@@ -113,7 +113,7 @@ namespace {
 
 			std::string case_name = getCaseTypeName(cs);
 
-			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
+			f.write("\t\t\tcase %s_variants.%s:\n", type_name.c_str(), cs.name.c_str());
 			f.write("\t\t\t{\n");
 			f.write("\t\t\t\t%s_message.parse(parser, val);\n", case_name.c_str());
 			f.write("\t\t\t\tbreak;\n");
@@ -154,7 +154,7 @@ namespace {
 
 			std::string case_name = getCaseTypeName(cs);
 
-			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
+			f.write("\t\t\tcase %s_variants.%s:\n", type_name, cs.name.c_str());
 			f.write("\t\t\t{\n");
 			f.write("\t\t\t\tcomposer.addNamePart(\"caseData\");\n");
 
@@ -194,7 +194,7 @@ namespace {
 
 			std::string case_name = getCaseTypeName(cs);
 
-			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
+			f.write("\t\t\tcase %s_variants.%s:\n", type_name, cs.name.c_str());
 			f.write("\t\t\t{\n");
 			string caller = generateCsharpCallerParams(cs, true);
 			f.write("\t\t\t\t%s_message.compose(composer, %s);\n", case_name.c_str(), caller.c_str());
@@ -313,7 +313,7 @@ namespace {
 
 			std::string case_type_name = getCaseTypeName(cs);
 
-			f.write("\t\t\tcase I%s.Variants.%s:\n", type_name, cs.name.c_str());
+			f.write("\t\t\tcase %s_variants.%s:\n", type_name, cs.name.c_str());
 			generateCsharpStructEquivalentExpression(f.indent(1), cs);
 		}
 		f.write("\t\t\tdefault: return true; // both unknown\n");
@@ -437,8 +437,8 @@ namespace {
 
 		f.write("\t\tcomposer.composeStructBegin();\n");
 
-		f.write("\t\tI%s.Variants c = t.currentVariant();\n", type_name);
-		//f.write("\t\tif( c == I%s.Variants.unknown)\n", type_name);
+		f.write("\t\t%s_variants c = t.currentVariant();\n", type_name);
+		//f.write("\t\tif( c == %s_variants.unknown)\n", type_name);
 
 		//f.write("\t\t\tcomposer.composeUnsigned(\"caseId\", (UInt64)c, false);\n");
 		//f.write("\t\telse\n");
@@ -454,7 +454,7 @@ namespace {
 
 			std::string case_type_name = getCaseTypeName(*duit);
 
-			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
+			f.write("\t\t\t\tcase %s_variants.%s:\n", type_name, duit->name.c_str());
 			f.write("\t\t\t\t\t%s_publisher.compose(composer, \"caseData\", t, false);\n", case_type_name.c_str());
 			f.write("\t\t\t\t\tbreak;\n");
 
@@ -491,10 +491,10 @@ namespace {
 
 		f.write("\t\tparser.parseStructBegin();\n");
 
-		f.write("\t\tI%s.Variants newVal = (I%s.Variants)parser.parseUnsigned(\"caseId\");\n", type_name, type_name);
+		f.write("\t\t%s_variants newVal = (%s_variants)parser.parseUnsigned(\"caseId\");\n", type_name, type_name);
 		f.write("\t\tdata.setCurrentVariant(newVal);\n");
 
-		//f.write("\t\tif( newVal != I%s.Variants.unknown)\n", type_name);
+		//f.write("\t\tif( newVal != %s_variants.unknown)\n", type_name);
 		//f.write("\t\t{\n");
 
 		f.write("\t\t\t// mb: get it back from data, in case is an unknown value\n");
@@ -508,7 +508,7 @@ namespace {
 
 			std::string case_type_name = getCaseTypeName(*duit);
 
-			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
+			f.write("\t\t\t\tcase %s_variants.%s:\n", type_name, duit->name.c_str());
 			f.write("\t\t\t\t\t%s_subscriber.parseForStateSync(parser, \"caseData\", data);\n", case_type_name.c_str());
 			f.write("\t\t\t\t\tbreak;\n");
 
@@ -531,12 +531,23 @@ namespace {
 		f.write("\t{\n");
 
 		f.write("\t\tparser.parseKey(expectedName);\n");
+		f.write("\t\treturn parse(parser, subscriber);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static bool parse_notify(IPublishableParser parser, %s_subscriber subscriber)\n", type_name);
+		f.write("\t{\n");
+		f.write("\t\treturn parse(parser, subscriber);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber)\n", type_name);
+		f.write("\t{\n");
+
 		f.write("\t\tparser.parseStructBegin();\n");
 
 		f.write("\t\tbool changed = subscriber.update_CurrentVariant(parser, \"caseId\");\n");
-		//f.write("\t\tI%s.Variants c = subscriber.currentVariant();\n", type_name);
+		//f.write("\t\t%s_variants c = subscriber.currentVariant();\n", type_name);
 
-		//f.write("\t\tif( c != I%s.Variants.unknown)\n", type_name);
+		//f.write("\t\tif( c != %s_variants.unknown)\n", type_name);
 		//f.write("\t\t{\n");
 		//f.write("\t\t\tparser.parsePublishableStructBegin(\"caseData\");\n");
 
@@ -550,7 +561,7 @@ namespace {
 
 			std::string case_type_name = getCaseTypeName(*duit);
 
-			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
+			f.write("\t\t\t\tcase %s_variants.%s:\n", type_name, duit->name.c_str());
 			f.write("\t\t\t\t\tchanged = %s_subscriber.parse(parser, \"caseData\", subscriber) | changed;\n", case_type_name.c_str());
 			f.write("\t\t\t\t\tbreak;\n");
 
@@ -599,7 +610,7 @@ namespace {
 
 			std::string case_type_name = getCaseTypeName(*duit);
 
-			f.write("\t\t\t\tcase I%s.Variants.%s:\n", type_name, duit->name.c_str());
+			f.write("\t\t\t\tcase %s_variants.%s:\n", type_name, duit->name.c_str());
 			f.write("\t\t\t\t\tchanged = %s_subscriber.parse(parser, subscriber, addr, offset) | changed;\n", case_type_name.c_str());
 			f.write("\t\t\t\t\tbreak;\n");
 		}
@@ -638,11 +649,8 @@ void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
 	std::string type_name = s.name;
 
 
-	f.write("public interface I%s : IEquivalenceComparable<I%s>\n", type_name.c_str(), type_name.c_str());
+	f.write("public enum %s_variants\n", type_name.c_str());
 	f.write("{\n");
-
-	f.write("\tpublic enum Variants\n");
-	f.write("\t{\n");
 	//f.write("\t\tunknown = 0,\n");
 
 	size_t sz = s.getDiscriminatedUnionCases().size();
@@ -656,17 +664,22 @@ void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
 		string number = std::to_string(it->numID);
 
 		//if(i != sz - 1)
-			f.write("\t\t%s = %s,\n", it->name.c_str(), number.c_str());
+			f.write("\t%s = %s,\n", it->name.c_str(), number.c_str());
 		//else
 		//	f.write("\t\t%s = %s\n", it->name.c_str(), number.c_str());
 	}
-	f.write("\t\tunknown\n");
+	f.write("\tunknown\n");
 
-	f.write("\t}\n");
+	f.write("}\n");
 
-	f.write("\tVariants currentVariant();\n");
 
-	f.write("\tvoid setCurrentVariant(Variants v);\n");
+	f.write("public interface I%s : IEquivalenceComparable<I%s>\n", type_name.c_str(), type_name.c_str());
+	f.write("{\n");
+
+
+	f.write("\t%s_variants currentVariant();\n", type_name.c_str());
+
+	f.write("\tvoid setCurrentVariant(%s_variants v);\n", type_name.c_str());
 
 	for (auto& duit : s.getDiscriminatedUnionCases())
 	{
@@ -709,10 +722,10 @@ void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
 
 	// currentVariant()
 
-	f.write("\tpublic I%s.Variants currentVariant()\n", type_name.c_str());
+	f.write("\tpublic %s_variants currentVariant()\n", type_name.c_str());
 	f.write("\t{\n");
 	f.write("\t\tif(this.mem == null)\n");
-	f.write("\t\t\treturn I%s.Variants.unknown;\n", type_name.c_str());
+	f.write("\t\t\treturn %s_variants.unknown;\n", type_name.c_str());
 
 	for (auto& it : s.getDiscriminatedUnionCases())
 	{
@@ -722,14 +735,14 @@ void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
 
 		std::string case_type_name = getCaseTypeName(cs);
 		f.write("\t\telse if(this.mem is %s)\n", case_type_name.c_str());
-		f.write("\t\t\treturn I%s.Variants.%s;\n", type_name.c_str(), cs.name.c_str());
+		f.write("\t\t\treturn %s_variants.%s;\n", type_name.c_str(), cs.name.c_str());
 	}
 
 	f.write("\t\telse\n");
-	f.write("\t\t\treturn I%s.Variants.unknown;\n", type_name.c_str());
+	f.write("\t\t\treturn %s_variants.unknown;\n", type_name.c_str());
 	f.write("\t}\n");
 
-	f.write("\tpublic void setCurrentVariant(I%s.Variants v)\n", type_name.c_str());
+	f.write("\tpublic void setCurrentVariant(%s_variants v)\n", type_name.c_str());
 	f.write("\t{\n");
 
 	f.write("\t\tswitch(v)\n");
@@ -742,7 +755,7 @@ void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
 
 		std::string case_type_name = getCaseTypeName(cs);
 
-		f.write("\t\tcase I%s.Variants.%s:\n", type_name.c_str(), cs.name.c_str());
+		f.write("\t\tcase %s_variants.%s:\n", type_name.c_str(), cs.name.c_str());
 		f.write("\t\t\tthis.mem = new %s();\n", case_type_name.c_str());
 		f.write("\t\t\tbreak;\n");
 	}
@@ -793,8 +806,8 @@ void generateCsharpUnionReadOnly(CsharpWritter f, CompositeType& s)
 	f.write("\tprotected I%s _data;\n", type_name);
 	f.write("\tpublic %s_readonly(I%s data) { this._data = data; }\n", type_name, type_name);
 
-	f.write("\tpublic I%s.Variants currentVariant() { return this._data.currentVariant(); }\n", type_name);
-	f.write("\tpublic void setCurrentVariant(I%s.Variants v) { throw new InvalidOperationException(); }\n", type_name);
+	f.write("\tpublic %s_variants currentVariant() { return this._data.currentVariant(); }\n", type_name);
+	f.write("\tpublic void setCurrentVariant(%s_variants v) { throw new InvalidOperationException(); }\n", type_name);
 
 	for (auto& duit : s.getDiscriminatedUnionCases())
 	{
@@ -886,7 +899,7 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 	}
 
 	f.write("\tpublic virtual void notifyUpdated() { }\n");
-	f.write("\tpublic virtual void notifyUpdated_CurrentVariant(I%s.Variants old) { }\n", type_name);
+	f.write("\tpublic virtual void notifyUpdated_CurrentVariant(%s_variants old) { }\n", type_name);
 
 	for (auto& duit : s.getDiscriminatedUnionCases())
 	{
@@ -909,18 +922,18 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 
 	csharpDu_generateUnionAddressEnum(f, s);
 
-	f.write("\tpublic %s_subscriber(I%s data) { this._data = data; }\n", type_name, type_name);
+	f.write("\tpublic %s_subscriber(I%s data) { this._data = data ?? new %s(); }\n", type_name, type_name, type_name);
 
-	f.write("\tpublic I%s.Variants currentVariant() { return this._data.currentVariant(); }\n", type_name);
-	f.write("\tpublic void setCurrentVariant(I%s.Variants v) { throw new InvalidOperationException(); }\n", type_name);
+	f.write("\tpublic %s_variants currentVariant() { return this._data.currentVariant(); }\n", type_name);
+	f.write("\tpublic void setCurrentVariant(%s_variants v) { throw new InvalidOperationException(); }\n", type_name);
 
 	f.write("\tbool update_CurrentVariant(IPublishableParser parser, String name)\n");
 	f.write("\t{\n");
-	f.write("\t\tI%s.Variants newVal = (I%s.Variants)parser.parseUnsigned(name);\n", type_name, type_name);
+	f.write("\t\t%s_variants newVal = (%s_variants)parser.parseUnsigned(name);\n", type_name, type_name);
 						
 	f.write("\t\tif (newVal != this._data.currentVariant())\n");
 	f.write("\t\t{\n");
-	f.write("\t\t\tI%s.Variants oldVal = this._data.currentVariant();\n", type_name);
+	f.write("\t\t\t%s_variants oldVal = this._data.currentVariant();\n", type_name);
 	f.write("\t\t\tthis._data.setCurrentVariant(newVal);\n");
 	f.write("\t\t\tthis._reset_handlers();\n");
 	f.write("\t\t\tnotifyUpdated_CurrentVariant(oldVal);\n");
@@ -952,13 +965,6 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 	csharpDu_generateParse2(f, s, type_name);
 
 	csharpDu_generateUnionResetHandlers(f, s);
-
-	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name);
-	f.write("\t{\n");
-	f.write("\t\tthis._data = data;\n");
-	f.write("\t\t_reset_handlers();\n");
-	f.write("\t}\n");
 
 	for (auto& duit : s.getDiscriminatedUnionCases())
 	{
@@ -999,9 +1005,9 @@ void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char*
 	f.write("\t\tthis.address = address;\n");
 	f.write("\t}\n");
 
-	f.write("\tpublic I%s.Variants currentVariant() { return t.currentVariant(); }\n", type_name);
+	f.write("\tpublic %s_variants currentVariant() { return t.currentVariant(); }\n", type_name);
 
-	f.write("\tpublic void setCurrentVariant(I%s.Variants v)\n", type_name);
+	f.write("\tpublic void setCurrentVariant(%s_variants v)\n", type_name);
 	f.write("\t{\n");
 	f.write("\t\tt.setCurrentVariant(v);\n");
 	f.write("\t\tcomposer.composeAddress(address, (UInt64)Address.CurrentVariant);\n");

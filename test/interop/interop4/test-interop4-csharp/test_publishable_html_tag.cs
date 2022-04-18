@@ -48,7 +48,7 @@ namespace test_interop4_csharp
         static void doUpdate1(mtest.Ipublishable_html_tag data)
         {
             data.data.name = "first";
-            data.data.tags.setCurrentVariant(mtest.IHtmlTextOrTags.Variants.taglists);
+            data.data.tags.setCurrentVariant(mtest.HtmlTextOrTags_variants.taglists);
             data.data.tags.tags.Add(new mtest.HtmlTag());
             data.data.tags.tags[0].name = "second";
         }

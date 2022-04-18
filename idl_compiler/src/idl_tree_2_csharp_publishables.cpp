@@ -182,11 +182,22 @@ namespace {
 			s.type == CompositeType::Type::discriminated_union_case);
 
 
-
 		f.write("\tpublic static bool parse(IPublishableParser parser, String expectedName, %s_subscriber subscriber)\n", type_name.c_str());
 		f.write("\t{\n");
 
 		f.write("\t\tparser.parseKey(expectedName);\n");
+		f.write("\t\treturn parse(parser, subscriber);\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static bool parse_notify(IPublishableParser parser, %s_subscriber subscriber)\n", type_name.c_str());
+		f.write("\t{\n");
+		f.write("\t\treturn parse(parser, subscriber);\n");
+		f.write("\t}\n");
+
+
+		f.write("\tpublic static bool parse(IPublishableParser parser, %s_subscriber subscriber)\n", type_name.c_str());
+		f.write("\t{\n");
+
 		f.write("\t\tparser.parseStructBegin();\n");
 
 
@@ -259,12 +270,12 @@ namespace {
 
 					f.write("\t\t{\n");
 					f.write("\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
-					f.write("\t\t\tparser.parseVector2(\"%s\", newVal, %s_subscriber.parseForStateSync);\n", member.name.c_str(), elem_type_name);
+					f.write("\t\t\tparser.parseVectorComplex(\"%s\", newVal, %s_subscriber.parse_notify, subscriber.makeElementHandler_%s);\n", member.name.c_str(), elem_type_name, member.name.c_str());
 
-					f.write("\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber._data.%s))\n", member.name.c_str());
+					f.write("\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.lazy_%s_handlers()))\n", member.name.c_str());
 					f.write("\t\t\t{\n");
-					f.write("\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
-					f.write("\t\t\t\tsubscriber.%s_handlers = null;\n", member.name.c_str());
+					// f.write("\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\tsubscriber.%s_handlers = newVal;\n", member.name.c_str());
 					f.write("\t\t\t\tchanged = true;\n");
 					f.write("\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
 					f.write("\t\t\t}\n");
@@ -316,15 +327,16 @@ namespace {
 
 					f.write("\t\t{\n");
 					f.write("\t\t\tDictionary<%s, I%s> newVal = new Dictionary<%s, I%s>();\n", key, value, key, value);
-					f.write("\t\t\tparser.parseDictionary(\"%s\", newVal,\n", member.name.c_str());
+					f.write("\t\t\tparser.parseDictionaryComplex(\"%s\", newVal,\n", member.name.c_str());
 					f.write("\t\t\t\t%s_subscriber.parseForStateSync,\n", key);
-					f.write("\t\t\t\t%s_subscriber.parseForStateSync\n", value);
+					f.write("\t\t\t\t%s_subscriber.parse_notify,\n", value);
+					f.write("\t\t\t\tsubscriber.makeValueHandler_%s\n", member.name.c_str());
 					f.write("\t\t\t);\n");
 
-					f.write("\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber._data.%s))\n", member.name.c_str());
+					f.write("\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.lazy_%s_handlers()))\n", member.name.c_str());
 					f.write("\t\t\t{\n");
-					f.write("\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
-					f.write("\t\t\t\tsubscriber.%s_handlers = null;\n", member.name.c_str());
+					// f.write("\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\tsubscriber.%s_handlers = newVal;\n", member.name.c_str());
 					f.write("\t\t\t\tchanged = true;\n");
 					f.write("\t\t\t\tsubscriber.notifyUpdated_%s();\n", member.name.c_str());
 					f.write("\t\t\t}\n");
@@ -497,11 +509,11 @@ namespace {
 					f.write("\t\t\t\t{\n");
 					f.write("\t\t\t\t\tList<I%s> newVal = new List<I%s>();\n", elem_type_name, elem_type_name);
 
-					f.write("\t\t\t\t\tparser.parseVector2(\"value\", newVal, %s_subscriber.parseForStateSync);\n", elem_type_name);
-					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber._data.%s))\n", member.name.c_str());
+					f.write("\t\t\t\t\tparser.parseVectorComplex(\"value\", newVal, %s_subscriber.parse_notify, subscriber.makeElementHandler_%s);\n", elem_type_name, member.name.c_str());
+					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.lazy_%s_handlers()))\n", member.name.c_str());
 					f.write("\t\t\t\t\t{\n");
-					f.write("\t\t\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber.%s_handlers = null;\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.%s_handlers = newVal;\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
 					f.write("\t\t\t\t\t}\n");
 
@@ -527,12 +539,12 @@ namespace {
 
 					f.write("\t\t\t\t\tcase Publishable.ActionOnVector.insert_single_before:\n");
 					f.write("\t\t\t\t\t{\n");
-					f.write("\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
-					f.write("\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(newVal);\n", elem_type_name, member.name.c_str());
+					// f.write("\t\t\t\t\t\tI%s newVal = new %s();\n", elem_type_name, elem_type_name);
+					f.write("\t\t\t\t\t\t%s_subscriber handler = subscriber.makeElementHandler_%s(null);\n", elem_type_name, member.name.c_str());
 					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, \"value\", handler);\n", elem_type_name);
-					f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
+					// f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
 					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Insert(index, handler);\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s.Insert(index, newVal);\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s.Insert(index, newVal);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
 					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(index);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tbreak;\n");
@@ -540,10 +552,10 @@ namespace {
 
 					f.write("\t\t\t\t\tcase Publishable.ActionOnVector.remove_at:\n");
 					f.write("\t\t\t\t\t{\n");
-					f.write("\t\t\t\t\t\tI%s oldVal = subscriber._data.%s[index];\n", elem_type_name, member.name.c_str());
-					f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
+					f.write("\t\t\t\t\t\tI%s oldVal = subscriber.lazy_%s_handlers()[index];\n", elem_type_name, member.name.c_str());
+					// f.write("\t\t\t\t\t\t// mb: lazy initialization always first\n");
 					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().RemoveAt(index);\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s.RemoveAt(index);\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s.RemoveAt(index);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
 					f.write("\t\t\t\t\t\tsubscriber.notifyErased_%s(index, oldVal);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tbreak;\n");
@@ -677,14 +689,15 @@ namespace {
 					f.write("\t\t\t\tif(addr.Length == offset + 1) // full vector replace\n");
 					f.write("\t\t\t\t{\n");
 					f.write("\t\t\t\t\tDictionary<%s, I%s> newVal = new Dictionary<%s, I%s>();\n", key, value, key, value);
-					f.write("\t\t\t\t\tparser.parseDictionary(\"value\", newVal,\n");
+					f.write("\t\t\t\t\tparser.parseDictionaryComplex(\"value\", newVal,\n");
 					f.write("\t\t\t\t\t\t%s_subscriber.parseForStateSync,\n", key);
-					f.write("\t\t\t\t\t\t%s_subscriber.parseForStateSync\n", value);
+					f.write("\t\t\t\t\t\t%s_subscriber.parse_notify,\n", value);
+					f.write("\t\t\t\t\t\tsubscriber.makeValueHandler_%s\n", member.name.c_str());
 					f.write("\t\t\t\t\t);\n");
-					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber._data.%s))\n", member.name.c_str());
+					f.write("\t\t\t\t\tif(!Enumerable.SequenceEqual(newVal, subscriber.lazy_%s_handlers()))\n", member.name.c_str());
 					f.write("\t\t\t\t\t{\n");
-					f.write("\t\t\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber.%s_handlers = null;\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s = newVal;\n", member.name.c_str());
+					f.write("\t\t\t\t\t\tsubscriber.%s_handlers = newVal;\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
 					f.write("\t\t\t\t\t}\n");
 
@@ -697,12 +710,12 @@ namespace {
 					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.update_value:\n");
 					f.write("\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
-					f.write("\t\t\t\t\t\tI%s v = new %s();\n", value, value);
-					f.write("\t\t\t\t\t\t%s_subscriber newVal = subscriber.makeValueHandler_%s(v);\n", value, member.name.c_str());
+					// f.write("\t\t\t\t\t\tI%s v = new %s();\n", value, value);
+					f.write("\t\t\t\t\t\t%s_subscriber newVal = subscriber.makeValueHandler_%s(null);\n", value, member.name.c_str());
 					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, \"value\", newVal);\n", value);
 					f.write("\t\t\t\t\t\tI%s oldValue = subscriber.lazy_%s_handlers()[key];\n", value, member.name.c_str());
 					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers()[key] = newVal;\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s[key] = v;\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s[key] = v;\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tif (!newVal.isEquivalent(oldValue))\n");
 					f.write("\t\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\t\t\tcurrentChanged = true;\n");
@@ -715,11 +728,11 @@ namespace {
 					f.write("\t\t\t\t\tcase Publishable.ActionOnDictionary.insert:\n");
 					f.write("\t\t\t\t\t{\n");
 					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
-					f.write("\t\t\t\t\t\tI%s v = new %s();\n", value, value);
-					f.write("\t\t\t\t\t\t%s_subscriber newVal = subscriber.makeValueHandler_%s(v);\n", value, member.name.c_str());
+					// f.write("\t\t\t\t\t\tI%s v = new %s();\n", value, value);
+					f.write("\t\t\t\t\t\t%s_subscriber newVal = subscriber.makeValueHandler_%s(null);\n", value, member.name.c_str());
 					f.write("\t\t\t\t\t\t%s_subscriber.parse(parser, \"value\", newVal);\n", value);
 					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Add(key, newVal);\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s.Add(key, v);\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s.Add(key, v);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
 					f.write("\t\t\t\t\t\tsubscriber.notifyInserted_%s(key);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tbreak;\n");
@@ -732,7 +745,7 @@ namespace {
 					f.write("\t\t\t\t\t\t%s key = parser.parse%s(\"key\");\n", key, idlKey);
 					f.write("\t\t\t\t\t\tI%s oldVal = subscriber.lazy_%s_handlers()[key];\n", value, member.name.c_str());
 					f.write("\t\t\t\t\t\tsubscriber.lazy_%s_handlers().Remove(key);\n", member.name.c_str());
-					f.write("\t\t\t\t\t\tsubscriber._data.%s.Remove(key);\n", member.name.c_str());
+					// f.write("\t\t\t\t\t\tsubscriber._data.%s.Remove(key);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tcurrentChanged = true;\n");
 					f.write("\t\t\t\t\t\tsubscriber.notifyRemoved_%s(key, oldVal);\n", member.name.c_str());
 					f.write("\t\t\t\t\t\tbreak;\n");
@@ -1005,7 +1018,7 @@ namespace {
 					const char* elem = getCSharpPrimitiveType(member.type.vectorElemKind);
 					const char* idl = getIdlPrimitiveType(member.type.vectorElemKind);
 					f.write("\t\tcomposer.composeVector2(\"%s\", t.%s,\n", member.name.c_str(), member.name.c_str());
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", elem, idl);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", elem, idl);
 					f.write("\t\t\t%s);\n", last);
 					break;
 				}
@@ -1045,8 +1058,8 @@ namespace {
 					const char* value = getCSharpPrimitiveType(member.type.dictionaryValueKind);
 					const char* idlValue = getIdlPrimitiveType(member.type.dictionaryValueKind);
 					f.write("\t\tcomposer.composeDictionary(\"%s\", t.%s,\n", member.name.c_str(), member.name.c_str());
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", key, idlKey);
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", value, idlValue);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", key, idlKey);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", value, idlValue);
 					f.write("\t\t\t%s);\n", last);
 					break;
 				}
@@ -1055,7 +1068,7 @@ namespace {
 				{
 					const char* value = member.type.name.c_str();
 					f.write("\t\tcomposer.composeDictionary(\"%s\", t.%s,\n", member.name.c_str(), member.name.c_str());
-					f.write("\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", key, idlKey);
+					f.write("\t\t\t(IPublishableComposer c, %s v) => { c.compose%s(null, v, false); },\n", key, idlKey);
 					f.write("\t\t\t%s_publisher.compose,\n", value);
 					f.write("\t\t\t%s);\n", last);
 					break;
@@ -1376,6 +1389,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t\t\t\t%s_subscriber handler = makeElementHandler_%s(this._data.%s[i]);\n", elem_type_name, member.name.c_str(), member.name.c_str());
 			f.write("\t\t\t\t%s_handlers.Add(handler);\n", member.name.c_str());
 			f.write("\t\t\t}\n");
+			f.write("\t\t\tthis._data.%s.Clear();\n", member.name.c_str());
 			f.write("\t\t}\n");
 			f.write("\t\treturn %s_handlers;\n", member.name.c_str());
 			f.write("\t}\n");
@@ -1425,6 +1439,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t\t\t\t%s_subscriber handler = makeValueHandler_%s(each.Value);\n", elem_type_name, member.name.c_str(), member.name.c_str());
 			f.write("\t\t\t\t%s_handlers.Add(each.Key, handler);\n", member.name.c_str());
 			f.write("\t\t\t}\n");
+			f.write("\t\t\tthis._data.%s.Clear();\n", member.name.c_str());
 			f.write("\t\t}\n");
 			f.write("\t\treturn %s_handlers;\n", member.name.c_str());
 			f.write("\t}\n");
@@ -1743,7 +1758,7 @@ void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const cha
 	if (s.type == CompositeType::Type::publishable)
 		f.write("\tpublic %s_subscriber() { this._data = new %s(); }\n", type_name, type_name);
 	else
-		f.write("\tpublic %s_subscriber(I%s data) { this._data = data; }\n", type_name, type_name);
+		f.write("\tpublic %s_subscriber(I%s data) { this._data = data ?? new %s(); }\n", type_name, type_name, type_name);
 
 
 	auto& mem = s.getMembers();
@@ -1764,14 +1779,6 @@ void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const cha
 		csharpPub_generateStateSubscriberBase(f, s, type_name);
 
 	csharpPub_generateSubscriberResetHandlers(f, s);
-
-	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	f.write("\tpublic void debugOnlySetData(I%s data)\n", type_name);
-	f.write("\t{\n");
-	f.write("\t\tthis._data = data;\n");
-	f.write("\t\tthis._reset_handlers();\n");
-	f.write("\t}\n");
-
 
 	f.write("} // class %s_subscriber\n\n", type_name);
 
@@ -1838,9 +1845,6 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 		f.write("\t}\n");
 	}
 
-
-	//f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	//f.write("\tpublic I%s debugOnlyGetData() { return this.t; }\n", type_name.c_str());
 
 	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
 	f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name);

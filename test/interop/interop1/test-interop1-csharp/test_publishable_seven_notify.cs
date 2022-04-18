@@ -196,9 +196,10 @@ namespace test_interop2_csharp
                     Events.notifyUpdated,
                     Events.notifyUpdated_realVec,
                     Events.notifyUpdated,
-                    //Events.notifyUpdated_x,
-                    //Events.notifyUpdated_y,
-                    //Events.notifyUpdated_z,
+                    Events.notifyUpdated_x,
+                    Events.notifyUpdated_y,
+                    Events.notifyUpdated_z,
+                    Events.notifyUpdated,
                     Events.notifyUpdated_structVec,
                     Events.notifyUpdated
                 }

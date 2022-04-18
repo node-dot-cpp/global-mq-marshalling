@@ -471,7 +471,7 @@ void testStateSync3(std::string fileName, std::function<void(typename Types::Pub
 
         subs.parseStateSyncMessage(parser);
 
-        EXPECT(typename Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
+        EXPECT(Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
 }
 
 
@@ -505,13 +505,13 @@ void testUpdate3(std::string fileNameInit, std::string fileNameUpdate,
     Types::ExpectAreEqual(expected, b);
 
 
-    EXPECT_NOT(typename Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
+    EXPECT_NOT(Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
     auto it = b.getReadIter();
     typename Types::ParserT parser(it);
 
     subs.applyMessageWithUpdates(parser);
 
-    EXPECT(typename Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
+    EXPECT(Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
 }
 
 #endif // TEST_COMMON_H_INCLUDED

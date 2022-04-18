@@ -162,11 +162,14 @@ namespace test_interop2_csharp
 
             Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
         }
-        static void TestParseUpdate(Protocol proto, String fileName, Func<mtest.publishable_dictionary> getState, Action<mtest.Ipublishable_dictionary> updateDelegate)
+        static void TestParseUpdate(Protocol proto, String fileNameInit, String fileName, Func<mtest.publishable_dictionary> getState, Action<mtest.Ipublishable_dictionary> updateDelegate)
         {
             mtest.publishable_dictionary_subscriber subs = new mtest.publishable_dictionary_subscriber();
-            mtest.publishable_dictionary data = getState();
-            subs.debugOnlySetData(data);
+            //mtest.publishable_dictionary data = getState();
+            //subs.debugOnlySetData(data);
+            SimpleBuffer bufferInit = SimpleBuffer.readFromFile(fileNameInit);
+            IPublishableParser parserInit = makePublishableParser(proto, bufferInit.getReadIterator());
+            subs.applyStateSyncMessage(parserInit);
 
             SimpleBuffer buffer = SimpleBuffer.readFromFile(fileName);
             IPublishableParser parser = makePublishableParser(proto, buffer.getReadIterator());
@@ -214,7 +217,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestJsonParseUpdate1()
         {
-            TestParseUpdate(Protocol.Json, JsonPath_u1, GetPublishableDictionary_0, doUpdate1);
+            TestParseUpdate(Protocol.Json, JsonPath_s0, JsonPath_u1, GetPublishableDictionary_0, doUpdate1);
         }
 
 
@@ -227,7 +230,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestJsonParseUpdate2()
         {
-            TestParseUpdate(Protocol.Json, JsonPath_u2, GetPublishableDictionary_1, doUpdate2);
+            TestParseUpdate(Protocol.Json, JsonPath_s1, JsonPath_u2, GetPublishableDictionary_1, doUpdate2);
         }
 
         [Fact]
@@ -239,7 +242,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestJsonParseUpdate3()
         {
-            TestParseUpdate(Protocol.Json, JsonPath_u3, GetPublishableDictionary_1, doUpdate3);
+            TestParseUpdate(Protocol.Json, JsonPath_s1, JsonPath_u3, GetPublishableDictionary_1, doUpdate3);
         }
 
 
@@ -276,7 +279,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestGmqParseUpdate1()
         {
-            TestParseUpdate(Protocol.Gmq, GmqPath_u1, GetPublishableDictionary_0, doUpdate1);
+            TestParseUpdate(Protocol.Gmq, GmqPath_s0, GmqPath_u1, GetPublishableDictionary_0, doUpdate1);
         }
 
 
@@ -289,7 +292,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestGmqParseUpdate2()
         {
-            TestParseUpdate(Protocol.Gmq, GmqPath_u2, GetPublishableDictionary_1, doUpdate2);
+            TestParseUpdate(Protocol.Gmq, GmqPath_s1, GmqPath_u2, GetPublishableDictionary_1, doUpdate2);
         }
         [Fact]
         public static void TestGmqComposeUpdate3()
@@ -300,7 +303,7 @@ namespace test_interop2_csharp
         [Fact]
         public static void TestGmqParseUpdate3()
         {
-            TestParseUpdate(Protocol.Gmq, GmqPath_u3, GetPublishableDictionary_1, doUpdate3);
+            TestParseUpdate(Protocol.Gmq, GmqPath_s1, GmqPath_u3, GetPublishableDictionary_1, doUpdate3);
         }
     }
 

@@ -421,7 +421,6 @@ namespace globalmq.marshalling
             status = Status.connected;
         }
         public bool isConnected() { return status == Status.connected; }
-        public abstract void onMessage(IPublishableParser parser);
         public void postMessage(BufferT buff)
         {
             Debug.Assert(isConnected());
@@ -434,7 +433,9 @@ namespace globalmq.marshalling
             Debug.Assert(status == Status.addedToPool);
             pool.connect(connID, path);
         }
-        public void onConnectionAccepted() { }
+        public virtual void onConnectionAccepted() { }
+        public abstract void onMessage(ReadIteratorT parser);
+
         //virtual ~ClientConnectionBase()
         //{
         //	// TODO: check status for being disconnected
@@ -596,7 +597,7 @@ namespace globalmq.marshalling
                             throw new Exception(); // TODO: revise
                         Debug.Assert(conn.ref_id_at_server == mh.ref_id_at_publisher); // self-consistency
                                                                                        //ReadIteratorT riter = parser.getIterator();
-                        conn.connection.onMessage(parser);
+                        conn.connection.onMessage(parser.getIterator());
                         //parser = riter;
                         break;
                     }

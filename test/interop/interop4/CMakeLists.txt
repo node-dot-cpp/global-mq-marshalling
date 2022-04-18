@@ -5,14 +5,18 @@
 add_subdirectory(test-interop4-cplusplus)
 
 add_custom_command(
-    COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop4.idl ${CMAKE_CURRENT_SOURCE_DIR}/test-interop4-csharp/generated_interop4.cs --csharp -m=mtest
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test-interop4-csharp/generated_interop4.cs
-    DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop4.idl
+    COMMAND idl_compiler interop4.idl test-interop4-csharp/generated_interop4.cs --csharp -m=mtest
+    OUTPUT test-interop4-csharp/generated_interop4.cs
+    DEPENDS idl_compiler
+    MAIN_DEPENDENCY interop4.idl
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_custom_target(test-interop4-csharp-idl ALL
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-interop4-csharp/generated_interop4.cs
-)
+# add_custom_target(test-interop4-csharp-generated ALL
+#     COMMAND idl_compiler interop4.idl test-interop4-csharp/generated_interop4.cs --csharp -m=mtest
+#     DEPENDS idl_compiler test-interop4-csharp/generated_interop4.cs
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+# )
 
 
 if(MSVC)
