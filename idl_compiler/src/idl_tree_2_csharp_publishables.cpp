@@ -1830,7 +1830,13 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 	csharpPub_generateCompose(f, s, type_name);
 
 	if (s.type == CompositeType::Type::publishable)
+	{
 		csharpPub_generateStatePublishableBase(f, s, type_name);
+		f.write("\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
+		f.write("\t{\n");
+		f.write("\t\tthis.t = %s_subscriber.parseForStateSync(parser);\n", type_name);
+		f.write("\t}\n");
+	}
 
 
 	//f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");

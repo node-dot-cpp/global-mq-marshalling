@@ -447,5 +447,71 @@ void testNotify2(std::string fileNameInit, std::string fileNameUpdate, std::vect
     EXPECT(subs.getEvents() == events);
 }
 
+template<typename Types>
+void testStateSync3(std::string fileName, std::function<void(typename Types::PublishableT&)> doUpdatePub, lest::env & lest_env)
+{
+        typename Types::PublishableT publ;
+        publ.startTick(BufferT());
+        doUpdatePub(publ);
+        publ.endTick();
+
+        BufferT b;
+        typename Types::ComposerT composer(b);
+
+        publ.generateStateSyncMessage(composer);
+
+        auto expected = makeBuffer(fileName);
+        Types::ExpectAreEqual(expected, b);
+
+
+        typename Types::SubscriberT subs;
+
+        auto it = b.getReadIter();
+        typename Types::ParserT parser(it);
+
+        subs.parseStateSyncMessage(parser);
+
+        EXPECT(typename Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
+}
+
+
+template<typename Types>
+void testUpdate3(std::string fileNameInit, std::string fileNameUpdate,
+                        std::function<void(typename Types::PublishableT&)> doUpdatePub,
+                        lest::env& lest_env)
+{
+    typename Types::PublishableT publ;
+    typename Types::SubscriberT subs;
+    
+    auto buffInit = makeBuffer(fileNameInit);
+    auto it1 = buffInit.getReadIter();
+
+    typename Types::ParserT parserInit(it1);
+
+    publ.parseStateSyncMessage(parserInit);
+
+    auto it2 = buffInit.getReadIter();
+    typename Types::ParserT parserInit2(it2);
+
+    subs.parseStateSyncMessage(parserInit2);
+
+    //////////////
+
+    publ.startTick(BufferT());
+    doUpdatePub(publ);
+    BufferT b = publ.endTick();
+
+    auto expected = makeBuffer(fileNameUpdate);
+    Types::ExpectAreEqual(expected, b);
+
+
+    EXPECT_NOT(typename Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
+    auto it = b.getReadIter();
+    typename Types::ParserT parser(it);
+
+    subs.applyMessageWithUpdates(parser);
+
+    EXPECT(typename Types::SubscriberT::isSame(subs, publ.debugOnlyGetState()));
+}
 
 #endif // TEST_COMMON_H_INCLUDED
