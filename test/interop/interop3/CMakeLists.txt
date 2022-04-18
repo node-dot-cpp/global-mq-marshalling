@@ -12,9 +12,9 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# add_custom_target(test-interop3-csharp-idl ALL
-#     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-interop3-csharp/generated_interop3.cs
-# )
+add_custom_target(test-interop3-csharp-generated ALL
+    DEPENDS test-interop3-csharp/generated_interop3.cs
+)
 
 
 if(MSVC)
