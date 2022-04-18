@@ -433,29 +433,36 @@ void generateDiscriminatedUnionCaseStruct2( FILE* header, CompositeType& ducs, c
 			fprintf( header, "%s\t%s %s;\n", offset, getSubscriberCppType( m.type ).c_str(), m.name.c_str() );
 	}
 
-	fprintf( header, "%s\tbool operator==(const %s& other) const\n", offset, typeName.c_str() );
-	fprintf( header, "%s\t{\n", offset );
-	fprintf( header, "%s\t\treturn\n", offset );
+	fprintf( header, "\t\t%s() {}\n", typeName.c_str() );
+
+	fprintf( header, "\t\t%s( const %s &other ) = delete;\n", typeName.c_str(), typeName.c_str() );
+	fprintf( header, "\t\t%s& operator = ( const %s &other) = delete;\n", typeName.c_str(), typeName.c_str() );
+	fprintf( header, "\t\t%s( %s&& other) noexcept = default;\n", typeName.c_str(), typeName.c_str() );
+	fprintf( header, "\t\t%s& operator = ( %s&& other) noexcept = default;\n", typeName.c_str(), typeName.c_str() );
+
+	// fprintf( header, "%s\tbool operator==(const %s& other) const\n", offset, typeName.c_str() );
+	// fprintf( header, "%s\t{\n", offset );
+	// fprintf( header, "%s\t\treturn\n", offset );
 	
-	auto& members = ducs.getMembers();
-	for ( size_t i = 0; i != members.size(); ++i )
-	{
-		auto& mem = *members[i];
-		if ( mem.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
+	// auto& members = ducs.getMembers();
+	// for ( size_t i = 0; i != members.size(); ++i )
+	// {
+	// 	auto& mem = *members[i];
+	// 	if ( mem.type.kind == MessageParameterType::KIND::EXTENSION )
+	// 		continue;
 
-		if(i != 0)
-			fprintf( header, " &&\n" );
+	// 	if(i != 0)
+	// 		fprintf( header, " &&\n" );
 
-		fprintf( header, "%s\t\t\tthis->%s == other.%s", offset, mem.name.c_str(), mem.name.c_str() );
-	}
-	fprintf( header, ";\n" );
-	fprintf( header, "%s\t}\n", offset );
+	// 	fprintf( header, "%s\t\t\tthis->%s == other.%s", offset, mem.name.c_str(), mem.name.c_str() );
+	// }
+	// fprintf( header, ";\n" );
+	// fprintf( header, "%s\t}\n", offset );
 
-	fprintf( header, "%s\tbool operator!=(const %s& other) const\n", offset, typeName.c_str() );
-	fprintf( header, "%s\t{\n", offset );
-	fprintf( header, "%s\t\treturn !this->operator==(other);\n", offset );
-	fprintf( header, "%s\t}\n", offset );
+	// fprintf( header, "%s\tbool operator!=(const %s& other) const\n", offset, typeName.c_str() );
+	// fprintf( header, "%s\t{\n", offset );
+	// fprintf( header, "%s\t\treturn !this->operator==(other);\n", offset );
+	// fprintf( header, "%s\t}\n", offset );
 
 	fprintf( header, "%s};\n", offset );
 
@@ -593,23 +600,26 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isF
 	fprintf( header, "\n" );
 
 	// copiers
-	fprintf( header, "\tvoid implCopyFrom( const %s& other ) {\n", typeName.c_str() );
-	fprintf( header, "\t\tif ( v != other.v )\n" );
-	fprintf( header, "\t\t\timplDeinit();\n" );
-	fprintf( header, "\t\tswitch ( other.v )\n" );
-	fprintf( header, "\t\t{\n" );
-	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	if(!isForSubscriber)
 	{
-		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
-		fprintf( header, "\t\t\tcase Variants::%s:\n", name );
-		fprintf( header, "\t\t\t\tnew ( %s ) Case_%s( *reinterpret_cast<const Case_%s*>( other.%s ) );\n", memName.c_str(), name, name, memName.c_str() );
-		fprintf( header, "\t\t\t\tbreak;\n" );
+		fprintf( header, "\tvoid implCopyFrom( const %s& other ) {\n", typeName.c_str() );
+		fprintf( header, "\t\tif ( v != other.v )\n" );
+		fprintf( header, "\t\t\timplDeinit();\n" );
+		fprintf( header, "\t\tswitch ( other.v )\n" );
+		fprintf( header, "\t\t{\n" );
+		for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+		{
+			const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+			fprintf( header, "\t\t\tcase Variants::%s:\n", name );
+			fprintf( header, "\t\t\t\tnew ( %s ) Case_%s( *reinterpret_cast<const Case_%s*>( other.%s ) );\n", memName.c_str(), name, name, memName.c_str() );
+			fprintf( header, "\t\t\t\tbreak;\n" );
+		}
+		fprintf( header, "\t\t\tcase Variants::unknown: break;\n" );
+		fprintf( header, "\t\t}\n" );
+		fprintf( header, "\t\tv = other.v;\n" );
+		fprintf( header, "\t}\n" );
+		fprintf( header, "\n" );
 	}
-	fprintf( header, "\t\t\tcase Variants::unknown: break;\n" );
-	fprintf( header, "\t\t}\n" );
-	fprintf( header, "\t\tv = other.v;\n" );
-	fprintf( header, "\t}\n" );
-	fprintf( header, "\n" );
 
 	fprintf( header, "\tvoid implMoveFrom( %s&& other ) {\n", typeName.c_str() );
 	fprintf( header, "\t\tif ( v != other.v )\n" );
@@ -629,33 +639,26 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isF
 	fprintf( header, "\t\tother.v = Variants::unknown;\n" );
 	fprintf( header, "\t}\n" );
 	fprintf( header, "\n" );
-
 	fprintf( header, "public:\n" );
 
 	// ctors, drtors...
 	fprintf( header, "\t%s() {}\n", typeName.c_str() );
 
-	fprintf( header, "\t%s( const %s &other ) {\n", typeName.c_str(), typeName.c_str() );
-	fprintf( header, "\t\timplCopyFrom( other );\n" );
-	fprintf( header, "\t}\n" );
+	if(isForSubscriber)
+	{
+		fprintf( header, "\t%s( const %s &other ) = delete;\n", typeName.c_str(), typeName.c_str() );
+		fprintf( header, "\t%s& operator = ( const %s &other) = delete;\n", typeName.c_str(), typeName.c_str() );
+	}
+	else
+	{
+		fprintf( header, "\t%s( const %s &other ) { implCopyFrom( other ); }\n", typeName.c_str(), typeName.c_str() );
+		fprintf( header, "\t%s& operator = ( const %s &other) { implCopyFrom( other ); return *this; }\n", typeName.c_str(), typeName.c_str() );
+	}
 
-	fprintf( header, "\t%s& operator = ( const %s &other) {\n", typeName.c_str(), typeName.c_str() );
-	fprintf( header, "\t\timplCopyFrom( other );\n" );
-	fprintf( header, "\t\treturn *this;\n" );
-	fprintf( header, "\t}\n" );
+	fprintf( header, "\t%s( %s&& other) noexcept { implMoveFrom( std::move( other ) ); }\n", typeName.c_str(), typeName.c_str() );
+	fprintf( header, "\t%s& operator = ( %s&& other) noexcept { implMoveFrom( std::move( other ) ); return *this; }\n", typeName.c_str(), typeName.c_str() );
 
-	fprintf( header, "\t%s( %s&& other) noexcept {\n", typeName.c_str(), typeName.c_str() );
-	fprintf( header, "\t\timplMoveFrom( std::move( other ) );\n" );
-	fprintf( header, "\t}\n" );
-
-	fprintf( header, "\t%s& operator = ( %s&& other) noexcept {\n", typeName.c_str(), typeName.c_str() );
-	fprintf( header, "\t\timplMoveFrom( std::move( other ) );\n" );
-	fprintf( header, "\t\treturn *this;\n" );
-	fprintf( header, "\t}\n" );
-
-	fprintf( header, "\tvirtual ~%s() {\n", typeName.c_str() );
-	fprintf( header, "\t\timplDeinit();\n" );
-	fprintf( header, "\t}\n" );
+	fprintf( header, "\tvirtual ~%s() { implDeinit(); }\n", typeName.c_str() );
 
 	fprintf( header, "\tVariants currentVariant() const { return v; }\n" );
 
@@ -709,33 +712,35 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isF
 		}
 	}
 
-	fprintf( header, "\tbool operator==(const %s& other) const\n", typeName.c_str() );
-	fprintf( header, "\t{\n");
-	fprintf( header, "\t\tif(this->currentVariant() != other.currentVariant())\n" );
-	fprintf( header, "\t\t\treturn false;\n" );
-	
-	fprintf( header, "\t\tswitch ( this->currentVariant() )\n" );
-	fprintf( header, "\t\t{\n" );
-	for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+	if(!isForSubscriber)
 	{
-		const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
-		fprintf( header, "\t\t\tcase Variants::%s:\n", name );
-		fprintf( header, "\t\t\t\treturn reinterpret_cast<const Case_%s*>( %s )->operator==(*reinterpret_cast<const Case_%s*>( other.%s ));\n", name, memName.c_str(), name, memName.c_str() );
+		fprintf( header, "\tbool operator==(const %s& other) const\n", typeName.c_str() );
+		fprintf( header, "\t{\n");
+		fprintf( header, "\t\tif(this->currentVariant() != other.currentVariant())\n" );
+		fprintf( header, "\t\t\treturn false;\n" );
+		
+		fprintf( header, "\t\tswitch ( this->currentVariant() )\n" );
+		fprintf( header, "\t\t{\n" );
+		for ( size_t i=0; i<du.getDiscriminatedUnionCases().size(); ++i )
+		{
+			const char* name = du.getDiscriminatedUnionCases()[i]->name.c_str();
+			fprintf( header, "\t\t\tcase Variants::%s:\n", name );
+			fprintf( header, "\t\t\t\treturn reinterpret_cast<const Case_%s*>( %s )->operator==(*reinterpret_cast<const Case_%s*>( other.%s ));\n", name, memName.c_str(), name, memName.c_str() );
+		}
+		fprintf( header, "\t\t\tcase Variants::unknown:\n" );
+		fprintf( header, "\t\t\t\treturn true;\n" );
+		fprintf( header, "\t\t\tdefault:\n" );
+		fprintf( header, "\t\t\t\treturn false;\n" );
+		fprintf( header, "\t\t}\n" );
+		fprintf( header, "\t\treturn false;\n" );
+
+		fprintf( header, "\t}\n" );
+
+		fprintf( header, "\tbool operator!=(const %s& other) const\n", typeName.c_str() );
+		fprintf( header, "\t{\n" );
+		fprintf( header, "\t\treturn !this->operator==(other);\n" );
+		fprintf( header, "\t}\n" );
 	}
-	fprintf( header, "\t\t\tcase Variants::unknown:\n" );
-	fprintf( header, "\t\t\t\treturn true;\n" );
-	fprintf( header, "\t\t\tdefault:\n" );
-	fprintf( header, "\t\t\t\treturn false;\n" );
-	fprintf( header, "\t\t}\n" );
-	fprintf( header, "\t\treturn false;\n" );
-
-	fprintf( header, "\t}\n" );
-
-	fprintf( header, "\tbool operator!=(const %s& other) const\n", typeName.c_str() );
-	fprintf( header, "\t{\n" );
-	fprintf( header, "\t\treturn !this->operator==(other);\n" );
-	fprintf( header, "\t}\n" );
-
 
 
 	fprintf( header, "};\n\n" );

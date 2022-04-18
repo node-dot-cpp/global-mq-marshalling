@@ -13,6 +13,7 @@ add_executable(test-interop4-cplusplus
     main.cpp
     test_common.h
     test_publishable_cycle.cpp
+    test_publishable_html_tag.cpp
     test_simple.cpp
 )
 
