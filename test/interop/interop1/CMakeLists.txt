@@ -9,14 +9,16 @@ endif()
 
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test-interop1-csharp/generated_interop1.cs
-    COMMAND idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop1.idl ${CMAKE_CURRENT_SOURCE_DIR}/test-interop1-csharp/generated_interop1.cs --csharp -m=mtest
-    DEPENDS idl_compiler ${CMAKE_CURRENT_SOURCE_DIR}/interop1.idl
+    OUTPUT test-interop1-csharp/generated_interop1.cs
+    COMMAND idl_compiler interop1.idl test-interop1-csharp/generated_interop1.cs --csharp -m=mtest
+    DEPENDS idl_compiler
+    MAIN_DEPENDENCY interop1.idl
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_custom_target(test-interop1-csharp-idl ALL
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-interop1-csharp/generated_interop1.cs
-)
+# add_custom_target(test-interop1-csharp-idl ALL
+#     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-interop1-csharp/generated_interop1.cs
+# )
 
 
 if(MSVC)
