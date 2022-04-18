@@ -844,10 +844,10 @@ void impl_GeneratePublishableStructWrapper4Set( FILE* header, Root& root, Compos
 
 void generatePublishable( FILE* header, Root& root, CompositeType& s, const GenerationConfig& config )
 {
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(s);
+	// checked = impl_checkFollowingExtensionRules(s) && checked;
+	// if ( !checked )
+	// 	throw std::exception();
 
 	assert( ( config.platformPrefix.size() == 0 && config.classNotifierName.size() == 0 ) || ( config.platformPrefix.size() != 0 && config.classNotifierName.size() != 0 ) );
 	bool generatePlatformSpec = config.platformPrefix.size() != 0 && config.classNotifierName.size() != 0;

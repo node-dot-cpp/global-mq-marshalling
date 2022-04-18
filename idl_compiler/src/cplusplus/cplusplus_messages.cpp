@@ -618,10 +618,10 @@ void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Comp
 
 void generateMessage( FILE* header, Root& root, CompositeType& s, const std::string& messageName, const GenerationConfig& config)
 {
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(s);
+	// checked = impl_checkFollowingExtensionRules(s) && checked;
+	// if ( !checked )
+	// 	throw std::exception();
 
 	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
@@ -640,9 +640,9 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const Gen
 	CompositeType& alias = *(root.structs[s.aliasIdx]);
 	assert( s.aliasOf == alias.name );
 
-	bool checked = impl_checkFollowingExtensionRules(s);
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkFollowingExtensionRules(s);
+	// if ( !checked )
+	// 	throw std::exception();
 
 	generateMessage(header, root, alias, s.name, config);
 }

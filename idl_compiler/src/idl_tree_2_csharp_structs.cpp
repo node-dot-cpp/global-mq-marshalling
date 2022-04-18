@@ -30,18 +30,18 @@
 
 #include <set>
 
-void checkCsharpStruct(CompositeType& s)
-{
-	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
-		s.type == CompositeType::Type::discriminated_union_case ||
-		s.type == CompositeType::Type::discriminated_union ||
-		s.type == CompositeType::Type::publishable) ;
+// void checkCsharpStruct(CompositeType& s)
+// {
+// 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+// 		s.type == CompositeType::Type::discriminated_union_case ||
+// 		s.type == CompositeType::Type::discriminated_union ||
+// 		s.type == CompositeType::Type::publishable) ;
 
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if (!checked)
-		throw std::exception();
-}
+// 	// bool checked = impl_checkParamNameUniqueness(s);
+// 	// checked = impl_checkFollowingExtensionRules(s) && checked;
+// 	// if (!checked)
+// 	// 	throw std::exception();
+// }
 
 std::string getCaseTypeName(CompositeType& s)
 {

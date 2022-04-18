@@ -172,6 +172,11 @@ bool impl_checkDiscriminatedUnions(Root& s)
 			for ( auto& ducase: cases )
 			{
 				assert( ducase->type == CompositeType::Type::discriminated_union_case );
+				if ( ducase->numID == 0 )
+				{
+					fprintf( stderr, "line %d: CASE VALUE \'0\' is reserved and cannot be used as a CASE VALUE\n", ducase->location.lineNumber );
+					ok = false;
+				}
 				auto ins = values.insert( std::make_pair( ducase->numID, ducase->location ) );
 				if ( !ins.second )
 				{
@@ -202,17 +207,19 @@ bool impl_checkDiscriminatedUnions(Root& s)
 
 bool impl_checkParamNameUniqueness(CompositeType& s, std::map<string, Location>& names)
 {
+	assert( s.type != CompositeType::Type::discriminated_union );
+
 	bool ok = true;
-	if ( s.type == CompositeType::Type::discriminated_union )
-	{
-		for ( auto& it : s.getDiscriminatedUnionCases() )
-		{
-			assert( it != nullptr );
-			impl_checkParamNameUniqueness( *it );
-		}
-	}
-	else
-	{
+	// if ( s.type == CompositeType::Type::discriminated_union )
+	// {
+	// 	for ( auto& it : s.getDiscriminatedUnionCases() )
+	// 	{
+	// 		assert( it != nullptr );
+	// 		impl_checkParamNameUniqueness( *it );
+	// 	}
+	// }
+	// else
+	// {
 		for ( auto& it : s.getMembers() )
 		{
 			if ( it->type.kind == MessageParameterType::KIND::EXTENSION )
@@ -224,7 +231,7 @@ bool impl_checkParamNameUniqueness(CompositeType& s, std::map<string, Location>&
 				ok = false;
 			}
 		}
-	}
+	// }
 	return ok;
 }
 
@@ -243,6 +250,37 @@ bool impl_checkParamNameUniqueness(CompositeType& s)
 	}
 	else
 		return impl_checkParamNameUniqueness( s, names );
+}
+
+bool checkParamNameUniqueness(Root& root)
+{
+	bool ok = true;
+
+	for ( auto& it : root.structs )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+		ok = impl_checkParamNameUniqueness(*it) && ok;
+	}
+
+	for ( auto& it : root.messages )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::message );
+		ok = impl_checkParamNameUniqueness(*it) && ok;
+	}
+
+	for ( auto& it : root.publishables )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::publishable );
+		ok = impl_checkParamNameUniqueness(*it) && ok;
+	}
+
+	return ok;
 }
 
 
@@ -289,6 +327,36 @@ bool impl_checkFollowingExtensionRules(CompositeType& s)
 	}
 	else
 		return impl_checkFollowingExtensionRules( s, extMarkFound, names );
+}
+
+bool checkFollowingExtensionRules(Root& root)
+{
+	bool ok = true;
+	for ( auto& it : root.structs )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+		ok = impl_checkFollowingExtensionRules(*it) && ok;
+	}
+
+	for ( auto& it : root.messages )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::message );
+		ok = impl_checkFollowingExtensionRules(*it) && ok;
+	}
+
+	for ( auto& it : root.publishables )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::publishable );
+		ok = impl_checkFollowingExtensionRules(*it) && ok;
+	}
+
+	return ok;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -920,6 +988,10 @@ void preprocessRoot( Root& s )
 {
 	bool ok = impl_checkCompositeTypeNameUniqueness(s);
 	ok = impl_checkDiscriminatedUnions(s) && ok;
+
+	ok = checkParamNameUniqueness(s) && ok;
+	ok = checkFollowingExtensionRules(s) && ok;
+
 	ok = impl_processScopes(s) && ok;
 	ok = impl_processCompositeTypeNamesInMessagesAndPublishables(s) && ok;
 	if (!ok)

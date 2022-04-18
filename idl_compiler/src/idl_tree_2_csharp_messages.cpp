@@ -935,7 +935,7 @@ void generateCsharpMessageScope(CsharpWritter f, Root& root, Scope& scope)
 		assert(it != nullptr);
 		assert(it->type == CompositeType::Type::message);
 
-		checkCsharpStruct(*it);
+		// checkCsharpStruct(*it);
 
 		if (!it->isAlias)
 		{

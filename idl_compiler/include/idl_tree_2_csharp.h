@@ -61,7 +61,7 @@ public:
 
 //shared by message and publishables
 
-void checkCsharpStruct(CompositeType& s);
+// void checkCsharpStruct(CompositeType& s);
 std::string getCaseTypeName(CompositeType& s);
 const char* getCSharpPrimitiveType(MessageParameterType::KIND kind);
 const char* getIdlPrimitiveType(MessageParameterType::KIND kind);

@@ -636,10 +636,10 @@ void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if (!checked)
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(s);
+	// checked = impl_checkFollowingExtensionRules(s) && checked;
+	// if (!checked)
+	// 	throw std::exception();
 
 
 	impl_generateMessageCommentBlock(f.getFile(), s);

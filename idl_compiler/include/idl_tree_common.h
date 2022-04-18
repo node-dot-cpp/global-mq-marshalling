@@ -31,8 +31,8 @@
 #include "idl_tree.h"
 
 const char* impl_kindToString( MessageParameterType::KIND kind );
-bool impl_checkParamNameUniqueness(CompositeType& s);
-bool impl_checkFollowingExtensionRules(CompositeType& s);
+bool checkParamNameUniqueness(Root& root);
+bool checkFollowingExtensionRules(Root& root);
 void impl_CollectParamNamesFromMessage( std::set<string>& params, std::set<string>& caseParams, CompositeType& s );
 bool impl_processCompositeTypeNamesInMessagesAndPublishables(Root& s, CompositeType& ct, std::vector<CompositeType*>& stack, bool isCollectionElementType = false );
 void impl_CollectMessageParamNamesFromRoot( std::set<string>& params, std::set<string>& caseParams, Root& s );

@@ -315,9 +315,9 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 {
 	assert( ducs.type == CompositeType::Type::publishable || ducs.type == CompositeType::Type::message || ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
 
-	bool checked = impl_checkParamNameUniqueness(ducs);
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(ducs);
+	// if ( !checked )
+	// 	throw std::exception();
 
 	if ( ducs.type == CompositeType::Type::message )
 	{
@@ -394,9 +394,9 @@ void generateDiscriminatedUnionCaseStruct2( FILE* header, CompositeType& ducs, c
 {
 	assert( ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
 
-	bool checked = impl_checkParamNameUniqueness(ducs);
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(ducs);
+	// if ( !checked )
+	// 	throw std::exception();
 
 	// if ( ducs.type == CompositeType::Type::message )
 	// {
@@ -970,21 +970,19 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 } //namespace cplusplus
 
-void generateCplusplus( const char* fileName, uint32_t fileChecksum, FILE* header, const char* metascope, const std::string& platformPrefix, const std::string& classNotifierName, Root& s )
+void generateCplusplus( FILE* header, Root& s, GenerationConfig config)
 {
-	GenerationConfig config;
+	if(config.composerNames.empty())
+	{
+		config.composerNames.push_back("IComposer2");
+		config.composerNames.push_back("GmqComposer");
+	}
 
-	config.fileChecksum = fileChecksum;
-	config.fileName = fileName;
-	config.metascope = metascope;
-	config.platformPrefix = platformPrefix;
-	config.classNotifierName = classNotifierName;
-
-	config.composerNames.push_back("IComposer2");
-	config.composerNames.push_back("GmqComposer");
-	
-	config.parserNames.push_back("IParser2");
-	config.parserNames.push_back("GmqParser");
+	if(config.parserNames.empty())
+	{
+		config.parserNames.push_back("IParser2");
+		config.parserNames.push_back("GmqParser");
+	}	
 
 	cplusplus::generateRoot(header, s, config);
 }

@@ -316,9 +316,9 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 {
 	assert( ducs.type == CompositeType::Type::publishable || ducs.type == CompositeType::Type::message || ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
 
-	bool checked = impl_checkParamNameUniqueness(ducs);
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(ducs);
+	// if ( !checked )
+	// 	throw std::exception();
 
 	if ( ducs.type == CompositeType::Type::message )
 	{

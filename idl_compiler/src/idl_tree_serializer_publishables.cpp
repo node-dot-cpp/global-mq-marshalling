@@ -2720,10 +2720,10 @@ void generateNotifierPresenceTesterBlock( FILE* header, Root& root )
 
 void generatePublishable( FILE* header, Root& root, CompositeType& s, std::string platformPrefix, std::string classNotifierName )
 {
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(s);
+	// checked = impl_checkFollowingExtensionRules(s) && checked;
+	// if ( !checked )
+	// 	throw std::exception();
 
 	assert( ( platformPrefix.size() == 0 && classNotifierName.size() == 0 ) || ( platformPrefix.size() != 0 && classNotifierName.size() != 0 ) );
 	bool generatePlatformSpec = platformPrefix.size() != 0 && classNotifierName.size() != 0;

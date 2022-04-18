@@ -44,10 +44,11 @@ int main( int argc, char *argv[] )
 
 	std::string idlPath = argv[1];
 	std::string targetPath = argv[2];
-	std::string metascope = "m";
-	std::string platformPrefix;
-	std::string classNotifierName;
-	std::string csharpFile;
+	// std::string metascope = "m";
+	// std::string platformPrefix;
+	// std::string classNotifierName;
+	// std::string csharpFile;
+	GenerationConfig config;
 	bool isCsharp = false;
 	bool isCplusplus = false;
 	bool isCppTemplates = false;
@@ -93,8 +94,8 @@ int main( int argc, char *argv[] )
 			string key = entry.substr( 0, separPos );
 			if ( key == "-m" )
 			{
-				metascope = entry.substr( separPos + 1 );
-				if ( metascope == "" )
+				config.metascope = entry.substr( separPos + 1 );
+				if ( config.metascope == "" )
 				{
 					fmt::print( "metascope (-m) option, if specified, must not be empty {}\n", key );
 					return 0;
@@ -102,8 +103,8 @@ int main( int argc, char *argv[] )
 			}
 			else if ( key == "-p" )
 			{
-				platformPrefix = entry.substr( separPos + 1 );
-				if ( platformPrefix == "" )
+				config.platformPrefix = entry.substr( separPos + 1 );
+				if ( config.platformPrefix == "" )
 				{
 					fmt::print( "platformprefix (-p) option, if specified, must not be empty {}\n", key );
 					return 0;
@@ -111,12 +112,32 @@ int main( int argc, char *argv[] )
 			}
 			else if ( key == "-c" )
 			{
-				classNotifierName = entry.substr( separPos + 1 );
-				if ( classNotifierName == "" )
+				config.classNotifierName = entry.substr( separPos + 1 );
+				if ( config.classNotifierName == "" )
 				{
 					fmt::print( "notifier class name (-c) option, if specified, must not be empty {}\n", key );
 					return 0;
 				}
+			}
+			else if ( key == "--parser" )
+			{
+				string parserName = entry.substr( separPos + 1 );
+				if ( parserName == "" )
+				{
+					fmt::print( "parser class name (--parser) option, if specified, must not be empty.\n" );
+					return 0;
+				}
+				config.parserNames.push_back(parserName);
+			}
+			else if ( key == "--composer" )
+			{
+				string composerName = entry.substr( separPos + 1 );
+				if ( composerName == "" )
+				{
+					fmt::print( "composer class name (--composer) option, if specified, must not be empty.\n" );
+					return 0;
+				}
+				config.composerNames.push_back(composerName);
 			}
 			else
 			{
@@ -126,7 +147,7 @@ int main( int argc, char *argv[] )
 		}
 	}
 
-	if ( ( classNotifierName.size() == 0 && platformPrefix.size() != 0 ) || ( classNotifierName.size() != 0 && platformPrefix.size() == 0 ) )
+	if ( ( config.classNotifierName.size() == 0 && config.platformPrefix.size() != 0 ) || ( config.classNotifierName.size() != 0 && config.platformPrefix.size() == 0 ) )
 	{
 		fmt::print( "platformprefix (-p)  and notifier class name (-c) options must either be both specified or not\n" );
 		return 0;
@@ -135,7 +156,7 @@ int main( int argc, char *argv[] )
 	size_t lastSlash = targetPath.find_last_of( "\\/" );
 	if ( lastSlash == std::string::npos )
 		lastSlash = 0;
-	std::string fileName = targetPath.substr( lastSlash );
+	string fileName = targetPath.substr( lastSlash );
 	if ( fileName.size() == 0 )
 	{
 		fmt::print( "failed to identify header file name\n" );
@@ -148,24 +169,25 @@ int main( int argc, char *argv[] )
 		}
 	}
 
+	config.fileName = fileName;
 //	try
-	{
-		uint32_t chksm = idlFileChecksum( idlPath );
-		Root* root = parseSourceFile(idlPath, false);
-		printRoot( *root );
+	// {
+	config.fileChecksum = idlFileChecksum( idlPath );
+	Root* root = parseSourceFile(idlPath, false);
+	printRoot( *root );
 
-		preprocessRoot( *root );
+	preprocessRoot( *root );
 
-		FILE* header = fopen(targetPath.c_str(), "wb");
+	FILE* header = fopen(targetPath.c_str(), "wb");
 
-		if (isCsharp)
-			generateCsharp(header, *root, metascope.c_str());
-		else if(isCplusplus)
-			generateCplusplus(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
-		else
-			generateCppTemplates(fileName.c_str(), chksm, header, metascope.c_str(), platformPrefix, classNotifierName, *root);
+	if (isCsharp)
+		generateCsharp(header, *root, config.metascope.c_str());
+	else if(isCplusplus)
+		generateCplusplus(header, *root, config);
+	else
+		generateCppTemplates(config.fileName.c_str(), config.fileChecksum, header, config.metascope.c_str(), config.platformPrefix, config.classNotifierName, *root);
 
-	}
+	// }
 	/*catch ( std::exception& x )
 	{
 		fmt::print( "Exception happened: {}\n", x.what() );
