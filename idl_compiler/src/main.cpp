@@ -1,4 +1,7 @@
 /* -------------------------------------------------------------------------------
+* Copyright (C) 2022 Six Impossible Things Before Breakfast Limited.
+* All rights reserved.
+* 
 * Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
@@ -44,10 +47,6 @@ int main( int argc, char *argv[] )
 
 	std::string idlPath = argv[1];
 	std::string targetPath = argv[2];
-	// std::string metascope = "m";
-	// std::string platformPrefix;
-	// std::string classNotifierName;
-	// std::string csharpFile;
 	GenerationConfig config;
 	bool isCsharp = false;
 	bool isCplusplus = false;
