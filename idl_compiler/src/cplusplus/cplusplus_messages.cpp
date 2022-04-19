@@ -301,85 +301,6 @@ void impl_generateParamTypeLIst( FILE* header, CompositeType& s )
 	fprintf( header, "\n" );
 }
 
-//void impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( FILE* header, CompositeType& s, int& count, const char* offset )
-//{
-//	assert( s.type != CompositeType::Type::discriminated_union );
-//	for ( auto& it : s.getMembers() )
-//	{
-//		assert( it != nullptr );
-//
-//		MessageParameter& param = *it;
-//		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-//			continue;
-//		++count;
-//
-//		switch ( param.type.kind )
-//		{
-//			case MessageParameterType::KIND::INTEGER:
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, int64_t, int64_t, (int64_t)(%lld)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (int64_t)(param.type.numericalDefault), count );
-//				break;
-//			case MessageParameterType::KIND::UINTEGER:
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
-//				break;
-//			case MessageParameterType::KIND::REAL:
-//			{
-//				FloatingParts parts(param.type.numericalDefault);
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, FloatingDefault<%lldll,%lldll>, int, 0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", parts.fraction, parts.exponent, count );
-//				break;
-//			}
-//			case MessageParameterType::KIND::CHARACTER_STRING:
-//				if ( param.type.hasDefault )
-//					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, false, nodecpp::string, const ::globalmq::marshalling::impl::StringLiteralForComposing*, &%s::default_%d>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, impl_MessageNameToDefaultsNamespaceName(s.name).c_str(), count, count );
-//				else
-//					fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, true, uint64_t, uint64_t, (uint64_t)0>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, count );
-//				break;
-//			case MessageParameterType::KIND::BYTE_ARRAY:
-//				break;
-//			case MessageParameterType::KIND::BLOB:
-//				break;
-//			case MessageParameterType::KIND::ENUM:
-//				break;
-//			case MessageParameterType::KIND::VECTOR:
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
-//				break;
-//			case MessageParameterType::KIND::DICTIONARY: // TODO: revise
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(%llu)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", (uint64_t)(param.type.numericalDefault), count );
-//				break;
-//			case MessageParameterType::KIND::EXTENSION:
-//				break; // TODO: treatment
-//			case MessageParameterType::KIND::STRUCT:
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
-//				break; // TODO: treatment
-//			case MessageParameterType::KIND::DISCRIMINATED_UNION:
-//				fprintf( header, "%s::globalmq::marshalling::impl::gmq::composeParamToGmq<ComposerT, arg_%d_type, %s, uint64_t, uint64_t, (uint64_t)(0)>(composer, arg_%d_type::nameAndTypeID, args...);\n", offset, count, param.type.hasDefault ? "false" : "true", count );
-//				break;
-//			default:
-//			{
-//				assert( false ); // unexpected
-//				break;
-//			}
-//		}
-//	}
-//}
-//
-//void impl_generateParamCallBlockForComposingGmq( FILE* header, CompositeType& s, const char* offset )
-//{
-//	int count = 0;
-//	if ( s.isDiscriminatedUnion() )
-//	{
-//		for ( auto& it: s.getDiscriminatedUnionCases() )
-//		{
-//			assert( it != nullptr );
-//			CompositeType& cs = *it;
-//			assert( cs.type == CompositeType::Type::discriminated_union_case );
-//			impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, cs, count, offset );
-//		}
-//	}
-//	else
-//		impl_generateParamCallBlockForComposingGmq_MemberIterationBlock( header, s, count, offset );
-//
-//}
-
 void impl_generateMatchCountBlock_MemberIterationBlock( FILE* header, CompositeType& s, int& count )
 {
 	assert( s.type != CompositeType::Type::discriminated_union );
@@ -511,78 +432,7 @@ void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s
 
 void impl_generateParamCallBlockForComposing( FILE* header, CompositeType& s, const std::string& composerType )
 {
-	//size_t protoCount = s.protoList.size();
-	//if ( protoCount == 1 )
-	//{
-	//	switch ( *(s.protoList.begin()) )
-	//	{
-	//		case Proto::gmq:
-	//		{
-	//			fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::GMQ, \"this %s assumes only GMQ protocol\" );\n", s.type2string() );
-	//			impl_generateParamCallBlockForComposingGmq( header, s, "\t" );
-	//			break;
-	//		}
-	//		case Proto::json:
-	//		{
-				//fprintf( header, "\tstatic_assert( ComposerT::proto == Proto::JSON, \"this %s assumes only JSON protocol\" );\n", s.type2string() );
-				impl_generateParamCallBlockForComposingJson( header, s, "\t", composerType);
-	//			break;
-	//		}
-	//		default:
-	//			assert( false );
-	//	}
-	//}
-	//else
-	//{
-	//	size_t processedProtoCount = 0;
-	//	// if present, keep GMQ first!
-	//	if ( s.protoList.find( Proto::gmq ) != s.protoList.end() )
-	//	{
-	//		++processedProtoCount;
-	//		fprintf( header, 
-	//			"\tif constexpr( ComposerT::proto == Proto::GMQ )\n"
-	//			"\t{\n" );
-	//		impl_generateParamCallBlockForComposingGmq( header, s, "\t\t" );
-	//		fprintf( header, "\t}\n" );
-	//	}
-	//	// then add the rest
-	//	for ( auto it:s.protoList )
-	//	{
-	//		++processedProtoCount;
-	//		switch ( it )
-	//		{
-	//			case Proto::gmq:
-	//				break; // already done
-	//			case Proto::json:
-	//			{
-	//				// NOTE: currently we have only two protocols; if more, we need to be a bit more delicate with 'else if' constructions
-	//				if ( processedProtoCount == 0 )
-	//				{
-	//					fprintf( header, 
-	//						"\tif constexpr ( ComposerT::proto == Proto::JSON )\n"
-	//						"\t{\n" );
-	//				}
-	//				else
-	//				{
-	//					if ( processedProtoCount == protoCount )
-	//						fprintf( header, 
-	//							"\telse\n"
-	//							"\t{\n"
-	//							"\t\tstatic_assert( ComposerT::proto == Proto::JSON );\n" );
-	//					else
-	//						fprintf( header, 
-	//							"\telse if constexpr ( ComposerT::proto == Proto::JSON )\n"
-	//							"\t{\n" );
-	//				}
-	//				impl_generateParamCallBlockForComposingJson( header, s, "\t\t" );
-	//				fprintf( header, "\n\t}\n" );
-	//				break;
-	//			}
-	//			default:
-	//				assert( false );
-	//		}
-	//	}
-	//}
+	impl_generateParamCallBlockForComposingJson( header, s, "\t", composerType);
 }
 
 void impl_generateComposeFunction( FILE* header, CompositeType& s, const std::string& messageName, const std::string& composerType )
@@ -618,11 +468,6 @@ void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Comp
 
 void generateMessage( FILE* header, Root& root, CompositeType& s, const std::string& messageName, const GenerationConfig& config)
 {
-	// bool checked = impl_checkParamNameUniqueness(s);
-	// checked = impl_checkFollowingExtensionRules(s) && checked;
-	// if ( !checked )
-	// 	throw std::exception();
-
 	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
 
@@ -639,10 +484,6 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s, const Gen
 	assert( s.aliasIdx < root.structs.size() );
 	CompositeType& alias = *(root.structs[s.aliasIdx]);
 	assert( s.aliasOf == alias.name );
-
-	// bool checked = impl_checkFollowingExtensionRules(s);
-	// if ( !checked )
-	// 	throw std::exception();
 
 	generateMessage(header, root, alias, s.name, config);
 }

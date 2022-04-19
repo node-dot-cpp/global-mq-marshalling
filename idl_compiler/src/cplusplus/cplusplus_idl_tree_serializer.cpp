@@ -75,105 +75,6 @@ void generateMessageParamNameBlock( FILE* header, const std::set<string>& params
 	fprintf( header, "\n\n" );
 }
 
-void generatePublishableMemberNameBlock( FILE* header, const std::set<string>& names )
-{
-	fprintf( header, "// member name presence checkers\n" );
-	for ( auto name : names )
-		fprintf( header, "template<typename T> concept has_%s_member = requires { { T::%s }; };\n", name.c_str(), name.c_str() );
-	fprintf( header, "\n\n" );
-}
-
-/*void generatePublishableCaseMemberNameBlock( FILE* header, const std::set<string>& names )
-{
-	fprintf( header, "// member accessor presence checkers\n" );
-	for ( auto name : names )
-	{
-		fprintf( header, "template<typename T> concept has_%s_getter = requires(T t) { { t.get_%s() }; };\n", name.c_str(), name.c_str() );
-		fprintf( header, "template<typename T> concept has_%s_setter = requires(T t) { { t.set_%s() }; };\n", name.c_str(), name.c_str() );
-	}
-	fprintf( header, "\n\n" );
-}*/
-
-// void orderStructsByDependency( std::vector<unique_ptr<CompositeType>> &structs, std::vector<CompositeType*>& out, std::unordered_set<size_t>& collElementTypes )
-// {
-// 	size_t processed = 0;
-// 	std::vector<CompositeType*> tmpStructs;
-// 	while ( processed < structs.size() )
-// 	{
-// 		for ( auto& s : structs )
-// 			if ( s->type == CompositeType::Type::structure && s->dependsOnCnt != -1 )
-// 				for ( auto& member : s->getMembers() )
-// 				{
-// 					if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-// 						structs[member->type.structIdx]->dependsOnCnt = 1;
-// 					else if ( member->type.kind == MessageParameterType::KIND::VECTOR )
-// 					{
-// 						if ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-// 						{
-// 							assert( member->type.structIdx < structs.size() );
-// 							collElementTypes.insert( member->type.structIdx );
-// 							structs[member->type.structIdx]->isStruct4Publishing = structs[member->type.structIdx]->isStruct4Publishing || s->isStruct4Publishing;
-// 							structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
-// 						}
-// 					}
-// 					else if (member->type.kind == MessageParameterType::KIND::DICTIONARY)
-// 					{
-// 						if (member->type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member->type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION)
-// 						{
-// 							assert(member->type.structIdx < structs.size());
-// 							collElementTypes.insert(member->type.structIdx);
-// 							structs[member->type.structIdx]->isStruct4Publishing = structs[member->type.structIdx]->isStruct4Publishing || s->isStruct4Publishing;
-// 							structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
-// 						}
-// 					}
-// 				}
-// 			else if ( s->type == CompositeType::Type::discriminated_union && s->dependsOnCnt != -1 )
-// 				for ( auto& cs : s->getDiscriminatedUnionCases() )
-// 					for ( auto& member : cs->getMembers() )
-// 					{
-// 						if ( member->type.kind == MessageParameterType::KIND::STRUCT || member->type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-// 							structs[member->type.structIdx]->dependsOnCnt = 1;
-// 						else if ( member->type.kind == MessageParameterType::KIND::VECTOR )
-// 						{
-// 							if ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-// 							{
-// 								assert( member->type.structIdx < structs.size() );
-// 								collElementTypes.insert( member->type.structIdx );
-// 								structs[member->type.structIdx]->isStruct4Publishing = structs[member->type.structIdx]->isStruct4Publishing || s->isStruct4Publishing;
-// 								structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
-// 							}
-// 						}
-// 						else if (member->type.kind == MessageParameterType::KIND::DICTIONARY)
-// 						{
-// 							if (member->type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || member->type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION)
-// 							{
-// 								assert(member->type.structIdx < structs.size());
-// 								collElementTypes.insert(member->type.structIdx);
-// 								structs[member->type.structIdx]->isStruct4Publishing = structs[member->type.structIdx]->isStruct4Publishing || s->isStruct4Publishing;
-// 								structs[member->type.structIdx]->isStruct4Messaging = structs[member->type.structIdx]->isStruct4Messaging || s->isStruct4Messaging;
-// 							}
-// 						}
-// 						//						else if ( member->type.kind == MessageParameterType::KIND::VECTOR && ( member->type.vectorElemKind == MessageParameterType::KIND::STRUCT || member->type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION ) )
-// //							structs[member->type.structIdx]->dependsOnCnt = 1;
-// 					}
-// 		for ( auto& s : structs )
-// 			if ( ( s->type == CompositeType::Type::structure || s->type == CompositeType::Type::discriminated_union ) && s->dependsOnCnt == 0 )
-// 			{
-// 				tmpStructs.push_back( s.get() );
-// 				s->dependsOnCnt = -1;
-// 				++processed;
-// 			}
-// 		for ( auto& s : structs )
-// 			if ( ( s->type == CompositeType::Type::structure || s->type == CompositeType::Type::discriminated_union ) && s->dependsOnCnt != -1 )
-// 				s->dependsOnCnt = 0;
-// 	}
-// 	for ( size_t i=0; i<tmpStructs.size(); ++i )
-// 		out.push_back( tmpStructs[tmpStructs.size()-1-i] );
-// 	assert( out.size() == structs.size() );
-
-// 	for (auto& s : structs)
-// 		s->dependsOnCnt = 0;
-// }
 
 void addLibAliasingBlock( FILE* header )
 {
@@ -187,14 +88,6 @@ void addLibAliasingBlock( FILE* header )
 	fprintf( header, "using JsonParser = globalmq::marshalling2::JsonParser2<Buffer>;\n" );
 	fprintf( header, "using IComposer2 = globalmq::marshalling2::IComposer2<Buffer>;\n" );
 	fprintf( header, "using IParser2 = globalmq::marshalling2::IParser2<Buffer>;\n" );
-	// fprintf( header, "template<class T>\n" );
-	// fprintf( header, "class SimpleTypeCollectionWrapper : public globalmq::marshalling::SimpleTypeCollectionWrapper<T> { public: SimpleTypeCollectionWrapper( T& coll ) : globalmq::marshalling::SimpleTypeCollectionWrapper<T>( coll ) {} };\n" );
-	// fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );
-	// fprintf( header, "class CollectionWrapperForComposing : public globalmq::marshalling::CollectionWrapperForComposing<LambdaSize, LambdaNext> { public: CollectionWrapperForComposing(LambdaSize &&lsize, LambdaNext &&lnext) : globalmq::marshalling::CollectionWrapperForComposing<LambdaSize, LambdaNext>(std::forward<LambdaSize>(lsize), std::forward<LambdaNext>(lnext)) {} };\n" );
-	// fprintf( header, "template<class LambdaCompose>\n" );
-	// fprintf( header, "class MessageWrapperForComposing : public globalmq::marshalling::MessageWrapperForComposing<LambdaCompose> { public: MessageWrapperForComposing(LambdaCompose &&lcompose) : globalmq::marshalling::MessageWrapperForComposing<LambdaCompose>( std::forward<LambdaCompose>(lcompose) ) {} };\n" );
-	// fprintf( header, "template<class LambdaSize, class LambdaNext>\n" );
-	// fprintf( header, "class CollectionWrapperForParsing : public globalmq::marshalling::CollectionWrapperForParsing<LambdaSize, LambdaNext> { public: CollectionWrapperForParsing(LambdaSize &&lsizeHint, LambdaNext &&lnext) : globalmq::marshalling::CollectionWrapperForParsing<LambdaSize, LambdaNext>(std::forward<LambdaSize>(lsizeHint), std::forward<LambdaNext>(lnext)) {} };\n" );
 	fprintf( header, "template<typename msgID_, class LambdaHandler>\n" );
 	fprintf( header, "MessageHandler<msgID_, LambdaHandler> makeMessageHandler( LambdaHandler &&lhandler ) { return globalmq::marshalling::makeMessageHandler<msgID_, LambdaHandler>(std::forward<LambdaHandler>(lhandler)); }\n" );
 	fprintf( header, "template<class LambdaHandler>\n" );
@@ -233,7 +126,7 @@ void generateStateConcentratorFactory( FILE* header, Root& root )
 std::string impl_generateDiscriminatedUnionCaseStructName( CompositeType& s )
 {
 	assert( s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::message || s.type == CompositeType::Type::discriminated_union_case || s.type == CompositeType::Type::structure );
-//	return fmt::format( "{}_{}", s.type2string(), s.name );
+
 	if ( s.type == CompositeType::Type::message )
 		return fmt::format( "MESSAGE_{}", s.name );
 	else
@@ -315,10 +208,6 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 {
 	assert( ducs.type == CompositeType::Type::publishable || ducs.type == CompositeType::Type::message || ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
 
-	// bool checked = impl_checkParamNameUniqueness(ducs);
-	// if ( !checked )
-	// 	throw std::exception();
-
 	if ( ducs.type == CompositeType::Type::message )
 	{
 		if ( ducs.isAlias )
@@ -390,27 +279,9 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 	fprintf( header, "\n" );
 }
 
-void generateDiscriminatedUnionCaseStruct2( FILE* header, CompositeType& ducs, const char* offset )
+void generateDUnionCaseForSubscriber( FILE* header, CompositeType& ducs, const char* offset )
 {
-	assert( ducs.type == CompositeType::Type::structure || ducs.type == CompositeType::Type::discriminated_union_case );
-
-	// bool checked = impl_checkParamNameUniqueness(ducs);
-	// if ( !checked )
-	// 	throw std::exception();
-
-	// if ( ducs.type == CompositeType::Type::message )
-	// {
-	// 	if ( ducs.isAlias )
-	// 	{
-	// 		fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
-	// 		fprintf( header, "%susing %s%s = %s;\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str(), ducs.aliasOf.c_str() );
-	// 		fprintf( header, "} // namespace %s\n", ducs.scopeName.c_str() );
-	// 		fprintf( header, "\n" );
-	// 		return;
-	// 	}
-	// 	else
-	// 		fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
-	// }
+	assert( ducs.type == CompositeType::Type::discriminated_union_case );
 
 	string typeName = ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "";
 	typeName += impl_generateDiscriminatedUnionCaseStructName( ducs );
@@ -418,13 +289,9 @@ void generateDiscriminatedUnionCaseStruct2( FILE* header, CompositeType& ducs, c
 	fprintf( header, "%s{\n", offset );
 	for ( auto& mbit: ducs.getMembers() )
 	{
-		assert( mbit != nullptr );
 		auto& m = *mbit;
-		assert( typeid( m ) == typeid( MessageParameter ) );
-		assert( m.type.kind != MessageParameterType::KIND::UNDEFINED );
 		if ( m.type.kind == MessageParameterType::KIND::EXTENSION )
 			continue;
-
 
 		if ( m.type.kind == MessageParameterType::KIND::INTEGER || m.type.kind == MessageParameterType::KIND::UINTEGER ||
 			m.type.kind == MessageParameterType::KIND::REAL || m.type.kind == MessageParameterType::KIND::ENUM)
@@ -440,34 +307,7 @@ void generateDiscriminatedUnionCaseStruct2( FILE* header, CompositeType& ducs, c
 	fprintf( header, "\t\t%s( %s&& other) noexcept = default;\n", typeName.c_str(), typeName.c_str() );
 	fprintf( header, "\t\t%s& operator = ( %s&& other) noexcept = default;\n", typeName.c_str(), typeName.c_str() );
 
-	// fprintf( header, "%s\tbool operator==(const %s& other) const\n", offset, typeName.c_str() );
-	// fprintf( header, "%s\t{\n", offset );
-	// fprintf( header, "%s\t\treturn\n", offset );
-	
-	// auto& members = ducs.getMembers();
-	// for ( size_t i = 0; i != members.size(); ++i )
-	// {
-	// 	auto& mem = *members[i];
-	// 	if ( mem.type.kind == MessageParameterType::KIND::EXTENSION )
-	// 		continue;
-
-	// 	if(i != 0)
-	// 		fprintf( header, " &&\n" );
-
-	// 	fprintf( header, "%s\t\t\tthis->%s == other.%s", offset, mem.name.c_str(), mem.name.c_str() );
-	// }
-	// fprintf( header, ";\n" );
-	// fprintf( header, "%s\t}\n", offset );
-
-	// fprintf( header, "%s\tbool operator!=(const %s& other) const\n", offset, typeName.c_str() );
-	// fprintf( header, "%s\t{\n", offset );
-	// fprintf( header, "%s\t\treturn !this->operator==(other);\n", offset );
-	// fprintf( header, "%s\t}\n", offset );
-
 	fprintf( header, "%s};\n", offset );
-
-	// if ( ducs.type == CompositeType::Type::message )
-	// 	fprintf( header, "} // namespace %s\n", ducs.scopeName.c_str() );
 
 	fprintf( header, "\n" );
 }
@@ -521,8 +361,9 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isF
 
 	fprintf( header, "{\n" );
 	fprintf( header, "public:\n" );
-	fprintf( header, "\tenum Variants { " );
+
 	// list of cases
+	fprintf( header, "\tenum Variants { " );
 	std::string concatenatedNames;
 	for ( auto& duit: du.getDiscriminatedUnionCases() )
 	{
@@ -539,14 +380,11 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isF
 	fprintf( header, "\tVariants v = Variants::unknown;\n" );
 
 	// list of structures
-	if(isForSubscriber)
+	for ( auto& duit: du.getDiscriminatedUnionCases() )
 	{
-		for ( auto& duit: du.getDiscriminatedUnionCases() )
-			generateDiscriminatedUnionCaseStruct2( header, *duit, "\t" );
-	}
-	else
-	{
-		for ( auto& duit: du.getDiscriminatedUnionCases() )
+		if(isForSubscriber)
+			generateDUnionCaseForSubscriber( header, *duit, "\t" );
+		else
 			generateStructOrDiscriminatedUnionCaseStruct( header, *duit, "\t" );
 	}
 
@@ -561,8 +399,8 @@ void generateDiscriminatedUnionObject( FILE* header, CompositeType& du, bool isF
 	}
 	fprintf( header, "\n" );
 
-	std::string memName;
 	// memory and its size
+	std::string memName;
 	fprintf( header, "private:\n" );
 	if ( du.getDiscriminatedUnionCases().size() )
 	{
@@ -777,9 +615,6 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	impl_insertScopeList( header, s );
 
 	generateMessageParamNameBlock( header, msgParams );
-	// generatePublishableMemberNameBlock( header, publishableMembers );
-//	generatePublishableCaseMemberNameBlock( header, publishableCaseMembers );
-	// generateNotifierPresenceTesterBlock( header, s );
 
 	vector<CompositeType*> structsOrderedByDependency;
 	std::unordered_set<size_t> collElementTypes;
@@ -823,8 +658,10 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	for ( auto it : structsOrderedByDependency )
 		fprintf( header, "// %s\n", it->name.c_str() );
 
+
+	//// data structures ////
+
 	fprintf( header, "//===============================================================================\n" );
-	fprintf( header, "// C-structures for idl STRUCTs, DISCRIMINATED_UNIONs, MESSAGEs and PUBLISHABLEs\n" );
 	fprintf( header, "\n" );
 	fprintf( header, "namespace structures {\n" );
 	fprintf( header, "\n" );
@@ -835,7 +672,7 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		if ( it->type == CompositeType::Type::discriminated_union )
 			fprintf( header, "class %s;\n", it->name.c_str() );
 		else
-			fprintf( header, "struct %s;\n", impl_generateDiscriminatedUnionCaseStructName( *it ).c_str() );
+			fprintf( header, "struct %s;\n", it->name.c_str() );
 	}
 
 	fprintf( header, "\n" );
@@ -862,7 +699,9 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 	fprintf( header, "} // namespace structures\n" );
 	fprintf( header, "\n//===============================================================================\n\n" );
 
-	for ( auto& it : structsOrderedByDependency ) // TODO: avoid dulication of the above
+	//// publishables forward decls ////
+
+	for ( auto& it : structsOrderedByDependency )
 	{
 		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
 		impl_generateHelperForwardDeclaration( header, s, *it );
@@ -876,6 +715,8 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 
 	fprintf( header, "\n" );
 
+	//// publishables declarations ////
+
 	for ( auto it : structsOrderedByDependency )
 	{
 		impl_generateHelperDeclaration( header, s, *it, config );
@@ -883,21 +724,35 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 			generatePublishableDeclaration2( header, s, *it, config );
 	}
 
+	for ( auto& it : s.publishables )
+	{
+		impl_generateHelperDeclaration( header, s, *it, config );
+		generatePublishableDeclaration2( header, s, *it, config );
+	}
+
+	//// publishables definitions ////
+
 	for ( auto it : structsOrderedByDependency )
 	{
 		impl_generateHelperDefinition( header, s, *it, config );
 		if ( it->isStruct4Publishing )
+		{
 			generatePublishableDefinition2(header, s, *it, config);
+			impl_GeneratePublishableStructWrapper( header, s, *it );
+			impl_GeneratePublishableStructWrapper4Set( header, s, *it );
+		}
 	}
 
 
 	for ( auto& it : s.publishables )
 	{
-		impl_generateHelperDeclaration( header, s, *it, config );
 		impl_generateHelperDefinition( header, s, *it, config );
-		generatePublishableDeclaration2( header, s, *it, config );
 		generatePublishableDefinition2(header, s, *it, config);
 	}
+
+	fprintf( header, "\n//===============================================================================\n\n" );
+
+	//// messages ////
 
 	for ( auto& scope : s.scopes )
 	{
@@ -948,16 +803,6 @@ void generateRoot( FILE* header, Root& s, const GenerationConfig& config)
 		fprintf( header, "\n//===============================================================================\n\n" );
 	}
 
-	for ( auto& it : structsOrderedByDependency )
-	{
-		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
-		if ( it->isStruct4Publishing )
-		{
-			impl_GeneratePublishableStructWrapper( header, s, *it );
-			impl_GeneratePublishableStructWrapper4Set( header, s, *it );
-		}
-	}
-
 	fprintf( header, "\n"
 		"} // namespace %s\n"
 		"\n"
@@ -974,14 +819,14 @@ void generateCplusplus( FILE* header, Root& s, GenerationConfig config)
 {
 	if(config.composerNames.empty())
 	{
-		config.composerNames.push_back("IComposer2");
 		config.composerNames.push_back("GmqComposer");
+		config.composerNames.push_back("JsonComposer");
 	}
 
 	if(config.parserNames.empty())
 	{
-		config.parserNames.push_back("IParser2");
 		config.parserNames.push_back("GmqParser");
+		config.parserNames.push_back("JsonParser");
 	}	
 
 	cplusplus::generateRoot(header, s, config);

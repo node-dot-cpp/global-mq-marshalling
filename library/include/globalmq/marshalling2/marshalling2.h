@@ -39,11 +39,13 @@ public:
 	virtual ~ComposerBase() {}
 };
 
-// mb: this is a reference interface for a composer. not really to be used virtually 
+/// mb: this is a reference interface for a composer. not really to be used 
 template<class BufferT>
 class IComposer2 : public ComposerBase
 {
 public:
+	virtual ~IComposer2() {}
+
 	using BufferType = BufferT;
 	static constexpr int proto = -1;
 
@@ -76,54 +78,56 @@ public:
 	virtual void stateSyncEnd() = 0;
 
 	virtual void composeAction(uint64_t action) = 0;
-
-	virtual ~IComposer2() {}
 };
 
 template<class BufferT>
-class JsonComposer2 : public IComposer2<BufferT>
+class JsonComposer2 : public ComposerBase
 {
 public:
 	BufferT& buff; //public because of impl::json::composeXXX, remove
 
 	JsonComposer2(BufferT& buff) : buff(buff) {}
+	virtual ~JsonComposer2() {}
 
-	virtual void reset() override {}
-	virtual void appendRaw(typename BufferT::ReadIteratorT it, size_t count = SIZE_MAX) override { buff.append(it, count); }
+	using BufferType = BufferT;
+	static constexpr int proto = -1;
 
-	virtual void composeSignedInteger(int64_t val) override { globalmq::marshalling::impl::json::composeSignedInteger(*this, val); }
-	virtual void composeUnsignedInteger(uint64_t val) override { globalmq::marshalling::impl::json::composeUnsignedInteger(*this, val); }
-	virtual void composeReal(double val) override { globalmq::marshalling::impl::json::composeReal(*this, val); }
-	virtual void composeString(const GMQ_COLL string& val) override { globalmq::marshalling::impl::json::composeString(*this, val); }
+	void reset() {}
+	void appendRaw(typename BufferT::ReadIteratorT it, size_t count = SIZE_MAX) { buff.append(it, count); }
 
-	virtual void structBegin() override { buff.appendUint8( '{' ); }
-	virtual void structEnd() override { buff.appendUint8( '}' ); }
+	void composeSignedInteger(int64_t val) { globalmq::marshalling::impl::json::composeSignedInteger(*this, val); }
+	void composeUnsignedInteger(uint64_t val) { globalmq::marshalling::impl::json::composeUnsignedInteger(*this, val); }
+	void composeReal(double val) { globalmq::marshalling::impl::json::composeReal(*this, val); }
+	void composeString(const GMQ_COLL string& val) { globalmq::marshalling::impl::json::composeString(*this, val); }
 
-	virtual void vectorBegin(uint64_t sz) override { buff.appendUint8( '[' ); }
-	virtual void vectorEnd() override { buff.appendUint8( ']' ); }
+	void structBegin() { buff.appendUint8( '{' ); }
+	void structEnd() { buff.appendUint8( '}' ); }
 
-	virtual void dictionaryBegin(uint64_t sz) override { buff.appendUint8( '{' ); }
-	virtual void dictionaryEnd() override { buff.appendUint8( '}' ); }
+	void vectorBegin(uint64_t sz) { buff.appendUint8( '[' ); }
+	void vectorEnd() { buff.appendUint8( ']' ); }
 
-	virtual void namedParamBegin(const char* name) override { globalmq::marshalling::impl::json::addNamePart(*this, name); }
-	virtual void leafeBegin() override { namedParamBegin("value"); }
-	virtual void nextElement() override { buff.appendUint8( ',' ); }
+	void dictionaryBegin(uint64_t sz) { buff.appendUint8( '{' ); }
+	void dictionaryEnd() { buff.appendUint8( '}' ); }
 
-	virtual void changeBegin(const GMQ_COLL vector<uint64_t>& addr, uint64_t last) override
+	void namedParamBegin(const char* name) { globalmq::marshalling::impl::json::addNamePart(*this, name); }
+	void leafeBegin() { namedParamBegin("value"); }
+	void nextElement() { buff.appendUint8( ',' ); }
+
+	void changeBegin(const GMQ_COLL vector<uint64_t>& addr, uint64_t last)
 	{
 		structBegin();
 		composeAddressInPublishable2(*this, addr, last);
 	}
 
-	virtual void changeEnd() override { structEnd(); nextElement(); }
+	void changeEnd() { structEnd(); nextElement(); }
 
-	virtual void stateUpdateBegin() override
+	void stateUpdateBegin()
 	{
 		structBegin();
 		namedParamBegin("changes");
 		buff.appendUint8( '[' );
 	}
-	virtual void stateUpdateEnd() override
+	void stateUpdateEnd()
 	{
 		buff.appendUint8( '{' );
 		buff.appendUint8( '}' );
@@ -131,16 +135,14 @@ public:
 		structEnd();
 	}
 
-	virtual void stateSyncBegin() override { structBegin(); namedParamBegin("hdr"); }
-	virtual void stateSyncEnd() override { structEnd(); }
+	void stateSyncBegin() { structBegin(); namedParamBegin("hdr"); }
+	void stateSyncEnd() { structEnd(); }
 
-	virtual void composeAction(uint64_t action) override
+	void composeAction(uint64_t action)
 	{
 		namedParamBegin("action");
 		composeUnsignedInteger(action);
 	}
-
-	virtual ~JsonComposer2() {}
 };
 
 template<class BufferT>
@@ -150,6 +152,7 @@ public:
 	BufferT& buff; //public because of impl::json::composeXXX, remove
 
 	GmqComposer2( BufferT& buff ) : buff(buff) {}
+	virtual ~GmqComposer2() {}
 
 	using BufferType = BufferT;
 	static constexpr int proto = -1;
@@ -186,6 +189,7 @@ public:
 
 	void composeAction(uint64_t action) { composeUnsignedInteger(action); }
 };
+
 
 inline
 GMQ_COLL vector<uint64_t> makeAddress(const GMQ_COLL vector<uint64_t>& addr, uint64_t last)
@@ -274,11 +278,13 @@ public:
 	virtual ~ParserBase() {}
 };
 
-// mb: this is a reference interface for a composer. not really to be used virtually 
+/// mb: this is a reference interface for a parser. not really to be used 
 template<class BufferT>
 class IParser2 : public ParserBase
 {
 public:
+	virtual ~IParser2() {}
+
 	using BufferType = BufferT;
 	using RiterT = typename BufferT::ReadIteratorT;
 	static constexpr int proto = -1;
@@ -314,40 +320,43 @@ public:
 	virtual void stateSyncEnd() = 0;
 
 	virtual uint64_t parseAction() = 0;
-
-	virtual ~IParser2() {}
 };
 
-// mb: this is a reference interface for a composer. not really to be used virtually
 template<class BufferT>
-class JsonParser2 : public IParser2<BufferT>
+class JsonParser2 : public ParserBase
 {
 	globalmq::marshalling::JsonParser<BufferT> p;
 
 public:
 
 	JsonParser2(typename BufferT::ReadIteratorT& iter) :p(iter) {}
+	virtual ~JsonParser2() {}
 
-	virtual size_t getCurrentOffset() const override { return p.getCurrentOffset(); }
-	virtual typename IParser2<BufferT>::RiterT& getIterator() override { return p.getIterator(); }
+	using BufferType = BufferT;
+	using RiterT = typename BufferT::ReadIteratorT;
+	static constexpr int proto = -1;
 
-	int64_t parseSignedInteger() override { int64_t v; p.readSignedIntegerFromJson(&v); return v; }
-	uint64_t parseUnsignedInteger() override { uint64_t v; p.readUnsignedIntegerFromJson(&v); return v; }
-	double parseReal() override { double v; p.readRealFromJson(&v); return v; }
-	GMQ_COLL string parseString() override { GMQ_COLL string v; p.readStringFromJson(&v); return v; }
 
-	void structBegin() override { p.skipDelimiter('{'); }
-	void structEnd() override { p.skipDelimiter('}'); }
+	size_t getCurrentOffset() const { return p.getCurrentOffset(); }
+	RiterT& getIterator() { return p.getIterator(); }
 
-	uint64_t vectorBegin() override { p.skipDelimiter('['); return UINT64_MAX; }
-	void vectorEnd() override { p.skipDelimiter(']'); }
-	bool isVectorEnd() override { return p.isDelimiter(']'); }
+	int64_t parseSignedInteger() { int64_t v; p.readSignedIntegerFromJson(&v); return v; }
+	uint64_t parseUnsignedInteger() { uint64_t v; p.readUnsignedIntegerFromJson(&v); return v; }
+	double parseReal() { double v; p.readRealFromJson(&v); return v; }
+	GMQ_COLL string parseString() { GMQ_COLL string v; p.readStringFromJson(&v); return v; }
 
-	uint64_t dictionaryBegin() override { p.skipDelimiter('{'); return UINT64_MAX; }
-	void dictionaryEnd() override { p.skipDelimiter('}'); }
-	bool isDictionaryEnd() override { return p.isDelimiter('}'); }
+	void structBegin() { p.skipDelimiter('{'); }
+	void structEnd() { p.skipDelimiter('}'); }
 
-	void namedParamBegin(const char* name) override
+	uint64_t vectorBegin() { p.skipDelimiter('['); return UINT64_MAX; }
+	void vectorEnd() { p.skipDelimiter(']'); }
+	bool isVectorEnd() { return p.isDelimiter(']'); }
+
+	uint64_t dictionaryBegin() { p.skipDelimiter('{'); return UINT64_MAX; }
+	void dictionaryEnd() { p.skipDelimiter('}'); }
+	bool isDictionaryEnd() { return p.isDelimiter('}'); }
+
+	void namedParamBegin(const char* name)
 	{
 		GMQ_COLL string v;
 		p.readKey(&v);
@@ -355,10 +364,10 @@ public:
 			throw std::exception();
 	}
 
-	void leafeBegin() override { namedParamBegin("value"); }
-	void nextElement() override { p.skipDelimiter(','); }
+	void leafeBegin() { namedParamBegin("value"); }
+	void nextElement() { p.skipDelimiter(','); }
 
-	bool changeBegin(GMQ_COLL vector<uint64_t>& addr) override
+	bool changeBegin(GMQ_COLL vector<uint64_t>& addr)
 	{
 		addr.clear();
 
@@ -385,30 +394,27 @@ public:
 		return !addr.empty();
 	}
 
-	void changeEnd() override { structEnd(); nextElement(); }
+	void changeEnd() { structEnd(); nextElement(); }
 
-	void stateUpdateBegin() override
+	void stateUpdateBegin()
 	{
 		structBegin();
 		namedParamBegin("changes");
 		p.skipDelimiter('[');
 	}
-	void stateUpdateEnd() override
+	void stateUpdateEnd()
 	{
 		p.skipDelimiter(']');
 		structEnd();
 	}
-	virtual void stateSyncBegin() override { structBegin(); namedParamBegin("hdr"); }
-	virtual void stateSyncEnd() override { structEnd(); }
+	void stateSyncBegin() { structBegin(); namedParamBegin("hdr"); }
+	void stateSyncEnd() { structEnd(); }
 
-	uint64_t parseAction() override
+	uint64_t parseAction()
 	{
 		namedParamBegin("action");
 		return parseUnsignedInteger();
 	}
-
-
-	virtual ~JsonParser2() {}
 };
 
 
@@ -422,6 +428,7 @@ public:
 	static constexpr int proto = -1;
 
 	GmqParser2(typename BufferT::ReadIteratorT& iter) :p(iter) {}
+	virtual ~GmqParser2() {}
 
 	size_t getCurrentOffset() const { return p.getCurrentOffset(); }
 	RiterT& getIterator() { return p.getIterator(); }
@@ -469,7 +476,6 @@ public:
 	void stateUpdateEnd() {}
 	void stateSyncBegin() {}
 	void stateSyncEnd() {}
-
 
 	uint64_t parseAction() { return parseUnsignedInteger();	}
 };
