@@ -35,32 +35,61 @@ namespace cplusplus
 void impl_GeneratePublishableStateMemberGetter( FILE* header, Root& root, CompositeType& s, MessageParameter& param )
 {
 	assert( s.type == CompositeType::Type::publishable || ( ( s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union_case ) && s.isStruct4Publishing ) );
-	if ( param.type.isNumericType() )
-		fprintf( header, "\tauto get_%s() { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
-	else if ( param.type.kind == MessageParameterType::KIND::VECTOR )
+
+
+	switch ( param.type.kind )
 	{
-		if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+	case MessageParameterType::KIND::INTEGER:
+	case MessageParameterType::KIND::UINTEGER:
+	case MessageParameterType::KIND::REAL:
+		fprintf( header, "\tauto get_%s() const { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+		break;
+	case MessageParameterType::KIND::CHARACTER_STRING:
+		fprintf( header, "\tconst auto& get_%s() const { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+		break;
+	case  MessageParameterType::KIND::STRUCT:
+	case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+		fprintf( header, "\tconst auto& get_%s() const { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+		break;
+	case MessageParameterType::KIND::VECTOR:
+		switch(param.type.vectorElemKind)
 		{
-			assert( root.structs.size() > param.type.structIdx );
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::VectorOfStructRefWrapper<%s, %s_RefWrapper>(t.%s); }\n", 
-				param.name.c_str(),  getVectorElementProcessor(param.type).c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			fprintf( header, "\tauto get_%s() const { return globalmq::marshalling2::VectorOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), getVectorElementProcessor(param.type).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			break;
+		case  MessageParameterType::KIND::STRUCT:
+		case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+			fprintf( header, "\tauto get_%s() const { return globalmq::marshalling2::VectorOfStructRefWrapper<%s, %s_RefWrapper>(t.%s); }\n", 
+				param.name.c_str(),  getVectorElementProcessor(param.type).c_str(), param.type.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			break;
+		default:
+			assert( false );
 		}
-		else
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::VectorOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), getVectorElementProcessor(param.type).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
-	}
-	else if ( param.type.kind == MessageParameterType::KIND::DICTIONARY )
-	{
-		if ( param.type.dictionaryValueKind == MessageParameterType::KIND::STRUCT || param.type.dictionaryValueKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
+		break;
+	case MessageParameterType::KIND::DICTIONARY:
+		switch(param.type.dictionaryValueKind)
 		{
-			assert( root.structs.size() > param.type.structIdx );
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::DictionaryOfStructRefWrapper<%s, %s_RefWrapper>(t.%s); }\n", 
-				param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), root.structs[param.type.structIdx]->name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+		case MessageParameterType::KIND::INTEGER:
+		case MessageParameterType::KIND::UINTEGER:
+		case MessageParameterType::KIND::REAL:
+		case MessageParameterType::KIND::CHARACTER_STRING:
+			fprintf( header, "\tauto get_%s() const { return globalmq::marshalling2::DictionaryOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			break;
+		case  MessageParameterType::KIND::STRUCT:
+		case  MessageParameterType::KIND::DISCRIMINATED_UNION:
+			fprintf( header, "\tauto get_%s() const { return globalmq::marshalling2::DictionaryOfStructRefWrapper<%s, %s_RefWrapper>(t.%s); }\n", 
+				param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), param.type.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+			break;
+		default:
+			assert( false );
 		}
-		else
-			fprintf( header, "\tauto get_%s() { return globalmq::marshalling2::DictionaryOfSimpleTypeRefWrapper<%s>(t.%s); }\n", param.name.c_str(), getDictionaryKeyValueProcessor(param.type).c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
+		break;
+	default:
+		assert( false );
 	}
-	else
-		fprintf( header, "\tconst auto& get_%s() { return t.%s; }\n", param.name.c_str(), impl_memberOrAccessFunctionName( param ).c_str() );
 }
 
 void impl_GeneratePublishableStateMemberGetter4Set( FILE* header, Root& root, const char* rootTypeNameBase, MessageParameter& param, size_t idx )
@@ -206,7 +235,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 	if ( obj.isDiscriminatedUnion() )
 	{
 		fprintf( header, "\t\tuint64_t caseId = t.currentVariant();\n" );
-		// fprintf( header, "\t\t::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, caseId, \"caseId\", true );\n" );
+
 		fprintf( header, "\t\tcomposer.namedParamBegin( \"caseId\" );\n" );
 		fprintf( header, "\t\tcomposer.composeUnsignedInteger( caseId );\n" );
 
@@ -216,7 +245,7 @@ void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root,
 
 		fprintf( header, "\t\tif ( caseId != CppType::Variants::unknown )\n" );
 		fprintf( header, "\t\t{\n" );
-		// fprintf( header, "\t\t\t::globalmq::marshalling::impl::composePublishableStructBegin( composer, \"caseData\" );\n" );
+
 		fprintf( header, "\t\t\tcomposer.namedParamBegin( \"caseData\" );\n" );
 		fprintf( header, "\t\t\tcomposer.structBegin();\n" );
 		fprintf( header, "\t\t\tswitch ( caseId )\n" );
