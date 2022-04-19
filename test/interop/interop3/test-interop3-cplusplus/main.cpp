@@ -1,4 +1,7 @@
 /* -------------------------------------------------------------------------------
+* Copyright (C) 2022 Six Impossible Things Before Breakfast Limited.
+* All rights reserved.
+* 
 * Copyright (c) 2022, OLogN Technologies AG
 * All rights reserved.
 *
