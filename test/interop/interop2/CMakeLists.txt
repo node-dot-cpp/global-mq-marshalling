@@ -8,7 +8,7 @@ if(MSVC)
 endif()
 
 add_custom_command(
-    OUTPUT cs/generated_interop2.cs
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cs/generated_interop2.cs
     COMMAND idl_compiler interop2.idl cs/generated_interop2.cs --csharp -m=mtest
     DEPENDS idl_compiler
     MAIN_DEPENDENCY interop2.idl

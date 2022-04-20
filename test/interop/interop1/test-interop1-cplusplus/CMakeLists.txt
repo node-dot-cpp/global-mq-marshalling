@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------------------
 
 add_custom_command(
-    OUTPUT generated_interop1.h
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/generated_interop1.h
     COMMAND idl_compiler ../interop1.idl generated_interop1.h --cplusplus -m=mtest
     DEPENDS idl_compiler
     MAIN_DEPENDENCY ../interop1.idl

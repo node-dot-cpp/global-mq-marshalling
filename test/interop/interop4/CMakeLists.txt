@@ -5,8 +5,8 @@
 add_subdirectory(test-interop4-cplusplus)
 
 add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/test-interop4-csharp/generated_interop4.cs
     COMMAND idl_compiler interop4.idl test-interop4-csharp/generated_interop4.cs --csharp -m=mtest
-    OUTPUT test-interop4-csharp/generated_interop4.cs
     DEPENDS idl_compiler
     MAIN_DEPENDENCY interop4.idl
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
