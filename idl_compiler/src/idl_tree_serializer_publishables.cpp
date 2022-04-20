@@ -2152,7 +2152,7 @@ void impl_GeneratePublishableStateMemberAccessors( FILE* header, Root& root, Com
 			const char* composer = forRoot ? "composer" : "root.getComposer()";
 			const char* composerType = forRoot ? "ComposerT" : "decltype(root.getComposer())";
 			const char* addrVector = forRoot ? "GMQ_COLL vector<size_t>()" : "address";
-			fprintf( header, "\tvoid set_currentVariant( decltype(T::v) v ) { \n" );
+			fprintf( header, "\tvoid set_currentVariant( typename T::Variants v ) { \n" );
 			fprintf( header, "\t\tt.initAs( v ); \n" );
 			fprintf( header, "\t\t::globalmq::marshalling::impl::composeAddressInPublishable( %s, %s, %d );\n", composer, addrVector, 0 );
 			fprintf( header, "\t\t::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( %s, (uint64_t)(t.currentVariant()) );\n", composer );
