@@ -33,6 +33,108 @@ using System.Text;
 
 namespace globalmq.marshalling
 {
+    public interface ITransport
+    {
+        void postMessage(BufferT msg);
+    };
+
+    public class InProcTransferrable
+    {
+        public string name;
+        public UInt64 id;
+
+        //void serialize(uint8_t* buff, size_t maxSz) // NOTE: temporary solution
+        //{
+        //    assert(name.size() + 1 + sizeof(id) <= maxSz);
+        //    memcpy(buff, &id, sizeof(id));
+        //    memcpy(buff + sizeof(id), name.c_str(), name.size());
+        //    buff[sizeof(id) + name.size()] = 0;
+        //}
+        //void deserilaize(uint8_t* buff) // NOTE: temporary solution
+        //{
+        //    memcpy(&id, buff, sizeof(id));
+        //    name = (char*)(buff + sizeof(id));
+        //}
+    };
+
+    public class GMQTransportBase : ITransport
+    {
+        GMQueue gmq;
+        string name;
+        SlotIdx idx = SlotIdx.Invalid;
+        UInt64 id;
+        public GMQTransportBase(GMQueue queue, string name_, SlotIdx idx_, UInt64 id_)
+        {
+            this.gmq = queue;
+            this.name = name_;
+            this.idx = idx_;
+            this.id = id_;
+        }
+
+        //GMQTransportBase(GMQueue<PlatformSupportT>& queue ) : gmq(queue ) { }
+        public void destroy()
+        {
+            if (idx.isInitialized())
+                gmq.remove(name, idx);
+
+        }
+        //virtual ~GMQTransportBase()
+        //{
+        //    if (idx.isInitialized())
+        //        gmq.remove(name, idx);
+        //}
+        //public GMQTransportBase(GMQueue queue, string name_, InProcessMessagePostmanBase postman)
+        //{
+
+        //    Debug.Assert(name_.Length != 0);
+        //    this.gmq = queue;
+        //    this.name = name_;
+        //    this.id = gmq.add(name, postman, out idx);
+        //}
+        //public GMQTransportBase(GMQueue queue, InProcessMessagePostmanBase postman)
+        //{
+        //    this.gmq = queue;
+
+        //    this.id = gmq.add(postman, out idx);
+        //}
+        public virtual void postMessage(BufferT msg)
+        {
+            Debug.Assert(idx.isInitialized());
+            gmq.postMessage(msg, id, idx);
+        }
+
+        InProcTransferrable makeTransferrable()
+        {
+            InProcTransferrable ret = new InProcTransferrable();
+            ret.name = name;
+            ret.id = id;
+            idx = SlotIdx.Invalid;
+            return ret;
+        }
+
+        void restore(InProcTransferrable t, GMQueue queue_)
+        {
+            Debug.Assert(ReferenceEquals(gmq, queue_));
+            Debug.Assert(!idx.isInitialized());
+            if (t.name.Length == 0)
+            {
+                idx = gmq.senderIDToSlotIdx(t.id);
+                Debug.Assert(idx.isInitialized());
+                id = t.id;
+            }
+            else
+            {
+                idx = gmq.locationNameToSlotIdx(t.name);
+                Debug.Assert(idx.isInitialized());
+                SlotIdx idx2 = gmq.senderIDToSlotIdx(t.id);
+                Debug.Assert(idx2.isInitialized());
+                Debug.Assert(idx == idx2);
+                name = t.name;
+                id = t.id;
+            }
+        }
+    };
+
     public class StateSubscriberData
     {
         public UInt64 IdInPool; // for indexing purposes
@@ -110,7 +212,7 @@ namespace globalmq.marshalling
     class StatePublisherPool
     {
         IPlatformSupport platform = null;
-        GMQTransportBase transport = null;
+        ITransport transport = null;
 
         List<StatePublisherData> publishers = new List<StatePublisherData>();
         Dictionary<string, StatePublisherData> name2publisherMapping = new Dictionary<string, StatePublisherData>();
@@ -158,7 +260,7 @@ namespace globalmq.marshalling
             publishers[publisher.idx].setUnused(publisher);
         }
 
-        public void setTransport(GMQTransportBase tr) { transport = tr; }
+        public void setTransport(ITransport tr) { transport = tr; }
         public void setPlatform(IPlatformSupport pl) { platform = pl; }
 
         public void onMessage(IPublishableParser parser)
@@ -276,7 +378,7 @@ namespace globalmq.marshalling
 
         List<Subscriber> subscribers = new List<Subscriber>(); // TODO: consider mapping ID -> ptr, if states are supposed to be added and removede dynamically
 
-        GMQTransportBase transport = null;
+        ITransport transport = null;
         IPlatformSupport platform = null;
 
         public void add(StateSubscriberBase subscriber)
@@ -302,7 +404,7 @@ namespace globalmq.marshalling
             Debug.Assert(false); // not found
         }
 
-        public void setTransport(GMQTransportBase tr) { transport = tr; }
+        public void setTransport(ITransport tr) { transport = tr; }
         public void setPlatform(IPlatformSupport pl) { platform = pl; }
 
         public void subscribe(StateSubscriberBase subscriber, string path)
@@ -490,10 +592,10 @@ namespace globalmq.marshalling
         Dictionary<UInt64, ClientConnection> connections = new Dictionary<UInt64, ClientConnection>();
         UInt64 connIdxBase = 0;
 
-        GMQTransportBase transport = null;
+        ITransport transport = null;
         IPlatformSupport platform = null;
 
-        public void setTransport(GMQTransportBase tr) { transport = tr; }
+        public void setTransport(ITransport tr) { transport = tr; }
         public void setPlatform(IPlatformSupport pl) { platform = pl; }
 
         public UInt64 add(ClientConnectionBase connection) // returns connection ID
@@ -633,7 +735,7 @@ namespace globalmq.marshalling
         UInt64 connIdxBase = 0;
 
         Dictionary<string, IConnectionFactory> connFactories = new Dictionary<string, IConnectionFactory>();
-        GMQTransportBase transport = null;
+        ITransport transport = null;
         IPlatformSupport platform = null;
 
         //public:
@@ -647,7 +749,7 @@ namespace globalmq.marshalling
             connFactories.Add(name, connFactory);
             //assert(ins.second);
         }
-        public void setTransport(GMQTransportBase tr) { transport = tr; }
+        public void setTransport(ITransport tr) { transport = tr; }
         public void setPlatform(IPlatformSupport pl) { platform = pl; }
 
         public void postMessage(UInt64 connID, BufferT msgBuff)
@@ -757,7 +859,7 @@ namespace globalmq.marshalling
         ClientSimpleConnectionPool cliPool = new ClientSimpleConnectionPool();
         ServerSimpleConnectionPool srvPool = new ServerSimpleConnectionPool();
 
-        public void setTransport(GMQTransportBase tr)
+        public void setTransport(ITransport tr)
         {
             pubPool.setTransport(tr);
             subPool.setTransport(tr);
@@ -789,7 +891,7 @@ namespace globalmq.marshalling
         {
             subPool.add(obj);
         }
-        void add(ClientConnectionBase obj)
+        public void add(ClientConnectionBase obj)
         {
             cliPool.add(obj);
         }
@@ -803,7 +905,7 @@ namespace globalmq.marshalling
         {
             subPool.remove(obj);
         }
-        void remove(ClientConnectionBase obj)
+        public void remove(ClientConnectionBase obj)
         {
             cliPool.remove(obj);
         }
