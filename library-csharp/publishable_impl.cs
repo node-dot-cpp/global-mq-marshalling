@@ -695,7 +695,7 @@ namespace globalmq.marshalling
                         //	throw std::exception();
                         //auto & conn = f->second;
                         ClientConnection conn = connections[mh.ref_id_at_subscriber];
-                        if (conn.connection.isConnected())
+                        if (!conn.connection.isConnected())
                             throw new Exception(); // TODO: revise
                         Debug.Assert(conn.ref_id_at_server == mh.ref_id_at_publisher); // self-consistency
                                                                                        //ReadIteratorT riter = parser.getIterator();
