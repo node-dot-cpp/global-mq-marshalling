@@ -35,7 +35,7 @@ namespace TestProject1
 
     public class test_gmqueue
     {
-        static void deliverAllMessages(MetaPool pool, MwsrThreadQueue<ThreadQueueItem> msgQueue, String filePrefix, ref int msgCnt)
+        static void deliverAllMessages(MetaPool pool, MwsrThreadQueue msgQueue, String filePrefix, ref int msgCnt)
         {
             ThreadQueueItem[] messages = new ThreadQueueItem[16];
 
@@ -64,12 +64,13 @@ namespace TestProject1
 
         }
 
-        static MetaPool initializeGmQueue(MwsrThreadQueue<ThreadQueueItem> msgQueue)
+        static MetaPool initializeGmQueue(MwsrThreadQueue msgQueue)
         {
             IPlatformSupport platform = new DefaultJsonPlatformSupport();
 
             GMQueue gmq = new GMQueue();
-            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory(), platform);
+            gmq.initStateConcentratorFactory(new mtest.StateConcentratorFactory());
+            gmq.initPlatformSupport(platform);
             gmq.initAuthority(String.Empty);
 
 
@@ -102,7 +103,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithStructSix()
         {
-            MwsrThreadQueue<ThreadQueueItem> msgQueue = new MwsrQueue<ThreadQueueItem>(5);
+            MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
             MetaPool mp = initializeGmQueue(msgQueue);
 
             mtest.StructSix_publisher publ = new mtest.StructSix_publisher();
@@ -162,7 +163,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithMock1()
         {
-            MwsrThreadQueue<ThreadQueueItem> msgQueue = new MwsrQueue<ThreadQueueItem>(5);
+            MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
             MetaPool mp = initializeGmQueue(msgQueue);
 
             mtest.Mock_publisher publ = new mtest.Mock_publisher();
@@ -187,7 +188,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithMock2()
         {
-            MwsrThreadQueue<ThreadQueueItem> msgQueue = new MwsrQueue<ThreadQueueItem>(5);
+            MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
             MetaPool mp = initializeGmQueue(msgQueue);
 
             mtest.Mock_publisher publ = new mtest.Mock_publisher();
@@ -217,7 +218,7 @@ namespace TestProject1
         [Fact]
         public static void TestGmQueueWithMock3()
         {
-            MwsrThreadQueue<ThreadQueueItem> msgQueue = new MwsrQueue<ThreadQueueItem>(5);
+            MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
             MetaPool mp = initializeGmQueue(msgQueue);
 
             mtest.Mock_publisher publ = new mtest.Mock_publisher();
