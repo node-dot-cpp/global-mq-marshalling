@@ -57,13 +57,13 @@ namespace globalmq.marshalling
         //}
     };
 
-    public class GMQTransportBase : ITransport
+    public class GMQTransport : ITransport
     {
         GMQueue gmq;
         string name;
         SlotIdx idx = SlotIdx.Invalid;
         UInt64 id;
-        public GMQTransportBase(GMQueue queue, string name_, SlotIdx idx_, UInt64 id_)
+        public GMQTransport(GMQueue queue, string name_, SlotIdx idx_, UInt64 id_)
         {
             this.gmq = queue;
             this.name = name_;
@@ -71,67 +71,16 @@ namespace globalmq.marshalling
             this.id = id_;
         }
 
-        //GMQTransportBase(GMQueue<PlatformSupportT>& queue ) : gmq(queue ) { }
         public void destroy()
         {
             if (idx.isInitialized())
                 gmq.remove(name, idx);
 
         }
-        //virtual ~GMQTransportBase()
-        //{
-        //    if (idx.isInitialized())
-        //        gmq.remove(name, idx);
-        //}
-        //public GMQTransportBase(GMQueue queue, string name_, InProcessMessagePostmanBase postman)
-        //{
-
-        //    Debug.Assert(name_.Length != 0);
-        //    this.gmq = queue;
-        //    this.name = name_;
-        //    this.id = gmq.add(name, postman, out idx);
-        //}
-        //public GMQTransportBase(GMQueue queue, InProcessMessagePostmanBase postman)
-        //{
-        //    this.gmq = queue;
-
-        //    this.id = gmq.add(postman, out idx);
-        //}
         public virtual void postMessage(BufferT msg)
         {
             Debug.Assert(idx.isInitialized());
             gmq.postMessage(msg, id, idx);
-        }
-
-        InProcTransferrable makeTransferrable()
-        {
-            InProcTransferrable ret = new InProcTransferrable();
-            ret.name = name;
-            ret.id = id;
-            idx = SlotIdx.Invalid;
-            return ret;
-        }
-
-        void restore(InProcTransferrable t, GMQueue queue_)
-        {
-            Debug.Assert(ReferenceEquals(gmq, queue_));
-            Debug.Assert(!idx.isInitialized());
-            if (t.name.Length == 0)
-            {
-                idx = gmq.senderIDToSlotIdx(t.id);
-                Debug.Assert(idx.isInitialized());
-                id = t.id;
-            }
-            else
-            {
-                idx = gmq.locationNameToSlotIdx(t.name);
-                Debug.Assert(idx.isInitialized());
-                SlotIdx idx2 = gmq.senderIDToSlotIdx(t.id);
-                Debug.Assert(idx2.isInitialized());
-                Debug.Assert(idx == idx2);
-                name = t.name;
-                id = t.id;
-            }
         }
     };
 
@@ -564,7 +513,7 @@ namespace globalmq.marshalling
         }
 
         public bool isConnected() { return status == Status.connected; }
-        public abstract void onMessage(IPublishableParser parser);
+        public abstract void onMessage(ReadIteratorT parser);
         public void postMessage(BufferT buff)
         {
             Debug.Assert(isConnected());
@@ -834,7 +783,7 @@ namespace globalmq.marshalling
                         ServerConnection conn = connections[mh.ref_id_at_publisher];
                         Debug.Assert(conn.ref_id_at_server == mh.ref_id_at_publisher); // self-consistency
                                                                                        //auto riter = parser.getIterator();
-                        conn.connection.onMessage(parser);
+                        conn.connection.onMessage(parser.getIterator());
                         //parser = riter;
                         break;
                     }
@@ -876,7 +825,7 @@ namespace globalmq.marshalling
         }
 
 
-        void addSimpleConnectionFactory(IConnectionFactory connFactory, string name)
+        public void addSimpleConnectionFactory(IConnectionFactory connFactory, string name)
         {
             srvPool.addSimpleConnectionFactory(connFactory, name);
         }

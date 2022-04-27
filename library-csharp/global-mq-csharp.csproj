@@ -43,7 +43,8 @@
   <ItemGroup>
     <Compile Include="global_mq_common.cs" />
     <Compile Include="gmqueue.cs" />
-    <Compile Include="inproc_queue.cs" />
+    <Compile Include="nodebase.cs" />
+    <Compile Include="interthread_impl.cs" />
     <Compile Include="marshalling.cs" />
     <Compile Include="marshalling_impl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

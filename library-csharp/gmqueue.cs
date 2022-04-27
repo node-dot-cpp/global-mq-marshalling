@@ -40,8 +40,6 @@ namespace globalmq.marshalling
         BufferT makeBuffer();
         IPublishableComposer makePublishableComposer(BufferT buffer);
         IPublishableParser makePublishableParser(ReadIteratorT readIter);
-        InProcessMessagePostmanBase allocPostman(Object[] args);
-
     }
 
     public class DefaultJsonPlatformSupport : IPlatformSupport
@@ -49,7 +47,6 @@ namespace globalmq.marshalling
         public BufferT makeBuffer() { return new SimpleBuffer(); }
         public IPublishableComposer makePublishableComposer(BufferT buffer) { return new JsonPublishableComposer(buffer); }
         public IPublishableParser makePublishableParser(ReadIteratorT readIter) { return new JsonPublishableParser(readIter); }
-        public InProcessMessagePostmanBase allocPostman(Object[] args) { throw new NotImplementedException(); }
     }
 
     public class DefaultGmqPlatformSupport : IPlatformSupport
@@ -57,7 +54,6 @@ namespace globalmq.marshalling
         public BufferT makeBuffer() { return new SimpleBuffer(); }
         public IPublishableComposer makePublishableComposer(BufferT buffer) { return new GmqPublishableComposer(buffer); }
         public IPublishableParser makePublishableParser(ReadIteratorT readIter) { return new GmqPublishableParser(readIter); }
-        public InProcessMessagePostmanBase allocPostman(Object[] args) { throw new NotImplementedException(); }
     }
 
 
@@ -442,17 +438,17 @@ namespace globalmq.marshalling
         StateConcentratorBase createConcentrator(UInt64 typeID);
 
     }
-    public interface InProcessMessagePostmanBase
+    public interface IPostman
     {
         void postMessage(BufferT buffer);
     };
 
     public class AddressableLocation
     {
-        public InProcessMessagePostmanBase postman;
+        public IPostman postman;
         public UInt64 reincarnation;
 
-        public AddressableLocation(InProcessMessagePostmanBase postman, UInt64 reincarnation)
+        public AddressableLocation(IPostman postman, UInt64 reincarnation)
         {
             this.postman = postman;
             this.reincarnation = reincarnation;
@@ -493,7 +489,7 @@ namespace globalmq.marshalling
     public class AddressableLocations // one per process; provides process-unique Slot with Postman and returns its SlotIdx
     {
         List<AddressableLocation> slots = new List<AddressableLocation>();
-        public SlotIdx add(InProcessMessagePostmanBase postman)
+        public SlotIdx add(IPostman postman)
         {
             // essentially add to slots and return its idx
             for (int i = 0; i < slots.Count; ++i)
@@ -513,7 +509,7 @@ namespace globalmq.marshalling
             Debug.Assert(idx.reincarnation == slots[idx.idx].reincarnation);
             slots[idx.idx].postman = null;
         }
-        public InProcessMessagePostmanBase getPostman(SlotIdx idx)
+        public IPostman getPostman(SlotIdx idx)
         {
             // access, verify, return
             Debug.Assert(idx.idx < slots.Count);
@@ -877,19 +873,27 @@ namespace globalmq.marshalling
         //}
 
         //template <class StateFactoryT>
-        public void initStateConcentratorFactory(IStateConcentratorFactory factory, IPlatformSupport platform) // Note: potentially, temporary solution
+        public void initStateConcentratorFactory(IStateConcentratorFactory factory) // Note: potentially, temporary solution
         {
             //std::unique_lock < std::mutex > lock (mx) ;
             lock (mx)
             {
                 Debug.Assert(stateConcentratorFactory == null); // must be called just once
                 stateConcentratorFactory = factory;
+            }
+        }
 
+        public void initPlatformSupport(IPlatformSupport platform) // Note: potentially, temporary solution
+        {
+            //std::unique_lock < std::mutex > lock (mx) ;
+            lock (mx)
+            {
                 Debug.Assert(platformSupport == null); // must be called just once
                 platformSupport = platform;
             }
         }
-        public void setAuthority(string authority)
+
+        public void initAuthority(string authority)
         {
             //std::unique_lock < std::mutex > lock (mx) ;
             lock (mx)
@@ -951,10 +955,10 @@ namespace globalmq.marshalling
 
         public class MsgToBeSent
         {
-            public InProcessMessagePostmanBase postman;
+            public IPostman postman;
             public BufferT message;
 
-            public MsgToBeSent(InProcessMessagePostmanBase postman, BufferT message)
+            public MsgToBeSent(IPostman postman, BufferT message)
             {
                 this.postman = postman;
                 this.message = message;
@@ -1020,7 +1024,7 @@ namespace globalmq.marshalling
                                         concentrator.generateStateSyncMessage(composer);
                                         helperComposePublishableStateMessageEnd(composer);
 
-                                        InProcessMessagePostmanBase postman = addressableLocations.getPostman(senderSlotIdx);
+                                        IPostman postman = addressableLocations.getPostman(senderSlotIdx);
                                         //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                                         //postman.postMessage(msgBack);
                                         msgsToSend.Add(new MsgToBeSent(postman, msgBack));
@@ -1040,7 +1044,7 @@ namespace globalmq.marshalling
                                     BufferT msgForward = platformSupport.makeBuffer();
                                     helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
-                                    InProcessMessagePostmanBase postman = addressableLocations.getPostman(targetIdx);
+                                    IPostman postman = addressableLocations.getPostman(targetIdx);
                                     //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                                     //postman.postMessage(msgForward);
                                     msgsToSend.Add(new MsgToBeSent(postman, msgForward));
@@ -1068,7 +1072,7 @@ namespace globalmq.marshalling
                                 BufferT msgForward = platformSupport.makeBuffer();
                                 helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
-                                InProcessMessagePostmanBase postman = addressableLocations.getPostman(subscriber.senderSlotIdx);
+                                IPostman postman = addressableLocations.getPostman(subscriber.senderSlotIdx);
                                 //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                                 //postman.postMessage(msgForward);
                                 //lock.lock () ;
@@ -1095,7 +1099,7 @@ namespace globalmq.marshalling
                                 BufferT msgForward = platformSupport.makeBuffer();
                                 helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
-                                InProcessMessagePostmanBase postman = addressableLocations.getPostman(subscriber.senderSlotIdx);
+                                IPostman postman = addressableLocations.getPostman(subscriber.senderSlotIdx);
                                 //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                                 //postman.postMessage(msgForward);
                                 //lock.lock () ;
@@ -1107,7 +1111,7 @@ namespace globalmq.marshalling
                     case PublishableStateMessageHeader.MsgType.connectionRequest:
                         {
                             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
-                            pc.type = PublishableStateMessageHeader.MsgType.subscriptionRequest;
+                            pc.type = PublishableStateMessageHeader.MsgType.connectionRequest;
                             bool pathOK = GmqPathHelper.parse(mh.path, pc);
                             if (!pathOK)
                                 throw new Exception(); // TODO: ... (bad path)
@@ -1129,7 +1133,7 @@ namespace globalmq.marshalling
                                 BufferT msgForward = platformSupport.makeBuffer();
                                 helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
-                                InProcessMessagePostmanBase postman = addressableLocations.getPostman(targetIdx);
+                                IPostman postman = addressableLocations.getPostman(targetIdx);
                                 //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                                 msgsToSend.Add(new MsgToBeSent(postman, msgForward));
                             }
@@ -1152,7 +1156,7 @@ namespace globalmq.marshalling
                             BufferT msgForward = platformSupport.makeBuffer();
                             helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
-                            InProcessMessagePostmanBase postman = addressableLocations.getPostman(fields.targetSlotIdx);
+                            IPostman postman = addressableLocations.getPostman(fields.targetSlotIdx);
                             //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                             //postman.postMessage(msgForward);
                             msgsToSend.Add(new MsgToBeSent(postman, msgForward));
@@ -1185,7 +1189,7 @@ namespace globalmq.marshalling
                             BufferT msgForward = platformSupport.makeBuffer();
                             helperParseAndUpdatePublishableStateMessage(platformSupport, msg, msgForward, ud);
 
-                            InProcessMessagePostmanBase postman = addressableLocations.getPostman(fields.targetSlotIdx);
+                            IPostman postman = addressableLocations.getPostman(fields.targetSlotIdx);
                             //lock.unlock(); // NOTE: this is correct as long as postans are not released; rework otherwise
                             //postman.postMessage(msgForward);
                             msgsToSend.Add(new MsgToBeSent(postman, msgForward));
@@ -1205,7 +1209,7 @@ namespace globalmq.marshalling
             }
         }
 
-        public UInt64 add(string name, InProcessMessagePostmanBase postman, out SlotIdx idx)
+        public UInt64 add(string name, IPostman postman, out SlotIdx idx)
         {
             Debug.Assert(name.Length != 0);
 
@@ -1217,7 +1221,7 @@ namespace globalmq.marshalling
                 return addSender(idx);
             }
         }
-        public UInt64 add(InProcessMessagePostmanBase postman, out SlotIdx idx)
+        public UInt64 add(IPostman postman, out SlotIdx idx)
         {
             //std::unique_lock < std::mutex > lock (mx) ;
             lock (mx)
