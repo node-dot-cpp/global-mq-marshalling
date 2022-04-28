@@ -1007,8 +1007,11 @@ public:
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 	virtual void startTick( BufferT&& buff ) = 0;
 	virtual BufferT&& endTick() = 0;
-	virtual const char* publishableName() = 0;
+    virtual const char* name() { throw std::exception(); }
 	virtual uint64_t stateTypeID() = 0;
+
+	// mb: using just 'name' prevents idl from using member named 'name'
+    virtual const char* publishableName() { return name(); }
 };
 
 template<class PlatformSupportT>
@@ -1225,19 +1228,21 @@ template<class BufferT>
 class StateSubscriberBase
 {
 public:
-	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
+    virtual ~StateSubscriberBase() { }
+    virtual void applyGmqMessageWithUpdates(GmqParser<BufferT>& parser) = 0;
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
 	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
 
-	virtual const char* publishableName() = 0;
-	virtual uint64_t stateTypeID() = 0;
+	virtual const char* name() { throw std::exception(); }
+    virtual uint64_t stateTypeID() = 0;
 
-	// new interface with default implementation to avoid breaking old code
+	// mb: using just 'name' prevents idl from using member named 'name'
+	virtual const char* publishableName() { return name(); }
+
+	// mb: new interface with default implementation to avoid breaking old code
 	virtual void publishableApplyUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
 	virtual void publishableApplyStateSync( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
-
-	virtual ~StateSubscriberBase() {}
 };
 
 

@@ -762,7 +762,10 @@ public:
 	// as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 
-	virtual const char* publishableName() = 0;
+	virtual const char* name() { throw std::exception(); }
+
+	// mb: using just 'name' prevents idl from using member named 'name'
+    virtual const char* publishableName() { return name(); }
 
 	// new interface with default implementation to avoid breaking old code
 	virtual void publishableApplyUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
