@@ -1,0 +1,61 @@
+//-------------------------------------------------------------------------------------------
+// Copyright (c) 2022, OLogN Technologies AG
+//-------------------------------------------------------------------------------------------
+
+SCOPE test_scope PROTO = GMQ;
+
+STRUCT NONEXTENDABLE SimpleStruct {
+  INTEGER id;
+  CHARACTER-STRING name;
+};
+
+PUBLISHABLE NONEXTENDABLE simple_publishable = 1 {
+	STRUCT SimpleStruct data;
+};
+
+MESSAGE NONEXTENDABLE test_scope : simple_message = 1 {
+	STRUCT SimpleStruct data;
+};
+
+
+
+STRUCT NONEXTENDABLE Cicle_1 {
+	STRUCT Cicle_2 child;
+};
+
+STRUCT NONEXTENDABLE Cicle_2 {
+	VECTOR<STRUCT Cicle_1> childs;
+};
+
+
+PUBLISHABLE NONEXTENDABLE publishable_cycle = 5 {
+	STRUCT Cicle_2 data;
+};
+
+MESSAGE NONEXTENDABLE test_scope : message_cycle = 5 {
+	STRUCT Cicle_2 data;
+};
+
+
+PUBLISHABLE publishable_html_tag = 10
+{
+    STRUCT HtmlTag data;
+};
+
+STRUCT HtmlTag
+{
+    CHARACTER-STRING name;
+    DICTIONARY<CHARACTER-STRING, CHARACTER-STRING> properties;
+    DISCRIMINATED_UNION HtmlTextOrTags tags;
+};
+
+DISCRIMINATED_UNION HtmlTextOrTags
+{
+    CASE text = 21 : {
+        CHARACTER-STRING str;
+    }
+    CASE taglists = 22:
+    {
+        VECTOR<STRUCT HtmlTag> tags;
+    }
+};

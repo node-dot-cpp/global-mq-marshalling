@@ -26,6 +26,10 @@
 * -------------------------------------------------------------------------------*/
 
 #include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
+
+namespace cpptemplates
+{
 
 string impl_MessageNameToDefaultsNamespaceName( string name )
 {
@@ -52,57 +56,6 @@ std::string impl_generateMessageParseFunctionRetType( CompositeType& s )
 	return fmt::format( "structures::{}", s.name );
 }
 
-bool impl_processScopes( Root& r )
-{
-	bool ok = true;
-	for ( auto& s : r.scopes )
-	{
-		if ( s->proto == Proto::undefined )
-		{
-			fprintf( stderr, "File %s, line %d: Scope \"%s\" misses protocol\n", s->location.fileName.c_str(), s->location.lineNumber, s->name.c_str() );
-			ok = false;
-		}
-	}
-	
-	// each message must be from one of declared scopes
-	for ( auto& it : r.messages )
-	{
-		if ( it->numID == CompositeType::invalid_num_id )
-		{
-			// todo report
-			ok = false;
-			continue;
-		}
-
-		bool found = false;
-		for ( auto& s : r.scopes )
-		{
-			if ( it->scopeName == s->name )
-			{
-//				s->objectList.push_back( &(*it) );
-				assert( it->protoList.empty() );
-				it->protoList.insert( s->proto );
-				s->objectList.push_back( &(*it) );
-				found = true;
-				break;
-			}
-		}
-
-		if ( !found )
-		{
-			ok = false;
-			fprintf( stderr, "File %s, line %d: Scope \"%s\" has not been declared\n", it->location.fileName.c_str(), it->location.lineNumber, it->scopeName.c_str() );
-
-			/*{
-				Scope* scope = new Scope;
-				scope->name = it->scopeName;
-				scope->objectList.push_back( &(*it) );
-				r.scopes.push_back( unique_ptr<Scope>(scope) );
-			}*/
-		}
-	}
-	return ok;
-}
 
 void impl_generateScopeHandler( FILE* header, Scope& scope )
 {
@@ -690,88 +643,6 @@ void impl_addParamStatsCheckBlock( FILE* header, CompositeType& s )
 		"\tstatic_assert( argCount == matchCount, \"unexpected arguments found\" );\n\n" );
 }
 
-void impl_generateMessageCommentBlock_MemberIterationBlock( FILE* header, CompositeType& s, const char* offset )
-{
-	assert( s.type != CompositeType::Type::discriminated_union );
-
-	fprintf( header, "(%zd parameters)\n", s.getMembers().size() );
-
-	int count = 0;
-	for ( auto& it : s.getMembers() )
-	{
-		assert( it != nullptr );
-		MessageParameter& param = *it;
-		if ( param.type.kind == MessageParameterType::KIND::EXTENSION )
-			continue;
-		++count;
-			
-		if ( param.type.kind == MessageParameterType::KIND::VECTOR )
-		{
-			if ( param.type.vectorElemKind == MessageParameterType::KIND::STRUCT || param.type.vectorElemKind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-				fprintf( header, "//%s%d. %s<%s%s %s>", offset, count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : " ", impl_kindToString( param.type.vectorElemKind ), param.type.name.c_str() );
-			else
-				fprintf( header, "//%s%d. %s<%s>", offset, count, impl_kindToString( param.type.kind ), impl_kindToString( param.type.vectorElemKind ) );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else if ( param.type.kind == MessageParameterType::KIND::STRUCT || param.type.kind == MessageParameterType::KIND::DISCRIMINATED_UNION )
-		{
-			fprintf( header, "//%s%d. %s %s%s", offset, count, impl_kindToString( param.type.kind ), param.type.isNonExtendable ? "NONEXTENDABLE " : "", param.type.name.c_str() );
-			fprintf( header, " %s", param.name.c_str() );
-		}
-		else
-			fprintf( header, "//%s%d. %s %s", offset, count, impl_kindToString( param.type.kind ), param.name.c_str() );
-
-		if ( param.type.hasDefault )
-		{
-			switch ( param.type.kind )
-			{
-				case MessageParameterType::KIND::ENUM: fprintf( header, " (DEFAULT: %s::%s)", param.type.name.c_str(), param.type.stringDefault.c_str() ); break;
-				case MessageParameterType::KIND::INTEGER: fprintf( header, " (DEFAULT: %lld)", (int64_t)(param.type.numericalDefault) ); break;
-				case MessageParameterType::KIND::UINTEGER: fprintf( header, " (DEFAULT: %lld)", (uint64_t)(param.type.numericalDefault) ); break;
-				case MessageParameterType::KIND::REAL: fprintf( header, " (DEFAULT: %f)", param.type.numericalDefault ); break;
-				case MessageParameterType::KIND::CHARACTER_STRING: fprintf( header, " (DEFAULT: \"%s\")", param.type.stringDefault.c_str() ); break;
-				default:
-					fprintf( header, " (REQUIRED)" );
-					break;
-			}
-		}
-		else
-			fprintf( header, " (REQUIRED)" );
-		fprintf( header, "\n" );
-	}
-}
-
-void impl_generateMessageCommentBlock( FILE* header, CompositeType& s )
-{
-	assert( s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure || s.type == CompositeType::Type::discriminated_union );
-	fprintf( header, "//**********************************************************************\n" );
-	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
-	for ( auto t:s.protoList )
-		switch ( t )
-		{
-			case Proto::gmq: fprintf( header, "GMQ " ); break;
-			case Proto::json: fprintf( header, "JSON " ); break;
-			default: assert( false );
-		}
-	if ( s.isDiscriminatedUnion() )
-	{
-		fprintf( header, "(%zd cases)\n", s.getDiscriminatedUnionCases().size() );
-		for ( auto& it: s.getDiscriminatedUnionCases() )
-		{
-			assert( it != nullptr );
-			CompositeType& cs = *it;
-			assert( cs.type == CompositeType::Type::discriminated_union_case );
-			fprintf( header, "//  CASE %s (%zd parameters)", cs.name.c_str(), cs.getMembers().size() );
-			impl_generateMessageCommentBlock_MemberIterationBlock( header, cs, "    " );
-		}
-	}
-	else
-	{
-		impl_generateMessageCommentBlock_MemberIterationBlock( header, s, "  " );
-	}
-
-	fprintf( header, "//**********************************************************************\n\n" );
-}
 
 void impl_generateParamCallBlockForComposingJson( FILE* header, CompositeType& s, const char* offset )
 {
@@ -957,10 +828,10 @@ void impl_generateParseFunctionForMessagesAndAliasingStructs( FILE* header, Root
 
 void generateMessage( FILE* header, Root& root, CompositeType& s )
 {
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkParamNameUniqueness(s);
+	// checked = impl_checkFollowingExtensionRules(s) && checked;
+	// if ( !checked )
+	// 	throw std::exception();
 
 	impl_generateMessageCommentBlock( header, s );
 	impl_GenerateMessageDefaults( header, s );
@@ -976,9 +847,9 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	CompositeType& alias = *(root.structs[s.aliasIdx]);
 	assert( s.aliasOf == alias.name );
 
-	bool checked = impl_checkFollowingExtensionRules(s);
-	if ( !checked )
-		throw std::exception();
+	// bool checked = impl_checkFollowingExtensionRules(s);
+	// if ( !checked )
+	// 	throw std::exception();
 
 	fprintf( header, "//**********************************************************************\n" );
 	fprintf( header, "// %s \"%s\" %sTargets: ", s.type2string(), s.name.c_str(), s.isNonExtendable ? "NONEXTENDABLE " : "" );
@@ -1014,3 +885,5 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
 	fprintf( header, "}\n\n" );
 }
+
+} // namespace cpptemplates

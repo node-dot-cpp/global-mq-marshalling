@@ -1,4 +1,7 @@
 /* -------------------------------------------------------------------------------
+* Copyright (C) 2022 Six Impossible Things Before Breakfast Limited.
+* All rights reserved.
+* 
 * Copyright (c) 2022, OLogN Technologies AG
 * All rights reserved.
 *
@@ -27,7 +30,7 @@
 
 #include "idl_tree_2_csharp.h"
 #include <fmt/printf.h>
-//#include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
 
 using namespace std;
 
@@ -125,7 +128,7 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 
 		if (it->isStruct4Messaging || it->isStruct4Publishing)
 		{
-			checkCsharpStruct(*it);
+			// checkCsharpStruct(*it);
 			if (it->type == CompositeType::Type::structure)
 			{
 
@@ -159,7 +162,7 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 
 		if (it->isStruct4Messaging)
 		{
-			checkCsharpStruct(*it);
+			// checkCsharpStruct(*it);
 			if (it->type == CompositeType::Type::structure)
 			{
 				std::string interface_name = "I" + it->name;
@@ -211,7 +214,7 @@ void generateCsharp(FILE* file, Root& root, const std::string& metascope)
 		assert(it != nullptr);
 		assert(it->type == CompositeType::Type::publishable);
 
-		checkCsharpStruct(*it);
+		// checkCsharpStruct(*it);
 
 		std::string type_name = it->name;
 		std::string interface_name = "I" + type_name;

@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#ifndef NAMED_PARAMS_CORE_H
-#define NAMED_PARAMS_CORE_H
+#ifndef GLOBALMQ_MARSHALLING_H
+#define GLOBALMQ_MARSHALLING_H
 
 #include "marshalling_impl.h"
 
@@ -1682,4 +1682,4 @@ void parseActionInPublishable(ParserT& p, size_t& action)
 
 } // namespace globalmq::marshalling
 
-#endif // NAMED_PARAMS_CORE_H
+#endif // GLOBALMQ_MARSHALLING2_H

@@ -99,12 +99,23 @@ mtest::structures::publishable_dictionary GetPublishableDictionary_0()
     return data;
 }
 
+// on linux std::unordered_map reverses the order
+// this is a quick hack for testing only
+#ifdef _MSC_VER
 void doUpdate1(mtest::structures::publishable_dictionary& data)
 {
     data.data.dictionary_one["hello"] = "world";
     data.data.dictionary_one["red"] = "blue";
     data.data.dictionary_one["dog"] = "cat";
 }
+#else
+void doUpdate1(mtest::structures::publishable_dictionary& data)
+{
+    data.data.dictionary_one["dog"] = "cat";
+    data.data.dictionary_one["red"] = "blue";
+    data.data.dictionary_one["hello"] = "world";
+}
+#endif
 
 template<class T>
 void doUpdatePublisher1(T& publ)

@@ -1,5 +1,8 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (C) 2022 Six Impossible Things Before Breakfast Limited.
+* All rights reserved.
+* 
+* Copyright (c) 2020-2022, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -26,22 +29,22 @@
 * -------------------------------------------------------------------------------*/
 
 #include "idl_tree_2_csharp.h"
-#include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
 
 #include <set>
 
-void checkCsharpStruct(CompositeType& s)
-{
-	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
-		s.type == CompositeType::Type::discriminated_union_case ||
-		s.type == CompositeType::Type::discriminated_union ||
-		s.type == CompositeType::Type::publishable) ;
+// void checkCsharpStruct(CompositeType& s)
+// {
+// 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
+// 		s.type == CompositeType::Type::discriminated_union_case ||
+// 		s.type == CompositeType::Type::discriminated_union ||
+// 		s.type == CompositeType::Type::publishable) ;
 
-	bool checked = impl_checkParamNameUniqueness(s);
-	checked = impl_checkFollowingExtensionRules(s) && checked;
-	if (!checked)
-		throw std::exception();
-}
+// 	// bool checked = impl_checkParamNameUniqueness(s);
+// 	// checked = impl_checkFollowingExtensionRules(s) && checked;
+// 	// if (!checked)
+// 	// 	throw std::exception();
+// }
 
 std::string getCaseTypeName(CompositeType& s)
 {

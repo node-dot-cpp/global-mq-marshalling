@@ -1,0 +1,1 @@
+{"changes":[{"addr":[0, 0],"value":"first"},{"addr":[0, 2, 0],"value":22},{"addr":[0, 2, 1, 0],"action":2,"value":{"name":"","properties":{},"tags":{"caseId":23,}}},{"addr":[0, 2, 1, 0, 0],"value":"second"},{}]}

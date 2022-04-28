@@ -161,7 +161,7 @@ public:
 				return "";
 		}
 	}
-	const char* type2string() { return type2string( type ); }
+	const char* type2string() const { return type2string( type ); }
 
 public:
 	string scopeName;

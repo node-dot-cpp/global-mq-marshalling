@@ -1,5 +1,5 @@
-#ifndef _test_marshalling_h_f545c797_guard
-#define _test_marshalling_h_f545c797_guard
+#ifndef _test_marshalling_h_9033bce0_guard
+#define _test_marshalling_h_9033bce0_guard
 
 #include <marshalling.h>
 #include <publishable_impl.h>
@@ -908,7 +908,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
 		t.initAs( (typename T::Variants)(caseId) );
 		if ( caseId != T::Variants::unknown )
 		{
@@ -992,7 +992,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 		static constexpr bool has_update_notifier = has_update_notifier_call<T>;
 
 		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
 		t.initAs( (typename T::Variants)(caseId) );
 		if ( caseId != T::Variants::unknown )
 		{
@@ -2352,7 +2352,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseid" );
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
 		t.initAs( (typename T::Variants)(caseId) );
 		if ( caseId != T::Variants::unknown )
 		{
@@ -2454,7 +2454,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		static constexpr bool has_update_notifier = has_update_notifier_call<T>;
 
 		uint64_t caseId;
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
+		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
 		t.initAs( (typename T::Variants)(caseId) );
 		if ( caseId != T::Variants::unknown )
 		{
@@ -5192,6 +5192,7 @@ public:
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() { return stringTypeID; }
+	const char* publishableName() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
@@ -5242,6 +5243,7 @@ public:
 	virtual BufferT&& endTick() { return  publishable_short_sample_WrapperForPublisher<T, ComposerT>::endTick(); }
 	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_short_sample_WrapperForPublisher<T, ComposerT>::compose(composer); }
 	virtual const char* name() { return publishable_short_sample_WrapperForPublisher<T, ComposerT>::name(); }
+	virtual const char* publishableName() { return publishable_short_sample_WrapperForPublisher<T, ComposerT>::publishableName(); }
 };
 
 template<class T, class BufferT>
@@ -5276,6 +5278,7 @@ public:
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual const char* name() { return stringTypeID; }
+	virtual const char* publishableName() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
@@ -5405,6 +5408,10 @@ public:
 	{
 		return publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
 	}
+	virtual const char* publishableName()
+	{
+		return publishable_short_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::publishableName();
+	}
 	void subscribe(GMQ_COLL string path)
 	{
 		registrar.subscribe( this, path );
@@ -5427,6 +5434,7 @@ public:
 
 	publishable_short_sample_WrapperForConcentrator() {}
 	const char* name() {return "publishable_short_sample";}
+	const char* publishableName() {return "publishable_short_sample";}
 	
 	// Acting as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
@@ -5545,6 +5553,7 @@ public:
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() { return stringTypeID; }
+	const char* publishableName() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 	auto get_ID() { return t.ID; }
 	void set_ID( decltype(T::ID) val) { 
@@ -5682,6 +5691,7 @@ public:
 	virtual BufferT&& endTick() { return  publishable_sample_WrapperForPublisher<T, ComposerT>::endTick(); }
 	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_sample_WrapperForPublisher<T, ComposerT>::compose(composer); }
 	virtual const char* name() { return publishable_sample_WrapperForPublisher<T, ComposerT>::name(); }
+	virtual const char* publishableName() { return publishable_sample_WrapperForPublisher<T, ComposerT>::publishableName(); }
 };
 
 template<class T, class BufferT>
@@ -5771,6 +5781,7 @@ public:
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual const char* name() { return stringTypeID; }
+	virtual const char* publishableName() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
@@ -6629,6 +6640,10 @@ public:
 	{
 		return publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
 	}
+	virtual const char* publishableName()
+	{
+		return publishable_sample_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::publishableName();
+	}
 	void subscribe(GMQ_COLL string path)
 	{
 		registrar.subscribe( this, path );
@@ -6665,6 +6680,7 @@ public:
 
 	publishable_sample_WrapperForConcentrator() {}
 	const char* name() {return "publishable_sample";}
+	const char* publishableName() {return "publishable_sample";}
 	
 	// Acting as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
@@ -6994,6 +7010,7 @@ public:
 	void startTick( BufferT&& buff ) { buffer = std::move( buff ); composer.reset(); ::globalmq::marshalling::impl::composeStateUpdateMessageBegin<ComposerT>( composer );}
 	BufferT&& endTick() { ::globalmq::marshalling::impl::composeStateUpdateMessageEnd( composer ); return std::move( buffer ); }
 	const char* name() { return stringTypeID; }
+	const char* publishableName() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 	const auto& get_tag() { return t.tag; }
 	void set_tag( decltype(T::tag) val) { 
@@ -7041,6 +7058,7 @@ public:
 	virtual BufferT&& endTick() { return  publishable_html_tag_WrapperForPublisher<T, ComposerT>::endTick(); }
 	virtual void generateStateSyncMessage(ComposerT& composer) { publishable_html_tag_WrapperForPublisher<T, ComposerT>::compose(composer); }
 	virtual const char* name() { return publishable_html_tag_WrapperForPublisher<T, ComposerT>::name(); }
+	virtual const char* publishableName() { return publishable_html_tag_WrapperForPublisher<T, ComposerT>::publishableName(); }
 };
 
 template<class T, class BufferT>
@@ -7070,6 +7088,7 @@ public:
 	virtual void applyGmqMessageWithUpdates( globalmq::marshalling::GmqParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual void applyJsonMessageWithUpdates( globalmq::marshalling::JsonParser<BufferT>& parser ) { applyMessageWithUpdates(parser); }
 	virtual const char* name() { return stringTypeID; }
+	virtual const char* publishableName() { return stringTypeID; }
 	virtual uint64_t stateTypeID() { return numTypeID; }
 
 	template<typename ParserT>
@@ -7228,6 +7247,10 @@ public:
 	{
 		return publishable_html_tag_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::name();
 	}
+	virtual const char* publishableName()
+	{
+		return publishable_html_tag_WrapperForSubscriber<T, typename GMQueueStatePublisherSubscriberTypeInfo::BufferT>::publishableName();
+	}
 	void subscribe(GMQ_COLL string path)
 	{
 		registrar.subscribe( this, path );
@@ -7248,6 +7271,7 @@ public:
 
 	publishable_html_tag_WrapperForConcentrator() {}
 	const char* name() {return "publishable_html_tag";}
+	const char* publishableName() {return "publishable_html_tag";}
 	
 	// Acting as publisher
 	virtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }
@@ -7631,7 +7655,7 @@ public:
 		PublishableVectorProcessor::compose<decltype(root.getComposer()), typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType>( root.getComposer(), t.vp_2() );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
-	auto get4set_vp_2() { return globalmq::marshalling::VectorRefWrapper4Set<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, RootT>(t.vp_2(), *this, GMQ_COLL vector<size_t>(), 2); }
+	auto get4set_vp_2() { return globalmq::marshalling::VectorRefWrapper4Set<typename T::Case_two_vp_2_T, ::globalmq::marshalling::impl::RealType, RootT>(t.vp_2(), root, address, 2); }
 };
 
 template<class T>
@@ -7839,7 +7863,7 @@ public:
 		PublishableVectorProcessor::compose<decltype(root.getComposer()), decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( root.getComposer(), t.signedInts );
 		::globalmq::marshalling::impl::composeStateUpdateBlockEnd( root.getComposer() );
 	}
-	auto get4set_signedInts() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, RootT>(t.signedInts, *this, GMQ_COLL vector<size_t>(), 1); }
+	auto get4set_signedInts() { return globalmq::marshalling::VectorRefWrapper4Set<decltype(T::signedInts), ::globalmq::marshalling::impl::SignedIntegralType, RootT>(t.signedInts, root, address, 1); }
 };
 
 //**********************************************************************
@@ -8283,4 +8307,4 @@ void STRUCT_Line__compose(ComposerT& composer, Args&& ... args)
 
 } // namespace mtest
 
-#endif // _test_marshalling_h_f545c797_guard
+#endif // _test_marshalling_h_9033bce0_guard

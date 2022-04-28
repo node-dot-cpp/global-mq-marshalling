@@ -1,4 +1,7 @@
 /* -------------------------------------------------------------------------------
+* Copyright (C) 2022 Six Impossible Things Before Breakfast Limited.
+* All rights reserved.
+* 
 * Copyright (c) 2020-2021, OLogN Technologies AG
 * All rights reserved.
 *
@@ -32,6 +35,9 @@
 #include "marshalling.h"
 #include "gmqueue.h"
 
+namespace globalmq::marshalling2 {
+	class ParserBase;
+}
 
 namespace globalmq::marshalling {
 
@@ -1001,8 +1007,11 @@ public:
 	virtual void generateStateSyncMessage( ComposerT& composer ) = 0;
 	virtual void startTick( BufferT&& buff ) = 0;
 	virtual BufferT&& endTick() = 0;
-	virtual const char* name() = 0;
+    virtual const char* name() { throw std::exception(); }
 	virtual uint64_t stateTypeID() = 0;
+
+	// mb: using just 'name' prevents idl from using member named 'name'
+    virtual const char* publishableName() { return name(); }
 };
 
 template<class PlatformSupportT>
@@ -1056,13 +1065,25 @@ public:
 	BufferT&& endTick() { assert( publisher != nullptr ); return std::move( publisher->endTick() ); }
 };
 
+template<class ComposerT>
+class PublisherRegistryBase
+{
+public:
+	using BasePublisherT = StatePublisherBase<ComposerT>;
+	virtual void addPublisher( BasePublisherT* publisher ) = 0;
+	virtual void removePublisher( BasePublisherT* publisher ) = 0;
+
+	virtual ~PublisherRegistryBase() {}
+};
+
 template<class PlatformSupportT>
-class StatePublisherPool
+class StatePublisherPool : public PublisherRegistryBase<typename PlatformSupportT::ComposerT>
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
+	using BasePublisherT = StatePublisherBase<ComposerT>;
 
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
@@ -1073,24 +1094,34 @@ public: // TODO: just a tmp approach to continue immediate dev
 	uint64_t publisherAndItsSubscriberBase = 0;
 
 public:
+	virtual void addPublisher( BasePublisherT* publisher ) override
+	{
+		add(publisher);
+	}
+	virtual void removePublisher( BasePublisherT* publisher ) override
+	{
+		remove(publisher);
+	}
+
+
 	uint64_t add( globalmq::marshalling::StatePublisherBase<ComposerT>* publisher )
 	{
 		for ( size_t i=0; i<publishers.size(); ++i )
 			if ( !publishers[i].isUsed() )
 			{
 				publishers[i].setPublisher( publisher );
-				auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->name(), &(publishers[i] ) ) ) );
+				auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->publishableName(), &(publishers[i] ) ) ) );
 				assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 				return i;
 			}
 		publishers.push_back( std::move( StatePublisherData<PlatformSupportT>(publishers.size(), publisher) ) );
-		auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->name(), &(publishers[publishers.size() - 1] ) ) ) );
+		auto ins = name2publisherMapping.insert( std::move( std::make_pair(publisher->publishableName(), &(publishers[publishers.size() - 1] ) ) ) );
 		assert( ins.second ); // this should never happen as all names are distinct and we assume only a single state of a particular type in a given pool
 		return publishers.size() - 1;
 	}
 	void remove( globalmq::marshalling::StatePublisherBase<ComposerT>* publisher )
 	{
-		size_t res = name2publisherMapping.erase( publisher->name() );
+		size_t res = name2publisherMapping.erase( publisher->publishableName() );
 		assert( res == 1 );
 		assert( publisher->idx < publishers.size() );
 		for ( auto& subscriber : publishers[publisher->idx].subscribers )
@@ -1192,27 +1223,50 @@ public:
 	}
 };
 
+
 template<class BufferT>
 class StateSubscriberBase
 {
 public:
-	virtual void applyGmqMessageWithUpdates( GmqParser<BufferT>& parser ) = 0;
+    virtual ~StateSubscriberBase() { }
+    virtual void applyGmqMessageWithUpdates(GmqParser<BufferT>& parser) = 0;
 	virtual void applyJsonMessageWithUpdates( JsonParser<BufferT>& parser ) = 0;
 	virtual void applyGmqStateSyncMessage( GmqParser<BufferT>& parser ) = 0;
 	virtual void applyJsonStateSyncMessage( JsonParser<BufferT>& parser ) = 0;
-	virtual const char* name() = 0;
-	virtual uint64_t stateTypeID() = 0;
-	virtual ~StateSubscriberBase() {}
+
+	virtual const char* name() { throw std::exception(); }
+    virtual uint64_t stateTypeID() = 0;
+
+	// mb: using just 'name' prevents idl from using member named 'name'
+	virtual const char* publishableName() { return name(); }
+
+	// mb: new interface with default implementation to avoid breaking old code
+	virtual void publishableApplyUpdates( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
+	virtual void publishableApplyStateSync( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
 };
 
+
+class SubscriberRegistryBase
+{
+public:
+	using BaseSubscriberT = StateSubscriberBase<Buffer>; //Buffer type is legacy here, not really needed
+	virtual void addSubscriber( BaseSubscriberT* subscriber ) = 0;
+	virtual void removeSubscriber( BaseSubscriberT* subscriber ) = 0;
+	virtual void pathSubscribe( BaseSubscriberT* subscriber, const GMQ_COLL string& path ) = 0;
+
+	virtual ~SubscriberRegistryBase() {}
+};
+
+
 template<class PlatformSupportT>
-class StateSubscriberPool
+class StateSubscriberPool : public SubscriberRegistryBase
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
+	using BaseSubscriberT = StateSubscriberBase<Buffer>; //Buffer type is legacy here, not really needed
 
 	struct Subscriber
 	{
@@ -1226,6 +1280,30 @@ protected:
 	GMQTransportBase<PlatformSupportT>* transport = nullptr;
 
 public:
+
+	virtual void addSubscriber( BaseSubscriberT* subscriber ) override
+	{
+		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
+			add(subscriber);
+		else
+			throw std::exception();
+	}
+
+	virtual void removeSubscriber( BaseSubscriberT* subscriber ) override
+	{
+		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
+			remove(subscriber);
+		else
+			throw std::exception();
+	}
+	virtual void pathSubscribe( BaseSubscriberT* subscriber, const GMQ_COLL string& path ) override
+	{
+		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
+			subscribe(subscriber, path);
+		else
+			throw std::exception();
+	}
+
 	void add( StateSubscriberT* subscriber )
 	{
 		// TODO: revise for performance
@@ -1284,11 +1362,10 @@ public:
 				subscribers[mh.ref_id_at_subscriber].ref_id_at_publisher = mh.ref_id_at_publisher;
 				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyJsonStateSyncMessage( parser );
-				else 
-				{
-					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+				else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqStateSyncMessage( parser );
-				}
+				else
+					subscribers[mh.ref_id_at_subscriber].subscriber->publishableApplyStateSync( parser );
 				break;
 			}
 			case PublishableStateMessageHeader::MsgType::stateUpdate:
@@ -1300,11 +1377,11 @@ public:
 				//	throw std::exception(); // TODO: ... (invalid source)
 				if constexpr ( ParserT::proto == globalmq::marshalling::Proto::JSON )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyJsonMessageWithUpdates( parser );
-				else 
-				{
-					static_assert( ParserT::proto == globalmq::marshalling::Proto::GMQ );
+				else if constexpr ( ParserT::proto == globalmq::marshalling::Proto::GMQ )
 					subscribers[mh.ref_id_at_subscriber].subscriber->applyGmqMessageWithUpdates( parser );
-				}
+				else
+					subscribers[mh.ref_id_at_subscriber].subscriber->publishableApplyUpdates( parser );
+
 				break;
 			}
 			default:

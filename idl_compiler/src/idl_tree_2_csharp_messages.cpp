@@ -1,5 +1,8 @@
 /* -------------------------------------------------------------------------------
-* Copyright (c) 2020, OLogN Technologies AG
+* Copyright (C) 2022 Six Impossible Things Before Breakfast Limited.
+* All rights reserved.
+* 
+* Copyright (c) 2020-2022, OLogN Technologies AG
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -26,7 +29,7 @@
 * -------------------------------------------------------------------------------*/
 
 #include "idl_tree_2_csharp.h"
-#include "idl_tree_serializer.h"
+#include "idl_tree_common.h"
 
 #include <set>
 
@@ -935,7 +938,7 @@ void generateCsharpMessageScope(CsharpWritter f, Root& root, Scope& scope)
 		assert(it != nullptr);
 		assert(it->type == CompositeType::Type::message);
 
-		checkCsharpStruct(*it);
+		// checkCsharpStruct(*it);
 
 		if (!it->isAlias)
 		{
