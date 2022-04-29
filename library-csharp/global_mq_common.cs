@@ -111,11 +111,6 @@ namespace globalmq.marshalling
             return buffSz;
         }
         public SimpleBuffer() { }
-        public SimpleBuffer(byte[] _data, int _size)
-        {
-            this._data = _data;
-            this._size = _size;
-        }
         public void writeToFile(string path)
         {
             Array.Resize(ref _data, _size);
@@ -124,7 +119,17 @@ namespace globalmq.marshalling
         public static SimpleBuffer readFromFile(string path)
         {
             byte[] arr = File.ReadAllBytes(path);
-            return new SimpleBuffer(arr, arr.Length);
+            SimpleBuffer buf = new SimpleBuffer();
+            buf.setInternalBuffer(arr, arr.Length);
+            return buf;
+        }
+
+        public byte[] getInternalBuffer() { return _data; }
+        public void setInternalBuffer(byte[] _data, int _size)
+        {
+            Debug.Assert(this._data == null);
+            this._data = _data;
+            this._size = _size;
         }
         public int size() { return _size; }
         public bool empty() { return _size == 0; }
