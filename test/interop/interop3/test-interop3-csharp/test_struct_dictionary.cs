@@ -29,13 +29,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop3_csharp
 {
-
+    [TestFixture]
     public class test_struct_dictionary
     {
         private const string Prefix = TestCommon.DataPathPrefix + "struct_dictionary/";
@@ -148,7 +148,7 @@ namespace test_interop3_csharp
                 buffer.writeToFile(fileName);
 
             SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
-            Assert.Equal(expected, buffer);
+            Assert.AreEqual(expected, buffer);
         }
 
         static void TestJsonParse(Func<mtest.struct_dictionary> sampleData, string fileName)
@@ -159,7 +159,7 @@ namespace test_interop3_csharp
             mtest.struct_dictionary msg = new mtest.struct_dictionary();
             mtest.struct_dictionary_message.parse(parser, msg);
 
-            Assert.Equal(msg, sampleData());
+            Assert.AreEqual(msg, sampleData());
         }
 
         static void TestGmqParse(Func<mtest.struct_dictionary> sampleData, string fileName)
@@ -170,28 +170,28 @@ namespace test_interop3_csharp
             mtest.struct_dictionary msg = new mtest.struct_dictionary();
             mtest.struct_dictionary_message.parse(parser, msg);
 
-            Assert.Equal(sampleData(), msg);
+            Assert.AreEqual(sampleData(), msg);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonCompose0()
         {
             TestJsonCompose(GetDictionary_2, JsonPath1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParse0()
         {
             TestJsonParse(GetDictionary_2, JsonPath1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqCompose0()
         {
             TestGmqCompose(GetDictionary_2, GmqPath1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParse0()
         {
             TestGmqParse(GetDictionary_2, GmqPath1);

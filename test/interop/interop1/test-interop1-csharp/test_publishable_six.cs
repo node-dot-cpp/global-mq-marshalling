@@ -26,13 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
 
+    [TestFixture]
     public class test_publishable_six
     {
         private const string Prefix = TestCommon.DataPathPrefix + "";
@@ -182,99 +183,99 @@ namespace test_interop2_csharp
 
         internal static void doNothing( mtest.IStructSix data) { }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeStateSync()
         {
             TestComposeStateSync(JsonPlatform, Path);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseStateSync()
         {
             TestParseStateSync(JsonPlatform, Path);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate1()
         {
             TestComposeUpdate(JsonPlatform, Path1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate1()
         {
             TestParseUpdate(JsonPlatform, Path, Path1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate2()
         {
             TestComposeUpdate(JsonPlatform, Path2, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate2()
         {
             TestParseUpdate(JsonPlatform, Path, Path2, doUpdate2);
         }
 
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeNoChangeUpdate3()
         {
             TestComposeUpdate(JsonPlatform, Path3, doNothing);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseNoChangeUpdate3()
         {
             TestParseUpdate(JsonPlatform, Path, Path3, null);
         }
 //////////////////////
-        [Fact]
+        [Test]
         public static void TestGmqComposeStateSync()
         {
             TestComposeStateSync(GmqPlatform, GmqPath_s0);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseStateSync()
         {
             TestParseStateSync(GmqPlatform, GmqPath_s0);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate1()
         {
             TestComposeUpdate(GmqPlatform, GmqPath_u1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate1()
         {
             TestParseUpdate(GmqPlatform, GmqPath_s0, GmqPath_u1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate2()
         {
             TestComposeUpdate(GmqPlatform, GmqPath_u2, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate2()
         {
             TestParseUpdate(GmqPlatform, GmqPath_s0, GmqPath_u2, doUpdate2);
         }
 
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeNoChangeUpdate3()
         {
             TestComposeUpdate(GmqPlatform, GmqPath_u3, doNothing);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseNoChangeUpdate3()
         {
             TestParseUpdate(GmqPlatform, GmqPath_s0, GmqPath_u3, null);

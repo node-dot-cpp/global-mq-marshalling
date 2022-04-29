@@ -29,13 +29,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop3_csharp
 {
-
+    [TestFixture]
     public class test_struct_du
     {
         private const string Prefix = TestCommon.DataPathPrefix + "struct_dunion/";
@@ -109,7 +109,7 @@ namespace test_interop3_csharp
                 buffer.writeToFile(fileName);
 
             SimpleBuffer expected = SimpleBuffer.readFromFile(fileName);
-            Assert.Equal(expected, buffer);
+            Assert.AreEqual(expected, buffer);
         }
 
         static void TestJsonParse(Func<mtest.struct_du> sampleData, string fileName)
@@ -120,7 +120,7 @@ namespace test_interop3_csharp
             mtest.struct_du msg = new mtest.struct_du();
             mtest.struct_du_message.parse(parser, msg);
 
-            Assert.Equal(msg, sampleData());
+            Assert.AreEqual(msg, sampleData());
         }
 
         static void TestGmqParse(Func<mtest.struct_du> sampleData, string fileName)
@@ -131,62 +131,62 @@ namespace test_interop3_csharp
             mtest.struct_du msg = new mtest.struct_du();
             mtest.struct_du_message.parse(parser, msg);
 
-            Assert.Equal(sampleData(), msg);
+            Assert.AreEqual(sampleData(), msg);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonCompose0()
         {
             TestJsonCompose(GetStructDu0, PathJson0);
         }
-        [Fact]
+        [Test]
         public static void TestJsonCompose1()
         {
             TestJsonCompose(GetStructDu1, PathJson1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonCompose2()
         {
             TestJsonCompose(GetStructDu2, PathJson2);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqCompose0()
         {
             TestGmqCompose(GetStructDu0, PathGmq0);
         }
-        [Fact]
+        [Test]
         public static void TestGmqCompose1()
         {
             TestGmqCompose(GetStructDu1, PathGmq1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqCompose2()
         {
             TestGmqCompose(GetStructDu2, PathGmq2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParse1()
         {
             TestJsonParse(GetStructDu1, PathJson1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParse2()
         {
             TestJsonParse(GetStructDu2, PathJson2);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParse1()
         {
             TestGmqParse(GetStructDu1, PathGmq1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParse2()
         {
             TestGmqParse(GetStructDu2, PathGmq2);

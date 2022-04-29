@@ -29,13 +29,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop4_csharp
 {
-
+    [TestFixture]
     public class test_publishable_dictionary
     {
         private const string Prefix = TestCommon.DataPathPrefix + "publishable_cycle/";
@@ -82,7 +82,7 @@ namespace test_interop4_csharp
             if (proto == TestCommon.Protocol.Json)
                 Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == TestCommon.Protocol.Gmq)
-                Assert.Equal(expected, buffer);
+                Assert.AreEqual(expected, buffer);
         }
 
         static void TestParseStateSync(TestCommon.Protocol proto, String fileName, Func<mtest.publishable_cycle> getState)
@@ -129,7 +129,7 @@ namespace test_interop4_csharp
             if (proto == TestCommon.Protocol.Json)
                 Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == TestCommon.Protocol.Gmq)
-                Assert.Equal(expected, buffer);
+                Assert.AreEqual(expected, buffer);
 
         }
         static void TestParseUpdate(TestCommon.Protocol proto, String fileName, Func<mtest.publishable_cycle> getState, Action<mtest.Ipublishable_cycle> updateDelegate)
@@ -161,13 +161,13 @@ namespace test_interop4_csharp
         }
 
 
-        [Fact]
+        [Test]
         public static void TestStateSync0()
         {
             TestStateSync(0, GetPublishableCycle_0);
         }
 
-        [Fact]
+        [Test]
         public static void TestUpdate1()
         {
             TestUpdate(1, GetPublishableCycle_0, doUpdate1);

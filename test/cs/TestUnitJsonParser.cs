@@ -20,27 +20,28 @@
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* ON ANY Test OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace TestProject1
 {
     /// <summary>
     /// Tests to match Json parser/composer from C# to C++
     /// </summary>
+    [TestFixture]
     public class TestUnitJsonParser
     {
 
-        [Theory]
-        [InlineData(" { \"addr\": [ 1, 2, 3],", new UInt64[] { 1, 2, 3 })]
-        [InlineData(" { \"addr\": [ ],", new UInt64[] { })]
+        [Test]
+        [TestCase(" { \"addr\": [ 1, 2, 3],", new UInt64[] { 1, 2, 3 })]
+        [TestCase(" { \"addr\": [ ],", new UInt64[] { })]
         public static void TestParseAddress(String asText, UInt64[] parsed)
         {
             SimpleBuffer buffer = new SimpleBuffer();
@@ -50,11 +51,11 @@ namespace TestProject1
 
             UInt64[] addr = null;
             Assert.True(parser.parseAddress(ref addr));
-            Assert.Equal<UInt64>(parsed, addr);
+            Assert.AreEqual(parsed, addr);
         }
 
 
-        [Fact]
+        [Test]
         public static void TestParseEmptyAddress()
         {
             SimpleBuffer buffer = new SimpleBuffer();
@@ -66,9 +67,9 @@ namespace TestProject1
             Assert.False(parser.parseAddress(ref addr));
         }
 
-        [Theory]
-        [InlineData(" ] }")]
-        [InlineData(" { \"addr\": "
+        [Test]
+        [TestCase(" ] }")]
+        [TestCase(" { \"addr\": "
             )]
         public static void TestParseFail(String asText)
         {
@@ -83,13 +84,13 @@ namespace TestProject1
 
 
         //mb: TODO add significant values
-        [Theory]
-        [InlineData(0, "0 ")]
-        [InlineData(1, "1 ")]
-        [InlineData(1.1, "1.1 ")]
-        [InlineData(1.1e4, "11000 ")]
-        [InlineData(-1.1e4, "-11000 ")]
-        [InlineData(-1.1e-4, "-0.00011 ")]
+        [Test]
+        [TestCase(0, "0 ")]
+        [TestCase(1, "1 ")]
+        [TestCase(1.1, "1.1 ")]
+        [TestCase(1.1e4, "11000 ")]
+        [TestCase(-1.1e4, "-11000 ")]
+        [TestCase(-1.1e-4, "-0.00011 ")]
 
         public static void TestParseFloat(double value, String asText)
         {
@@ -99,21 +100,21 @@ namespace TestProject1
             composer.composeReal(value);
             composer.append(' ');
 
-            Assert.Equal(asText, buffer.toDebugString());
+            Assert.AreEqual(asText, buffer.toDebugString());
 
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
             double res;
             parser.parseReal(out res);
 
-            Assert.Equal(value, res);
+            Assert.AreEqual(value, res);
         }
 
-        [Theory]
-        [InlineData("hola mundo!", "\"hola mundo!\"")]
-        [InlineData("hola \"mundo\"!", "\"hola \\\"mundo\\\"!\"")]
-        [InlineData("hola\r\n\tmundo!", "\"hola\\r\\n\\tmundo!\"")]
-        [InlineData("hola\\mundo!", "\"hola\\\\mundo!\"")]
+        [Test]
+        [TestCase("hola mundo!", "\"hola mundo!\"")]
+        [TestCase("hola \"mundo\"!", "\"hola \\\"mundo\\\"!\"")]
+        [TestCase("hola\r\n\tmundo!", "\"hola\\r\\n\\tmundo!\"")]
+        [TestCase("hola\\mundo!", "\"hola\\\\mundo!\"")]
         public static void TestEscapeString(String value, String escaped)
         {
             SimpleBuffer buffer = new SimpleBuffer();
@@ -121,14 +122,14 @@ namespace TestProject1
             JsonComposer composer = new JsonComposer(buffer);
             composer.composeString(value);
 
-            Assert.Equal(escaped, buffer.toDebugString());
+            Assert.AreEqual(escaped, buffer.toDebugString());
 
             JsonParser parser = new JsonParser(buffer.getReadIterator());
 
             String res;
             parser.parseString(out res);
 
-            Assert.Equal(value, res);
+            Assert.AreEqual(value, res);
         }
     }
 

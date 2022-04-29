@@ -26,13 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
 
+    [TestFixture]
     public class test_struct_one
     {
         private const string Prefix = TestCommon.DataPathPrefix + "";
@@ -63,7 +64,7 @@ namespace test_interop2_csharp
             return msg;
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqCompose()
         {
             mtest.struct_one msg = GetSampleData();
@@ -82,7 +83,7 @@ namespace test_interop2_csharp
             Assert.True(GmqPlatform.AreEqual(expected, buffer));
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonCompose()
         {
             mtest.struct_one msg = GetSampleData();
@@ -100,7 +101,7 @@ namespace test_interop2_csharp
             Assert.True(JsonPlatform.AreEqual(expected, buffer));
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParse()
         {
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathGmq);
@@ -109,10 +110,10 @@ namespace test_interop2_csharp
             mtest.struct_one msg = new mtest.struct_one();
             mtest.struct_one_message.parse(parser, msg);
 
-            Assert.Equal(msg, GetSampleData());
+            Assert.AreEqual(msg, GetSampleData());
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParse()
         {
             SimpleBuffer buffer = SimpleBuffer.readFromFile(PathJson);
@@ -121,9 +122,9 @@ namespace test_interop2_csharp
             mtest.struct_one msg = new mtest.struct_one();
             mtest.struct_one_message.parse(parser, msg);
 
-            Assert.Equal(msg, GetSampleData());
+            Assert.AreEqual(msg, GetSampleData());
         }
-        [Fact]
+        [Test]
         public static void TestGmqComposeAndParse()
         {
             mtest.struct_one msg = GetSampleData();
@@ -138,10 +139,10 @@ namespace test_interop2_csharp
             mtest.struct_one msg2 = new mtest.struct_one();
             mtest.struct_one_message.parse(parser, msg2);
 
-            Assert.Equal(msg, msg2);
+            Assert.AreEqual(msg, msg2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeAndParse()
         {
             mtest.struct_one msg = GetSampleData();
@@ -156,7 +157,7 @@ namespace test_interop2_csharp
             mtest.struct_one msg2 = new mtest.struct_one();
             mtest.struct_one_message.parse(parser, msg2);
 
-            Assert.Equal(msg, msg2);
+            Assert.AreEqual(msg, msg2);
         }
 
     }

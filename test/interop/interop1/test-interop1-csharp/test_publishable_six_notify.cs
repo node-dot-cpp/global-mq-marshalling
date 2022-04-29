@@ -26,13 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
 
+    [TestFixture]
     public class test_publishable_six_notify
     {
         public enum Events {
@@ -97,7 +98,7 @@ namespace test_interop2_csharp
         }
 
 
-        [Fact]
+        [Test]
         public static void TestJsonNotifyStateSync()
         {
             List<Events> handled = new List<Events>();
@@ -108,7 +109,7 @@ namespace test_interop2_csharp
 
             stub.applyStateSyncMessage(parser);
 
-            Assert.Equal(handled.ToArray(), new Events[]{ Events.notifyFullyUpdated });
+            Assert.AreEqual(handled.ToArray(), new Events[]{ Events.notifyFullyUpdated });
         }
 
         static void TestJsonParseUpdate(String fileName, Events[] events)
@@ -121,10 +122,10 @@ namespace test_interop2_csharp
 
             stub.applyMessageWithUpdates(parser);
 
-            Assert.Equal(events, handled.ToArray());
+            Assert.AreEqual(events, handled.ToArray());
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonNotifyUpdate1()
         {
             TestJsonParseUpdate(test_publishable_six.Path1, new Events[] {
@@ -138,7 +139,7 @@ namespace test_interop2_csharp
         }
 
 
-        [Fact]
+        [Test]
         public static void TestJsonNotifyUpdate2()
         {
             TestJsonParseUpdate(test_publishable_six.Path2, new Events[] {
@@ -170,7 +171,7 @@ namespace test_interop2_csharp
             });
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonNotifyUpdate3()
         {
             TestJsonParseUpdate(test_publishable_six.Path3, new Events[] { });

@@ -20,32 +20,34 @@
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* ON ANY Test OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
+
 
 namespace TestProject1
 {
     /// <summary>
     /// Tests to match Json parser/composer from C# to C++
     /// </summary>
+    [TestFixture]
     public class TestUnitEncoding
     {
 
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(126)]
-        [InlineData(127)]
-        [InlineData(128)]
-        [InlineData(UInt64.MaxValue)]
+        [Test]
+        [TestCase(0UL)]
+        [TestCase(1UL)]
+        [TestCase(2UL)]
+        [TestCase(126UL)]
+        [TestCase(127UL)]
+        [TestCase(128UL)]
+        [TestCase(UInt64.MaxValue)]
         public static void TestVlqEncoding(UInt64 val)
         {
             SimpleBuffer buffer = new SimpleBuffer();
@@ -53,32 +55,32 @@ namespace TestProject1
 
             UInt64 result = IntegralVlq.readVlqIntegral(buffer.getReadIterator());
 
-            Assert.Equal(val, result);
+            Assert.AreEqual(val, result);
         }
 
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(126)]
-        [InlineData(127)]
-        [InlineData(128)]
-        [InlineData(Int64.MaxValue)]
-        [InlineData(Int64.MinValue)]
-        [InlineData(-128)]
-        [InlineData(-127)]
-        [InlineData(-1)]
+        [Test]
+        [TestCase(0L)]
+        [TestCase(1L)]
+        [TestCase(2L)]
+        [TestCase(126L)]
+        [TestCase(127L)]
+        [TestCase(128L)]
+        [TestCase(Int64.MaxValue)]
+        [TestCase(Int64.MinValue)]
+        [TestCase(-128L)]
+        [TestCase(-127L)]
+        [TestCase(-1L)]
         public static void TestZigZagEncoding(Int64 val)
         {
             UInt64 uns = ZigZag.encode(val);
             Int64 result = ZigZag.decode(uns);
 
-            Assert.Equal(val, result);
+            Assert.AreEqual(val, result);
         }
 
-        [Theory]
-        [InlineData("hello")]
-        [InlineData("\thi\r\nbye")]
+        [Test]
+        [TestCase("hello")]
+        [TestCase("\thi\r\nbye")]
         public static void TestAsciiAddressEncoding(String val)
         {
             UInt64[] baseAddr = new UInt64[1];
@@ -86,12 +88,12 @@ namespace TestProject1
             int refIndex = 1;
             String result = AsciiAddress.decode(addr, ref refIndex);
 
-            Assert.Equal(val, result);
+            Assert.AreEqual(val, result);
         }
 
 
-        [Theory]
-        [InlineData("hello\0")]
+        [Test]
+        [TestCase("hello\0")]
         public static void TestAsciiAddressEncodingFail(String val)
         {
             try

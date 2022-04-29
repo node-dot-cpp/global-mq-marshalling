@@ -29,13 +29,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop3_csharp
 {
-
+    [TestFixture]
     public class test_message_dictionary
     {
         private const string Prefix = TestCommon.DataPathPrefix + "message_dictionary/";
@@ -57,7 +57,7 @@ namespace test_interop3_csharp
         }
 
 
-        [Fact]
+        [Test]
         public static void TestJsonCompose()
         {
             mtest.struct_dictionary1 msg = GetDictionary_0();
@@ -73,7 +73,7 @@ namespace test_interop3_csharp
             Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonHandle()
         {
             bool condition = false;
@@ -91,7 +91,7 @@ namespace test_interop3_csharp
             Assert.True(condition);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqCompose()
         {
             mtest.struct_dictionary1 msg = GetDictionary_0();
@@ -103,11 +103,11 @@ namespace test_interop3_csharp
             if (WriteFiles)
                 buffer.writeToFile(GmqPath_0);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(GmqPath_0));
+            Assert.AreEqual(buffer, SimpleBuffer.readFromFile(GmqPath_0));
         }
 
 
-        [Fact]
+        [Test]
         public static void TestGmqHandle()
         {
             SimpleBuffer buffer = SimpleBuffer.readFromFile(GmqPath_0);

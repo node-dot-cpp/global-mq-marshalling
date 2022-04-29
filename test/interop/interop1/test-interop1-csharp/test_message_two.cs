@@ -26,13 +26,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
-
+    [TestFixture]
     public class test_message_two
     {
         private const string PathGmq = TestCommon.DataPathPrefix + "test_message_two.gmq";
@@ -49,7 +49,7 @@ namespace test_interop2_csharp
             );
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqCompose()
         {
             mtest.struct_one msg = test_struct_one.GetSampleData();
@@ -61,11 +61,11 @@ namespace test_interop2_csharp
             // uncomment to update file
             //buffer.writeToFile(PathGmq);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(PathGmq));
+            Assert.AreEqual(buffer, SimpleBuffer.readFromFile(PathGmq));
         }
 
 
-        [Fact]
+        [Test]
         public static void TestGmqHandle()
         {
             mtest.struct_one msg = test_struct_one.GetSampleData();
@@ -88,7 +88,7 @@ namespace test_interop2_csharp
             Assert.True(condition);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqHandleDefault()
         {
             mtest.struct_one msg = test_struct_one.GetSampleData();

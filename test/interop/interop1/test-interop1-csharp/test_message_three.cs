@@ -26,13 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
 
+    [TestFixture]
     public class test_message_three
     {
         private const string PathJson = TestCommon.DataPathPrefix + "test_message_three.json";
@@ -49,7 +50,7 @@ namespace test_interop2_csharp
             );
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonCompose()
         {
             mtest.struct_one msg = test_struct_one.GetSampleData();
@@ -65,7 +66,7 @@ namespace test_interop2_csharp
             Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonHandle()
         {
             bool condition = false;
@@ -84,7 +85,7 @@ namespace test_interop2_csharp
             Assert.True(condition);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonHandleDefault()
         {
             bool condition = false;

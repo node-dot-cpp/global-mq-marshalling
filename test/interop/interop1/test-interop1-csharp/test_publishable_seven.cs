@@ -26,13 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
 
+    [TestFixture]
     public class test_publishable_seven
     {
         private const string Prefix = TestCommon.DataPathPrefix + "";
@@ -237,73 +238,73 @@ namespace test_interop2_csharp
             data.structVec.Insert(1, e1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeStateSync()
         {
             TestComposeStateSync(JsonFactory, JsonPath);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseStateSync()
         {
             TestParseStateSync(JsonFactory, JsonPath);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate1()
         {
             TestComposeUpdate(JsonFactory, JsonPath1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate1()
         {
             TestParseUpdate(JsonFactory, JsonPath, JsonPath1, doUpdate1);
         }
 
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate2()
         {
             TestComposeUpdate(JsonFactory, JsonPath2, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate2()
         {
             TestParseUpdate(JsonFactory, JsonPath, JsonPath2, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate3()
         {
             TestComposeUpdate(JsonFactory, JsonPath3, doUpdate3);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate3()
         {
             TestParseUpdate(JsonFactory, JsonPath, JsonPath3, doUpdate3);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate4()
         {
             TestComposeUpdate(JsonFactory, JsonPath4, doUpdate4);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate4()
         {
             TestParseUpdate(JsonFactory, JsonPath, JsonPath4, doUpdate4);
         }
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate5()
         {
             TestComposeUpdate(JsonFactory, JsonPath5, doUpdate5);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate5()
         {
             TestParseUpdate(JsonFactory, JsonPath, JsonPath5, doUpdate5);
@@ -311,71 +312,71 @@ namespace test_interop2_csharp
 
 
         ///////////////////// gmq //////////////////
-        [Fact]
+        [Test]
         public static void TestGmqComposeStateSync()
         {
             TestComposeStateSync(GmqFactory, GmqPath);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseStateSync()
         {
             TestParseStateSync(GmqFactory, GmqPath);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate1()
         {
             TestComposeUpdate(GmqFactory, GmqPath1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate1()
         {
             TestParseUpdate(GmqFactory, GmqPath, GmqPath1, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate2()
         {
             TestComposeUpdate(GmqFactory, GmqPath2, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate2()
         {
             TestParseUpdate(GmqFactory, GmqPath, GmqPath2, doUpdate2);
         }
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate3()
         {
             TestComposeUpdate(GmqFactory, GmqPath3, doUpdate3);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate3()
         {
             TestParseUpdate(GmqFactory, GmqPath, GmqPath3, doUpdate3);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate4()
         {
             TestComposeUpdate(GmqFactory, GmqPath4, doUpdate4);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate4()
         {
             TestParseUpdate(GmqFactory, GmqPath, GmqPath4, doUpdate4);
         }
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate5()
         {
             TestComposeUpdate(GmqFactory, GmqPath5, doUpdate5);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate5()
         {
             TestParseUpdate(GmqFactory, GmqPath, GmqPath5, doUpdate5);

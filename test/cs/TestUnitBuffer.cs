@@ -20,28 +20,30 @@
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* ON ANY Test OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
+
 
 namespace TestProject1
 {
+    [TestFixture]
     public class TestUnitBuffer
     {
 
 
-        [Theory]
-        [InlineData("hola mundo!", "hola mundo!")]
-        [InlineData("hola\r\nmundo!", "hola\r\nmundo!")]
-        [InlineData("hola\nmundo!", "hola\nmundo!")]
-        [InlineData("hola\r\nmundo!", "hola\nmundo!")]
-        [InlineData("hola\nmundo!", "hola\r\nmundo!")]
+        [Test]
+        [TestCase("hola mundo!", "hola mundo!")]
+        [TestCase("hola\r\nmundo!", "hola\r\nmundo!")]
+        [TestCase("hola\nmundo!", "hola\nmundo!")]
+        [TestCase("hola\r\nmundo!", "hola\nmundo!")]
+        [TestCase("hola\nmundo!", "hola\r\nmundo!")]
         public static void TestEqualsIgnoreEol(String l, String r)
         {
             SimpleBuffer left = new SimpleBuffer();

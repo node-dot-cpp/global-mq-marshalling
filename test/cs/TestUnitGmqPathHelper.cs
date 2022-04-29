@@ -20,19 +20,19 @@
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* ON ANY Test OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace TestProject1
 {
-
+    [TestFixture]
     public class TestUnitGmqPathHelper
     {
         static void checkParser(GmqPathHelper.PathComponents pc, String path, PublishableStateMessageHeader.MsgType msgType)
@@ -41,17 +41,17 @@ namespace TestProject1
             result.type = msgType;
             Assert.True(GmqPathHelper.parse(path, result));
 
-            Assert.Equal(pc, result);
+            Assert.AreEqual(pc, result);
 
         }
 
 
-        [Fact]
+        [Test]
         public static void TestException1()
         {
             Assert.Throws<ArgumentException>(() => { GmqPathHelper.compose(null); });
         }
-        [Fact]
+        [Test]
         public static void TestException2()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -59,7 +59,7 @@ namespace TestProject1
             Assert.Throws<ArgumentException>(() => { GmqPathHelper.compose(pc); });
         }
 
-        [Fact]
+        [Test]
         public static void TestException3()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -69,7 +69,7 @@ namespace TestProject1
 
             Assert.Throws<ArgumentException>(() => { GmqPathHelper.compose(pc); });
         }
-        [Fact]
+        [Test]
         public static void TestException4()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -79,7 +79,7 @@ namespace TestProject1
 
             Assert.Throws<ArgumentException>(() => { GmqPathHelper.compose(pc); });
         }
-        [Fact]
+        [Test]
         public static void TestException5()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -89,7 +89,7 @@ namespace TestProject1
 
             Assert.Throws<ArgumentException>(() => { GmqPathHelper.compose(pc); });
         }
-        [Fact]
+        [Test]
         public static void Test10()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -99,11 +99,11 @@ namespace TestProject1
             
             string path = GmqPathHelper.compose(pc);
 
-            Assert.Equal("globalmq:/test_node?sp=StructSix", path);
+            Assert.AreEqual("globalmq:/test_node?sp=StructSix", path);
 
             checkParser(pc, path, PublishableStateMessageHeader.MsgType.subscriptionRequest);
         }
-        [Fact]
+        [Test]
         public static void Test11()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -113,11 +113,11 @@ namespace TestProject1
 
             string path = GmqPathHelper.compose(pc);
 
-            Assert.Equal("globalmq:/test_node?ct=StructSix", path);
+            Assert.AreEqual("globalmq:/test_node?ct=StructSix", path);
 
             checkParser(pc, path, PublishableStateMessageHeader.MsgType.connectionRequest);
         }
-        [Fact]
+        [Test]
         public static void Test12()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -128,11 +128,11 @@ namespace TestProject1
 
             string path = GmqPathHelper.compose(pc);
 
-            Assert.Equal("globalmq://authority/test_node?sp=StructSix", path);
+            Assert.AreEqual("globalmq://authority/test_node?sp=StructSix", path);
 
             checkParser(pc, path, PublishableStateMessageHeader.MsgType.subscriptionRequest);
         }
-        [Fact]
+        [Test]
         public static void Test13()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -144,11 +144,11 @@ namespace TestProject1
 
             string path = GmqPathHelper.compose(pc);
 
-            Assert.Equal("globalmq://authority!gmq/test_node?sp=StructSix", path);
+            Assert.AreEqual("globalmq://authority!gmq/test_node?sp=StructSix", path);
 
             checkParser(pc, path, PublishableStateMessageHeader.MsgType.subscriptionRequest);
         }
-        [Fact]
+        [Test]
         public static void Test14()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -161,11 +161,11 @@ namespace TestProject1
 
             string path = GmqPathHelper.compose(pc);
 
-            Assert.Equal("globalmq://authority:8080/test_node?sp=StructSix", path);
+            Assert.AreEqual("globalmq://authority:8080/test_node?sp=StructSix", path);
 
             checkParser(pc, path, PublishableStateMessageHeader.MsgType.subscriptionRequest);
         }
-        [Fact]
+        [Test]
         public static void Test15()
         {
             GmqPathHelper.PathComponents pc = new GmqPathHelper.PathComponents();
@@ -179,7 +179,7 @@ namespace TestProject1
 
             string path = GmqPathHelper.compose(pc);
 
-            Assert.Equal("globalmq://authority!gmq:8080/test_node?sp=StructSix", path);
+            Assert.AreEqual("globalmq://authority!gmq:8080/test_node?sp=StructSix", path);
 
             checkParser(pc, path, PublishableStateMessageHeader.MsgType.subscriptionRequest);
         }

@@ -26,13 +26,14 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
+
 
 namespace test_interop2_csharp
 {
-
+    [TestFixture]
     public class test_gmqueue
     {
         static void deliverAllMessages(MetaPool pool, MwsrThreadQueue msgQueue, String filePrefix, ref int msgCnt)
@@ -100,7 +101,7 @@ namespace test_interop2_csharp
             return path;
         }
 
-        [Fact]
+        [Test]
         public static void TestGmQueueWithStructSix()
         {
             MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
@@ -160,7 +161,7 @@ namespace test_interop2_csharp
             Assert.True(publ.isEquivalent(subs3));
         }
 
-        [Fact]
+        [Test]
         public static void TestGmQueueWithMock1()
         {
             MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
@@ -185,7 +186,7 @@ namespace test_interop2_csharp
             deliverAllMessages(mp, msgQueue, "test_gmqueue1_", ref msgCnt);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmQueueWithMock2()
         {
             MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);
@@ -215,7 +216,7 @@ namespace test_interop2_csharp
             deliverAllMessages(mp, msgQueue, "test_gmqueue2_", ref msgCnt);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmQueueWithMock3()
         {
             MwsrThreadQueue msgQueue = new MwsrThreadQueue(5);

@@ -26,13 +26,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop2_csharp
 {
-
+    [TestFixture]
     public class test_publishable_dictionary
     {
         private const string Prefix = TestCommon.DataPathPrefix + "publishable_dictionary/";
@@ -125,7 +125,7 @@ namespace test_interop2_csharp
             if (proto == Protocol.Json)
                 Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == Protocol.Gmq)
-                Assert.Equal(expected, buffer);
+                Assert.AreEqual(expected, buffer);
         }
 
         static void TestParseStateSync(Protocol proto, String fileName, Func<mtest.publishable_dictionary> getState)
@@ -160,7 +160,7 @@ namespace test_interop2_csharp
             if (WriteFiles)
                 buffer.writeToFile(fileName);
 
-            Assert.Equal(buffer, SimpleBuffer.readFromFile(fileName));
+            Assert.AreEqual(buffer, SimpleBuffer.readFromFile(fileName));
         }
         static void TestParseUpdate(Protocol proto, String fileNameInit, String fileName, Func<mtest.publishable_dictionary> getState, Action<mtest.Ipublishable_dictionary> updateDelegate)
         {
@@ -185,61 +185,61 @@ namespace test_interop2_csharp
             Assert.True(expected.isEquivalent(subs));
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeStateSync0()
         {
             TestComposeStateSync(Protocol.Json, JsonPath_s0, GetPublishableDictionary_0);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseStateSync0()
         {
             TestParseStateSync(Protocol.Json, JsonPath_s0, GetPublishableDictionary_0);
         }
-        [Fact]
+        [Test]
         public static void TestJsonComposeStateSync1()
         {
             TestComposeStateSync(Protocol.Json, JsonPath_s1, GetPublishableDictionary_1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseStateSync1()
         {
             TestParseStateSync(Protocol.Json, JsonPath_s1, GetPublishableDictionary_1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate1()
         {
             TestComposeUpdate(Protocol.Json, JsonPath_u1, GetPublishableDictionary_0, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate1()
         {
             TestParseUpdate(Protocol.Json, JsonPath_s0, JsonPath_u1, GetPublishableDictionary_0, doUpdate1);
         }
 
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate2()
         {
             TestComposeUpdate(Protocol.Json, JsonPath_u2, GetPublishableDictionary_1, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate2()
         {
             TestParseUpdate(Protocol.Json, JsonPath_s1, JsonPath_u2, GetPublishableDictionary_1, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonComposeUpdate3()
         {
             TestComposeUpdate(Protocol.Json, JsonPath_u3, GetPublishableDictionary_1, doUpdate3);
         }
 
-        [Fact]
+        [Test]
         public static void TestJsonParseUpdate3()
         {
             TestParseUpdate(Protocol.Json, JsonPath_s1, JsonPath_u3, GetPublishableDictionary_1, doUpdate3);
@@ -247,60 +247,60 @@ namespace test_interop2_csharp
 
 
         ///////////////////// gmq //////////////////
-        [Fact]
+        [Test]
         public static void TestGmqComposeStateSync0()
         {
             TestComposeStateSync(Protocol.Gmq, GmqPath_s0, GetPublishableDictionary_0);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseStateSync0()
         {
             TestParseStateSync(Protocol.Gmq, GmqPath_s0, GetPublishableDictionary_0);
         }
-        [Fact]
+        [Test]
         public static void TestGmqComposeStateSync1()
         {
             TestComposeStateSync(Protocol.Gmq, GmqPath_s1, GetPublishableDictionary_1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseStateSync1()
         {
             TestParseStateSync(Protocol.Gmq, GmqPath_s1, GetPublishableDictionary_1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate1()
         {
             TestComposeUpdate(Protocol.Gmq, GmqPath_u1, GetPublishableDictionary_0, doUpdate1);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate1()
         {
             TestParseUpdate(Protocol.Gmq, GmqPath_s0, GmqPath_u1, GetPublishableDictionary_0, doUpdate1);
         }
 
 
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate2()
         {
             TestComposeUpdate(Protocol.Gmq, GmqPath_u2, GetPublishableDictionary_1, doUpdate2);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate2()
         {
             TestParseUpdate(Protocol.Gmq, GmqPath_s1, GmqPath_u2, GetPublishableDictionary_1, doUpdate2);
         }
-        [Fact]
+        [Test]
         public static void TestGmqComposeUpdate3()
         {
             TestComposeUpdate(Protocol.Gmq, GmqPath_u3, GetPublishableDictionary_1, doUpdate3);
         }
 
-        [Fact]
+        [Test]
         public static void TestGmqParseUpdate3()
         {
             TestParseUpdate(Protocol.Gmq, GmqPath_s1, GmqPath_u3, GetPublishableDictionary_1, doUpdate3);

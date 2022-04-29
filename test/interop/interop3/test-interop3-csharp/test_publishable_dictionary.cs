@@ -29,13 +29,13 @@
 * -------------------------------------------------------------------------------*/
 
 using globalmq.marshalling;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using Xunit;
 
 namespace test_interop3_csharp
 {
-
+    [TestFixture]
     public class test_publishable_dictionary
     {
         private const string Prefix = TestCommon.DataPathPrefix + "publishable_dictionary/";
@@ -121,7 +121,7 @@ namespace test_interop3_csharp
             if (proto == TestCommon.Protocol.Json)
                 Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == TestCommon.Protocol.Gmq)
-                Assert.Equal(expected, buffer);
+                Assert.AreEqual(expected, buffer);
         }
 
         static void TestParseStateSync(TestCommon.Protocol proto, String fileName, Func<mtest.publishable_dictionary> getState)
@@ -170,7 +170,7 @@ namespace test_interop3_csharp
             if (proto == TestCommon.Protocol.Json)
                 Assert.True(SimpleBuffer.AreEqualIgnoreEol(expected, buffer));
             else if (proto == TestCommon.Protocol.Gmq)
-                Assert.Equal(expected, buffer);
+                Assert.AreEqual(expected, buffer);
 
         }
         static void TestParseUpdate(TestCommon.Protocol proto, String fileNameInit, String fileName, Func<mtest.publishable_dictionary> getState, Action<mtest.Ipublishable_dictionary> updateDelegate)
@@ -210,39 +210,39 @@ namespace test_interop3_csharp
         }
 
 
-        [Fact]
+        [Test]
         public static void TestStateSync2()
         {
             TestStateSync(2, GetPublishableDictionary_2);
         }
 
-        [Fact]
+        [Test]
         public static void TestUpdate21()
         {
             TestUpdate(2, 21, GetPublishableDictionary_2, doUpdate21);
         }
-        [Fact]
+        [Test]
         public static void TestUpdate22()
         {
             TestUpdate(2, 22, GetPublishableDictionary_2, doUpdate22);
         }
-        [Fact]
+        [Test]
         public static void TestUpdate23()
         {
             TestUpdate(2, 23, GetPublishableDictionary_2, doUpdate23);
         }
-        [Fact]
+        [Test]
         public static void TestUpdate24()
         {
             TestUpdate(2, 24, GetPublishableDictionary_2, doUpdate24);
         }
-        [Fact]
+        [Test]
         public static void TestUpdate25()
         {
             TestUpdate(2, 25, GetPublishableDictionary_2, doUpdate25);
         }
 
-        [Fact]
+        [Test]
         public static void TestUpdate26()
         {
             TestUpdate(2, 26, GetPublishableDictionary_2, doUpdate26);
