@@ -34,6 +34,7 @@
 #include "global_mq_common.h"
 #include "marshalling.h"
 #include "gmqueue.h"
+#include "action_on.h"
 
 namespace globalmq::marshalling2 {
 	class ParserBase;
@@ -43,7 +44,7 @@ namespace globalmq::marshalling {
 
 // VECTOR support
 
-enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
+// enum ActionOnVector { update_at = 1, insert_single_before = 2, remove_at = 3 };
 
 template<class VectorT>
 class VectorOfSimpleTypeRefWrapper
@@ -423,7 +424,7 @@ namespace impl {
 
 // DICTIONARY support
 
-enum ActionOnDictionary { update_value = 1, insert = 2, remove = 3 };
+// enum ActionOnDictionary { update_value = 1, insert = 2, remove = 3 };
 
 class PublishableDictionaryProcessor
 {
@@ -1245,11 +1246,11 @@ public:
 	virtual void publishableApplyStateSync( globalmq::marshalling2::ParserBase& parser ) { throw std::exception(); }
 };
 
-
+template<class BufferT>
 class SubscriberRegistryBase
 {
 public:
-	using BaseSubscriberT = StateSubscriberBase<Buffer>; //Buffer type is legacy here, not really needed
+	using BaseSubscriberT = StateSubscriberBase<BufferT>; //Buffer type is legacy here, not really needed
 	virtual void addSubscriber( BaseSubscriberT* subscriber ) = 0;
 	virtual void removeSubscriber( BaseSubscriberT* subscriber ) = 0;
 	virtual void pathSubscribe( BaseSubscriberT* subscriber, const GMQ_COLL string& path ) = 0;
@@ -1259,14 +1260,13 @@ public:
 
 
 template<class PlatformSupportT>
-class StateSubscriberPool : public SubscriberRegistryBase
+class StateSubscriberPool : public SubscriberRegistryBase<typename PlatformSupportT::BufferT>
 {
 protected:
 	using BufferT = typename PlatformSupportT::BufferT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
-	using BaseSubscriberT = StateSubscriberBase<Buffer>; //Buffer type is legacy here, not really needed
 
 	struct Subscriber
 	{
@@ -1281,27 +1281,18 @@ protected:
 
 public:
 
-	virtual void addSubscriber( BaseSubscriberT* subscriber ) override
+	virtual void addSubscriber(StateSubscriberT* subscriber) override
 	{
-		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
-			add(subscriber);
-		else
-			throw std::exception();
+		add(subscriber);
 	}
 
-	virtual void removeSubscriber( BaseSubscriberT* subscriber ) override
+	virtual void removeSubscriber(StateSubscriberT* subscriber) override
 	{
-		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
-			remove(subscriber);
-		else
-			throw std::exception();
+		remove(subscriber);
 	}
-	virtual void pathSubscribe( BaseSubscriberT* subscriber, const GMQ_COLL string& path ) override
+    virtual void pathSubscribe(StateSubscriberT* subscriber, const GMQ_COLL string& path) override
 	{
-		if constexpr (std::is_same<StateSubscriberT, BaseSubscriberT>::value)
-			subscribe(subscriber, path);
-		else
-			throw std::exception();
+		subscribe(subscriber, path);
 	}
 
 	void add( StateSubscriberT* subscriber )

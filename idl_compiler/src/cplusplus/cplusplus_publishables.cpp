@@ -2025,7 +2025,7 @@ void impl_SubscriberGetters(FileWritter f, CompositeType& obj)
 
     if (obj.isDiscriminatedUnion())
     {
-        f.write("//Variants currentVariant();\n");
+        f.write("Variants currentVariant() const { return BaseType::currentVariant(); }\n");
 
         for (auto& it : obj.getDiscriminatedUnionCases())
         {
@@ -2149,8 +2149,13 @@ void impl_generateSubscriberStruct(FileWritter f, Root& root, CompositeType& obj
     }
     else if (obj.type == CompositeType::Type::publishable)
     {
-        f.write("class %s : public globalmq::marshalling::StateSubscriberBase<globalmq::marshalling::Buffer>\n",
-                typeName.c_str());
+        if(!config.classNotifierName.empty())
+            f.write("class %s : public globalmq::marshalling::StateSubscriberBase<%s::BufferT>\n",
+                    typeName.c_str(), config.classNotifierName.c_str());
+        else
+            f.write("class %s : public globalmq::marshalling::StateSubscriberBase<globalmq::marshalling::Buffer>\n",
+                    typeName.c_str());
+
     }
     else
     {
@@ -2168,11 +2173,23 @@ void impl_generateSubscriberStruct(FileWritter f, Root& root, CompositeType& obj
 
     f.write("\tusing ThisType = %s;\n", typeName.c_str());
     f.write("\tusing CppType = %s;\n", typeName.c_str());
+
+    if(!config.classNotifierName.empty())
+        f.write("\tusing BufferType = %s::BufferT;\n", config.classNotifierName.c_str());
+    else
+        f.write("\tusing BufferType = globalmq::marshalling::Buffer;\n");
+
+    if (obj.type == CompositeType::Type::discriminated_union)
+    {
+        f.write("\tusing BaseType = %s_subscriber_base;\n", obj.name.c_str());
+        f.write("\tusing %s_subscriber_base::Variants;\n", obj.name.c_str());
+    }
+
     f.write("\n");
 
     f.write("private:\n");
     if (obj.type == CompositeType::Type::publishable)
-        f.write("\tglobalmq::marshalling::SubscriberRegistryBase* const publishableRegistry = nullptr;\n");
+        f.write("\tglobalmq::marshalling::SubscriberRegistryBase<BufferType>* const publishableRegistry = nullptr;\n");
 
     if (!obj.isDiscriminatedUnion())
     {
@@ -2201,7 +2218,7 @@ void impl_generateSubscriberStruct(FileWritter f, Root& root, CompositeType& obj
         f.write("\tvirtual ~%s() { if(publishableRegistry) publishableRegistry->removeSubscriber(this); }\n",
                 typeName.c_str());
         f.write("\t%s() {}\n", typeName.c_str());
-        f.write("\t%s(globalmq::marshalling::SubscriberRegistryBase* registry) : publishableRegistry(registry) { "
+        f.write("\t%s(globalmq::marshalling::SubscriberRegistryBase<BufferType>* registry) : publishableRegistry(registry) { "
                 "if(publishableRegistry) publishableRegistry->addSubscriber(this); }\n",
                 typeName.c_str());
         f.write("\tvoid subscribe(const GMQ_COLL string& path) { if(!publishableRegistry) throw std::exception(); "
@@ -2228,16 +2245,16 @@ void impl_generateSubscriberStruct(FileWritter f, Root& root, CompositeType& obj
         f.write("\n");
         f.write("\t// old interface\n");
         f.write("\tvirtual void applyGmqMessageWithUpdates( "
-                "globalmq::marshalling::GmqParser<globalmq::marshalling::Buffer>& parser ) override { throw "
+                "globalmq::marshalling::GmqParser<BufferType>& parser ) override { throw "
                 "std::exception(); }\n");
         f.write("\tvirtual void applyJsonMessageWithUpdates( "
-                "globalmq::marshalling::JsonParser<globalmq::marshalling::Buffer>& parser ) override { throw "
+                "globalmq::marshalling::JsonParser<BufferType>& parser ) override { throw "
                 "std::exception(); }\n");
         f.write(
-            "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<globalmq::marshalling::Buffer>& "
+            "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<BufferType>& "
             "parser ) override { throw std::exception(); }\n");
         f.write("\tvirtual void applyJsonStateSyncMessage( "
-                "globalmq::marshalling::JsonParser<globalmq::marshalling::Buffer>& parser ) override { throw "
+                "globalmq::marshalling::JsonParser<BufferType>& parser ) override { throw "
                 "std::exception(); }\n");
         f.write("\n");
         f.write("\t// new interface\n");
@@ -2366,16 +2383,16 @@ void impl_generateConcentratorStruct(FileWritter f, CompositeType& obj, const Ge
 
         f.write("\t// old interface\n");
         f.write("\tvirtual void applyGmqMessageWithUpdates( "
-                "globalmq::marshalling::GmqParser<globalmq::marshalling::Buffer>& parser ) override { throw "
+                "globalmq::marshalling::GmqParser<InputBufferT>& parser ) override { throw "
                 "std::exception(); }\n");
         f.write("\tvirtual void applyJsonMessageWithUpdates( "
-                "globalmq::marshalling::JsonParser<globalmq::marshalling::Buffer>& parser ) override { throw "
+                "globalmq::marshalling::JsonParser<InputBufferT>& parser ) override { throw "
                 "std::exception(); }\n");
         f.write(
-            "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<globalmq::marshalling::Buffer>& "
+            "\tvirtual void applyGmqStateSyncMessage( globalmq::marshalling::GmqParser<InputBufferT>& "
             "parser ) override { throw std::exception(); }\n");
         f.write("\tvirtual void applyJsonStateSyncMessage( "
-                "globalmq::marshalling::JsonParser<globalmq::marshalling::Buffer>& parser ) override { throw "
+                "globalmq::marshalling::JsonParser<InputBufferT>& parser ) override { throw "
                 "std::exception(); }\n");
         f.write(
             "\tvirtual void generateStateSyncMessage( ComposerT& composer ) override { throw std::exception(); }\n");

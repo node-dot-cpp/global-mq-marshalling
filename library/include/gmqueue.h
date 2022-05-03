@@ -63,11 +63,17 @@ namespace globalmq::marshalling2
 	template<class BufferT>
 	class GmqComposer2;
 
+	template <class BufferT>
+    class JsonComposer2;
+
 	template<class BufferT>
 	class IParser2;
 
 	template<class BufferT>
 	class GmqParser2;
+
+	template <class BufferT>
+    class JsonParser2;
 }
 
 
