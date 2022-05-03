@@ -32,6 +32,7 @@
 #define GLOBALMQ_MARSHALLING2_MARSHALLING2_H
 
 #include <action_on.h>
+#include <marshalling_impl.h>
 
 namespace globalmq::marshalling2 {
 
@@ -219,8 +220,78 @@ void composeAddressInPublishable2( ComposerT& composer, const GMQ_COLL vector<ui
 	composer.vectorEnd();
 }
 
+//mb: copy and paste from marshalling.h to avoid #include
+template <typename T, typename NameTag>
+class NamedParameterWithType;
+
+template <typename NameTag>
+class NamedParameter
+{
+public:
+	explicit NamedParameter() {}
+
+	using Name = NameTag;
+
+	struct TypeConverter
+	{
+		template<typename DataType>
+		NamedParameterWithType<DataType, NameTag> operator=(DataType&& value) const
+		{
+			return NamedParameterWithType<DataType, NameTag>(std::forward<DataType>(value));
+		}
+		TypeConverter() = default;
+		TypeConverter(TypeConverter const&) = delete;
+		TypeConverter(TypeConverter&&) = delete;
+		TypeConverter& operator=(TypeConverter const&) = delete;
+		TypeConverter& operator=(TypeConverter&&) = delete;
+	};
+};
+
+template <typename T, typename NameTag_>
+class NamedParameterWithType : public NamedParameter<NameTag_>
+{
+private:
+	T value_;
+
+public:
+	explicit NamedParameterWithType(T const& value) : value_(value) {}
+	T& get() { return value_; }
+	T const& get() const { return value_; }
+
+	using NameBase = NamedParameter<NameTag_>;
+	using Name = typename NamedParameter<NameTag_>::Name;
+	using Type = T;
+	using typename NamedParameter<NameTag_>::TypeConverter;
+
+	template<class NameT, class DataT>
+	struct FullType
+	{
+		using NameTag = NameT;
+		using DataType = DataT;
+	};
+
+	using NameAndTypeID = FullType<NameTag_, T>;
+	static constexpr NameAndTypeID nameAndTypeID = {};
+};
+
+template <class T>
+struct unwrap_refwrapper
+{
+	using type = T;
+};
+ 
+template <class T>
+struct unwrap_refwrapper<std::reference_wrapper<T>>
+{
+	using type = T&;
+};
+ 
+template <class T>
+using special_decay_t = typename unwrap_refwrapper<typename std::decay<T>::type>::type;
+
+
 template <typename NameTag_, typename Proc_>
-class NamedParameterWithProcessor : public globalmq::marshalling::NamedParameter<NameTag_>
+class NamedParameterWithProcessor : public NamedParameter<NameTag_>
 {
 // private:
 	// T value_;
@@ -230,10 +301,10 @@ public:
 	// T& get() { return value_; }
 	// T const& get() const { return value_; }
 
-	using NameBase = globalmq::marshalling::NamedParameter<NameTag_>;
-	using Name = typename globalmq::marshalling::NamedParameter<NameTag_>::Name;
+	using NameBase = NamedParameter<NameTag_>;
+	using Name = typename NamedParameter<NameTag_>::Name;
 	using Proc = Proc_;
-	using typename globalmq::marshalling::NamedParameter<NameTag_>::TypeConverter;
+	using typename NamedParameter<NameTag_>::TypeConverter;
 
 	template<class NameT, class DataT>
 	struct FullType
@@ -264,8 +335,8 @@ void composeParam2(ComposerT& composer, GMQ_COLL string name, const typename Typ
 template<typename ComposerT, typename TypeToPick, bool required, class AssumedDefaultT, class DefaultT, DefaultT defaultValue, typename Arg0, typename ... Args>
 void composeParam2(ComposerT& composer, const char* name, const typename TypeToPick::NameAndTypeID expected, Arg0&& arg0, Args&& ... args)
 {
-	using Agr0Type = globalmq::marshalling::special_decay_t<Arg0>;
-	if constexpr ( std::is_same<typename globalmq::marshalling::special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
+	using Agr0Type = special_decay_t<Arg0>;
+	if constexpr ( std::is_same<typename special_decay_t<Arg0>::Name, typename TypeToPick::Name>::value ) // same parameter name
 	{
 		composeEntry2<ComposerT, typename TypeToPick::Proc, Arg0>(composer, name, arg0);
 	}
