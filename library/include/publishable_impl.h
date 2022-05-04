@@ -994,13 +994,14 @@ class StatePublisherBase
 {
 	template<class PlatformSupportT>
 	friend class StatePublisherPool;
+	static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFFFULL;
 
 public:
 	using ComposerT = ComposerTT;
 	using BufferT = typename ComposerT::BufferType;
 
 public:
-	uint64_t idx; // for use in pools, etc
+	uint64_t idx = invalidValue; // for use in pools, etc
 
 public:
 	virtual ~StatePublisherBase() {}

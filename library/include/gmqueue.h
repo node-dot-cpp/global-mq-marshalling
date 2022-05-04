@@ -83,19 +83,20 @@ using MessageBufferT = typename GMQueueStatePublisherSubscriberTypeInfo::BufferT
 
 struct PublishableStateMessageHeader
 {
+	static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFULL;
 	enum MsgType { undefined = 0, subscriptionRequest = 1, subscriptionResponse = 2, stateUpdate = 3, connectionRequest = 4, connectionAccepted = 5, connectionMessage = 6 };
 	enum ConnMsgDirection { toServer = 0, toClient = 1 };
 	MsgType type = MsgType::undefined;
-	uint64_t state_type_id_or_direction; // Note: may be removed in future versions
-	uint64_t priority;
+	uint64_t state_type_id_or_direction = invalidValue; // Note: may be removed in future versions
+	uint64_t priority = invalidValue;
 	GMQ_COLL string path;  // subscriptionRequest only
-	uint64_t ref_id_at_subscriber; // updatable
-	uint64_t ref_id_at_publisher; // updatable
+	uint64_t ref_id_at_subscriber = invalidValue; // updatable
+	uint64_t ref_id_at_publisher = invalidValue; // updatable
 
 	struct UpdatedData
 	{
-		uint64_t ref_id_at_subscriber;
-		uint64_t ref_id_at_publisher;
+		uint64_t ref_id_at_subscriber = invalidValue;
+		uint64_t ref_id_at_publisher = invalidValue;
 		bool update_ref_id_at_subscriber = false;
 		bool update_ref_id_at_publisher = false;
 	};
@@ -868,13 +869,14 @@ class GMQueue
 
 		StateConcentratorBase<InputBufferT, ComposerT>* ptr = nullptr;
 		bool subscriptionResponseReceived = false;
-		uint64_t idAtPublisher; // one for all subscriber using this concentrator
+		static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFFFULL;
+		uint64_t idAtPublisher = invalidValue; // one for all subscriber using this concentrator
 
 	public:
 		struct SubscriberData
 		{
-			uint64_t ref_id_at_subscriber;
-			uint64_t ref_id_at_publisher;
+			uint64_t ref_id_at_subscriber = invalidValue;
+			uint64_t ref_id_at_publisher = invalidValue;
 			SlotIdx senderSlotIdx;
 		};
 		GMQ_COLL vector<SubscriberData> subscribers;
@@ -883,13 +885,13 @@ class GMQueue
 		ConcentratorWrapper( StateConcentratorBase<InputBufferT, ComposerT>* ptr_ ) : ptr( ptr_ ) {}
 		ConcentratorWrapper( const ConcentratorWrapper& ) = delete;
 		ConcentratorWrapper& operator = ( const ConcentratorWrapper& ) = delete;
-		ConcentratorWrapper( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; }
-		ConcentratorWrapper& operator = ( ConcentratorWrapper&& other ) { ptr = other.ptr; other.ptr = nullptr; return *this; }
+		ConcentratorWrapper( ConcentratorWrapper&& other ) noexcept { ptr = other.ptr; other.ptr = nullptr; }
+		ConcentratorWrapper& operator = ( ConcentratorWrapper&& other ) noexcept { ptr = other.ptr; other.ptr = nullptr; return *this; }
 		~ConcentratorWrapper() { if ( ptr ) delete ptr; }
 
 		// Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
 		GMQ_COLL string address;
-		uint64_t idInQueue; // used as a key for finding this concentrator; reported to publisher as a ref_id_at_subscriber (note: concentrator plays role of subscriber in this case)
+		uint64_t idInQueue = invalidValue; // used as a key for finding this concentrator; reported to publisher as a ref_id_at_subscriber (note: concentrator plays role of subscriber in this case)
 
 	public:
 		uint64_t addSubscriber( SubscriberData sd )
@@ -940,14 +942,15 @@ class GMQueue
 
 	class Connections
 	{
+		static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFFFULL;
 		struct Connection
 		{
 			enum Status {uninitialized, connRequestSent, connected };
 			Status status = Status::uninitialized;
 
 			// conn initiator info
-			uint64_t ref_id_at_conn_initiator;
-			uint64_t ref_id_at_conn_acceptor;
+			uint64_t ref_id_at_conn_initiator = invalidValue;
+			uint64_t ref_id_at_conn_acceptor = invalidValue;
 			uint64_t idInQueueForInitiator = 0; // reported to initiator
 			uint64_t idInQueueForAcceptor = 0; // reported to aceptor
 
@@ -971,8 +974,8 @@ class GMQueue
 
 		struct FieldsForSending
 		{
-			uint64_t idAtSource;
-			uint64_t idAtTarget;
+			uint64_t idAtSource = invalidValue;
+			uint64_t idAtTarget = invalidValue;
 			SlotIdx targetSlotIdx;
 		};
 

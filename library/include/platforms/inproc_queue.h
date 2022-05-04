@@ -46,7 +46,7 @@ class CircularBuffer {
 	static constexpr size_t mask = maxsz;
 	size_t head = 0;
 	size_t tail = 0;
-	alignas(T) uint8_t buffer[bufsz * sizeof(T)];
+	alignas(T) uint8_t buffer[bufsz * sizeof(T)] = {0};
 	//Having buffer as T[bufsz] is possible 
 	//  IF we'll replace placement move constructors with move assignments
 	//  AND drop explicit destructor calls
@@ -214,12 +214,12 @@ struct ThreadQueueItem
 	ThreadQueueItem( InterThreadMsgT&& msg_, uint64_t recipientID_ ) : msg( std::move( msg_ ) ), recipientID( recipientID_ ) {}
 	ThreadQueueItem( const ThreadQueueItem& other ) = delete;
 	ThreadQueueItem& operator = ( const ThreadQueueItem& other ) = delete;
-	ThreadQueueItem( ThreadQueueItem&& other ) {
+	ThreadQueueItem( ThreadQueueItem&& other ) noexcept {
 		msg = std::move( other.msg );
 		recipientID = other.recipientID;
 		other.recipientID = invalidRecipientID;
 	}
-	ThreadQueueItem& operator = ( ThreadQueueItem&& other ) {
+	ThreadQueueItem& operator = ( ThreadQueueItem&& other ) noexcept {
 		msg = std::move( other.msg );
 		recipientID = other.recipientID;
 		other.recipientID = invalidRecipientID;

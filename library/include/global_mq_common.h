@@ -169,12 +169,12 @@ namespace globalmq::marshalling {
 	public:
 		Buffer() {}
 //		Buffer(size_t res) { reserve(res); }
-		Buffer(Buffer&& p) {
+		Buffer(Buffer&& p) noexcept {
 			std::swap(_size, p._size);
 			std::swap(_capacity, p._capacity);
 			std::swap(_data, p._data);
 		}
-		Buffer& operator = (Buffer&& p) {
+		Buffer& operator = (Buffer&& p) noexcept {
 			std::swap(_size, p._size);
 			std::swap(_capacity, p._capacity);
 			std::swap(_data, p._data);
