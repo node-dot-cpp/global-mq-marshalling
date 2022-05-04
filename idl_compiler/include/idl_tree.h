@@ -85,7 +85,7 @@ public:
 	KIND dictionaryKeyKind = UNDEFINED; // DICTIONARY
 	KIND dictionaryValueKind = UNDEFINED; // DICTIONARY
 
-	size_t structIdx; // VECTOR or DICTIONARY with element kind STRUCT, reserved for postprocessing
+	size_t structIdx = (size_t)(-1); // VECTOR or DICTIONARY with element kind STRUCT, reserved for postprocessing
 
 	map<string, uint32_t> enumValues; // ENUM
 

@@ -44,8 +44,8 @@ public:
 
 	RaiiStdioFile(const RaiiStdioFile&) = delete;
 	RaiiStdioFile& operator =(const RaiiStdioFile&) = delete;
-	RaiiStdioFile(RaiiStdioFile&& other) { f = other.f; other.f = nullptr; }
-	RaiiStdioFile& operator =(RaiiStdioFile&& other) { f = other.f; other.f = nullptr; return *this; }
+	RaiiStdioFile(RaiiStdioFile&& other) noexcept { f = other.f; other.f = nullptr; }
+	RaiiStdioFile& operator =(RaiiStdioFile&& other) noexcept { f = other.f; other.f = nullptr; return *this; }
 
 	operator FILE*() {
 		return f;
