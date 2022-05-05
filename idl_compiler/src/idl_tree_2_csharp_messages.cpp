@@ -458,12 +458,17 @@ namespace {
 		}
 	}
 
-	void csharpMsg_generateDictionaryMessage(CsharpWritter f, MessageParameter& member)
+	void csharpMsg_generateDictionaryMessage(CsharpWritter f, MessageParameter& member, std::set<std::string>& alreadyDone)
 	{
 		assert(member.type.kind == MessageParameterType::KIND::DICTIONARY);
 
 		string prefix = getCSharpPrefixByType(member.type);
 		string iface = getCSharpInterfaceType(member.type);
+
+		if(alreadyDone.find(prefix) != alreadyDone.end())
+			return;
+
+		alreadyDone.insert(prefix);
 
 		f.write("public class %s_message\n", prefix.c_str());
 		f.write("{\n");
@@ -677,13 +682,18 @@ namespace {
 		f.write("} // class %s_message\n\n", prefix.c_str());
 	}
 
-	void csharpMsg_generateVectorMessage(CsharpWritter f, MessageParameter& member)
+	void csharpMsg_generateVectorMessage(CsharpWritter f, MessageParameter& member, std::set<std::string>& alreadyDone)
 	{
 		assert(member.type.kind == MessageParameterType::KIND::VECTOR);
 
 		string type = getCSharpInterfaceType(member.type);
 		string prefix = getCSharpPrefixByType(member.type);
 		
+		if(alreadyDone.find(prefix) != alreadyDone.end())
+			return;
+
+		alreadyDone.insert(prefix);
+
 		f.write("public class %s_message\n", prefix.c_str());
 		f.write("{\n");
 
@@ -887,6 +897,7 @@ void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* 
 
 	// this should be made only once for each type, and
 	// put at namespace scope
+	std::set<std::string> alreadyDone;
 	auto& mem = s.getMembers();
 	for (auto it = mem.begin(); it != mem.end(); ++it)
 	{
@@ -906,10 +917,10 @@ void generateCsharpStructMessage(CsharpWritter f, CompositeType& s, const char* 
 		case MessageParameterType::KIND::DISCRIMINATED_UNION:
 			break;
 		case MessageParameterType::KIND::VECTOR:
-			csharpMsg_generateVectorMessage(f, member);
+			csharpMsg_generateVectorMessage(f, member, alreadyDone);
 			break;
 		case MessageParameterType::KIND::DICTIONARY:
-			csharpMsg_generateDictionaryMessage(f, member);
+			csharpMsg_generateDictionaryMessage(f, member, alreadyDone);
 			break;
 		default:
 			break;

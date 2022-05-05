@@ -1595,7 +1595,6 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 	case MessageParameterType::KIND::DICTIONARY:
 	{
 		string type = getCSharpInterfaceType(member.type);
-		string prefix = getCSharpPrefixByType(member.type);
 		const char* key = getCSharpPrimitiveType(member.type.dictionaryKeyKind);
 		const char* idlKey = getIdlPrimitiveType(member.type.dictionaryKeyKind);
 
