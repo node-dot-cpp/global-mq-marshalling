@@ -1106,21 +1106,21 @@ namespace {
 		f.write("\tpublic void generateStateSyncMessage(IPublishableComposer composer)\n");
 		f.write("\t{\n");
 		//f.write("\t\tcomposer.composeStructBegin();\n");
-		f.write("\t\t%s_publisher.compose(composer, this.t);\n", type_name.c_str());
+		f.write("\t\t%s_publisher.compose(composer, this.data_);\n", type_name.c_str());
 		//f.write("\t\tcomposer.composeStructEnd();\n");
 		f.write("\t}\n");
 		
 		f.write("\tpublic void startTick(IPublishableComposer composer)\n");
 		f.write("\t{\n");
-		f.write("\t\tthis.composer = composer;\n");
-		f.write("\t\tcomposer.composeStateUpdateMessageBegin();\n");
+		f.write("\t\tthis.composer_ = composer;\n");
+		f.write("\t\tthis.composer_.composeStateUpdateMessageBegin();\n");
 		f.write("\t}\n");
 
 		f.write("\tpublic IPublishableComposer endTick()\n");
 		f.write("\t{\n");
-		f.write("\t\tcomposer.composeStateUpdateMessageEnd();\n");
-		f.write("\t\tIPublishableComposer tmp = composer;\n");
-		f.write("\t\tthis.composer = null;\n");
+		f.write("\t\tthis.composer_.composeStateUpdateMessageEnd();\n");
+		f.write("\t\tIPublishableComposer tmp = this.composer_;\n");
+		f.write("\t\tthis.composer_ = null;\n");
 		f.write("\t\treturn tmp;\n");
 		f.write("\t}\n");
 	}
@@ -1475,15 +1475,15 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 	case MessageParameterType::KIND::CHARACTER_STRING:
 		f.write("\tpublic %s %s\n", getCSharpPrimitiveType(member.type.kind), member.name.c_str());
 		f.write("\t{\n");
-		f.write("\t\tget { return t.%s; }\n", member.name.c_str());
+		f.write("\t\tget { return this.data_.%s; }\n", member.name.c_str());
 		f.write("\t\tset\n");
 		f.write("\t\t{\n");
 		//f.write("\t\t\tif (value != t.%s)\n", member.name.c_str());
 		//f.write("\t\t\t{\n");
-		f.write("\t\t\tt.%s = value;\n", member.name.c_str());
-		f.write("\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-		f.write("\t\t\tcomposer.compose%s(\"value\", value, false);\n", getIdlPrimitiveType(member.type.kind));
-		f.write("\t\t\tcomposer.composeAddressEnd();\n");
+		f.write("\t\t\tthis.data_.%s = value;\n", member.name.c_str());
+		f.write("\t\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.%s);\n", member.name.c_str());
+		f.write("\t\t\tthis.composer_.compose%s(\"value\", value, false);\n", getIdlPrimitiveType(member.type.kind));
+		f.write("\t\t\tthis.composer_.composeAddressEnd();\n");
 		//f.write("\t\t\t}\n");
 		f.write("\t\t}\n");
 		f.write("\t}\n");
@@ -1492,17 +1492,17 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 	case MessageParameterType::KIND::DISCRIMINATED_UNION:
 		f.write("\tpublic I%s %s\n", member.type.name.c_str(), member.name.c_str());
 		f.write("\t{\n");
-		f.write("\t\tget { return new %s_publisher(t.%s, composer, Publishable.makeAddress(address, (UInt64)Address.%s)); }\n", member.type.name.c_str(), member.name.c_str(), member.name.c_str());
+		f.write("\t\tget { return new %s_publisher(this.data_.%s, this.composer_, Publishable.makeAddress(this.address_, (UInt64)Address.%s)); }\n", member.type.name.c_str(), member.name.c_str(), member.name.c_str());
 		f.write("\t\tset\n");
 		f.write("\t\t{\n");
 		//f.write("\t\t\tif (value != t.%s)\n", member.name.c_str());
 		//f.write("\t\t\t{\n");
-		f.write("\t\t\tt.%s = value;\n", member.name.c_str());
-		f.write("\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
-		//f.write("\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
-		f.write("\t\t\t%s_publisher.compose(composer, \"value\", value, false);\n", member.type.name.c_str());
-		//f.write("\t\t\tcomposer.composePublishableStructEnd(false);\n");
-		f.write("\t\t\tcomposer.composeAddressEnd();\n");
+		f.write("\t\t\tthis.data_.%s = value;\n", member.name.c_str());
+		f.write("\t\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.%s);\n", member.name.c_str());
+		//f.write("\t\t\tthis.composer_.composePublishableStructBegin(\"value\");\n");
+		f.write("\t\t\t%s_publisher.compose(this.composer_, \"value\", value, false);\n", member.type.name.c_str());
+		//f.write("\t\t\tthis.composer_.composePublishableStructEnd(false);\n");
+		f.write("\t\t\tthis.composer_.composeAddressEnd();\n");
 		//f.write("\t\t\t}\n");
 		f.write("\t\t}\n");
 		f.write("\t}\n");
@@ -1525,21 +1525,21 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t{\n");
 			f.write("\t\tget\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\treturn new PublisherVectorWrapper<%s>(t.%s, composer,\n", elem_type_name, member.name.c_str());
-			f.write("\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
+			f.write("\t\t\treturn new PublisherVectorWrapper<%s>(this.data_.%s, this.composer_,\n", elem_type_name, member.name.c_str());
+			f.write("\t\t\t\tPublishable.makeAddress(this.address_, (UInt64)Address.%s),\n", member.name.c_str());
 			f.write("\t\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(\"value\", v, false); },\n", elem_type_name, compose_method);
 			f.write("\t\t\t\tnull\n");
 			f.write("\t\t\t);\n");
 			f.write("\t\t}\n");
 			f.write("\t\tset\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\tt.%s = value;\n", member.name.c_str());
-			f.write("\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
+			f.write("\t\t\tthis.data_.%s = value;\n", member.name.c_str());
+			f.write("\t\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.%s);\n", member.name.c_str());
 
-			f.write("\t\t\tcomposer.composeVector2(\"value\", value,\n");
+			f.write("\t\t\tthis.composer_.composeVector2(\"value\", value,\n");
 			f.write("\t\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); }, false);\n", elem_type_name, compose_method);
 
-			f.write("\t\t\tcomposer.composeAddressEnd();\n");
+			f.write("\t\t\tthis.composer_.composeAddressEnd();\n");
 			f.write("\t\t}\n");
 			f.write("\t}\n");
 			break;
@@ -1553,8 +1553,8 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t{\n");
 			f.write("\t\tget\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\treturn new PublisherVectorWrapper<I%s>(t.%s, composer,\n", elem_type_name, member.name.c_str());
-			f.write("\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
+			f.write("\t\t\treturn new PublisherVectorWrapper<I%s>(this.data_.%s, this.composer_,\n", elem_type_name, member.name.c_str());
+			f.write("\t\t\t\tPublishable.makeAddress(this.address_, (UInt64)Address.%s),\n", member.name.c_str());
 			f.write("\t\t\t\t(IPublishableComposer composer, I%s val) =>\n", elem_type_name);
 		/*	f.write("\t\t\t\t{\n");
 		*/	//f.write("\t\t\t\t\tcomposer.composePublishableStructBegin(\"value\");\n");
@@ -1567,10 +1567,10 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t\t}\n");
 			f.write("\t\tset\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\tt.%s = value;\n", member.name.c_str());
-			f.write("\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
+			f.write("\t\t\tthis.data_.%s = value;\n", member.name.c_str());
+			f.write("\t\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.%s);\n", member.name.c_str());
 
-			f.write("\t\t\tcomposer.composeVector2(\"value\", value,\n");
+			f.write("\t\t\tthis.composer_.composeVector2(\"value\", value,\n");
 			f.write("\t\t\t\t%s_publisher.compose,\n", elem_type_name);
 
 			//f.write("\t\t\t\t(IPublishableComposer composer, I%s val) =>\n", elem_type_name);
@@ -1582,7 +1582,7 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 
 			f.write("\t\t\t\tfalse);\n");
 
-			f.write("\t\t\tcomposer.composeAddressEnd();\n");
+			f.write("\t\t\tthis.composer_.composeAddressEnd();\n");
 			f.write("\t\t}\n");
 			f.write("\t}\n");
 			break;
@@ -1614,8 +1614,8 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t{\n");
 			f.write("\t\tget\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\treturn new PublisherDictionaryWrapper<%s,%s>(t.%s, composer,\n", key, value, member.name.c_str());
-			f.write("\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
+			f.write("\t\t\treturn new PublisherDictionaryWrapper<%s,%s>(this.data_.%s, this.composer_,\n", key, value, member.name.c_str());
+			f.write("\t\t\t\tPublishable.makeAddress(this.address_, (UInt64)Address.%s),\n", member.name.c_str());
 			f.write("\t\t\t\t(IPublishableComposer composer, %s k, bool s) => { composer.compose%s(\"key\", k, s); },\n", key, idlKey);
 			f.write("\t\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(\"value\", v, false); },\n", value, idlValue);
 			f.write("\t\t\t\tnull\n");
@@ -1623,14 +1623,14 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 			f.write("\t\t}\n");
 			f.write("\t\tset\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\tt.%s = value;\n", member.name.c_str());
-			f.write("\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
+			f.write("\t\t\tthis.data_.%s = value;\n", member.name.c_str());
+			f.write("\t\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.%s);\n", member.name.c_str());
 
-			f.write("\t\t\tcomposer.composeDictionary(\"value\", value,\n");
+			f.write("\t\t\tthis.composer_.composeDictionary(\"value\", value,\n");
 			f.write("\t\t\t\t(IPublishableComposer composer, %s k) => { composer.compose%s(null, k, false); },\n", key, idlKey);
 			f.write("\t\t\t\t(IPublishableComposer composer, %s v) => { composer.compose%s(null, v, false); },\n", value, idlValue);
 			f.write("\t\t\t\tfalse);\n");
-			f.write("\t\t\tcomposer.composeAddressEnd();\n");
+			f.write("\t\t\tthis.composer_.composeAddressEnd();\n");
 			f.write("\t\t}\n");
 			f.write("\t}\n");
 			break;
@@ -1645,8 +1645,8 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 
 			f.write("\t\tget\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\treturn new PublisherDictionaryWrapper<%s,I%s>(t.%s, composer,\n", key, value, member.name.c_str());
-			f.write("\t\t\t\tPublishable.makeAddress(address, (UInt64)Address.%s),\n", member.name.c_str());
+			f.write("\t\t\treturn new PublisherDictionaryWrapper<%s,I%s>(this.data_.%s, this.composer_,\n", key, value, member.name.c_str());
+			f.write("\t\t\t\tPublishable.makeAddress(this.address_, (UInt64)Address.%s),\n", member.name.c_str());
 			f.write("\t\t\t\t(IPublishableComposer composer, %s k, bool s) => { composer.compose%s(\"key\", k, s); },\n", key, idlKey);
 			f.write("\t\t\t\t(IPublishableComposer composer, I%s v) => { %s_publisher.compose(composer, \"value\", v, false); },\n", value, value);
 
@@ -1673,15 +1673,15 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 
 			f.write("\t\tset\n");
 			f.write("\t\t{\n");
-			f.write("\t\t\tt.%s = value;\n", member.name.c_str());
-			f.write("\t\t\tcomposer.composeAddress(address, (UInt64)Address.%s);\n", member.name.c_str());
+			f.write("\t\t\tthis.data_.%s = value;\n", member.name.c_str());
+			f.write("\t\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.%s);\n", member.name.c_str());
 
-			f.write("\t\t\tcomposer.composeDictionary(\"value\", value,\n");
+			f.write("\t\t\tthis.composer_.composeDictionary(\"value\", value,\n");
 			f.write("\t\t\t\t(IPublishableComposer composer, %s k) => { composer.compose%s(null, k, false); },\n", key, idlKey);
 			f.write("\t\t\t\t(IPublishableComposer composer, I%s v) => { %s_publisher.compose(composer, null, v, false); },\n", value, value);
 			f.write("\t\t\t\tfalse);\n");
 
-			f.write("\t\t\tcomposer.composeAddressEnd();\n");
+			f.write("\t\t\tthis.composer_.composeAddressEnd();\n");
 			f.write("\t\t}\n");
 
 			f.write("\t}\n");
@@ -1772,7 +1772,7 @@ void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const cha
 		generateCsharpSubscriberMember(f, *it);
 	}
 
-	generateCsharpSimpleEquivalentMethod(f, type_name, "_data");
+	generateCsharpSimpleEquivalentMethod(f, type_name, "this._data");
 
 	csharpPub_generateParseStateSync(f, s, type_name);
 	csharpPub_generateParse1(f, s, type_name);
@@ -1803,9 +1803,9 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 
 
 	f.write("{\n");
-	f.write("\tI%s t;\n", type_name);
-	f.write("\tIPublishableComposer composer;\n");
-	f.write("\tUInt64[] address;\n");
+	f.write("\tI%s data_;\n", type_name);
+	f.write("\tIPublishableComposer composer_;\n");
+	f.write("\tUInt64[] address_;\n");
 
 	csharpPub_generateAddressEnum(f, s);
 
@@ -1813,18 +1813,18 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 	{
 		f.write("\tpublic %s_publisher()\n", type_name);
 		f.write("\t{\n");
-		f.write("\t\tthis.t = new %s();\n", type_name);
-		f.write("\t\tthis.composer = null;\n");
-		f.write("\t\tthis.address = new UInt64[] { };\n");
+		f.write("\t\tthis.data_ = new %s();\n", type_name);
+		f.write("\t\tthis.composer_ = null;\n");
+		f.write("\t\tthis.address_ = new UInt64[] { };\n");
 		f.write("\t}\n");
 	}
 	else
 	{
-		f.write("\tpublic %s_publisher(I%s t, IPublishableComposer composer, UInt64[] address)\n", type_name, type_name);
+		f.write("\tpublic %s_publisher(I%s data, IPublishableComposer composer, UInt64[] address)\n", type_name, type_name);
 		f.write("\t{\n");
-		f.write("\t\tthis.t = t;\n");
-		f.write("\t\tthis.composer = composer;\n");
-		f.write("\t\tthis.address = address;\n");
+		f.write("\t\tthis.data_ = data;\n");
+		f.write("\t\tthis.composer_ = composer;\n");
+		f.write("\t\tthis.address_ = address;\n");
 		f.write("\t}\n");
 	}
 	auto& mem = s.getMembers();
@@ -1835,7 +1835,7 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 		generateCsharpPublisherMember(f, *it);
 	}
 
-	generateCsharpSimpleEquivalentMethod(f, type_name, "t");
+	generateCsharpSimpleEquivalentMethod(f, type_name, "this.data_");
 
 	csharpPub_generateCompose(f, s, type_name);
 
@@ -1844,13 +1844,13 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 		csharpPub_generateStatePublishableBase(f, s, type_name);
 		f.write("\tpublic void applyStateSyncMessage(IPublishableParser parser)\n");
 		f.write("\t{\n");
-		f.write("\t\tthis.t = %s_subscriber.parseForStateSync(parser);\n", type_name);
+		f.write("\t\tthis.data_ = %s_subscriber.parseForStateSync(parser);\n", type_name);
 		f.write("\t}\n");
 	}
 
 
 	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name);
+	f.write("\tpublic void debugOnlySetData(I%s data) { this.data_ = data; }\n", type_name);
 
 
 	f.write("} // class %s_publisher\n\n", type_name);

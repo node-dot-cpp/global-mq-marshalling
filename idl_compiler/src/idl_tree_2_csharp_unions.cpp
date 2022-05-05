@@ -995,27 +995,27 @@ void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char*
 
 
 	f.write("{\n");
-	f.write("\tI%s t;\n", type_name);
-	f.write("\tIPublishableComposer composer;\n");
-	f.write("\tUInt64[] address;\n");
+	f.write("\tI%s data_;\n", type_name);
+	f.write("\tIPublishableComposer composer_;\n");
+	f.write("\tUInt64[] address_;\n");
 
 	csharpDu_generateUnionAddressEnum(f, s);
 
-	f.write("\tpublic %s_publisher(I%s t, IPublishableComposer composer, UInt64[] address)\n", type_name, type_name);
+	f.write("\tpublic %s_publisher(I%s data, IPublishableComposer composer, UInt64[] address)\n", type_name, type_name);
 	f.write("\t{\n");
-	f.write("\t\tthis.t = t;\n");
-	f.write("\t\tthis.composer = composer;\n");
-	f.write("\t\tthis.address = address;\n");
+	f.write("\t\tthis.data_ = data;\n");
+	f.write("\t\tthis.composer_ = composer;\n");
+	f.write("\t\tthis.address_ = address;\n");
 	f.write("\t}\n");
 
-	f.write("\tpublic %s_variants currentVariant() { return t.currentVariant(); }\n", type_name);
+	f.write("\tpublic %s_variants currentVariant() { return this.data_.currentVariant(); }\n", type_name);
 
 	f.write("\tpublic void setCurrentVariant(%s_variants v)\n", type_name);
 	f.write("\t{\n");
-	f.write("\t\tt.setCurrentVariant(v);\n");
-	f.write("\t\tcomposer.composeAddress(address, (UInt64)Address.CurrentVariant);\n");
-	f.write("\t\tcomposer.composeUnsigned(\"value\", (UInt64)v, false);\n");
-	f.write("\t\tcomposer.composeAddressEnd();\n");
+	f.write("\t\tthis.data_.setCurrentVariant(v);\n");
+	f.write("\t\tthis.composer_.composeAddress(this.address_, (UInt64)Address.CurrentVariant);\n");
+	f.write("\t\tthis.composer_.composeUnsigned(\"value\", (UInt64)v, false);\n");
+	f.write("\t\tthis.composer_.composeAddressEnd();\n");
 	f.write("\t}\n");
 
 
@@ -1033,13 +1033,13 @@ void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char*
 		}
 	}
 
-	generateCsharpSimpleEquivalentMethod(f, type_name, "t");
+	generateCsharpSimpleEquivalentMethod(f, type_name, "this.data_");
 
 	csharpDu_generateCompose(f, s, type_name);
 
 
 	f.write("\t/// <summary>This method is for testing and debugging only. Do not use!</summary>\n");
-	f.write("\tpublic void debugOnlySetData(I%s data) { this.t = data; }\n", type_name);
+	f.write("\tpublic void debugOnlySetData(I%s data) { this.data_ = data; }\n", type_name);
 
 
 

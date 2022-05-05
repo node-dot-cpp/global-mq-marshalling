@@ -939,7 +939,7 @@ void generateCsharpStructReadOnly(CsharpWritter f, CompositeType& s)
 		generateCsharpReadOnlyMember(f, *it);
 	}
 
-	generateCsharpSimpleEquivalentMethod(f, type_name, "_data");
+	generateCsharpSimpleEquivalentMethod(f, type_name, "this._data");
 
 	f.write("} // class %s_readonly\n\n", type_name);
 }

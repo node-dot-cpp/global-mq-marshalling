@@ -7390,7 +7390,7 @@ public:
 		address.push_back (idx );
 	}
 	auto get_currentVariant() { return t.currentVariant(); }
-	void set_currentVariant( decltype(T::v) v ) { 
+	void set_currentVariant( typename T::Variants v ) { 
 		t.initAs( v ); 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), (uint64_t)(t.currentVariant()) );
@@ -7621,7 +7621,7 @@ public:
 		address.push_back (idx );
 	}
 	auto get_currentVariant() { return t.currentVariant(); }
-	void set_currentVariant( decltype(T::v) v ) { 
+	void set_currentVariant( typename T::Variants v ) { 
 		t.initAs( v ); 
 		::globalmq::marshalling::impl::composeAddressInPublishable( root.getComposer(), address, 0 );
 		::globalmq::marshalling::impl::publishableComposeLeafeUnsignedInteger( root.getComposer(), (uint64_t)(t.currentVariant()) );
