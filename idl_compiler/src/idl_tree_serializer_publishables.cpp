@@ -1298,13 +1298,12 @@ void impl_generateComposeFunctionForPublishableStruct_MemberIterationBlock( FILE
 	}
 }
 
-void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+void impl_generateComposeFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj, const string& className )
 {
 	if ( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union )
 	{
 		fprintf( header, "\ttemplate<class ComposerT, class T>\n" );
-		fprintf( header, "\tstatic\n" );
-		fprintf( header, "\tvoid compose( ComposerT& composer, const T& t )\n" );
+		fprintf( header, "\tvoid %s::compose( ComposerT& composer, const T& t )\n", className.c_str() );
 		fprintf( header, "\t{\n" );
 	}
 	else if ( obj.type == CompositeType::Type::publishable )
@@ -1462,11 +1461,10 @@ void impl_GenerateDiscriminatedUnionVariantUpdateNotifierPresenceCheckingBlock( 
 	fprintf( header, "%sstatic constexpr bool has_any_notifier_for_currentVariant = has_void_update_notifier_for_currentVariant || has_update_notifier_for_currentVariant;\n", offset );
 }
 
-void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+void impl_generateContinueParsingFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj, const string& className )
 {
-	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
-	fprintf( header, "\tstatic\n" );
-	fprintf( header, "\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n" );
+	fprintf( header, "\ttemplate<class ParserT, class T, class RetT>\n" );
+	fprintf( header, "\tRetT %s::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )\n", className.c_str() );
 	fprintf( header, "\t{\n" );
 //	fprintf( header, "\t\t//****  ContinueParsing  **************************************************************************************************************************************************************\n" );
 	fprintf( header, "\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n" );
@@ -1621,13 +1619,12 @@ void impl_generateParseFunctionForPublishableStruct_MemberIterationBlock( FILE* 
 	}
 }
 
-void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj )
+void impl_generateParseFunctionForPublishableStruct( FILE* header, Root& root, CompositeType& obj, const string& className )
 {
 	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
 
-	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
-	fprintf( header, "\tstatic\n" );
-	fprintf( header, "\tRetT parse( ParserT& parser, T& t )\n" );
+	fprintf( header, "\ttemplate<class ParserT, class T, class RetT>\n" );
+	fprintf( header, "\tRetT %s::parse( ParserT& parser, T& t )\n", className.c_str() );
 	fprintf( header, "\t{\n" );
 	fprintf( header, "\t\tstatic_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );\n" );
 	fprintf( header, "\t\tconstexpr bool reportChanges = std::is_same<RetT, bool>::value;\n" );
@@ -1762,14 +1759,11 @@ void impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth
 		impl_generateParseFunctionForPublishableStructStateSync_MemberIterationBlock( header, root, obj, "\t\t" );
 }
 
-void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj )
+void impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( FILE* header, Root& root, CompositeType& obj, const string& className )
 {
 	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
-//	fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
 	fprintf( header, "\ttemplate<class ParserT, class T>\n" );
-	fprintf( header, "\tstatic\n" );
-//	fprintf( header, "\tRetT parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n" );
-	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n" );
+	fprintf( header, "\tvoid %s::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )\n", className.c_str() );
 	fprintf( header, "\t{\n" );
 
 	impl_generateParseFunctionBodyForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
@@ -1885,10 +1879,11 @@ void impl_GeneratePublishableStructCopyFn_MemberIterationBlock( FILE* header, Ro
 	}
 }
 
-void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableStructCopyFn( FILE* header, Root& root, CompositeType& s, const string& className )
 {
 	fprintf( header, "\ttemplate<typename UserT>\n" );
-	fprintf( header, "\tstatic void copy(const UserT& src, UserT& dst) {\n" );
+	fprintf( header, "\tvoid %s::copy(const UserT& src, UserT& dst)\n", className.c_str() );
+	fprintf( header, "\t{\n" );
 
 	if ( s.isDiscriminatedUnion() )
 	{
@@ -1959,10 +1954,11 @@ void impl_GeneratePublishableStructIsSameFn_MemberIterationBlock( FILE* header, 
 	}
 }
 
-void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, CompositeType& s )
+void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, CompositeType& s, const string& className )
 {
 	fprintf( header, "\ttemplate<typename UserT>\n" );
-	fprintf( header, "\tstatic bool isSame(const UserT& s1, const UserT& s2) {\n" );
+	fprintf( header, "\tbool %s::isSame(const UserT& s1, const UserT& s2)\n", className.c_str() );
+	fprintf( header, "\t{\n" );
 
 	if ( s.isDiscriminatedUnion() )
 	{
@@ -1998,28 +1994,73 @@ void impl_GeneratePublishableStructIsSameFn( FILE* header, Root& root, Composite
 	fprintf( header, "\t}\n" );
 }
 
-void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj )
+void impl_generatePublishableStructDeclaration( FILE* header, Root& root, CompositeType& obj )
 {
+	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
+
 	fprintf( header, "struct %s : public ::globalmq::marshalling::impl::StructType\n", impl_generatePublishableStructName( obj ).c_str() );
 	fprintf( header, "{\n" );
 
-	impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
+	// impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj );
+	fprintf( header, "\ttemplate<class ParserT, class T>\n" );
+	fprintf( header, "\tstatic\n" );
+	fprintf( header, "\tvoid parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );\n" );
+
+	if ( obj.isStruct4Publishing )
+	{
+		fprintf( header, "\n" );
+		// impl_generateComposeFunctionForPublishableStruct( header, root, obj );
+		fprintf( header, "\ttemplate<class ComposerT, class T>\n" );
+		fprintf( header, "\tstatic\n" );
+		fprintf( header, "\tvoid compose( ComposerT& composer, const T& t );\n" );
+		fprintf( header, "\n" );
+
+		// impl_generateParseFunctionForPublishableStruct( header, root, obj );
+		fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
+		fprintf( header, "\tstatic\n" );
+		fprintf( header, "\tRetT parse( ParserT& parser, T& t );\n" );
+		fprintf( header, "\n" );
+
+		// impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
+		fprintf( header, "\ttemplate<class ParserT, class T, class RetT = void>\n" );
+		fprintf( header, "\tstatic\n" );
+		fprintf( header, "\tRetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );\n" );
+		fprintf( header, "\n" );
+
+		// impl_GeneratePublishableStructCopyFn( header, root, obj );
+		fprintf( header, "\ttemplate<typename UserT>\n" );
+		fprintf( header, "\tstatic void copy(const UserT& src, UserT& dst);\n" );
+		fprintf( header, "\n" );
+
+		// impl_GeneratePublishableStructIsSameFn( header, root, obj );
+		fprintf( header, "\ttemplate<typename UserT>\n" );
+		fprintf( header, "\tstatic bool isSame(const UserT& s1, const UserT& s2);\n" );
+	}
+
+	fprintf( header, "};\n\n" );
+}
+
+void impl_generatePublishableStruct( FILE* header, Root& root, CompositeType& obj )
+{
+	assert( obj.type == CompositeType::Type::structure || obj.type == CompositeType::Type::discriminated_union );
+
+	string className = impl_generatePublishableStructName( obj );
+
+	impl_generateParseFunctionForPublishableStructStateSyncOrMessageInDepth( header, root, obj, className );
 	fprintf( header, "\n" );
 
 	if ( obj.isStruct4Publishing )
 	{
-		impl_generateComposeFunctionForPublishableStruct( header, root, obj );
+		impl_generateComposeFunctionForPublishableStruct( header, root, obj, className );
 		fprintf( header, "\n" );
-		impl_generateParseFunctionForPublishableStruct( header, root, obj );
+		impl_generateParseFunctionForPublishableStruct( header, root, obj, className );
 		fprintf( header, "\n" );
-		impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj );
+		impl_generateContinueParsingFunctionForPublishableStruct( header, root, obj, className );
 		fprintf( header, "\n" );
-		impl_GeneratePublishableStructCopyFn( header, root, obj );
+		impl_GeneratePublishableStructCopyFn( header, root, obj, className );
 		fprintf( header, "\n" );
-		impl_GeneratePublishableStructIsSameFn( header, root, obj );
+		impl_GeneratePublishableStructIsSameFn( header, root, obj, className );
 	}
-
-	fprintf( header, "};\n\n" );
 }
 
 void impl_GeneratePublishableStateMemberSetter( FILE* header, Root& root, bool forRoot, MessageParameter& param, size_t idx )
@@ -2316,7 +2357,7 @@ void impl_GeneratePublishableStateWrapperForPublisher( FILE* header, Root& root,
 
 	impl_GeneratePublishableStateMemberAccessors( header, root, s, true );
 	fprintf( header, "\n" );
-	impl_generateComposeFunctionForPublishableStruct( header, root, s );
+	impl_generateComposeFunctionForPublishableStruct( header, root, s, "" );
 
 	fprintf( header, "};\n\n" );
 }
@@ -2469,7 +2510,7 @@ void impl_GeneratePublishableStateWrapperForConcentrator( FILE* header, Root& ro
 	fprintf( header, "\t// Acting as publisher\n" );
 	fprintf( header, "\tvirtual void generateStateSyncMessage( ComposerT& composer ) { compose(composer); }\n" );
 
-	impl_generateComposeFunctionForPublishableStruct( header, root, s );
+	impl_generateComposeFunctionForPublishableStruct( header, root, s, "" );
 	fprintf( header, "\n" );
 
 	fprintf( header, "\t// Acting as subscriber\n" );

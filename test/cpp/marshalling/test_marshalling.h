@@ -717,15 +717,15 @@ struct StructWithVectorOfInt
 };
 
 namespace scope_one {
-struct MESSAGE_point3D : public point3D {};
+using MESSAGE_point3D = point3D;
 } // namespace scope_one
 
 namespace scope_one {
-struct MESSAGE_point3D_alias : public point3D {};
+using MESSAGE_point3D_alias = point3D;
 } // namespace scope_one
 
 namespace scope_one {
-struct MESSAGE_point_alias : public point {};
+using MESSAGE_point_alias = point;
 } // namespace scope_one
 
 namespace level_trace {
@@ -832,29 +832,29 @@ struct publishable_html_tag
 
 //===============================================================================
 
-struct publishable_STRUCT_SIZE;
-template<class T> class SIZE_RefWrapper;
-template<class T, class RootT> class SIZE_RefWrapper4Set;
-
-struct publishable_STRUCT_Line;
-template<class T> class Line_RefWrapper;
-template<class T, class RootT> class Line_RefWrapper4Set;
-
 struct publishable_STRUCT_Line_;
 template<class T> class Line__RefWrapper;
 template<class T, class RootT> class Line__RefWrapper4Set;
 
-struct publishable_STRUCT_Vertex;
-template<class T> class Vertex_RefWrapper;
-template<class T, class RootT> class Vertex_RefWrapper4Set;
+struct publishable_STRUCT_HtmlTag;
+template<class T> class HtmlTag_RefWrapper;
+template<class T, class RootT> class HtmlTag_RefWrapper4Set;
 
 struct publishable_STRUCT_PolygonMap;
 template<class T> class PolygonMap_RefWrapper;
 template<class T, class RootT> class PolygonMap_RefWrapper4Set;
 
-struct publishable_STRUCT_HtmlTag;
-template<class T> class HtmlTag_RefWrapper;
-template<class T, class RootT> class HtmlTag_RefWrapper4Set;
+struct publishable_STRUCT_Vertex;
+template<class T> class Vertex_RefWrapper;
+template<class T, class RootT> class Vertex_RefWrapper4Set;
+
+struct publishable_STRUCT_Line;
+template<class T> class Line_RefWrapper;
+template<class T, class RootT> class Line_RefWrapper4Set;
+
+struct publishable_STRUCT_SIZE;
+template<class T> class SIZE_RefWrapper;
+template<class T, class RootT> class SIZE_RefWrapper4Set;
 
 struct publishable_STRUCT_StructWithVectorOfInt;
 template<class T> class StructWithVectorOfInt_RefWrapper;
@@ -889,7 +889,292 @@ struct publishable_STRUCT_AnimZone : public ::globalmq::marshalling::impl::Struc
 {
 	template<class ParserT, class T>
 	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_Vertex : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_Line_ : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_PolygonSt : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_point : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_PolygonMap : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_ObstacleMap : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_Line : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_LineMap : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+};
+
+struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling::impl::StructType
+{
+	template<class ParserT, class T>
+	static
+	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t );
+
+	template<class ComposerT, class T>
+	static
+	void compose( ComposerT& composer, const T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t );
+
+	template<class ParserT, class T, class RetT = void>
+	static
+	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset );
+
+	template<typename UserT>
+	static void copy(const UserT& src, UserT& dst);
+
+	template<typename UserT>
+	static bool isSame(const UserT& s1, const UserT& s2);
+};
+
+	template<class ParserT, class T>
+	void publishable_STRUCT_AnimZone::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "animVector" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::animVector), publishable_STRUCT_Line_, true>( parser, t.animVector );
@@ -899,13 +1184,8 @@ struct publishable_STRUCT_AnimZone : public ::globalmq::marshalling::impl::Struc
 
 	}
 
-};
-
-struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_DISCRIMINATED_UNION_HtmlTextOrTags::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		uint64_t caseId;
 		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
@@ -936,8 +1216,7 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_DISCRIMINATED_UNION_HtmlTextOrTags::compose( ComposerT& composer, const T& t )
 	{
 		uint64_t caseId = t.currentVariant();
 		::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, caseId, "caseId", true );
@@ -965,9 +1244,8 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 		}
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_DISCRIMINATED_UNION_HtmlTextOrTags::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -1055,9 +1333,8 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_DISCRIMINATED_UNION_HtmlTextOrTags::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -1349,7 +1626,8 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_DISCRIMINATED_UNION_HtmlTextOrTags::copy(const UserT& src, UserT& dst)
+	{
 		auto srcCaseId = src.currentVariant();
 		dst.initAs( srcCaseId );
 		if ( srcCaseId != UserT::Variants::unknown )
@@ -1371,7 +1649,8 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_DISCRIMINATED_UNION_HtmlTextOrTags::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.currentVariant() != s2.currentVariant() )
 			return false;
 		if ( s1.currentVariant() != UserT::Variants::unknown )
@@ -1392,13 +1671,8 @@ struct publishable_DISCRIMINATED_UNION_HtmlTextOrTags : public ::globalmq::marsh
 			}
 		return true;
 	}
-};
-
-struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_point3D::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
 
@@ -1409,8 +1683,7 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_point3D::compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.x, "x", true );
 
@@ -1420,9 +1693,8 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_point3D::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -1503,9 +1775,8 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_point3D::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -1607,26 +1878,23 @@ struct publishable_STRUCT_point3D : public ::globalmq::marshalling::impl::Struct
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_point3D::copy(const UserT& src, UserT& dst)
+	{
 		dst.x = src.x;
 		dst.y = src.y;
 		dst.z = src.z;
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_point3D::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.x != s2.x ) return false;
 		if ( s1.y != s2.y ) return false;
 		if ( s1.z != s2.z ) return false;
 		return true;
 	}
-};
-
-struct publishable_STRUCT_Vertex : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_Vertex::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
 
@@ -1636,13 +1904,8 @@ struct publishable_STRUCT_Vertex : public ::globalmq::marshalling::impl::StructT
 
 	}
 
-};
-
-struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_SIZE::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
@@ -1653,8 +1916,7 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_SIZE::compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
 
@@ -1664,9 +1926,8 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_SIZE::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -1747,9 +2008,8 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_SIZE::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -1851,26 +2111,23 @@ struct publishable_STRUCT_SIZE : public ::globalmq::marshalling::impl::StructTyp
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_SIZE::copy(const UserT& src, UserT& dst)
+	{
 		dst.X = src.X;
 		dst.Y = src.Y;
 		dst.Z = src.Z;
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_SIZE::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.X != s2.X ) return false;
 		if ( s1.Y != s2.Y ) return false;
 		if ( s1.Z != s2.Z ) return false;
 		return true;
 	}
-};
-
-struct publishable_STRUCT_Line_ : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_Line_::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parsePublishableStructBegin( parser, "a" );
 		publishable_STRUCT_Vertex::parseForStateSyncOrMessageInDepth( parser, t.a );
@@ -1882,13 +2139,8 @@ struct publishable_STRUCT_Line_ : public ::globalmq::marshalling::impl::StructTy
 
 	}
 
-};
-
-struct publishable_STRUCT_PolygonSt : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_PolygonSt::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "portalMap" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::portalMap), publishable_STRUCT_Line_, true>( parser, t.portalMap );
@@ -1899,13 +2151,8 @@ struct publishable_STRUCT_PolygonSt : public ::globalmq::marshalling::impl::Stru
 
 	}
 
-};
-
-struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_HtmlTag::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseString<ParserT, decltype(T::name)>( parser, &(t.name), "name" );
 
@@ -1919,8 +2166,7 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_HtmlTag::compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::publishableStructComposeString( composer, t.name, "name", true );
 
@@ -1932,9 +2178,8 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_HtmlTag::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -2038,9 +2283,8 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_HtmlTag::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -2330,26 +2574,23 @@ struct publishable_STRUCT_HtmlTag : public ::globalmq::marshalling::impl::Struct
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_HtmlTag::copy(const UserT& src, UserT& dst)
+	{
 		dst.name = src.name;
 		::globalmq::marshalling::impl::copyDictionary<decltype(UserT::properties), ::globalmq::marshalling::impl::StringType, ::globalmq::marshalling::impl::StringType>( src.properties, dst.properties );
 		publishable_DISCRIMINATED_UNION_HtmlTextOrTags::copy( src.tags, dst.tags );
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_HtmlTag::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.name != s2.name ) return false;
 		if ( !::globalmq::marshalling::impl::isSameDictionary<decltype(UserT::properties), ::globalmq::marshalling::impl::StringType>( s1.properties, s2.properties ) ) return false;
 		if( ! publishable_DISCRIMINATED_UNION_HtmlTextOrTags::isSame( s1.tags, s2.tags ) ) return false;
 		return true;
 	}
-};
-
-struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_DISCRIMINATED_UNION_du_one::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		uint64_t caseId;
 		::globalmq::marshalling::impl::publishableParseUnsignedInteger<ParserT, uint64_t>( parser, &(caseId), "caseId" );
@@ -2386,8 +2627,7 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_DISCRIMINATED_UNION_du_one::compose( ComposerT& composer, const T& t )
 	{
 		uint64_t caseId = t.currentVariant();
 		::globalmq::marshalling::impl::publishableStructComposeUnsignedInteger( composer, caseId, "caseId", true );
@@ -2421,9 +2661,8 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 		}
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_DISCRIMINATED_UNION_du_one::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -2567,9 +2806,8 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_DISCRIMINATED_UNION_du_one::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -2922,7 +3160,8 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_DISCRIMINATED_UNION_du_one::copy(const UserT& src, UserT& dst)
+	{
 		auto srcCaseId = src.currentVariant();
 		dst.initAs( srcCaseId );
 		if ( srcCaseId != UserT::Variants::unknown )
@@ -2946,7 +3185,8 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_DISCRIMINATED_UNION_du_one::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.currentVariant() != s2.currentVariant() )
 			return false;
 		if ( s1.currentVariant() != UserT::Variants::unknown )
@@ -2969,13 +3209,8 @@ struct publishable_DISCRIMINATED_UNION_du_one : public ::globalmq::marshalling::
 			}
 		return true;
 	}
-};
-
-struct publishable_STRUCT_point : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_point::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
 
@@ -2983,39 +3218,24 @@ struct publishable_STRUCT_point : public ::globalmq::marshalling::impl::StructTy
 
 	}
 
-};
-
-struct publishable_STRUCT_PolygonMap : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_PolygonMap::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "_PolygonMap" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::_PolygonMap), publishable_STRUCT_Vertex, true>( parser, t._PolygonMap );
 
 	}
 
-};
-
-struct publishable_STRUCT_ObstacleMap : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_ObstacleMap::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "_ObstacleMap" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::_ObstacleMap), publishable_STRUCT_PolygonMap, true>( parser, t._ObstacleMap );
 
 	}
 
-};
-
-struct publishable_STRUCT_Line : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_Line::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "a" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::a), publishable_STRUCT_Vertex, true>( parser, t.a );
@@ -3025,26 +3245,16 @@ struct publishable_STRUCT_Line : public ::globalmq::marshalling::impl::StructTyp
 
 	}
 
-};
-
-struct publishable_STRUCT_LineMap : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_LineMap::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "lineMap" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::lineMap), publishable_STRUCT_Line, true>( parser, t.lineMap );
 
 	}
 
-};
-
-struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_POINT3DREAL::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseReal<ParserT, decltype(T::X)>( parser, &(t.X), "X" );
 
@@ -3055,8 +3265,7 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_POINT3DREAL::compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::publishableStructComposeReal( composer, t.X, "X", true );
 
@@ -3066,9 +3275,8 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_POINT3DREAL::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3149,9 +3357,8 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_POINT3DREAL::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3253,26 +3460,23 @@ struct publishable_STRUCT_POINT3DREAL : public ::globalmq::marshalling::impl::St
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_POINT3DREAL::copy(const UserT& src, UserT& dst)
+	{
 		dst.X = src.X;
 		dst.Y = src.Y;
 		dst.Z = src.Z;
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_POINT3DREAL::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.X != s2.X ) return false;
 		if ( s1.Y != s2.Y ) return false;
 		if ( s1.Z != s2.Z ) return false;
 		return true;
 	}
-};
-
-struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_CharacterParamStruct::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
@@ -3283,8 +3487,7 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_CharacterParamStruct::compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
 
@@ -3294,9 +3497,8 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_CharacterParamStruct::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3370,9 +3572,8 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_CharacterParamStruct::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3499,24 +3700,21 @@ struct publishable_STRUCT_CharacterParamStruct : public ::globalmq::marshalling:
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_CharacterParamStruct::copy(const UserT& src, UserT& dst)
+	{
 		dst.ID = src.ID;
 		publishable_STRUCT_SIZE::copy( src.Size, dst.Size );
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_CharacterParamStruct::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.ID != s2.ID ) return false;
 		if( ! publishable_STRUCT_SIZE::isSame( s1.Size, s2.Size ) ) return false;
 		return true;
 	}
-};
-
-struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_StructWithVectorOfSize::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::parseKey( parser, "sizes" );
 		PublishableVectorProcessor::parse<ParserT, decltype(T::sizes), publishable_STRUCT_SIZE, true>( parser, t.sizes );
@@ -3526,8 +3724,7 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_StructWithVectorOfSize::compose( ComposerT& composer, const T& t )
 	{
 		PublishableVectorProcessor::compose<ComposerT, decltype(T::sizes), publishable_STRUCT_SIZE>( composer, t.sizes, "sizes", true );
 
@@ -3535,9 +3732,8 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_StructWithVectorOfSize::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3604,9 +3800,8 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_StructWithVectorOfSize::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3850,24 +4045,21 @@ struct publishable_STRUCT_StructWithVectorOfSize : public ::globalmq::marshallin
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_StructWithVectorOfSize::copy(const UserT& src, UserT& dst)
+	{
 		::globalmq::marshalling::impl::copyVector<decltype(UserT::sizes), publishable_STRUCT_SIZE>( src.sizes, dst.sizes );
 		dst.NN = src.NN;
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_StructWithVectorOfSize::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::sizes), publishable_STRUCT_SIZE>( s1.sizes, s2.sizes ) ) return false;
 		if ( s1.NN != s2.NN ) return false;
 		return true;
 	}
-};
-
-struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling::impl::StructType
-{
 	template<class ParserT, class T>
-	static
-	void parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
+	void publishable_STRUCT_StructWithVectorOfInt::parseForStateSyncOrMessageInDepth( ParserT& parser, T& t )
 	{
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::ID)>( parser, &(t.ID), "ID" );
 
@@ -3877,8 +4069,7 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 	}
 
 	template<class ComposerT, class T>
-	static
-	void compose( ComposerT& composer, const T& t )
+	void publishable_STRUCT_StructWithVectorOfInt::compose( ComposerT& composer, const T& t )
 	{
 		::globalmq::marshalling::impl::publishableStructComposeInteger( composer, t.ID, "ID", true );
 
@@ -3886,9 +4077,8 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_StructWithVectorOfInt::parse( ParserT& parser, T& t )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -3955,9 +4145,8 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 			return changed;
 	}
 
-	template<class ParserT, class T, class RetT = void>
-	static
-	RetT parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
+	template<class ParserT, class T, class RetT>
+	RetT publishable_STRUCT_StructWithVectorOfInt::parse( ParserT& parser, T& t, GMQ_COLL vector<size_t>& addr, size_t offset )
 	{
 		static_assert( std::is_same<RetT, bool>::value || std::is_same<RetT, void>::value );
 		constexpr bool reportChanges = std::is_same<RetT, bool>::value;
@@ -4159,19 +4348,19 @@ struct publishable_STRUCT_StructWithVectorOfInt : public ::globalmq::marshalling
 	}
 
 	template<typename UserT>
-	static void copy(const UserT& src, UserT& dst) {
+	void publishable_STRUCT_StructWithVectorOfInt::copy(const UserT& src, UserT& dst)
+	{
 		dst.ID = src.ID;
 		::globalmq::marshalling::impl::copyVector<decltype(UserT::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( src.signedInts, dst.signedInts );
 	}
 
 	template<typename UserT>
-	static bool isSame(const UserT& s1, const UserT& s2) {
+	bool publishable_STRUCT_StructWithVectorOfInt::isSame(const UserT& s1, const UserT& s2)
+	{
 		if ( s1.ID != s2.ID ) return false;
 		if ( !::globalmq::marshalling::impl::isSameVector<decltype(UserT::signedInts), ::globalmq::marshalling::impl::SignedIntegralType>( s1.signedInts, s2.signedInts ) ) return false;
 		return true;
 	}
-};
-
 namespace scope_one {
 
 using point3D = ::globalmq::marshalling::impl::MessageName<11>;
@@ -4234,6 +4423,23 @@ template<typename msgID, class BufferT, typename ... Args>
 void composeMessage( BufferT& buffer, Args&& ... args );
 
 template<class ParserT>
+structures::point STRUCT_point_parse(ParserT& parser)
+{
+	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
+
+	using T = structures::point;
+	T t;
+	::globalmq::marshalling::impl::parseStructBegin( parser );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
+
+		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
+
+	::globalmq::marshalling::impl::parseStructEnd( parser );
+	return t;
+}
+
+template<class ParserT>
 structures::point3D STRUCT_point3D_parse(ParserT& parser)
 {
 	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
@@ -4247,23 +4453,6 @@ structures::point3D STRUCT_point3D_parse(ParserT& parser)
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
 
 		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::z)>( parser, &(t.z), "z" );
-
-	::globalmq::marshalling::impl::parseStructEnd( parser );
-	return t;
-}
-
-template<class ParserT>
-structures::point STRUCT_point_parse(ParserT& parser)
-{
-	static_assert( std::is_base_of<ParserBase, ParserT>::value, "Parser must be one of GmqParser<> or JsonParser<>" );
-
-	using T = structures::point;
-	T t;
-	::globalmq::marshalling::impl::parseStructBegin( parser );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::x)>( parser, &(t.x), "x" );
-
-		::globalmq::marshalling::impl::publishableParseInteger<ParserT, decltype(T::y)>( parser, &(t.y), "y" );
 
 	::globalmq::marshalling::impl::parseStructEnd( parser );
 	return t;
@@ -4289,7 +4478,7 @@ void MESSAGE_point3D_parse(ParserT& p, Args&& ... args)
 template<class ParserT>
 structures::scope_one::MESSAGE_point3D MESSAGE_point3D_parse(ParserT& p)
 {
-	return static_cast<structures::scope_one::MESSAGE_point3D>(STRUCT_point3D_parse(p));
+	return STRUCT_point3D_parse(p);
 }
 
 //**********************************************************************
@@ -4312,7 +4501,7 @@ void MESSAGE_point3D_alias_parse(ParserT& p, Args&& ... args)
 template<class ParserT>
 structures::scope_one::MESSAGE_point3D_alias MESSAGE_point3D_alias_parse(ParserT& p)
 {
-	return static_cast<structures::scope_one::MESSAGE_point3D_alias>(STRUCT_point3D_parse(p));
+	return STRUCT_point3D_parse(p);
 }
 
 //**********************************************************************
@@ -4335,7 +4524,7 @@ void MESSAGE_point_alias_parse(ParserT& p, Args&& ... args)
 template<class ParserT>
 structures::scope_one::MESSAGE_point_alias MESSAGE_point_alias_parse(ParserT& p)
 {
-	return static_cast<structures::scope_one::MESSAGE_point_alias>(STRUCT_point_parse(p));
+	return STRUCT_point_parse(p);
 }
 
 template<typename msgID, class BufferT, typename ... Args>

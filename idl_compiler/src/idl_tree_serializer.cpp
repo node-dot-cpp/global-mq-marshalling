@@ -325,7 +325,7 @@ void generateStructOrDiscriminatedUnionCaseStruct( FILE* header, CompositeType& 
 		if ( ducs.isAlias )
 		{
 			fprintf( header, "namespace %s {\n", ducs.scopeName.c_str() );
-			fprintf( header, "%sstruct %s%s : public %s {};\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str(), ducs.aliasOf.c_str() );
+			fprintf( header, "%susing %s%s = %s;\n", offset, ducs.type == CompositeType::Type::discriminated_union_case ? "Case_" : "", impl_generateDiscriminatedUnionCaseStructName( ducs ).c_str(), ducs.aliasOf.c_str() );
 			fprintf( header, "} // namespace %s\n", ducs.scopeName.c_str() );
 			fprintf( header, "\n" );
 			return;
@@ -688,6 +688,15 @@ void generateRoot( const char* fileName, uint32_t fileChecksum, FILE* header, co
 	}
 
 	fprintf( header, "\n" );
+
+	for ( auto it : structsOrderedByDependency )
+	{
+		assert( it != nullptr );
+		assert( typeid( *(it) ) == typeid( CompositeType ) );
+		assert( it->type == CompositeType::Type::structure || it->type == CompositeType::Type::discriminated_union );
+//		if ( it->isStruct4Publishing )
+			impl_generatePublishableStructDeclaration( header, s, *(dynamic_cast<CompositeType*>(&(*(it)))) );
+	}
 
 	for ( auto it : structsOrderedByDependency )
 	{

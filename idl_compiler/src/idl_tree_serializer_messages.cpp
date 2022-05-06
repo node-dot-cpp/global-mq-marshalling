@@ -882,7 +882,8 @@ void generateMessageAlias( FILE* header, Root& root, CompositeType& s )
 	fprintf( header, "template<class ParserT>\n" );
 	fprintf( header, "structures::%s::%s_%s %s_%s_parse(ParserT& p)\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), s.type2string(), s.name.c_str() );
 	fprintf( header, "{\n" );
-	fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
+	// fprintf( header, "\treturn static_cast<structures::%s::%s_%s>(%s(p));\n", s.scopeName.c_str(), s.type2string(), s.name.c_str(), impl_generateParseFunctionName( alias ).c_str() );
+	fprintf( header, "\treturn %s(p);\n", impl_generateParseFunctionName( alias ).c_str() );
 	fprintf( header, "}\n\n" );
 }
 
