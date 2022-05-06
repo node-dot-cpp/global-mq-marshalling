@@ -154,6 +154,9 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    if (config.metascope.empty())
+        config.metascope = "m";
+
     size_t lastSlash = targetPath.find_last_of("\\/");
     if (lastSlash == std::string::npos)
         lastSlash = 0;
