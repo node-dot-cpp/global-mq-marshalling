@@ -39,22 +39,26 @@ namespace globalmq.marshalling
     public abstract class NodeBase
     {
         MetaPool pool = new MetaPool();
-        IPlatformSupport platform = null;
-        ITransport transport = null;
+        IPlatformSupport platform_ = null;
+        ITransport transport_ = null;
         public MetaPool Pool { get { return pool; } }
         public abstract string getNodeName();
-        public IPlatformSupport Platform { get { return platform; } }
+        public IPlatformSupport Platform { get => this.platform_; }
         public void initPlatform(IPlatformSupport pt)
         {
-            Debug.Assert(platform == null);
-            this.platform = pt;
+            if(this.platform_ != null)
+                throw new Exception();
+
+            this.platform_ = pt;
             pool.setPlatform(pt);
         }
-        public ITransport Transport { get { return transport; } }
+        public ITransport Transport { get => this.transport_; }
         public void initTransport(ITransport tr)
         {
-            Debug.Assert(transport == null);
-            this.transport = tr;
+            if(this.transport_ != null)
+                throw new Exception();
+
+            this.transport_ = tr;
             pool.setTransport(tr);
         }
         public void onGlobalMQMessage(BufferT msg )

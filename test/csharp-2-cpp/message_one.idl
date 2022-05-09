@@ -29,6 +29,6 @@ STRUCT message_one {
   VECTOR<REAL> tenthParam;
 };
 
-MESSAGE test_gmq:message_one_gmq=1 = STRUCT message_one;
-MESSAGE test_json:message_one_json=2 = STRUCT message_one;
+MESSAGE test_gmq:message_one_gmq=3 = STRUCT message_one;
+MESSAGE test_json:message_one_json=4 = STRUCT message_one;
 

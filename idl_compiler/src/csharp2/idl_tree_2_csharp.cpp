@@ -82,7 +82,7 @@ using namespace std;
 // }
 
 
-namespace csharp
+namespace csharp2
 {
 
 void generateCsharp(FileWritter f0, Root& root, const GenerationConfig& config)
@@ -241,7 +241,7 @@ void generateCsharp(FileWritter f0, Root& root, const GenerationConfig& config)
 }
 }
 
-void generateCsharp(FILE* file, Root& root, GenerationConfig config)
+void generateCsharp2(FILE* file, Root& root, GenerationConfig config)
 {
 	FileWritter f0(file, 0);
 
@@ -257,6 +257,6 @@ void generateCsharp(FILE* file, Root& root, GenerationConfig config)
 		config.parserNames.push_back("JsonParser");
 	}
 
-	csharp::generateCsharp(f0, root, config);
+	csharp2::generateCsharp(f0, root, config);
 }
 
