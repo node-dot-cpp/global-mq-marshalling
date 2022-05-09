@@ -25,13 +25,13 @@
     <ClCompile Include="..\src\cplusplus\cplusplus_idl_tree_serializer.cpp" />
     <ClCompile Include="..\src\cplusplus\cplusplus_messages.cpp" />
     <ClCompile Include="..\src\cplusplus\cplusplus_publishables.cpp" />
+    <ClCompile Include="..\src\csharp\idl_tree_2_csharp.cpp" />
+    <ClCompile Include="..\src\csharp\idl_tree_2_csharp_messages.cpp" />
+    <ClCompile Include="..\src\csharp\idl_tree_2_csharp_publishables.cpp" />
+    <ClCompile Include="..\src\csharp\idl_tree_2_csharp_structs.cpp" />
+    <ClCompile Include="..\src\csharp\idl_tree_2_csharp_unions.cpp" />
     <ClCompile Include="..\src\file_writter.cpp" />
     <ClCompile Include="..\src\global_mq_parser_helper.cpp" />
-    <ClCompile Include="..\src\idl_tree_2_csharp.cpp" />
-    <ClCompile Include="..\src\idl_tree_2_csharp_unions.cpp" />
-    <ClCompile Include="..\src\idl_tree_2_csharp_messages.cpp" />
-    <ClCompile Include="..\src\idl_tree_2_csharp_publishables.cpp" />
-    <ClCompile Include="..\src\idl_tree_2_csharp_structs.cpp" />
     <ClCompile Include="..\src\idl_tree_common.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer.cpp" />
     <ClCompile Include="..\src\idl_tree_serializer_messages.cpp" />
@@ -41,16 +41,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\grammar\generated\global_mq_IDL.tab.h" />
-    <ClInclude Include="..\include\cplusplus_idl_tree_serializer.h" />
     <ClInclude Include="..\include\global_mq_parser_helper.h" />
     <ClInclude Include="..\include\idl_generators.h" />
     <ClInclude Include="..\include\idl_tree.h" />
-    <ClInclude Include="..\include\idl_tree_2_csharp.h" />
     <ClInclude Include="..\include\idl_tree_common.h" />
     <ClInclude Include="..\include\idl_tree_serializer.h" />
     <ClInclude Include="..\include\lex.h" />
     <ClInclude Include="..\include\idl_parser.h" />
     <ClInclude Include="..\include\raiistdiofile.h" />
+    <ClInclude Include="..\src\cplusplus\cplusplus_idl_tree_serializer.h" />
+    <ClInclude Include="..\src\csharp\idl_tree_2_csharp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

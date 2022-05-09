@@ -12,11 +12,11 @@ add_executable(idl_compiler
     src/idl_tree_serializer_messages.cpp
     src/idl_tree_serializer_publishables.cpp
     src/idl_tree_serializer_publishables_print_tree.cpp
-    src/idl_tree_2_csharp_messages.cpp
-    src/idl_tree_2_csharp_publishables.cpp
-    src/idl_tree_2_csharp_structs.cpp
-    src/idl_tree_2_csharp_unions.cpp
-    src/idl_tree_2_csharp.cpp
+    src/csharp/idl_tree_2_csharp_messages.cpp
+    src/csharp/idl_tree_2_csharp_publishables.cpp
+    src/csharp/idl_tree_2_csharp_structs.cpp
+    src/csharp/idl_tree_2_csharp_unions.cpp
+    src/csharp/idl_tree_2_csharp.cpp
     src/cplusplus/cplusplus_messages.cpp
     src/cplusplus/cplusplus_publishables.cpp
     src/cplusplus/cplusplus_idl_tree_serializer.cpp

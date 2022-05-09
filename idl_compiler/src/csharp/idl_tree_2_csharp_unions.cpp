@@ -33,9 +33,10 @@
 
 #include <set>
 
-namespace {
+namespace csharp
+{
 
-	void csharpDu_generateUnionParseJson3(CsharpWritter f, CompositeType& s)
+	void csharpDu_generateUnionParseJson3(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -89,7 +90,7 @@ namespace {
 		//f.write("\t\treturn val;\n");
 		f.write("\t}\n");
 	}
-	void csharpDu_generateUnionParseGmq3(CsharpWritter f, CompositeType& s)
+	void csharpDu_generateUnionParseGmq3(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -132,7 +133,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateUnionComposeJson2(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateUnionComposeJson2(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -177,7 +178,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateUnionComposeGmq2(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateUnionComposeGmq2(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -212,7 +213,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateUnionCaseProperties(CsharpWritter f, CompositeType& s)
+	void csharpDu_generateUnionCaseProperties(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -275,7 +276,7 @@ namespace {
 
 
 
-	void csharpDu_generateUnionEqualsMethod(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpDu_generateUnionEqualsMethod(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -290,7 +291,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateUnionEquivalentMethod(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateUnionEquivalentMethod(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -325,7 +326,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateUnionResetHandlers(CsharpWritter f, CompositeType& s)
+	void csharpDu_generateUnionResetHandlers(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -382,7 +383,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateUnionAddressEnum(CsharpWritter f, CompositeType& s)
+	void csharpDu_generateUnionAddressEnum(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -419,7 +420,7 @@ namespace {
 
 	}
 
-	void csharpDu_generateCompose(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateCompose(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -472,7 +473,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateParseStateSync(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateParseStateSync(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -526,7 +527,7 @@ namespace {
 
 		f.write("\t}\n");
 	}
-	void csharpDu_generateParse1(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateParse1(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -584,7 +585,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpDu_generateParse2(CsharpWritter f, CompositeType& s, const char* type_name)
+	void csharpDu_generateParse2(FileWritter f, CompositeType& s, const char* type_name)
 	{
 		assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -631,11 +632,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-}
-
-
-
-void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
+void generateCsharpUnionInterface(FileWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -701,7 +698,7 @@ void generateCsharpUnionInterface(CsharpWritter f, CompositeType& s)
 	f.write("} // interface I%s\n\n", s.name.c_str());
 }
 
-void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
+void generateCsharpUnionImpl(FileWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -797,7 +794,7 @@ void generateCsharpUnionImpl(CsharpWritter f, CompositeType& s)
 	f.write("} // class %s\n\n", s.name.c_str());
 }
 
-void generateCsharpUnionReadOnly(CsharpWritter f, CompositeType& s)
+void generateCsharpUnionReadOnly(FileWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -833,7 +830,7 @@ void generateCsharpUnionReadOnly(CsharpWritter f, CompositeType& s)
 }
 
 
-void generateCsharpUnionMessage(CsharpWritter f, CompositeType& s)
+void generateCsharpUnionMessage(FileWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -870,7 +867,7 @@ void generateCsharpUnionMessage(CsharpWritter f, CompositeType& s)
 }
 
 
-void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpUnionSubscriber(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -983,7 +980,7 @@ void generateCsharpUnionSubscriber(CsharpWritter f, CompositeType& s, const char
 	f.write("} // class %s_subscriber\n\n", type_name);
 }
 
-void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpUnionPublisher(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::discriminated_union);
 
@@ -1055,5 +1052,6 @@ void generateCsharpUnionPublisher(CsharpWritter f, CompositeType& s, const char*
 	}
 
 	f.write("} // class %s_publisher\n\n", type_name);
+}
 }
 

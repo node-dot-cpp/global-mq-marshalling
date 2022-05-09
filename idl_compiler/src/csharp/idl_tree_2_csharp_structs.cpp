@@ -46,6 +46,11 @@
 // 	// 	throw std::exception();
 // }
 
+namespace csharp
+{
+
+
+
 std::string getCaseTypeName(CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::discriminated_union_case);
@@ -325,7 +330,7 @@ string generateCsharpCallerParams(CompositeType& s, bool valPrefix)
 }
 
 
-void generateCsharpStandardMethods(CsharpWritter f, const char* type_name)
+void generateCsharpStandardMethods(FileWritter f, const char* type_name)
 {
 
 
@@ -359,7 +364,7 @@ void generateCsharpStandardMethods(CsharpWritter f, const char* type_name)
 
 }
 
-void generateCsharpStructEqualsMethod(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpStructEqualsMethod(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -409,7 +414,7 @@ void generateCsharpStructEqualsMethod(CsharpWritter f, CompositeType& s, const c
 	f.write("\t}\n");
 }
 
-void generateCsharpStructEquivalentExpression(CsharpWritter f, CompositeType& s)
+void generateCsharpStructEquivalentExpression(FileWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -484,7 +489,7 @@ void generateCsharpStructEquivalentExpression(CsharpWritter f, CompositeType& s)
 	}
 }
 
-void generateCsharpStructEquivalentMethod(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpStructEquivalentMethod(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -505,7 +510,7 @@ void generateCsharpStructEquivalentMethod(CsharpWritter f, CompositeType& s, con
 	f.write("\t}\n");
 }
 
-void generateCsharpSimpleEquivalentMethod(CsharpWritter f, const char* type_name, const char* member_name)
+void generateCsharpSimpleEquivalentMethod(FileWritter f, const char* type_name, const char* member_name)
 {
 
 
@@ -520,7 +525,7 @@ void generateCsharpSimpleEquivalentMethod(CsharpWritter f, const char* type_name
 	f.write("\t}\n");
 }
 
-void generateCsharpInterfaceMember(CsharpWritter f, MessageParameter& member)
+void generateCsharpInterfaceMember(FileWritter f, MessageParameter& member)
 {
 
 
@@ -593,7 +598,7 @@ void generateCsharpInterfaceMember(CsharpWritter f, MessageParameter& member)
 }
 
 
-void generateCsharpStructInterface(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpStructInterface(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -617,7 +622,7 @@ void generateCsharpStructInterface(CsharpWritter f, CompositeType& s, const char
 	f.write("} // interface %s\n\n", type_name);
 }
 
-void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* type_name, const char* interface_name)
+void generateCsharpStructImpl(FileWritter f, CompositeType& s, const char* type_name, const char* interface_name)
 {
 	assert(s.type == CompositeType::Type::message || s.type == CompositeType::Type::structure ||
 		s.type == CompositeType::Type::discriminated_union_case ||
@@ -813,7 +818,7 @@ void generateCsharpStructImpl(CsharpWritter f, CompositeType& s, const char* typ
 	f.write("} // class %s\n\n", type_name);
 }
 
-void generateCsharpReadOnlyMember(CsharpWritter f, MessageParameter& member)
+void generateCsharpReadOnlyMember(FileWritter f, MessageParameter& member)
 {
 	const char* name = member.name.c_str();
 
@@ -919,7 +924,7 @@ void generateCsharpReadOnlyMember(CsharpWritter f, MessageParameter& member)
 }
 
 
-void generateCsharpStructReadOnly(CsharpWritter f, CompositeType& s)
+void generateCsharpStructReadOnly(FileWritter f, CompositeType& s)
 {
 	assert(s.type == CompositeType::Type::structure);
 
@@ -944,3 +949,4 @@ void generateCsharpStructReadOnly(CsharpWritter f, CompositeType& s)
 	f.write("} // class %s_readonly\n\n", type_name);
 }
 
+}

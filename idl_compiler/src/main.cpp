@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
     FILE* header = fopen(targetPath.c_str(), "wb");
 
     if (isCsharp)
-        generateCsharp(header, *root, config.metascope.c_str());
+        generateCsharp(header, *root, config);
     else if (isCplusplus)
         generateCplusplus(header, *root, config);
     else

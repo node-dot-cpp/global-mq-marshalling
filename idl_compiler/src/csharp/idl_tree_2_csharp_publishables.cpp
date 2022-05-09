@@ -35,9 +35,10 @@
 
 
 
-namespace {
+namespace csharp
+{
 
-	void csharpPub_generateAddressEnum(CsharpWritter f, CompositeType& s)
+	void csharpPub_generateAddressEnum(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -62,7 +63,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParseStateSync(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParseStateSync(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -179,7 +180,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParse1(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse1(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -364,7 +365,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateParse2(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateParse2(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -825,7 +826,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateStateSubscriberBase(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStateSubscriberBase(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
@@ -864,7 +865,7 @@ namespace {
 		f.write("\t}\n");
 	}
 
-	void csharpPub_generateEventHandlerSubs(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateEventHandlerSubs(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -885,7 +886,7 @@ namespace {
 
 
 
-	void csharpPub_generateFactoryMethodSubs(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateFactoryMethodSubs(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -898,7 +899,7 @@ namespace {
 		}
 	}
 
-	void csharpPub_generateSubscriberResetHandlers(CsharpWritter f, CompositeType& s)
+	void csharpPub_generateSubscriberResetHandlers(FileWritter f, CompositeType& s)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -965,7 +966,7 @@ namespace {
 	}
 
 
-	void csharpPub_generateCompose(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateCompose(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure ||
 			s.type == CompositeType::Type::discriminated_union_case);
@@ -1092,7 +1093,7 @@ namespace {
 	}
 
 
-	void csharpPub_generateStatePublishableBase(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStatePublishableBase(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
@@ -1127,7 +1128,7 @@ namespace {
 
 
 
-	void csharpPub_generateStateConcentratorBase(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStateConcentratorBase(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable);
 
@@ -1143,7 +1144,7 @@ namespace {
 	}
 
 
-	void csharpPub_generateStructConcentrator(CsharpWritter f, CompositeType& s, const std::string& type_name)
+	void csharpPub_generateStructConcentrator(FileWritter f, CompositeType& s, const std::string& type_name)
 	{
 		assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1159,9 +1160,9 @@ namespace {
 	}
 
 
-}
 
-void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& member)
+
+void generateCsharpSubscriberFactoryMethod(FileWritter f, MessageParameter& member)
 {
 
 
@@ -1223,7 +1224,7 @@ void generateCsharpSubscriberFactoryMethod(CsharpWritter f, MessageParameter& me
 	}
 }
 
-void generateCsharpSubscriberEventHandler(CsharpWritter f, MessageParameter& member)
+void generateCsharpSubscriberEventHandler(FileWritter f, MessageParameter& member)
 {
 
 
@@ -1310,7 +1311,7 @@ void generateCsharpSubscriberEventHandler(CsharpWritter f, MessageParameter& mem
 	}
 }
 
-void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
+void generateCsharpSubscriberMember(FileWritter f, MessageParameter& member)
 {
 
 
@@ -1463,7 +1464,7 @@ void generateCsharpSubscriberMember(CsharpWritter f, MessageParameter& member)
 	}
 }
 
-void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
+void generateCsharpPublisherMember(FileWritter f, MessageParameter& member)
 {
 
 
@@ -1696,7 +1697,7 @@ void generateCsharpPublisherMember(CsharpWritter f, MessageParameter& member)
 	}
 }
 
-void generateCsharpCaseSubscriber(CsharpWritter f, CompositeType& s, const char* type_name, const char* du_name)
+void generateCsharpCaseSubscriber(FileWritter f, CompositeType& s, const char* type_name, const char* du_name)
 {
 	assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1712,7 +1713,7 @@ void generateCsharpCaseSubscriber(CsharpWritter f, CompositeType& s, const char*
 	f.write("} // class %s_subscriber\n\n", type_name);
 }
 
-void generateCsharpCasePublisher(CsharpWritter f, CompositeType& s, const char* type_name, const char* du_name)
+void generateCsharpCasePublisher(FileWritter f, CompositeType& s, const char* type_name, const char* du_name)
 {
 	assert(s.type == CompositeType::Type::discriminated_union_case);
 
@@ -1726,7 +1727,7 @@ void generateCsharpCasePublisher(CsharpWritter f, CompositeType& s, const char* 
 	f.write("} // class %s_publisher\n\n", type_name);
 }
 
-void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpStructSubscriber(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1786,7 +1787,7 @@ void generateCsharpStructSubscriber(CsharpWritter f, CompositeType& s, const cha
 
 }
 
-void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpStructPublisher(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1855,7 +1856,7 @@ void generateCsharpStructPublisher(CsharpWritter f, CompositeType& s, const char
 	f.write("} // class %s_publisher\n\n", type_name);
 }
 
-void generateCsharpStructConcentrator(CsharpWritter f, CompositeType& s, const char* type_name)
+void generateCsharpStructConcentrator(FileWritter f, CompositeType& s, const char* type_name)
 {
 	assert(s.type == CompositeType::Type::publishable || s.type == CompositeType::Type::structure);
 
@@ -1870,7 +1871,7 @@ void generateCsharpStructConcentrator(CsharpWritter f, CompositeType& s, const c
 	f.write("} // class %s_concentrator\n\n", type_name);
 }
 
-void generateCsharpConcentratorFactory(CsharpWritter f, Root& root)
+void generateCsharpConcentratorFactory(FileWritter f, Root& root)
 {
 	assert(!root.publishables.empty());
 
@@ -1900,3 +1901,4 @@ void generateCsharpConcentratorFactory(CsharpWritter f, Root& root)
 	f.write("} // class StateConcentratorFactory\n\n");
 }
 
+}
