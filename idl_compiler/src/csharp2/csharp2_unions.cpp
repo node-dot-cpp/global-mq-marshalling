@@ -28,7 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "idl_tree_2_csharp.h"
+#include "csharp2.h"
 #include "idl_tree_common.h"
 
 #include <set>

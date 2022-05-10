@@ -28,7 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "idl_tree_2_csharp.h"
+#include "csharp2.h"
 #include "idl_tree_common.h"
 #include "idl_generators.h"
 
@@ -514,7 +514,7 @@ namespace csharp2
 
         for (auto& each : config.parserNames)
         {
-            f.write("\tpublic static void handleMessage( %s parser, default_delegate defaultHandler = null %s )\n",
+            f.write("\tstatic void handleMessage( %s parser, default_delegate defaultHandler = null %s )\n",
                     each.c_str(), declArgs.c_str());
             f.write("\t{\n");
             f.write("\t\tulong msgId = MessageHandlerCommon.parseMsgBegin(parser);\n");
@@ -558,8 +558,8 @@ namespace csharp2
 			f.write("\t\t}\n");
 			f.write("\t\tif(parsed)\n");
 			f.write("\t\t\tMessageHandlerCommon.parseMsgEnd(parser);\n");
-			f.write("\t\telse\n");
-			f.write("\t\t\t; // TODO skip message\n");
+			f.write("\t\t// else\n");
+			f.write("\t\t\t// TODO skip message\n");
 			f.write("\t}\n");
         }
     }

@@ -179,7 +179,7 @@ void generateCsharp(FileWritter f0, Root& root, const GenerationConfig& config)
 
 	for (auto& scope : root.scopes)
 	{
-		generateCsharpMessageScope(f, root, *scope, config);
+		generateCsharpMessageScope(f, root, *scope);
 	}
 
 	f.write("//////////////////////////////////////////////////////////////\n");

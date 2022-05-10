@@ -28,7 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "idl_tree_2_csharp.h"
+#include "csharp2.h"
 #include "idl_tree_common.h"
 
 #include <set>
@@ -1816,6 +1816,13 @@ void generateCsharpStructPublisher(FileWritter f, CompositeType& s, const char* 
 		f.write("\t\tthis.data_ = new %s();\n", type_name);
 		f.write("\t\tthis.composer_ = null;\n");
 		f.write("\t\tthis.address_ = new UInt64[] { };\n");
+		f.write("\t}\n");
+
+		f.write("\tpublic static %s_publisher make(IPlatformSupport platform)\n", type_name);
+		f.write("\t{\n");
+		f.write("\t\tif(platform == null)\n");
+		f.write("\t\t\tthrow new ArgumentNullException();\n");
+		f.write("\t\treturn new %s_publisher();\n", type_name);
 		f.write("\t}\n");
 	}
 	else

@@ -25,6 +25,11 @@
     <ClCompile Include="..\src\cplusplus\cplusplus_idl_tree_serializer.cpp" />
     <ClCompile Include="..\src\cplusplus\cplusplus_messages.cpp" />
     <ClCompile Include="..\src\cplusplus\cplusplus_publishables.cpp" />
+    <ClCompile Include="..\src\csharp2\csharp2.cpp" />
+    <ClCompile Include="..\src\csharp2\csharp2_messages.cpp" />
+    <ClCompile Include="..\src\csharp2\csharp2_publishables.cpp" />
+    <ClCompile Include="..\src\csharp2\csharp2_structs.cpp" />
+    <ClCompile Include="..\src\csharp2\csharp2_unions.cpp" />
     <ClCompile Include="..\src\csharp\idl_tree_2_csharp.cpp" />
     <ClCompile Include="..\src\csharp\idl_tree_2_csharp_messages.cpp" />
     <ClCompile Include="..\src\csharp\idl_tree_2_csharp_publishables.cpp" />
@@ -50,6 +55,7 @@
     <ClInclude Include="..\include\idl_parser.h" />
     <ClInclude Include="..\include\raiistdiofile.h" />
     <ClInclude Include="..\src\cplusplus\cplusplus_idl_tree_serializer.h" />
+    <ClInclude Include="..\src\csharp2\csharp2.h" />
     <ClInclude Include="..\src\csharp\idl_tree_2_csharp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
