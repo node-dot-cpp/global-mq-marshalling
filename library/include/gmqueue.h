@@ -1198,6 +1198,11 @@ public:
 		assert( myAuthority.empty() ); // set just once
 		myAuthority = authority;
 	}
+	std::pair<bool, GMQ_COLL string> isStateConcentratorFactoryInitialized() // Note: potentially, temporary solution
+	{
+		std::unique_lock<std::mutex> lock(mx);
+		return std::make_pair(stateConcentratorFactory != nullptr, myAuthority);
+	}
 
 	void postMessage( MessageBufferT&& msg, uint64_t senderID, SlotIdx senderSlotIdx )
 	{
@@ -1464,8 +1469,9 @@ public:
 
 struct InProcTransferrable
 {
+	static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFULL;
 	GMQ_COLL string name;
-	uint64_t id;
+	uint64_t id = invalidValue;
 	void serialize( uint8_t* buff, size_t maxSz ) // NOTE: temporary solution
 	{
 		assert( name.size() + 1 + sizeof( id ) <= maxSz );
@@ -1484,10 +1490,11 @@ template<class PlatformSupportT>
 class GMQTransportBase
 {
 protected:
+	static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFULL;
 	GMQueue<PlatformSupportT>& gmq;
 	GMQ_COLL string name;
 	SlotIdx idx;
-	uint64_t id;
+	uint64_t id = invalidValue;
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, SlotIdx idx_, uint64_t id_ ) : gmq( queue ), name( name_ ), idx( idx_ ), id ( id_ ) {}
 
 public:
