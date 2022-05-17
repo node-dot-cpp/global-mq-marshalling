@@ -434,10 +434,18 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 	if ( addReportChanges )
 	{
 		fprintf( header, "%selse if constexpr ( reportChanges || has_update_notifier )\n", offset.c_str() );
+		fprintf( header, "%s{\n", offset.c_str() );
 		if ( forwardAddress )
-			fprintf( header, "%s\tchanged = %s::parse<ParserT, %s, bool>( parser, t.%s, addr, %s1 );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
+			fprintf( header, "%s\tbool changedCurrent = %s::parse<ParserT, %s, bool>( parser, t.%s, addr, %s1 );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );
 		else
-			fprintf( header, "%s\tchanged = %s::parse<ParserT, %s, bool>( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+			fprintf( header, "%s\tbool changedCurrent = %s::parse<ParserT, %s, bool>( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		
+		fprintf( header, "%s\tif ( changedCurrent )\n", offset.c_str() );
+		fprintf( header, "%s\t\tchanged = true;\n", offset.c_str() );
+
+
+
+		fprintf( header, "%s}\n", offset.c_str() );
 		fprintf( header, "%selse\n", offset.c_str() );
 		if ( forwardAddress )
 			fprintf( header, "%s\t%s::parse( parser, t.%s, addr, %s1 );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str(), offsetPlusStr );

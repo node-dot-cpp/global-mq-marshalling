@@ -28,7 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * -------------------------------------------------------------------------------*/
 
-#include "idl_tree_2_csharp.h"
+#include "csharp2.h"
 #include <fmt/printf.h>
 #include "idl_tree_common.h"
 #include "idl_generators.h"
@@ -82,7 +82,7 @@ using namespace std;
 // }
 
 
-namespace csharp
+namespace csharp2
 {
 
 void generateCsharp(FileWritter f0, Root& root, const GenerationConfig& config)
@@ -179,7 +179,7 @@ void generateCsharp(FileWritter f0, Root& root, const GenerationConfig& config)
 
 	for (auto& scope : root.scopes)
 	{
-		generateCsharpMessageScope(f, root, *scope);
+		generateCsharpMessageScope(f, root, *scope, config);
 	}
 
 	f.write("//////////////////////////////////////////////////////////////\n");
@@ -241,7 +241,7 @@ void generateCsharp(FileWritter f0, Root& root, const GenerationConfig& config)
 }
 }
 
-void generateCsharp(FILE* file, Root& root, GenerationConfig config)
+void generateCsharp2(FILE* file, Root& root, GenerationConfig config)
 {
 	FileWritter f0(file, 0);
 
@@ -257,6 +257,6 @@ void generateCsharp(FILE* file, Root& root, GenerationConfig config)
 		config.parserNames.push_back("JsonParser");
 	}
 
-	csharp::generateCsharp(f0, root, config);
+	csharp2::generateCsharp(f0, root, config);
 }
 

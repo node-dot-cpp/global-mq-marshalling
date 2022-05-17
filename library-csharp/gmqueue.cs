@@ -40,6 +40,9 @@ namespace globalmq.marshalling
         BufferT makeBuffer();
         IPublishableComposer makePublishableComposer(BufferT buffer);
         IPublishableParser makePublishableParser(ReadIteratorT readIter);
+
+        ComposerBase makeComposer(BufferT buffer);
+        ParserBase makeParser(ReadIteratorT readIter);
     }
 
     public class DefaultJsonPlatformSupport : IPlatformSupport
@@ -47,6 +50,9 @@ namespace globalmq.marshalling
         public BufferT makeBuffer() { return new SimpleBuffer(); }
         public IPublishableComposer makePublishableComposer(BufferT buffer) { return new JsonPublishableComposer(buffer); }
         public IPublishableParser makePublishableParser(ReadIteratorT readIter) { return new JsonPublishableParser(readIter); }
+
+        public ComposerBase makeComposer(BufferT buffer) { return new JsonComposer(buffer); }
+        public ParserBase makeParser(ReadIteratorT readIter) { return new JsonParser(readIter); }
     }
 
     public class DefaultGmqPlatformSupport : IPlatformSupport
@@ -54,6 +60,8 @@ namespace globalmq.marshalling
         public BufferT makeBuffer() { return new SimpleBuffer(); }
         public IPublishableComposer makePublishableComposer(BufferT buffer) { return new GmqPublishableComposer(buffer); }
         public IPublishableParser makePublishableParser(ReadIteratorT readIter) { return new GmqPublishableParser(readIter); }
+        public ComposerBase makeComposer(BufferT buffer) { return new GmqComposer(buffer); }
+        public ParserBase makeParser(ReadIteratorT readIter) { return new GmqParser(readIter); }
     }
 
 

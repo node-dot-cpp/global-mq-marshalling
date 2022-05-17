@@ -263,8 +263,9 @@ namespace globalmq.marshalling
 
 namespace globalmq.marshalling
 {
+	public interface ParserBase {	}
 
-    public class GmqParser
+    public class GmqParser : ParserBase
 	{
 		ReadIteratorT riter;
 
@@ -309,7 +310,7 @@ namespace globalmq.marshalling
 			s = sb.ToString();
 		}
 	};
-	public class JsonParser
+	public class JsonParser : ParserBase
 	{
 		ReadIteratorT riter;
 

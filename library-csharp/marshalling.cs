@@ -228,4 +228,42 @@ namespace globalmq.marshalling
         }
 
     }
+
+
+    public class MessageHandlerCommon
+    {
+        public static ulong parseMsgBegin(JsonParser parser)
+        {
+            parser.skipDelimiter('{');
+            string key;
+            parser.readKeyFromJson(out key);
+            if (key != "msgid")
+                throw new Exception(); // bad format
+            ulong msgID;
+            parser.parseUnsignedInteger(out msgID);
+            parser.skipSpacesEtc();
+            parser.skipDelimiter(',');
+            parser.readKeyFromJson(out key);
+            if (key != "msgbody")
+                throw new Exception(); // bad format
+
+            return msgID;
+        }
+
+        public static void parseMsgEnd(JsonParser parser)
+        {
+            parser.skipDelimiter('}');
+        }
+
+        public static ulong parseMsgBegin(GmqParser parser)
+        {
+            ulong msgID;
+            parser.parseUnsignedInteger(out msgID);
+
+            return msgID;
+        }
+
+        public static void parseMsgEnd(GmqParser parser) { }
+
+    }
 }
