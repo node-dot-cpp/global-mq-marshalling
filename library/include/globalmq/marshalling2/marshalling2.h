@@ -31,6 +31,7 @@
 #ifndef GLOBALMQ_MARSHALLING2_MARSHALLING2_H
 #define GLOBALMQ_MARSHALLING2_MARSHALLING2_H
 
+#include <functional>
 #include <action_on.h>
 #include <marshalling_impl.h>
 
