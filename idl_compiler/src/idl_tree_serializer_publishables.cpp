@@ -372,7 +372,12 @@ void impl_generateApplyUpdateForStructItself( FILE* header, MessageParameter& me
 	if ( addReportChanges )
 	{
 		fprintf( header, "%s\tif constexpr ( reportChanges || has_update_notifier )\n", offset.c_str() );
-		fprintf( header, "%s\t\tchanged = %s::parse<ParserT, %s, bool>( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		fprintf( header, "%s\t{\n", offset.c_str() );
+		fprintf( header, "%s\t\tbool changedCurrent = %s::parse<ParserT, %s, bool>( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
+		fprintf( header, "%s\t\tif ( changedCurrent )\n", offset.c_str() );
+		fprintf( header, "%s\t\t\tchanged = true;\n", offset.c_str() );
+		fprintf( header, "%s\t}\n", offset.c_str() );
+
 		fprintf( header, "%s\telse\n", offset.c_str() );
 		fprintf( header, "%s\t\t%s::parse( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	}
@@ -401,7 +406,7 @@ void impl_generateApplyUpdateForFurtherProcessingInStruct( FILE* header, Message
 		fprintf( header, "%s\tbool changedCurrent = %s::parse<ParserT, %s, bool>( parser, t.%s );\n", offset.c_str(), impl_generatePublishableStructName( member ).c_str(), impl_templateMemberTypeName( "T", member).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 	fprintf( header, "%s\tif ( changedCurrent )\n", offset.c_str() );
 	fprintf( header, "%s\t{\n", offset.c_str() );
-	fprintf( header, "%s\t\tchanged = true;\n", offset.c_str() );
+//	fprintf( header, "%s\t\tchanged = true;\n", offset.c_str() );
 	if ( addReportChanges )
 	{
 		fprintf( header, "%s\t\tif constexpr ( reportChanges || has_update_notifier )\n", offset.c_str() );
@@ -480,7 +485,7 @@ void impl_generateApplyUpdateForFurtherProcessingInDictionary( FILE* header, Roo
 
 	fprintf( header, "%s%s oldDictionaryVal;\n", offset.c_str(),  impl_templateMemberTypeName( "T", member).c_str() );
 	fprintf( header, "%sbool currentChanged = false;\n", offset.c_str() );
-	fprintf( header, "%sconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%sconstexpr bool alwaysCollectChanges = reportChanges || has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
 //	fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
 //	fprintf( header, "%s\t::globalmq::marshalling::impl::copyDictionary<%s, %s, %s>( t.%s, oldDictionaryVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), dictionaryKeyTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), dictionaryValueTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
@@ -678,14 +683,14 @@ fprintf( header, "%s//~~~~~~~~~~XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	}
 }
 
-void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, bool addReportChanges, std::string offset )
+void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, std::string offset )
 {
 //	assert( (!addOffsetInAddr) || (addOffsetInAddr && forwardAddress) );
 	const char* offsetPlusStr = addOffsetInAddr ? "offset + " : "";
 
 	fprintf( header, "%s%s oldVectorVal;\n", offset.c_str(),  impl_templateMemberTypeName( "T", member).c_str() );
 	fprintf( header, "%sbool currentChanged = false;\n", offset.c_str() );
-	fprintf( header, "%sconstexpr bool alwaysCollectChanges = has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
+	fprintf( header, "%sconstexpr bool alwaysCollectChanges = reportChanges || has_any_notifier_for_%s;\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
 	fprintf( header, "%s\t::globalmq::marshalling::impl::copyVector<%s, %s>( t.%s, oldVectorVal );\n", offset.c_str(), impl_templateMemberTypeName( "T", member).c_str(), vectorElementTypeToLibTypeOrTypeProcessor( member.type, root ).c_str(), impl_memberOrAccessFunctionName( member ).c_str() );
 
@@ -930,12 +935,6 @@ void impl_generateApplyUpdateForFurtherProcessingInVector( FILE* header, Root& r
 	fprintf( header, "%s\t\tt.notifyUpdated_%s( oldVectorVal );\n", offset.c_str(), member.name.c_str() );
 	fprintf( header, "%s}\n", offset.c_str() );
 
-	if ( addReportChanges )
-	{
-		fprintf( header, "\n" );
-		fprintf( header, "%sif constexpr( alwaysCollectChanges )\n", offset.c_str() );
-		fprintf( header, "%s\treturn currentChanged;\n", offset.c_str() );
-	}
 }
 
 void impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( FILE* header, Root& root, MessageParameter& member, bool addOffsetInAddr, std::string offset )
@@ -1409,15 +1408,13 @@ void impl_generateContinueParsingFunctionForPublishableStruct_MemberIterationBlo
 			case MessageParameterType::KIND::VECTOR:
 			{
 				fprintf( header, "%s\t{\n", offset );
-//				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
-				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, true, false, std::string( offset ) + "\t\t" );
+				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, true, std::string( offset ) + "\t\t" );
 				fprintf( header, "%s\t}\n", offset );
 				break;
 			}
 			case MessageParameterType::KIND::DICTIONARY:
 			{
 				fprintf( header, "%s\t{\n", offset );
-//				impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false );
 				impl_generateApplyUpdateForFurtherProcessingInDictionary( header, root, member, true, false, std::string( offset ) + "\t\t" );
 				fprintf( header, "%s\t}\n", offset );
 				break;
@@ -2275,7 +2272,6 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 				fprintf( header, "\t\t\t\t\t{\n" );
 
 				if ( addNotifications )
-//					impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, false, true, "\t\t\t\t\t\t" );
 					impl_generateApplyUpdateForFurtherProcessingInStruct( header, member, false, true, true, "\t\t\t\t\t\t" );
 				else
 					impl_generateApplyUpdateForFurtherProcessingInStructNoNotifiers( header, member, false, true, "\t\t\t\t\t\t" );
@@ -2286,25 +2282,19 @@ void impl_GenerateApplyUpdateMessageMemberFn( FILE* header, Root& root, Composit
 			}
 			case MessageParameterType::KIND::VECTOR:
 			{
-//				fprintf( header, "\t\t\t\t{\n" );
 				if ( addNotifications )
-					impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, false, "\t\t\t\t\t" );
+					impl_generateApplyUpdateForFurtherProcessingInVector( header, root, member, false, "\t\t\t\t\t" );
 				else
 					impl_generateApplyUpdateForFurtherProcessingInVectorNoNotifiers( header, root, member, false, "\t\t\t\t\t" );
-//				fprintf( header, "\t\t\t\t}\n" );
-//				fprintf( header, "\n" ); 
 
 				break;
 			}
 			case MessageParameterType::KIND::DICTIONARY:
 			{
-//				fprintf( header, "\t\t\t\t{\n" );
 				if ( addNotifications )
 					impl_generateApplyUpdateForFurtherProcessingInDictionary( header, root, member, false, false, "\t\t\t\t\t" );
 				else
 					impl_generateApplyUpdateForFurtherProcessingInDictionaryNoNotifiers( header, root, member, false, "\t\t\t\t\t" );
-//				fprintf( header, "\t\t\t\t}\n" );
-//				fprintf( header, "\n" ); 
 
 				break;
 			}
