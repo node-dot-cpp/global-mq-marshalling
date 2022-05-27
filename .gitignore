@@ -19,6 +19,7 @@ test/build/.vs/
 test/build/x64/
 
 /build/
+/library-csharp/build/
 .vs/
 out/
 bin/
