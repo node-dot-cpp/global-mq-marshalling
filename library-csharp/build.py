@@ -7,7 +7,7 @@ def build(buildType):
     isExist = os.path.exists(path)
     if not isExist:
         os.makedirs(path)
-    os.system("dotnet build global-mq-csharp.csproj --arch any --output build --configuration " + buildType)
+    os.system("dotnet build global-mq-csharp.csproj --output build --configuration " + buildType)
 
 buildType = 'Release'
 
