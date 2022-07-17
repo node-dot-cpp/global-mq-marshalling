@@ -47,6 +47,8 @@ public:
 	using ComposerT = globalmq::marshalling::JsonComposer<BufferT>;
 	template<class T>
 	using OwningPtrT = ::std::unique_ptr<T>;
+	template<class T>
+	using AllocatorForGMQueueT = std::allocator<T>;
 };
 #else
 #include GMQUEUE_CUSTOMIZED_Q_TYPES
@@ -598,8 +600,8 @@ void helperParseAndUpdatePublishableStateMessage( typename ParserT::BufferType& 
 	}
 }
 
-
-struct GmqPathHelper
+template<class StringT>
+struct GmqPathHelperT
 {
 	/*
 		(global)
@@ -614,18 +616,18 @@ struct GmqPathHelper
 	struct PathComponents
 	{
 		PublishableStateMessageHeader::MsgType type = PublishableStateMessageHeader::MsgType::undefined;
-		GMQ_COLL string authority;
+		StringT authority;
 		bool furtherResolution = false;
 		bool hasPort = false;
 		uint16_t port = 0xFFFF;
-		GMQ_COLL string nodeName;
-		GMQ_COLL string statePublisherOrConnectionType; // for subscription request
+		StringT nodeName;
+		StringT statePublisherOrConnectionType; // for subscription request
 	};
 
-	static GMQ_COLL string compose( const PathComponents& components )
+	static StringT compose( const PathComponents& components )
 	{
 		// TODO: check components
-		GMQ_COLL string ret = "globalmq:";
+		StringT ret = "globalmq:";
 		if ( !components.authority.empty() )
 		{
 			ret += "//";
@@ -645,21 +647,21 @@ struct GmqPathHelper
 		return ret;
 	}
 
-	static GMQ_COLL string localPart( const PathComponents& components )
+	static StringT localPart( const PathComponents& components )
 	{
 		switch ( components.type )
 		{
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
-				return fmt::format( "{}?sp={}", components.nodeName, components.statePublisherOrConnectionType );
+				return StringT(fmt::format( "{}?sp={}", components.nodeName, components.statePublisherOrConnectionType ).c_str());
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
-				return fmt::format( "{}?ct={}", components.nodeName, components.statePublisherOrConnectionType );
+				return StringT(fmt::format( "{}?ct={}", components.nodeName, components.statePublisherOrConnectionType ).c_str());
 			default:
 				assert( false );
 				return "";
 		}
 	}
 
-	static bool parse( GMQ_COLL string path, PathComponents& components )
+	static bool parse( StringT path, PathComponents& components )
 	{
 		size_t pos = path.find( "globalmq:" );
 		if ( pos != 0 )
@@ -673,12 +675,12 @@ struct GmqPathHelper
 		{
 			++pos;
 			size_t pos1 = path.find( "/", pos );
-			if ( pos1 == GMQ_COLL string::npos )
+			if ( pos1 == StringT::npos )
 				return false;
 			components.authority = path.substr( pos, pos1 - pos );
 			pos = pos1 + 1;
 			pos1 = components.authority.find_last_of( ':' );
-			if ( pos1 != GMQ_COLL string::npos )
+			if ( pos1 != StringT::npos )
 			{
 				char* end = nullptr;
 				size_t port = strtol( components.authority.c_str() + pos1 + 1, &end, 10 );
@@ -699,7 +701,7 @@ struct GmqPathHelper
 			}
 
 			size_t pos2 = components.authority.find_last_of( '!' );
-			if ( pos2 != GMQ_COLL string::npos )
+			if ( pos2 != StringT::npos )
 			{
 				if ( components.authority.size() - pos2 < sizeof( "gmq" ) - 1 )
 					return false;
@@ -723,7 +725,7 @@ struct GmqPathHelper
 
 		// node name
 		size_t pos1 = path.find( '?', pos );
-		if ( pos1 == GMQ_COLL string::npos )
+		if ( pos1 == StringT::npos )
 			return false;
 		components.nodeName = path.substr( pos, pos1 - pos );
 		pos = pos1;
@@ -742,16 +744,18 @@ struct GmqPathHelper
 			default:
 				assert( false );
 		}
-		if ( pos == GMQ_COLL string::npos )
+		if ( pos == StringT::npos )
 			return false;
 		pos1 = path.find( '&', pos );
-		if ( pos1 == GMQ_COLL string::npos )
+		if ( pos1 == StringT::npos )
 			components.statePublisherOrConnectionType = path.substr( pos );
 		else
 			components.statePublisherOrConnectionType = path.substr( pos, pos1 - pos );
 		return true;
 	}
 };
+
+using GmqPathHelper = GmqPathHelperT<GMQ_COLL string>;
 
 template<class InputBufferT, class ComposerT>
 class StateConcentratorBase
@@ -814,9 +818,34 @@ struct SlotIdx
 	void invalidate() { idx = invalid_idx; reincarnation = invalid_reincarnation; }
 };
 
+template<class T, template<typename> typename AllocT>
+struct AllocatorSelector
+{
+	using AllocatorT = AllocT<T>;
+};
+
+template<class T>
+struct AllocatorSelector<T, std::allocator>
+{
+	using AllocatorT = std::allocator<T>;
+};
+
+template<template<typename> typename AllocT>
+struct StringSelector
+{
+	using StringT = std::basic_string<char, std::char_traits<char>, AllocT<char>>;
+};
+
+template<>
+struct StringSelector<std::allocator>
+{
+	using StringT = std::string;
+};
+
+template<template<typename> typename AllocatorT = std::allocator>
 class AddressableLocations // one per process; provides process-unique Slot with Postman and returns its SlotIdx
 {
-	GMQ_COLL vector<AddressableLocation> slots; // mx-protected!
+	std::vector<AddressableLocation, typename AllocatorSelector<AddressableLocation, AllocatorT>::AllocatorT> slots; // mx-protected!
 public:
 	SlotIdx add( InProcessMessagePostmanBase* postman )
 	{ 
@@ -850,14 +879,18 @@ public:
 template<class PlatformSupportT>
 class GMQueue
 {
+	template<class T>
+	using AllocatorT = typename PlatformSupportT::template AllocatorForGMQueueT<T>;
 	using InputBufferT = typename PlatformSupportT::BufferT;
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ParserT = typename PlatformSupportT::ParserT;
+	using StorableStringT = typename StringSelector<AllocatorT>::StringT;
+	using GmqPathHelper4GMQ = GmqPathHelperT<StorableStringT>;
 
-	AddressableLocations addressableLocations;
+	AddressableLocations<AllocatorT> addressableLocations;
 
-	GMQ_COLL string myAuthority;
-	bool isMyAuthority( GMQ_COLL string authority )
+	StorableStringT myAuthority;
+	bool isMyAuthority( StorableStringT authority )
 	{
 		// TODO: regexp comparison (note: myAuthority could be '*', etc );
 		return authority == myAuthority || authority.empty();
@@ -879,7 +912,7 @@ class GMQueue
 			uint64_t ref_id_at_publisher = invalidValue;
 			SlotIdx senderSlotIdx;
 		};
-		GMQ_COLL vector<SubscriberData> subscribers;
+		std::vector<SubscriberData, typename AllocatorSelector<SubscriberData, AllocatorT>::AllocatorT> subscribers;
 
 	public:
 		ConcentratorWrapper( StateConcentratorBase<InputBufferT, ComposerT>* ptr_ ) : ptr( ptr_ ) {}
@@ -890,7 +923,7 @@ class GMQueue
 		~ConcentratorWrapper() { if ( ptr ) delete ptr; }
 
 		// Gmqueue part (indeed, we need it only if 'remove concentrator' event may actually happen (conditions?))
-		GMQ_COLL string address;
+		StorableStringT address;
 		uint64_t idInQueue = invalidValue; // used as a key for finding this concentrator; reported to publisher as a ref_id_at_subscriber (note: concentrator plays role of subscriber in this case)
 
 	public:
@@ -957,11 +990,11 @@ class GMQueue
 			SlotIdx initiatorSlotIdx;
 			SlotIdx acceptorSlotIdx;
 
-			GMQ_COLL string address;
+			StorableStringT address;
 		};
 
-		GMQ_COLL unordered_map<uint64_t, Connection> idToConnectionStorage; // used as storage, mx-protected
-		GMQ_COLL unordered_map<uint64_t, Connection*> idToConnection; // used for searching, mx-protected
+		std::unordered_map<uint64_t, Connection, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, Connection>, AllocatorT>::AllocatorT> idToConnectionStorage; // used as storage, mx-protected
+		std::unordered_map<uint64_t, Connection*, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, Connection*>, AllocatorT>::AllocatorT> idToConnection; // used for searching, mx-protected
 		uint64_t connectionIDBase = 0;
 
 	public:
@@ -979,7 +1012,7 @@ class GMQueue
 			SlotIdx targetSlotIdx;
 		};
 
-		FieldsForSending onConnRequest( uint64_t ref_id_at_conn_initiator, SlotIdx initiatorSlotIdx, SlotIdx acceptorSlotIdx, GMQ_COLL string address )
+		FieldsForSending onConnRequest( uint64_t ref_id_at_conn_initiator, SlotIdx initiatorSlotIdx, SlotIdx acceptorSlotIdx, StorableStringT address )
 		{
 			Connection conn;
 			conn.status = Connection::Status::connRequestSent;
@@ -1060,17 +1093,17 @@ class GMQueue
 	std::mutex mx;
 
 
-	GMQ_COLL unordered_map<GMQ_COLL string, ConcentratorWrapper> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
-	GMQ_COLL unordered_map<uint64_t, ConcentratorWrapper*> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
+	std::unordered_map<StorableStringT, ConcentratorWrapper, std::hash<StorableStringT>, std::equal_to<StorableStringT>, typename AllocatorSelector<std::pair<const StorableStringT, ConcentratorWrapper>, AllocatorT>::AllocatorT> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
+	std::unordered_map<uint64_t, ConcentratorWrapper*, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, ConcentratorWrapper*>, AllocatorT>::AllocatorT> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	uint64_t concentratorIDBase = 0;
 
-//	GMQ_COLL unordered_map<GMQ_COLL string, AddressableLocation> namedRecipients; // node name to location, mx-protected
-	GMQ_COLL unordered_map<GMQ_COLL string, SlotIdx> namedRecipients; // node name to location, mx-protected
+//	GMQ_COLL unordered_map<StorableStringT, AddressableLocation> namedRecipients; // node name to location, mx-protected
+	std::unordered_map<StorableStringT, SlotIdx, std::hash<StorableStringT>, std::equal_to<StorableStringT>, typename AllocatorSelector<std::pair<const StorableStringT, SlotIdx>, AllocatorT>::AllocatorT> namedRecipients; // node name to location, mx-protected
 
-	GMQ_COLL unordered_map<uint64_t, SlotIdx> senders; // node name to location, mx-protected
+	std::unordered_map<uint64_t, SlotIdx, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, SlotIdx>, AllocatorT>::AllocatorT> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
 
-	GMQ_COLL unordered_map<uint64_t, std::pair<uint64_t, uint64_t>> ID2ConcentratorSubscriberPairMapping;
+	std::unordered_map<uint64_t, std::pair<uint64_t, uint64_t>, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, std::pair<uint64_t, uint64_t>>, AllocatorT>::AllocatorT> ID2ConcentratorSubscriberPairMapping;
 	uint64_t publisherAndItsConcentratorBase = 0;
 
 	StateConcentratorFactoryBase<InputBufferT, ComposerT>* stateConcentratorFactory = nullptr;
@@ -1091,7 +1124,7 @@ class GMQueue
 	}
 
 	// concentrators (address2concentrators)
-	std::pair<ConcentratorWrapper*, bool> findOrAddStateConcentrator( GMQ_COLL string path, uint64_t stateTypeID ) {
+	std::pair<ConcentratorWrapper*, bool> findOrAddStateConcentrator( StorableStringT path, uint64_t stateTypeID ) {
 		assert( !path.empty() );
 		auto f = addressesToStateConcentrators.find( path );
 		if ( f != addressesToStateConcentrators.end() )
@@ -1122,7 +1155,7 @@ class GMQueue
 		else
 			return nullptr;
 	}
-	/*void removeStateConcentrator( GMQ_COLL string path ) { // TODO: rework
+	/*void removeStateConcentrator( StorableStringT path ) { // TODO: rework
 		assert( !path.empty() );
 		std::unique_lock<std::mutex> lock(mxAddressesToStateConcentrators);
 		addressesToStateConcentrators.erase( path );
@@ -1130,18 +1163,18 @@ class GMQueue
 	}*/
 
 	// named local objects (namedRecipients)
-	void addNamedLocation( GMQ_COLL string name, SlotIdx idx ) {
+	void addNamedLocation( StorableStringT name, SlotIdx idx ) {
 		assert( !name.empty() );
 		auto ins = namedRecipients.insert( std::make_pair( name, idx ) );
 		assert( ins.second );
 	}
-	void removeNamedLocation( GMQ_COLL string name ) {
+	void removeNamedLocation( StorableStringT name ) {
 		assert( !name.empty() );
 		namedRecipients.erase( name );
 	}
 
 	public:
-	SlotIdx locationNameToSlotIdx( GMQ_COLL string name ) {
+	SlotIdx locationNameToSlotIdx( StorableStringT name ) {
 		assert( !name.empty() );
 		auto f = namedRecipients.find( name );
 		if ( f != namedRecipients.end() )
@@ -1191,14 +1224,14 @@ public:
 		assert( stateConcentratorFactory == nullptr ); // must be called just once
 		stateConcentratorFactory = new StateFactoryT;
 	}
-	void setAuthority( GMQ_COLL string authority )
+	void setAuthority( StorableStringT authority )
 	{ 
 		std::unique_lock<std::mutex> lock(mx);
 
 		assert( myAuthority.empty() ); // set just once
 		myAuthority = authority;
 	}
-	std::pair<bool, GMQ_COLL string> isStateConcentratorFactoryInitialized() // Note: potentially, temporary solution
+	std::pair<bool, StorableStringT> isStateConcentratorFactoryInitialized() // Note: potentially, temporary solution
 	{
 		std::unique_lock<std::mutex> lock(mx);
 		return std::make_pair(stateConcentratorFactory != nullptr, myAuthority);
@@ -1221,13 +1254,13 @@ public:
 		{
 			case PublishableStateMessageHeader::MsgType::subscriptionRequest:
 			{
-				GmqPathHelper::PathComponents pc;
+				typename GmqPathHelper4GMQ::PathComponents pc;
 				pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
-				bool pathOK = GmqPathHelper::parse( mh.path, pc );
+				bool pathOK = GmqPathHelper4GMQ::parse( StorableStringT(mh.path.c_str()), pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
 
-				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
+				StorableStringT addr = GmqPathHelper4GMQ::localPart( pc );
 				if ( isMyAuthority( pc.authority ) ) // local
 				{
 					assert( !pc.nodeName.empty() );
@@ -1341,13 +1374,13 @@ public:
 			}
 			case PublishableStateMessageHeader::MsgType::connectionRequest:
 			{
-				GmqPathHelper::PathComponents pc;
+				typename GmqPathHelper4GMQ::PathComponents pc;
 				pc.type = PublishableStateMessageHeader::MsgType::subscriptionRequest;
-				bool pathOK = GmqPathHelper::parse( mh.path, pc );
+				bool pathOK = GmqPathHelper4GMQ::parse( StorableStringT(mh.path.c_str()), pc );
 				if ( !pathOK )
 					throw std::exception(); // TODO: ... (bad path)
 
-				GMQ_COLL string addr = GmqPathHelper::localPart( pc );
+				StorableStringT addr = GmqPathHelper4GMQ::localPart( pc );
 				if ( isMyAuthority( pc.authority ) ) // local
 				{
 					assert( !pc.nodeName.empty() );
@@ -1356,7 +1389,7 @@ public:
 					if ( targetIdx.idx == SlotIdx::invalid_idx )
 						throw std::exception(); // TODO: post permanent error message to sender instead or in addition
 
-					typename Connections::FieldsForSending fields = connections.onConnRequest( mh.ref_id_at_subscriber, senderSlotIdx, targetIdx, mh.path );
+					typename Connections::FieldsForSending fields = connections.onConnRequest( mh.ref_id_at_subscriber, senderSlotIdx, targetIdx, StorableStringT(mh.path.c_str()) );
 					globalmq::marshalling::PublishableStateMessageHeader::UpdatedData ud;
 					ud.ref_id_at_subscriber = fields.idAtSource;
 					ud.update_ref_id_at_subscriber = true;
@@ -1429,7 +1462,7 @@ public:
 		}
 	}
 
-	uint64_t add( GMQ_COLL string name, InProcessMessagePostmanBase* postman, SlotIdx& idx )
+	uint64_t add( StorableStringT name, InProcessMessagePostmanBase* postman, SlotIdx& idx )
 	{
 		assert( !name.empty() );
 
@@ -1446,7 +1479,7 @@ public:
 		idx = addressableLocations.add( postman );
 		return addSender( idx );
 	}
-	void remove( GMQ_COLL string name, SlotIdx idx )
+	void remove( StorableStringT name, SlotIdx idx )
 	{
 		std::unique_lock<std::mutex> lock(mx);
 
@@ -1467,10 +1500,14 @@ public:
 
 };
 
+template<class PlatformSupportT>
 struct InProcTransferrable
 {
+	template<class T>
+	using AllocatorT = typename PlatformSupportT::template AllocatorForGMQueueT<T>;
+	using StorableStringT = typename StringSelector<AllocatorT>::StringT;
 	static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFULL;
-	GMQ_COLL string name;
+	StorableStringT name;
 	uint64_t id = invalidValue;
 	void serialize( uint8_t* buff, size_t maxSz ) // NOTE: temporary solution
 	{
@@ -1490,12 +1527,16 @@ template<class PlatformSupportT>
 class GMQTransportBase
 {
 protected:
+	template<class T>
+	using AllocatorT = typename PlatformSupportT::template AllocatorForGMQueueT<T>;
+	using StorableStringT = typename StringSelector<AllocatorT>::StringT;
+
 	static constexpr uint64_t invalidValue = 0xFFFFFFFFFFFFFFULL;
 	GMQueue<PlatformSupportT>& gmq;
-	GMQ_COLL string name;
+	StorableStringT name;
 	SlotIdx idx;
 	uint64_t id = invalidValue;
-	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, SlotIdx idx_, uint64_t id_ ) : gmq( queue ), name( name_ ), idx( idx_ ), id ( id_ ) {}
+	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, SlotIdx idx_, uint64_t id_ ) : gmq( queue ), name( StorableStringT(name_.c_str()) ), idx( idx_ ), id ( id_ ) {}
 
 public:
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue ) : gmq( queue ) {}
@@ -1504,8 +1545,8 @@ public:
 			gmq.remove( name, idx );
 	}
 protected:
-	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( name_ ) {
-		assert( !name_.empty() );
+	GMQTransportBase( GMQueue<PlatformSupportT>& queue, GMQ_COLL string name_, InProcessMessagePostmanBase* postman ) : gmq( queue ), name( StorableStringT(name_.c_str()) ) {
+		assert( !name.empty() );
 		id = gmq.add( name, postman, idx );
 	};
 	GMQTransportBase( GMQueue<PlatformSupportT>& queue, InProcessMessagePostmanBase* postman ) : gmq( queue ) {
@@ -1519,16 +1560,16 @@ public:
 	}
 
 public:
-	InProcTransferrable makeTransferrable()
+	InProcTransferrable<PlatformSupportT> makeTransferrable()
 	{
-		InProcTransferrable ret;
-		ret.name = name;
+		InProcTransferrable<PlatformSupportT> ret;
+		ret.name = (decltype(ret.name))(name.c_str());
 		ret.id = id;
 		idx.invalidate();
 		return ret;
 	}
 
-	void restore( const InProcTransferrable& t, GMQueue<PlatformSupportT>& queue_ ) {
+	void restore( const InProcTransferrable<PlatformSupportT>& t, GMQueue<PlatformSupportT>& queue_ ) {
 		assert( &gmq == &queue_ );
 		assert( !idx.isInitialized() );
 		if ( t.name.empty() )

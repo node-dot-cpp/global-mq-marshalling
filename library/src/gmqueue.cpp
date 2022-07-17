@@ -30,8 +30,8 @@
 
 namespace globalmq::marshalling {
 
-AddressableLocations addressableLocations;
-AddressableLocations& getAddressableLocations() { return addressableLocations; }
+//AddressableLocations addressableLocations;
+//AddressableLocations& getAddressableLocations() { return addressableLocations; }
 
 } // namespace globalmq::marshalling
 

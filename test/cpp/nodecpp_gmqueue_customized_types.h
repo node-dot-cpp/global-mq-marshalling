@@ -13,6 +13,8 @@ public:
 //	using ComposerT = globalmq::marshalling::GmqComposer<BufferT>;
 	template<class T>
 	using OwningPtrT = ::std::unique_ptr<T>;
+	template<class T>
+	using AllocatorForGMQueueT = std::allocator<T>;
 //	using StateSubscriberT = globalmq::marshalling::StateSubscriberBase<BufferT>;
 //	using StatePublisherT = globalmq::marshalling::StatePublisherBase<ComposerT>;
 };
