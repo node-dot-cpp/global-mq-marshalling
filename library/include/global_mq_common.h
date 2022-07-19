@@ -44,6 +44,7 @@
 #ifndef GMQ_COLL
 #include <string>
 #include <unordered_map>
+#include <vector>
 #define GMQ_COLL std::
 #endif // GMQ_COLL
 /////////////////////////////////////////
