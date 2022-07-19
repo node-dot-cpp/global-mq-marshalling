@@ -60,7 +60,7 @@ class JsonComposer2 : public ComposerBase2
 		auto str = fmt::format( "\"{}\":", name );
 		buff.append( str.c_str(), str.size() );
 	}
-	void implAnyOnValue()
+	void implOnAnyValue()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
 
@@ -76,6 +76,13 @@ class JsonComposer2 : public ComposerBase2
 			assert( stack.size() > 0 && stack.back().type == InType::inArray );
 			++(stack.back().count);
 		}
+	}
+	void implProcessNamePart( GMQ_COLL string name )
+	{
+		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+		implAddNextItemSeparator();
+		implInsertNamePart( name );
+		++stack.back().count;
 	}
 	template<class T>
 	void implInsertUnsignedInteger( T& t )
@@ -169,92 +176,80 @@ public:
 	}
 	void beginNamedValue( GMQ_COLL string name )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
+		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 	}
 	template<class T>
-	bool processUnsignedInteger( T& t )
+	void processUnsignedInteger( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		implInsertUnsignedInteger( t );
-		return ret;
 	}
 	template<class T>
-	bool processSignedInteger( T& t )
+	void processSignedInteger( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		implInsertSignedInteger( t );
-		return ret;
 	}
 	template<class T>
-	bool processReal( T& t )
+	void processReal( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		implInsertReal( t );
-		return ret;
 	}
 	template<class T>
-	bool processStringValue( T& t )
+	void processStringValue( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		implInsertStringValue( t );
-		return ret;
 	}
 	template<class T>
-	bool processStructValue( T& t )
+	void processStructValue( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		implInsertStructValue( t );
-		return ret;
 	}
 	template<class T>
 	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
+		implProcessNamePart( name );
 		implInsertUnsignedInteger( num );
 	}
 	template<class T>
 	void processNamedSignedInteger( GMQ_COLL string name, T& num )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
+		implProcessNamePart( name );
 		implInsertSignedInteger( num );
 	}
 	template<class T>
 	void processNamedReal( GMQ_COLL string name, T& num )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
+		implProcessNamePart( name );
 		implInsertReal( num );
 	}
 	template<class T>
 	void processNamedString( GMQ_COLL string name, T& str )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
+		implProcessNamePart( name );
 		implInsertStringValue( str );
 	}
 	template<class T>
 	void processNamedStruct( GMQ_COLL string name, T& s )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
+		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implInsertStructValue( s );
+		stack.pop_back();
+	}
+	template<class T>
+	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
+	{
+		implProcessNamePart( name );
+		stack.push_back({InType::inNameVal, 0});
+		beginArray();
+		for ( size_t i=0; i<v.size(); ++i )
+			processUnsignedInteger( v[i] );
+		endArray();
 		stack.pop_back();
 	}
 };
@@ -277,7 +272,7 @@ private:
 	struct In { InType type = InType::inUnknown; uint32_t count = 0; };
 	std::vector<In> stack;
 
-	void implAnyOnValue()
+	void implOnAnyValue()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
 
@@ -494,115 +489,122 @@ public:
 		skipDelimiter( ']' );
 		stack.pop_back();
 	}
-	void beginNamedValue( GMQ_COLL string name )
+	void implProcessNamePart( GMQ_COLL string name )
 	{
 		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+		if ( stack.back().count > 0 )
+			skipComma();
 		GMQ_COLL string s;
-		readKey(s);
+		readKey(&s);
 		if ( s != name )
 			throw std::exception(); // TODO
 		++stack.back().count;
+	}
+	void beginNamedValue( GMQ_COLL string name )
+	{
+		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 	}
 	template<class T>
-	bool processUnsignedInteger( T& t )
+	void processUnsignedInteger( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		readUnsignedInteger( &t );
-		return ret;
 	}
 	template<class T>
-	bool processSignedInteger( T& t )
+	void processSignedInteger( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		readSignedInteger( &t );
-		return ret;
 	}
 	template<class T>
-	bool processReal( T& t )
+	void processReal( T& t )
 	{
-		bool ret = implAnyOnValue();
+		implOnAnyValue();
 		readReal( &t );
-		return ret;
 	}
 	template<class T>
 	void processStringValue( T& t )
 	{
-		implAnyOnValue();
+		implOnAnyValue();
 		readString( &t );
 	}
 	template<class T>
 	void processStructValue( T& t )
 	{
-		implAnyOnValue();
+		bool ret = implOnAnyValue();
 		t.rw( *this );
 	}
 	template<class T>
 	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string s;
-		readKey(&s);
-		if ( s != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
+		implProcessNamePart( name );
 		readUnsignedInteger( &num );
 	}
 	template<class T>
 	void processNamedSignedInteger( GMQ_COLL string name, T& num )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string s;
-		readKey(&s);
-		if ( s != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
+		implProcessNamePart( name );
 		readSignedInteger( &num );
 	}
 	template<class T>
 	void processNamedReal( GMQ_COLL string name, T& num )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string s;
-		readKey(&s);
-		if ( s != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
+		implProcessNamePart( name );
 		readReal( &num );
 	}
 	template<class T>
 	void processNamedString( GMQ_COLL string name, T& str )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string s;
-		readKey(&s);
-		if ( s != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
+		implProcessNamePart( name );
 		readString( &str );
 	}
 	template<class T>
 	void processNamedStruct( GMQ_COLL string name, T& s )
 	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string ns;
-		readKey(&ns);
-		if ( ns != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
+		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		s.rw( *this );
 		stack.pop_back();
+	}
+	template<class T, class ValT, class LambdaProc>
+	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, LambdaProc proc )
+	{
+		v.clear();
+		implProcessNamePart( name );
+		stack.push_back({InType::inNameVal, 0});
+		beginArray();
+		if ( !isDelimiter( ']' ) )
+		{
+			ValT val = 0;
+			do {
+				proc( val );
+				v.push_back( val );
+			}
+			while ( isComma() );
+		}
+		endArray();
+		stack.pop_back();
+	}
+	template<class T>
+	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, uint64_t>( name, v, [&](uint64_t& val){processUnsignedInteger( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfSignedIntegers( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, int64_t>( name, v, [&](int64_t& val){processSignedInteger( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfReal( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, T>( name, v, [&](T& val){val->rw(*this);} );
 	}
 };
 
