@@ -9,7 +9,12 @@
 
 enum Proto { GMQ, JSON };
 
-struct ComposerBase2 {};
+struct ComposerBase2 {
+	static constexpr bool isComposer() { return true; }
+	static constexpr bool isParser() { return false; }
+	static void checkPrecondition( bool cond ) { assert( cond ); }
+	static void checkPostcondition( bool cond ) {}
+};
 
 template<class BufferT, bool SC_friendly = false>
 class JsonComposer2 : public ComposerBase2
@@ -106,6 +111,24 @@ class JsonComposer2 : public ComposerBase2
 		buff.append( str.c_str(), str.size() );
 	}
 	template<class T>
+	void implInsertEnumValue( T& t )
+	{
+		using PureT = typename std::remove_reference<T>::type;
+		using UnderT = typename std::underlying_type_t<PureT>;
+		static_assert( sizeof( PureT ) == sizeof( UnderT ) );
+		if constexpr ( std::is_signed< UnderT >::value )
+		{
+			UnderT num = (UnderT)(t);
+			implInsertSignedInteger( num );
+		}
+		else
+		{
+			static_assert( std::is_unsigned<UnderT>::value );
+			UnderT num = (UnderT)(t);
+			implInsertUnsignedInteger( num );
+		}
+	}
+	template<class T>
 	void implInsertBooleanValue( T& t )
 	{
 		static_assert( std::is_arithmetic<T>::value );
@@ -137,7 +160,7 @@ class JsonComposer2 : public ComposerBase2
 	template<class T>
 	void implInsertStructValue( T& t )
 	{
-		t.rw( *this );
+		t._rw( *this );
 	}
 
 
@@ -205,6 +228,12 @@ public:
 		implInsertReal( t );
 	}
 	template<class T>
+	void processEnumValue( T& t )
+	{
+		implOnAnyValue();
+		implInsertEnumValue( t );
+	}
+	template<class T>
 	void processStringValue( T& t )
 	{
 		implOnAnyValue();
@@ -239,6 +268,12 @@ public:
 	{
 		implProcessNamePart( name );
 		implInsertReal( num );
+	}
+	template<class T>
+	void processNamedEnum( GMQ_COLL string name, T& num )
+	{
+		implProcessNamePart( name );
+		implInsertEnumValue( num );
 	}
 	template<class T>
 	void processNamedBoolean( GMQ_COLL string name, T& b )
@@ -287,6 +322,11 @@ public:
 		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
 	}
 	template<class T>
+	void processNamedArrayOfEnums( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, T>( name, v, [&](T& val){processEnumValue( val );} );
+	}
+	template<class T>
 	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
 	{
 		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processString( val );} );
@@ -304,7 +344,12 @@ public:
 };
 
 
-struct ParserBase2 {};
+struct ParserBase2 {
+	static constexpr bool isComposer() { return false; }
+	static constexpr bool isParser() { return true; }
+	static void checkPrecondition( bool cond ) {}
+	static void checkPostcondition( bool cond ) { throw std::exception(); }
+};
 
 template<class MessageT>
 class JsonParser2 : public ParserBase2
@@ -500,6 +545,21 @@ private:
 		*num = (T)ret; // TODO: add boundary checking
 	}
 
+	template<class T>
+	void readEnumValue( T* t )
+	{
+		using PureT = typename std::remove_pointer<T>::type;
+		using UnderT = typename std::underlying_type_t<PureT>;
+		static_assert( sizeof( PureT ) == sizeof( UnderT ) );
+		if constexpr ( std::is_signed< UnderT >::value )
+			readSignedInteger( (UnderT*)(t) );
+		else
+		{
+			static_assert( std::is_unsigned<UnderT>::value );
+			readUnsignedInteger( (UnderT*)(t) );
+		}
+	}
+
 	template <typename T>
 	void readBoolean( T* b )
 	{
@@ -593,6 +653,12 @@ public:
 		readReal( &t );
 	}
 	template<class T>
+	void processEnumValue( T& t )
+	{
+		implOnAnyValue();
+		readEnumValue( &t );
+	}
+	template<class T>
 	void processStringValue( T& t )
 	{
 		implOnAnyValue();
@@ -608,7 +674,7 @@ public:
 	void processStructValue( T& t )
 	{
 		implOnAnyValue();
-		t.rw( *this );
+		t._rw( *this );
 	}
 	template<class T>
 	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
@@ -629,6 +695,12 @@ public:
 		readReal( &num );
 	}
 	template<class T>
+	void processNamedEnum( GMQ_COLL string name, T& num )
+	{
+		implProcessNamePart( name );
+		readEnumValue( &num );
+	}
+	template<class T>
 	void processNamedString( GMQ_COLL string name, T& str )
 	{
 		implProcessNamePart( name );
@@ -645,7 +717,7 @@ public:
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		s.rw( *this );
+		s._rw( *this );
 		stack.pop_back();
 	}
 	template<class T, class ValT, class LambdaProc>
@@ -681,6 +753,11 @@ public:
 	void processNamedArrayOfReals( GMQ_COLL string name, std::vector<T>& v )
 	{
 		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfEnums( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, T>( name, v, [&](T& val){processEnumValue( val );} );
 	}
 	template<class T>
 	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )

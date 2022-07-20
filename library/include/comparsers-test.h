@@ -13,7 +13,7 @@ struct A
 	std::vector<uint64_t> vnn;
 	bool bb;
 	template<class ComparserT>
-	void rw( ComparserT& comparser )
+	void _rw( ComparserT& comparser )
 	{
 		comparser.beginStruct();
 		comparser.processNamedSignedInteger( "ii", ii );
@@ -39,6 +39,8 @@ struct A
 
 struct B
 {
+	enum E {v1, v2, v3};
+	E e;
 	int i;
 	uint32_t n;
 	std::string s;
@@ -47,9 +49,10 @@ struct B
 	std::vector<A> va;
 
 	template<class ComparserT>
-	void rw( ComparserT& comparser )
+	void _rw( ComparserT& comparser )
 	{
 		comparser.beginStruct();
+		comparser.processNamedEnum( "e", e );
 		comparser.processNamedSignedInteger( "i", i );
 		comparser.processNamedUnsignedInteger( "n", n );
 		comparser.processNamedReal( "f", f );
@@ -60,6 +63,7 @@ struct B
 	}
 	void assertIsSameAs( const B& other ) const
 	{
+		assert( e == other.e );
 		assert( i == other.i );
 		assert( n == other.n );
 		assert( f == other.f );
@@ -74,6 +78,7 @@ struct B
 inline void comparsers_test()
 {
 	B b;
+	b.e = B::E::v2;
 	b.i = -17;
 	b.n = 17;
 	b.s = "high!";
@@ -89,7 +94,7 @@ inline void comparsers_test()
 
 	globalmq::marshalling::Buffer buff;
 	JsonComposer2 composer( buff );
-	b.rw( composer );
+	b._rw( composer );
 
 	std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
 	fmt::print( "{}\n", sview );
@@ -97,7 +102,7 @@ inline void comparsers_test()
 	auto riter = buff.getReadIter();
 	JsonParser2<globalmq::marshalling::Buffer> parser( riter );
 	B b1;
-	b1.rw( parser );
+	b1._rw( parser );
 
 	b.assertIsSameAs( b1 );
 }
