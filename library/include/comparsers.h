@@ -106,6 +106,13 @@ class JsonComposer2 : public ComposerBase2
 		buff.append( str.c_str(), str.size() );
 	}
 	template<class T>
+	void implInsertBooleanValue( T& t )
+	{
+		static_assert( std::is_arithmetic<T>::value );
+		auto str = t ? "true" : "false";
+		buff.append( str.c_str(), str.size() );
+	}
+	template<class T>
 	void implInsertStringValue( T& str )
 	{
 		if constexpr ( std::is_same<T, std::string>::value )
@@ -204,6 +211,12 @@ public:
 		implInsertStringValue( t );
 	}
 	template<class T>
+	void processBooleanValue( T& t )
+	{
+		implOnAnyValue();
+		implInsertBooleanValue( t );
+	}
+	template<class T>
 	void processStructValue( T& t )
 	{
 		implOnAnyValue();
@@ -228,6 +241,12 @@ public:
 		implInsertReal( num );
 	}
 	template<class T>
+	void processNamedBoolean( GMQ_COLL string name, T& b )
+	{
+		implProcessNamePart( name );
+		implInsertBoolean( b );
+	}
+	template<class T>
 	void processNamedString( GMQ_COLL string name, T& str )
 	{
 		implProcessNamePart( name );
@@ -241,16 +260,46 @@ public:
 		implInsertStructValue( s );
 		stack.pop_back();
 	}
-	template<class T>
-	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
+	template<class T, class ValT, class LambdaProc>
+	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, LambdaProc proc )
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		beginArray();
 		for ( size_t i=0; i<v.size(); ++i )
-			processUnsignedInteger( v[i] );
+			proc( v[i] );
 		endArray();
 		stack.pop_back();
+	}
+	template<class T>
+	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, uint64_t>( name, v, [&](uint64_t& val){processUnsignedInteger( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfSignedIntegers( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, int64_t>( name, v, [&](int64_t& val){processSignedInteger( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfReals( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processString( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfBooleans( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, bool>( name, v, [&](bool& val){processBoolean( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, T>( name, v, [&](T& val){processUnsignedInteger( val );} );
 	}
 };
 
@@ -451,6 +500,26 @@ private:
 		*num = (T)ret; // TODO: add boundary checking
 	}
 
+	template <typename T>
+	void readBoolean( T* b )
+	{
+		skipSpacesEtc();
+		GMQ_COLL string s;
+		while ( riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' || *riter == ',' || *riter == ']' || *riter == '}') ) // expected terminators
+		{
+			s += *riter;
+			++riter;
+		}
+		if ( !riter.isData() )
+			throw std::exception(); // TODO
+		if ( s == "true" )
+			*b = true;
+		else if ( s == "false" )
+			*b = false;
+		else
+			throw std::exception(); // TODO
+	}
+
 
 
 public:
@@ -530,6 +599,12 @@ public:
 		readString( &t );
 	}
 	template<class T>
+	void processBooleanValue( T& t )
+	{
+		implOnAnyValue();
+		readBoolean( &t );
+	}
+	template<class T>
 	void processStructValue( T& t )
 	{
 		bool ret = implOnAnyValue();
@@ -558,6 +633,12 @@ public:
 	{
 		implProcessNamePart( name );
 		readString( &str );
+	}
+	template<class T>
+	void processNamedBoolean( GMQ_COLL string name, T& b )
+	{
+		implProcessNamePart( name );
+		readBoolean( &b );
 	}
 	template<class T>
 	void processNamedStruct( GMQ_COLL string name, T& s )
@@ -597,9 +678,19 @@ public:
 		processNamedArray<T, int64_t>( name, v, [&](int64_t& val){processSignedInteger( val );} );
 	}
 	template<class T>
-	void processNamedArrayOfReal( GMQ_COLL string name, std::vector<T>& v )
+	void processNamedArrayOfReals( GMQ_COLL string name, std::vector<T>& v )
 	{
 		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processString( val );} );
+	}
+	template<class T>
+	void processNamedArrayOfBooleans( GMQ_COLL string name, std::vector<T>& v )
+	{
+		processNamedArray<T, bool>( name, v, [&](bool& val){processBoolean( val );} );
 	}
 	template<class T>
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
