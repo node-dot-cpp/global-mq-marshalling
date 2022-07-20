@@ -203,6 +203,16 @@ public:
 		assert( stack.size() > 0 && stack.back().type == InType::inArray );
 		buff.append( "]\n  ", sizeof("]\n  ") - 1 );
 		stack.pop_back();
+		if ( stack.back().type == InType::inNameVal )
+		{
+			stack.pop_back();
+			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+		}
+		else
+		{
+			assert( stack.size() > 0 && stack.back().type == InType::inArray );
+			++(stack.back().count);
+		}
 	}
 	void beginNamedValue( GMQ_COLL string name )
 	{
@@ -304,7 +314,7 @@ public:
 		for ( size_t i=0; i<v.size(); ++i )
 			proc( v[i] );
 		endArray();
-		stack.pop_back();
+//		stack.pop_back();
 	}
 	template<class T>
 	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
@@ -617,6 +627,16 @@ public:
 		assert( stack.size() > 0 && stack.back().type == InType::inArray );
 		skipDelimiter( ']' );
 		stack.pop_back();
+		if ( stack.back().type == InType::inNameVal )
+		{
+			stack.pop_back();
+			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+		}
+		else
+		{
+			assert( stack.size() > 0 && stack.back().type == InType::inArray );
+			++(stack.back().count);
+		}
 	}
 	void implProcessNamePart( GMQ_COLL string name )
 	{
@@ -737,7 +757,7 @@ public:
 			while ( isComma() );
 		}
 		endArray();
-		stack.pop_back();
+//		stack.pop_back();
 	}
 	template<class T>
 	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )

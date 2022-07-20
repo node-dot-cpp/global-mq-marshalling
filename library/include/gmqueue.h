@@ -834,12 +834,21 @@ template<template<typename> typename AllocT>
 struct StringSelector
 {
 	using StringT = std::basic_string<char, std::char_traits<char>, AllocT<char>>;
+	struct StringHasher {
+		size_t operator()(const StringT& t) const {
+			std::string_view s( t.c_str(), t.size() );
+			std::hash<std::string_view> hs;
+			return hs( s );
+		}
+	};
+	using StringHasherT = StringHasher;
 };
 
 template<>
 struct StringSelector<std::allocator>
 {
 	using StringT = std::string;
+	using StringHasherT = std::hash<std::string>;
 };
 
 template<template<typename> typename AllocatorT = std::allocator>
@@ -885,6 +894,7 @@ class GMQueue
 	using ComposerT = typename PlatformSupportT::ComposerT;
 	using ParserT = typename PlatformSupportT::ParserT;
 	using StorableStringT = typename StringSelector<AllocatorT>::StringT;
+	using StorableStringHasherT = typename StringSelector<AllocatorT>::StringHasherT;
 	using GmqPathHelper4GMQ = GmqPathHelperT<StorableStringT>;
 
 	AddressableLocations<AllocatorT> addressableLocations;
@@ -1093,12 +1103,12 @@ class GMQueue
 	std::mutex mx;
 
 
-	std::unordered_map<StorableStringT, ConcentratorWrapper, std::hash<StorableStringT>, std::equal_to<StorableStringT>, typename AllocatorSelector<std::pair<const StorableStringT, ConcentratorWrapper>, AllocatorT>::AllocatorT> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
+	std::unordered_map<StorableStringT, ConcentratorWrapper, StorableStringHasherT, std::equal_to<StorableStringT>, typename AllocatorSelector<std::pair<const StorableStringT, ConcentratorWrapper>, AllocatorT>::AllocatorT> addressesToStateConcentrators; // address to concentrator mapping, 1 - 1, mx-protected
 	std::unordered_map<uint64_t, ConcentratorWrapper*, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, ConcentratorWrapper*>, AllocatorT>::AllocatorT> idToStateConcentrators; // id to concentrator mapping, many - 1, mx-protected
 	uint64_t concentratorIDBase = 0;
 
 //	GMQ_COLL unordered_map<StorableStringT, AddressableLocation> namedRecipients; // node name to location, mx-protected
-	std::unordered_map<StorableStringT, SlotIdx, std::hash<StorableStringT>, std::equal_to<StorableStringT>, typename AllocatorSelector<std::pair<const StorableStringT, SlotIdx>, AllocatorT>::AllocatorT> namedRecipients; // node name to location, mx-protected
+	std::unordered_map<StorableStringT, SlotIdx, StorableStringHasherT, std::equal_to<StorableStringT>, typename AllocatorSelector<std::pair<const StorableStringT, SlotIdx>, AllocatorT>::AllocatorT> namedRecipients; // node name to location, mx-protected
 
 	std::unordered_map<uint64_t, SlotIdx, std::hash<uint64_t>, std::equal_to<uint64_t>, typename AllocatorSelector<std::pair<const uint64_t, SlotIdx>, AllocatorT>::AllocatorT> senders; // node name to location, mx-protected
 	uint64_t senderIDBase = 0;
@@ -1208,6 +1218,10 @@ class GMQueue
 
 public:
 	GMQueue() {}
+	GMQueue( const GMQueue& ) = delete;
+	GMQueue& operator = ( const GMQueue& ) = delete;
+	GMQueue( GMQueue&& ) = delete;
+	GMQueue& operator = ( GMQueue&& ) = delete;
 	~GMQueue()
 	{ 
 		std::unique_lock<std::mutex> lock(mx);
