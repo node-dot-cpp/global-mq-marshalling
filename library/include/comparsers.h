@@ -109,8 +109,10 @@ class JsonComposer2 : public ComposerBase2
 	void implInsertBooleanValue( T& t )
 	{
 		static_assert( std::is_arithmetic<T>::value );
-		auto str = t ? "true" : "false";
-		buff.append( str.c_str(), str.size() );
+		if ( t )
+			buff.append( "true", 4 );
+		else
+			buff.append( "false", 5 );
 	}
 	template<class T>
 	void implInsertStringValue( T& str )
@@ -154,8 +156,6 @@ public:
 	void beginStruct()
 	{
 		assert( stack.size() == 0 || stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) );
-		if ( stack.size() ) // yes, it might also be the root object
-			implAddNextItemSeparator();
 		buff.append( "{\n  ", sizeof("{\n  ") - 1 );
 		if ( stack.size() ) // yes, it might also be the root object
 			++stack.back().count;
@@ -244,7 +244,7 @@ public:
 	void processNamedBoolean( GMQ_COLL string name, T& b )
 	{
 		implProcessNamePart( name );
-		implInsertBoolean( b );
+		implInsertBooleanValue( b );
 	}
 	template<class T>
 	void processNamedString( GMQ_COLL string name, T& str )
@@ -299,7 +299,7 @@ public:
 	template<class T>
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
 	{
-		processNamedArray<T, T>( name, v, [&](T& val){processUnsignedInteger( val );} );
+		processNamedArray<T, T>( name, v, [&](T& val){processStructValue(val);} );
 	}
 };
 
@@ -607,7 +607,7 @@ public:
 	template<class T>
 	void processStructValue( T& t )
 	{
-		bool ret = implOnAnyValue();
+		implOnAnyValue();
 		t.rw( *this );
 	}
 	template<class T>
@@ -657,7 +657,7 @@ public:
 		beginArray();
 		if ( !isDelimiter( ']' ) )
 		{
-			ValT val = 0;
+			ValT val;
 			do {
 				proc( val );
 				v.push_back( val );
@@ -695,7 +695,7 @@ public:
 	template<class T>
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
 	{
-		processNamedArray<T, T>( name, v, [&](T& val){val->rw(*this);} );
+		processNamedArray<T, T>( name, v, [&](T& val){processStructValue(val);} );
 	}
 };
 
