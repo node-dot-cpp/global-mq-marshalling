@@ -193,7 +193,7 @@ public:
 	void beginArray()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-		implAddNextItemSeparator();
+//		implAddNextItemSeparator();
 		buff.append( "[\n  ", sizeof("[\n  ") - 1 );
 		++stack.back().count;
 		stack.push_back({InType::inArray, 0});
@@ -261,6 +261,20 @@ public:
 		implOnAnyValue();
 		implInsertStructValue( t );
 	}
+	template<class T, class ItemProcT>
+	void implProcessArray( std::vector<T>& v, ItemProcT proc )
+	{
+		beginArray();
+		for ( size_t i=0; i<v.size(); ++i )
+			proc( v[i] );
+		endArray();
+	}
+	template<class T, class ItemProcT>
+	void processArray( std::vector<T>& v, ItemProcT proc )
+	{
+		implOnAnyValue();
+		implProcessArray( v, proc );
+	}
 	template<class T>
 	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
 	{
@@ -310,11 +324,7 @@ public:
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		beginArray();
-		for ( size_t i=0; i<v.size(); ++i )
-			proc( v[i] );
-		endArray();
-//		stack.pop_back();
+		implProcessArray( v, proc );
 	}
 	template<class T>
 	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
@@ -350,6 +360,11 @@ public:
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
 	{
 		processNamedArray<T, T>( name, v, [&](T& val){processStructValue(val);} );
+	}
+	template<class T, class ItemProcT>
+	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, ItemProcT proc )
+	{
+		processNamedArray<T, T>( name, v, [&](T& val){proc(val);} );
 	}
 };
 
@@ -696,6 +711,27 @@ public:
 		implOnAnyValue();
 		t._rw( *this );
 	}
+	template<class T, class ItemProcT>
+	void implProcessArray( std::vector<T>& v, ItemProcT proc )
+	{
+		beginArray();
+		if ( !isDelimiter( ']' ) )
+		{
+			do {
+				T val;
+				proc( val );
+				v.push_back( std::move( val ) );
+			}
+			while ( isComma() );
+		}
+		endArray();
+	}
+	template<class T, class ItemProcT>
+	void processArray( std::vector<T>& v, ItemProcT proc )
+	{
+		implOnAnyValue();
+		implProcessArray( v, proc );
+	}
 	template<class T>
 	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
 	{
@@ -746,18 +782,7 @@ public:
 		v.clear();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		beginArray();
-		if ( !isDelimiter( ']' ) )
-		{
-			ValT val;
-			do {
-				proc( val );
-				v.push_back( val );
-			}
-			while ( isComma() );
-		}
-		endArray();
-//		stack.pop_back();
+		implProcessArray( v, proc );
 	}
 	template<class T>
 	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
@@ -793,6 +818,11 @@ public:
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
 	{
 		processNamedArray<T, T>( name, v, [&](T& val){processStructValue(val);} );
+	}
+	template<class T, class ItemProcT>
+	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, ItemProcT proc )
+	{
+		processNamedArray<T, T>( name, v, [&](T& val){proc(val);} );
 	}
 };
 

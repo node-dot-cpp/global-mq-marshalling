@@ -47,6 +47,7 @@ struct B
 	A a;
 	float f;
 	std::vector<A> va;
+	std::vector<std::vector<int>> vvi;
 
 	template<class ComparserT>
 	void _rw( ComparserT& comparser )
@@ -59,6 +60,7 @@ struct B
 		comparser.processNamedStruct( "a", a );
 		comparser.processNamedString( "s", s );
 		comparser.processNamedArrayOfStructs( "va", va );
+		comparser.processNamedArray( "vvi", vvi, [&comparser]( std::vector<int>& val ){ comparser.processArray( val, [&comparser](int& val){comparser.processSignedInteger(val);} ); } );
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const B& other ) const
@@ -72,6 +74,13 @@ struct B
 		assert( va.size() == other.va.size() );
 		for ( size_t i=0; i<va.size(); ++i )
 			va[i].assertIsSameAs( other.va[i] );
+		assert( vvi.size() == other.vvi.size() );
+		for ( size_t i=0; i<vvi.size(); ++i )
+		{
+			assert( vvi[i].size() == other.vvi[i].size() );
+			for ( size_t j=0; j<vvi[i].size(); ++j )
+				assert( vvi[i][j] == other.vvi[i][j] );
+		}
 	}
 };
 
@@ -91,6 +100,7 @@ inline void comparsers_test()
 	b.f = 2.71;
 	b.va.push_back({-171,171,13.1416,"high again!",{5,4,3},true});
 	b.va.push_back(b.a);
+	b.vvi = {{55,56,57},{66,67,68}};
 
 	globalmq::marshalling::Buffer buff;
 	JsonComposer2 composer( buff );
