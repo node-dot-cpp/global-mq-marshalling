@@ -720,7 +720,7 @@ public:
 			do {
 				T val;
 				proc( val );
-				v.push_back( val );
+				v.push_back( std::move( val ) );
 			}
 			while ( isComma() );
 		}
