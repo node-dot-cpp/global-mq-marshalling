@@ -162,6 +162,11 @@ class JsonComposer2 : public ComposerBase2
 	{
 		t._rw( *this );
 	}
+	template<class T, class ItemProcT>
+	void implInsertStructValue( T& t, ItemProcT proc )
+	{
+		proc( t );
+	}
 
 
 
@@ -262,6 +267,12 @@ public:
 		implInsertStructValue( t );
 	}
 	template<class T, class ItemProcT>
+	void processStructValue( T& t, ItemProcT proc )
+	{
+		implOnAnyValue();
+		implInsertStructValue( t, proc );
+	}
+	template<class T, class ItemProcT>
 	void implProcessArray( std::vector<T>& v, ItemProcT proc )
 	{
 		beginArray();
@@ -319,6 +330,14 @@ public:
 		implInsertStructValue( s );
 		stack.pop_back();
 	}
+	template<class T, class LambdaProc>
+	void processNamedStruct( GMQ_COLL string name, T& s, LambdaProc proc )
+	{
+		implProcessNamePart( name );
+		stack.push_back({InType::inNameVal, 0});
+		implInsertStructValue( s, proc );
+		stack.pop_back();
+	}
 	template<class T, class ValT, class LambdaProc>
 	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, LambdaProc proc )
 	{
@@ -349,12 +368,12 @@ public:
 	template<class T>
 	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
 	{
-		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processString( val );} );
+		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processStringValue( val );} );
 	}
 	template<class T>
 	void processNamedArrayOfBooleans( GMQ_COLL string name, std::vector<T>& v )
 	{
-		processNamedArray<T, bool>( name, v, [&](bool& val){processBoolean( val );} );
+		processNamedArray<T, bool>( name, v, [&](bool& val){processBooleanValue( val );} );
 	}
 	template<class T>
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
@@ -712,6 +731,12 @@ public:
 		t._rw( *this );
 	}
 	template<class T, class ItemProcT>
+	void processStructValue( T& t, ItemProcT proc )
+	{
+		implOnAnyValue();
+		proc( t );
+	}
+	template<class T, class ItemProcT>
 	void implProcessArray( std::vector<T>& v, ItemProcT proc )
 	{
 		beginArray();
@@ -776,6 +801,14 @@ public:
 		s._rw( *this );
 		stack.pop_back();
 	}
+	template<class T, class LambdaProc>
+	void processNamedStruct( GMQ_COLL string name, T& s, LambdaProc proc )
+	{
+		implProcessNamePart( name );
+		stack.push_back({InType::inNameVal, 0});
+		proc( s );
+		stack.pop_back();
+	}
 	template<class T, class ValT, class LambdaProc>
 	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, LambdaProc proc )
 	{
@@ -807,12 +840,12 @@ public:
 	template<class T>
 	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
 	{
-		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processString( val );} );
+		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processStringValue( val );} );
 	}
 	template<class T>
 	void processNamedArrayOfBooleans( GMQ_COLL string name, std::vector<T>& v )
 	{
-		processNamedArray<T, bool>( name, v, [&](bool& val){processBoolean( val );} );
+		processNamedArray<T, bool>( name, v, [&](bool& val){processBooleanValue( val );} );
 	}
 	template<class T>
 	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
