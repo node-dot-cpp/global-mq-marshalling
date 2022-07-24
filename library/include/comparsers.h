@@ -19,7 +19,6 @@ struct ComparserBase
 	struct BOOLEAN {static constexpr bool dummy = false;};
 	struct ENUM {static constexpr bool dummy = false;};
 	struct STRUCT {static constexpr bool dummy = false;};
-	struct ARRAY {static constexpr bool dummy = false;};
 };
 
 struct ComposerBase2 : public ComparserBase
@@ -278,13 +277,6 @@ public:
 		implInsertValue<ValueTypeT>( val );
 	}
 
-	template<class ValueTypeT, class ValueT, class ItemProcT>
-	void rw( ValueT& val, ItemProcT proc, std::enable_if<std::is_invocable<ItemProcT, JsonComposer2, ValueT>::value> )
-	{
-		implOnAnyValue();
-		proc( *this, val );
-	}
-
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, ValueT& val )
 	{
@@ -317,7 +309,6 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( std::vector<ValueT>& v )
 	{
-		static_assert( !std::is_same<ValueTypeT, ARRAY>::value, "lambda function telling how to process elements must be specified" );
 		implOnAnyValue();
 		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
 	}
@@ -332,7 +323,6 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
 	{
-		static_assert( !std::is_same<ValueTypeT, ARRAY>::value, "lambda function telling how to process elements must be specified" );
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
@@ -705,13 +695,6 @@ public:
 		implReadValue<ValueTypeT>( val );
 	}
 
-	template<class ValueTypeT, class ValueT, class ItemProcT, std::enable_if<std::is_invocable<ItemProcT, JsonParser2, ValueT>::value>>
-	void rw( ValueT& val, ItemProcT proc )
-	{
-		implOnAnyValue();
-		proc( val );
-	}
-
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, ValueT& val )
 	{
@@ -744,7 +727,6 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( std::vector<ValueT>& v )
 	{
-		static_assert( !std::is_same<ValueTypeT, ARRAY>::value, "lambda function telling how to process elements must be specified" );
 		implOnAnyValue();
 		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
 	}
@@ -759,7 +741,6 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
 	{
-		static_assert( !std::is_same<ValueTypeT, ARRAY>::value, "lambda function telling how to process elements must be specified" );
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
