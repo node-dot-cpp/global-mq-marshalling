@@ -13,15 +13,16 @@ struct A
 	std::vector<uint64_t> vnn;
 	bool bb;
 	template<class ComparserT>
-	void _rw( ComparserT& comparser )
+	void rw( ComparserT& comparser )
 	{
 		comparser.beginStruct();
-		comparser.processNamedSignedInteger( "ii", ii );
-		comparser.processNamedUnsignedInteger( "nn", nn );
-		comparser.processNamedReal( "ff", ff );
-		comparser.processNamedString( "ss", ss );
-		comparser.processNamedArrayOfUnsignedIntegers( "vnn", vnn );
-		comparser.processNamedBoolean( "bb", bb );
+		comparser.rw<ComparserT::INT>( "ii", ii );
+		comparser.rw<ComparserT::UINT>( "nn", nn );
+		comparser.rw<ComparserT::REAL>( "ff", ff );
+		comparser.rw<ComparserT::STRING>( "ss", ss );
+//		comparser.rw<ComparserT::UINT>( "vnn", vnn );
+		comparser.rw<ComparserT::UINT>( "vnn", vnn, [&comparser](uint64_t& val){comparser.rw<ComparserT::UINT>(val);} );
+		comparser.rw<ComparserT::BOOLEAN>( "bb", bb );
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const A& other ) const
@@ -47,20 +48,18 @@ struct B
 	A a;
 	float f;
 	std::vector<A> va;
-	std::vector<std::vector<int>> vvi;
 
 	template<class ComparserT>
-	void _rw( ComparserT& comparser )
+	void rw( ComparserT& comparser )
 	{
 		comparser.beginStruct();
-		comparser.processNamedEnum( "e", e );
-		comparser.processNamedSignedInteger( "i", i );
-		comparser.processNamedUnsignedInteger( "n", n );
-		comparser.processNamedReal( "f", f );
-		comparser.processNamedStruct( "a", a );
-		comparser.processNamedString( "s", s );
-		comparser.processNamedArrayOfStructs( "va", va );
-		comparser.processNamedArray( "vvi", vvi, [&comparser]( std::vector<int>& val ){ comparser.processArray( val, [&comparser](int& val){comparser.processSignedInteger(val);} ); } );
+		comparser.rw<ComparserT::ENUM>( "e", e );
+		comparser.rw<ComparserT::INT>( "i", i );
+		comparser.rw<ComparserT::UINT>( "n", n );
+		comparser.rw<ComparserT::REAL>( "f", f );
+		comparser.rw<ComparserT::STRUCT>( "a", a );
+		comparser.rw<ComparserT::STRING>( "s", s );
+		comparser.rw<ComparserT::STRUCT>( "va", va );
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const B& other ) const
@@ -74,13 +73,6 @@ struct B
 		assert( va.size() == other.va.size() );
 		for ( size_t i=0; i<va.size(); ++i )
 			va[i].assertIsSameAs( other.va[i] );
-		assert( vvi.size() == other.vvi.size() );
-		for ( size_t i=0; i<vvi.size(); ++i )
-		{
-			assert( vvi[i].size() == other.vvi[i].size() );
-			for ( size_t j=0; j<vvi[i].size(); ++j )
-				assert( vvi[i][j] == other.vvi[i][j] );
-		}
 	}
 };
 
@@ -100,11 +92,10 @@ inline void comparsers_test()
 	b.f = 2.71;
 	b.va.push_back({-171,171,13.1416,"high again!",{5,4,3},true});
 	b.va.push_back(b.a);
-	b.vvi = {{55,56,57},{66,67,68}};
 
 	globalmq::marshalling::Buffer buff;
 	JsonComposer2 composer( buff );
-	b._rw( composer );
+	b.rw( composer );
 
 	std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
 	fmt::print( "{}\n", sview );
@@ -112,7 +103,7 @@ inline void comparsers_test()
 	auto riter = buff.getReadIter();
 	JsonParser2<globalmq::marshalling::Buffer> parser( riter );
 	B b1;
-	b1._rw( parser );
+	b1.rw( parser );
 
 	b.assertIsSameAs( b1 );
 }

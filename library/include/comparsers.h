@@ -9,7 +9,20 @@
 
 enum Proto { GMQ, JSON };
 
-struct ComposerBase2 {
+struct ComparserBase
+{
+	// supported value types (exhaustive list)
+	struct INT {static constexpr bool dummy = false;};
+	struct UINT {static constexpr bool dummy = false;};
+	struct REAL {static constexpr bool dummy = false;};
+	struct STRING {static constexpr bool dummy = false;};
+	struct BOOLEAN {static constexpr bool dummy = false;};
+	struct ENUM {static constexpr bool dummy = false;};
+	struct STRUCT {static constexpr bool dummy = false;};
+};
+
+struct ComposerBase2 : public ComparserBase
+{
 	static constexpr bool isComposer() { return true; }
 	static constexpr bool isParser() { return false; }
 	static void checkPrecondition( bool cond ) { assert( cond ); }
@@ -160,12 +173,44 @@ class JsonComposer2 : public ComposerBase2
 	template<class T>
 	void implInsertStructValue( T& t )
 	{
-		t._rw( *this );
+//		t._rw( *this );
+		t.rw( *this );
 	}
 	template<class T, class ItemProcT>
 	void implInsertStructValue( T& t, ItemProcT proc )
 	{
 		proc( t );
+	}
+
+	template<class T, class ItemProcT>
+	void implInsertArray( std::vector<T>& v, ItemProcT proc )
+	{
+		beginArray();
+		for ( size_t i=0; i<v.size(); ++i )
+			proc( v[i] );
+		endArray();
+	}
+	
+	template<class ValueTypeT, class ValueT>
+	void implInsertValue( ValueT& val )
+	{
+		if constexpr ( std::is_same<INT, ValueTypeT>::value )
+			implInsertSignedInteger( val );
+		else if constexpr ( std::is_same<UINT, ValueTypeT>::value )
+			implInsertUnsignedInteger( val );
+		else if constexpr ( std::is_same<REAL, ValueTypeT>::value )
+			implInsertReal( val );
+		else if constexpr ( std::is_same<STRING, ValueTypeT>::value )
+			implInsertStringValue( val );
+		else if constexpr ( std::is_same<BOOLEAN, ValueTypeT>::value )
+			implInsertBooleanValue( val );
+		else if constexpr ( std::is_same<ENUM, ValueTypeT>::value )
+			implInsertEnumValue( val );
+		else
+		{
+			static_assert ( std::is_same<STRUCT, ValueTypeT>::value );
+			implInsertStructValue( val );
+		}
 	}
 
 
@@ -224,171 +269,77 @@ public:
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 	}
-	template<class T>
-	void processUnsignedInteger( T& t )
+
+	template<class ValueTypeT, class ValueT>
+	void rw( ValueT& val )
 	{
 		implOnAnyValue();
-		implInsertUnsignedInteger( t );
+		implInsertValue<ValueTypeT>( val );
 	}
-	template<class T>
-	void processSignedInteger( T& t )
+
+	template<class ValueTypeT, class ValueT>
+	void rw( GMQ_COLL string name, ValueT& val )
 	{
-		implOnAnyValue();
-		implInsertSignedInteger( t );
+		static_assert( !std::is_invocable<ValueT, JsonComposer2, ValueT>::value );
+		implProcessNamePart( name );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.push_back({InType::inNameVal, 0});
+
+		implInsertValue<ValueTypeT>( val );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.pop_back();
 	}
-	template<class T>
-	void processReal( T& t )
-	{
-		implOnAnyValue();
-		implInsertReal( t );
-	}
-	template<class T>
-	void processEnumValue( T& t )
-	{
-		implOnAnyValue();
-		implInsertEnumValue( t );
-	}
-	template<class T>
-	void processStringValue( T& t )
-	{
-		implOnAnyValue();
-		implInsertStringValue( t );
-	}
-	template<class T>
-	void processBooleanValue( T& t )
-	{
-		implOnAnyValue();
-		implInsertBooleanValue( t );
-	}
-	template<class T>
-	void processStructValue( T& t )
-	{
-		implOnAnyValue();
-		implInsertStructValue( t );
-	}
-	template<class T, class ItemProcT>
-	void processStructValue( T& t, ItemProcT proc )
-	{
-		implOnAnyValue();
-		implInsertStructValue( t, proc );
-	}
-	template<class T, class ItemProcT>
-	void implProcessArray( std::vector<T>& v, ItemProcT proc )
-	{
-		beginArray();
-		for ( size_t i=0; i<v.size(); ++i )
-			proc( v[i] );
-		endArray();
-	}
-	template<class T, class ItemProcT>
-	void processArray( std::vector<T>& v, ItemProcT proc )
-	{
-		implOnAnyValue();
-		implProcessArray( v, proc );
-	}
-	template<class T>
-	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
+
+	template<class ValueTypeT, class ValueT, class ItemProcT>
+	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
 	{
 		implProcessNamePart( name );
-		implInsertUnsignedInteger( num );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.push_back({InType::inNameVal, 0});
+
+		proc( val );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.pop_back();
 	}
-	template<class T>
-	void processNamedSignedInteger( GMQ_COLL string name, T& num )
+
+	template<class ValueTypeT, class ValueT>
+	void rw( std::vector<ValueT>& v )
 	{
-		implProcessNamePart( name );
-		implInsertSignedInteger( num );
+		implOnAnyValue();
+		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
 	}
-	template<class T>
-	void processNamedReal( GMQ_COLL string name, T& num )
+
+	template<class ValueTypeT, class ValueT, class ItemProcT>
+	void rw( std::vector<ValueT>& v, ItemProcT proc )
 	{
-		implProcessNamePart( name );
-		implInsertReal( num );
+		implOnAnyValue();
+		implInsertArray( v, proc );
 	}
-	template<class T>
-	void processNamedEnum( GMQ_COLL string name, T& num )
-	{
-		implProcessNamePart( name );
-		implInsertEnumValue( num );
-	}
-	template<class T>
-	void processNamedBoolean( GMQ_COLL string name, T& b )
-	{
-		implProcessNamePart( name );
-		implInsertBooleanValue( b );
-	}
-	template<class T>
-	void processNamedString( GMQ_COLL string name, T& str )
-	{
-		implProcessNamePart( name );
-		implInsertStringValue( str );
-	}
-	template<class T>
-	void processNamedStruct( GMQ_COLL string name, T& s )
+	
+	template<class ValueTypeT, class ValueT>
+	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		implInsertStructValue( s );
-		stack.pop_back();
+		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
 	}
-	template<class T, class LambdaProc>
-	void processNamedStruct( GMQ_COLL string name, T& s, LambdaProc proc )
+	
+	template<class ValueTypeT, class ValueT, class LambdaProc>
+	void rw( GMQ_COLL string name, std::vector<ValueT>& v, LambdaProc proc )
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		implInsertStructValue( s, proc );
-		stack.pop_back();
-	}
-	template<class T, class ValT, class LambdaProc>
-	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, LambdaProc proc )
-	{
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implProcessArray( v, proc );
-	}
-	template<class T>
-	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, uint64_t>( name, v, [&](uint64_t& val){processUnsignedInteger( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfSignedIntegers( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, int64_t>( name, v, [&](int64_t& val){processSignedInteger( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfReals( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfEnums( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, T>( name, v, [&](T& val){processEnumValue( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processStringValue( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfBooleans( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, bool>( name, v, [&](bool& val){processBooleanValue( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, T>( name, v, [&](T& val){processStructValue(val);} );
-	}
-	template<class T, class ItemProcT>
-	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, ItemProcT proc )
-	{
-		processNamedArray<T, T>( name, v, [&](T& val){proc(val);} );
+		implInsertArray<ValueT>( v, [&](ValueT& val){proc( val );} );
 	}
 };
 
 
-struct ParserBase2 {
+struct ParserBase2 : public ComparserBase
+{
 	static constexpr bool isComposer() { return false; }
 	static constexpr bool isParser() { return true; }
 	static void checkPrecondition( bool cond ) {}
@@ -624,6 +575,65 @@ private:
 			throw std::exception(); // TODO
 	}
 
+	void implProcessNamePart( GMQ_COLL string name )
+	{
+		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+		if ( stack.back().count > 0 )
+			skipComma();
+		GMQ_COLL string s;
+		readKey(&s);
+		if ( s != name )
+			throw std::exception(); // TODO
+		++stack.back().count;
+	}
+
+	
+	template<class T>
+	void readStructValue( T& t )
+	{
+		t.rw( *this );
+	}
+	template<class T, class ItemProcT>
+	void readStructValue( T& t, ItemProcT proc )
+	{
+		proc( t );
+	}
+	template<class ValueTypeT, class ValueT>
+	void implReadValue( ValueT& val )
+	{
+		if constexpr ( std::is_same<INT, ValueTypeT>::value )
+			readSignedInteger( &val );
+		else if constexpr ( std::is_same<UINT, ValueTypeT>::value )
+			readUnsignedInteger( &val );
+		else if constexpr ( std::is_same<REAL, ValueTypeT>::value )
+			readReal( &val );
+		else if constexpr ( std::is_same<STRING, ValueTypeT>::value )
+			readString( &val );
+		else if constexpr ( std::is_same<BOOLEAN, ValueTypeT>::value )
+			readBoolean( &val );
+		else if constexpr ( std::is_same<ENUM, ValueTypeT>::value )
+			readEnumValue( &val );
+		else
+		{
+			static_assert ( std::is_same<STRUCT, ValueTypeT>::value );
+			readStructValue( val );
+		}
+	}
+	template<class T, class ItemProcT>
+	void implProcessArray( std::vector<T>& v, ItemProcT proc )
+	{
+		beginArray();
+		if ( !isDelimiter( ']' ) )
+		{
+			do {
+				T val;
+				proc( val );
+				v.push_back( std::move( val ) );
+			}
+			while ( isComma() );
+		}
+		endArray();
+	}
 
 
 public:
@@ -672,190 +682,76 @@ public:
 			++(stack.back().count);
 		}
 	}
-	void implProcessNamePart( GMQ_COLL string name )
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string s;
-		readKey(&s);
-		if ( s != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
-	}
 	void beginNamedValue( GMQ_COLL string name )
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 	}
-	template<class T>
-	void processUnsignedInteger( T& t )
+
+	template<class ValueTypeT, class ValueT>
+	void rw( ValueT& val )
 	{
 		implOnAnyValue();
-		readUnsignedInteger( &t );
+		implReadValue<ValueTypeT>( val );
 	}
-	template<class T>
-	void processSignedInteger( T& t )
+
+	template<class ValueTypeT, class ValueT>
+	void rw( GMQ_COLL string name, ValueT& val )
+	{
+		static_assert( !std::is_invocable<ValueT, JsonParser2, ValueT>::value );
+		implProcessNamePart( name );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.push_back({InType::inNameVal, 0});
+
+		implReadValue<ValueTypeT>( val );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.pop_back();
+	}
+
+	template<class ValueTypeT, class ValueT, class ItemProcT>
+	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
+	{
+		implProcessNamePart( name );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.push_back({InType::inNameVal, 0});
+
+		proc( val );
+
+		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+			stack.pop_back();
+	}
+
+	template<class ValueTypeT, class ValueT>
+	void rw( std::vector<ValueT>& v )
 	{
 		implOnAnyValue();
-		readSignedInteger( &t );
+		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
 	}
-	template<class T>
-	void processReal( T& t )
-	{
-		implOnAnyValue();
-		readReal( &t );
-	}
-	template<class T>
-	void processEnumValue( T& t )
-	{
-		implOnAnyValue();
-		readEnumValue( &t );
-	}
-	template<class T>
-	void processStringValue( T& t )
-	{
-		implOnAnyValue();
-		readString( &t );
-	}
-	template<class T>
-	void processBooleanValue( T& t )
-	{
-		implOnAnyValue();
-		readBoolean( &t );
-	}
-	template<class T>
-	void processStructValue( T& t )
-	{
-		implOnAnyValue();
-		t._rw( *this );
-	}
-	template<class T, class ItemProcT>
-	void processStructValue( T& t, ItemProcT proc )
-	{
-		implOnAnyValue();
-		proc( t );
-	}
-	template<class T, class ItemProcT>
-	void implProcessArray( std::vector<T>& v, ItemProcT proc )
-	{
-		beginArray();
-		if ( !isDelimiter( ']' ) )
-		{
-			do {
-				T val;
-				proc( val );
-				v.push_back( std::move( val ) );
-			}
-			while ( isComma() );
-		}
-		endArray();
-	}
-	template<class T, class ItemProcT>
-	void processArray( std::vector<T>& v, ItemProcT proc )
+
+	template<class ValueTypeT, class ValueT, class ItemProcT>
+	void rw( std::vector<ValueT>& v, ItemProcT proc )
 	{
 		implOnAnyValue();
 		implProcessArray( v, proc );
 	}
-	template<class T>
-	void processNamedUnsignedInteger( GMQ_COLL string name, T& num )
-	{
-		implProcessNamePart( name );
-		readUnsignedInteger( &num );
-	}
-	template<class T>
-	void processNamedSignedInteger( GMQ_COLL string name, T& num )
-	{
-		implProcessNamePart( name );
-		readSignedInteger( &num );
-	}
-	template<class T>
-	void processNamedReal( GMQ_COLL string name, T& num )
-	{
-		implProcessNamePart( name );
-		readReal( &num );
-	}
-	template<class T>
-	void processNamedEnum( GMQ_COLL string name, T& num )
-	{
-		implProcessNamePart( name );
-		readEnumValue( &num );
-	}
-	template<class T>
-	void processNamedString( GMQ_COLL string name, T& str )
-	{
-		implProcessNamePart( name );
-		readString( &str );
-	}
-	template<class T>
-	void processNamedBoolean( GMQ_COLL string name, T& b )
-	{
-		implProcessNamePart( name );
-		readBoolean( &b );
-	}
-	template<class T>
-	void processNamedStruct( GMQ_COLL string name, T& s )
+	
+	template<class ValueTypeT, class ValueT>
+	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		s._rw( *this );
-		stack.pop_back();
+		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
 	}
-	template<class T, class LambdaProc>
-	void processNamedStruct( GMQ_COLL string name, T& s, LambdaProc proc )
+	
+	template<class ValueTypeT, class ValueT, class LambdaProc>
+	void rw( GMQ_COLL string name, std::vector<ValueT>& v, LambdaProc proc )
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		proc( s );
-		stack.pop_back();
-	}
-	template<class T, class ValT, class LambdaProc>
-	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, LambdaProc proc )
-	{
-		v.clear();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implProcessArray( v, proc );
-	}
-	template<class T>
-	void processNamedArrayOfUnsignedIntegers( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, uint64_t>( name, v, [&](uint64_t& val){processUnsignedInteger( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfSignedIntegers( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, int64_t>( name, v, [&](int64_t& val){processSignedInteger( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfReals( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, double>( name, v, [&](double& val){processReal( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfEnums( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, T>( name, v, [&](T& val){processEnumValue( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfStrings( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, GMQ_COLL string>( name, v, [&](GMQ_COLL string& val){processStringValue( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfBooleans( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, bool>( name, v, [&](bool& val){processBooleanValue( val );} );
-	}
-	template<class T>
-	void processNamedArrayOfStructs( GMQ_COLL string name, std::vector<T>& v )
-	{
-		processNamedArray<T, T>( name, v, [&](T& val){processStructValue(val);} );
-	}
-	template<class T, class ItemProcT>
-	void processNamedArray( GMQ_COLL string name, std::vector<T>& v, ItemProcT proc )
-	{
-		processNamedArray<T, T>( name, v, [&](T& val){proc(val);} );
+		implProcessArray<ValueT>( v, [&](ValueT& val){proc( val );} );
 	}
 };
 
