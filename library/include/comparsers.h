@@ -343,7 +343,7 @@ struct ParserBase2 : public ComparserBase
 	static constexpr bool isComposer() { return false; }
 	static constexpr bool isParser() { return true; }
 	static void checkPrecondition( bool cond ) {}
-	static void checkPostcondition( bool cond ) { throw std::exception(); }
+	static void checkPostcondition( bool cond ) { if( !cond ) throw std::exception(); }
 };
 
 template<class MessageT>
