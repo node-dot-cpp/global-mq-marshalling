@@ -78,16 +78,17 @@ class JsonComposer2 : public ComposerBase2
 		auto str = fmt::format( "\"{}\":", name );
 		buff.append( str.c_str(), str.size() );
 	}
-	void implOnAnyValue()
+	void implBeforeAnyValue()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-
 		implAddNextItemSeparator();
-
+	}
+	void implAfterAnyValue()
+	{
 		if ( stack.back().type == InType::inNameVal )
 		{
-			stack.pop_back();
-			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+//			stack.pop_back();
+//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
 		}
 		else
 		{
@@ -173,7 +174,6 @@ class JsonComposer2 : public ComposerBase2
 	template<class T>
 	void implInsertStructValue( T& t )
 	{
-//		t._rw( *this );
 		t.rw( *this );
 	}
 	template<class T, class ItemProcT>
@@ -243,7 +243,6 @@ public:
 	void beginArray()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-//		implAddNextItemSeparator();
 		buff.append( "[\n  ", sizeof("[\n  ") - 1 );
 		++stack.back().count;
 		stack.push_back({InType::inArray, 0});
@@ -255,8 +254,8 @@ public:
 		stack.pop_back();
 		if ( stack.back().type == InType::inNameVal )
 		{
-			stack.pop_back();
-			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+//			stack.pop_back();
+//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
 		}
 		else
 		{
@@ -273,8 +272,9 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( ValueT& val )
 	{
-		implOnAnyValue();
+		implBeforeAnyValue();
 		implInsertValue<ValueTypeT>( val );
+		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT>
@@ -283,12 +283,12 @@ public:
 		static_assert( !std::is_invocable<ValueT, JsonComposer2, ValueT>::value );
 		implProcessNamePart( name );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.push_back({InType::inNameVal, 0});
 
 		implInsertValue<ValueTypeT>( val );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.pop_back();
 	}
 
@@ -297,27 +297,29 @@ public:
 	{
 		implProcessNamePart( name );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.push_back({InType::inNameVal, 0});
 
 		proc( val );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT>
 	void rw( std::vector<ValueT>& v )
 	{
-		implOnAnyValue();
+		implBeforeAnyValue();
 		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( std::vector<ValueT>& v, ItemProcT proc )
 	{
-		implOnAnyValue();
+		implBeforeAnyValue();
 		implInsertArray( v, proc );
+		implAfterAnyValue();
 	}
 	
 	template<class ValueTypeT, class ValueT>
@@ -325,7 +327,13 @@ public:
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		if constexpr ( std::is_same<ValueT, bool>::value ) 
+			implInsertArray( v, [&](ValueT val){rw<ValueTypeT>( val );} );
+		else
+			implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		assert( stack.back().type == InType::inNameVal );
+		assert( stack.back().count == 1 );
+		stack.pop_back();
 	}
 	
 	template<class ValueTypeT, class ValueT, class LambdaProc>
@@ -334,6 +342,9 @@ public:
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implInsertArray<ValueT>( v, [&](ValueT& val){proc( val );} );
+		assert( stack.back().type == InType::inNameVal );
+		assert( stack.back().count == 1 );
+		stack.pop_back();
 	}
 };
 
@@ -361,21 +372,24 @@ private:
 	struct In { InType type = InType::inUnknown; uint32_t count = 0; };
 	std::vector<In> stack;
 
-	void implOnAnyValue()
+	void implBeforeAnyValue()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
 
-		if ( stack.back().type == InType::inNameVal )
+		if ( stack.back().type == InType::inArray )
 		{
-			stack.pop_back();
-			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		}
-		else
-		{
-			assert( stack.size() > 0 && stack.back().type == InType::inArray );
 			if ( stack.back().count > 0 )
 				skipComma();
 			++(stack.back().count);
+		}
+	}
+
+	void implAfterAnyValue()
+	{
+		if ( stack.back().type == InType::inNameVal )
+		{
+//			stack.pop_back();
+//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
 		}
 	}
 
@@ -525,7 +539,6 @@ private:
 	{
 		skipSpacesEtc();
 		GMQ_COLL string s;
-//		while ( riter.isData() && ((*riter >= '0' && *riter <= '9') || *riter == '.') ) // TODO: more than one '.' in json with errors
 		while ( riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' || *riter == ',' || *riter == ']' || *riter == '}') ) // expected terminators
 		{
 			s += *riter;
@@ -673,8 +686,8 @@ public:
 		stack.pop_back();
 		if ( stack.back().type == InType::inNameVal )
 		{
-			stack.pop_back();
-			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+//			stack.pop_back();
+//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
 		}
 		else
 		{
@@ -691,8 +704,9 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( ValueT& val )
 	{
-		implOnAnyValue();
+		implBeforeAnyValue();
 		implReadValue<ValueTypeT>( val );
+		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT>
@@ -701,12 +715,12 @@ public:
 		static_assert( !std::is_invocable<ValueT, JsonParser2, ValueT>::value );
 		implProcessNamePart( name );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.push_back({InType::inNameVal, 0});
 
 		implReadValue<ValueTypeT>( val );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.pop_back();
 	}
 
@@ -715,27 +729,29 @@ public:
 	{
 		implProcessNamePart( name );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.push_back({InType::inNameVal, 0});
 
 		proc( val );
 
-		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
+//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
 			stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT>
 	void rw( std::vector<ValueT>& v )
 	{
-		implOnAnyValue();
+		implBeforeAnyValue();
 		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( std::vector<ValueT>& v, ItemProcT proc )
 	{
-		implOnAnyValue();
+		implBeforeAnyValue();
 		implProcessArray( v, proc );
+		implAfterAnyValue();
 	}
 	
 	template<class ValueTypeT, class ValueT>
@@ -744,6 +760,7 @@ public:
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		stack.pop_back();
 	}
 	
 	template<class ValueTypeT, class ValueT, class LambdaProc>
@@ -752,6 +769,7 @@ public:
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implProcessArray<ValueT>( v, [&](ValueT& val){proc( val );} );
+		stack.pop_back();
 	}
 };
 
