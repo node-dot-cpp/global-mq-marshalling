@@ -85,12 +85,7 @@ class JsonComposer2 : public ComposerBase2
 	}
 	void implAfterAnyValue()
 	{
-		if ( stack.back().type == InType::inNameVal )
-		{
-//			stack.pop_back();
-//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		}
-		else
+		if ( stack.back().type != InType::inNameVal )
 		{
 			assert( stack.size() > 0 && stack.back().type == InType::inArray );
 			++(stack.back().count);
@@ -286,28 +281,18 @@ public:
 	{
 		static_assert( !std::is_invocable<ValueT, JsonComposer2, ValueT>::value );
 		implProcessNamePart( name );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.push_back({InType::inNameVal, 0});
-
+		stack.push_back({InType::inNameVal, 0});
 		implInsertValue<ValueTypeT>( val );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.pop_back();
+		stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
 	{
 		implProcessNamePart( name );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.push_back({InType::inNameVal, 0});
-
+		stack.push_back({InType::inNameVal, 0});
 		proc( val );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.pop_back();
+		stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT>
@@ -390,11 +375,6 @@ private:
 
 	void implAfterAnyValue()
 	{
-		if ( stack.back().type == InType::inNameVal )
-		{
-//			stack.pop_back();
-//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		}
 	}
 
 	void skipSpacesEtc()
@@ -688,12 +668,7 @@ public:
 		assert( stack.size() > 0 && stack.back().type == InType::inArray );
 		skipDelimiter( ']' );
 		stack.pop_back();
-		if ( stack.back().type == InType::inNameVal )
-		{
-//			stack.pop_back();
-//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		}
-		else
+		if ( stack.back().type != InType::inNameVal )
 		{
 			assert( stack.size() > 0 && stack.back().type == InType::inArray );
 			++(stack.back().count);
@@ -722,28 +697,18 @@ public:
 	{
 		static_assert( !std::is_invocable<ValueT, JsonParser2, ValueT>::value );
 		implProcessNamePart( name );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.push_back({InType::inNameVal, 0});
-
+		stack.push_back({InType::inNameVal, 0});
 		implReadValue<ValueTypeT>( val );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.pop_back();
+		stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
 	{
 		implProcessNamePart( name );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.push_back({InType::inNameVal, 0});
-
+		stack.push_back({InType::inNameVal, 0});
 		proc( val );
-
-//		if constexpr ( std::is_same<STRUCT, ValueTypeT>::value )
-			stack.pop_back();
+		stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT>
