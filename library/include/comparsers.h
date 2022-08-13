@@ -268,6 +268,10 @@ public:
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 	}
+	void endNamedValue()
+	{
+		stack.pop_back();
+	}
 
 	template<class ValueTypeT, class ValueT>
 	void rw( ValueT& val )
@@ -699,6 +703,10 @@ public:
 	{
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
+	}
+	void endNamedValue()
+	{
+		stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT>
