@@ -12,6 +12,7 @@ enum Proto { GMQ, JSON };
 struct ComparserBase
 {
 	// supported value types (exhaustive list)
+	// scalars
 	struct INT {static constexpr bool dummy = false;};
 	struct UINT {static constexpr bool dummy = false;};
 	struct REAL {static constexpr bool dummy = false;};
@@ -19,6 +20,38 @@ struct ComparserBase
 	struct BOOLEAN {static constexpr bool dummy = false;};
 	struct ENUM {static constexpr bool dummy = false;};
 	struct STRUCT {static constexpr bool dummy = false;};
+	// vectors
+	struct VofINT {static constexpr bool dummy = false; using ValueT = INT;};
+	struct VofUINT {static constexpr bool dummy = false;; using ValueT = UINT;};
+	struct VofREAL {static constexpr bool dummy = false;; using ValueT = REAL;};
+	struct VofSTRING {static constexpr bool dummy = false;; using ValueT = STRING;};
+	struct VofBOOLEAN {static constexpr bool dummy = false;; using ValueT = BOOLEAN;};
+	struct VofENUM {static constexpr bool dummy = false;; using ValueT = ENUM;};
+	struct VofSTRUCT {static constexpr bool dummy = false;; using ValueT = STRUCT;};
+
+	// checks
+	template<class ValueTypeT>
+	void assertScalarType()
+	{
+		static_assert( std::is_same<ValueTypeT, INT>::value ||
+			std::is_same<ValueTypeT, UINT>::value ||
+			std::is_same<ValueTypeT, REAL>::value ||
+			std::is_same<ValueTypeT, STRING>::value ||
+			std::is_same<ValueTypeT, BOOLEAN>::value ||
+			std::is_same<ValueTypeT, ENUM>::value ||
+			std::is_same<ValueTypeT, STRUCT>::value );
+	}
+	template<class ValueTypeT>
+	void assertVectorType()
+	{
+		static_assert( std::is_same<ValueTypeT, VofINT>::value ||
+			std::is_same<ValueTypeT, VofUINT>::value ||
+			std::is_same<ValueTypeT, VofREAL>::value ||
+			std::is_same<ValueTypeT, VofSTRING>::value ||
+			std::is_same<ValueTypeT, VofBOOLEAN>::value ||
+			std::is_same<ValueTypeT, VofENUM>::value ||
+			std::is_same<ValueTypeT, VofSTRUCT>::value );
+	}
 };
 
 struct ComposerBase2 : public ComparserBase
@@ -187,7 +220,7 @@ class JsonComposer2 : public ComposerBase2
 	}
 	
 	template<class ValueTypeT, class ValueT>
-	void implInsertValue( ValueT& val )
+	void implInsertScalarValue( ValueT& val )
 	{
 		if constexpr ( std::is_same<INT, ValueTypeT>::value )
 			implInsertSignedInteger( val );
@@ -271,24 +304,27 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( ValueT& val )
 	{
+		assertScalarType<ValueTypeT>();
 		implBeforeAnyValue();
-		implInsertValue<ValueTypeT>( val );
+		implInsertScalarValue<ValueTypeT>( val );
 		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, ValueT& val )
 	{
+		assertScalarType<ValueTypeT>();
 		static_assert( !std::is_invocable<ValueT, JsonComposer2, ValueT>::value );
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		implInsertValue<ValueTypeT>( val );
+		implInsertScalarValue<ValueTypeT>( val );
 		stack.pop_back();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
 	{
+		assertScalarType<ValueTypeT>();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		proc( val );
@@ -298,14 +334,16 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( std::vector<ValueT>& v )
 	{
+		assertVectorType<ValueTypeT>();
 		implBeforeAnyValue();
-		implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		implInsertArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
 		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( std::vector<ValueT>& v, ItemProcT proc )
 	{
+		assertVectorType<ValueTypeT>();
 		implBeforeAnyValue();
 		implInsertArray( v, proc );
 		implAfterAnyValue();
@@ -314,12 +352,13 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
 	{
+		assertVectorType<ValueTypeT>();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		if constexpr ( std::is_same<ValueT, bool>::value ) 
-			implInsertArray( v, [&](ValueT val){rw<ValueTypeT>( val );} );
+			implInsertArray( v, [&](ValueT val){rw<typename ValueTypeT::ValueT>( val );} );
 		else
-			implInsertArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+			implInsertArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
 		assert( stack.back().type == InType::inNameVal );
 		assert( stack.back().count == 1 );
 		stack.pop_back();
@@ -328,6 +367,7 @@ public:
 	template<class ValueTypeT, class ValueT, class LambdaProc>
 	void rw( GMQ_COLL string name, std::vector<ValueT>& v, LambdaProc proc )
 	{
+		assertVectorType<ValueTypeT>();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implInsertArray<ValueT>( v, [&](ValueT& val){proc( val );} );
@@ -687,6 +727,7 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( ValueT& val )
 	{
+		assertScalarType<ValueTypeT>();
 		implBeforeAnyValue();
 		implReadValue<ValueTypeT>( val );
 		implAfterAnyValue();
@@ -695,6 +736,7 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, ValueT& val )
 	{
+		assertScalarType<ValueTypeT>();
 		static_assert( !std::is_invocable<ValueT, JsonParser2, ValueT>::value );
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
@@ -705,6 +747,7 @@ public:
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
 	{
+		assertScalarType<ValueTypeT>();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		proc( val );
@@ -714,14 +757,16 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( std::vector<ValueT>& v )
 	{
+		assertVectorType<ValueTypeT>();
 		implBeforeAnyValue();
-		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		implProcessArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
 		implAfterAnyValue();
 	}
 
 	template<class ValueTypeT, class ValueT, class ItemProcT>
 	void rw( std::vector<ValueT>& v, ItemProcT proc )
 	{
+		assertVectorType<ValueTypeT>();
 		implBeforeAnyValue();
 		implProcessArray( v, proc );
 		implAfterAnyValue();
@@ -730,15 +775,17 @@ public:
 	template<class ValueTypeT, class ValueT>
 	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
 	{
+		assertVectorType<ValueTypeT>();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
-		implProcessArray( v, [&](ValueT& val){rw<ValueTypeT>( val );} );
+		implProcessArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
 		stack.pop_back();
 	}
 	
 	template<class ValueTypeT, class ValueT, class LambdaProc>
 	void rw( GMQ_COLL string name, std::vector<ValueT>& v, LambdaProc proc )
 	{
+		assertVectorType<ValueTypeT>();
 		implProcessNamePart( name );
 		stack.push_back({InType::inNameVal, 0});
 		implProcessArray<ValueT>( v, [&](ValueT& val){proc( val );} );
