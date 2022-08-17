@@ -20,8 +20,8 @@ struct A
 		comparser.rw<ComparserT::UINT>( "nn", nn );
 		comparser.rw<ComparserT::REAL>( "ff", ff );
 		comparser.rw<ComparserT::STRING>( "ss", ss );
-//		comparser.rw<ComparserT::UINT>( "vnn", vnn );
-		comparser.rw<ComparserT::UINT>( "vnn", vnn, [&comparser](uint64_t& val){comparser.rw<ComparserT::UINT>(val);} );
+//		comparser.rw<ComparserT::VofUINT>( "vnn", vnn );
+		comparser.rw<ComparserT::VofUINT>( "vnn", vnn, [&comparser](uint64_t& val){comparser.rw<ComparserT::UINT>(val);} );
 		comparser.rw<ComparserT::BOOLEAN>( "bb", bb );
 		comparser.endStruct();
 	}
@@ -59,7 +59,7 @@ struct B
 		comparser.rw<ComparserT::REAL>( "f", f );
 		comparser.rw<ComparserT::STRUCT>( "a", a );
 		comparser.rw<ComparserT::STRING>( "s", s );
-		comparser.rw<ComparserT::STRUCT>( "va", va );
+		comparser.rw<ComparserT::VofSTRUCT>( "va", va );
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const B& other ) const
