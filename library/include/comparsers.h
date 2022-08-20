@@ -7,10 +7,11 @@
 #include <assert.h>
 #include <fmt/format.h>
 
-enum Proto { GMQ, JSON };
 
 struct ComparserBase
 {
+	enum class Proto { GMQ, JSON };
+
 	// supported value types (exhaustive list)
 	// scalars
 	struct INT {static constexpr bool dummy = false;};
@@ -62,19 +63,26 @@ struct ComposerBase2 : public ComparserBase
 	static void checkPostcondition( bool cond ) {}
 };
 
-template<class BufferT, bool SC_friendly = false>
+template<class BufferT, bool Beautify = true>
 class JsonComposer2 : public ComposerBase2
 {
 	enum class InType {inUnknown, inStruct, inArray, inNameVal};
 	struct In { InType type = InType::inUnknown; uint32_t count = 0; };
 	std::vector<In> stack;
+	size_t offset = 0;
 	void implAddNextItemSeparator()
 	{
 		assert( stack.size() > 0 );
 		// TODO: offsets, (no) new lines, etc
 		if ( stack.back().count != 0 )
 		{
-			buff.append( ",\n", 2 );
+			buff.append( ",", 1 );
+		}
+		if constexpr ( Beautify )
+		{
+			buff.append( "\n", 1 );
+			for ( size_t i=0; i<offset; ++i )
+				buff.append( "  ", 2 );
 		}
 	}
 	template<class StringT>
@@ -110,6 +118,8 @@ class JsonComposer2 : public ComposerBase2
 	{
 		auto str = fmt::format( "\"{}\":", name );
 		buff.append( str.c_str(), str.size() );
+		if constexpr ( Beautify )
+			buff.append( " ", 1 );
 	}
 	void implBeforeAnyValue()
 	{
@@ -244,7 +254,6 @@ class JsonComposer2 : public ComposerBase2
 
 
 public: // just temporary TODO: rework!
-	static constexpr bool SCFriendly = SC_friendly;
 	static constexpr Proto proto = Proto::JSON;
 	using BufferType = BufferT;
 private:
@@ -257,7 +266,9 @@ public:
 	void beginStruct()
 	{
 		assert( stack.size() == 0 || stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) );
-		buff.append( "{\n  ", sizeof("{\n  ") - 1 );
+		buff.append( "{", 1 );
+		if constexpr ( Beautify )
+			++offset;
 		if ( stack.size() ) // yes, it might also be the root object
 			++stack.back().count;
 		stack.push_back({InType::inStruct, 0});
@@ -265,27 +276,38 @@ public:
 	void endStruct()
 	{
 		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		buff.append( "}\n  ", sizeof("}\n  ") - 1 );
 		stack.pop_back();
+		if constexpr ( Beautify )
+		{
+			--offset;
+			buff.append( "\n  ", 1 );
+			for ( size_t i=0; i<offset; ++i )
+				buff.append( "  ", 2 );
+		}
+		buff.append( "}", 1 );
 	}
 	void beginArray()
 	{
 		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-		buff.append( "[\n  ", sizeof("[\n  ") - 1 );
+		buff.append( "[", 1 );
+		if constexpr ( Beautify )
+			++offset;
 		++stack.back().count;
 		stack.push_back({InType::inArray, 0});
 	}
 	void endArray()
 	{
 		assert( stack.size() > 0 && stack.back().type == InType::inArray );
-		buff.append( "]\n  ", sizeof("]\n  ") - 1 );
 		stack.pop_back();
-		if ( stack.back().type == InType::inNameVal )
+		if constexpr ( Beautify )
 		{
-//			stack.pop_back();
-//			assert( stack.size() > 0 && stack.back().type == InType::inStruct );
+			--offset;
+			buff.append( "\n  ", 1 );
+			for ( size_t i=0; i<offset; ++i )
+				buff.append( "  ", 2 );
 		}
-		else
+		buff.append( "]", 1 );
+		if ( stack.back().type != InType::inNameVal )
 		{
 			assert( stack.size() > 0 && stack.back().type == InType::inArray );
 			++(stack.back().count);
