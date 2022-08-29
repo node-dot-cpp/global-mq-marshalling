@@ -2,6 +2,7 @@
 //
 
 #include "tests.h"
+#include "comparsers-test.h"
 
 int main()
 {
@@ -13,4 +14,5 @@ int main()
 	// publishableTestOne();
 	publishableTestTwo();
 	//quickTestForGmqParts();
+	comparsers_test();
 }
