@@ -4,6 +4,8 @@
 #include "global_mq_common.h"
 #include "comparsers.h"
 
+using namespace comparsers;
+
 struct A
 {
 	int ii;
@@ -15,14 +17,14 @@ struct A
 	template<typename This, typename ComparserT>
 	static void rw(This& obj, ComparserT& comparser )
 	{
-		comparser.template beginStruct("A");
-		GMQ_SERIALIZE(INT, "ii", obj.ii);
-		GMQ_SERIALIZE(UINT, "nn", obj.nn);
-		GMQ_SERIALIZE(REAL, "ff", obj.ff);
-		GMQ_SERIALIZE(STRING, "ss", obj.ss);
+		comparser.beginStruct("A");
+		comparser.template rw<INT>( "ii", obj.ii);
+		comparser.template rw<UINT>( "nn", obj.nn);
+		comparser.template rw<REAL>( "ff", obj.ff);
+		comparser.template rw<STRING>( "ss", obj.ss);
 //		comparser.rw<ComparserT::VofUINT>( "vnn", vnn );
-		GMQ_SERIALIZE(VofUINT, "vnn", obj.vnn);
-		GMQ_SERIALIZE(BOOLEAN, "bb", obj.bb);
+		comparser.template rw<VofUINT>( "vnn", obj.vnn);
+		comparser.template rw<BOOLEAN>( "bb", obj.bb);
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const A& other ) const
@@ -55,21 +57,21 @@ struct B
 	template<typename Object, typename ComparserT>
 	static void rw(Object& obj, ComparserT& comparser )
 	{
-		comparser.template beginStruct("B");
-		GMQ_SERIALIZE(ENUM, "e", obj.e);
-		GMQ_SERIALIZE(INT, "i", obj.i);
-		GMQ_SERIALIZE(UINT, "n", obj.n);
-		GMQ_SERIALIZE(REAL, "f", obj.f);
-		GMQ_SERIALIZE(STRUCT, "a", obj.a);
-		GMQ_SERIALIZE(STRING, "s", obj.s);
-		GMQ_SERIALIZE(VofSTRUCT, "va", obj.va);
-		GMQ_SERIALIZE(VofSTRING, "vs", obj.vs);
-		GMQ_SERIALIZE(VofBOOLEAN, "vb", obj.vb);
+		comparser.beginStruct("B");
+		comparser.template rw<ENUM>( "e", obj.e);
+		comparser.template rw<INT>( "i", obj.i);
+		comparser.template rw<UINT>( "n", obj.n);
+		comparser.template rw<REAL>( "f", obj.f);
+		comparser.template rw<STRUCT>( "a", obj.a);
+		comparser.template rw<STRING>( "s", obj.s);
+		comparser.template rw<VofSTRUCT>( "va", obj.va);
+		comparser.template rw<VofSTRING>( "vs", obj.vs);
+		comparser.template rw<VofBOOLEAN>( "vb", obj.vb);
 
 		comparser.beginNamedValue("ints");
 		comparser.beginArray();
 		for (size_t i = 0; i != 100; ++i)
-			GMQ_SERIALIZE_VALUE(INT, obj.ints[i]);
+			comparser.template rw<INT>(obj.ints[i]);
 		comparser.endArray();
 		comparser.endNamedValue();
 
