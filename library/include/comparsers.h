@@ -1,98 +1,138 @@
 #ifndef COMPARSERS_H
 #define COMPARSERS_H
 
-#define GMQ_COLL std:: // TDO: tmp
-#include <vector>
-#include <string>
 #include <assert.h>
 #include <fmt/format.h>
+#include <string>
+#include <vector>
+#include <string_view>
 
-
-struct ComparserBase
+namespace comparsers
 {
-	enum class Proto { GMQ, JSON };
-
-	// supported value types (exhaustive list)
-	// scalars
-	struct INT {static constexpr bool dummy = false;};
-	struct UINT {static constexpr bool dummy = false;};
-	struct REAL {static constexpr bool dummy = false;};
-	struct STRING {static constexpr bool dummy = false;};
-	struct BOOLEAN {static constexpr bool dummy = false;};
-	struct ENUM {static constexpr bool dummy = false;};
-	struct STRUCT {static constexpr bool dummy = false;};
-	// vectors
-	struct VofINT {static constexpr bool dummy = false; using ValueT = INT;};
-	struct VofUINT {static constexpr bool dummy = false;; using ValueT = UINT;};
-	struct VofREAL {static constexpr bool dummy = false;; using ValueT = REAL;};
-	struct VofSTRING {static constexpr bool dummy = false;; using ValueT = STRING;};
-	struct VofBOOLEAN {static constexpr bool dummy = false;; using ValueT = BOOLEAN;};
-	struct VofENUM {static constexpr bool dummy = false;; using ValueT = ENUM;};
-	struct VofSTRUCT {static constexpr bool dummy = false;; using ValueT = STRUCT;};
-
-	// checks
-	template<class ValueTypeT>
-	void assertScalarType()
+	template <typename Type, template <typename...> typename Template>
+	struct is_specialization : std::false_type
 	{
-		static_assert( std::is_same<ValueTypeT, INT>::value ||
-			std::is_same<ValueTypeT, UINT>::value ||
-			std::is_same<ValueTypeT, REAL>::value ||
-			std::is_same<ValueTypeT, STRING>::value ||
-			std::is_same<ValueTypeT, BOOLEAN>::value ||
-			std::is_same<ValueTypeT, ENUM>::value ||
-			std::is_same<ValueTypeT, STRUCT>::value );
-	}
-	template<class ValueTypeT>
-	void assertVectorType()
-	{
-		static_assert( std::is_same<ValueTypeT, VofINT>::value ||
-			std::is_same<ValueTypeT, VofUINT>::value ||
-			std::is_same<ValueTypeT, VofREAL>::value ||
-			std::is_same<ValueTypeT, VofSTRING>::value ||
-			std::is_same<ValueTypeT, VofBOOLEAN>::value ||
-			std::is_same<ValueTypeT, VofENUM>::value ||
-			std::is_same<ValueTypeT, VofSTRUCT>::value );
-	}
-};
+	};
 
-struct ComposerBase2 : public ComparserBase
-{
-	static constexpr bool isComposer() { return true; }
-	static constexpr bool isParser() { return false; }
-	static void checkPrecondition( bool cond ) { assert( cond ); }
-	static void checkPostcondition( bool cond ) {}
-};
-
-template<class BufferT, bool Beautify = true>
-class JsonComposer2 : public ComposerBase2
-{
-	enum class InType {inUnknown, inStruct, inArray, inNameVal};
-	struct In { InType type = InType::inUnknown; uint32_t count = 0; };
-	std::vector<In> stack;
-	size_t offset = 0;
-	void implAddNextItemSeparator()
+	template <template <typename...> typename Template, typename... Args>
+	struct is_specialization<Template<Args...>, Template> : std::true_type
 	{
-		assert( stack.size() > 0 );
-		// TODO: offsets, (no) new lines, etc
-		if ( stack.back().count != 0 )
+	};
+
+	template <typename Type, template <typename...> typename Template>
+	inline constexpr bool is_specialization_v = is_specialization<Type, Template>::value;
+
+	template <typename T>
+	inline constexpr bool is_vector_v = is_specialization_v<std::decay_t<T>, std::vector>;
+
+    template <int>
+    struct ScalarValueType
+    {
+        static constexpr bool isScalar = true;
+    };
+
+    template <typename T>
+    struct VectorValueType
+    {
+        using ValueT = T;
+        static constexpr bool isScalar = false;
+    };
+
+    using INT = ScalarValueType<0>;
+    using UINT = ScalarValueType<1>;
+    using REAL = ScalarValueType<2>;
+    using STRING = ScalarValueType<3>;
+    using BOOLEAN = ScalarValueType<4>;
+    using ENUM = ScalarValueType<5>;
+    using STRUCT = ScalarValueType<6>;
+    using VofINT = VectorValueType<INT>;
+    using VofUINT = VectorValueType<UINT>;
+    using VofREAL = VectorValueType<REAL>;
+    using VofSTRING = VectorValueType<STRING>;
+    using VofBOOLEAN = VectorValueType<BOOLEAN>;
+    using VofENUM = VectorValueType<ENUM>;
+    using VofSTRUCT = VectorValueType<STRUCT>;
+
+	struct ComparserBase
+	{
+		enum class Proto
 		{
-			buff.append( ",", 1 );
+			GMQ,
+			JSON
+		};
+
+		// checks
+		template <typename ValueTypeT>
+		static constexpr void assertScalarType()
+		{
+			static_assert(ValueTypeT::isScalar);
 		}
-		if constexpr ( Beautify )
+		template <typename ValueTypeT>
+		static constexpr void assertVectorType()
 		{
-			buff.append( "\n", 1 );
-			for ( size_t i=0; i<offset; ++i )
-				buff.append( "  ", 2 );
+			static_assert(!ValueTypeT::isScalar);
 		}
-	}
-	template<class StringT>
-	GMQ_COLL string implString2JsonString( const StringT& str )
+	};
+
+	struct ComposerBase2 : public ComparserBase
 	{
-		GMQ_COLL string out;
-		for ( auto& ch : str )
+		static constexpr bool isComposer()
 		{
-			switch ( ch )
+			return true;
+		}
+		static constexpr bool isParser()
+		{
+			return false;
+		}
+		static void checkPrecondition(bool cond)
+		{
+			assert(cond);
+		}
+		static void checkPostcondition(bool cond)
+		{
+		}
+	};
+
+	template <typename BufferT, bool Beautify = true>
+	class JsonComposer2 : public ComposerBase2
+	{
+		enum class InType
+		{
+			inUnknown,
+			inStruct,
+			inArray,
+			inNameVal
+		};
+		struct In
+		{
+			InType type = InType::inUnknown;
+			uint32_t count = 0;
+		};
+		std::vector<In> stack;
+		size_t offset = 0;
+		void implAddNextItemSeparator()
+		{
+			assert(stack.size() > 0);
+			// TODO: offsets, (no) new lines, etc
+			if (stack.back().count != 0)
 			{
+				buff.append(",", 1);
+			}
+			if constexpr (Beautify)
+			{
+				buff.append("\n", 1);
+				for (size_t i = 0; i < offset; ++i)
+					buff.append("  ", 2);
+			}
+		}
+		template <typename StringT>
+		std::string implString2JsonString(const StringT& str)
+		{
+			std::string out;
+			for (auto& ch : str)
+			{
+				switch (ch)
+				{
 				case '\\':
 					out += "\\\\";
 					break;
@@ -109,407 +149,424 @@ class JsonComposer2 : public ComposerBase2
 					out += "\\\"";
 					break;
 				default:
-					out.push_back( ch );
+					out.push_back(ch);
+				}
+			}
+			return out;
+		}
+		void implInsertNamePart(const std::string_view& name)
+		{
+			auto str = fmt::format("\"{}\":", name);
+			buff.append(str.c_str(), str.size());
+			if constexpr (Beautify)
+				buff.append(" ", 1);
+		}
+		void implBeforeAnyValue()
+		{
+			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
+										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
+			implAddNextItemSeparator();
+		}
+		void implAfterAnyValue()
+		{
+			if (stack.back().type != InType::inNameVal)
+			{
+				assert(stack.size() > 0 && stack.back().type == InType::inArray);
+				++(stack.back().count);
 			}
 		}
-		return out;
-	}
-	void implInsertNamePart( GMQ_COLL string name )
-	{
-		auto str = fmt::format( "\"{}\":", name );
-		buff.append( str.c_str(), str.size() );
-		if constexpr ( Beautify )
-			buff.append( " ", 1 );
-	}
-	void implBeforeAnyValue()
-	{
-		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-		implAddNextItemSeparator();
-	}
-	void implAfterAnyValue()
-	{
-		if ( stack.back().type != InType::inNameVal )
+		void implProcessNamePart(const std::string_view& name)
 		{
-			assert( stack.size() > 0 && stack.back().type == InType::inArray );
-			++(stack.back().count);
-		}
-	}
-	void implProcessNamePart( GMQ_COLL string name )
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		implAddNextItemSeparator();
-		implInsertNamePart( name );
-		++stack.back().count;
-	}
-	template<class T>
-	void implInsertUnsignedInteger( T& t )
-	{
-		static_assert( std::is_arithmetic<T>::value );
-		auto str = fmt::format( "{}", t );
-		buff.append( str.c_str(), str.size() );
-	}
-	template<class T>
-	void implInsertSignedInteger( T& t )
-	{
-		static_assert( std::is_arithmetic<T>::value );
-		auto str = fmt::format( "{}", t );
-		buff.append( str.c_str(), str.size() );
-	}
-	template<class T>
-	void implInsertReal( T& t )
-	{
-		static_assert( std::is_arithmetic<T>::value );
-		auto str = fmt::format( "{}", t );
-		buff.append( str.c_str(), str.size() );
-	}
-	template<class T>
-	void implInsertEnumValue( T& t )
-	{
-		using PureT = typename std::remove_reference<T>::type;
-		using UnderT = typename std::underlying_type_t<PureT>;
-		static_assert( sizeof( PureT ) == sizeof( UnderT ) );
-		if constexpr ( std::is_signed< UnderT >::value )
-		{
-			UnderT num = (UnderT)(t);
-			implInsertSignedInteger( num );
-		}
-		else
-		{
-			static_assert( std::is_unsigned<UnderT>::value );
-			UnderT num = (UnderT)(t);
-			implInsertUnsignedInteger( num );
-		}
-	}
-	template<class T>
-	void implInsertBooleanValue( T& t )
-	{
-		static_assert( std::is_arithmetic<T>::value );
-		if ( t )
-			buff.append( "true", 4 );
-		else
-			buff.append( "false", 5 );
-	}
-	template<class T>
-	void implInsertStringValue( T& str )
-	{
-		if constexpr ( std::is_same<T, std::string>::value )
-		{
-			buff.appendUint8( '\"' );
-			auto str1 = implString2JsonString( str );
-			buff.append( str1.c_str(), str1.size() );
-			buff.appendUint8( '\"' );
-		}
-		else 
-		{
-			static_assert( std::is_same<T, const char*>::value );
-			std::string s(str);
-			buff.appendUint8( '\"' );
-			auto str1 = implString2JsonString( s );
-			buff.append( str1.c_str(), str1.size() );
-			buff.appendUint8( '\"' );
-		}
-	}
-	template<class T>
-	void implInsertStructValue( T& t )
-	{
-		t.rw( *this );
-	}
-	template<class T, class ItemProcT>
-	void implInsertStructValue( T& t, ItemProcT proc )
-	{
-		proc( t );
-	}
-
-	template<class T, class ItemProcT>
-	void implInsertArray( std::vector<T>& v, ItemProcT proc )
-	{
-		beginArray();
-		for ( size_t i=0; i<v.size(); ++i )
-			proc( v[i] );
-		endArray();
-	}
-	
-	template<class ValueTypeT, class ValueT>
-	void implInsertScalarValue( ValueT& val )
-	{
-		if constexpr ( std::is_same<INT, ValueTypeT>::value )
-			implInsertSignedInteger( val );
-		else if constexpr ( std::is_same<UINT, ValueTypeT>::value )
-			implInsertUnsignedInteger( val );
-		else if constexpr ( std::is_same<REAL, ValueTypeT>::value )
-			implInsertReal( val );
-		else if constexpr ( std::is_same<STRING, ValueTypeT>::value )
-			implInsertStringValue( val );
-		else if constexpr ( std::is_same<BOOLEAN, ValueTypeT>::value )
-			implInsertBooleanValue( val );
-		else if constexpr ( std::is_same<ENUM, ValueTypeT>::value )
-			implInsertEnumValue( val );
-		else
-		{
-			static_assert ( std::is_same<STRUCT, ValueTypeT>::value );
-			implInsertStructValue( val );
-		}
-	}
-
-
-
-public: // just temporary TODO: rework!
-	static constexpr Proto proto = Proto::JSON;
-	using BufferType = BufferT;
-private:
-	BufferT& buff;
-
-public:
-	JsonComposer2( BufferT& buff_ ) : buff( buff_ ) {}
-	void reset() {} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some data in it
-
-	void beginStruct()
-	{
-		assert( stack.size() == 0 || stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) );
-		buff.append( "{", 1 );
-		if constexpr ( Beautify )
-			++offset;
-		if ( stack.size() ) // yes, it might also be the root object
+			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
+			implAddNextItemSeparator();
+			implInsertNamePart(name);
 			++stack.back().count;
-		stack.push_back({InType::inStruct, 0});
-	}
-	void endStruct()
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		stack.pop_back();
-		if constexpr ( Beautify )
-		{
-			--offset;
-			buff.append( "\n  ", 1 );
-			for ( size_t i=0; i<offset; ++i )
-				buff.append( "  ", 2 );
 		}
-		buff.append( "}", 1 );
-	}
-	void beginArray()
-	{
-		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-		buff.append( "[", 1 );
-		if constexpr ( Beautify )
-			++offset;
-		++stack.back().count;
-		stack.push_back({InType::inArray, 0});
-	}
-	void endArray()
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inArray );
-		stack.pop_back();
-		if constexpr ( Beautify )
+		template <typename T>
+		void implInsertUnsignedInteger(T& t)
 		{
-			--offset;
-			buff.append( "\n  ", 1 );
-			for ( size_t i=0; i<offset; ++i )
-				buff.append( "  ", 2 );
+			static_assert(std::is_arithmetic<T>::value);
+			auto str = fmt::format("{}", t);
+			buff.append(str.c_str(), str.size());
 		}
-		buff.append( "]", 1 );
-		if ( stack.back().type != InType::inNameVal )
+		template <typename T>
+		void implInsertSignedInteger(T& t)
 		{
-			assert( stack.size() > 0 && stack.back().type == InType::inArray );
-			++(stack.back().count);
+			static_assert(std::is_arithmetic<T>::value);
+			auto str = fmt::format("{}", t);
+			buff.append(str.c_str(), str.size());
 		}
-	}
-	void beginNamedValue( GMQ_COLL string name )
-	{
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-	}
-	void endNamedValue()
-	{
-		stack.pop_back();
-	}
-
-	template<class ValueTypeT, class ValueT>
-	void rw( ValueT& val )
-	{
-		assertScalarType<ValueTypeT>();
-		implBeforeAnyValue();
-		implInsertScalarValue<ValueTypeT>( val );
-		implAfterAnyValue();
-	}
-
-	template<class ValueTypeT, class ValueT>
-	void rw( GMQ_COLL string name, ValueT& val )
-	{
-		assertScalarType<ValueTypeT>();
-		static_assert( !std::is_invocable<ValueT, JsonComposer2, ValueT>::value );
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implInsertScalarValue<ValueTypeT>( val );
-		stack.pop_back();
-	}
-
-	template<class ValueTypeT, class ValueT, class ItemProcT>
-	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
-	{
-		assertScalarType<ValueTypeT>();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		proc( val );
-		stack.pop_back();
-	}
-
-	template<class ValueTypeT, class ValueT>
-	void rw( std::vector<ValueT>& v )
-	{
-		assertVectorType<ValueTypeT>();
-		implBeforeAnyValue();
-		implInsertArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
-		implAfterAnyValue();
-	}
-
-	template<class ValueTypeT, class ValueT, class ItemProcT>
-	void rw( std::vector<ValueT>& v, ItemProcT proc )
-	{
-		assertVectorType<ValueTypeT>();
-		implBeforeAnyValue();
-		implInsertArray( v, proc );
-		implAfterAnyValue();
-	}
-	
-	template<class ValueTypeT, class ValueT>
-	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
-	{
-		assertVectorType<ValueTypeT>();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		if constexpr ( std::is_same<ValueT, bool>::value ) 
-			implInsertArray( v, [&](ValueT val){rw<typename ValueTypeT::ValueT>( val );} );
-		else
-			implInsertArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
-		assert( stack.back().type == InType::inNameVal );
-		assert( stack.back().count == 1 );
-		stack.pop_back();
-	}
-	
-	template<class ValueTypeT, class ValueT, class LambdaProc>
-	void rw( GMQ_COLL string name, std::vector<ValueT>& v, LambdaProc proc )
-	{
-		assertVectorType<ValueTypeT>();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implInsertArray<ValueT>( v, [&](ValueT& val){proc( val );} );
-		assert( stack.back().type == InType::inNameVal );
-		assert( stack.back().count == 1 );
-		stack.pop_back();
-	}
-};
-
-
-struct ParserBase2 : public ComparserBase
-{
-	static constexpr bool isComposer() { return false; }
-	static constexpr bool isParser() { return true; }
-	static void checkPrecondition( bool cond ) {}
-	static void checkPostcondition( bool cond ) { if( !cond ) throw std::exception(); }
-};
-
-template<class MessageT>
-class JsonParser2 : public ParserBase2
-{
-public:
-	static constexpr Proto proto = Proto::JSON;
-	using BufferType = MessageT;
-	using RiterT = typename MessageT::ReadIteratorT;
-
-private:
-	RiterT& riter;
-
-	enum class InType {inUnknown, inStruct, inArray, inNameVal};
-	struct In { InType type = InType::inUnknown; uint32_t count = 0; };
-	std::vector<In> stack;
-
-	void implBeforeAnyValue()
-	{
-		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-
-		if ( stack.back().type == InType::inArray )
+		template <typename T>
+		void implInsertReal(T& t)
 		{
-			if ( stack.back().count > 0 )
-				skipComma();
-			++(stack.back().count);
+			static_assert(std::is_arithmetic<T>::value);
+			auto str = fmt::format("{}", t);
+			buff.append(str.c_str(), str.size());
 		}
-	}
-
-	void implAfterAnyValue()
-	{
-	}
-
-	void skipSpacesEtc()
-	{
-		while ( riter.isData() && ( *riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ) ) ++riter;
-	}
-
-	bool isComma()
-	{
-		skipSpacesEtc();
-		return *riter == ',';
-	}
-
-	void skipComma()
-	{
-		skipSpacesEtc();
-		if ( *riter != ',' )
-			throw std::exception(); // TODO
-		++riter;
-	}
-
-	bool isDelimiter( char delim )
-	{
-		skipSpacesEtc();
-		return *riter == delim;
-	}
-
-	void skipDelimiter( char delim )
-	{
-		skipSpacesEtc();
-		if ( *riter != delim )
-			throw std::exception(); // TODO
-		++riter;
-	}
-
-	void readString(GMQ_COLL string* s)
-	{
-		s->clear();
-		skipSpacesEtc();
-		if ( *riter != '\"' )
-			throw std::exception(); // TODO
-		++riter;
-		bool done = false;
-		while ( (!done) && riter.isData()  )
+		template <typename T>
+		void implInsertEnumValue(T& t)
 		{
-			switch ( *riter )
+			using PureT = typename std::remove_reference<T>::type;
+			using UnderT = typename std::underlying_type_t<PureT>;
+			static_assert(sizeof(PureT) == sizeof(UnderT));
+			if constexpr (std::is_signed<UnderT>::value)
 			{
+				UnderT num = (UnderT)(t);
+				implInsertSignedInteger(num);
+			}
+			else
+			{
+				static_assert(std::is_unsigned<UnderT>::value);
+				UnderT num = (UnderT)(t);
+				implInsertUnsignedInteger(num);
+			}
+		}
+		template <typename T>
+		void implInsertBooleanValue(T& t)
+		{
+			static_assert(std::is_arithmetic<T>::value);
+			if (t)
+				buff.append("true", 4);
+			else
+				buff.append("false", 5);
+		}
+
+		void implInsertStringValue(const std::string_view& str)
+		{
+			buff.appendUint8('\"');
+			auto str1 = implString2JsonString(str);
+			buff.append(str1.c_str(), str1.size());
+			buff.appendUint8('\"');
+		}
+		template <typename T>
+		void implInsertStructValue(T& t)
+		{
+			std::remove_const_t<T>::rw(t, *this);
+		}
+		template <typename T, typename ItemProcT>
+		void implInsertStructValue(T& t, ItemProcT&& proc)
+		{
+			proc(t);
+		}
+
+		template <typename Vector, typename ItemProcT, typename Enable = std::enable_if_t<is_vector_v<Vector>>>
+		void implInsertArray(Vector& v, ItemProcT&& proc)
+		{
+			beginArray();
+			for (size_t i = 0; i < v.size(); ++i)
+				proc(v[i]);
+			endArray();
+		}
+
+		template <typename ValueTypeT, typename ValueT>
+		void implInsertScalarValue(ValueT& val)
+		{
+			if constexpr (std::is_same<INT, ValueTypeT>::value)
+				implInsertSignedInteger(val);
+			else if constexpr (std::is_same<UINT, ValueTypeT>::value)
+				implInsertUnsignedInteger(val);
+			else if constexpr (std::is_same<REAL, ValueTypeT>::value)
+				implInsertReal(val);
+			else if constexpr (std::is_same<STRING, ValueTypeT>::value)
+				implInsertStringValue(val);
+			else if constexpr (std::is_same<BOOLEAN, ValueTypeT>::value)
+				implInsertBooleanValue(val);
+			else if constexpr (std::is_same<ENUM, ValueTypeT>::value)
+				implInsertEnumValue(val);
+			else
+			{
+				static_assert(std::is_same<STRUCT, ValueTypeT>::value);
+				implInsertStructValue(val);
+			}
+		}
+
+	  public: // just temporary TODO: rework!
+		static constexpr Proto proto = Proto::JSON;
+		using BufferType = BufferT;
+
+	  private:
+		BufferT& buff;
+
+	  public:
+		JsonComposer2(BufferT& buff_) : buff(buff_)
+		{
+		}
+		void reset()
+		{
+		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
+		  // data in it
+
+		void beginStruct([[maybe_unused]] const std::string_view& name)
+		{
+			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
+				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
+			buff.append("{", 1);
+			if constexpr (Beautify)
+				++offset;
+			if (stack.size()) // yes, it might also be the root object
+				++stack.back().count;
+			stack.push_back({InType::inStruct, 0});
+		}
+		void endStruct()
+		{
+			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
+			stack.pop_back();
+			if constexpr (Beautify)
+			{
+				--offset;
+				buff.append("\n  ", 1);
+				for (size_t i = 0; i < offset; ++i)
+					buff.append("  ", 2);
+			}
+			buff.append("}", 1);
+		}
+		void beginArray()
+		{
+			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
+										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
+			buff.append("[", 1);
+			if constexpr (Beautify)
+				++offset;
+			++stack.back().count;
+			stack.push_back({InType::inArray, 0});
+		}
+		void endArray()
+		{
+			assert(stack.size() > 0 && stack.back().type == InType::inArray);
+			stack.pop_back();
+			if constexpr (Beautify)
+			{
+				--offset;
+				buff.append("\n  ", 1);
+				for (size_t i = 0; i < offset; ++i)
+					buff.append("  ", 2);
+			}
+			buff.append("]", 1);
+			if (stack.back().type != InType::inNameVal)
+			{
+				assert(stack.size() > 0 && stack.back().type == InType::inArray);
+				++(stack.back().count);
+			}
+		}
+		void beginNamedValue(const std::string_view& name)
+		{
+			implProcessNamePart(name);
+			stack.push_back({InType::inNameVal, 0});
+		}
+		void endNamedValue()
+		{
+			stack.pop_back();
+		}
+
+		template <typename ValueTypeT, typename ValueT, typename ItemProcT,
+				  typename Enable = std::enable_if_t<is_vector_v<ValueT>>>
+		void rw(ValueT& v, ItemProcT&& proc)
+		{
+			assertVectorType<ValueTypeT>();
+			implBeforeAnyValue();
+			implInsertArray(v, std::forward<ItemProcT>(proc));
+			implAfterAnyValue();
+		}
+
+		template <typename ValueTypeT, typename ValueT>
+		void rw(ValueT& val)
+		{
+			implBeforeAnyValue();
+			if constexpr (is_vector_v<ValueT>)
+			{
+				assertVectorType<ValueTypeT>();
+				implInsertArray(val, [&](auto& e) { rw<typename ValueTypeT::ValueT>(e); });
+			}
+			else
+			{
+				assertScalarType<ValueTypeT>();
+				implInsertScalarValue<ValueTypeT>(val);
+			}
+			implAfterAnyValue();
+		}
+
+		template <typename ValueTypeT, typename ValueT>
+		void rw(const std::string_view& name, ValueT& val)
+		{
+			implProcessNamePart(name);
+			stack.push_back({InType::inNameVal, 0});
+			if constexpr (is_vector_v<ValueT>)
+			{
+				assertVectorType<ValueTypeT>();
+				using ElementType = typename ValueT::value_type;
+				if constexpr (std::is_same_v<ElementType, bool>)
+					implInsertArray(val, [&](bool e) { rw<typename ValueTypeT::ValueT>(e); });
+				else
+					implInsertArray(val, [&](auto& e) { rw<typename ValueTypeT::ValueT>(e); });
+				assert(stack.back().type == InType::inNameVal);
+				assert(stack.back().count == 1);
+			}
+			else
+			{
+				assertScalarType<ValueTypeT>();
+				static_assert(!std::is_invocable_v<ValueT, JsonComposer2, ValueT>);
+				implInsertScalarValue<ValueTypeT>(val);
+			}
+			stack.pop_back();
+		}
+
+		template <typename ValueTypeT, typename ValueT, typename Proc>
+		void rw(const std::string_view& name, ValueT& val, Proc&& proc)
+		{
+			implProcessNamePart(name);
+			stack.push_back({InType::inNameVal, 0});
+
+			if constexpr (is_vector_v<ValueT>)
+			{
+				assertVectorType<ValueTypeT>();
+				implInsertArray<ValueT>(val, std::forward<Proc>(proc));
+				assert(stack.back().type == InType::inNameVal);
+				assert(stack.back().count == 1);
+			}
+			else
+			{
+				assertScalarType<ValueTypeT>();
+				proc(val);
+			}
+
+			stack.pop_back();
+		}
+	};
+
+	struct ParserBase2 : public ComparserBase
+	{
+		static constexpr bool isComposer()
+		{
+			return false;
+		}
+		static constexpr bool isParser()
+		{
+			return true;
+		}
+		static void checkPrecondition(bool cond)
+		{
+		}
+		static void checkPostcondition(bool cond)
+		{
+			if (!cond)
+				throw std::exception();
+		}
+	};
+
+	template <typename MessageT>
+	class JsonParser2 : public ParserBase2
+	{
+	  public:
+		static constexpr Proto proto = Proto::JSON;
+		using BufferType = MessageT;
+		using RiterT = typename MessageT::ReadIteratorT;
+
+	  private:
+		RiterT& riter;
+
+		enum class InType
+		{
+			inUnknown,
+			inStruct,
+			inArray,
+			inNameVal
+		};
+		struct In
+		{
+			InType type = InType::inUnknown;
+			uint32_t count = 0;
+		};
+		std::vector<In> stack;
+
+		void implBeforeAnyValue()
+		{
+			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
+										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
+
+			if (stack.back().type == InType::inArray)
+			{
+				if (stack.back().count > 0)
+					skipComma();
+				++(stack.back().count);
+			}
+		}
+
+		void implAfterAnyValue()
+		{
+		}
+
+		void skipSpacesEtc()
+		{
+			while (riter.isData() && (*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n'))
+				++riter;
+		}
+
+		bool isComma()
+		{
+			skipSpacesEtc();
+			return *riter == ',';
+		}
+
+		void skipComma()
+		{
+			skipSpacesEtc();
+			if (*riter != ',')
+				throw std::exception(); // TODO
+			++riter;
+		}
+
+		bool isDelimiter(char delim)
+		{
+			skipSpacesEtc();
+			return *riter == delim;
+		}
+
+		void skipDelimiter(char delim)
+		{
+			skipSpacesEtc();
+			if (*riter != delim)
+				throw std::exception(); // TODO
+			++riter;
+		}
+
+		void readString(std::string* s)
+		{
+			s->clear();
+			skipSpacesEtc();
+			if (*riter != '\"')
+				throw std::exception(); // TODO
+			++riter;
+			bool done = false;
+			while ((!done) && riter.isData())
+			{
+				switch (*riter)
+				{
 				case '\"':
 					done = true;
 					break;
 				case '\\':
 					++riter;
-					if ( !riter.isData() )
+					if (!riter.isData())
 						throw std::exception(); // TODO
-					switch ( *riter )
+					switch (*riter)
 					{
-						case '\\':
-							*s += '\\';
-							break;
-						case 't':
-							*s += '\t';
-							break;
-						case 'r':
-							*s += '\r';
-							break;
-						case 'n':
-							*s += '\n';
-							break;
-						case '\"':
-							*s += '\"';
-							break;
-						default:
-							throw std::exception(); // TODO (unexpected)
+					case '\\':
+						*s += '\\';
+						break;
+					case 't':
+						*s += '\t';
+						break;
+					case 'r':
+						*s += '\r';
+						break;
+					case 'n':
+						*s += '\n';
+						break;
+					case '\"':
+						*s += '\"';
+						break;
+					default:
+						throw std::exception(); // TODO (unexpected)
 					}
 					++riter;
 					break;
@@ -517,302 +574,319 @@ private:
 					*s += *riter;
 					++riter;
 					break;
+				}
+			}
+			if (!riter.isData())
+				throw std::exception(); // TODO
+			++riter;
+		}
+
+		void readKey(std::string* s)
+		{
+			s->clear();
+			skipSpacesEtc();
+			readString(s);
+			skipSpacesEtc();
+			if (*riter != ':')
+				throw std::exception(); // TODO (expected ':')
+			++riter;
+		}
+
+		template <typename T>
+		void readUnsignedInteger(T* num)
+		{
+			skipSpacesEtc();
+			if (*riter == '-')
+				throw std::exception(); // TODO: (negative is unexpected)
+			std::string s;
+			while (riter.isData() && (*riter >= '0' && *riter <= '9'))
+			{
+				s += *riter;
+				++riter;
+			}
+			if (!riter.isData())
+				throw std::exception(); // TODO
+			char* end = const_cast<char*>(s.c_str());
+			uint64_t ret = strtoull(s.c_str(), &end, 10);
+			if (s.c_str() == end)
+				throw std::exception(); // TODO: (NaN)
+			*num = (T)ret;              // TODO: add boundary checking
+		}
+
+		template <typename T>
+		void readSignedInteger(T* num)
+		{
+			skipSpacesEtc();
+			std::string s;
+			if (*riter == '-')
+			{
+				s += *riter;
+				++riter;
+			}
+			while (riter.isData() && (*riter >= '0' && *riter <= '9'))
+			{
+				s += *riter;
+				++riter;
+			}
+			if (!riter.isData())
+				throw std::exception(); // TODO
+			char* end = const_cast<char*>(s.c_str());
+			uint64_t ret = strtoull(s.c_str(), &end, 10);
+			if (s.c_str() == end)
+				throw std::exception(); // TODO: (NaN)
+			*num = (T)ret;              // TODO: add boundary checking
+		}
+
+		template <typename T>
+		void readReal(T* num)
+		{
+			skipSpacesEtc();
+			std::string s;
+			while (riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ||
+									   *riter == ',' || *riter == ']' || *riter == '}')) // expected terminators
+			{
+				s += *riter;
+				++riter;
+			}
+			if (!riter.isData())
+				throw std::exception(); // TODO
+			char* end = const_cast<char*>(s.c_str());
+			double ret = strtod(s.c_str(), &end);
+			if (s.c_str() == end)
+				throw std::exception(); // TODO: (NaN)
+			*num = (T)ret;              // TODO: add boundary checking
+		}
+
+		template <typename T>
+		void readEnumValue(T* t)
+		{
+			using PureT = typename std::remove_pointer<T>::type;
+			using UnderT = typename std::underlying_type_t<PureT>;
+			static_assert(sizeof(PureT) == sizeof(UnderT));
+			if constexpr (std::is_signed<UnderT>::value)
+				readSignedInteger((UnderT*)(t));
+			else
+			{
+				static_assert(std::is_unsigned<UnderT>::value);
+				readUnsignedInteger((UnderT*)(t));
 			}
 		}
-		if ( !riter.isData() )
-			throw std::exception(); // TODO
-		++riter;
-	}
 
-	void readKey(GMQ_COLL string* s)
-	{
-		s->clear();
-		skipSpacesEtc();
-		readString(s);
-		skipSpacesEtc();
-		if ( *riter != ':' )
-			throw std::exception(); // TODO (expected ':')
-		++riter;
-	}
-
-	template <typename T>
-	void readUnsignedInteger( T* num )
-	{
-		skipSpacesEtc();
-		if ( *riter == '-' )
-			throw std::exception(); // TODO: (negative is unexpected)
-		GMQ_COLL string s;
-		while ( riter.isData() && (*riter >= '0' && *riter <= '9') )
+		template <typename T>
+		void readBoolean(T* b)
 		{
-			s += *riter;
-			++riter;
-		}
-		if ( !riter.isData() )
-			throw std::exception(); // TODO
-		char* end = const_cast<char*>(s.c_str());
-		uint64_t ret = strtoull( s.c_str(), &end, 10 );
-		if ( s.c_str() == end )
-			throw std::exception(); // TODO: (NaN)
-		*num = (T)ret; // TODO: add boundary checking
-	}
-
-	template <typename T>
-	void readSignedInteger( T* num )
-	{
-		skipSpacesEtc();
-		GMQ_COLL string s;
-		if ( *riter == '-' )
-		{
-			s += *riter;
-			++riter;
-		}
-		while ( riter.isData() && (*riter >= '0' && *riter <= '9') )
-		{
-			s += *riter;
-			++riter;
-		}
-		if ( !riter.isData() )
-			throw std::exception(); // TODO
-		char* end = const_cast<char*>(s.c_str());
-		uint64_t ret = strtoull( s.c_str(), &end, 10 );
-		if ( s.c_str() == end )
-			throw std::exception(); // TODO: (NaN)
-		*num = (T)ret; // TODO: add boundary checking
-	}
-
-	template <typename T>
-	void readReal( T* num )
-	{
-		skipSpacesEtc();
-		GMQ_COLL string s;
-		while ( riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' || *riter == ',' || *riter == ']' || *riter == '}') ) // expected terminators
-		{
-			s += *riter;
-			++riter;
-		}
-		if ( !riter.isData() )
-			throw std::exception(); // TODO
-		char* end = const_cast<char*>(s.c_str());
-		double ret = strtod( s.c_str(), &end );
-		if ( s.c_str() == end )
-			throw std::exception(); // TODO: (NaN)
-		*num = (T)ret; // TODO: add boundary checking
-	}
-
-	template<class T>
-	void readEnumValue( T* t )
-	{
-		using PureT = typename std::remove_pointer<T>::type;
-		using UnderT = typename std::underlying_type_t<PureT>;
-		static_assert( sizeof( PureT ) == sizeof( UnderT ) );
-		if constexpr ( std::is_signed< UnderT >::value )
-			readSignedInteger( (UnderT*)(t) );
-		else
-		{
-			static_assert( std::is_unsigned<UnderT>::value );
-			readUnsignedInteger( (UnderT*)(t) );
-		}
-	}
-
-	template <typename T>
-	void readBoolean( T* b )
-	{
-		skipSpacesEtc();
-		GMQ_COLL string s;
-		while ( riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' || *riter == ',' || *riter == ']' || *riter == '}') ) // expected terminators
-		{
-			s += *riter;
-			++riter;
-		}
-		if ( !riter.isData() )
-			throw std::exception(); // TODO
-		if ( s == "true" )
-			*b = true;
-		else if ( s == "false" )
-			*b = false;
-		else
-			throw std::exception(); // TODO
-	}
-
-	void implProcessNamePart( GMQ_COLL string name )
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		if ( stack.back().count > 0 )
-			skipComma();
-		GMQ_COLL string s;
-		readKey(&s);
-		if ( s != name )
-			throw std::exception(); // TODO
-		++stack.back().count;
-	}
-
-	
-	template<class T>
-	void readStructValue( T& t )
-	{
-		t.rw( *this );
-	}
-	template<class T, class ItemProcT>
-	void readStructValue( T& t, ItemProcT proc )
-	{
-		proc( t );
-	}
-	template<class ValueTypeT, class ValueT>
-	void implReadValue( ValueT& val )
-	{
-		if constexpr ( std::is_same<INT, ValueTypeT>::value )
-			readSignedInteger( &val );
-		else if constexpr ( std::is_same<UINT, ValueTypeT>::value )
-			readUnsignedInteger( &val );
-		else if constexpr ( std::is_same<REAL, ValueTypeT>::value )
-			readReal( &val );
-		else if constexpr ( std::is_same<STRING, ValueTypeT>::value )
-			readString( &val );
-		else if constexpr ( std::is_same<BOOLEAN, ValueTypeT>::value )
-			readBoolean( &val );
-		else if constexpr ( std::is_same<ENUM, ValueTypeT>::value )
-			readEnumValue( &val );
-		else
-		{
-			static_assert ( std::is_same<STRUCT, ValueTypeT>::value );
-			readStructValue( val );
-		}
-	}
-	template<class T, class ItemProcT>
-	void implProcessArray( std::vector<T>& v, ItemProcT proc )
-	{
-		beginArray();
-		if ( !isDelimiter( ']' ) )
-		{
-			do {
-				T val;
-				proc( val );
-				v.push_back( std::move( val ) );
+			skipSpacesEtc();
+			std::string s;
+			while (riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ||
+									   *riter == ',' || *riter == ']' || *riter == '}')) // expected terminators
+			{
+				s += *riter;
+				++riter;
 			}
-			while ( isComma() );
+			if (!riter.isData())
+				throw std::exception(); // TODO
+			if (s == "true")
+				*b = true;
+			else if (s == "false")
+				*b = false;
+			else
+				throw std::exception(); // TODO
 		}
-		endArray();
-	}
 
-
-public:
-	JsonParser2( RiterT& riter_ ) : riter( riter_ ) {}
-	JsonParser2( const JsonParser2& other ) : riter( other.riter ) {}
-	JsonParser2& operator = ( const JsonParser2& other ) { riter = other.riter; return *this; }
-	JsonParser2( JsonParser2&& other ) noexcept { riter = std::move( other.riter ); }
-	JsonParser2& operator = ( JsonParser2&& other ) noexcept { riter = std::move( other.riter ); return *this; }
-	~JsonParser2() {}
-	void reset() {} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some data in it
-
-	void beginStruct()
-	{
-		assert( stack.size() == 0 || stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) );
-		skipDelimiter( '{' );
-		if ( stack.size() )
+		void implProcessNamePart(const std::string_view& name)
+		{
+			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
+			if (stack.back().count > 0)
+				skipComma();
+			std::string s;
+			readKey(&s);
+			if (s != name)
+				throw std::exception(); // TODO
 			++stack.back().count;
-		stack.push_back({InType::inStruct, 0});
-	}
-	void endStruct()
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inStruct );
-		skipDelimiter( '}' );
-		stack.pop_back();
-	}
-	void beginArray()
-	{
-		assert( stack.size() > 0 && ( stack.back().type == InType::inArray || ( stack.back().type == InType::inNameVal && stack.back().count == 0 ) ) );
-		skipDelimiter( '[' );
-		++stack.back().count;
-		stack.push_back({InType::inArray, 0});
-	}
-	void endArray()
-	{
-		assert( stack.size() > 0 && stack.back().type == InType::inArray );
-		skipDelimiter( ']' );
-		stack.pop_back();
-		if ( stack.back().type != InType::inNameVal )
-		{
-			assert( stack.size() > 0 && stack.back().type == InType::inArray );
-			++(stack.back().count);
 		}
-	}
-	void beginNamedValue( GMQ_COLL string name )
-	{
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-	}
-	void endNamedValue()
-	{
-		stack.pop_back();
-	}
 
-	template<class ValueTypeT, class ValueT>
-	void rw( ValueT& val )
-	{
-		assertScalarType<ValueTypeT>();
-		implBeforeAnyValue();
-		implReadValue<ValueTypeT>( val );
-		implAfterAnyValue();
-	}
+		template <typename T>
+		void readStructValue(T& t)
+		{
+			std::remove_const_t<T>::rw(t, *this);
+		}
+		template <typename T, typename ItemProcT>
+		void readStructValue(T& t, ItemProcT&& proc)
+		{
+			proc(t);
+		}
+		template <typename ValueTypeT, typename ValueT>
+		void implReadValue(ValueT& val)
+		{
+			if constexpr (std::is_same<INT, ValueTypeT>::value)
+				readSignedInteger(&val);
+			else if constexpr (std::is_same<UINT, ValueTypeT>::value)
+				readUnsignedInteger(&val);
+			else if constexpr (std::is_same<REAL, ValueTypeT>::value)
+				readReal(&val);
+			else if constexpr (std::is_same<STRING, ValueTypeT>::value)
+				readString(&val);
+			else if constexpr (std::is_same<BOOLEAN, ValueTypeT>::value)
+				readBoolean(&val);
+			else if constexpr (std::is_same<ENUM, ValueTypeT>::value)
+				readEnumValue(&val);
+			else
+			{
+				static_assert(std::is_same<STRUCT, ValueTypeT>::value);
+				readStructValue(val);
+			}
+		}
+		template <typename T, typename ItemProcT>
+		void implProcessArray(std::vector<T>& v, ItemProcT&& proc)
+		{
+			beginArray();
+			if (!isDelimiter(']'))
+			{
+				do
+				{
+					T val;
+					proc(val);
+					v.push_back(std::move(val));
+				} while (isComma());
+			}
+			endArray();
+		}
 
-	template<class ValueTypeT, class ValueT>
-	void rw( GMQ_COLL string name, ValueT& val )
-	{
-		assertScalarType<ValueTypeT>();
-		static_assert( !std::is_invocable<ValueT, JsonParser2, ValueT>::value );
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implReadValue<ValueTypeT>( val );
-		stack.pop_back();
-	}
+	  public:
+		JsonParser2(RiterT& riter_) : riter(riter_)
+		{
+		}
+		JsonParser2(const JsonParser2& other) : riter(other.riter)
+		{
+		}
+		JsonParser2& operator=(const JsonParser2& other)
+		{
+			riter = other.riter;
+			return *this;
+		}
+		JsonParser2(JsonParser2&& other) noexcept
+		{
+			riter = std::move(other.riter);
+		}
+		JsonParser2& operator=(JsonParser2&& other) noexcept
+		{
+			riter = std::move(other.riter);
+			return *this;
+		}
+		~JsonParser2()
+		{
+		}
+		void reset()
+		{
+		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
+		  // data in it
 
-	template<class ValueTypeT, class ValueT, class ItemProcT>
-	void rw( GMQ_COLL string name, ValueT& val, ItemProcT proc )
-	{
-		assertScalarType<ValueTypeT>();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		proc( val );
-		stack.pop_back();
-	}
+		void beginStruct([[maybe_unused]] const std::string_view& name)
+		{
+			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
+				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
+			skipDelimiter('{');
+			if (stack.size())
+				++stack.back().count;
+			stack.push_back({InType::inStruct, 0});
+		}
+		void endStruct()
+		{
+			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
+			skipDelimiter('}');
+			stack.pop_back();
+		}
+		void beginArray()
+		{
+			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
+										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
+			skipDelimiter('[');
+			++stack.back().count;
+			stack.push_back({InType::inArray, 0});
+		}
+		void endArray()
+		{
+			assert(stack.size() > 0 && stack.back().type == InType::inArray);
+			skipDelimiter(']');
+			stack.pop_back();
+			if (stack.back().type != InType::inNameVal)
+			{
+				assert(stack.size() > 0 && stack.back().type == InType::inArray);
+				++(stack.back().count);
+			}
+		}
+		void beginNamedValue(const std::string_view& name)
+		{
+			implProcessNamePart(name);
+			stack.push_back({InType::inNameVal, 0});
+		}
+		void endNamedValue()
+		{
+			stack.pop_back();
+		}
 
-	template<class ValueTypeT, class ValueT>
-	void rw( std::vector<ValueT>& v )
-	{
-		assertVectorType<ValueTypeT>();
-		implBeforeAnyValue();
-		implProcessArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
-		implAfterAnyValue();
-	}
+		template <typename TypeHint, typename ValueT>
+		void rw(ValueT& val)
+		{
+			implBeforeAnyValue();
+			if constexpr (is_vector_v<ValueT>)
+			{
+				assertVectorType<TypeHint>();
+				implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
+			}
+			else
+			{
+				implReadValue<TypeHint>(val);
+			}
+			implAfterAnyValue();
+		}
 
-	template<class ValueTypeT, class ValueT, class ItemProcT>
-	void rw( std::vector<ValueT>& v, ItemProcT proc )
-	{
-		assertVectorType<ValueTypeT>();
-		implBeforeAnyValue();
-		implProcessArray( v, proc );
-		implAfterAnyValue();
-	}
-	
-	template<class ValueTypeT, class ValueT>
-	void rw( GMQ_COLL string name, std::vector<ValueT>& v )
-	{
-		assertVectorType<ValueTypeT>();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implProcessArray( v, [&](ValueT& val){rw<typename ValueTypeT::ValueT>( val );} );
-		stack.pop_back();
-	}
-	
-	template<class ValueTypeT, class ValueT, class LambdaProc>
-	void rw( GMQ_COLL string name, std::vector<ValueT>& v, LambdaProc proc )
-	{
-		assertVectorType<ValueTypeT>();
-		implProcessNamePart( name );
-		stack.push_back({InType::inNameVal, 0});
-		implProcessArray<ValueT>( v, [&](ValueT& val){proc( val );} );
-		stack.pop_back();
-	}
-};
+		template <typename TypeHint, typename Vector, typename ItemProcT,
+				  typename Enable = std::enable_if_t<is_vector_v<Vector>>>
+		void rw(Vector& v, ItemProcT&& proc)
+		{
+			assertVectorType<TypeHint>();
+			implBeforeAnyValue();
+			implProcessArray(v, std::forward<ItemProcT>(proc));
+			implAfterAnyValue();
+		}
+
+		template <typename TypeHint, typename ValueT>
+		void rw(const std::string_view& name, ValueT& val)
+		{
+			implProcessNamePart(name);
+			stack.push_back({InType::inNameVal, 0});
+			if constexpr (is_vector_v<ValueT>)
+			{
+				assertVectorType<TypeHint>();
+				implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
+			}
+			else
+			{
+				static_assert(!std::is_invocable<ValueT, JsonParser2, ValueT>::value);
+				implReadValue<TypeHint>(val);
+			}
+			stack.pop_back();
+		}
+
+		template <typename TypeHint, typename ValueT, typename ItemProc>
+		void rw(const std::string_view& name, ValueT& val, ItemProc&& proc)
+		{
+			implProcessNamePart(name);
+			stack.push_back({InType::inNameVal, 0});
+			if constexpr (is_vector_v<ValueT>)
+			{
+				assertVectorType<TypeHint>();
+				implProcessArray(val, std::forward<ItemProc>(proc));
+			}
+			else
+			{
+				proc(val);
+			}
+			stack.pop_back();
+		}
+	};
+
+} // namespace comparsers
 
 #endif // COMPARSERS_H
