@@ -12,17 +12,17 @@ struct A
 	std::string ss;
 	std::vector<uint64_t> vnn;
 	bool bb;
-	template<class ComparserT>
-	void rw( ComparserT& comparser )
+	template<typename This, typename ComparserT>
+	static void rw(This& obj, ComparserT& comparser )
 	{
-		comparser.beginStruct();
-		comparser.rw<ComparserT::INT>( "ii", ii );
-		comparser.rw<ComparserT::UINT>( "nn", nn );
-		comparser.rw<ComparserT::REAL>( "ff", ff );
-		comparser.rw<ComparserT::STRING>( "ss", ss );
+		comparser.template beginStruct("A");
+		GMQ_SERIALIZE(INT, "ii", obj.ii);
+		GMQ_SERIALIZE(UINT, "nn", obj.nn);
+		GMQ_SERIALIZE(REAL, "ff", obj.ff);
+		GMQ_SERIALIZE(STRING, "ss", obj.ss);
 //		comparser.rw<ComparserT::VofUINT>( "vnn", vnn );
-		comparser.rw<ComparserT::VofUINT>( "vnn", vnn, [&comparser](uint64_t& val){comparser.rw<ComparserT::UINT>(val);} );
-		comparser.rw<ComparserT::BOOLEAN>( "bb", bb );
+		GMQ_SERIALIZE(VofUINT, "vnn", obj.vnn);
+		GMQ_SERIALIZE(BOOLEAN, "bb", obj.bb);
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const A& other ) const
@@ -48,18 +48,31 @@ struct B
 	A a;
 	float f;
 	std::vector<A> va;
+	std::vector<std::string> vs;
+	std::vector<bool> vb;
+	std::unique_ptr<int[]> ints;
 
-	template<class ComparserT>
-	void rw( ComparserT& comparser )
+	template<typename Object, typename ComparserT>
+	static void rw(Object& obj, ComparserT& comparser )
 	{
-		comparser.beginStruct();
-		comparser.rw<ComparserT::ENUM>( "e", e );
-		comparser.rw<ComparserT::INT>( "i", i );
-		comparser.rw<ComparserT::UINT>( "n", n );
-		comparser.rw<ComparserT::REAL>( "f", f );
-		comparser.rw<ComparserT::STRUCT>( "a", a );
-		comparser.rw<ComparserT::STRING>( "s", s );
-		comparser.rw<ComparserT::VofSTRUCT>( "va", va );
+		comparser.template beginStruct("B");
+		GMQ_SERIALIZE(ENUM, "e", obj.e);
+		GMQ_SERIALIZE(INT, "i", obj.i);
+		GMQ_SERIALIZE(UINT, "n", obj.n);
+		GMQ_SERIALIZE(REAL, "f", obj.f);
+		GMQ_SERIALIZE(STRUCT, "a", obj.a);
+		GMQ_SERIALIZE(STRING, "s", obj.s);
+		GMQ_SERIALIZE(VofSTRUCT, "va", obj.va);
+		GMQ_SERIALIZE(VofSTRING, "vs", obj.vs);
+		GMQ_SERIALIZE(VofBOOLEAN, "vb", obj.vb);
+
+		comparser.beginNamedValue("ints");
+		comparser.beginArray();
+		for (size_t i = 0; i != 100; ++i)
+			GMQ_SERIALIZE_VALUE(INT, obj.ints[i]);
+		comparser.endArray();
+		comparser.endNamedValue();
+
 		comparser.endStruct();
 	}
 	void assertIsSameAs( const B& other ) const
@@ -73,8 +86,20 @@ struct B
 		assert( va.size() == other.va.size() );
 		for ( size_t i=0; i<va.size(); ++i )
 			va[i].assertIsSameAs( other.va[i] );
+		for ( size_t i=0; i!=0; ++i)
+			assert(ints[i] == other.ints[i]);
+		for ( size_t i=0; i!=vs.size(); ++i)
+			assert(vs[i] == other.vs[i]);
+		for ( size_t i=0; i!=vb.size(); ++i)
+			assert(vb[i] == other.vb[i]);
 	}
 };
+
+// Check that rw can be called on const qualified variable
+template<typename Composer>
+inline void test_const(const B& b, Composer& composer) {
+	B::rw(b, composer);
+}
 
 inline void comparsers_test()
 {
@@ -92,10 +117,19 @@ inline void comparsers_test()
 	b.f = 2.71;
 	b.va.push_back({-171,171,13.1416,"high again!",{5,4,3},true});
 	b.va.push_back(b.a);
+	b.vs.emplace_back("string 0");
+	b.vs.emplace_back("string 1");
+	b.vb.emplace_back(false);
+	b.vb.emplace_back(true);
+	b.ints = std::unique_ptr<int[]>( new int[100] );
+	for (int i = 0; i != 100; ++i) {
+		b.ints[i] = i;
+	}
 
 	globalmq::marshalling::Buffer buff;
 	JsonComposer2 composer( buff );
-	b.rw( composer );
+
+	test_const(b, composer);
 
 	std::string_view sview( reinterpret_cast<const char*>(buff.begin()), buff.size() );
 	fmt::print( "{}\n", sview );
@@ -103,7 +137,8 @@ inline void comparsers_test()
 	auto riter = buff.getReadIter();
 	JsonParser2<globalmq::marshalling::Buffer> parser( riter );
 	B b1;
-	b1.rw( parser );
+	b1.ints = std::unique_ptr<int[]>( new int[100] );
+	B::rw(b1, parser);
 
 	b.assertIsSameAs( b1 );
 }
