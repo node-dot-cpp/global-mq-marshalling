@@ -9,6 +9,24 @@
 
 namespace comparsers
 {
+	template<class DataT>
+	struct UserData
+	{
+		using UserDataT = DataT;
+		DataT userdata;
+		UserData()
+		{
+			if constexpr ( std::is_pointer<DataT>::value )
+				userdata = nullptr;
+		}
+	};
+
+	template<>
+	struct UserData<void>
+	{
+		using UserDataT = void;
+	};
+
 	template <typename Type, template <typename...> typename Template>
 	struct is_specialization : std::false_type
 	{
@@ -53,14 +71,15 @@ namespace comparsers
     using VofENUM = VectorValueType<ENUM>;
     using VofSTRUCT = VectorValueType<STRUCT>;
 
-	struct ComparserBase
+	enum class Proto
 	{
-		enum class Proto
-		{
-			GMQ,
-			JSON
-		};
+		GMQ,
+		JSON
+	};
 
+	template<class DataT=void>
+	struct ComparserBase : public UserData<DataT>
+	{
 		// checks
 		template <typename ValueTypeT>
 		static constexpr void assertScalarType()
@@ -74,7 +93,8 @@ namespace comparsers
 		}
 	};
 
-	struct ComposerBase2 : public ComparserBase
+	template<class DataT=void>
+	struct ComposerBase2 : public ComparserBase<DataT>
 	{
 		static constexpr bool isComposer()
 		{
@@ -93,8 +113,8 @@ namespace comparsers
 		}
 	};
 
-	template <typename BufferT, bool Beautify = true>
-	class JsonComposer2 : public ComposerBase2
+	template <typename BufferT, bool Beautify = true, class DataT=void>
+	class JsonComposer2 : public ComposerBase2<DataT>
 	{
 		enum class InType
 		{
@@ -362,7 +382,7 @@ namespace comparsers
 				  typename Enable = std::enable_if_t<is_vector_v<ValueT>>>
 		void rw(ValueT& v, ItemProcT&& proc)
 		{
-			assertVectorType<ValueTypeT>();
+			ComparserBase<DataT>::template assertVectorType<ValueTypeT>();
 			implBeforeAnyValue();
 			implInsertArray(v, std::forward<ItemProcT>(proc));
 			implAfterAnyValue();
@@ -374,12 +394,12 @@ namespace comparsers
 			implBeforeAnyValue();
 			if constexpr (is_vector_v<ValueT>)
 			{
-				assertVectorType<ValueTypeT>();
+				ComparserBase<DataT>::template assertVectorType<ValueTypeT>();
 				implInsertArray(val, [&](auto& e) { rw<typename ValueTypeT::ValueT>(e); });
 			}
 			else
 			{
-				assertScalarType<ValueTypeT>();
+				ComparserBase<DataT>::template assertScalarType<ValueTypeT>();
 				implInsertScalarValue<ValueTypeT>(val);
 			}
 			implAfterAnyValue();
@@ -392,7 +412,7 @@ namespace comparsers
 			stack.push_back({InType::inNameVal, 0});
 			if constexpr (is_vector_v<ValueT>)
 			{
-				assertVectorType<ValueTypeT>();
+				ComparserBase<DataT>::template assertVectorType<ValueTypeT>();
 				using ElementType = typename ValueT::value_type;
 				if constexpr (std::is_same_v<ElementType, bool>)
 					implInsertArray(val, [&](bool e) { rw<typename ValueTypeT::ValueT>(e); });
@@ -403,7 +423,7 @@ namespace comparsers
 			}
 			else
 			{
-				assertScalarType<ValueTypeT>();
+				ComparserBase<DataT>::template assertScalarType<ValueTypeT>();
 				static_assert(!std::is_invocable_v<ValueT, JsonComposer2, ValueT>);
 				implInsertScalarValue<ValueTypeT>(val);
 			}
@@ -418,14 +438,14 @@ namespace comparsers
 
 			if constexpr (is_vector_v<ValueT>)
 			{
-				assertVectorType<ValueTypeT>();
+				ComparserBase<DataT>::template assertVectorType<ValueTypeT>();
 				implInsertArray<ValueT>(val, std::forward<Proc>(proc));
 				assert(stack.back().type == InType::inNameVal);
 				assert(stack.back().count == 1);
 			}
 			else
 			{
-				assertScalarType<ValueTypeT>();
+				ComparserBase<DataT>::template assertScalarType<ValueTypeT>();
 				proc(val);
 			}
 
@@ -433,7 +453,8 @@ namespace comparsers
 		}
 	};
 
-	struct ParserBase2 : public ComparserBase
+	template <class DataT=void>
+	struct ParserBase2 : public ComparserBase<DataT>
 	{
 		static constexpr bool isComposer()
 		{
@@ -453,8 +474,8 @@ namespace comparsers
 		}
 	};
 
-	template <typename MessageT>
-	class JsonParser2 : public ParserBase2
+	template <typename MessageT, class DataT=void>
+	class JsonParser2 : public ParserBase2<DataT>
 	{
 	  public:
 		static constexpr Proto proto = Proto::JSON;
@@ -845,7 +866,7 @@ namespace comparsers
 				  typename Enable = std::enable_if_t<is_vector_v<Vector>>>
 		void rw(Vector& v, ItemProcT&& proc)
 		{
-			assertVectorType<TypeHint>();
+			ParserBase2<DataT>::template assertVectorType<TypeHint>();
 			implBeforeAnyValue();
 			implProcessArray(v, std::forward<ItemProcT>(proc));
 			implAfterAnyValue();
@@ -858,7 +879,7 @@ namespace comparsers
 			stack.push_back({InType::inNameVal, 0});
 			if constexpr (is_vector_v<ValueT>)
 			{
-				assertVectorType<TypeHint>();
+				ParserBase2<DataT>::template assertVectorType<TypeHint>();
 				implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
 			}
 			else
@@ -876,7 +897,7 @@ namespace comparsers
 			stack.push_back({InType::inNameVal, 0});
 			if constexpr (is_vector_v<ValueT>)
 			{
-				assertVectorType<TypeHint>();
+				ParserBase2<DataT>::template assertVectorType<TypeHint>();
 				implProcessArray(val, std::forward<ItemProc>(proc));
 			}
 			else
