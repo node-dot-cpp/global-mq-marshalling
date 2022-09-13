@@ -852,7 +852,7 @@ namespace comparsers
 			implBeforeAnyValue();
 			if constexpr (is_vector_v<ValueT>)
 			{
-				assertVectorType<TypeHint>();
+				ParserBase2<DataT>::template assertVectorType<TypeHint>();
 				implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
 			}
 			else
