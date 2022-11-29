@@ -253,10 +253,10 @@ namespace comparsers
 
 		void implInsertStringValue(const std::string_view& str)
 		{
-			buff.appendUint8('\"');
+			buff.append("\"", 1);
 			auto str1 = implString2JsonString(str);
 			buff.append(str1.c_str(), str1.size());
-			buff.appendUint8('\"');
+			buff.append("\"", 1);
 		}
 		template <typename T>
 		void implInsertStructValue(T& t)
