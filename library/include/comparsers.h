@@ -550,6 +550,20 @@ namespace comparsers
 	{
 	  public:
 		static constexpr Proto proto = Proto::JSON;
+		static constexpr bool isPositionBased()
+		{
+			return false;
+		}
+		static constexpr bool isTagBased()
+		{
+			return true;
+		}
+		void fence()
+		{
+			static_assert( isTagBased() ); // we do nothing in this case (unlike in case of isPositionBased())
+		}
+
+
 		using RiterT = RiterT_;
 
 		enum class InType
