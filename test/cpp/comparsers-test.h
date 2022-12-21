@@ -137,7 +137,7 @@ inline void comparsers_test()
 	fmt::print( "{}\n", sview );
 
 	auto riter = buff.getReadIter();
-	JsonParser2<globalmq::marshalling::Buffer> parser( riter );
+	JsonParser2<globalmq::marshalling::Buffer::ReadIter> parser( riter );
 	B b1;
 	b1.ints = std::unique_ptr<int[]>( new int[100] );
 	B::rw(b1, parser);

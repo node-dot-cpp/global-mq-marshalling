@@ -889,357 +889,13 @@ namespace comparsers
 		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
 	};
 
-	template <typename MessageT, class DataT=void>
-	class JsonParser2 : public JsonParserBase<typename MessageT::ReadIteratorT, DataT>
-	{
-	  public:
-		static constexpr Proto proto = JsonParserBase<typename MessageT::ReadIteratorT, DataT>::proto;
-//		using BufferType = MessageT;
-		using RiterT = JsonParserBase<typename MessageT::ReadIteratorT, DataT>::RiterT;
-		using InType = JsonParserBase<typename MessageT::ReadIteratorT, DataT>::InType;
-
-	  private:
-		struct In
-		{
-			InType type = InType::inUnknown;
-			uint32_t count = 0;
-			std::string lastName;
-		};
-		std::vector<In> stack;
-
-		void implBeforeAnyValue()
-		{
-			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
-										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
-
-			if (stack.back().type == InType::inArray)
-			{
-				if (stack.back().count > 0)
-					this->skipComma();
-				++(stack.back().count);
-			}
-		}
-
-		void implAfterAnyValue()
-		{
-		}
-
-		/*void implProcessNamePart(const std::string_view& name)
-		{
-			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
-			if (stack.back().count > 0)
-				this->skipComma();
-			std::string s;
-			this->readKey(&s);
-			if (s != name)
-				throw std::exception(); // TODO
-			++stack.back().count;
-		}*/
-
-		bool implProcessNamePart(const std::string_view& name, bool throwIfNotFound = true)
-		{
-			if ( stack.back().lastName != "" )
-			{
-				if ( stack.back().lastName == name )
-				{
-					stack.back().lastName = "";
-					++stack.back().count;
-					return true;
-				}
-				else
-					return false;
-			}
-			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
-			if (stack.back().count > 0)
-				this->skipComma();
-			std::string s;
-			this->readKey(&s);
-			if (s != name)
-			{
-				if ( throwIfNotFound )
-					throw std::exception(); // TODO
-				stack.back().lastName = s;
-				return false;
-			}
-			else
-			{
-				++stack.back().count;
-				return true;
-			}
-		}
-
-		template <typename T>
-		void readStructValue(T& t)
-		{
-			std::remove_const_t<T>::rw(t, *this);
-		}
-		template <typename T, typename ItemProcT>
-		void readStructValue(T& t, ItemProcT&& proc)
-		{
-			proc(t);
-		}
-		template <typename ValueTypeT, typename ValueT>
-		void implReadValue(ValueT& val)
-		{
-			if constexpr (std::is_same<INT, ValueTypeT>::value)
-				this->readSignedInteger(&val);
-			else if constexpr (std::is_same<UINT, ValueTypeT>::value)
-				this->readUnsignedInteger(&val);
-			else if constexpr (std::is_same<REAL, ValueTypeT>::value)
-				this->readReal(&val);
-			else if constexpr (std::is_same<STRING, ValueTypeT>::value)
-				this->readString(&val);
-			else if constexpr (std::is_same<BOOLEAN, ValueTypeT>::value)
-				this->readBoolean(&val);
-			else if constexpr (std::is_same<ENUM, ValueTypeT>::value)
-				this->readEnumValue(&val);
-			else
-			{
-				static_assert(std::is_same<STRUCT, ValueTypeT>::value);
-				readStructValue(val);
-			}
-		}
-		template <typename T, typename ItemProcT>
-		void implProcessArray(std::vector<T>& v, ItemProcT&& proc)
-		{
-			beginArray();
-			if (!this->isDelimiter(']'))
-			{
-				do
-				{
-					T val;
-					proc(val);
-					v.push_back(std::move(val));
-				} while (this->isComma());
-			}
-			endArray();
-		}
-
-		template <typename TypeHint, typename ValueT, auto defaultValue>
-		void implApplyDefault(ValueT& val)
-		{
-			if constexpr (is_vector_v<ValueT>)
-			{
-				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value )
-					return;
-				else
-					val = defaultValue();
-			}
-			else
-			{
-				if constexpr (std::is_same<STRUCT, TypeHint>::value)
-				{
-					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value )
-						val = ValueT( defaultValue );
-					else
-						val = defaultValue();
-				}
-				else 
-				{
-					if ( std::is_invocable<decltype( defaultValue ), ValueT>::value )
-						val = defaultValue();
-					else
-						val = defaultValue;
-				}
-			}
-		}
-
-	  public:
-		JsonParser2(RiterT& riter_) : JsonParserBase<typename MessageT::ReadIteratorT, DataT>(riter_)
-		{
-		}
-		JsonParser2(const JsonParser2& other) : JsonParserBase<typename MessageT::ReadIteratorT, DataT>(other.riter)
-		{
-		}
-		JsonParser2& operator=(const JsonParser2& other)
-		{
-			this->riter = other.riter;
-			return *this;
-		}
-		JsonParser2(JsonParser2&& other) noexcept
-		{
-			this->riter = std::move(other.riter);
-		}
-		JsonParser2& operator=(JsonParser2&& other) noexcept
-		{
-			this->riter = std::move(other.riter);
-			return *this;
-		}
-		~JsonParser2()
-		{
-		}
-		void reset()
-		{
-		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
-		  // data in it
-
-		void beginStruct([[maybe_unused]] const std::string_view& name)
-		{
-			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
-				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
-			this->skipDelimiter('{');
-			if (stack.size())
-				++stack.back().count;
-			stack.push_back({InType::inStruct, 0});
-		}
-		void endStruct()
-		{
-			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
-			this->skipDelimiter('}');
-			stack.pop_back();
-		}
-		void beginArray()
-		{
-			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
-										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
-			this->skipDelimiter('[');
-			++stack.back().count;
-			stack.push_back({InType::inArray, 0});
-		}
-		void endArray()
-		{
-			assert(stack.size() > 0 && stack.back().type == InType::inArray);
-			this->skipDelimiter(']');
-			stack.pop_back();
-			if (stack.back().type != InType::inNameVal)
-			{
-				assert(stack.size() > 0 && stack.back().type == InType::inArray);
-				++(stack.back().count);
-			}
-		}
-		void beginNamedValue(const std::string_view& name)
-		{
-			implProcessNamePart(name);
-			stack.push_back({InType::inNameVal, 0});
-		}
-		void beginNamedValueWithWireDefault(const std::string_view& name)
-		{
-			if ( implProcessNamePart(name, false) )
-			{
-				assert( stack.size() != 0 || stack.back().lastName == "" );
-				stack.push_back({InType::inNameVal, 0});
-			}
-			else
-				assert( stack.size() != 0 || stack.back().lastName != "" );
-		}
-		void endNamedValue()
-		{
-			stack.pop_back();
-		}
-
-		template <typename TypeHint, typename ValueT>
-		void rw(ValueT& val)
-		{
-			implBeforeAnyValue();
-			if constexpr (is_vector_v<ValueT>)
-			{
-				ParserBase2<DataT>::template assertVectorType<TypeHint>();
-				implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
-			}
-			else
-			{
-				this->implReadValue<TypeHint>(val);
-			}
-			implAfterAnyValue();
-		}
-
-		template <typename TypeHint, typename Vector, typename ItemProcT,
-				  typename Enable = std::enable_if_t<is_vector_v<Vector>>>
-		void rw(Vector& v, ItemProcT&& proc)
-		{
-			ParserBase2<DataT>::template assertVectorType<TypeHint>();
-			implBeforeAnyValue();
-			implProcessArray(v, std::forward<ItemProcT>(proc));
-			implAfterAnyValue();
-		}
-
-		template <typename TypeHint, typename ValueT>
-		void rw(const std::string_view& name, ValueT& val)
-		{
-			implProcessNamePart(name);
-			stack.push_back({InType::inNameVal, 0});
-			if constexpr (is_vector_v<ValueT>)
-			{
-				ParserBase2<DataT>::template assertVectorType<TypeHint>();
-				implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
-			}
-			else
-			{
-				static_assert(!std::is_invocable<ValueT, JsonParser2, ValueT>::value);
-				this->implReadValue<TypeHint>(val);
-			}
-			stack.pop_back();
-		}
-
-		template <typename TypeHint, typename ValueT, auto defaultValue>
-		void rwWithWireDefault(const std::string_view& name, ValueT& val)
-		{
-			bool found = implProcessNamePart(name, false);
-			if ( found )
-			{
-				stack.push_back({InType::inNameVal, 0});
-				if constexpr (is_vector_v<ValueT>)
-				{
-					ParserBase2<DataT>::template assertVectorType<TypeHint>();
-					implProcessArray(val, [&](auto& element) { rw<typename TypeHint::ValueT>(element); });
-				}
-				else
-				{
-					static_assert(!std::is_invocable<ValueT, JsonParser2, ValueT>::value);
-					this->implReadValue<TypeHint>(val);
-				}
-				stack.pop_back();
-			}
-			else
-				implApplyDefault<TypeHint, ValueT, defaultValue>(val);
-		}
-
-		template <typename TypeHint, typename ValueT, typename ItemProc>
-		void rw(const std::string_view& name, ValueT& val, ItemProc&& proc)
-		{
-			implProcessNamePart(name);
-			stack.push_back({InType::inNameVal, 0});
-			if constexpr (is_vector_v<ValueT>)
-			{
-				ParserBase2<DataT>::template assertVectorType<TypeHint>();
-				implProcessArray(val, std::forward<ItemProc>(proc));
-			}
-			else
-			{
-				proc(val);
-			}
-			stack.pop_back();
-		}
-
-		template <typename TypeHint, typename ValueT, auto defaultValue, typename ItemProc>
-		void rwWithWireDefault(const std::string_view& name, ValueT& val, ItemProc&& proc)
-		{
-			bool found = implProcessNamePart(name, false);
-			if ( found )
-			{
-				stack.push_back({InType::inNameVal, 0});
-				if constexpr (is_vector_v<ValueT>)
-				{
-					ParserBase2<DataT>::template assertVectorType<TypeHint>();
-					implProcessArray(val, std::forward<ItemProc>(proc));
-				}
-				else
-				{
-					proc(val);
-				}
-				stack.pop_back();
-			}
-			else
-				implApplyDefault<TypeHint, ValueT, defaultValue>(val);
-		}
-	};
-
 #include <unordered_map>
+
 	template <typename RiterT, class DataT=void>
-	class JsonParserWithReordering : public JsonParserBase<RiterT, DataT>
+	class JsonParser2 : public JsonParserBase<RiterT, DataT>
 	{
 		template <typename RiterT_, class DataT_>
-		friend class JsonParserWithReordering;
+		friend class JsonParser2;
 		template<class StringT>
 		class StringAsRiter
 		{
@@ -1364,27 +1020,27 @@ namespace comparsers
 		}
 
 	  public:
-		JsonParserWithReordering(RiterT& riter_) : JsonParserBase<RiterT, DataT>(riter_)
+		JsonParser2(RiterT& riter_) : JsonParserBase<RiterT, DataT>(riter_)
 		{
 		}
-		JsonParserWithReordering(const JsonParserWithReordering& other) : JsonParserBase<RiterT, DataT>(other.riter)
+		JsonParser2(const JsonParser2& other) : JsonParserBase<RiterT, DataT>(other.riter)
 		{
 		}
-		JsonParserWithReordering& operator=(const JsonParserWithReordering& other)
+		JsonParser2& operator=(const JsonParser2& other)
 		{
 			this->riter = other.riter;
 			return *this;
 		}
-		JsonParserWithReordering(JsonParserWithReordering&& other) noexcept
+		JsonParser2(JsonParser2&& other) noexcept
 		{
 			this->riter = std::move(other.riter);
 		}
-		JsonParserWithReordering& operator=(JsonParserWithReordering&& other) noexcept
+		JsonParser2& operator=(JsonParser2&& other) noexcept
 		{
 			this->riter = std::move(other.riter);
 			return *this;
 		}
-		~JsonParserWithReordering()
+		~JsonParser2()
 		{
 		}
 		void reset()
@@ -1430,32 +1086,6 @@ namespace comparsers
 		{
 			implProcessNamePart(name);
 			stack.push_back({InType::inNameVal, 0});
-			/*auto f = stack.back().ooo.find( name );
-			if ( f == stack.back().ooo.end() )
-			{
-				StringAsRiter<std::string> sr( f->second );
-				JsonParserWithReordering p( sr );
-				p.stack.push_back({InType::inNameVal, 0});
-				// TODO: parse
-				p.endNamedValue();
-			}
-			else
-			{
-				std::string s = implProcessNamePart();
-				while ( s != name )
-				{
-					std::string buf;
-					this->readValueAsJson( buf );
-					stack.back().ooo.insert( std::make_pair( s, buf ) );
-					this->skipSpacesEtc();
-					if ( *(this->riter) == '}' )
-					{
-						// TODO: if name has default value, apply it
-						throw std::exception(); // not found
-					}
-				}
-				stack.push_back({InType::inNameVal, 0});
-			}*/
 		}
 		void endNamedValue()
 		{
@@ -1498,7 +1128,7 @@ namespace comparsers
 			}
 			else
 			{
-				static_assert(!std::is_invocable<ValueT, JsonParserWithReordering, ValueT>::value);
+				static_assert(!std::is_invocable<ValueT, JsonParser2, ValueT>::value);
 				this->implReadValue<TypeHint>(val);
 			}
 		}
@@ -1553,15 +1183,17 @@ namespace comparsers
 			if ( f != stack.back().ooo.end() )
 			{
 				StringAsRiter<std::string> sr( f->second );
-				JsonParserWithReordering<StringAsRiter<std::string>, DataT> p( sr );
-				p.userdata = std::move( this->userdata );
-				p.stack.push_back({JsonParserWithReordering<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
+				JsonParser2<StringAsRiter<std::string>, DataT> p( sr );
+				if constexpr ( !std::is_same<DataT, void>::value )
+					p.userdata = std::move( this->userdata );
+				p.stack.push_back({JsonParser2<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
 				if constexpr ( std::is_same<ValueProc, VoidPlaceholder>::value )
 					p.implRWValue<TypeHint, ValueT>(val);
 				else
 					p.implRWValue<TypeHint, ValueT, ValueProc>(val, std::move( proc ) );
 				p.endNamedValue();
-				this->userdata = std::move( p.userdata );
+				if constexpr ( !std::is_same<DataT, void>::value )
+					this->userdata = std::move( p.userdata );
 			}
 			else
 			{
@@ -1597,38 +1229,6 @@ namespace comparsers
 		{
 			VoidPlaceholder dummyProc;
 			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, voidPlaceholderValue>(name, val, std::move( dummyProc ));
-			/*auto f = stack.back().ooo.find( std::string( name ) );
-			if ( f != stack.back().ooo.end() )
-			{
-				StringAsRiter<std::string> sr( f->second );
-				JsonParserWithReordering<StringAsRiter<std::string>, DataT> p( sr );
-				p.userdata = std::move( this->userdata );
-				p.stack.push_back({JsonParserWithReordering<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
-				p.implRWValue<TypeHint, ValueT>(val);
-				p.endNamedValue();
-				this->userdata = std::move( p.userdata );
-			}
-			else
-			{
-				std::string s = implProcessNamePart();
-				while ( s != name )
-				{
-					std::string buf;
-					this->readValueAsJson( buf );
-					++stack.back().count;
-					stack.back().ooo.insert( std::make_pair( s, buf ) );
-					this->skipSpacesEtc();
-					if ( *(this->riter) == '}' )
-					{
-						throw std::exception(); // not found; rwWithWireDefault() might be helpful
-					}
-					s = implProcessNamePart();
-				}
-				++stack.back().count;
-				stack.push_back({InType::inNameVal, 0});
-				implRWValue<TypeHint, ValueT>(val);
-				stack.pop_back();
-			}*/
 		}
 
 		template <typename TypeHint, typename ValueT, auto defaultValue>
@@ -1636,88 +1236,18 @@ namespace comparsers
 		{
 			VoidPlaceholder dummyProc;
 			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, defaultValue>(name, val, std::move( dummyProc ));
-			/*auto f = stack.back().ooo.find( std::string( name ) );
-			if ( f != stack.back().ooo.end() )
-			{
-				StringAsRiter<std::string> sr( f->second );
-				JsonParserWithReordering<StringAsRiter<std::string>, DataT> p( sr );
-				p.userdata = std::move( this->userdata );
-				p.stack.push_back({JsonParserWithReordering<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
-				p.implRWValue<TypeHint, ValueT>(val);
-				p.endNamedValue();
-				this->userdata = std::move( p.userdata );
-			}
-			else
-			{
-				std::string s = implProcessNamePart();
-				while ( s != name )
-				{
-					std::string buf;
-					this->readValueAsJson( buf );
-					++stack.back().count;
-					stack.back().ooo.insert( std::make_pair( s, buf ) );
-					this->skipSpacesEtc();
-					if ( *(this->riter) == '}' )
-					{
-						implApplyDefault<TypeHint, ValueT, defaultValue>(val);
-						return; // we're done
-					}
-					s = implProcessNamePart();
-				}
-				++stack.back().count;
-				stack.push_back({InType::inNameVal, 0});
-				implRWValue<TypeHint, ValueT>(val);
-				stack.pop_back();
-			}*/
 		}
 
 		template <typename TypeHint, typename ValueT, typename ItemProc>
 		void rw(const std::string_view& name, ValueT& val, ItemProc&& proc)
 		{
 			implRWNameValue<TypeHint, ValueT, ItemProc, voidPlaceholderValue>(name, val, std::move( proc ));
-			/*implProcessNamePart(name);
-			stack.push_back({InType::inNameVal, 0});
-			implRWValue<TypeHint, ValueT, ItemProc>(val, std::move( proc ) );
-			stack.pop_back();*/
 		}
 
 		template <typename TypeHint, typename ValueT, typename ItemProc, auto defaultValue>
 		void rwWithWireDefault(const std::string_view& name, ValueT& val, ItemProc&& proc)
 		{
 			implRWNameValue<TypeHint, ValueT, ItemProc, defaultValue>(name, val, std::move( proc ));
-			/*auto f = stack.back().ooo.find( std::string( name ) );
-			if ( f != stack.back().ooo.end() )
-			{
-				StringAsRiter<std::string> sr( f->second );
-				JsonParserWithReordering<StringAsRiter<std::string>, DataT> p( sr );
-				p.userdata = std::move( this->userdata );
-				p.stack.push_back({JsonParserWithReordering<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
-				p.implRWValue<TypeHint, ValueT>(val);
-				p.endNamedValue();
-				this->userdata = std::move( p.userdata );
-			}
-			else
-			{
-				std::string s = implProcessNamePart();
-				while ( s != name )
-				{
-					std::string buf;
-					this->readValueAsJson( buf );
-					++stack.back().count;
-					stack.back().ooo.insert( std::make_pair( s, buf ) );
-					this->skipSpacesEtc();
-					if ( *(this->riter) == '}' )
-					{
-						implApplyDefault<TypeHint, ValueT, defaultValue>(val);
-						return; // we're done
-					}
-					s = implProcessNamePart();
-				}
-				++stack.back().count;
-				stack.push_back({InType::inNameVal, 0});
-				implRWValue<TypeHint, ValueT>(val);
-				stack.pop_back();
-			}*/
 		}
 	};
 
