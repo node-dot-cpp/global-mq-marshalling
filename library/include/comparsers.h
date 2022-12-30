@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <string_view>
+#include <unordered_map>
 
 namespace comparsers
 {
@@ -871,6 +872,7 @@ namespace comparsers
 					}
 					if (!riter.isData())
 						throw std::exception(); // TODO
+					buf += ' '; // to avoid end-of-data while further parsing of numbers and identifiers
 				}
 			}
 		}
@@ -903,8 +905,6 @@ namespace comparsers
 		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
 	};
 
-#include <unordered_map>
-
 	template <typename RiterT, class DataT=void>
 	class JsonParser2 : public JsonParserBase<RiterT, DataT>
 	{
@@ -935,8 +935,7 @@ namespace comparsers
 
 	  public:
 		static constexpr Proto proto = JsonParserBase<RiterT, DataT>::proto;
-//		using BufferType = MessageT;
-		using InType = JsonParserBase<RiterT, DataT>::InType;
+		using InType = typename JsonParserBase<RiterT, DataT>::InType;
 
 	  private:
 		struct In
@@ -1182,7 +1181,7 @@ namespace comparsers
 				}
 				else 
 				{
-					if ( std::is_invocable<decltype( defaultValue ), ValueT>::value )
+					if constexpr ( std::is_invocable<decltype( defaultValue )>::value )
 						val = defaultValue();
 					else
 						val = defaultValue;
@@ -1190,7 +1189,7 @@ namespace comparsers
 			}
 		}
 
-		template <typename TypeHint, typename ValueT, typename ValueProc, auto DefaultValue>
+		template <typename TypeHint, typename ValueT, typename ValueProc, bool hasDefault, auto DefaultValue>
 		void implRWNameValue(const std::string_view& name, ValueT& val, ValueProc&& proc)
 		{
 			auto f = stack.back().ooo.find( std::string( name ) );
@@ -1202,15 +1201,24 @@ namespace comparsers
 					p.userdata = std::move( this->userdata );
 				p.stack.push_back({JsonParser2<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
 				if constexpr ( std::is_same<ValueProc, VoidPlaceholder>::value )
-					p.implRWValue<TypeHint, ValueT>(val);
+					p.template implRWValue<TypeHint, ValueT>(val);
 				else
-					p.implRWValue<TypeHint, ValueT, ValueProc>(val, std::move( proc ) );
+					p.template implRWValue<TypeHint, ValueT, ValueProc>(val, std::move( proc ) );
 				p.endNamedValue();
 				if constexpr ( !std::is_same<DataT, void>::value )
 					this->userdata = std::move( p.userdata );
 			}
 			else
 			{
+				this->skipSpacesEtc();
+				if ( *(this->riter) == '}' )
+				{
+					if constexpr ( hasDefault )
+						implApplyDefault<TypeHint, ValueT, DefaultValue>(val);
+					else
+						throw std::exception(); // not found; rwWithWireDefault() might be helpful
+					return;
+				}
 				std::string s = implProcessNamePart();
 				while ( s != name )
 				{
@@ -1221,10 +1229,11 @@ namespace comparsers
 					this->skipSpacesEtc();
 					if ( *(this->riter) == '}' )
 					{
-						if constexpr ( std::is_same<decltype(DefaultValue), VoidPlaceholder>::value )
-							throw std::exception(); // not found; rwWithWireDefault() might be helpful
-						else
+						if constexpr ( hasDefault )
 							implApplyDefault<TypeHint, ValueT, DefaultValue>(val);
+						else
+							throw std::exception(); // not found; rwWithWireDefault() might be helpful
+						return;
 					}
 					s = implProcessNamePart();
 				}
@@ -1242,26 +1251,26 @@ namespace comparsers
 		void rw(const std::string_view& name, ValueT& val)
 		{
 			VoidPlaceholder dummyProc;
-			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, voidPlaceholderValue>(name, val, std::move( dummyProc ));
+			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, false, voidPlaceholderValue>(name, val, std::move( dummyProc ));
 		}
 
 		template <typename TypeHint, typename ValueT, auto defaultValue>
 		void rwWithWireDefault(const std::string_view& name, ValueT& val)
 		{
 			VoidPlaceholder dummyProc;
-			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, defaultValue>(name, val, std::move( dummyProc ));
+			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, true, defaultValue>(name, val, std::move( dummyProc ));
 		}
 
 		template <typename TypeHint, typename ValueT, typename ItemProc>
 		void rw(const std::string_view& name, ValueT& val, ItemProc&& proc)
 		{
-			implRWNameValue<TypeHint, ValueT, ItemProc, voidPlaceholderValue>(name, val, std::move( proc ));
+			implRWNameValue<TypeHint, ValueT, ItemProc, false, voidPlaceholderValue>(name, val, std::move( proc ));
 		}
 
 		template <typename TypeHint, typename ValueT, typename ItemProc, auto defaultValue>
 		void rwWithWireDefault(const std::string_view& name, ValueT& val, ItemProc&& proc)
 		{
-			implRWNameValue<TypeHint, ValueT, ItemProc, defaultValue>(name, val, std::move( proc ));
+			implRWNameValue<TypeHint, ValueT, ItemProc, true, defaultValue>(name, val, std::move( proc ));
 		}
 	};
 
