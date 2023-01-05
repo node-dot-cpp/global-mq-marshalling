@@ -566,6 +566,7 @@ namespace comparsers
 
 
 		using RiterT = RiterT_;
+		using CharT = typename RiterT::CharT;
 
 		enum class InType
 		{
@@ -575,62 +576,116 @@ namespace comparsers
 			inNameVal
 		};
 
+		class LastReadChar
+		{
+			CharT ch = 0;
+			bool set = false;
+		public:
+			void save( CharT ch_ )
+			{
+				assert( !set );
+				ch = ch_;
+				set = true;
+			}
+			bool isSaved()
+			{
+				return set;
+			}
+			CharT consume()
+			{
+				assert( set );
+				CharT ret = ch;
+				ch = 0;
+				set = false;
+				return ret;
+			}
+		};
+		LastReadChar lastChar;
+
 	  protected:
 		RiterT& riter;
 
-		void skipSpacesEtc()
+		CharT skipSpacesEtc( CharT firstChar )
 		{
-			while (riter.isData() && (*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n'))
-				++riter;
+			while (riter.isData() && (firstChar == ' ' || firstChar == '\t' || firstChar == '\r' || firstChar == '\n'))
+				firstChar = riter.readChar();
+			return firstChar;
 		}
 
-		bool isComma()
+		CharT skipSpacesEtc()
 		{
-			skipSpacesEtc();
-			return *riter == ',';
+			return skipSpacesEtc(riter.readChar());
 		}
+
+		/*bool isComma()
+		{
+			CharT ret = skipSpacesEtc();
+			return ret == ',';
+		}
+
+		bool isComma( CharT ch )
+		{
+			CharT ret = skipSpacesEtc(ch);
+			return ret == ',';
+		}*/
 
 		void skipComma()
 		{
-			skipSpacesEtc();
-			if (*riter != ',')
+			CharT ret = skipSpacesEtc();
+			if (ret != ',')
 				throw std::exception(); // TODO
-			++riter;
 		}
 
-		bool isDelimiter(char delim)
+		void skipComma( CharT ch )
 		{
-			skipSpacesEtc();
-			return *riter == delim;
+			CharT ret = skipSpacesEtc(ch);
+			if (ret != ',')
+				throw std::exception(); // TODO
 		}
 
-		void skipDelimiter(char delim)
+		/*bool isDelimiter(char delim)
 		{
-			skipSpacesEtc();
-			if (*riter != delim)
-				throw std::exception(); // TODO
-			++riter;
+			CharT ret = skipSpacesEtc();
+			return ret == delim;
 		}
 
-		void readString(std::string* s)
+		bool isDelimiter(char delim, CharT ch)
 		{
-			skipSpacesEtc();
-			if (*riter != '\"')
+			CharT ret = skipSpacesEtc(ch);
+			return ret == delim;
+		}*/
+
+		void skipDelimiter( char delim )
+		{
+			CharT ret = skipSpacesEtc();
+			if ( ret != delim )
 				throw std::exception(); // TODO
-			++riter;
+		}
+
+		void skipDelimiter( char delim, CharT ch )
+		{
+			CharT ret = skipSpacesEtc(ch);
+			if ( ret != delim )
+				throw std::exception(); // TODO
+		}
+
+		template<class StringT>
+		void implContinueReadingString(StringT* s)
+		{
 			bool done = false;
 			while ((!done) && riter.isData())
 			{
-				switch (*riter)
+				CharT ret = riter.readChar();
+				switch (ret)
 				{
 				case '\"':
 					done = true;
 					break;
 				case '\\':
-					++riter;
+					ret = riter.readChar();
 					if (!riter.isData())
 						throw std::exception(); // TODO
-					switch (*riter)
+					switch (ret)
 					{
 					case '\\':
 						*s += '\\';
@@ -650,120 +705,191 @@ namespace comparsers
 					default:
 						throw std::exception(); // TODO (unexpected)
 					}
-					++riter;
 					break;
 				default:
-					*s += *riter;
-					++riter;
+					*s += ret;
 					break;
 				}
 			}
 			if (!riter.isData())
 				throw std::exception(); // TODO
-			++riter;
+//			++riter;
+		}
+
+		void readString(std::string* s)
+		{
+			CharT ret = skipSpacesEtc();
+			if (ret != '\"')
+				throw std::exception(); // TODO
+			implContinueReadingString( s );
+		}
+
+		void readString(std::string* s, CharT ch)
+		{
+			CharT ret = skipSpacesEtc(ch);
+			if (ret != '\"')
+				throw std::exception(); // TODO
+			implContinueReadingString( s );
+		}
+
+		void readKey(std::string* s, CharT ch)
+		{
+			s->clear();
+			readString(s, ch);
+			CharT ret = skipSpacesEtc();
+			if (ret != ':')
+				throw std::exception(); // TODO (expected ':')
 		}
 
 		void readKey(std::string* s)
 		{
 			s->clear();
-			skipSpacesEtc();
 			readString(s);
-			skipSpacesEtc();
-			if (*riter != ':')
+			CharT ret = skipSpacesEtc();
+			if (ret != ':')
 				throw std::exception(); // TODO (expected ':')
-			++riter;
 		}
 
 		template <typename T>
-		void readUnsignedInteger(T* num)
+		CharT implReadUnsignedInteger(T* num, CharT retch)
 		{
-			skipSpacesEtc();
-			if (*riter == '-')
+			if (retch == '-')
 				throw std::exception(); // TODO: (negative is unexpected)
 			std::string s;
-			while (riter.isData() && (*riter >= '0' && *riter <= '9'))
+			while (riter.isData() && (retch >= '0' && retch <= '9'))
 			{
-				s += *riter;
-				++riter;
+				s += retch;
+				if (!riter.isData())
+					throw std::exception(); // TODO
+				retch = riter.readChar();
 			}
-			if (!riter.isData())
-				throw std::exception(); // TODO
 			char* end = const_cast<char*>(s.c_str());
-			uint64_t ret = strtoull(s.c_str(), &end, 10);
+			uint64_t retnum = strtoull(s.c_str(), &end, 10);
 			if (s.c_str() == end)
 				throw std::exception(); // TODO: (NaN)
-			*num = (T)ret;              // TODO: add boundary checking
+			*num = (T)retnum;              // TODO: add boundary checking
+			return retch;
 		}
 
 		template <typename T>
-		void readSignedInteger(T* num)
+		CharT readUnsignedInteger(T* num)
 		{
-			skipSpacesEtc();
-			std::string s;
-			if (*riter == '-')
-			{
-				s += *riter;
-				++riter;
-			}
-			while (riter.isData() && (*riter >= '0' && *riter <= '9'))
-			{
-				s += *riter;
-				++riter;
-			}
-			if (!riter.isData())
-				throw std::exception(); // TODO
-			char* end = const_cast<char*>(s.c_str());
-			uint64_t ret = strtoull(s.c_str(), &end, 10);
-			if (s.c_str() == end)
-				throw std::exception(); // TODO: (NaN)
-			*num = (T)ret;              // TODO: add boundary checking
+			return implReadUnsignedInteger(num, skipSpacesEtc());
 		}
 
 		template <typename T>
-		void readReal(T* num)
+		CharT readUnsignedInteger(T* num, CharT ch)
 		{
-			skipSpacesEtc();
-			std::string s;
-			while (riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ||
-									   *riter == ',' || *riter == ']' || *riter == '}')) // expected terminators
-			{
-				s += *riter;
-				++riter;
-			}
-			if (!riter.isData())
-				throw std::exception(); // TODO
-			char* end = const_cast<char*>(s.c_str());
-			double ret = strtod(s.c_str(), &end);
-			if (s.c_str() == end)
-				throw std::exception(); // TODO: (NaN)
-			*num = (T)ret;              // TODO: add boundary checking
+			return implReadUnsignedInteger(num, skipSpacesEtc(ch));
 		}
 
 		template <typename T>
-		void readEnumValue(T* t)
+		CharT implReadSignedInteger(T* num, CharT retch)
+		{
+			std::string s;
+			if (retch == '-')
+			{
+				s += retch;
+				retch = riter.readChar();
+			}
+			while (riter.isData() && (retch >= '0' && retch <= '9'))
+			{
+				s += retch;
+				if (!riter.isData())
+					throw std::exception(); // TODO
+				retch = riter.readChar();
+			}
+			char* end = const_cast<char*>(s.c_str());
+			uint64_t retnum = strtoull(s.c_str(), &end, 10);
+			if (s.c_str() == end)
+				throw std::exception(); // TODO: (NaN)
+			*num = (T)retnum;              // TODO: add boundary checking
+			return retch;
+		}
+
+		template <typename T>
+		CharT readSignedInteger(T* num)
+		{
+			return implReadSignedInteger(num, skipSpacesEtc());
+		}
+
+		template <typename T>
+		CharT readSignedInteger(T* num, CharT ch)
+		{
+			return implReadSignedInteger(num, skipSpacesEtc(ch));
+		}
+
+		template <typename T>
+		CharT implReadReal(T* num, CharT retch)
+		{
+			std::string s;
+			while (riter.isData() && !(retch == ' ' || retch == '\t' || retch == '\r' || retch == '\n' ||
+									   retch == ',' || retch == ']' || retch == '}')) // expected terminators
+			{
+				s += retch;
+				if (!riter.isData())
+					throw std::exception(); // TODO
+				retch = riter.readChar();
+			}
+			char* end = const_cast<char*>(s.c_str());
+			double retnum = strtod(s.c_str(), &end);
+			if (s.c_str() == end)
+				throw std::exception(); // TODO: (NaN)
+			*num = (T)retnum;              // TODO: add boundary checking
+			return retch;
+		}
+
+		template <typename T>
+		CharT readReal(T* num)
+		{
+			return implReadReal(num, skipSpacesEtc());
+		}
+
+		template <typename T>
+		CharT readReal(T* num, CharT ch)
+		{
+			return implReadReal(num, skipSpacesEtc(ch));
+		}
+
+		template <typename T>
+		CharT readEnumValue(T* t)
 		{
 			using PureT = typename std::remove_pointer<T>::type;
 			using UnderT = typename std::underlying_type_t<PureT>;
 			static_assert(sizeof(PureT) == sizeof(UnderT));
 			if constexpr (std::is_signed<UnderT>::value)
-				readSignedInteger((UnderT*)(t));
+				return readSignedInteger((UnderT*)(t));
 			else
 			{
 				static_assert(std::is_unsigned<UnderT>::value);
-				readUnsignedInteger((UnderT*)(t));
+				return readUnsignedInteger((UnderT*)(t));
 			}
 		}
 
 		template <typename T>
-		void readBoolean(T* b)
+		CharT readEnumValue(T* t, CharT ch)
 		{
-			skipSpacesEtc();
-			std::string s;
-			while (riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ||
-									   *riter == ',' || *riter == ']' || *riter == '}')) // expected terminators
+			using PureT = typename std::remove_pointer<T>::type;
+			using UnderT = typename std::underlying_type_t<PureT>;
+			static_assert(sizeof(PureT) == sizeof(UnderT));
+			if constexpr (std::is_signed<UnderT>::value)
+				return readSignedInteger((UnderT*)(t), ch);
+			else
 			{
-				s += *riter;
-				++riter;
+				static_assert(std::is_unsigned<UnderT>::value);
+				return readUnsignedInteger((UnderT*)(t), ch);
+			}
+		}
+
+		template <typename T>
+		CharT implReadBoolean(T* b, CharT retch)
+		{
+			std::string s;
+			while (riter.isData() && !(retch == ' ' || retch == '\t' || retch == '\r' || retch == '\n' ||
+									   retch == ',' || retch == ']' || retch == '}')) // expected terminators
+			{
+				s += retch;
+				retch = riter.readChar();
 			}
 			if (!riter.isData())
 				throw std::exception(); // TODO
@@ -773,108 +899,128 @@ namespace comparsers
 				*b = false;
 			else
 				throw std::exception(); // TODO
+			return retch;
 		}
 
-		void readObjectAsJson( std::string& buf )
+		template <typename T>
+		CharT readBoolean(T* num)
 		{
-			assert( *riter == '{' );
-			buf.append("{", 1);
-			++riter;
+			return implReadBoolean(num, skipSpacesEtc());
+		}
+
+		template <typename T>
+		CharT readBoolean(T* num, CharT ch)
+		{
+			return implReadBoolean(num, skipSpacesEtc(ch));
+		}
+
+		template<class StringT>
+		void implReadObjectAsJson( StringT& buf )
+		{
+			buf.append(1, '{');
 			size_t depth = 1;
 			do
 			{
-				char ch = *riter;
-				buf.append( &ch, 1 );
-				switch ( ch )
+				CharT retch = riter.readChar();
+				buf.append( 1, retch );
+				switch ( retch )
 				{
 					case '}': 
-						++riter;
 						--depth;
 						if ( depth == 0 )
 							return;
 						break;
 					case '{':
-						++riter;
 						++depth;
 						break;
 					case '\"':
-						readString( &buf );
-						buf.append("\"", 1);
+						implContinueReadingString( &buf );
+						buf.append(1, '\"');
 						break;
 					default:
-						++riter;
 						break;
 				}
 			}
 			while ( 1 );
 		}
 
-		void readArrayAsJson( std::string& buf )
+		template<class StringT>
+		void implReadArrayAsJson( StringT& buf )
 		{
-			assert( *riter == '[' );
-			buf.append("[", 1);
-			++riter;
+			buf.append(1, '[');
 			size_t depth = 1;
 			do
 			{
-				char ch = *riter;
-				buf.append( &ch, 1 );
+				CharT ch = riter.readChar();
+				buf.append( 1, ch );
 				switch ( ch )
 				{
 					case ']': 
-						++riter;
 						--depth;
 						if ( depth == 0 )
 							return;
 						break;
 					case '[':
-						++riter;
 						++depth;
 						break;
 					case '\"':
-						readString( &buf );
-						buf.append("\"", 1);
+						implContinueReadingString( &buf );
+						buf.append(1, '\"');
 						break;
 					default:
-						++riter;
 						break;
 				}
 			}
 			while ( 1 );
 		}
 
-		void readValueAsJson( std::string& buf )
+		template<class StringT>
+		CharT implReadValueAsJson( StringT& buf, CharT ch )
 		{
-			skipSpacesEtc();
-			switch ( *riter )
+			switch ( ch )
 			{
 				case '[' :
-					readArrayAsJson( buf );
+					implReadArrayAsJson( buf );
+					ch = riter.readChar();
 					break;
 				case '{' :
-					readObjectAsJson( buf );
+					implReadObjectAsJson( buf );
+					ch = riter.readChar();
 					break;
 				case '\"' :
 				{
-					buf.append("\"", 1);
-					readString( &buf );
-					buf.append("\"", 1);
+					buf.append(1, '\"');
+					implContinueReadingString( &buf );
+					buf.append(1, '\"');
+					ch = riter.readChar();
 					break;
 				}
 				default: // true, false, none, number
 				{
-					while (riter.isData() && !(*riter == ' ' || *riter == '\t' || *riter == '\r' || *riter == '\n' ||
-											   *riter == ',' || *riter == ']' || *riter == '}')) // expected terminators
+					while (riter.isData() && !(ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' ||
+											   ch == ',' || ch == ']' || ch == '}')) // expected terminators
 					{
-						char ch = *riter;
-						buf.append( &ch, 1 );
-						++riter;
+						buf.append( 1, ch );
+						ch = riter.readChar();
 					}
 					if (!riter.isData())
 						throw std::exception(); // TODO
-					buf += ' '; // to avoid end-of-data while further parsing of numbers and identifiers
 				}
 			}
+			buf.append(2, ' '); // to avoid end-of-data while further parsing of numbers and identifiers
+			return ch;
+		}
+
+		template<class StringT>
+		CharT readValueAsJson( StringT& buf )
+		{
+			return implReadValueAsJson( buf, skipSpacesEtc() );
+		}
+
+		template<class StringT>
+		CharT readValueAsJson( StringT& buf, CharT ch )
+		{
+			return implReadValueAsJson( buf, ch );
 		}
 
 		JsonParserBase(RiterT& riter_) : riter(riter_)
@@ -908,8 +1054,15 @@ namespace comparsers
 	template <typename RiterT, class DataT=void>
 	class JsonParser2 : public JsonParserBase<RiterT, DataT>
 	{
+	  public:
+		static constexpr Proto proto = JsonParserBase<RiterT, DataT>::proto;
+		using InType = typename JsonParserBase<RiterT, DataT>::InType;
+		using CharT = typename JsonParserBase<RiterT, DataT>::CharT;
+
 		template <typename RiterT_, class DataT_>
 		friend class JsonParser2;
+
+	  private:
 		template<class StringT>
 		class StringAsRiter
 		{
@@ -917,32 +1070,34 @@ namespace comparsers
 			size_t pos = 0;
 
 		public:
+			using CharT = typename StringT::value_type;
 			StringAsRiter( const StringT& str_ ) : str( str_ ) {}
-			typename StringT::value_type operator* () 
-			{
-				assert( pos < str.size() );
-				return str[pos];
-			}
 			bool isData()
 			{
 				return pos < str.size();
 			}
+			/*typename StringT::value_type operator* () 
+			{
+				assert( pos < str.size() );
+				return str[pos];
+			}
 			void operator ++ () 
 			{
 				++pos;
+			}*/
+			CharT readChar()
+			{
+				assert( pos < str.size() );
+				return str[pos++];
 			}
 		};
-
-	  public:
-		static constexpr Proto proto = JsonParserBase<RiterT, DataT>::proto;
-		using InType = typename JsonParserBase<RiterT, DataT>::InType;
 
 	  private:
 		struct In
 		{
 			InType type = InType::inUnknown;
 			uint32_t count = 0;
-			std::unordered_map<std::string, std::string> ooo;
+			std::unordered_map<std::string, std::basic_string<CharT>> ooo;
 		};
 		std::vector<In> stack;
 
@@ -954,7 +1109,12 @@ namespace comparsers
 			if (stack.back().type == InType::inArray)
 			{
 				if (stack.back().count > 0)
-					this->skipComma();
+				{
+					if ( this->lastChar.isSaved() )
+						this->skipComma(this->lastChar.consume());
+					else
+						this->skipComma();
+				}
 				++(stack.back().count);
 			}
 		}
@@ -963,16 +1123,18 @@ namespace comparsers
 		{
 		}
 
-		void implProcessNamePart(const std::string_view& name)
+		std::string implProcessNamePart( CharT ch )
 		{
 			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
-			if (stack.back().count > 0)
-				this->skipComma();
 			std::string s;
-			this->readKey(&s);
-			if (s != name)
-				throw std::exception(); // TODO
-			++stack.back().count;
+			if (stack.back().count > 0)
+			{
+				this->skipComma(ch);
+				this->readKey(&s);
+			}
+			else
+				this->readKey(&s, ch);
+			return s;
 		}
 
 		std::string implProcessNamePart()
@@ -983,6 +1145,22 @@ namespace comparsers
 			std::string s;
 			this->readKey(&s);
 			return s;
+		}
+
+		void implProcessNamePart(const std::string_view& name)
+		{
+			std::string s = implProcessNamePart();
+			if (s != name)
+				throw std::exception(); // TODO
+			++stack.back().count;
+		}
+
+		void implProcessNamePart(const std::string_view& name, CharT ch)
+		{
+			std::string s = implProcessNamePart(ch);
+			if (s != name)
+				throw std::exception(); // TODO
+			++stack.back().count;
 		}
 
 		template <typename T>
@@ -998,38 +1176,49 @@ namespace comparsers
 		template <typename ValueTypeT, typename ValueT>
 		void implReadValue(ValueT& val)
 		{
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
 			if constexpr (std::is_same<INT, ValueTypeT>::value)
-				this->readSignedInteger(&val);
+				ch = this->readSignedInteger(&val, ch);
 			else if constexpr (std::is_same<UINT, ValueTypeT>::value)
-				this->readUnsignedInteger(&val);
+				ch = this->readUnsignedInteger(&val, ch);
 			else if constexpr (std::is_same<REAL, ValueTypeT>::value)
-				this->readReal(&val);
+				ch = this->readReal(&val, ch);
 			else if constexpr (std::is_same<STRING, ValueTypeT>::value)
-				this->readString(&val);
+			{
+				this->implContinueReadingString(&val);
+				ch = this->skipSpacesEtc();
+			}
 			else if constexpr (std::is_same<BOOLEAN, ValueTypeT>::value)
-				this->readBoolean(&val);
+				ch = this->readBoolean(&val, ch);
 			else if constexpr (std::is_same<ENUM, ValueTypeT>::value)
-				this->readEnumValue(&val);
+				ch = this->readEnumValue(&val, ch);
 			else
 			{
 				static_assert(std::is_same<STRUCT, ValueTypeT>::value);
+				this->lastChar.save(ch);
 				readStructValue(val);
+				ch = this->skipSpacesEtc();
 			}
+			this->lastChar.save(ch);
 		}
 		template <typename T, typename ItemProcT>
 		void implProcessArray(std::vector<T>& v, ItemProcT&& proc)
 		{
 			beginArray();
-			if (!this->isDelimiter(']'))
+			CharT ch = this->skipSpacesEtc();
+			if ( ch !=']' )
 			{
 				do
 				{
+					this->lastChar.save(ch);
 					T val;
 					proc(val);
 					v.push_back(std::move(val));
-				} while (this->isComma());
+					ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+				}
+				while (ch == ',');
 			}
-			endArray();
+			endArray(ch);
 		}
 
 	  public:
@@ -1065,7 +1254,8 @@ namespace comparsers
 		{
 			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
 				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
-			this->skipDelimiter('{');
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			this->skipDelimiter('{', ch);
 			if (stack.size())
 				++stack.back().count;
 			stack.push_back({InType::inStruct, 0});
@@ -1073,21 +1263,27 @@ namespace comparsers
 		void endStruct()
 		{
 			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
-			this->skipDelimiter('}');
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			this->skipDelimiter('}', ch);
 			stack.pop_back();
 		}
-		void beginArray()
+		void beginArray(CharT ch)
 		{
 			assert(stack.size() > 0 && (stack.back().type == InType::inArray ||
 										(stack.back().type == InType::inNameVal && stack.back().count == 0)));
-			this->skipDelimiter('[');
+			this->skipDelimiter('[', ch);
 			++stack.back().count;
 			stack.push_back({InType::inArray, 0});
 		}
-		void endArray()
+		void beginArray()
+		{
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			beginArray( ch );
+		}
+		void endArray(CharT ch)
 		{
 			assert(stack.size() > 0 && stack.back().type == InType::inArray);
-			this->skipDelimiter(']');
+			this->skipDelimiter(']', ch);
 			stack.pop_back();
 			if (stack.back().type != InType::inNameVal)
 			{
@@ -1095,9 +1291,15 @@ namespace comparsers
 				++(stack.back().count);
 			}
 		}
+		void endArray()
+		{
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			endArray( ch );
+		}
 		void beginNamedValue(const std::string_view& name)
 		{
-			implProcessNamePart(name);
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			implProcessNamePart(name, ch);
 			stack.push_back({InType::inNameVal, 0});
 		}
 		void endNamedValue()
@@ -1195,11 +1397,11 @@ namespace comparsers
 			auto f = stack.back().ooo.find( std::string( name ) );
 			if ( f != stack.back().ooo.end() )
 			{
-				StringAsRiter<std::string> sr( f->second );
-				JsonParser2<StringAsRiter<std::string>, DataT> p( sr );
+				StringAsRiter<std::basic_string<CharT>> sr( f->second );
+				JsonParser2<StringAsRiter<std::basic_string<CharT>>, DataT> p( sr );
 				if constexpr ( !std::is_same<DataT, void>::value )
 					p.userdata = std::move( this->userdata );
-				p.stack.push_back({JsonParser2<StringAsRiter<std::string>, DataT>::InType::inNameVal, 0});
+				p.stack.push_back({JsonParser2<StringAsRiter<std::basic_string<CharT>>, DataT>::InType::inNameVal, 0});
 				if constexpr ( std::is_same<ValueProc, VoidPlaceholder>::value )
 					p.template implRWValue<TypeHint, ValueT>(val);
 				else
@@ -1210,33 +1412,40 @@ namespace comparsers
 			}
 			else
 			{
-				this->skipSpacesEtc();
-				if ( *(this->riter) == '}' )
+				CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+				if ( ch == '}' )
 				{
 					if constexpr ( hasDefault )
+					{
+						this->lastChar.save(ch);
 						implApplyDefault<TypeHint, ValueT, DefaultValue>(val);
+					}
 					else
 						throw std::exception(); // not found; rwWithWireDefault() might be helpful
 					return;
 				}
-				std::string s = implProcessNamePart();
+				std::string s = implProcessNamePart(ch);
 				while ( s != name )
 				{
-					std::string buf;
-					this->readValueAsJson( buf );
+					std::basic_string<CharT> buf;
+					ch = this->readValueAsJson( buf );
 					++stack.back().count;
 					stack.back().ooo.insert( std::make_pair( s, buf ) );
-					this->skipSpacesEtc();
-					if ( *(this->riter) == '}' )
+					ch = this->skipSpacesEtc(ch);
+					if ( ch == '}' )
 					{
 						if constexpr ( hasDefault )
+						{
+							this->lastChar.save(ch);
 							implApplyDefault<TypeHint, ValueT, DefaultValue>(val);
+						}
 						else
 							throw std::exception(); // not found; rwWithWireDefault() might be helpful
 						return;
 					}
-					s = implProcessNamePart();
+					s = implProcessNamePart(ch);
 				}
+//				this->lastChar.save(ch);
 				++stack.back().count;
 				stack.push_back({InType::inNameVal, 0});
 				if constexpr ( std::is_same<ValueProc, VoidPlaceholder>::value )
