@@ -71,6 +71,7 @@ namespace globalmq::marshalling {
 
 		public:
 			using BufferT = Buffer;
+			using CharT = char;
 
 		public:
 			ReadIter() {}
@@ -129,6 +130,12 @@ namespace globalmq::marshalling {
 				return size;
 			}
 			size_t offset() const { return currentOffset; }
+			CharT readChar()
+			{
+				GMQ_ASSERT( begin != end ); 
+				++currentOffset;
+				return *begin++;
+			}
 		};
 
 		using ReadIteratorT = ReadIter;
