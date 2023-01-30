@@ -1100,6 +1100,8 @@ namespace comparsers
 			std::unordered_map<std::string, std::basic_string<CharT>> ooo;
 		};
 		std::vector<In> stack;
+		std::vector<std::string> structNameStack; // Note: at present we silently assume that all CharT = char and std::string works as such TODO: if CharT != char convert names to utf8 first
+		std::function<void(const std::vector<std::string>&, const std::string&)> unknownFieldsReporter;
 
 		void implBeforeAnyValue()
 		{
@@ -1208,13 +1210,17 @@ namespace comparsers
 			CharT ch = this->skipSpacesEtc();
 			if ( ch !=']' )
 			{
+				size_t ctr = 0;
 				do
 				{
 					this->lastChar.save(ch);
 					T val;
+					structNameStack.push_back( fmt::format( "[{}]", ctr ) );
 					proc(val);
 					v.push_back(std::move(val));
+					structNameStack.pop_back();
 					ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+					++ctr;
 				}
 				while (ch == ',');
 			}
@@ -1250,6 +1256,16 @@ namespace comparsers
 		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
 		  // data in it
 
+		void setUnknownFieldsReporter( std::function<void(const std::vector<std::string>&, const std::string&)>& unknownFieldsReporter_ )
+		{
+			unknownFieldsReporter = unknownFieldsReporter_;
+		}
+
+		void resetUnknownFieldsReporter()
+		{
+			unknownFieldsReporter = std::function<void(const std::vector<std::string>&, const std::string&)>();
+		}
+
 		void beginStruct([[maybe_unused]] const std::string_view& name)
 		{
 			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
@@ -1265,6 +1281,11 @@ namespace comparsers
 			assert(stack.size() > 0 && stack.back().type == InType::inStruct);
 			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
 			this->skipDelimiter('}', ch);
+			if ( stack.back().ooo.size() && unknownFieldsReporter )
+			{
+				for ( auto& it: stack.back().ooo )
+					unknownFieldsReporter( structNameStack, it.first );
+			}
 			stack.pop_back();
 		}
 		void beginArray(CharT ch)
@@ -1399,6 +1420,9 @@ namespace comparsers
 			{
 				StringAsRiter<std::basic_string<CharT>> sr( f->second );
 				JsonParser2<StringAsRiter<std::basic_string<CharT>>, DataT> p( sr );
+				p.unknownFieldsReporter = unknownFieldsReporter;
+				p.structNameStack = structNameStack;
+				p.structNameStack.push_back( std::string( name ) ); // "popping" is in dtor
 				if constexpr ( !std::is_same<DataT, void>::value )
 					p.userdata = std::move( this->userdata );
 				p.stack.push_back({JsonParser2<StringAsRiter<std::basic_string<CharT>>, DataT>::InType::inNameVal, 0});
@@ -1409,6 +1433,7 @@ namespace comparsers
 				p.endNamedValue();
 				if constexpr ( !std::is_same<DataT, void>::value )
 					this->userdata = std::move( p.userdata );
+				stack.back().ooo.erase( f );
 			}
 			else
 			{
@@ -1445,13 +1470,14 @@ namespace comparsers
 					}
 					s = implProcessNamePart(ch);
 				}
-//				this->lastChar.save(ch);
 				++stack.back().count;
 				stack.push_back({InType::inNameVal, 0});
+				structNameStack.push_back( std::string( name ) );
 				if constexpr ( std::is_same<ValueProc, VoidPlaceholder>::value )
 					implRWValue<TypeHint, ValueT>(val);
 				else
 					implRWValue<TypeHint, ValueT, ValueProc>(val, std::move( proc ) );
+				structNameStack.pop_back();
 				stack.pop_back();
 			}
 		}
