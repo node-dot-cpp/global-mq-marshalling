@@ -46,6 +46,8 @@ struct B
 	E e;
 	int i;
 	uint32_t n;
+	uint64_t un64;
+	int64_t n64;
 	std::string s;
 	A a;
 	float f;
@@ -61,6 +63,8 @@ struct B
 		comparser.template rw<ENUM>( "e", obj.e);
 		comparser.template rw<INT>( "i", obj.i);
 		comparser.template rw<UINT>( "n", obj.n);
+		comparser.template rw<UINT>( "un64", obj.un64);
+		comparser.template rw<UINT>( "n64", obj.n64);
 		comparser.template rw<REAL>( "f", obj.f);
 		comparser.template rw<STRUCT>( "a", obj.a);
 		comparser.template rw<STRING>( "s", obj.s);
@@ -109,6 +113,8 @@ inline void comparsers_test()
 	b.e = B::E::v2;
 	b.i = -17;
 	b.n = 17;
+	b.un64 = 0xFFFFFFFFFFFFFFFFULL;
+	b.n64 = 0xFFFFFFFFFFFFFFFFULL; // effectively, -1
 	b.s = "high!";
 	b.a.ii = -71;
 	b.a.nn = 71;
