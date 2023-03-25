@@ -7,6 +7,7 @@
 #include <vector>
 #include <string_view>
 #include <unordered_map>
+#include <functional>
 
 namespace comparsers
 {
@@ -344,13 +345,13 @@ namespace comparsers
 				if constexpr (std::is_same<STRUCT, TypeHint>::value)
 				{
 					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value )
-						return val == ValueT( defaultValue );
+						return val == structDefaultValue;
 					else
 						return val == defaultValue();
 				}
 				else 
 				{
-					if ( std::is_invocable<decltype( defaultValue ), ValueT>::value )
+					if constexpr ( std::is_invocable<decltype( defaultValue )>::value )
 						return val == defaultValue();
 					else
 						return val == defaultValue;
