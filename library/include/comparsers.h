@@ -86,6 +86,8 @@ namespace comparsers
         uint8_t dummy = 0;
     };
 	static constexpr StructDefaultValueType structDefaultValue;
+	template<typename T> concept has_equality_comparison_with_struct_default_value = requires(T t) { { t.operator == (StructDefaultValueType()) }; };
+	template<typename T> concept has_equality_comparison_with_struct_itself = requires(T t) { { t.operator == (T()) }; };
 
     struct EmptyVectorValueType
     {
@@ -345,7 +347,15 @@ namespace comparsers
 				if constexpr (std::is_same<STRUCT, TypeHint>::value)
 				{
 					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value )
-						return val == structDefaultValue;
+					{
+						if constexpr ( has_equality_comparison_with_struct_default_value<ValueT> )
+							return val == structDefaultValue;
+						else
+						{
+							static_assert ( has_equality_comparison_with_struct_itself<ValueT>, "one of comparison operators required" );
+							return val == ValueT(structDefaultValue);
+						}
+					}
 					else
 						return val == defaultValue();
 				}
