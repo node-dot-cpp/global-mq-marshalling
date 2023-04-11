@@ -329,7 +329,8 @@ namespace comparsers
 		{
 			if constexpr (is_vector_v<ValueT>)
 			{
-				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value )
+				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value || 
+					std::is_same<decltype( defaultValue ), decltype( emptyVectorValue )>::value ) // NOTE: the second component is due to f..ing GCC which sees types differently
 					return val.empty();
 				else
 				{
@@ -346,7 +347,8 @@ namespace comparsers
 			{
 				if constexpr (std::is_same<STRUCT, TypeHint>::value)
 				{
-					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value )
+					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value || 
+						std::is_same<decltype( defaultValue ), decltype( structDefaultValue)>::value ) // NOTE: the second component is due to f..ing GCC which sees types differently
 					{
 						if constexpr ( has_equality_comparison_with_struct_default_value<ValueT> )
 							return val == structDefaultValue;
@@ -1399,7 +1401,8 @@ namespace comparsers
 		{
 			if constexpr (is_vector_v<ValueT>)
 			{
-				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value )
+				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value || 
+					std::is_same<decltype( defaultValue ), decltype( emptyVectorValue )>::value ) // NOTE: the second component is due to f..ing GCC which sees types differently
 					return;
 				else
 					val = defaultValue();
@@ -1408,7 +1411,8 @@ namespace comparsers
 			{
 				if constexpr (std::is_same<STRUCT, TypeHint>::value)
 				{
-					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value )
+					if constexpr ( std::is_same<decltype( defaultValue ), StructDefaultValueType>::value || 
+						std::is_same<decltype( defaultValue ), decltype( structDefaultValue )>::value ) // NOTE: the second component is due to f..ing GCC which sees types differently
 						val = ValueT( defaultValue );
 					else
 						val = defaultValue();
