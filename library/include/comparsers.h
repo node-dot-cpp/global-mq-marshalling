@@ -8,6 +8,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <functional>
+#include <array>
 
 namespace comparsers
 {
@@ -94,6 +95,39 @@ namespace comparsers
         uint8_t dummy = 0;
     };
 	static constexpr EmptyVectorValueType emptyVectorValue;
+
+	struct StringLiteralHelperIndicator {};
+	template<unsigned int charCnt>
+	struct StringLiteralHelper : public StringLiteralHelperIndicator
+	{
+		char str[charCnt]{};
+		constexpr StringLiteralHelper(const char (&s)[charCnt]) 
+		{
+			for (unsigned int i=0; i<charCnt; ++i) 
+				str[i] = s[i];
+		}
+		constexpr operator const char*() const
+		{
+			return str;
+		}
+	};
+
+	template<class T>
+	struct is_std_array:std::is_array<T>{};
+	template<class T, std::size_t N>
+	struct is_std_array<std::array<T,N>>:std::true_type{};
+    
+	struct FloatingConstIndicator {};
+	template <class _Ty>
+	class FloatingConst : public FloatingConstIndicator {
+	public:
+		using value_type      = _Ty;	
+		constexpr FloatingConst( _Ty f ) { _Elem = f; }
+		constexpr _Ty val() const { return _Elem; }
+		_Ty _Elem;
+	};
+	using FLOAT = FloatingConst<float>;
+	using DOUBLE = FloatingConst<double>;
 
     struct VoidPlaceholder
     {
@@ -332,6 +366,15 @@ namespace comparsers
 				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value || 
 					std::is_same<decltype( defaultValue ), decltype( emptyVectorValue )>::value ) // NOTE: the second component is due to f..ing GCC which sees types differently
 					return val.empty();
+				else if constexpr ( is_std_array<std::remove_cvref_t<decltype( defaultValue )>>::value )
+				{
+					if ( val.size() != defaultValue.size() )
+						return false;
+					for ( size_t i=0; i<val.size(); ++i )
+						if ( val[i] != defaultValue[i] )
+							return false;
+					return true;
+				}
 				else
 				{
 					auto defval = defaultValue();
@@ -366,7 +409,14 @@ namespace comparsers
 					if constexpr ( std::is_invocable<decltype( defaultValue )>::value )
 						return val == defaultValue();
 					else
-						return val == defaultValue;
+					{
+						if constexpr ( std::is_base_of<StringLiteralHelperIndicator, decltype( defaultValue )>::value )
+							return val == (const char*)defaultValue;
+						else if constexpr ( std::is_base_of<FloatingConstIndicator, decltype( defaultValue )>::value )
+							return val == defaultValue.val();
+						else
+							return val == defaultValue;
+					}
 				}
 			}
 		}
@@ -508,6 +558,13 @@ namespace comparsers
 				rw<ValueTypeT, ValueT>(name, val);
 		}
 
+		template <typename ValueTypeT, typename ValueT, StringLiteralHelper defaultValue>
+		void rwWithWireDefault(const std::string_view& name, ValueT& val)
+		{
+			if ( !implIsDefaultValue<ValueTypeT, ValueT, defaultValue>( val ) )
+				rw<ValueTypeT, ValueT>(name, val);
+		}
+
 		template <typename ValueTypeT, typename ValueT, typename Proc>
 		void rw(const std::string_view& name, ValueT& val, Proc&& proc)
 		{
@@ -531,6 +588,13 @@ namespace comparsers
 		}
 
 		template <typename ValueTypeT, typename ValueT, auto defaultValue, typename Proc>
+		void rwWithWireDefault(const std::string_view& name, ValueT& val, Proc&& proc)
+		{
+			if ( !implIsDefaultValue<ValueTypeT, ValueT, defaultValue>( val ) )
+				rw<ValueTypeT, ValueT, Proc>(name, val, std::move(proc));
+		}
+
+		template <typename ValueTypeT, typename ValueT, StringLiteralHelper defaultValue, typename Proc>
 		void rwWithWireDefault(const std::string_view& name, ValueT& val, Proc&& proc)
 		{
 			if ( !implIsDefaultValue<ValueTypeT, ValueT, defaultValue>( val ) )
@@ -1404,6 +1468,12 @@ namespace comparsers
 				if constexpr ( std::is_same<decltype( defaultValue ), EmptyVectorValueType>::value || 
 					std::is_same<decltype( defaultValue ), decltype( emptyVectorValue )>::value ) // NOTE: the second component is due to f..ing GCC which sees types differently
 					return;
+				else if constexpr ( is_std_array<std::remove_cvref_t<decltype( defaultValue )>>::value )
+				{
+					val.resize( defaultValue.size() );
+					for ( size_t i=0; i<val.size(); ++i )
+						val[i] = defaultValue[i];
+				}
 				else
 					val = defaultValue();
 			}
@@ -1422,7 +1492,14 @@ namespace comparsers
 					if constexpr ( std::is_invocable<decltype( defaultValue )>::value )
 						val = defaultValue();
 					else
-						val = defaultValue;
+					{
+						if constexpr ( std::is_base_of<StringLiteralHelperIndicator, decltype( defaultValue )>::value )
+							val = (const char*)defaultValue;
+						else if constexpr ( std::is_base_of<FloatingConstIndicator, decltype( defaultValue )>::value )
+							val = defaultValue.val();
+						else
+							val = defaultValue;
+					}
 				}
 			}
 		}
@@ -1511,6 +1588,13 @@ namespace comparsers
 			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, true, defaultValue>(name, val, std::move( dummyProc ));
 		}
 
+		template <typename TypeHint, typename ValueT, StringLiteralHelper defaultValue>
+		void rwWithWireDefault(const std::string_view& name, ValueT& val)
+		{
+			VoidPlaceholder dummyProc;
+			implRWNameValue<TypeHint, ValueT, VoidPlaceholder, true, defaultValue>(name, val, std::move( dummyProc ));
+		}
+
 		template <typename TypeHint, typename ValueT, typename ItemProc>
 		void rw(const std::string_view& name, ValueT& val, ItemProc&& proc)
 		{
@@ -1518,6 +1602,12 @@ namespace comparsers
 		}
 
 		template <typename TypeHint, typename ValueT, typename ItemProc, auto defaultValue>
+		void rwWithWireDefault(const std::string_view& name, ValueT& val, ItemProc&& proc)
+		{
+			implRWNameValue<TypeHint, ValueT, ItemProc, true, defaultValue>(name, val, std::move( proc ));
+		}
+
+		template <typename TypeHint, typename ValueT, typename ItemProc, StringLiteralHelper defaultValue>
 		void rwWithWireDefault(const std::string_view& name, ValueT& val, ItemProc&& proc)
 		{
 			implRWNameValue<TypeHint, ValueT, ItemProc, true, defaultValue>(name, val, std::move( proc ));
