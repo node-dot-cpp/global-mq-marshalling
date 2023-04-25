@@ -437,7 +437,30 @@ namespace comparsers
 		} // TODO: add extra functionality, if starting over requires that. Do not clear buff!!! - it may already have some
 		  // data in it
 
-		void beginStruct([[maybe_unused]] const std::string_view& name)
+		[[deprecated]] void beginStruct([[maybe_unused]] const std::string_view& name)
+		{
+			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
+				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
+			buff.append("{", 1);
+			if constexpr (Beautify)
+				++offset;
+			if (stack.size()) // yes, it might also be the root object
+				++stack.back().count;
+			stack.push_back({InType::inStruct, 0});
+		}
+		[[deprecated]] void beginStruct([[maybe_unused]] const char* name)
+		{
+			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
+				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
+			buff.append("{", 1);
+			if constexpr (Beautify)
+				++offset;
+			if (stack.size()) // yes, it might also be the root object
+				++stack.back().count;
+			stack.push_back({InType::inStruct, 0});
+		}
+		template<StringLiteralHelper structName, class StructT>
+		void beginStruct([[maybe_unused]] StructT& ref)
 		{
 			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
 				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
@@ -1343,7 +1366,28 @@ namespace comparsers
 			unknownFieldsReporter = std::function<void(const std::vector<std::string>&, const std::string&)>();
 		}
 
-		void beginStruct([[maybe_unused]] const std::string_view& name)
+		[[deprecated]] void beginStruct([[maybe_unused]] const std::string_view& name)
+		{
+			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
+				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			this->skipDelimiter('{', ch);
+			if (stack.size())
+				++stack.back().count;
+			stack.push_back({InType::inStruct, 0});
+		}
+		[[deprecated]] void beginStruct([[maybe_unused]] const char* name)
+		{
+			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
+				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
+			CharT ch = this->lastChar.isSaved() ? this->skipSpacesEtc(this->lastChar.consume()) : this->skipSpacesEtc();
+			this->skipDelimiter('{', ch);
+			if (stack.size())
+				++stack.back().count;
+			stack.push_back({InType::inStruct, 0});
+		}
+		template<StringLiteralHelper structName, class StructT>
+		void beginStruct([[maybe_unused]] StructT& ref)
 		{
 			assert(stack.size() == 0 || stack.back().type == InType::inArray ||
 				   (stack.back().type == InType::inNameVal && stack.back().count == 0));
