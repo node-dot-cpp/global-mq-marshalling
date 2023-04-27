@@ -48,29 +48,59 @@ namespace comparsers
 	template <typename T>
 	inline constexpr bool is_vector_v = is_specialization_v<std::decay_t<T>, std::vector>;
 
-    template <int>
-    struct ScalarValueType
+    using IndexT = int8_t;
+
+    template <int id, typename T = void>
+    struct ValueType
+    {
+        using Type = T;
+        static constexpr IndexT Index = id;
+    };
+
+    template <IndexT id, typename T = void>
+    struct ScalarValueType : ValueType<id, T>
     {
         static constexpr bool isScalar = true;
     };
 
     template <typename T>
-    struct VectorValueType
+    struct VectorValueType : ValueType<15>
     {
         using ValueT = T;
         static constexpr bool isScalar = false;
     };
 
-    using INT = ScalarValueType<0>;
-    using UINT = ScalarValueType<1>;
-    using REAL = ScalarValueType<2>;
-    using STRING = ScalarValueType<3>;
-    using BOOLEAN = ScalarValueType<4>;
-    using ENUM = ScalarValueType<5>;
-    using STRUCT = ScalarValueType<6>;
-    using VofINT = VectorValueType<INT>;
-    using VofUINT = VectorValueType<UINT>;
-    using VofREAL = VectorValueType<REAL>;
+    using INT_8 = ScalarValueType<0, int8_t>;
+    using INT_16 = ScalarValueType<1, int16_t>;
+    using INT_32 = ScalarValueType<2, int32_t>;
+    using INT_64 = ScalarValueType<3, int64_t>;
+    using INT = INT_64;
+    using UINT_8 = ScalarValueType<4, uint8_t>;
+    using UINT_16 = ScalarValueType<5, uint16_t>;
+    using UINT_32 = ScalarValueType<6, uint32_t>;
+    using UINT_64 = ScalarValueType<7, uint64_t>;
+    using UINT = UINT_64;
+    using REAL_32 = ScalarValueType<8, float>;
+    using REAL_64 = ScalarValueType<9, double>;
+    using REAL = REAL_64;
+    using STRING = ScalarValueType<10, std::string>;
+    using CHAR = ScalarValueType<11, char>;
+    using BOOLEAN = ScalarValueType<12, bool>;
+    using ENUM = ScalarValueType<13>;
+    using STRUCT = ScalarValueType<14>;
+    using VofINT_8 = VectorValueType<INT_8>;
+    using VofINT_16 = VectorValueType<INT_16>;
+    using VofINT_32 = VectorValueType<INT_32>;
+    using VofINT_64 = VectorValueType<INT_64>;
+    using VofINT = VofINT_64;
+    using VofUINT_8 = VectorValueType<UINT_8>;
+    using VofUINT_16 = VectorValueType<UINT_16>;
+    using VofUINT_32 = VectorValueType<UINT_32>;
+    using VofUINT_64 = VectorValueType<UINT_64>;
+    using VofUINT = VofUINT_64;
+    using VofFLOAT = VectorValueType<REAL_32>;
+    using VofDOUBLE = VectorValueType<REAL_64>;
+    using VofREAL = VofDOUBLE;
     using VofSTRING = VectorValueType<STRING>;
     using VofBOOLEAN = VectorValueType<BOOLEAN>;
     using VofENUM = VectorValueType<ENUM>;
