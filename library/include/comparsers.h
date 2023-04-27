@@ -98,8 +98,8 @@ namespace comparsers
     using VofUINT_32 = VectorValueType<UINT_32>;
     using VofUINT_64 = VectorValueType<UINT_64>;
     using VofUINT = VofUINT_64;
-    using VofFLOAT = VectorValueType<FLOAT>;
-    using VofDOUBLE = VectorValueType<DOUBLE>;
+    using VofFLOAT = VectorValueType<REAL_32>;
+    using VofDOUBLE = VectorValueType<REAL_64>;
     using VofREAL = VofDOUBLE;
     using VofSTRING = VectorValueType<STRING>;
     using VofBOOLEAN = VectorValueType<BOOLEAN>;
